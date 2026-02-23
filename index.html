@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PunchClock Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222535;
+    --border: #2e3347;
+    --accent: #4f8ef7;
+    --accent2: #7c5cbf;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #e8eaf0;
+    --text2: #8b92a8;
+    --text3: #555e7a;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+  /* NAV */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-logo svg { width: 22px; height: 22px; }
+  .nav-links { display: flex; gap: 4px; flex: 1; }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .nav-right { display: flex; gap: 8px; align-items: center; }
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    background: rgba(79,142,247,0.2);
+    color: var(--accent);
+  }
+  .company-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+  /* PAGES */
+  .page { display: none; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
+  .page.active { display: block; }
+  /* PUNCH PAGE */
+  .punch-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 130px);
+    gap: 32px;
+  }
+  .clock-display {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .clock-time {
+    font-size: 72px;
+    font-weight: 300;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .clock-date {
+    color: var(--text2);
+    font-size: 16px;
+    margin-top: 8px;
+  }
+  .punch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow);
+  }
+  .punch-card h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--text);
+    text-align: center;
+  }
+  .select-wrap {
+    position: relative;
+    margin-bottom: 28px;
+  }
+  .select-wrap select {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 16px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .select-wrap select:focus { border-color: var(--accent); }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text2);
+    pointer-events: none;
+  }
+  .punch-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .punch-btn {
+    padding: 22px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+  .punch-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.15s;
+  }
+  .punch-btn:hover::before { background: rgba(255,255,255,0.08); }
+  .punch-btn:active { transform: scale(0.97); }
+  .btn-in { background: var(--green); color: #fff; }
+  .btn-out { background: var(--red); color: #fff; }
+  .punch-feedback {
+    text-align: center;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 15px;
+    display: none;
+  }
+  .punch-feedback.show { display: block; }
+  .punch-feedback.success { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .punch-feedback.error { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  /* FORMS */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: var(--shadow);
+  }
+  .form-card h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .form-card p { color: var(--text2); margin-bottom: 28px; font-size: 14px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary {
+    padding: 9px 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger {
+    padding: 9px 18px;
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 9px;
+    color: var(--red);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+  }
+  .msg { padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+  .msg.success { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+  .msg.error { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+  .msg.info { background: rgba(79,142,247,0.12); color: var(--accent); border: 1px solid rgba(79,142,247,0.25); }
+  /* PAGE HEADER */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-header h1 { font-size: 26px; font-weight: 700; }
+  .page-header p { color: var(--text2); font-size: 14px; margin-top: 4px; }
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 13px 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 32px; font-weight: 700; margin-top: 6px; font-family: 'DM Mono', monospace; }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .value.blue { color: var(--accent); }
+  .stat-card .value.purple { color: #a78bfa; }
+  /* TABS */
+  .tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 24px; width: fit-content; }
+  .tab {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    display: none;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+  /* REPORT FILTERS */
+  .filter-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    align-items: end;
+  }
+  .filter-bar label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .filter-bar input, .filter-bar select {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+  /* EMPLOYEES CHECKBOXES */
+  .emp-list-check {
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+  }
+  .emp-check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 14px;
+  }
+  .emp-check-item:hover { background: rgba(255,255,255,0.04); }
+  .emp-check-item input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .select-all-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .select-all-row button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+  }
+  /* EXPORT BTNS */
+  .export-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-export {
+    padding: 9px 16px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-export:hover { border-color: var(--accent); color: var(--accent); }
+  /* STATUS PILL */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .pill.in { background: rgba(34,197,94,0.15); color: var(--green); }
+  .pill.out { background: rgba(239,68,68,0.15); color: var(--red); }
+  .pill.admin { background: rgba(79,142,247,0.15); color: var(--accent); }
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .clock-time { font-size: 48px; }
+    .punch-card { padding: 24px; }
+    .page { padding: 20px 16px; }
+  }
+  /* COMPANY CARDS */
+  .company-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .company-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .company-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .company-card.selected { border-color: var(--accent); background: rgba(79,142,247,0.07); }
+  .company-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .company-card .meta { font-size: 12px; color: var(--text2); }
+  .company-card .actions { display: flex; gap: 8px; margin-top: 14px; }
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  /* AVATAR */
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #fff;
+    flex-shrink: 0;
+  }
+  .emp-row { display: flex; align-items: center; gap: 12px; }
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty p { font-size: 15px; }
+  /* CODE DISPLAY */
+  .code-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    color: var(--accent);
+    margin: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="mainNav">
+  <div class="nav-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    PunchClock
+  </div>
+  <div class="nav-links" id="navLinks">
+    <button class="nav-btn active" onclick="navigate('punch')">⏱ Clock In/Out</button>
+    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none">⚙️ Admin</button>
+    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none">📊 Reports</button>
+    <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" style="display:none">🏢 Companies</button>
+    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none">📋 Activity Log</button>
+  </div>
+  <div class="nav-right">
+    <select class="company-select" id="companySwitch" onchange="switchCompany(this.value)" style="display:none"></select>
+    <span id="adminBadge" style="display:none"></span>
+    <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" style="font-size:13px;padding:7px 14px;">Admin Login</button>
+    <button class="btn-secondary" id="logoutBtn" onclick="logout()" style="display:none;font-size:13px;padding:7px 14px;">Logout</button>
+  </div>
+</nav>
+
+<!-- PUNCH PAGE -->
+<div class="page active" id="page-punch">
+  <div class="punch-wrap">
+    <div class="clock-display">
+      <div class="clock-time" id="liveTime">00:00:00</div>
+      <div class="clock-date" id="liveDate"></div>
+    </div>
+    <div class="punch-card">
+      <h2>Select Your Name</h2>
+      <div class="select-wrap">
+        <select id="empSelect">
+          <option value="">-- Choose employee --</option>
+        </select>
+      </div>
+      <div class="punch-btns">
+        <button class="punch-btn btn-in" onclick="punch('IN')">✓ IN</button>
+        <button class="punch-btn btn-out" onclick="punch('OUT')">✕ OUT</button>
+      </div>
+      <div class="punch-feedback" id="punchFeedback"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="page" id="page-login">
+  <div class="form-card" style="margin-top:60px">
+    <h2>Admin Login</h2>
+    <p>Sign in to access the admin dashboard.</p>
+    <div id="loginMsg"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@company.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    <hr class="divider">
+    <p style="text-align:center;color:var(--text2);font-size:13px">Don't have an account? <button class="link-btn" onclick="navigate('register')">Register</button></p>
+  </div>
+</div>
+
+<!-- REGISTER PAGE -->
+<div class="page" id="page-register">
+  <div class="form-card" style="margin-top:60px">
+    <h2>Admin Registration</h2>
+    <p>Create your admin account. A verification code will be shown after submission.</p>
+    <div id="registerMsg"></div>
+    <div id="registerForm">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Jane Smith">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="admin@company.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="Min 6 characters">
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Register & Get Code</button>
+    </div>
+    <div id="verifyForm" style="display:none">
+      <p style="margin-bottom:12px">Your verification code (simulated — in production this would be emailed):</p>
+      <div class="code-display" id="verifyCode"></div>
+      <div class="form-group" style="margin-top:16px">
+        <label>Enter Code to Confirm</label>
+        <input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6">
+      </div>
+      <button class="btn-primary" onclick="doVerify()">Verify & Activate</button>
+    </div>
+    <hr class="divider">
+    <p style="text-align:center;color:var(--text2);font-size:13px">Already have an account? <button class="link-btn" onclick="navigate('login')">Sign in</button></p>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div class="page" id="page-admin">
+  <div class="page-header">
+    <div>
+      <h1>Admin Panel</h1>
+      <p>Manage employees across your companies</p>
+    </div>
+    <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openAddEmpModal()">+ Add Employee</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="adminTab('employees', this)">Employees</button>
+    <button class="tab" onclick="adminTab('admins', this)">Admins</button>
+  </div>
+
+  <!-- EMPLOYEES TAB -->
+  <div id="tab-employees">
+    <div class="filter-bar" style="grid-template-columns: 1fr auto; margin-bottom:16px; padding:14px 16px">
+      <div>
+        <label>Search</label>
+        <input type="text" id="empSearch" placeholder="Search by name or department..." oninput="renderEmployees()">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <select style="padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empFilter" onchange="renderEmployees()">
+          <option value="">All Departments</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>Company</th><th>Actions</th></tr></thead>
+        <tbody id="empTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ADMINS TAB -->
+  <div id="tab-admins" style="display:none">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Registered</th></tr></thead>
+        <tbody id="adminsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS PAGE -->
+<div class="page" id="page-reports">
+  <div class="page-header">
+    <div>
+      <h1>Reports</h1>
+      <p>Generate time & attendance reports</p>
+    </div>
+    <div class="export-btns">
+      <button class="btn-export" onclick="exportReport('excel')">📥 Excel</button>
+      <button class="btn-export" onclick="exportReport('csv')">📄 CSV</button>
+      <button class="btn-export" onclick="exportReport('pdf')">📋 PDF</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div>
+      <label>Period</label>
+      <select id="reportPeriod" onchange="updateDateRange()">
+        <option value="custom">Custom Range</option>
+        <option value="week" selected>This Week</option>
+        <option value="biweek">Bi-Weekly</option>
+        <option value="month">This Month</option>
+        <option value="quarter">This Quarter</option>
+        <option value="6months">Last 6 Months</option>
+        <option value="year">This Year</option>
+      </select>
+    </div>
+    <div>
+      <label>Start Date</label>
+      <input type="date" id="reportStart">
+    </div>
+    <div>
+      <label>End Date</label>
+      <input type="date" id="reportEnd">
+    </div>
+    <div>
+      <label>Company</label>
+      <select id="reportCompany" onchange="loadReportEmps()">
+        <option value="all">All Companies</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:flex-end">
+      <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0" onclick="generateReport()">Generate</button>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px">
+    <p style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:10px">Filter Employees</p>
+    <div class="select-all-row">
+      <button onclick="selAll(true)">Select All</button>
+      <span style="color:var(--border)">|</span>
+      <button onclick="selAll(false)">Deselect All</button>
+    </div>
+    <div class="emp-list-check" id="empCheckList"></div>
+  </div>
+
+  <!-- SUMMARY STATS -->
+  <div class="stats-grid" id="reportStats" style="display:none"></div>
+
+  <div class="table-wrap" id="reportTableWrap" style="display:none">
+    <table>
+      <thead><tr><th>Employee</th><th>Company</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Hours</th></tr></thead>
+      <tbody id="reportTableBody"></tbody>
+    </table>
+  </div>
+  <div class="empty" id="reportEmpty" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <p>No punch records found for the selected filters.</p>
+  </div>
+</div>
+
+<!-- COMPANIES PAGE -->
+<div class="page" id="page-companies">
+  <div class="page-header">
+    <div>
+      <h1>Companies</h1>
+      <p>Manage organizations in the system</p>
+    </div>
+    <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openAddCompanyModal()">+ New Company</button>
+  </div>
+  <div class="company-grid" id="companyGrid"></div>
+</div>
+
+<!-- ACTIVITY PAGE -->
+<div class="page" id="page-activity">
+  <div class="page-header">
+    <div>
+      <h1>Activity Log</h1>
+      <p>Real-time punch records</p>
+    </div>
+  </div>
+  <div class="stats-grid" id="activityStats"></div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Employee</th><th>Company</th><th>Type</th><th>Date</th><th>Time</th></tr></thead>
+      <tbody id="activityBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE MODAL -->
+<div class="modal-overlay" id="addEmpModal">
+  <div class="modal">
+    <h3 id="empModalTitle">Add Employee</h3>
+    <div id="empModalMsg"></div>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="empName" placeholder="John Smith">
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <input type="text" id="empDept" placeholder="Engineering, Sales, HR...">
+    </div>
+    <div class="form-group">
+      <label>Company</label>
+      <select id="empCompany"></select>
+    </div>
+    <div class="form-group">
+      <label>Employee ID (optional)</label>
+      <input type="text" id="empId" placeholder="EMP-001">
+    </div>
+    <input type="hidden" id="editEmpUid">
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('addEmpModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="saveEmployee()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD COMPANY MODAL -->
+<div class="modal-overlay" id="addCompanyModal">
+  <div class="modal">
+    <h3 id="companyModalTitle">New Company</h3>
+    <div id="companyModalMsg"></div>
+    <div class="form-group">
+      <label>Company Name</label>
+      <input type="text" id="companyName" placeholder="Acme Corp">
+    </div>
+    <div class="form-group">
+      <label>Industry</label>
+      <input type="text" id="companyIndustry" placeholder="Technology, Retail, Healthcare...">
+    </div>
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <input type="text" id="companyDesc" placeholder="Brief description">
+    </div>
+    <input type="hidden" id="editCompanyUid">
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('addCompanyModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="saveCompany()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>Confirm Delete</h3>
+    <p id="deleteMsg" style="color:var(--text2);margin-top:8px;font-size:14px;line-height:1.6"></p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA LAYER =====
+const DB = {
+  get: (k, def=[]) => { try { return JSON.parse(localStorage.getItem('pc_'+k)) ?? def; } catch { return def; } },
+  set: (k, v) => localStorage.setItem('pc_'+k, JSON.stringify(v)),
+};
+
+function getData() {
+  return {
+    companies: DB.get('companies', []),
+    employees: DB.get('employees', []),
+    punches: DB.get('punches', []),
+    admins: DB.get('admins', []),
+    session: DB.get('session', null),
+    pendingReg: DB.get('pendingReg', null),
+  };
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// SEED DEFAULT DATA
+function seedData() {
+  let d = getData();
+  if (!d.companies.length) {
+    const c1 = { id: uid(), name: 'Acme Corp', industry: 'Technology', desc: 'Main company', created: new Date().toISOString() };
+    const c2 = { id: uid(), name: 'Beta Industries', industry: 'Manufacturing', desc: 'Second company', created: new Date().toISOString() };
+    DB.set('companies', [c1, c2]);
+    const emps = [
+      { id: uid(), name: 'Alice Martin', dept: 'Engineering', companyId: c1.id, empId: 'EMP-001', active: true },
+      { id: uid(), name: 'Bob Johnson', dept: 'Sales', companyId: c1.id, empId: 'EMP-002', active: true },
+      { id: uid(), name: 'Carol White', dept: 'HR', companyId: c1.id, empId: 'EMP-003', active: true },
+      { id: uid(), name: 'Dave Lee', dept: 'Operations', companyId: c2.id, empId: 'EMP-004', active: true },
+      { id: uid(), name: 'Eva Chen', dept: 'Marketing', companyId: c2.id, empId: 'EMP-005', active: true },
+    ];
+    DB.set('employees', emps);
+  }
+}
+seedData();
+
+// ===== STATE =====
+let currentPage = 'punch';
+let currentCompanyFilter = 'all';
+let reportData = [];
+let pendingVerify = null;
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = new Date();
+  document.getElementById('liveTime').textContent = now.toLocaleTimeString('en-US', {hour12: false});
+  document.getElementById('liveDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== NAVIGATION =====
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) { el.classList.add('active'); currentPage = page; }
+  const map = { punch:0, admin:1, reports:2, companies:3, activity:4 };
+  const btns = document.querySelectorAll('.nav-links .nav-btn');
+  if (map[page] !== undefined && btns[map[page]]) btns[map[page]].classList.add('active');
+
+  if (page === 'punch') loadPunchPage();
+  if (page === 'admin') loadAdminPage();
+  if (page === 'reports') loadReportsPage();
+  if (page === 'companies') loadCompaniesPage();
+  if (page === 'activity') loadActivityPage();
+}
+
+// ===== AUTH =====
+function isLoggedIn() { return !!DB.get('session', null); }
+function currentAdmin() { return DB.get('session', null); }
+
+function updateNav() {
+  const logged = isLoggedIn();
+  document.getElementById('loginBtn').style.display = logged ? 'none' : '';
+  document.getElementById('logoutBtn').style.display = logged ? '' : 'none';
+  document.getElementById('navAdmin').style.display = logged ? '' : 'none';
+  document.getElementById('navReports').style.display = logged ? '' : 'none';
+  document.getElementById('navCompanies').style.display = logged ? '' : 'none';
+  document.getElementById('navActivity').style.display = logged ? '' : 'none';
+  const sw = document.getElementById('companySwitch');
+  sw.style.display = logged ? '' : 'none';
+  if (logged) {
+    const a = currentAdmin();
+    document.getElementById('adminBadge').innerHTML = `<span class="badge">${a.name}</span>`;
+    document.getElementById('adminBadge').style.display = '';
+    loadCompanySwitcher();
+  } else {
+    document.getElementById('adminBadge').style.display = 'none';
+  }
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const admins = DB.get('admins', []);
+  const a = admins.find(x => x.email === email && x.password === pass && x.verified);
+  if (!a) { showMsg('loginMsg', 'Invalid credentials or account not verified.', 'error'); return; }
+  DB.set('session', { id: a.id, name: a.name, email: a.email });
+  updateNav();
+  navigate('admin');
+}
+
+function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('regPass').value;
+  if (!name || !email || !pass) { showMsg('registerMsg', 'All fields are required.', 'error'); return; }
+  if (pass.length < 6) { showMsg('registerMsg', 'Password must be at least 6 characters.', 'error'); return; }
+  const admins = DB.get('admins', []);
+  if (admins.find(a => a.email === email)) { showMsg('registerMsg', 'Email already registered.', 'error'); return; }
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  pendingVerify = { name, email, pass, code };
+  document.getElementById('verifyCode').textContent = code;
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('verifyForm').style.display = '';
+  showMsg('registerMsg', '📧 In production, this code would be emailed to you. For this demo, it\'s shown above.', 'info');
+}
+
+function doVerify() {
+  const entered = document.getElementById('codeInput').value.trim();
+  if (!pendingVerify || entered !== pendingVerify.code) { showMsg('registerMsg', 'Incorrect code. Please try again.', 'error'); return; }
+  const admins = DB.get('admins', []);
+  const newAdmin = { id: uid(), name: pendingVerify.name, email: pendingVerify.email, password: pendingVerify.pass, verified: true, created: new Date().toISOString() };
+  admins.push(newAdmin);
+  DB.set('admins', admins);
+  pendingVerify = null;
+  DB.set('session', { id: newAdmin.id, name: newAdmin.name, email: newAdmin.email });
+  updateNav();
+  showMsg('registerMsg', 'Account verified! Redirecting...', 'success');
+  setTimeout(() => navigate('admin'), 1200);
+}
+
+function logout() {
+  DB.set('session', null);
+  updateNav();
+  navigate('punch');
+}
+
+// ===== PUNCH PAGE =====
+function loadPunchPage() {
+  const sel = document.getElementById('empSelect');
+  const employees = DB.get('employees', []).filter(e => e.active);
+  const companies = DB.get('companies', []);
+  sel.innerHTML = '<option value="">-- Select your name --</option>';
+  const grouped = {};
+  employees.forEach(e => {
+    const co = companies.find(c => c.id === e.companyId);
+    const gname = co ? co.name : 'General';
+    if (!grouped[gname]) grouped[gname] = [];
+    grouped[gname].push(e);
+  });
+  Object.entries(grouped).forEach(([gname, emps]) => {
+    const og = document.createElement('optgroup');
+    og.label = gname;
+    emps.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.id;
+      o.textContent = e.name + (e.empId ? ` (${e.empId})` : '');
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+}
+
+function punch(type) {
+  const empId = document.getElementById('empSelect').value;
+  if (!empId) { showPunchFeedback('Please select your name first.', 'error'); return; }
+  const employees = DB.get('employees', []);
+  const emp = employees.find(e => e.id === empId);
+  if (!emp) return;
+
+  const now = new Date();
+  const punches = DB.get('punches', []);
+
+  // Check for consecutive same punch type
+  const todayPunches = punches.filter(p => p.empId === empId && p.date === now.toLocaleDateString('en-CA'));
+  if (todayPunches.length > 0) {
+    const last = todayPunches[todayPunches.length - 1];
+    if (last.type === type) {
+      showPunchFeedback(`${emp.name} already punched ${type} without a corresponding ${type === 'IN' ? 'OUT' : 'IN'}.`, 'error');
+      return;
+    }
+  }
+
+  const record = {
+    id: uid(),
+    empId,
+    empName: emp.name,
+    companyId: emp.companyId,
+    type,
+    date: now.toLocaleDateString('en-CA'),
+    time: now.toLocaleTimeString('en-US', {hour12: false}),
+    timestamp: now.toISOString(),
+  };
+  punches.push(record);
+  DB.set('punches', punches);
+
+  const timeStr = now.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
+  showPunchFeedback(`✓ ${emp.name} punched ${type} at ${timeStr}`, 'success');
+  document.getElementById('empSelect').value = '';
+}
+
+function showPunchFeedback(msg, type) {
+  const el = document.getElementById('punchFeedback');
+  el.textContent = msg;
+  el.className = 'punch-feedback show ' + type;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// ===== ADMIN PAGE =====
+function loadAdminPage() {
+  if (!isLoggedIn()) { navigate('login'); return; }
+  renderEmployees();
+  renderAdmins();
+}
+
+function adminTab(tab, btn) {
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-employees').style.display = tab === 'employees' ? '' : 'none';
+  document.getElementById('tab-admins').style.display = tab === 'admins' ? '' : 'none';
+}
+
+function renderEmployees() {
+  const employees = DB.get('employees', []);
+  const companies = DB.get('companies', []);
+  const search = document.getElementById('empSearch')?.value.toLowerCase() || '';
+  const filterDept = document.getElementById('empFilter')?.value || '';
+
+  // Populate dept filter
+  const depts = [...new Set(employees.map(e => e.dept).filter(Boolean))].sort();
+  const df = document.getElementById('empFilter');
+  const cur = df.value;
+  df.innerHTML = '<option value="">All Departments</option>';
+  depts.forEach(d => { df.innerHTML += `<option value="${d}" ${d===cur?'selected':''}>${d}</option>`; });
+
+  let filtered = employees.filter(e => {
+    const s = (e.name+e.dept+e.empId).toLowerCase();
+    return (!search || s.includes(search)) && (!filterDept || e.dept === filterDept);
+  });
+
+  const tbody = document.getElementById('empTableBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px">No employees found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(e => {
+    const co = companies.find(c => c.id === e.companyId);
+    const initials = e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    return `<tr>
+      <td><div class="emp-row"><div class="avatar">${initials}</div><div><div style="font-weight:500">${e.name}</div><div style="font-size:12px;color:var(--text2)">${e.empId||'—'}</div></div></div></td>
+      <td>${e.dept||'—'}</td>
+      <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
+      <td>${co?.name||'—'}</td>
+      <td><div style="display:flex;gap:8px">
+        <button class="btn-secondary" style="padding:6px 12px;font-size:12px" onclick="editEmployee('${e.id}')">Edit</button>
+        <button class="btn-secondary" style="padding:6px 12px;font-size:12px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
+        <button class="btn-danger" style="padding:6px 12px;font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAdmins() {
+  const admins = DB.get('admins', []);
+  const tbody = document.getElementById('adminsTableBody');
+  if (!admins.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:32px">No admins registered.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = admins.map(a => `<tr>
+    <td><div class="emp-row"><div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div><span style="font-weight:500">${a.name}</span></div></td>
+    <td>${a.email}</td>
+    <td><span class="pill ${a.verified?'admin':'out'}">${a.verified?'Active':'Pending'}</span></td>
+    <td style="color:var(--text2);font-size:13px">${new Date(a.created).toLocaleDateString()}</td>
+  </tr>`).join('');
+}
+
+function openAddEmpModal() {
+  document.getElementById('empModalTitle').textContent = 'Add Employee';
+  document.getElementById('empName').value = '';
+  document.getElementById('empDept').value = '';
+  document.getElementById('empId').value = '';
+  document.getElementById('editEmpUid').value = '';
+  document.getElementById('empModalMsg').innerHTML = '';
+  const companies = DB.get('companies', []);
+  const sel = document.getElementById('empCompany');
+  sel.innerHTML = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  openModal('addEmpModal');
+}
+
+function editEmployee(id) {
+  const emp = DB.get('employees', []).find(e => e.id === id);
+  if (!emp) return;
+  document.getElementById('empModalTitle').textContent = 'Edit Employee';
+  document.getElementById('empName').value = emp.name;
+  document.getElementById('empDept').value = emp.dept || '';
+  document.getElementById('empId').value = emp.empId || '';
+  document.getElementById('editEmpUid').value = emp.id;
+  document.getElementById('empModalMsg').innerHTML = '';
+  const companies = DB.get('companies', []);
+  const sel = document.getElementById('empCompany');
+  sel.innerHTML = companies.map(c => `<option value="${c.id}" ${c.id===emp.companyId?'selected':''}>${c.name}</option>`).join('');
+  openModal('addEmpModal');
+}
+
+function saveEmployee() {
+  const name = document.getElementById('empName').value.trim();
+  const dept = document.getElementById('empDept').value.trim();
+  const empId = document.getElementById('empId').value.trim();
+  const companyId = document.getElementById('empCompany').value;
+  const editId = document.getElementById('editEmpUid').value;
+  if (!name) { showMsg('empModalMsg', 'Name is required.', 'error'); return; }
+  if (!companyId) { showMsg('empModalMsg', 'Please select a company.', 'error'); return; }
+  let employees = DB.get('employees', []);
+  if (editId) {
+    employees = employees.map(e => e.id === editId ? { ...e, name, dept, empId, companyId } : e);
+  } else {
+    employees.push({ id: uid(), name, dept, empId, companyId, active: true, created: new Date().toISOString() });
+  }
+  DB.set('employees', employees);
+  closeModal('addEmpModal');
+  renderEmployees();
+  loadPunchPage();
+}
+
+function toggleEmp(id) {
+  let employees = DB.get('employees', []);
+  employees = employees.map(e => e.id === id ? { ...e, active: !e.active } : e);
+  DB.set('employees', employees);
+  renderEmployees();
+  loadPunchPage();
+}
+
+// ===== COMPANIES =====
+function loadCompaniesPage() {
+  if (!isLoggedIn()) { navigate('login'); return; }
+  const companies = DB.get('companies', []);
+  const employees = DB.get('employees', []);
+  const grid = document.getElementById('companyGrid');
+  if (!companies.length) {
+    grid.innerHTML = `<div class="empty"><p>No companies yet. Create your first one!</p></div>`;
+    return;
+  }
+  grid.innerHTML = companies.map(c => {
+    const empCount = employees.filter(e => e.companyId === c.id).length;
+    return `<div class="company-card">
+      <h3>${c.name}</h3>
+      <div class="meta">${c.industry||''}${c.industry&&c.desc?' · ':''}${c.desc||''}</div>
+      <div class="meta" style="margin-top:6px;color:var(--text2)">👥 ${empCount} employee${empCount!==1?'s':''}</div>
+      <div class="actions">
+        <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="editCompany('${c.id}')">Edit</button>
+        <button class="btn-danger" style="font-size:12px;padding:6px 12px" onclick="confirmDelete('company','${c.id}','${c.name}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddCompanyModal() {
+  document.getElementById('companyModalTitle').textContent = 'New Company';
+  document.getElementById('companyName').value = '';
+  document.getElementById('companyIndustry').value = '';
+  document.getElementById('companyDesc').value = '';
+  document.getElementById('editCompanyUid').value = '';
+  document.getElementById('companyModalMsg').innerHTML = '';
+  openModal('addCompanyModal');
+}
+
+function editCompany(id) {
+  const co = DB.get('companies', []).find(c => c.id === id);
+  if (!co) return;
+  document.getElementById('companyModalTitle').textContent = 'Edit Company';
+  document.getElementById('companyName').value = co.name;
+  document.getElementById('companyIndustry').value = co.industry || '';
+  document.getElementById('companyDesc').value = co.desc || '';
+  document.getElementById('editCompanyUid').value = co.id;
+  document.getElementById('companyModalMsg').innerHTML = '';
+  openModal('addCompanyModal');
+}
+
+function saveCompany() {
+  const name = document.getElementById('companyName').value.trim();
+  const industry = document.getElementById('companyIndustry').value.trim();
+  const desc = document.getElementById('companyDesc').value.trim();
+  const editId = document.getElementById('editCompanyUid').value;
+  if (!name) { showMsg('companyModalMsg', 'Company name is required.', 'error'); return; }
+  let companies = DB.get('companies', []);
+  if (editId) {
+    companies = companies.map(c => c.id === editId ? { ...c, name, industry, desc } : c);
+  } else {
+    companies.push({ id: uid(), name, industry, desc, created: new Date().toISOString() });
+  }
+  DB.set('companies', companies);
+  closeModal('addCompanyModal');
+  loadCompaniesPage();
+  loadCompanySwitcher();
+}
+
+function loadCompanySwitcher() {
+  const companies = DB.get('companies', []);
+  const sel = document.getElementById('companySwitch');
+  sel.innerHTML = '<option value="all">All Companies</option>' + companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function switchCompany(val) { currentCompanyFilter = val; }
+
+// ===== REPORTS =====
+function loadReportsPage() {
+  if (!isLoggedIn()) { navigate('login'); return; }
+  updateDateRange();
+  loadReportEmps();
+  loadReportCompanyFilter();
+  document.getElementById('reportStats').style.display = 'none';
+  document.getElementById('reportTableWrap').style.display = 'none';
+  document.getElementById('reportEmpty').style.display = 'none';
+}
+
+function loadReportCompanyFilter() {
+  const companies = DB.get('companies', []);
+  const sel = document.getElementById('reportCompany');
+  sel.innerHTML = '<option value="all">All Companies</option>' + companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function loadReportEmps() {
+  const coId = document.getElementById('reportCompany')?.value || 'all';
+  let employees = DB.get('employees', []).filter(e => e.active);
+  if (coId !== 'all') employees = employees.filter(e => e.companyId === coId);
+  const companies = DB.get('companies', []);
+  const list = document.getElementById('empCheckList');
+  list.innerHTML = employees.map(e => {
+    const co = companies.find(c => c.id === e.companyId);
+    return `<label class="emp-check-item">
+      <input type="checkbox" class="emp-check" value="${e.id}" checked>
+      <span>${e.name}</span><span style="color:var(--text3);font-size:12px;margin-left:auto">${co?.name||''}</span>
+    </label>`;
+  }).join('');
+}
+
+function selAll(val) {
+  document.querySelectorAll('.emp-check').forEach(c => c.checked = val);
+}
+
+function updateDateRange() {
+  const period = document.getElementById('reportPeriod').value;
+  const now = new Date();
+  let start, end;
+  end = now.toLocaleDateString('en-CA');
+  const y = now.getFullYear(), m = now.getMonth();
+  switch(period) {
+    case 'week': start = new Date(now - 6*86400000).toLocaleDateString('en-CA'); break;
+    case 'biweek': start = new Date(now - 13*86400000).toLocaleDateString('en-CA'); break;
+    case 'month': start = new Date(y, m, 1).toLocaleDateString('en-CA'); break;
+    case 'quarter': start = new Date(y, Math.floor(m/3)*3, 1).toLocaleDateString('en-CA'); break;
+    case '6months': start = new Date(y, m-5, 1).toLocaleDateString('en-CA'); break;
+    case 'year': start = new Date(y, 0, 1).toLocaleDateString('en-CA'); break;
+    default: return;
+  }
+  document.getElementById('reportStart').value = start;
+  document.getElementById('reportEnd').value = end;
+}
+
+function generateReport() {
+  const start = document.getElementById('reportStart').value;
+  const end = document.getElementById('reportEnd').value;
+  const selectedEmps = [...document.querySelectorAll('.emp-check:checked')].map(c => c.value);
+  if (!start || !end) { alert('Please select a date range.'); return; }
+  if (!selectedEmps.length) { alert('Please select at least one employee.'); return; }
+
+  const punches = DB.get('punches', []);
+  const employees = DB.get('employees', []);
+  const companies = DB.get('companies', []);
+
+  // Build sessions (pair IN/OUT)
+  const rows = [];
+  selectedEmps.forEach(empId => {
+    const emp = employees.find(e => e.id === empId);
+    if (!emp) return;
+    const co = companies.find(c => c.id === emp.companyId);
+    const empPunches = punches.filter(p => p.empId === empId && p.date >= start && p.date <= end).sort((a,b) => a.timestamp.localeCompare(b.timestamp));
+
+    let i = 0;
+    while (i < empPunches.length) {
+      const p = empPunches[i];
+      if (p.type === 'IN') {
+        const out = empPunches[i+1]?.type === 'OUT' ? empPunches[i+1] : null;
+        let hours = '—';
+        if (out) {
+          const diff = (new Date(out.timestamp) - new Date(p.timestamp)) / 3600000;
+          hours = diff.toFixed(2);
+          i += 2;
+        } else { i++; }
+        rows.push({ empName: emp.name, empId: emp.empId||'', company: co?.name||'—', dept: emp.dept||'—', date: p.date, punchIn: p.time, punchOut: out?.time||'—', hours });
+      } else { i++; }
+    }
+  });
+
+  reportData = rows;
+
+  // Stats
+  const totalH = rows.filter(r => r.hours !== '—').reduce((s,r) => s + parseFloat(r.hours), 0);
+  const statsEl = document.getElementById('reportStats');
+  statsEl.style.display = 'grid';
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="label">Total Records</div><div class="value blue">${rows.length}</div></div>
+    <div class="stat-card"><div class="label">Total Hours</div><div class="value green">${totalH.toFixed(1)}</div></div>
+    <div class="stat-card"><div class="label">Employees</div><div class="value purple">${selectedEmps.length}</div></div>
+    <div class="stat-card"><div class="label">Avg Hours/Record</div><div class="value">${rows.length?((totalH/rows.filter(r=>r.hours!=='—').length)||0).toFixed(1):'0'}</div></div>`;
+
+  if (!rows.length) {
+    document.getElementById('reportTableWrap').style.display = 'none';
+    document.getElementById('reportEmpty').style.display = '';
+    return;
+  }
+  document.getElementById('reportEmpty').style.display = 'none';
+  document.getElementById('reportTableWrap').style.display = '';
+  document.getElementById('reportTableBody').innerHTML = rows.map(r => `<tr>
+    <td><span style="font-weight:500">${r.empName}</span><span style="color:var(--text2);font-size:12px;margin-left:8px">${r.empId}</span></td>
+    <td>${r.company}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:13px">${r.date}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)">${r.punchIn}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)">${r.punchOut}</td>
+    <td style="font-family:'DM Mono',monospace;font-weight:600">${r.hours !== '—' ? r.hours+'h' : '—'}</td>
+  </tr>`).join('');
+}
+
+function exportReport(fmt) {
+  if (!reportData.length) { alert('Generate a report first.'); return; }
+  const headers = ['Employee', 'Employee ID', 'Company', 'Department', 'Date', 'Punch In', 'Punch Out', 'Hours'];
+  const rows = reportData.map(r => [r.empName, r.empId, r.company, r.dept, r.date, r.punchIn, r.punchOut, r.hours]);
+
+  if (fmt === 'excel' || fmt === 'csv') {
+    const data = [headers, ...rows];
+    if (fmt === 'excel') {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = headers.map(() => ({ wch: 16 }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Time Report');
+      XLSX.writeFile(wb, `time-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
+    } else {
+      const csv = data.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `time-report-${new Date().toLocaleDateString('en-CA')}.csv`;
+      a.click();
+    }
+  } else if (fmt === 'pdf') {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PunchClock Pro — Time Report', 14, 16);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 23);
+    doc.setTextColor(0);
+    doc.autoTable({
+      head: [headers],
+      body: rows,
+      startY: 28,
+      styles: { fontSize: 9, cellPadding: 4 },
+      headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 245, 250] },
+    });
+    doc.save(`time-report-${new Date().toLocaleDateString('en-CA')}.pdf`);
+  }
+}
+
+// ===== ACTIVITY LOG =====
+function loadActivityPage() {
+  if (!isLoggedIn()) { navigate('login'); return; }
+  const punches = DB.get('punches', []).slice().reverse().slice(0, 200);
+  const employees = DB.get('employees', []);
+  const companies = DB.get('companies', []);
+
+  const total = punches.length;
+  const ins = punches.filter(p => p.type === 'IN').length;
+  const outs = punches.filter(p => p.type === 'OUT').length;
+  const today = new Date().toLocaleDateString('en-CA');
+  const todayPunches = punches.filter(p => p.date === today).length;
+
+  document.getElementById('activityStats').innerHTML = `
+    <div class="stat-card"><div class="label">Total Punches</div><div class="value blue">${total}</div></div>
+    <div class="stat-card"><div class="label">Today</div><div class="value green">${todayPunches}</div></div>
+    <div class="stat-card"><div class="label">Clock-Ins</div><div class="value">${ins}</div></div>
+    <div class="stat-card"><div class="label">Clock-Outs</div><div class="value purple">${outs}</div></div>`;
+
+  const tbody = document.getElementById('activityBody');
+  if (!punches.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = punches.map(p => {
+    const co = companies.find(c => c.id === p.companyId);
+    return `<tr>
+      <td style="font-weight:500">${p.empName}</td>
+      <td>${co?.name||'—'}</td>
+      <td><span class="pill ${p.type.toLowerCase()}">${p.type}</span></td>
+      <td style="color:var(--text2);font-size:13px">${p.date}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px">${p.time}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== DELETE =====
+function confirmDelete(type, id, name) {
+  document.getElementById('deleteMsg').textContent = `Are you sure you want to delete "${name}"? This cannot be undone.`;
+  document.getElementById('confirmDeleteBtn').onclick = () => {
+    if (type === 'emp') {
+      DB.set('employees', DB.get('employees', []).filter(e => e.id !== id));
+      renderEmployees(); loadPunchPage();
+    } else if (type === 'company') {
+      DB.set('companies', DB.get('companies', []).filter(c => c.id !== id));
+      loadCompaniesPage(); loadCompanySwitcher();
+    }
+    closeModal('deleteModal');
+  };
+  openModal('deleteModal');
+}
+
+// ===== MODAL UTILS =====
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+function showMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+}
+
+// ===== INIT =====
+updateNav();
+loadPunchPage();
+updateDateRange();
+</script>
+</body>
+</html>
