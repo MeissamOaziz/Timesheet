@@ -461,6 +461,109 @@
   .pill.in { background: rgba(34,197,94,0.15); color: var(--green); }
   .pill.out { background: rgba(239,68,68,0.15); color: var(--red); }
   .pill.admin { background: rgba(79,142,247,0.15); color: var(--accent); }
+  /* CURRENTLY IN PANEL */
+  .currently-in {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+  .currently-in-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .currently-in-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .currently-in-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 20px;
+    padding: 2px 10px;
+  }
+  .currently-in-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+  .clocked-in-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--surface2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .clocked-in-row .ci-name { font-size: 14px; font-weight: 500; flex: 1; }
+  .clocked-in-row .ci-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--green); }
+  .clocked-in-row .ci-duration { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .ci-empty { text-align: center; color: var(--text3); font-size: 13px; padding: 16px; }
+
+  /* PIN PAD */
+  .pin-modal-body { text-align: center; }
+  .pin-modal-body .pin-emp-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .pin-modal-body .pin-action { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+  .pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .pin-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-dot.error { background: var(--red); border-color: var(--red); }
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 260px;
+    margin: 0 auto;
+  }
+  .pin-key {
+    padding: 18px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .pin-key:hover { background: var(--border); border-color: var(--accent); }
+  .pin-key:active { transform: scale(0.93); }
+  .pin-key.del { font-size: 16px; color: var(--text2); }
+  .pin-key.zero { grid-column: 2; }
+  .pin-error-msg { color: var(--red); font-size: 13px; margin-top: 14px; min-height: 20px; font-weight: 500; }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -556,10 +659,54 @@
         </select>
       </div>
       <div class="punch-btns">
-        <button class="punch-btn btn-in" onclick="punch('IN')">✓ IN</button>
-        <button class="punch-btn btn-out" onclick="punch('OUT')">✕ OUT</button>
+        <button class="punch-btn btn-in" onclick="requestPunch('IN')">✓ IN</button>
+        <button class="punch-btn btn-out" onclick="requestPunch('OUT')">✕ OUT</button>
       </div>
       <div class="punch-feedback" id="punchFeedback"></div>
+    </div>
+
+    <!-- CURRENTLY CLOCKED IN -->
+    <div class="currently-in">
+      <div class="currently-in-header">
+        <h3><span class="live-dot"></span> Currently Clocked In</h3>
+        <span class="currently-in-count" id="clockedInCount">0</span>
+      </div>
+      <div class="currently-in-list" id="clockedInList">
+        <div class="ci-empty">No one is clocked in yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN PAD MODAL -->
+<div class="modal-overlay" id="pinModal">
+  <div class="modal" style="max-width:340px">
+    <div class="pin-modal-body">
+      <div class="pin-emp-name" id="pinEmpName"></div>
+      <div class="pin-action" id="pinActionLabel"></div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key zero" onclick="pinKey('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>
+      <div class="pin-error-msg" id="pinErrorMsg"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;margin-top:16px">
+      <button class="btn-secondary" onclick="closeModal('pinModal');resetPin()">Cancel</button>
     </div>
   </div>
 </div>
@@ -649,7 +796,7 @@
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>Company</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>PIN</th><th>Company</th><th>Actions</th></tr></thead>
         <tbody id="empTableBody"></tbody>
       </table>
     </div>
@@ -787,6 +934,15 @@
       <label>Employee ID (optional)</label>
       <input type="text" id="empId" placeholder="EMP-001">
     </div>
+    <div class="form-group">
+      <label>4-Digit PIN <span style="color:var(--text3);font-weight:400">(required for clock in/out)</span></label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="password" id="empPin" placeholder="••••" maxlength="4" style="letter-spacing:6px;font-family:'DM Mono',monospace;font-size:18px;width:110px">
+        <button type="button" onclick="generatePin()" style="padding:9px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap">🎲 Random</button>
+        <span id="pinPreview" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);display:none"></span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">Must be exactly 4 digits. Keep this private — share only with the employee.</div>
+    </div>
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addEmpModal')">Cancel</button>
@@ -860,11 +1016,11 @@ function seedData() {
     const c2 = { id: uid(), name: 'Beta Industries', industry: 'Manufacturing', desc: 'Second company', created: new Date().toISOString() };
     DB.set('companies', [c1, c2]);
     const emps = [
-      { id: uid(), name: 'Alice Martin', dept: 'Engineering', companyId: c1.id, empId: 'EMP-001', active: true },
-      { id: uid(), name: 'Bob Johnson', dept: 'Sales', companyId: c1.id, empId: 'EMP-002', active: true },
-      { id: uid(), name: 'Carol White', dept: 'HR', companyId: c1.id, empId: 'EMP-003', active: true },
-      { id: uid(), name: 'Dave Lee', dept: 'Operations', companyId: c2.id, empId: 'EMP-004', active: true },
-      { id: uid(), name: 'Eva Chen', dept: 'Marketing', companyId: c2.id, empId: 'EMP-005', active: true },
+      { id: uid(), name: 'Alice Martin', dept: 'Engineering', companyId: c1.id, empId: 'EMP-001', pin: '1234', active: true },
+      { id: uid(), name: 'Bob Johnson', dept: 'Sales', companyId: c1.id, empId: 'EMP-002', pin: '2345', active: true },
+      { id: uid(), name: 'Carol White', dept: 'HR', companyId: c1.id, empId: 'EMP-003', pin: '3456', active: true },
+      { id: uid(), name: 'Dave Lee', dept: 'Operations', companyId: c2.id, empId: 'EMP-004', pin: '4567', active: true },
+      { id: uid(), name: 'Eva Chen', dept: 'Marketing', companyId: c2.id, empId: 'EMP-005', pin: '5678', active: true },
     ];
     DB.set('employees', emps);
   }
@@ -998,24 +1154,160 @@ function loadPunchPage() {
     });
     sel.appendChild(og);
   });
+  refreshClockedIn();
 }
 
-function punch(type) {
+function refreshClockedIn() {
+  const punches = DB.get('punches', []);
+  const employees = DB.get('employees', []);
+  const companies = DB.get('companies', []);
+  const today = new Date().toLocaleDateString('en-CA');
+
+  // Find who is currently clocked in (last punch today is IN)
+  const clockedIn = [];
+  employees.forEach(emp => {
+    const empPunches = punches
+      .filter(p => p.empId === emp.id && p.date === today)
+      .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    if (empPunches.length && empPunches[empPunches.length - 1].type === 'IN') {
+      const lastIn = empPunches[empPunches.length - 1];
+      const co = companies.find(c => c.id === emp.companyId);
+      clockedIn.push({ emp, lastIn, co });
+    }
+  });
+
+  const list = document.getElementById('clockedInList');
+  const countEl = document.getElementById('clockedInCount');
+  countEl.textContent = clockedIn.length;
+
+  if (!clockedIn.length) {
+    list.innerHTML = '<div class="ci-empty">No one is clocked in right now.</div>';
+    return;
+  }
+
+  list.innerHTML = clockedIn.map(({ emp, lastIn, co }) => {
+    const initials = emp.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const dur = getElapsedStr(lastIn.timestamp);
+    return `<div class="clocked-in-row">
+      <div class="avatar" style="width:30px;height:30px;font-size:11px">${initials}</div>
+      <div style="flex:1">
+        <div class="ci-name">${emp.name}</div>
+        <div class="ci-duration">${co?.name || ''}${co && emp.dept ? ' · ' : ''}${emp.dept || ''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="ci-time">↑ ${lastIn.time}</div>
+        <div class="ci-duration">${dur}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getElapsedStr(isoStr) {
+  const diff = Math.floor((Date.now() - new Date(isoStr)) / 60000);
+  if (diff < 1) return 'just now';
+  if (diff < 60) return `${diff}m`;
+  const h = Math.floor(diff / 60), m = diff % 60;
+  return `${h}h ${m}m`;
+}
+
+// Auto-refresh clocked-in list every 30s
+setInterval(() => { if (currentPage === 'punch') refreshClockedIn(); }, 30000);
+
+// ===== PIN FLOW =====
+let pinState = { empId: null, punchType: null, entered: '' };
+
+function requestPunch(type) {
   const empId = document.getElementById('empSelect').value;
   if (!empId) { showPunchFeedback('Please select your name first.', 'error'); return; }
   const employees = DB.get('employees', []);
   const emp = employees.find(e => e.id === empId);
   if (!emp) return;
 
+  if (!emp.pin) {
+    // No PIN set — admin needs to set one first
+    showPunchFeedback('⚠️ No PIN set for this employee. An admin must assign a PIN before clocking in/out.', 'error');
+    return;
+  }
+
+  pinState = { empId, punchType: type, entered: '' };
+  document.getElementById('pinEmpName').textContent = emp.name;
+  document.getElementById('pinActionLabel').textContent = `Enter PIN to clock ${type}`;
+  document.getElementById('pinActionLabel').style.color = type === 'IN' ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pinErrorMsg').textContent = '';
+  resetPinDots();
+  openModal('pinModal');
+}
+
+function pinKey(digit) {
+  if (pinState.entered.length >= 4) return;
+  pinState.entered += digit;
+  updatePinDots();
+  if (pinState.entered.length === 4) {
+    setTimeout(validatePin, 120);
+  }
+}
+
+function pinDel() {
+  pinState.entered = pinState.entered.slice(0, -1);
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    dot.classList.toggle('filled', i < pinState.entered.length);
+    dot.classList.remove('error');
+  }
+}
+
+function resetPinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    dot.classList.remove('filled', 'error');
+  }
+}
+
+function validatePin() {
+  const employees = DB.get('employees', []);
+  const emp = employees.find(e => e.id === pinState.empId);
+  if (!emp || pinState.entered !== emp.pin) {
+    // Wrong PIN — shake & reset
+    for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
+    document.getElementById('pinErrorMsg').textContent = 'Incorrect PIN. Please try again.';
+    setTimeout(() => {
+      pinState.entered = '';
+      resetPinDots();
+    }, 900);
+    return;
+  }
+  // Correct!
+  closeModal('pinModal');
+  resetPin();
+  executePunch(pinState.empId, pinState.punchType);
+}
+
+function resetPin() {
+  pinState = { empId: null, punchType: null, entered: '' };
+  resetPinDots();
+  document.getElementById('pinErrorMsg').textContent = '';
+}
+
+function executePunch(empId, type) {
+  const employees = DB.get('employees', []);
+  const emp = employees.find(e => e.id === empId);
+  if (!emp) return;
+
   const now = new Date();
   const punches = DB.get('punches', []);
+  const today = now.toLocaleDateString('en-CA');
 
   // Check for consecutive same punch type
-  const todayPunches = punches.filter(p => p.empId === empId && p.date === now.toLocaleDateString('en-CA'));
+  const todayPunches = punches.filter(p => p.empId === empId && p.date === today);
   if (todayPunches.length > 0) {
     const last = todayPunches[todayPunches.length - 1];
     if (last.type === type) {
-      showPunchFeedback(`${emp.name} already punched ${type} without a corresponding ${type === 'IN' ? 'OUT' : 'IN'}.`, 'error');
+      showPunchFeedback(`${emp.name} is already clocked ${type}. Please clock ${type === 'IN' ? 'OUT' : 'IN'} first.`, 'error');
+      document.getElementById('empSelect').value = '';
       return;
     }
   }
@@ -1026,16 +1318,17 @@ function punch(type) {
     empName: emp.name,
     companyId: emp.companyId,
     type,
-    date: now.toLocaleDateString('en-CA'),
-    time: now.toLocaleTimeString('en-US', {hour12: false}),
+    date: today,
+    time: now.toLocaleTimeString('en-US', { hour12: false }),
     timestamp: now.toISOString(),
   };
   punches.push(record);
   DB.set('punches', punches);
 
-  const timeStr = now.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
-  showPunchFeedback(`✓ ${emp.name} punched ${type} at ${timeStr}`, 'success');
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  showPunchFeedback(`✓ ${emp.name} clocked ${type} at ${timeStr}`, 'success');
   document.getElementById('empSelect').value = '';
+  refreshClockedIn();
 }
 
 function showPunchFeedback(msg, type) {
@@ -1079,16 +1372,20 @@ function renderEmployees() {
 
   const tbody = document.getElementById('empTableBody');
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px">No employees found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">No employees found.</td></tr>`;
     return;
   }
   tbody.innerHTML = filtered.map(e => {
     const co = companies.find(c => c.id === e.companyId);
     const initials = e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const pinStatus = e.pin
+      ? `<span class="pill in" title="PIN is set">🔑 Set</span>`
+      : `<span class="pill out" title="No PIN — employee cannot punch">⚠️ No PIN</span>`;
     return `<tr>
       <td><div class="emp-row"><div class="avatar">${initials}</div><div><div style="font-weight:500">${e.name}</div><div style="font-size:12px;color:var(--text2)">${e.empId||'—'}</div></div></div></td>
       <td>${e.dept||'—'}</td>
       <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
+      <td>${pinStatus}</td>
       <td>${co?.name||'—'}</td>
       <td><div style="display:flex;gap:8px">
         <button class="btn-secondary" style="padding:6px 12px;font-size:12px" onclick="editEmployee('${e.id}')">Edit</button>
@@ -1119,6 +1416,8 @@ function openAddEmpModal() {
   document.getElementById('empName').value = '';
   document.getElementById('empDept').value = '';
   document.getElementById('empId').value = '';
+  document.getElementById('empPin').value = '';
+  document.getElementById('pinPreview').style.display = 'none';
   document.getElementById('editEmpUid').value = '';
   document.getElementById('empModalMsg').innerHTML = '';
   const companies = DB.get('companies', []);
@@ -1134,12 +1433,23 @@ function editEmployee(id) {
   document.getElementById('empName').value = emp.name;
   document.getElementById('empDept').value = emp.dept || '';
   document.getElementById('empId').value = emp.empId || '';
+  document.getElementById('empPin').value = emp.pin || '';
+  const prev = document.getElementById('pinPreview');
+  prev.style.display = 'none';
   document.getElementById('editEmpUid').value = emp.id;
-  document.getElementById('empModalMsg').innerHTML = '';
+  document.getElementById('empModalMsg').innerHTML = emp.pin ? '' : '<div class="msg info">⚠️ This employee has no PIN yet. Set one so they can clock in/out.</div>';
   const companies = DB.get('companies', []);
   const sel = document.getElementById('empCompany');
   sel.innerHTML = companies.map(c => `<option value="${c.id}" ${c.id===emp.companyId?'selected':''}>${c.name}</option>`).join('');
   openModal('addEmpModal');
+}
+
+function generatePin() {
+  const pin = Math.floor(1000 + Math.random() * 9000).toString();
+  document.getElementById('empPin').value = pin;
+  const prev = document.getElementById('pinPreview');
+  prev.textContent = `PIN: ${pin}`;
+  prev.style.display = '';
 }
 
 function saveEmployee() {
@@ -1147,14 +1457,17 @@ function saveEmployee() {
   const dept = document.getElementById('empDept').value.trim();
   const empId = document.getElementById('empId').value.trim();
   const companyId = document.getElementById('empCompany').value;
+  const pin = document.getElementById('empPin').value.trim();
   const editId = document.getElementById('editEmpUid').value;
   if (!name) { showMsg('empModalMsg', 'Name is required.', 'error'); return; }
   if (!companyId) { showMsg('empModalMsg', 'Please select a company.', 'error'); return; }
+  if (pin && (!/^\d{4}$/.test(pin))) { showMsg('empModalMsg', 'PIN must be exactly 4 digits.', 'error'); return; }
   let employees = DB.get('employees', []);
   if (editId) {
-    employees = employees.map(e => e.id === editId ? { ...e, name, dept, empId, companyId } : e);
+    employees = employees.map(e => e.id === editId ? { ...e, name, dept, empId, companyId, ...(pin ? { pin } : {}) } : e);
   } else {
-    employees.push({ id: uid(), name, dept, empId, companyId, active: true, created: new Date().toISOString() });
+    if (!pin) { showMsg('empModalMsg', 'A 4-digit PIN is required for new employees.', 'error'); return; }
+    employees.push({ id: uid(), name, dept, empId, companyId, pin, active: true, created: new Date().toISOString() });
   }
   DB.set('employees', employees);
   closeModal('addEmpModal');
