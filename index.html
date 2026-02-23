@@ -901,8 +901,9 @@
   <div class="page-header">
     <div>
       <h1>Activity Log</h1>
-      <p>Real-time punch records</p>
+      <p>Real-time punch records — showing most recent 200</p>
     </div>
+    <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:13px">↻ Refresh</button>
   </div>
   <div class="stats-grid" id="activityStats"></div>
   <div class="table-wrap">
@@ -1159,25 +1160,28 @@ function loadPunchPage() {
 
 function refreshClockedIn() {
   const punches = DB.get('punches', []);
-  const employees = DB.get('employees', []);
+  const employees = DB.get('employees', []).filter(e => e.active);
   const companies = DB.get('companies', []);
   const today = new Date().toLocaleDateString('en-CA');
 
-  // Find who is currently clocked in (last punch today is IN)
+  // For each employee, find their last punch of today — if it's IN, they're clocked in
   const clockedIn = [];
   employees.forEach(emp => {
     const empPunches = punches
       .filter(p => p.empId === emp.id && p.date === today)
-      .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-    if (empPunches.length && empPunches[empPunches.length - 1].type === 'IN') {
-      const lastIn = empPunches[empPunches.length - 1];
-      const co = companies.find(c => c.id === emp.companyId);
-      clockedIn.push({ emp, lastIn, co });
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    if (empPunches.length > 0) {
+      const last = empPunches[empPunches.length - 1];
+      if (last.type === 'IN') {
+        const co = companies.find(c => c.id === emp.companyId);
+        clockedIn.push({ emp, lastIn: last, co });
+      }
     }
   });
 
   const list = document.getElementById('clockedInList');
   const countEl = document.getElementById('clockedInCount');
+  if (!list || !countEl) return;
   countEl.textContent = clockedIn.length;
 
   if (!clockedIn.length) {
@@ -1185,16 +1189,20 @@ function refreshClockedIn() {
     return;
   }
 
+  // Sort by punch-in time (earliest first)
+  clockedIn.sort((a, b) => new Date(a.lastIn.timestamp) - new Date(b.lastIn.timestamp));
+
   list.innerHTML = clockedIn.map(({ emp, lastIn, co }) => {
     const initials = emp.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     const dur = getElapsedStr(lastIn.timestamp);
+    const deptLine = [co?.name, emp.dept].filter(Boolean).join(' · ');
     return `<div class="clocked-in-row">
-      <div class="avatar" style="width:30px;height:30px;font-size:11px">${initials}</div>
-      <div style="flex:1">
+      <div class="avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0">${initials}</div>
+      <div style="flex:1;min-width:0">
         <div class="ci-name">${emp.name}</div>
-        <div class="ci-duration">${co?.name || ''}${co && emp.dept ? ' · ' : ''}${emp.dept || ''}</div>
+        ${deptLine ? `<div class="ci-duration">${deptLine}</div>` : ''}
       </div>
-      <div style="text-align:right">
+      <div style="text-align:right;flex-shrink:0">
         <div class="ci-time">↑ ${lastIn.time}</div>
         <div class="ci-duration">${dur}</div>
       </div>
@@ -1271,19 +1279,17 @@ function validatePin() {
   const employees = DB.get('employees', []);
   const emp = employees.find(e => e.id === pinState.empId);
   if (!emp || pinState.entered !== emp.pin) {
-    // Wrong PIN — shake & reset
     for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
     document.getElementById('pinErrorMsg').textContent = 'Incorrect PIN. Please try again.';
-    setTimeout(() => {
-      pinState.entered = '';
-      resetPinDots();
-    }, 900);
+    setTimeout(() => { pinState.entered = ''; resetPinDots(); }, 900);
     return;
   }
-  // Correct!
+  // Correct! Capture values BEFORE resetPin() clears pinState
+  const empId = pinState.empId;
+  const punchType = pinState.punchType;
   closeModal('pinModal');
   resetPin();
-  executePunch(pinState.empId, pinState.punchType);
+  executePunch(empId, punchType);
 }
 
 function resetPin() {
@@ -1721,34 +1727,44 @@ function exportReport(fmt) {
 // ===== ACTIVITY LOG =====
 function loadActivityPage() {
   if (!isLoggedIn()) { navigate('login'); return; }
-  const punches = DB.get('punches', []).slice().reverse().slice(0, 200);
+  const allPunches = DB.get('punches', []);
+  const punches = allPunches.slice().reverse().slice(0, 200);
   const employees = DB.get('employees', []);
   const companies = DB.get('companies', []);
 
-  const total = punches.length;
-  const ins = punches.filter(p => p.type === 'IN').length;
-  const outs = punches.filter(p => p.type === 'OUT').length;
+  const total = allPunches.length;
+  const ins = allPunches.filter(p => p.type === 'IN').length;
+  const outs = allPunches.filter(p => p.type === 'OUT').length;
   const today = new Date().toLocaleDateString('en-CA');
-  const todayPunches = punches.filter(p => p.date === today).length;
+  const todayPunches = allPunches.filter(p => p.date === today).length;
+  const currentlyIn = (() => {
+    const emp_ids = [...new Set(allPunches.map(p => p.empId))];
+    return emp_ids.filter(id => {
+      const ep = allPunches.filter(p => p.empId === id && p.date === today)
+        .sort((a,b) => new Date(a.timestamp)-new Date(b.timestamp));
+      return ep.length && ep[ep.length-1].type === 'IN';
+    }).length;
+  })();
 
   document.getElementById('activityStats').innerHTML = `
-    <div class="stat-card"><div class="label">Total Punches</div><div class="value blue">${total}</div></div>
-    <div class="stat-card"><div class="label">Today</div><div class="value green">${todayPunches}</div></div>
-    <div class="stat-card"><div class="label">Clock-Ins</div><div class="value">${ins}</div></div>
-    <div class="stat-card"><div class="label">Clock-Outs</div><div class="value purple">${outs}</div></div>`;
+    <div class="stat-card"><div class="label">Total Records</div><div class="value blue">${total}</div></div>
+    <div class="stat-card"><div class="label">Today's Punches</div><div class="value green">${todayPunches}</div></div>
+    <div class="stat-card"><div class="label">Currently In</div><div class="value" style="color:#a78bfa">${currentlyIn}</div></div>
+    <div class="stat-card"><div class="label">Clocked Out Today</div><div class="value">${outs}</div></div>`;
 
   const tbody = document.getElementById('activityBody');
   if (!punches.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet. Clock in/out on the main page to see records here.</td></tr>`;
     return;
   }
   tbody.innerHTML = punches.map(p => {
     const co = companies.find(c => c.id === p.companyId);
+    const emp = employees.find(e => e.id === p.empId);
     return `<tr>
-      <td style="font-weight:500">${p.empName}</td>
+      <td style="font-weight:500">${p.empName}${emp?.empId ? `<span style="color:var(--text3);font-size:12px;margin-left:6px">${emp.empId}</span>` : ''}</td>
       <td>${co?.name||'—'}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type}</span></td>
-      <td style="color:var(--text2);font-size:13px">${p.date}</td>
+      <td style="color:var(--text2);font-size:13px;font-family:'DM Mono',monospace">${p.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:13px">${p.time}</td>
     </tr>`;
   }).join('');
