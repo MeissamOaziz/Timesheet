@@ -167,18 +167,18 @@
   .punch-btns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 28px;
   }
   .punch-btn {
-    padding: 22px;
+    padding: 30px 16px;
     border: none;
-    border-radius: var(--radius);
+    border-radius: 18px;
     font-family: inherit;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.15s;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     position: relative;
     overflow: hidden;
   }
@@ -1627,80 +1627,133 @@ function generateReport() {
   const employees = DB.get('employees', []);
   const companies = DB.get('companies', []);
 
-  // Build sessions (pair IN/OUT)
-  const rows = [];
+  // Build sessions per employee (pair IN/OUT)
+  const allRows = [];
   selectedEmps.forEach(empId => {
     const emp = employees.find(e => e.id === empId);
     if (!emp) return;
     const co = companies.find(c => c.id === emp.companyId);
-    const empPunches = punches.filter(p => p.empId === empId && p.date >= start && p.date <= end).sort((a,b) => a.timestamp.localeCompare(b.timestamp));
+    const empPunches = punches
+      .filter(p => p.empId === empId && p.date >= start && p.date <= end)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
+    const empRows = [];
     let i = 0;
     while (i < empPunches.length) {
       const p = empPunches[i];
       if (p.type === 'IN') {
-        const out = empPunches[i+1]?.type === 'OUT' ? empPunches[i+1] : null;
-        let hours = '—';
+        const out = empPunches[i + 1]?.type === 'OUT' ? empPunches[i + 1] : null;
+        let hours = null;
         if (out) {
-          const diff = (new Date(out.timestamp) - new Date(p.timestamp)) / 3600000;
-          hours = diff.toFixed(2);
+          hours = (new Date(out.timestamp) - new Date(p.timestamp)) / 3600000;
           i += 2;
         } else { i++; }
-        rows.push({ empName: emp.name, empId: emp.empId||'', company: co?.name||'—', dept: emp.dept||'—', date: p.date, punchIn: p.time, punchOut: out?.time||'—', hours });
+        empRows.push({
+          empName: emp.name, empId: emp.empId || '', company: co?.name || '—',
+          dept: emp.dept || '—', date: p.date, punchIn: p.time,
+          punchOut: out?.time || '—', hours,
+          isSubtotal: false
+        });
       } else { i++; }
+    }
+
+    if (empRows.length > 0) {
+      allRows.push(...empRows);
+      // Per-employee subtotal row
+      const empTotal = empRows.reduce((s, r) => s + (r.hours ?? 0), 0);
+      allRows.push({
+        empName: emp.name, empId: emp.empId || '', company: co?.name || '—',
+        dept: emp.dept || '—', date: '', punchIn: '', punchOut: '',
+        hours: empTotal, isSubtotal: true,
+        subtotalLabel: `${emp.name} — Total`
+      });
     }
   });
 
-  reportData = rows;
+  reportData = allRows;
 
-  // Stats
-  const totalH = rows.filter(r => r.hours !== '—').reduce((s,r) => s + parseFloat(r.hours), 0);
+  // Summary stats (only data rows)
+  const dataRows = allRows.filter(r => !r.isSubtotal);
+  const totalH = allRows.filter(r => r.isSubtotal).reduce((s, r) => s + (r.hours ?? 0), 0);
   const statsEl = document.getElementById('reportStats');
   statsEl.style.display = 'grid';
   statsEl.innerHTML = `
-    <div class="stat-card"><div class="label">Total Records</div><div class="value blue">${rows.length}</div></div>
-    <div class="stat-card"><div class="label">Total Hours</div><div class="value green">${totalH.toFixed(1)}</div></div>
+    <div class="stat-card"><div class="label">Total Sessions</div><div class="value blue">${dataRows.length}</div></div>
+    <div class="stat-card"><div class="label">Total Hours</div><div class="value green">${totalH.toFixed(2)}</div></div>
     <div class="stat-card"><div class="label">Employees</div><div class="value purple">${selectedEmps.length}</div></div>
-    <div class="stat-card"><div class="label">Avg Hours/Record</div><div class="value">${rows.length?((totalH/rows.filter(r=>r.hours!=='—').length)||0).toFixed(1):'0'}</div></div>`;
+    <div class="stat-card"><div class="label">Avg Hrs / Session</div><div class="value">${dataRows.length ? (totalH / dataRows.filter(r => r.hours !== null).length || 0).toFixed(2) : '0'}</div></div>`;
 
-  if (!rows.length) {
+  if (!dataRows.length) {
     document.getElementById('reportTableWrap').style.display = 'none';
     document.getElementById('reportEmpty').style.display = '';
     return;
   }
   document.getElementById('reportEmpty').style.display = 'none';
   document.getElementById('reportTableWrap').style.display = '';
-  document.getElementById('reportTableBody').innerHTML = rows.map(r => `<tr>
-    <td><span style="font-weight:500">${r.empName}</span><span style="color:var(--text2);font-size:12px;margin-left:8px">${r.empId}</span></td>
-    <td>${r.company}</td>
-    <td style="font-family:'DM Mono',monospace;font-size:13px">${r.date}</td>
-    <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)">${r.punchIn}</td>
-    <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)">${r.punchOut}</td>
-    <td style="font-family:'DM Mono',monospace;font-weight:600">${r.hours !== '—' ? r.hours+'h' : '—'}</td>
-  </tr>`).join('');
+
+  document.getElementById('reportTableBody').innerHTML = allRows.map(r => {
+    if (r.isSubtotal) {
+      return `<tr style="background:rgba(79,142,247,0.06);border-top:2px solid var(--border)">
+        <td colspan="3" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 16px">
+          📊 ${r.subtotalLabel}
+        </td>
+        <td style="color:var(--text2);font-size:12px;font-style:italic"></td>
+        <td style="color:var(--text2);font-size:12px;font-style:italic"></td>
+        <td style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--accent)">${r.hours.toFixed(2)}h</td>
+      </tr>`;
+    }
+    const hoursDisplay = r.hours !== null ? r.hours.toFixed(2) + 'h' : '<span style="color:var(--text3)">Still in</span>';
+    return `<tr>
+      <td><span style="font-weight:500">${r.empName}</span>${r.empId ? `<span style="color:var(--text2);font-size:12px;margin-left:8px">${r.empId}</span>` : ''}</td>
+      <td>${r.company}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text2)">${r.date}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)">${r.punchIn}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)">${r.punchOut !== '—' ? r.punchOut : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${hoursDisplay}</td>
+    </tr>`;
+  }).join('');
 }
 
 function exportReport(fmt) {
   if (!reportData.length) { alert('Generate a report first.'); return; }
   const headers = ['Employee', 'Employee ID', 'Company', 'Department', 'Date', 'Punch In', 'Punch Out', 'Hours'];
-  const rows = reportData.map(r => [r.empName, r.empId, r.company, r.dept, r.date, r.punchIn, r.punchOut, r.hours]);
 
-  if (fmt === 'excel' || fmt === 'csv') {
-    const data = [headers, ...rows];
-    if (fmt === 'excel') {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = headers.map(() => ({ wch: 16 }));
-      XLSX.utils.book_append_sheet(wb, ws, 'Time Report');
-      XLSX.writeFile(wb, `time-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
-    } else {
-      const csv = data.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `time-report-${new Date().toLocaleDateString('en-CA')}.csv`;
-      a.click();
+  // Build flat rows: data rows + subtotal rows (clearly marked)
+  const rows = reportData.map(r => {
+    if (r.isSubtotal) {
+      return [r.subtotalLabel, '', '', '', '', '', 'TOTAL', r.hours.toFixed(2)];
     }
+    return [r.empName, r.empId, r.company, r.dept, r.date, r.punchIn, r.punchOut,
+      r.hours !== null ? r.hours.toFixed(2) : 'Still In'];
+  });
+
+  if (fmt === 'excel') {
+    const wb = XLSX.utils.book_new();
+    const data = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = headers.map((h, i) => ({ wch: i === 0 ? 22 : 14 }));
+    // Style subtotal rows bold (row indices where isSubtotal is true)
+    reportData.forEach((r, idx) => {
+      if (r.isSubtotal) {
+        const rowNum = idx + 2; // 1-indexed + header
+        ['A','B','C','D','E','F','G','H'].forEach(col => {
+          const cell = ws[col + rowNum];
+          if (cell) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'EEF2FF' } } };
+        });
+      }
+    });
+    XLSX.utils.book_append_sheet(wb, ws, 'Time Report');
+    XLSX.writeFile(wb, `time-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
+
+  } else if (fmt === 'csv') {
+    const data = [headers, ...rows];
+    const csv = data.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `time-report-${new Date().toLocaleDateString('en-CA')}.csv`;
+    a.click();
+
   } else if (fmt === 'pdf') {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape' });
@@ -1710,15 +1763,33 @@ function exportReport(fmt) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(120);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 23);
+    const period = document.getElementById('reportStart').value + ' → ' + document.getElementById('reportEnd').value;
+    doc.text(`Period: ${period}   |   Generated: ${new Date().toLocaleString()}`, 14, 23);
     doc.setTextColor(0);
+
+    const pdfBody = reportData.map(r => {
+      if (r.isSubtotal) {
+        return [{ content: r.subtotalLabel, colSpan: 5, styles: { fontStyle: 'bold', fillColor: [238, 242, 255], textColor: [60, 80, 200] } },
+                { content: '', styles: { fillColor: [238, 242, 255] } },
+                { content: r.hours.toFixed(2) + 'h', styles: { fontStyle: 'bold', fillColor: [238, 242, 255], textColor: [60, 80, 200] } }];
+      }
+      return [r.empName + (r.empId ? ` (${r.empId})` : ''), r.company, r.date, r.punchIn,
+              r.punchOut !== '—' ? r.punchOut : '—',
+              r.hours !== null ? r.hours.toFixed(2) + 'h' : 'Still In'];
+    });
+
     doc.autoTable({
-      head: [headers],
-      body: rows,
+      head: [['Employee', 'Company', 'Date', 'Punch In', 'Punch Out', 'Hours']],
+      body: pdfBody,
       startY: 28,
       styles: { fontSize: 9, cellPadding: 4 },
       headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [245, 245, 250] },
+      didParseCell: (data) => {
+        if (reportData[data.row.index]?.isSubtotal) {
+          data.cell.styles.alternateRowStyles = {};
+        }
+      }
     });
     doc.save(`time-report-${new Date().toLocaleDateString('en-CA')}.pdf`);
   }
