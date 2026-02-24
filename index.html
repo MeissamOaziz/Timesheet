@@ -10,635 +10,203 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #222535;
-    --border: #2e3347;
-    --accent: #4f8ef7;
-    --accent2: #7c5cbf;
-    --green: #22c55e;
-    --red: #ef4444;
-    --text: #e8eaf0;
-    --text2: #8b92a8;
-    --text3: #555e7a;
-    --radius: 14px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;
+    --accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;
+    --text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;
+    --radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);
   }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 15px;
-  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+  /* LOADING */
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;}
+  .loading-overlay.hidden{display:none;}
+  .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-overlay p{color:var(--text2);font-size:14px;}
+
   /* NAV */
-  .nav {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 60px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .nav-logo {
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--accent);
-    letter-spacing: -0.5px;
-    margin-right: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .nav-logo svg { width: 22px; height: 22px; }
-  .nav-links { display: flex; gap: 4px; flex: 1; }
-  .nav-btn {
-    background: none;
-    border: none;
-    color: var(--text2);
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.15s;
-  }
-  .nav-btn:hover { background: var(--surface2); color: var(--text); }
-  .nav-btn.active { background: rgba(79,142,247,0.15); color: var(--accent); }
-  .nav-right { display: flex; gap: 8px; align-items: center; }
-  .badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-weight: 600;
-    background: rgba(79,142,247,0.2);
-    color: var(--accent);
-  }
-  .company-select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    outline: none;
-  }
+  .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:8px;height:60px;position:sticky;top:0;z-index:100;}
+  .nav-logo{font-weight:700;font-size:18px;color:var(--accent);letter-spacing:-0.5px;margin-right:16px;display:flex;align-items:center;gap:8px;}
+  .nav-logo svg{width:22px;height:22px;}
+  .nav-links{display:flex;gap:4px;flex:1;}
+  .nav-btn{background:none;border:none;color:var(--text2);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;transition:all 0.15s;}
+  .nav-btn:hover{background:var(--surface2);color:var(--text);}
+  .nav-btn.active{background:rgba(79,142,247,0.15);color:var(--accent);}
+  .nav-right{display:flex;gap:8px;align-items:center;}
+  .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:rgba(79,142,247,0.2);color:var(--accent);}
+
   /* PAGES */
-  .page { display: none; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
-  .page.active { display: block; }
-  /* PUNCH PAGE */
-  .punch-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 130px);
-    gap: 32px;
-  }
-  .clock-display {
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  .clock-time {
-    font-size: 72px;
-    font-weight: 300;
-    font-family: 'DM Mono', monospace;
-    color: var(--text);
-    letter-spacing: -2px;
-    line-height: 1;
-  }
-  .clock-date {
-    color: var(--text2);
-    font-size: 16px;
-    margin-top: 8px;
-  }
-  .punch-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px;
-    width: 100%;
-    max-width: 480px;
-    box-shadow: var(--shadow);
-  }
-  .punch-card h2 {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    color: var(--text);
-    text-align: center;
-  }
-  .select-wrap {
-    position: relative;
-    margin-bottom: 28px;
-  }
-  .select-wrap select {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 16px;
-    outline: none;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-  .select-wrap select:focus { border-color: var(--accent); }
-  .select-wrap::after {
-    content: '▾';
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text2);
-    pointer-events: none;
-  }
-  .punch-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    padding: 0 8px;
-  }
-  .punch-btn {
-    padding: 34px 16px;
-    border: none;
-    border-radius: 20px;
-    font-family: inherit;
-    font-size: 26px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 3px;
-    position: relative;
-    overflow: hidden;
-  }
-  .punch-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0);
-    transition: background 0.15s;
-  }
-  .punch-btn:hover::before { background: rgba(255,255,255,0.08); }
-  .punch-btn:active { transform: scale(0.97); }
-  .btn-in { background: var(--green); color: #fff; }
-  .btn-out { background: var(--red); color: #fff; }
-  .punch-feedback {
-    text-align: center;
-    padding: 14px;
-    border-radius: 10px;
-    font-weight: 500;
-    font-size: 15px;
-    display: none;
-  }
-  .punch-feedback.show { display: block; }
-  .punch-feedback.success { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
-  .punch-feedback.error { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
-  /* FORMS */
-  .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 36px;
-    max-width: 480px;
-    margin: 0 auto;
-    box-shadow: var(--shadow);
-  }
-  .form-card h2 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
-  .form-card p { color: var(--text2); margin-bottom: 28px; font-size: 14px; }
-  .form-group { margin-bottom: 18px; }
-  .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
-  .form-group input, .form-group select {
-    width: 100%;
-    padding: 11px 14px;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: inherit;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
-  .btn-primary {
-    width: 100%;
-    padding: 12px;
-    background: var(--accent);
-    border: none;
-    border-radius: 10px;
-    color: #fff;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    margin-top: 8px;
-  }
-  .btn-primary:hover { opacity: 0.88; }
-  .btn-secondary {
-    padding: 9px 18px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-danger {
-    padding: 9px 18px;
-    background: rgba(239,68,68,0.12);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: 9px;
-    color: var(--red);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-danger:hover { background: rgba(239,68,68,0.25); }
-  .link-btn {
-    background: none;
-    border: none;
-    color: var(--accent);
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-    text-decoration: underline;
-  }
-  .msg { padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
-  .msg.success { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
-  .msg.error { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
-  .msg.info { background: rgba(79,142,247,0.12); color: var(--accent); border: 1px solid rgba(79,142,247,0.25); }
-  /* PAGE HEADER */
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .page-header h1 { font-size: 26px; font-weight: 700; }
-  .page-header p { color: var(--text2); font-size: 14px; margin-top: 4px; }
-  /* TABLE */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    background: var(--surface2);
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border);
-  }
-  td { padding: 13px 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-  /* STAT CARDS */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-  .stat-card .label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat-card .value { font-size: 32px; font-weight: 700; margin-top: 6px; font-family: 'DM Mono', monospace; }
-  .stat-card .value.green { color: var(--green); }
-  .stat-card .value.blue { color: var(--accent); }
-  .stat-card .value.purple { color: #a78bfa; }
-  /* TABS */
-  .tabs { display: flex; gap: 4px; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 24px; width: fit-content; }
-  .tab {
-    padding: 8px 18px;
-    border: none;
-    border-radius: 8px;
-    background: none;
-    color: var(--text2);
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-  /* MODAL */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    display: none;
-    backdrop-filter: blur(4px);
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    width: 100%;
-    max-width: 440px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
-  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
-  /* REPORT FILTERS */
-  .filter-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 14px;
-    align-items: end;
-  }
-  .filter-bar label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
-  .filter-bar input, .filter-bar select {
-    width: 100%;
-    padding: 9px 12px;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: 9px;
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-  }
-  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
-  /* EMPLOYEES CHECKBOXES */
-  .emp-list-check {
-    max-height: 220px;
-    overflow-y: auto;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px;
-  }
-  .emp-check-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: background 0.1s;
-    font-size: 14px;
-  }
-  .emp-check-item:hover { background: rgba(255,255,255,0.04); }
-  .emp-check-item input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
-  .select-all-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    padding: 0 2px;
-  }
-  .select-all-row button {
-    background: none;
-    border: none;
-    color: var(--accent);
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    padding: 0;
-  }
-  /* EXPORT BTNS */
-  .export-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn-export {
-    padding: 9px 16px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: var(--surface2);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-export:hover { border-color: var(--accent); color: var(--accent); }
-  /* STATUS PILL */
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .pill.in { background: rgba(34,197,94,0.15); color: var(--green); }
-  .pill.out { background: rgba(239,68,68,0.15); color: var(--red); }
-  .pill.admin { background: rgba(79,142,247,0.15); color: var(--accent); }
-  /* CURRENTLY IN PANEL */
-  .currently-in {
-    width: 100%;
-    max-width: 480px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: var(--shadow);
-  }
-  .currently-in-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .currently-in-header h3 {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text2);
-    display: flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .live-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 6px var(--green);
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .currently-in-count {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--green);
-    background: rgba(34,197,94,0.12);
-    border: 1px solid rgba(34,197,94,0.25);
-    border-radius: 20px;
-    padding: 2px 10px;
-  }
-  .currently-in-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
-  .clocked-in-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    background: var(--surface2);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-  }
-  .clocked-in-row .ci-name { font-size: 14px; font-weight: 500; flex: 1; }
-  .clocked-in-row .ci-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--green); }
-  .clocked-in-row .ci-duration { font-size: 11px; color: var(--text3); margin-top: 1px; }
-  .ci-empty { text-align: center; color: var(--text3); font-size: 13px; padding: 16px; }
+  .page{display:none;padding:32px 24px;max-width:1100px;margin:0 auto;}
+  .page.active{display:block;}
+
+  /* PUNCH */
+  .punch-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 130px);gap:32px;}
+  .clock-display{text-align:center;margin-bottom:8px;}
+  .clock-time{font-size:72px;font-weight:300;font-family:'DM Mono',monospace;color:var(--text);letter-spacing:-2px;line-height:1;}
+  .clock-date{color:var(--text2);font-size:16px;margin-top:8px;}
+  .punch-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:480px;box-shadow:var(--shadow);}
+  .punch-card h2{font-size:22px;font-weight:600;margin-bottom:24px;text-align:center;}
+  .select-wrap{position:relative;margin-bottom:28px;}
+  .select-wrap select{width:100%;padding:14px 16px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:inherit;font-size:16px;outline:none;appearance:none;cursor:pointer;transition:border-color 0.15s;}
+  .select-wrap select:focus{border-color:var(--accent);}
+  .select-wrap::after{content:'▾';position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--text2);pointer-events:none;}
+  .punch-btns{display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:0 8px;}
+  .punch-btn{padding:34px 16px;border:none;border-radius:20px;font-family:inherit;font-size:26px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:3px;position:relative;overflow:hidden;}
+  .punch-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background 0.15s;}
+  .punch-btn:hover::before{background:rgba(255,255,255,0.08);}
+  .punch-btn:active{transform:scale(0.97);}
+  .btn-in{background:var(--green);color:#fff;}
+  .btn-out{background:var(--red);color:#fff;}
+  .punch-feedback{text-align:center;padding:14px;border-radius:10px;font-weight:500;font-size:15px;display:none;margin-top:16px;}
+  .punch-feedback.show{display:block;}
+  .punch-feedback.success{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+  .punch-feedback.error{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+
+  /* CURRENTLY IN */
+  .currently-in{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow);}
+  .currently-in-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .currently-in-header h3{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text2);display:flex;align-items:center;gap:7px;}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .currently-in-count{font-size:12px;font-weight:600;color:var(--green);background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);border-radius:20px;padding:2px 10px;}
+  .currently-in-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;}
+  .clocked-in-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+  .ci-name{font-size:14px;font-weight:500;flex:1;}
+  .ci-time{font-family:'DM Mono',monospace;font-size:12px;color:var(--green);}
+  .ci-duration{font-size:11px;color:var(--text3);margin-top:1px;}
+  .ci-empty{text-align:center;color:var(--text3);font-size:13px;padding:16px;}
 
   /* PIN PAD */
-  .pin-modal-body { text-align: center; }
-  .pin-modal-body .pin-emp-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-  .pin-modal-body .pin-action { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
-  .pin-dots {
-    display: flex;
-    justify-content: center;
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-  .pin-dot {
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: transparent;
-    transition: all 0.15s;
-  }
-  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
-  .pin-dot.error { background: var(--red); border-color: var(--red); }
-  .pin-pad {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    max-width: 260px;
-    margin: 0 auto;
-  }
-  .pin-key {
-    padding: 18px;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.1s;
-    user-select: none;
-  }
-  .pin-key:hover { background: var(--border); border-color: var(--accent); }
-  .pin-key:active { transform: scale(0.93); }
-  .pin-key.del { font-size: 16px; color: var(--text2); }
-  .pin-key.zero { grid-column: 2; }
-  .pin-error-msg { color: var(--red); font-size: 13px; margin-top: 14px; min-height: 20px; font-weight: 500; }
+  .pin-modal-body{text-align:center;}
+  .pin-emp-name{font-size:20px;font-weight:600;margin-bottom:4px;}
+  .pin-action{font-size:14px;color:var(--text2);margin-bottom:20px;}
+  .pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:24px;}
+  .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all 0.15s;}
+  .pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+  .pin-dot.error{background:var(--red);border-color:var(--red);}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto;}
+  .pin-key{padding:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;font-family:'DM Mono',monospace;font-size:22px;font-weight:600;color:var(--text);cursor:pointer;transition:all 0.1s;user-select:none;}
+  .pin-key:hover{background:var(--border);border-color:var(--accent);}
+  .pin-key:active{transform:scale(0.93);}
+  .pin-key.del{font-size:16px;color:var(--text2);}
+  .pin-key.zero{grid-column:2;}
+  .pin-error-msg{color:var(--red);font-size:13px;margin-top:14px;min-height:20px;font-weight:500;}
 
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  /* RESPONSIVE */
-  @media (max-width: 600px) {
-    .clock-time { font-size: 48px; }
-    .punch-card { padding: 24px; }
-    .page { padding: 20px 16px; }
-  }
-  /* COMPANY CARDS */
-  .company-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-  .company-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
-    cursor: pointer;
-    transition: all 0.15s;
-    position: relative;
-  }
-  .company-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .company-card.selected { border-color: var(--accent); background: rgba(79,142,247,0.07); }
-  .company-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .company-card .meta { font-size: 12px; color: var(--text2); }
-  .company-card .actions { display: flex; gap: 8px; margin-top: 14px; }
-  /* DIVIDER */
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-  /* AVATAR */
-  .avatar {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 13px; color: #fff;
-    flex-shrink: 0;
-  }
-  .emp-row { display: flex; align-items: center; gap: 12px; }
-  /* EMPTY STATE */
-  .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
-  .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
-  .empty p { font-size: 15px; }
-  /* CODE DISPLAY */
-  .code-display {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 32px;
-    font-weight: 600;
-    letter-spacing: 8px;
-    color: var(--accent);
-    margin: 16px 0;
-  }
+  /* FORMS */
+  .form-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px;max-width:480px;margin:0 auto;box-shadow:var(--shadow);}
+  .form-card h2{font-size:22px;font-weight:600;margin-bottom:8px;}
+  .form-card>p{color:var(--text2);margin-bottom:28px;font-size:14px;}
+  .form-group{margin-bottom:18px;}
+  .form-group label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px;}
+  .form-group input,.form-group select{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color 0.15s;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+  .btn-primary{width:100%;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:opacity 0.15s;margin-top:8px;}
+  .btn-primary:hover{opacity:0.88;}
+  .btn-secondary{padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-danger{padding:9px 18px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:9px;color:var(--red);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+  .btn-danger:hover{background:rgba(239,68,68,0.25);}
+  .link-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-family:inherit;font-size:14px;text-decoration:underline;}
+  .msg{padding:12px 14px;border-radius:10px;margin-bottom:16px;font-size:14px;}
+  .msg.success{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+  .msg.error{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+  .msg.info{background:rgba(79,142,247,0.12);color:var(--accent);border:1px solid rgba(79,142,247,0.25);}
+
+  /* PAGE HEADER */
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+  .page-header h1{font-size:26px;font-weight:700;}
+  .page-header p{color:var(--text2);font-size:14px;margin-top:4px;}
+
+  /* TABLE */
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:var(--surface2);padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);}
+  td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+  .stat-card .label{font-size:12px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+  .stat-card .value{font-size:32px;font-weight:700;margin-top:6px;font-family:'DM Mono',monospace;}
+  .stat-card .value.green{color:var(--green);}
+  .stat-card .value.blue{color:var(--accent);}
+  .stat-card .value.purple{color:#a78bfa;}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px;width:fit-content;}
+  .tab{padding:8px 18px;border:none;border-radius:8px;background:none;color:var(--text2);font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+  .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .modal h3{font-size:18px;font-weight:600;margin-bottom:20px;}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+
+  /* REPORTS */
+  .filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;align-items:end;}
+  .filter-bar label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px;}
+  .filter-bar input,.filter-bar select{width:100%;padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none;}
+  .filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent);}
+  .emp-list-check{max-height:220px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px;}
+  .emp-check-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background 0.1s;font-size:14px;}
+  .emp-check-item:hover{background:rgba(255,255,255,0.04);}
+  .emp-check-item input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;}
+  .select-all-row{display:flex;gap:8px;margin-bottom:8px;padding:0 2px;}
+  .select-all-row button{background:none;border:none;color:var(--accent);font-family:inherit;font-size:12px;cursor:pointer;padding:0;}
+  .export-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-export{padding:9px 16px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+  .btn-export:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* PILLS */
+  .pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  .pill.in{background:rgba(34,197,94,0.15);color:var(--green);}
+  .pill.out{background:rgba(239,68,68,0.15);color:var(--red);}
+  .pill.admin{background:rgba(79,142,247,0.15);color:var(--accent);}
+
+  /* MISC */
+  .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;}
+  .emp-row{display:flex;align-items:center;gap:12px;}
+  .empty{text-align:center;padding:60px 20px;color:var(--text3);}
+  .empty p{font-size:15px;}
+  .code-display{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;font-family:'DM Mono',monospace;font-size:32px;font-weight:600;letter-spacing:8px;color:var(--accent);margin:16px 0;}
+  .company-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+  .company-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;transition:all 0.15s;}
+  .company-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .company-card h3{font-size:16px;font-weight:600;margin-bottom:4px;}
+  .company-card .meta{font-size:12px;color:var(--text2);}
+  .company-card .actions{display:flex;gap:8px;margin-top:14px;}
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  @media(max-width:600px){.clock-time{font-size:48px;}.punch-card{padding:24px;}.page{padding:20px 16px;}}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav class="nav" id="mainNav">
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingMsg">Connecting to database…</p>
+</div>
+
+<nav class="nav">
   <div class="nav-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     PunchClock
   </div>
-  <div class="nav-links" id="navLinks">
-    <button class="nav-btn active" onclick="navigate('punch')">⏱ Clock In/Out</button>
-    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none">⚙️ Admin</button>
-    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none">📊 Reports</button>
-    <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" style="display:none">🏢 Companies</button>
-    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none">📋 Activity Log</button>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="navigate('punch')">&#9201; Clock In/Out</button>
+    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none">&#9881;&#65039; Admin</button>
+    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none">&#128202; Reports</button>
+    <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" style="display:none">&#127970; Companies</button>
+    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none">&#128203; Activity Log</button>
   </div>
   <div class="nav-right">
-    <select class="company-select" id="companySwitch" onchange="switchCompany(this.value)" style="display:none"></select>
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" style="font-size:13px;padding:7px 14px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" style="display:none;font-size:13px;padding:7px 14px;">Logout</button>
@@ -655,182 +223,103 @@
     <div class="punch-card">
       <h2>Select Your Name</h2>
       <div class="select-wrap">
-        <select id="empSelect">
-          <option value="">-- Choose employee --</option>
-        </select>
+        <select id="empSelect"><option value="">-- Choose employee --</option></select>
       </div>
       <div class="punch-btns">
-        <button class="punch-btn btn-in" onclick="requestPunch('IN')">✓ IN</button>
-        <button class="punch-btn btn-out" onclick="requestPunch('OUT')">✕ OUT</button>
+        <button class="punch-btn btn-in" onclick="requestPunch('IN')">&#10003; IN</button>
+        <button class="punch-btn btn-out" onclick="requestPunch('OUT')">&#10005; OUT</button>
       </div>
       <div class="punch-feedback" id="punchFeedback"></div>
     </div>
-
-    <!-- CURRENTLY CLOCKED IN -->
     <div class="currently-in">
       <div class="currently-in-header">
         <h3><span class="live-dot"></span> Currently Clocked In</h3>
         <span class="currently-in-count" id="clockedInCount">0</span>
       </div>
-      <div class="currently-in-list" id="clockedInList">
-        <div class="ci-empty">No one is clocked in yet.</div>
-      </div>
+      <div class="currently-in-list" id="clockedInList"><div class="ci-empty">Loading...</div></div>
     </div>
   </div>
 </div>
 
-<!-- PIN PAD MODAL -->
-<div class="modal-overlay" id="pinModal">
-  <div class="modal" style="max-width:340px">
-    <div class="pin-modal-body">
-      <div class="pin-emp-name" id="pinEmpName"></div>
-      <div class="pin-action" id="pinActionLabel"></div>
-      <div class="pin-dots">
-        <div class="pin-dot" id="pd0"></div>
-        <div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div>
-        <div class="pin-dot" id="pd3"></div>
-      </div>
-      <div class="pin-pad">
-        <button class="pin-key" onclick="pinKey('1')">1</button>
-        <button class="pin-key" onclick="pinKey('2')">2</button>
-        <button class="pin-key" onclick="pinKey('3')">3</button>
-        <button class="pin-key" onclick="pinKey('4')">4</button>
-        <button class="pin-key" onclick="pinKey('5')">5</button>
-        <button class="pin-key" onclick="pinKey('6')">6</button>
-        <button class="pin-key" onclick="pinKey('7')">7</button>
-        <button class="pin-key" onclick="pinKey('8')">8</button>
-        <button class="pin-key" onclick="pinKey('9')">9</button>
-        <button class="pin-key zero" onclick="pinKey('0')">0</button>
-        <button class="pin-key del" onclick="pinDel()">⌫</button>
-      </div>
-      <div class="pin-error-msg" id="pinErrorMsg"></div>
-    </div>
-    <div class="modal-footer" style="justify-content:center;margin-top:16px">
-      <button class="btn-secondary" onclick="closeModal('pinModal');resetPin()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- LOGIN PAGE -->
+<!-- LOGIN -->
 <div class="page" id="page-login">
   <div class="form-card" style="margin-top:60px">
     <h2>Admin Login</h2>
     <p>Sign in to access the admin dashboard.</p>
     <div id="loginMsg"></div>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="admin@company.com">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
+    <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@company.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn-primary" onclick="doLogin()">Sign In</button>
     <hr class="divider">
-    <p style="text-align:center;color:var(--text2);font-size:13px">Don't have an account? <button class="link-btn" onclick="navigate('register')">Register</button></p>
+    <p style="text-align:center;color:var(--text2);font-size:13px">No account? <button class="link-btn" onclick="navigate('register')">Register</button></p>
   </div>
 </div>
 
-<!-- REGISTER PAGE -->
+<!-- REGISTER -->
 <div class="page" id="page-register">
   <div class="form-card" style="margin-top:60px">
     <h2>Admin Registration</h2>
-    <p>Create your admin account. A verification code will be shown after submission.</p>
+    <p>Create your admin account.</p>
     <div id="registerMsg"></div>
     <div id="registerForm">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="regName" placeholder="Jane Smith">
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="regEmail" placeholder="admin@company.com">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="regPass" placeholder="Min 6 characters">
-      </div>
-      <button class="btn-primary" onclick="doRegister()">Register & Get Code</button>
+      <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Smith"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
+      <button class="btn-primary" onclick="doRegister()">Register &amp; Get Code</button>
     </div>
     <div id="verifyForm" style="display:none">
-      <p style="margin-bottom:12px">Your verification code (simulated — in production this would be emailed):</p>
+      <p style="margin-bottom:12px">Your verification code (in production this would be emailed):</p>
       <div class="code-display" id="verifyCode"></div>
-      <div class="form-group" style="margin-top:16px">
-        <label>Enter Code to Confirm</label>
-        <input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6">
-      </div>
-      <button class="btn-primary" onclick="doVerify()">Verify & Activate</button>
+      <div class="form-group" style="margin-top:16px"><label>Enter Code</label><input type="text" id="codeInput" placeholder="6-digit code" maxlength="6"></div>
+      <button class="btn-primary" onclick="doVerify()">Verify &amp; Activate</button>
     </div>
     <hr class="divider">
-    <p style="text-align:center;color:var(--text2);font-size:13px">Already have an account? <button class="link-btn" onclick="navigate('login')">Sign in</button></p>
+    <p style="text-align:center;color:var(--text2);font-size:13px">Already registered? <button class="link-btn" onclick="navigate('login')">Sign in</button></p>
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
+<!-- ADMIN -->
 <div class="page" id="page-admin">
   <div class="page-header">
-    <div>
-      <h1>Admin Panel</h1>
-      <p>Manage employees across your companies</p>
-    </div>
+    <div><h1>Admin Panel</h1><p>Manage employees across your companies</p></div>
     <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openAddEmpModal()">+ Add Employee</button>
   </div>
-
   <div class="tabs">
-    <button class="tab active" onclick="adminTab('employees', this)">Employees</button>
-    <button class="tab" onclick="adminTab('admins', this)">Admins</button>
+    <button class="tab active" onclick="adminTab('employees',this)">Employees</button>
+    <button class="tab" onclick="adminTab('admins',this)">Admins</button>
   </div>
-
-  <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
-    <div class="filter-bar" style="grid-template-columns: 1fr auto; margin-bottom:16px; padding:14px 16px">
-      <div>
-        <label>Search</label>
-        <input type="text" id="empSearch" placeholder="Search by name or department..." oninput="renderEmployees()">
-      </div>
+    <div class="filter-bar" style="grid-template-columns:1fr auto;margin-bottom:16px;padding:14px 16px">
+      <div><label>Search</label><input type="text" id="empSearch" placeholder="Search name or department..." oninput="renderEmployees()"></div>
       <div style="display:flex;align-items:flex-end">
-        <select style="padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empFilter" onchange="renderEmployees()">
-          <option value="">All Departments</option>
-        </select>
+        <select style="padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empFilter" onchange="renderEmployees()"><option value="">All Departments</option></select>
       </div>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>PIN</th><th>Company</th><th>Actions</th></tr></thead>
-        <tbody id="empTableBody"></tbody>
-      </table>
-    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>PIN</th><th>Company</th><th>Actions</th></tr></thead>
+      <tbody id="empTableBody"></tbody>
+    </table></div>
   </div>
-
-  <!-- ADMINS TAB -->
   <div id="tab-admins" style="display:none">
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Registered</th></tr></thead>
-        <tbody id="adminsTableBody"></tbody>
-      </table>
-    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Registered</th></tr></thead>
+      <tbody id="adminsTableBody"></tbody>
+    </table></div>
   </div>
 </div>
 
-<!-- REPORTS PAGE -->
+<!-- REPORTS -->
 <div class="page" id="page-reports">
   <div class="page-header">
-    <div>
-      <h1>Reports</h1>
-      <p>Generate time & attendance reports</p>
-    </div>
+    <div><h1>Reports</h1><p>Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
-      <button class="btn-export" onclick="exportReport('excel')">📥 Excel</button>
-      <button class="btn-export" onclick="exportReport('csv')">📄 CSV</button>
-      <button class="btn-export" onclick="exportReport('pdf')">📋 PDF</button>
+      <button class="btn-export" onclick="exportReport('excel')">&#128229; Excel</button>
+      <button class="btn-export" onclick="exportReport('csv')">&#128196; CSV</button>
+      <button class="btn-export" onclick="exportReport('pdf')">&#128203; PDF</button>
     </div>
   </div>
-
   <div class="filter-bar">
-    <div>
-      <label>Period</label>
+    <div><label>Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
         <option value="custom">Custom Range</option>
         <option value="week" selected>This Week</option>
@@ -841,25 +330,13 @@
         <option value="year">This Year</option>
       </select>
     </div>
-    <div>
-      <label>Start Date</label>
-      <input type="date" id="reportStart">
-    </div>
-    <div>
-      <label>End Date</label>
-      <input type="date" id="reportEnd">
-    </div>
-    <div>
-      <label>Company</label>
-      <select id="reportCompany" onchange="loadReportEmps()">
-        <option value="all">All Companies</option>
-      </select>
-    </div>
+    <div><label>Start Date</label><input type="date" id="reportStart"></div>
+    <div><label>End Date</label><input type="date" id="reportEnd"></div>
+    <div><label>Company</label><select id="reportCompany" onchange="loadReportEmps()"><option value="all">All Companies</option></select></div>
     <div style="display:flex;align-items:flex-end">
       <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0" onclick="generateReport()">Generate</button>
     </div>
   </div>
-
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px">
     <p style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:10px">Filter Employees</p>
     <div class="select-all-row">
@@ -869,50 +346,34 @@
     </div>
     <div class="emp-list-check" id="empCheckList"></div>
   </div>
-
-  <!-- SUMMARY STATS -->
   <div class="stats-grid" id="reportStats" style="display:none"></div>
-
   <div class="table-wrap" id="reportTableWrap" style="display:none">
-    <table>
-      <thead><tr><th>Employee</th><th>Company</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Hours</th></tr></thead>
-      <tbody id="reportTableBody"></tbody>
-    </table>
+    <table><thead><tr><th>Employee</th><th>Company</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Hours</th></tr></thead>
+    <tbody id="reportTableBody"></tbody></table>
   </div>
-  <div class="empty" id="reportEmpty" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    <p>No punch records found for the selected filters.</p>
-  </div>
+  <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
 </div>
 
-<!-- COMPANIES PAGE -->
+<!-- COMPANIES -->
 <div class="page" id="page-companies">
   <div class="page-header">
-    <div>
-      <h1>Companies</h1>
-      <p>Manage organizations in the system</p>
-    </div>
+    <div><h1>Companies</h1><p>Manage organizations in the system</p></div>
     <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openAddCompanyModal()">+ New Company</button>
   </div>
   <div class="company-grid" id="companyGrid"></div>
 </div>
 
-<!-- ACTIVITY PAGE -->
+<!-- ACTIVITY -->
 <div class="page" id="page-activity">
   <div class="page-header">
-    <div>
-      <h1>Activity Log</h1>
-      <p>Real-time punch records — showing most recent 200</p>
-    </div>
-    <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:13px">↻ Refresh</button>
+    <div><h1>Activity Log</h1><p>Real-time punch records</p></div>
+    <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:13px">&#8635; Refresh</button>
   </div>
   <div class="stats-grid" id="activityStats"></div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Employee</th><th>Company</th><th>Type</th><th>Date</th><th>Time</th></tr></thead>
-      <tbody id="activityBody"></tbody>
-    </table>
-  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Employee</th><th>Company</th><th>Type</th><th>Date</th><th>Time</th></tr></thead>
+    <tbody id="activityBody"></tbody>
+  </table></div>
 </div>
 
 <!-- ADD EMPLOYEE MODAL -->
@@ -920,30 +381,18 @@
   <div class="modal">
     <h3 id="empModalTitle">Add Employee</h3>
     <div id="empModalMsg"></div>
-    <div class="form-group">
-      <label>Full Name</label>
-      <input type="text" id="empName" placeholder="John Smith">
-    </div>
-    <div class="form-group">
-      <label>Department</label>
-      <input type="text" id="empDept" placeholder="Engineering, Sales, HR...">
-    </div>
-    <div class="form-group">
-      <label>Company</label>
-      <select id="empCompany"></select>
-    </div>
-    <div class="form-group">
-      <label>Employee ID (optional)</label>
-      <input type="text" id="empId" placeholder="EMP-001">
-    </div>
+    <div class="form-group"><label>Full Name</label><input type="text" id="empName" placeholder="John Smith"></div>
+    <div class="form-group"><label>Department</label><input type="text" id="empDept" placeholder="Engineering, Sales, HR..."></div>
+    <div class="form-group"><label>Company</label><select id="empCompany"></select></div>
+    <div class="form-group"><label>Employee ID (optional)</label><input type="text" id="empId" placeholder="EMP-001"></div>
     <div class="form-group">
       <label>4-Digit PIN <span style="color:var(--text3);font-weight:400">(required for clock in/out)</span></label>
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="password" id="empPin" placeholder="••••" maxlength="4" style="letter-spacing:6px;font-family:'DM Mono',monospace;font-size:18px;width:110px">
-        <button type="button" onclick="generatePin()" style="padding:9px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap">🎲 Random</button>
+        <input type="password" id="empPin" placeholder="&bull;&bull;&bull;&bull;" maxlength="4" style="letter-spacing:6px;font-family:'DM Mono',monospace;font-size:18px;width:110px">
+        <button type="button" onclick="generatePin()" style="padding:9px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap">&#127922; Random</button>
         <span id="pinPreview" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);display:none"></span>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:5px">Must be exactly 4 digits. Keep this private — share only with the employee.</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">Exactly 4 digits. Share only with the employee.</div>
     </div>
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
@@ -958,18 +407,9 @@
   <div class="modal">
     <h3 id="companyModalTitle">New Company</h3>
     <div id="companyModalMsg"></div>
-    <div class="form-group">
-      <label>Company Name</label>
-      <input type="text" id="companyName" placeholder="Acme Corp">
-    </div>
-    <div class="form-group">
-      <label>Industry</label>
-      <input type="text" id="companyIndustry" placeholder="Technology, Retail, Healthcare...">
-    </div>
-    <div class="form-group">
-      <label>Description (optional)</label>
-      <input type="text" id="companyDesc" placeholder="Brief description">
-    </div>
+    <div class="form-group"><label>Company Name</label><input type="text" id="companyName" placeholder="Acme Corp"></div>
+    <div class="form-group"><label>Industry</label><input type="text" id="companyIndustry" placeholder="Technology, Retail..."></div>
+    <div class="form-group"><label>Description (optional)</label><input type="text" id="companyDesc" placeholder="Brief description"></div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addCompanyModal')">Cancel</button>
@@ -978,7 +418,7 @@
   </div>
 </div>
 
-<!-- CONFIRM DELETE MODAL -->
+<!-- DELETE MODAL -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal">
     <h3>Confirm Delete</h3>
@@ -990,61 +430,129 @@
   </div>
 </div>
 
+<!-- PIN MODAL -->
+<div class="modal-overlay" id="pinModal">
+  <div class="modal" style="max-width:340px">
+    <div class="pin-modal-body">
+      <div class="pin-emp-name" id="pinEmpName"></div>
+      <div class="pin-action" id="pinActionLabel"></div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key zero" onclick="pinKey('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">&#9003;</button>
+      </div>
+      <div class="pin-error-msg" id="pinErrorMsg"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;margin-top:16px">
+      <button class="btn-secondary" onclick="closeModal('pinModal');resetPin()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ===== DATA LAYER =====
+// ================================================================
+// SUPABASE
+// ================================================================
+const SUPA_URL = 'https://uziwymrwaeojhqaagqcm.supabase.co';
+const SUPA_KEY = 'sb_publishable_Qn1tcjjwGyX1aYACba9udg_JYBOOxUq';
+
+async function supaFetch(method, table, opts = {}) {
+  let url = `${SUPA_URL}/rest/v1/${table}`;
+  const qp = [];
+  if (opts.filter) qp.push(opts.filter);
+  if (method === 'GET') qp.push('select=*');
+  if (qp.length) url += '?' + qp.join('&');
+
+  const headers = {
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Content-Type': 'application/json',
+  };
+  if (method === 'POST') headers['Prefer'] = 'return=representation';
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    let msg = txt;
+    try { msg = JSON.parse(txt).message || txt; } catch {}
+    throw new Error(msg);
+  }
+  if (method === 'DELETE' || method === 'PATCH') return true;
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
+}
+
 const DB = {
-  get: (k, def=[]) => { try { return JSON.parse(localStorage.getItem('pc_'+k)) ?? def; } catch { return def; } },
-  set: (k, v) => localStorage.setItem('pc_'+k, JSON.stringify(v)),
+  all:    (t, f)    => supaFetch('GET',    t, { filter: f }),
+  insert: (t, body) => supaFetch('POST',   t, { body }),
+  update: (t, f, b) => supaFetch('PATCH',  t, { filter: f, body: b }),
+  del:    (t, f)    => supaFetch('DELETE', t, { filter: f }),
 };
 
-function getData() {
-  return {
-    companies: DB.get('companies', []),
-    employees: DB.get('employees', []),
-    punches: DB.get('punches', []),
-    admins: DB.get('admins', []),
-    session: DB.get('session', null),
-    pendingReg: DB.get('pendingReg', null),
-  };
+// ================================================================
+// SESSION (localStorage for admin login only)
+// ================================================================
+const Sess = {
+  get:   () => { try { return JSON.parse(localStorage.getItem('pc_sess')); } catch { return null; } },
+  set:   (v) => localStorage.setItem('pc_sess', JSON.stringify(v)),
+  clear: () => localStorage.removeItem('pc_sess'),
+};
+
+// ================================================================
+// CACHE
+// ================================================================
+let C = { companies: [], employees: [], punches: [] };
+
+async function refreshCache() {
+  const [companies, employees, punches] = await Promise.all([
+    DB.all('companies', 'order=name.asc'),
+    DB.all('employees', 'order=name.asc'),
+    DB.all('punches',   'order=punched_at.desc&limit=2000'),
+  ]);
+  C.companies = companies || [];
+  C.employees = employees || [];
+  C.punches   = punches   || [];
 }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
-
-// SEED DEFAULT DATA
-function seedData() {
-  let d = getData();
-  if (!d.companies.length) {
-    const c1 = { id: uid(), name: 'Acme Corp', industry: 'Technology', desc: 'Main company', created: new Date().toISOString() };
-    const c2 = { id: uid(), name: 'Beta Industries', industry: 'Manufacturing', desc: 'Second company', created: new Date().toISOString() };
-    DB.set('companies', [c1, c2]);
-    const emps = [
-      { id: uid(), name: 'Alice Martin', dept: 'Engineering', companyId: c1.id, empId: 'EMP-001', pin: '1234', active: true },
-      { id: uid(), name: 'Bob Johnson', dept: 'Sales', companyId: c1.id, empId: 'EMP-002', pin: '2345', active: true },
-      { id: uid(), name: 'Carol White', dept: 'HR', companyId: c1.id, empId: 'EMP-003', pin: '3456', active: true },
-      { id: uid(), name: 'Dave Lee', dept: 'Operations', companyId: c2.id, empId: 'EMP-004', pin: '4567', active: true },
-      { id: uid(), name: 'Eva Chen', dept: 'Marketing', companyId: c2.id, empId: 'EMP-005', pin: '5678', active: true },
-    ];
-    DB.set('employees', emps);
-  }
-}
-seedData();
-
-// ===== STATE =====
+// ================================================================
+// STATE
+// ================================================================
 let currentPage = 'punch';
-let currentCompanyFilter = 'all';
-let reportData = [];
+let reportData  = [];
 let pendingVerify = null;
+let pinState = { empId: null, punchType: null, entered: '' };
 
-// ===== CLOCK =====
+// ================================================================
+// CLOCK
+// ================================================================
 function updateClock() {
-  const now = new Date();
-  document.getElementById('liveTime').textContent = now.toLocaleTimeString('en-US', {hour12: false});
-  document.getElementById('liveDate').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  const n = new Date();
+  document.getElementById('liveTime').textContent = n.toLocaleTimeString('en-US', { hour12: false });
+  document.getElementById('liveDate').textContent = n.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// ===== NAVIGATION =====
+// ================================================================
+// NAVIGATE
+// ================================================================
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1053,105 +561,117 @@ function navigate(page) {
   const map = { punch:0, admin:1, reports:2, companies:3, activity:4 };
   const btns = document.querySelectorAll('.nav-links .nav-btn');
   if (map[page] !== undefined && btns[map[page]]) btns[map[page]].classList.add('active');
-
-  if (page === 'punch') loadPunchPage();
-  if (page === 'admin') loadAdminPage();
-  if (page === 'reports') loadReportsPage();
-  if (page === 'companies') loadCompaniesPage();
-  if (page === 'activity') loadActivityPage();
+  if (page === 'punch')     loadPunchPage();
+  else if (page === 'admin')     loadAdminPage();
+  else if (page === 'reports')   loadReportsPage();
+  else if (page === 'companies') loadCompaniesPage();
+  else if (page === 'activity')  loadActivityPage();
 }
 
-// ===== AUTH =====
-function isLoggedIn() { return !!DB.get('session', null); }
-function currentAdmin() { return DB.get('session', null); }
+// ================================================================
+// AUTH
+// ================================================================
+function isLoggedIn() { return !!Sess.get(); }
 
 function updateNav() {
-  const logged = isLoggedIn();
-  document.getElementById('loginBtn').style.display = logged ? 'none' : '';
-  document.getElementById('logoutBtn').style.display = logged ? '' : 'none';
-  document.getElementById('navAdmin').style.display = logged ? '' : 'none';
-  document.getElementById('navReports').style.display = logged ? '' : 'none';
-  document.getElementById('navCompanies').style.display = logged ? '' : 'none';
-  document.getElementById('navActivity').style.display = logged ? '' : 'none';
-  const sw = document.getElementById('companySwitch');
-  sw.style.display = logged ? '' : 'none';
-  if (logged) {
-    const a = currentAdmin();
+  const ok = isLoggedIn();
+  document.getElementById('loginBtn').style.display  = ok ? 'none' : '';
+  document.getElementById('logoutBtn').style.display = ok ? '' : 'none';
+  ['navAdmin','navReports','navCompanies','navActivity'].forEach(id =>
+    document.getElementById(id).style.display = ok ? '' : 'none');
+  if (ok) {
+    const a = Sess.get();
     document.getElementById('adminBadge').innerHTML = `<span class="badge">${a.name}</span>`;
     document.getElementById('adminBadge').style.display = '';
-    loadCompanySwitcher();
   } else {
     document.getElementById('adminBadge').style.display = 'none';
   }
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-  const pass = document.getElementById('loginPass').value;
-  const admins = DB.get('admins', []);
-  const a = admins.find(x => x.email === email && x.password === pass && x.verified);
-  if (!a) { showMsg('loginMsg', 'Invalid credentials or account not verified.', 'error'); return; }
-  DB.set('session', { id: a.id, name: a.name, email: a.email });
-  updateNav();
-  navigate('admin');
+  const pass  = document.getElementById('loginPass').value;
+  try {
+    const rows = await DB.all('admins',
+      `email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
+    if (!rows.length) { showMsg('loginMsg','Invalid credentials or account not verified.','error'); return; }
+    Sess.set({ id: rows[0].id, name: rows[0].name, email: rows[0].email });
+    updateNav();
+    await refreshCache();
+    navigate('admin');
+  } catch(e) { showMsg('loginMsg','Connection error: '+e.message,'error'); }
 }
 
-function doRegister() {
-  const name = document.getElementById('regName').value.trim();
+async function doRegister() {
+  const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim().toLowerCase();
-  const pass = document.getElementById('regPass').value;
-  if (!name || !email || !pass) { showMsg('registerMsg', 'All fields are required.', 'error'); return; }
-  if (pass.length < 6) { showMsg('registerMsg', 'Password must be at least 6 characters.', 'error'); return; }
-  const admins = DB.get('admins', []);
-  if (admins.find(a => a.email === email)) { showMsg('registerMsg', 'Email already registered.', 'error'); return; }
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  pendingVerify = { name, email, pass, code };
-  document.getElementById('verifyCode').textContent = code;
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('verifyForm').style.display = '';
-  showMsg('registerMsg', '📧 In production, this code would be emailed to you. For this demo, it\'s shown above.', 'info');
+  const pass  = document.getElementById('regPass').value;
+  if (!name||!email||!pass) { showMsg('registerMsg','All fields are required.','error'); return; }
+  if (pass.length < 6)      { showMsg('registerMsg','Password must be at least 6 characters.','error'); return; }
+  try {
+    const ex = await DB.all('admins', `email=eq.${encodeURIComponent(email)}`);
+    if (ex.length) { showMsg('registerMsg','Email already registered.','error'); return; }
+    const code = Math.floor(100000+Math.random()*900000).toString();
+    pendingVerify = { name, email, pass, code };
+    document.getElementById('verifyCode').textContent = code;
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('verifyForm').style.display = '';
+    showMsg('registerMsg','In production this code would be emailed. For this demo it is shown above.','info');
+  } catch(e) { showMsg('registerMsg','Error: '+e.message,'error'); }
 }
 
-function doVerify() {
+async function doVerify() {
   const entered = document.getElementById('codeInput').value.trim();
-  if (!pendingVerify || entered !== pendingVerify.code) { showMsg('registerMsg', 'Incorrect code. Please try again.', 'error'); return; }
-  const admins = DB.get('admins', []);
-  const newAdmin = { id: uid(), name: pendingVerify.name, email: pendingVerify.email, password: pendingVerify.pass, verified: true, created: new Date().toISOString() };
-  admins.push(newAdmin);
-  DB.set('admins', admins);
-  pendingVerify = null;
-  DB.set('session', { id: newAdmin.id, name: newAdmin.name, email: newAdmin.email });
-  updateNav();
-  showMsg('registerMsg', 'Account verified! Redirecting...', 'success');
-  setTimeout(() => navigate('admin'), 1200);
+  if (!pendingVerify || entered !== pendingVerify.code) { showMsg('registerMsg','Incorrect code.','error'); return; }
+  try {
+    const result = await DB.insert('admins', {
+      name: pendingVerify.name, email: pendingVerify.email,
+      password: pendingVerify.pass, verified: true
+    });
+    Sess.set({ id: result[0].id, name: result[0].name, email: result[0].email });
+    pendingVerify = null;
+    updateNav();
+    await refreshCache();
+    showMsg('registerMsg','Account verified! Redirecting...','success');
+    setTimeout(() => navigate('admin'), 1200);
+  } catch(e) { showMsg('registerMsg','Error: '+e.message,'error'); }
 }
 
-function logout() {
-  DB.set('session', null);
-  updateNav();
-  navigate('punch');
+function logout() { Sess.clear(); updateNav(); navigate('punch'); }
+
+// ================================================================
+// STATUS HELPER
+// ================================================================
+function getEmpStatus(empId) {
+  const ep = C.punches
+    .filter(p => p.emp_id === empId)
+    .sort((a,b) => new Date(a.punched_at) - new Date(b.punched_at));
+  if (!ep.length) return { status:'OUT', last: null };
+  return { status: ep[ep.length-1].type, last: ep[ep.length-1] };
 }
 
-// ===== PUNCH PAGE =====
-function loadPunchPage() {
-  const sel = document.getElementById('empSelect');
-  const employees = DB.get('employees', []).filter(e => e.active);
-  const companies = DB.get('companies', []);
+// ================================================================
+// PUNCH PAGE
+// ================================================================
+async function loadPunchPage() {
+  await refreshCache();
+  const sel  = document.getElementById('empSelect');
+  const emps = C.employees.filter(e => e.active);
   sel.innerHTML = '<option value="">-- Select your name --</option>';
-  const grouped = {};
-  employees.forEach(e => {
-    const co = companies.find(c => c.id === e.companyId);
-    const gname = co ? co.name : 'General';
-    if (!grouped[gname]) grouped[gname] = [];
-    grouped[gname].push(e);
+  const groups = {};
+  emps.forEach(e => {
+    const co = C.companies.find(c => c.id === e.company_id);
+    const g  = co ? co.name : 'General';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(e);
   });
-  Object.entries(grouped).forEach(([gname, emps]) => {
+  Object.entries(groups).sort().forEach(([g, list]) => {
     const og = document.createElement('optgroup');
-    og.label = gname;
-    emps.forEach(e => {
+    og.label = g;
+    list.forEach(e => {
       const o = document.createElement('option');
       o.value = e.id;
-      o.textContent = e.name + (e.empId ? ` (${e.empId})` : '');
+      o.textContent = e.name + (e.emp_code ? ` (${e.emp_code})` : '');
       og.appendChild(o);
     });
     sel.appendChild(og);
@@ -1159,281 +679,208 @@ function loadPunchPage() {
   refreshClockedIn();
 }
 
-function getEmployeeStatus(empId) {
-  // Returns the employee's current status based on their most recent punch ever
-  const punches = DB.get('punches', []);
-  const empPunches = punches
-    .filter(p => p.empId === empId)
-    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  if (!empPunches.length) return { status: 'OUT', lastPunch: null };
-  const last = empPunches[empPunches.length - 1];
-  return { status: last.type, lastPunch: last };
-}
-
 function refreshClockedIn() {
-  const employees = DB.get('employees', []).filter(e => e.active);
-  const companies = DB.get('companies', []);
   const today = new Date().toLocaleDateString('en-CA');
+  const clockedIn = C.employees.filter(e => e.active)
+    .map(emp => {
+      const { status, last } = getEmpStatus(emp.id);
+      if (status !== 'IN') return null;
+      const co = C.companies.find(c => c.id === emp.company_id);
+      return { emp, last, co };
+    })
+    .filter(Boolean)
+    .sort((a,b) => new Date(a.last.punched_at) - new Date(b.last.punched_at));
 
-  // Find everyone whose last punch EVER was IN (regardless of which day)
-  const clockedIn = [];
-  employees.forEach(emp => {
-    const { status, lastPunch } = getEmployeeStatus(emp.id);
-    if (status === 'IN') {
-      const co = companies.find(c => c.id === emp.companyId);
-      clockedIn.push({ emp, lastIn: lastPunch, co });
-    }
-  });
-
-  const list = document.getElementById('clockedInList');
+  const list    = document.getElementById('clockedInList');
   const countEl = document.getElementById('clockedInCount');
   if (!list || !countEl) return;
   countEl.textContent = clockedIn.length;
 
-  if (!clockedIn.length) {
-    list.innerHTML = '<div class="ci-empty">No one is clocked in right now.</div>';
-    return;
-  }
+  if (!clockedIn.length) { list.innerHTML = '<div class="ci-empty">No one is clocked in right now.</div>'; return; }
 
-  clockedIn.sort((a, b) => new Date(a.lastIn.timestamp) - new Date(b.lastIn.timestamp));
-
-  list.innerHTML = clockedIn.map(({ emp, lastIn, co }) => {
-    const initials = emp.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    const dur = getElapsedStr(lastIn.timestamp);
-    const deptLine = [co?.name, emp.dept].filter(Boolean).join(' · ');
-    const isOvernight = lastIn.date !== today;
-    const dateWarning = isOvernight
-      ? `<span style="color:var(--red);font-size:11px;font-weight:600;margin-left:4px">⚠ since ${lastIn.date}</span>`
-      : '';
-    return `<div class="clocked-in-row" style="${isOvernight ? 'border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.05)' : ''}">
-      <div class="avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0">${initials}</div>
+  list.innerHTML = clockedIn.map(({ emp, last, co }) => {
+    const ini    = emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const dur    = elapsed(last.punched_at);
+    const dept   = [co?.name, emp.dept].filter(Boolean).join(' · ');
+    const over   = last.punch_date !== today;
+    const warn   = over ? `<span style="color:var(--red);font-size:11px;font-weight:600;margin-left:4px">&#9888; since ${last.punch_date}</span>` : '';
+    return `<div class="clocked-in-row" style="${over?'border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.05)':''}">
+      <div class="avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0">${ini}</div>
       <div style="flex:1;min-width:0">
-        <div class="ci-name">${emp.name}${dateWarning}</div>
-        ${deptLine ? `<div class="ci-duration">${deptLine}</div>` : ''}
+        <div class="ci-name">${emp.name}${warn}</div>
+        ${dept ? `<div class="ci-duration">${dept}</div>` : ''}
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div class="ci-time">↑ ${lastIn.time}</div>
+        <div class="ci-time">&#8593; ${last.punch_time}</div>
         <div class="ci-duration">${dur}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-function getElapsedStr(isoStr) {
-  const diff = Math.floor((Date.now() - new Date(isoStr)) / 60000);
-  if (diff < 1) return 'just now';
-  if (diff < 60) return `${diff}m`;
-  const h = Math.floor(diff / 60), m = diff % 60;
-  return `${h}h ${m}m`;
+function elapsed(iso) {
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m/60)}h ${m%60}m`;
 }
 
-// Auto-refresh clocked-in list every 30s
-setInterval(() => { if (currentPage === 'punch') refreshClockedIn(); }, 30000);
+setInterval(async () => { if (currentPage==='punch') { await refreshCache(); refreshClockedIn(); } }, 30000);
 
-// ===== PIN FLOW =====
-let pinState = { empId: null, punchType: null, entered: '' };
-
+// ================================================================
+// PIN FLOW
+// ================================================================
 function requestPunch(type) {
   const empId = document.getElementById('empSelect').value;
-  if (!empId) { showPunchFeedback('Please select your name first.', 'error'); return; }
-  const employees = DB.get('employees', []);
-  const emp = employees.find(e => e.id === empId);
+  if (!empId) { showPunchMsg('Please select your name first.','error'); return; }
+  const emp = C.employees.find(e => e.id === empId);
   if (!emp) return;
+  if (!emp.pin) { showPunchMsg('No PIN set — an admin must assign one first.','error'); return; }
 
-  if (!emp.pin) {
-    // No PIN set — admin needs to set one first
-    showPunchFeedback('⚠️ No PIN set for this employee. An admin must assign a PIN before clocking in/out.', 'error');
-    return;
+  const { status, last } = getEmpStatus(empId);
+  const today = new Date().toLocaleDateString('en-CA');
+  if (type==='IN' && status==='IN') {
+    const when = last.punch_date===today ? `since ${last.punch_time} today` : `since ${last.punch_date} at ${last.punch_time}`;
+    showPunchMsg(`&#9888; ${emp.name} is already clocked IN ${when}. Please clock OUT first.`,'error');
+    document.getElementById('empSelect').value=''; return;
   }
-
-  // Pre-validate status before showing PIN pad — give immediate feedback
-  const { status, lastPunch } = getEmployeeStatus(empId);
-  if (type === 'IN' && status === 'IN') {
-    const today = new Date().toLocaleDateString('en-CA');
-    const whenStr = lastPunch.date === today
-      ? `since ${lastPunch.time} today`
-      : `since ${lastPunch.date} at ${lastPunch.time}`;
-    showPunchFeedback(`⚠ ${emp.name} is already clocked IN ${whenStr}. Please clock OUT first.`, 'error');
-    document.getElementById('empSelect').value = '';
-    return;
-  }
-  if (type === 'OUT' && status === 'OUT') {
-    const msg = lastPunch
-      ? `⚠ ${emp.name} is not clocked in. Last clock-out: ${lastPunch.date} at ${lastPunch.time}.`
-      : `⚠ ${emp.name} has never clocked in. Please clock IN first.`;
-    showPunchFeedback(msg, 'error');
-    document.getElementById('empSelect').value = '';
-    return;
+  if (type==='OUT' && status==='OUT') {
+    const msg = last
+      ? `&#9888; ${emp.name} is not clocked in. Last clock-out: ${last.punch_date} at ${last.punch_time}.`
+      : `&#9888; ${emp.name} has no clock-in on record.`;
+    showPunchMsg(msg,'error');
+    document.getElementById('empSelect').value=''; return;
   }
 
   pinState = { empId, punchType: type, entered: '' };
-  document.getElementById('pinEmpName').textContent = emp.name;
+  document.getElementById('pinEmpName').textContent  = emp.name;
   document.getElementById('pinActionLabel').textContent = `Enter PIN to clock ${type}`;
-  document.getElementById('pinActionLabel').style.color = type === 'IN' ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pinErrorMsg').textContent = '';
+  document.getElementById('pinActionLabel').style.color = type==='IN' ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pinErrorMsg').textContent  = '';
   resetPinDots();
   openModal('pinModal');
 }
 
-function pinKey(digit) {
+function pinKey(d) {
   if (pinState.entered.length >= 4) return;
-  pinState.entered += digit;
+  pinState.entered += d;
   updatePinDots();
-  if (pinState.entered.length === 4) {
-    setTimeout(validatePin, 120);
-  }
+  if (pinState.entered.length === 4) setTimeout(validatePin, 120);
 }
-
-function pinDel() {
-  pinState.entered = pinState.entered.slice(0, -1);
-  updatePinDots();
-}
+function pinDel() { pinState.entered = pinState.entered.slice(0,-1); updatePinDots(); }
 
 function updatePinDots() {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('pd' + i);
-    dot.classList.toggle('filled', i < pinState.entered.length);
-    dot.classList.remove('error');
+  for (let i=0;i<4;i++) {
+    document.getElementById('pd'+i).classList.toggle('filled', i < pinState.entered.length);
+    document.getElementById('pd'+i).classList.remove('error');
   }
 }
-
-function resetPinDots() {
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('pd' + i);
-    dot.classList.remove('filled', 'error');
-  }
-}
+function resetPinDots() { for (let i=0;i<4;i++) document.getElementById('pd'+i).classList.remove('filled','error'); }
 
 function validatePin() {
-  const employees = DB.get('employees', []);
-  const emp = employees.find(e => e.id === pinState.empId);
+  const emp = C.employees.find(e => e.id === pinState.empId);
   if (!emp || pinState.entered !== emp.pin) {
-    for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
+    for (let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('error');
     document.getElementById('pinErrorMsg').textContent = 'Incorrect PIN. Please try again.';
-    setTimeout(() => { pinState.entered = ''; resetPinDots(); }, 900);
+    setTimeout(() => { pinState.entered=''; resetPinDots(); }, 900);
     return;
   }
-  // Correct! Capture values BEFORE resetPin() clears pinState
-  const empId = pinState.empId;
-  const punchType = pinState.punchType;
-  closeModal('pinModal');
-  resetPin();
+  const empId = pinState.empId, punchType = pinState.punchType;
+  closeModal('pinModal'); resetPin();
   executePunch(empId, punchType);
 }
-
 function resetPin() {
-  pinState = { empId: null, punchType: null, entered: '' };
+  pinState = { empId:null, punchType:null, entered:'' };
   resetPinDots();
   document.getElementById('pinErrorMsg').textContent = '';
 }
 
-function executePunch(empId, type) {
-  const employees = DB.get('employees', []);
-  const emp = employees.find(e => e.id === empId);
+async function executePunch(empId, type) {
+  const emp = C.employees.find(e => e.id === empId);
   if (!emp) return;
+  const { status, last } = getEmpStatus(empId);
+  const today = new Date().toLocaleDateString('en-CA');
 
-  // Check current status using ALL historical punches, not just today
-  const { status, lastPunch } = getEmployeeStatus(empId);
-
-  if (type === 'IN' && status === 'IN') {
-    const sinceDate = lastPunch.date;
-    const sinceTime = lastPunch.time;
-    const today = new Date().toLocaleDateString('en-CA');
-    const whenStr = sinceDate === today
-      ? `since ${sinceTime} today`
-      : `since ${sinceDate} at ${sinceTime}`;
-    showPunchFeedback(`⚠ ${emp.name} is already clocked IN ${whenStr}. Please clock OUT first.`, 'error');
-    document.getElementById('empSelect').value = '';
-    return;
+  if (type==='IN' && status==='IN') {
+    const when = last.punch_date===today ? `since ${last.punch_time} today` : `since ${last.punch_date} at ${last.punch_time}`;
+    showPunchMsg(`&#9888; ${emp.name} is already clocked IN ${when}.`,'error');
+    document.getElementById('empSelect').value=''; return;
+  }
+  if (type==='OUT' && status==='OUT') {
+    showPunchMsg(`&#9888; ${emp.name} is not currently clocked in.`,'error');
+    document.getElementById('empSelect').value=''; return;
   }
 
-  if (type === 'OUT' && status === 'OUT') {
-    const msg = lastPunch
-      ? `⚠ ${emp.name} is not clocked in. Their last clock-out was on ${lastPunch.date} at ${lastPunch.time}.`
-      : `⚠ ${emp.name} has no clock-in on record. Please clock IN first.`;
-    showPunchFeedback(msg, 'error');
+  const now   = new Date();
+  const ptime = now.toLocaleTimeString('en-US',{hour12:false});
+  try {
+    const result = await DB.insert('punches', {
+      emp_id: empId, emp_name: emp.name, company_id: emp.company_id,
+      type, punch_date: today, punch_time: ptime,
+    });
+    if (result?.[0]) C.punches.unshift(result[0]);
+    showPunchMsg(`&#10003; ${emp.name} clocked ${type} at ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`,'success');
     document.getElementById('empSelect').value = '';
-    return;
-  }
-
-  const now = new Date();
-  const today = now.toLocaleDateString('en-CA');
-  const punches = DB.get('punches', []);
-
-  const record = {
-    id: uid(),
-    empId,
-    empName: emp.name,
-    companyId: emp.companyId,
-    type,
-    date: today,
-    time: now.toLocaleTimeString('en-US', { hour12: false }),
-    timestamp: now.toISOString(),
-  };
-  punches.push(record);
-  DB.set('punches', punches);
-
-  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  showPunchFeedback(`✓ ${emp.name} clocked ${type} at ${timeStr}`, 'success');
-  document.getElementById('empSelect').value = '';
-  refreshClockedIn();
+    refreshClockedIn();
+  } catch(e) { showPunchMsg('Error saving punch: '+e.message,'error'); }
 }
 
-function showPunchFeedback(msg, type) {
+function showPunchMsg(msg, type) {
   const el = document.getElementById('punchFeedback');
-  el.textContent = msg;
-  el.className = 'punch-feedback show ' + type;
-  setTimeout(() => el.classList.remove('show'), type === 'error' ? 7000 : 4000);
+  el.innerHTML = msg;
+  el.className = 'punch-feedback show '+type;
+  setTimeout(() => el.classList.remove('show'), type==='error' ? 7000 : 4000);
 }
 
-// ===== ADMIN PAGE =====
-function loadAdminPage() {
+// ================================================================
+// ADMIN PAGE
+// ================================================================
+async function loadAdminPage() {
   if (!isLoggedIn()) { navigate('login'); return; }
+  await refreshCache();
   renderEmployees();
   renderAdmins();
 }
 
 function adminTab(tab, btn) {
-  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tab-employees').style.display = tab === 'employees' ? '' : 'none';
-  document.getElementById('tab-admins').style.display = tab === 'admins' ? '' : 'none';
+  document.getElementById('tab-employees').style.display = tab==='employees' ? '' : 'none';
+  document.getElementById('tab-admins').style.display    = tab==='admins'    ? '' : 'none';
 }
 
 function renderEmployees() {
-  const employees = DB.get('employees', []);
-  const companies = DB.get('companies', []);
-  const search = document.getElementById('empSearch')?.value.toLowerCase() || '';
-  const filterDept = document.getElementById('empFilter')?.value || '';
+  const search = (document.getElementById('empSearch')?.value||'').toLowerCase();
+  const dept   = document.getElementById('empFilter')?.value || '';
 
-  // Populate dept filter
-  const depts = [...new Set(employees.map(e => e.dept).filter(Boolean))].sort();
+  const depts = [...new Set(C.employees.map(e=>e.dept).filter(Boolean))].sort();
   const df = document.getElementById('empFilter');
   const cur = df.value;
   df.innerHTML = '<option value="">All Departments</option>';
-  depts.forEach(d => { df.innerHTML += `<option value="${d}" ${d===cur?'selected':''}>${d}</option>`; });
+  depts.forEach(d => df.innerHTML += `<option value="${d}"${d===cur?' selected':''}>${d}</option>`);
 
-  let filtered = employees.filter(e => {
-    const s = (e.name+e.dept+e.empId).toLowerCase();
-    return (!search || s.includes(search)) && (!filterDept || e.dept === filterDept);
+  const filtered = C.employees.filter(e => {
+    const s = (e.name+(e.dept||'')+(e.emp_code||'')).toLowerCase();
+    return (!search||s.includes(search)) && (!dept||e.dept===dept);
   });
 
   const tbody = document.getElementById('empTableBody');
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">No employees found.</td></tr>`;
-    return;
-  }
+  if (!filtered.length) { tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">No employees found.</td></tr>`; return; }
+
   tbody.innerHTML = filtered.map(e => {
-    const co = companies.find(c => c.id === e.companyId);
-    const initials = e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const pinStatus = e.pin
-      ? `<span class="pill in" title="PIN is set">🔑 Set</span>`
-      : `<span class="pill out" title="No PIN — employee cannot punch">⚠️ No PIN</span>`;
+    const co  = C.companies.find(c=>c.id===e.company_id);
+    const ini = e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const pin = e.pin
+      ? `<span class="pill in">&#128273; Set</span>`
+      : `<span class="pill out">&#9888;&#65039; No PIN</span>`;
     return `<tr>
-      <td><div class="emp-row"><div class="avatar">${initials}</div><div><div style="font-weight:500">${e.name}</div><div style="font-size:12px;color:var(--text2)">${e.empId||'—'}</div></div></div></td>
+      <td><div class="emp-row"><div class="avatar">${ini}</div><div>
+        <div style="font-weight:500">${e.name}</div>
+        <div style="font-size:12px;color:var(--text2)">${e.emp_code||'—'}</div>
+      </div></div></td>
       <td>${e.dept||'—'}</td>
       <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
-      <td>${pinStatus}</td>
+      <td>${pin}</td>
       <td>${co?.name||'—'}</td>
       <td><div style="display:flex;gap:8px">
         <button class="btn-secondary" style="padding:6px 12px;font-size:12px" onclick="editEmployee('${e.id}')">Edit</button>
@@ -1444,109 +891,101 @@ function renderEmployees() {
   }).join('');
 }
 
-function renderAdmins() {
-  const admins = DB.get('admins', []);
+async function renderAdmins() {
   const tbody = document.getElementById('adminsTableBody');
-  if (!admins.length) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:32px">No admins registered.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = admins.map(a => `<tr>
-    <td><div class="emp-row"><div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div><span style="font-weight:500">${a.name}</span></div></td>
-    <td>${a.email}</td>
-    <td><span class="pill ${a.verified?'admin':'out'}">${a.verified?'Active':'Pending'}</span></td>
-    <td style="color:var(--text2);font-size:13px">${new Date(a.created).toLocaleDateString()}</td>
-  </tr>`).join('');
+  try {
+    const admins = await DB.all('admins','order=created_at.asc');
+    if (!admins.length) { tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:32px">No admins yet.</td></tr>`; return; }
+    tbody.innerHTML = admins.map(a=>`<tr>
+      <td><div class="emp-row"><div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div><span style="font-weight:500">${a.name}</span></div></td>
+      <td>${a.email}</td>
+      <td><span class="pill ${a.verified?'admin':'out'}">${a.verified?'Active':'Pending'}</span></td>
+      <td style="color:var(--text2);font-size:13px">${new Date(a.created_at).toLocaleDateString()}</td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="4" style="color:var(--red);padding:20px">Error: ${e.message}</td></tr>`; }
 }
 
 function openAddEmpModal() {
   document.getElementById('empModalTitle').textContent = 'Add Employee';
-  document.getElementById('empName').value = '';
-  document.getElementById('empDept').value = '';
-  document.getElementById('empId').value = '';
-  document.getElementById('empPin').value = '';
+  ['empName','empDept','empId','empPin'].forEach(id => document.getElementById(id).value='');
   document.getElementById('pinPreview').style.display = 'none';
   document.getElementById('editEmpUid').value = '';
   document.getElementById('empModalMsg').innerHTML = '';
-  const companies = DB.get('companies', []);
-  const sel = document.getElementById('empCompany');
-  sel.innerHTML = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('empCompany').innerHTML = C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   openModal('addEmpModal');
 }
 
 function editEmployee(id) {
-  const emp = DB.get('employees', []).find(e => e.id === id);
-  if (!emp) return;
+  const e = C.employees.find(e=>e.id===id);
+  if (!e) return;
   document.getElementById('empModalTitle').textContent = 'Edit Employee';
-  document.getElementById('empName').value = emp.name;
-  document.getElementById('empDept').value = emp.dept || '';
-  document.getElementById('empId').value = emp.empId || '';
-  document.getElementById('empPin').value = emp.pin || '';
-  const prev = document.getElementById('pinPreview');
-  prev.style.display = 'none';
-  document.getElementById('editEmpUid').value = emp.id;
-  document.getElementById('empModalMsg').innerHTML = emp.pin ? '' : '<div class="msg info">⚠️ This employee has no PIN yet. Set one so they can clock in/out.</div>';
-  const companies = DB.get('companies', []);
-  const sel = document.getElementById('empCompany');
-  sel.innerHTML = companies.map(c => `<option value="${c.id}" ${c.id===emp.companyId?'selected':''}>${c.name}</option>`).join('');
+  document.getElementById('empName').value  = e.name;
+  document.getElementById('empDept').value  = e.dept||'';
+  document.getElementById('empId').value    = e.emp_code||'';
+  document.getElementById('empPin').value   = e.pin||'';
+  document.getElementById('pinPreview').style.display = 'none';
+  document.getElementById('editEmpUid').value = e.id;
+  document.getElementById('empModalMsg').innerHTML = e.pin ? '' : '<div class="msg info">This employee has no PIN yet — set one so they can clock in/out.</div>';
+  document.getElementById('empCompany').innerHTML = C.companies.map(c=>`<option value="${c.id}"${c.id===e.company_id?' selected':''}>${c.name}</option>`).join('');
   openModal('addEmpModal');
 }
 
 function generatePin() {
-  const pin = Math.floor(1000 + Math.random() * 9000).toString();
+  const pin = Math.floor(1000+Math.random()*9000).toString();
   document.getElementById('empPin').value = pin;
-  const prev = document.getElementById('pinPreview');
-  prev.textContent = `PIN: ${pin}`;
-  prev.style.display = '';
+  const p = document.getElementById('pinPreview');
+  p.textContent = `PIN: ${pin}`; p.style.display='';
 }
 
-function saveEmployee() {
-  const name = document.getElementById('empName').value.trim();
-  const dept = document.getElementById('empDept').value.trim();
-  const empId = document.getElementById('empId').value.trim();
-  const companyId = document.getElementById('empCompany').value;
-  const pin = document.getElementById('empPin').value.trim();
-  const editId = document.getElementById('editEmpUid').value;
-  if (!name) { showMsg('empModalMsg', 'Name is required.', 'error'); return; }
-  if (!companyId) { showMsg('empModalMsg', 'Please select a company.', 'error'); return; }
-  if (pin && (!/^\d{4}$/.test(pin))) { showMsg('empModalMsg', 'PIN must be exactly 4 digits.', 'error'); return; }
-  let employees = DB.get('employees', []);
-  if (editId) {
-    employees = employees.map(e => e.id === editId ? { ...e, name, dept, empId, companyId, ...(pin ? { pin } : {}) } : e);
-  } else {
-    if (!pin) { showMsg('empModalMsg', 'A 4-digit PIN is required for new employees.', 'error'); return; }
-    employees.push({ id: uid(), name, dept, empId, companyId, pin, active: true, created: new Date().toISOString() });
-  }
-  DB.set('employees', employees);
-  closeModal('addEmpModal');
+async function saveEmployee() {
+  const name       = document.getElementById('empName').value.trim();
+  const dept       = document.getElementById('empDept').value.trim();
+  const emp_code   = document.getElementById('empId').value.trim();
+  const company_id = document.getElementById('empCompany').value;
+  const pin        = document.getElementById('empPin').value.trim();
+  const editId     = document.getElementById('editEmpUid').value;
+  if (!name)       { showMsg('empModalMsg','Name is required.','error'); return; }
+  if (!company_id) { showMsg('empModalMsg','Please select a company.','error'); return; }
+  if (pin && !/^\d{4}$/.test(pin)) { showMsg('empModalMsg','PIN must be exactly 4 digits.','error'); return; }
+  if (!editId && !pin)             { showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error'); return; }
+  try {
+    if (editId) {
+      const upd = { name, dept, emp_code, company_id };
+      if (pin) upd.pin = pin;
+      await DB.update('employees', `id=eq.${editId}`, upd);
+      const idx = C.employees.findIndex(e=>e.id===editId);
+      if (idx!==-1) C.employees[idx] = { ...C.employees[idx], ...upd };
+    } else {
+      const r = await DB.insert('employees', { name, dept, emp_code, company_id, pin, active:true });
+      if (r?.[0]) C.employees.push(r[0]);
+    }
+    closeModal('addEmpModal');
+    renderEmployees();
+  } catch(e) { showMsg('empModalMsg','Error: '+e.message,'error'); }
+}
+
+async function toggleEmp(id) {
+  const e = C.employees.find(e=>e.id===id);
+  if (!e) return;
+  await DB.update('employees',`id=eq.${id}`,{ active:!e.active });
+  e.active = !e.active;
   renderEmployees();
-  loadPunchPage();
 }
 
-function toggleEmp(id) {
-  let employees = DB.get('employees', []);
-  employees = employees.map(e => e.id === id ? { ...e, active: !e.active } : e);
-  DB.set('employees', employees);
-  renderEmployees();
-  loadPunchPage();
-}
-
-// ===== COMPANIES =====
-function loadCompaniesPage() {
+// ================================================================
+// COMPANIES
+// ================================================================
+async function loadCompaniesPage() {
   if (!isLoggedIn()) { navigate('login'); return; }
-  const companies = DB.get('companies', []);
-  const employees = DB.get('employees', []);
+  await refreshCache();
   const grid = document.getElementById('companyGrid');
-  if (!companies.length) {
-    grid.innerHTML = `<div class="empty"><p>No companies yet. Create your first one!</p></div>`;
-    return;
-  }
-  grid.innerHTML = companies.map(c => {
-    const empCount = employees.filter(e => e.companyId === c.id).length;
+  if (!C.companies.length) { grid.innerHTML=`<div class="empty"><p>No companies yet. Create your first one!</p></div>`; return; }
+  grid.innerHTML = C.companies.map(c => {
+    const cnt = C.employees.filter(e=>e.company_id===c.id).length;
     return `<div class="company-card">
       <h3>${c.name}</h3>
-      <div class="meta">${c.industry||''}${c.industry&&c.desc?' · ':''}${c.desc||''}</div>
-      <div class="meta" style="margin-top:6px;color:var(--text2)">👥 ${empCount} employee${empCount!==1?'s':''}</div>
+      <div class="meta">${c.industry||''}${c.industry&&c.description?' · ':''}${c.description||''}</div>
+      <div class="meta" style="margin-top:6px;color:var(--text2)">&#128101; ${cnt} employee${cnt!==1?'s':''}</div>
       <div class="actions">
         <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="editCompany('${c.id}')">Edit</button>
         <button class="btn-danger" style="font-size:12px;padding:6px 12px" onclick="confirmDelete('company','${c.id}','${c.name}')">Delete</button>
@@ -1556,78 +995,65 @@ function loadCompaniesPage() {
 }
 
 function openAddCompanyModal() {
-  document.getElementById('companyModalTitle').textContent = 'New Company';
-  document.getElementById('companyName').value = '';
-  document.getElementById('companyIndustry').value = '';
-  document.getElementById('companyDesc').value = '';
-  document.getElementById('editCompanyUid').value = '';
-  document.getElementById('companyModalMsg').innerHTML = '';
+  document.getElementById('companyModalTitle').textContent='New Company';
+  ['companyName','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('editCompanyUid').value='';
+  document.getElementById('companyModalMsg').innerHTML='';
   openModal('addCompanyModal');
 }
 
 function editCompany(id) {
-  const co = DB.get('companies', []).find(c => c.id === id);
-  if (!co) return;
-  document.getElementById('companyModalTitle').textContent = 'Edit Company';
-  document.getElementById('companyName').value = co.name;
-  document.getElementById('companyIndustry').value = co.industry || '';
-  document.getElementById('companyDesc').value = co.desc || '';
-  document.getElementById('editCompanyUid').value = co.id;
-  document.getElementById('companyModalMsg').innerHTML = '';
+  const c = C.companies.find(c=>c.id===id);
+  if (!c) return;
+  document.getElementById('companyModalTitle').textContent='Edit Company';
+  document.getElementById('companyName').value     = c.name;
+  document.getElementById('companyIndustry').value = c.industry||'';
+  document.getElementById('companyDesc').value     = c.description||'';
+  document.getElementById('editCompanyUid').value  = c.id;
+  document.getElementById('companyModalMsg').innerHTML='';
   openModal('addCompanyModal');
 }
 
-function saveCompany() {
-  const name = document.getElementById('companyName').value.trim();
-  const industry = document.getElementById('companyIndustry').value.trim();
-  const desc = document.getElementById('companyDesc').value.trim();
-  const editId = document.getElementById('editCompanyUid').value;
-  if (!name) { showMsg('companyModalMsg', 'Company name is required.', 'error'); return; }
-  let companies = DB.get('companies', []);
-  if (editId) {
-    companies = companies.map(c => c.id === editId ? { ...c, name, industry, desc } : c);
-  } else {
-    companies.push({ id: uid(), name, industry, desc, created: new Date().toISOString() });
-  }
-  DB.set('companies', companies);
-  closeModal('addCompanyModal');
-  loadCompaniesPage();
-  loadCompanySwitcher();
+async function saveCompany() {
+  const name        = document.getElementById('companyName').value.trim();
+  const industry    = document.getElementById('companyIndustry').value.trim();
+  const description = document.getElementById('companyDesc').value.trim();
+  const editId      = document.getElementById('editCompanyUid').value;
+  if (!name) { showMsg('companyModalMsg','Company name is required.','error'); return; }
+  try {
+    if (editId) {
+      await DB.update('companies',`id=eq.${editId}`,{name,industry,description});
+      const c = C.companies.find(c=>c.id===editId);
+      if (c) { c.name=name; c.industry=industry; c.description=description; }
+    } else {
+      const r = await DB.insert('companies',{name,industry,description});
+      if (r?.[0]) C.companies.push(r[0]);
+    }
+    closeModal('addCompanyModal');
+    loadCompaniesPage();
+  } catch(e) { showMsg('companyModalMsg','Error: '+e.message,'error'); }
 }
 
-function loadCompanySwitcher() {
-  const companies = DB.get('companies', []);
-  const sel = document.getElementById('companySwitch');
-  sel.innerHTML = '<option value="all">All Companies</option>' + companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-}
-
-function switchCompany(val) { currentCompanyFilter = val; }
-
-// ===== REPORTS =====
-function loadReportsPage() {
+// ================================================================
+// REPORTS
+// ================================================================
+async function loadReportsPage() {
   if (!isLoggedIn()) { navigate('login'); return; }
+  await refreshCache();
   updateDateRange();
+  document.getElementById('reportCompany').innerHTML =
+    '<option value="all">All Companies</option>' +
+    C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   loadReportEmps();
-  loadReportCompanyFilter();
-  document.getElementById('reportStats').style.display = 'none';
-  document.getElementById('reportTableWrap').style.display = 'none';
-  document.getElementById('reportEmpty').style.display = 'none';
-}
-
-function loadReportCompanyFilter() {
-  const companies = DB.get('companies', []);
-  const sel = document.getElementById('reportCompany');
-  sel.innerHTML = '<option value="all">All Companies</option>' + companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
 }
 
 function loadReportEmps() {
-  const coId = document.getElementById('reportCompany')?.value || 'all';
-  let employees = DB.get('employees', []).filter(e => e.active);
-  if (coId !== 'all') employees = employees.filter(e => e.companyId === coId);
-  const companies = DB.get('companies', []);
-  const list = document.getElementById('empCheckList');
-  list.innerHTML = employees.map(e => {
-    const co = companies.find(c => c.id === e.companyId);
+  const coId = document.getElementById('reportCompany')?.value||'all';
+  let emps = C.employees.filter(e=>e.active);
+  if (coId!=='all') emps = emps.filter(e=>e.company_id===coId);
+  document.getElementById('empCheckList').innerHTML = emps.map(e=>{
+    const co = C.companies.find(c=>c.id===e.company_id);
     return `<label class="emp-check-item">
       <input type="checkbox" class="emp-check" value="${e.id}" checked>
       <span>${e.name}</span><span style="color:var(--text3);font-size:12px;margin-left:auto">${co?.name||''}</span>
@@ -1635,286 +1061,232 @@ function loadReportEmps() {
   }).join('');
 }
 
-function selAll(val) {
-  document.querySelectorAll('.emp-check').forEach(c => c.checked = val);
-}
+function selAll(v) { document.querySelectorAll('.emp-check').forEach(c=>c.checked=v); }
 
 function updateDateRange() {
-  const period = document.getElementById('reportPeriod').value;
+  const p   = document.getElementById('reportPeriod').value;
   const now = new Date();
-  let start, end;
-  end = now.toLocaleDateString('en-CA');
-  const y = now.getFullYear(), m = now.getMonth();
-  switch(period) {
-    case 'week': start = new Date(now - 6*86400000).toLocaleDateString('en-CA'); break;
-    case 'biweek': start = new Date(now - 13*86400000).toLocaleDateString('en-CA'); break;
-    case 'month': start = new Date(y, m, 1).toLocaleDateString('en-CA'); break;
-    case 'quarter': start = new Date(y, Math.floor(m/3)*3, 1).toLocaleDateString('en-CA'); break;
-    case '6months': start = new Date(y, m-5, 1).toLocaleDateString('en-CA'); break;
-    case 'year': start = new Date(y, 0, 1).toLocaleDateString('en-CA'); break;
+  const y   = now.getFullYear(), m = now.getMonth();
+  const end = now.toLocaleDateString('en-CA');
+  let start;
+  switch(p) {
+    case 'week':    start = new Date(now-6*86400000).toLocaleDateString('en-CA'); break;
+    case 'biweek':  start = new Date(now-13*86400000).toLocaleDateString('en-CA'); break;
+    case 'month':   start = new Date(y,m,1).toLocaleDateString('en-CA'); break;
+    case 'quarter': start = new Date(y,Math.floor(m/3)*3,1).toLocaleDateString('en-CA'); break;
+    case '6months': start = new Date(y,m-5,1).toLocaleDateString('en-CA'); break;
+    case 'year':    start = new Date(y,0,1).toLocaleDateString('en-CA'); break;
     default: return;
   }
   document.getElementById('reportStart').value = start;
-  document.getElementById('reportEnd').value = end;
+  document.getElementById('reportEnd').value   = end;
 }
 
-function generateReport() {
-  const start = document.getElementById('reportStart').value;
-  const end = document.getElementById('reportEnd').value;
-  const selectedEmps = [...document.querySelectorAll('.emp-check:checked')].map(c => c.value);
-  if (!start || !end) { alert('Please select a date range.'); return; }
-  if (!selectedEmps.length) { alert('Please select at least one employee.'); return; }
+async function generateReport() {
+  const start   = document.getElementById('reportStart').value;
+  const end     = document.getElementById('reportEnd').value;
+  const selEmps = [...document.querySelectorAll('.emp-check:checked')].map(c=>c.value);
+  if (!start||!end)     { alert('Please select a date range.'); return; }
+  if (!selEmps.length)  { alert('Please select at least one employee.'); return; }
 
-  const punches = DB.get('punches', []);
-  const employees = DB.get('employees', []);
-  const companies = DB.get('companies', []);
+  let punches;
+  try {
+    punches = await DB.all('punches', `punch_date=gte.${start}&punch_date=lte.${end}&order=punched_at.asc`);
+  } catch(e) { alert('Error: '+e.message); return; }
 
-  // Build sessions per employee (pair IN/OUT)
   const allRows = [];
-  selectedEmps.forEach(empId => {
-    const emp = employees.find(e => e.id === empId);
+  selEmps.forEach(empId => {
+    const emp = C.employees.find(e=>e.id===empId);
     if (!emp) return;
-    const co = companies.find(c => c.id === emp.companyId);
-    const empPunches = punches
-      .filter(p => p.empId === empId && p.date >= start && p.date <= end)
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
+    const co  = C.companies.find(c=>c.id===emp.company_id);
+    const eps = (punches||[]).filter(p=>p.emp_id===empId)
+      .sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
     const empRows = [];
-    let i = 0;
-    while (i < empPunches.length) {
-      const p = empPunches[i];
-      if (p.type === 'IN') {
-        const out = empPunches[i + 1]?.type === 'OUT' ? empPunches[i + 1] : null;
-        let hours = null;
-        if (out) {
-          hours = (new Date(out.timestamp) - new Date(p.timestamp)) / 3600000;
-          i += 2;
-        } else { i++; }
-        empRows.push({
-          empName: emp.name, empId: emp.empId || '', company: co?.name || '—',
-          dept: emp.dept || '—', date: p.date, punchIn: p.time,
-          punchOut: out?.time || '—', hours,
-          isSubtotal: false
-        });
-      } else { i++; }
+    let i=0;
+    while (i<eps.length) {
+      const p=eps[i];
+      if (p.type==='IN') {
+        const out = eps[i+1]?.type==='OUT' ? eps[i+1] : null;
+        const hrs = out ? (new Date(out.punched_at)-new Date(p.punched_at))/3600000 : null;
+        if (out) i+=2; else i++;
+        empRows.push({ empName:emp.name, empCode:emp.emp_code||'', company:co?.name||'—', dept:emp.dept||'—',
+          date:p.punch_date, punchIn:p.punch_time, punchOut:out?.punch_time||'—', hours:hrs, isSubtotal:false });
+      } else i++;
     }
-
-    if (empRows.length > 0) {
+    if (empRows.length) {
       allRows.push(...empRows);
-      // Per-employee subtotal row
-      const empTotal = empRows.reduce((s, r) => s + (r.hours ?? 0), 0);
-      allRows.push({
-        empName: emp.name, empId: emp.empId || '', company: co?.name || '—',
-        dept: emp.dept || '—', date: '', punchIn: '', punchOut: '',
-        hours: empTotal, isSubtotal: true,
-        subtotalLabel: `${emp.name} — Total`
-      });
+      const tot = empRows.reduce((s,r)=>s+(r.hours??0),0);
+      allRows.push({ empName:emp.name, subtotalLabel:`${emp.name} — Total`, hours:tot, isSubtotal:true });
     }
   });
 
   reportData = allRows;
+  const dataRows = allRows.filter(r=>!r.isSubtotal);
+  const totalH   = allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
+  const doneRows = dataRows.filter(r=>r.hours!==null);
 
-  // Summary stats (only data rows)
-  const dataRows = allRows.filter(r => !r.isSubtotal);
-  const totalH = allRows.filter(r => r.isSubtotal).reduce((s, r) => s + (r.hours ?? 0), 0);
-  const statsEl = document.getElementById('reportStats');
-  statsEl.style.display = 'grid';
-  statsEl.innerHTML = `
+  document.getElementById('reportStats').style.display='grid';
+  document.getElementById('reportStats').innerHTML=`
     <div class="stat-card"><div class="label">Total Sessions</div><div class="value blue">${dataRows.length}</div></div>
     <div class="stat-card"><div class="label">Total Hours</div><div class="value green">${totalH.toFixed(2)}</div></div>
-    <div class="stat-card"><div class="label">Employees</div><div class="value purple">${selectedEmps.length}</div></div>
-    <div class="stat-card"><div class="label">Avg Hrs / Session</div><div class="value">${dataRows.length ? (totalH / dataRows.filter(r => r.hours !== null).length || 0).toFixed(2) : '0'}</div></div>`;
+    <div class="stat-card"><div class="label">Employees</div><div class="value purple">${selEmps.length}</div></div>
+    <div class="stat-card"><div class="label">Avg Hrs / Session</div><div class="value">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
 
   if (!dataRows.length) {
-    document.getElementById('reportTableWrap').style.display = 'none';
-    document.getElementById('reportEmpty').style.display = '';
-    return;
+    document.getElementById('reportTableWrap').style.display='none';
+    document.getElementById('reportEmpty').style.display=''; return;
   }
-  document.getElementById('reportEmpty').style.display = 'none';
-  document.getElementById('reportTableWrap').style.display = '';
-
+  document.getElementById('reportEmpty').style.display='none';
+  document.getElementById('reportTableWrap').style.display='';
   document.getElementById('reportTableBody').innerHTML = allRows.map(r => {
-    if (r.isSubtotal) {
-      return `<tr style="background:rgba(79,142,247,0.06);border-top:2px solid var(--border)">
-        <td colspan="3" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 16px">
-          📊 ${r.subtotalLabel}
-        </td>
-        <td style="color:var(--text2);font-size:12px;font-style:italic"></td>
-        <td style="color:var(--text2);font-size:12px;font-style:italic"></td>
-        <td style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--accent)">${r.hours.toFixed(2)}h</td>
-      </tr>`;
-    }
-    const hoursDisplay = r.hours !== null ? r.hours.toFixed(2) + 'h' : '<span style="color:var(--text3)">Still in</span>';
+    if (r.isSubtotal) return `<tr style="background:rgba(79,142,247,0.06);border-top:2px solid var(--border)">
+      <td colspan="3" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 16px">&#128202; ${r.subtotalLabel}</td>
+      <td></td><td></td>
+      <td style="font-family:'DM Mono',monospace;font-weight:700;font-size:15px;color:var(--accent)">${r.hours.toFixed(2)}h</td>
+    </tr>`;
     return `<tr>
-      <td><span style="font-weight:500">${r.empName}</span>${r.empId ? `<span style="color:var(--text2);font-size:12px;margin-left:8px">${r.empId}</span>` : ''}</td>
+      <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:12px;margin-left:8px">${r.empCode}</span>`:''}</td>
       <td>${r.company}</td>
       <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--green)">${r.punchIn}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)">${r.punchOut !== '—' ? r.punchOut : '<span style="color:var(--text3)">—</span>'}</td>
-      <td style="font-family:'DM Mono',monospace;font-weight:600">${hoursDisplay}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red)">${r.punchOut!=='—'?r.punchOut:'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${r.hours!==null?r.hours.toFixed(2)+'h':'<span style="color:var(--text3)">Still in</span>'}</td>
     </tr>`;
   }).join('');
 }
 
 function exportReport(fmt) {
   if (!reportData.length) { alert('Generate a report first.'); return; }
-  const headers = ['Employee', 'Employee ID', 'Company', 'Department', 'Date', 'Punch In', 'Punch Out', 'Hours'];
+  const headers = ['Employee','Employee ID','Company','Department','Date','Punch In','Punch Out','Hours'];
+  const rows    = reportData.map(r => r.isSubtotal
+    ? [r.subtotalLabel,'','','','','','TOTAL', r.hours.toFixed(2)]
+    : [r.empName, r.empCode, r.company, r.dept, r.date, r.punchIn, r.punchOut, r.hours!==null?r.hours.toFixed(2):'Still In']);
 
-  // Build flat rows: data rows + subtotal rows (clearly marked)
-  const rows = reportData.map(r => {
-    if (r.isSubtotal) {
-      return [r.subtotalLabel, '', '', '', '', '', 'TOTAL', r.hours.toFixed(2)];
-    }
-    return [r.empName, r.empId, r.company, r.dept, r.date, r.punchIn, r.punchOut,
-      r.hours !== null ? r.hours.toFixed(2) : 'Still In'];
-  });
-
-  if (fmt === 'excel') {
+  if (fmt==='excel') {
     const wb = XLSX.utils.book_new();
-    const data = [headers, ...rows];
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = headers.map((h, i) => ({ wch: i === 0 ? 22 : 14 }));
-    // Style subtotal rows bold (row indices where isSubtotal is true)
-    reportData.forEach((r, idx) => {
-      if (r.isSubtotal) {
-        const rowNum = idx + 2; // 1-indexed + header
-        ['A','B','C','D','E','F','G','H'].forEach(col => {
-          const cell = ws[col + rowNum];
-          if (cell) cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'EEF2FF' } } };
-        });
-      }
-    });
-    XLSX.utils.book_append_sheet(wb, ws, 'Time Report');
-    XLSX.writeFile(wb, `time-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
-
-  } else if (fmt === 'csv') {
-    const data = [headers, ...rows];
-    const csv = data.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const ws = XLSX.utils.aoa_to_sheet([headers,...rows]);
+    ws['!cols'] = headers.map((_,i)=>({wch:i===0?22:14}));
+    XLSX.utils.book_append_sheet(wb,ws,'Time Report');
+    XLSX.writeFile(wb,`time-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
+  } else if (fmt==='csv') {
+    const csv = [headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
     a.download = `time-report-${new Date().toLocaleDateString('en-CA')}.csv`;
     a.click();
-
-  } else if (fmt === 'pdf') {
+  } else {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape' });
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PunchClock Pro — Time Report', 14, 16);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(120);
-    const period = document.getElementById('reportStart').value + ' → ' + document.getElementById('reportEnd').value;
-    doc.text(`Period: ${period}   |   Generated: ${new Date().toLocaleString()}`, 14, 23);
+    const doc = new jsPDF({orientation:'landscape'});
+    doc.setFontSize(16); doc.setFont('helvetica','bold');
+    doc.text('PunchClock Pro — Time Report',14,16);
+    doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(120);
+    doc.text(`Period: ${document.getElementById('reportStart').value} to ${document.getElementById('reportEnd').value}  |  Generated: ${new Date().toLocaleString()}`,14,23);
     doc.setTextColor(0);
-
-    const pdfBody = reportData.map(r => {
-      if (r.isSubtotal) {
-        return [{ content: r.subtotalLabel, colSpan: 5, styles: { fontStyle: 'bold', fillColor: [238, 242, 255], textColor: [60, 80, 200] } },
-                { content: '', styles: { fillColor: [238, 242, 255] } },
-                { content: r.hours.toFixed(2) + 'h', styles: { fontStyle: 'bold', fillColor: [238, 242, 255], textColor: [60, 80, 200] } }];
-      }
-      return [r.empName + (r.empId ? ` (${r.empId})` : ''), r.company, r.date, r.punchIn,
-              r.punchOut !== '—' ? r.punchOut : '—',
-              r.hours !== null ? r.hours.toFixed(2) + 'h' : 'Still In'];
-    });
-
     doc.autoTable({
-      head: [['Employee', 'Company', 'Date', 'Punch In', 'Punch Out', 'Hours']],
-      body: pdfBody,
-      startY: 28,
-      styles: { fontSize: 9, cellPadding: 4 },
-      headStyles: { fillColor: [79, 142, 247], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [245, 245, 250] },
-      didParseCell: (data) => {
-        if (reportData[data.row.index]?.isSubtotal) {
-          data.cell.styles.alternateRowStyles = {};
-        }
-      }
+      head:[['Employee','Company','Date','Punch In','Punch Out','Hours']],
+      body: reportData.map(r=>r.isSubtotal
+        ? [{ content:r.subtotalLabel,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]} },
+           { content:r.hours.toFixed(2)+'h',styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]} }]
+        : [r.empName+(r.empCode?` (${r.empCode})`:''),r.company,r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',r.hours!==null?r.hours.toFixed(2)+'h':'Still In']),
+      startY:28,
+      styles:{fontSize:9,cellPadding:4},
+      headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[245,245,250]},
     });
     doc.save(`time-report-${new Date().toLocaleDateString('en-CA')}.pdf`);
   }
 }
 
-// ===== ACTIVITY LOG =====
-function loadActivityPage() {
+// ================================================================
+// ACTIVITY LOG
+// ================================================================
+async function loadActivityPage() {
   if (!isLoggedIn()) { navigate('login'); return; }
-  const allPunches = DB.get('punches', []);
-  const punches = allPunches.slice().reverse().slice(0, 200);
-  const employees = DB.get('employees', []);
-  const companies = DB.get('companies', []);
-
-  const total = allPunches.length;
-  const ins = allPunches.filter(p => p.type === 'IN').length;
-  const outs = allPunches.filter(p => p.type === 'OUT').length;
+  await refreshCache();
+  const all   = C.punches;
   const today = new Date().toLocaleDateString('en-CA');
-  const todayPunches = allPunches.filter(p => p.date === today).length;
-  const currentlyIn = (() => {
-    const emp_ids = [...new Set(allPunches.map(p => p.empId))];
-    return emp_ids.filter(id => {
-      const ep = allPunches.filter(p => p.empId === id && p.date === today)
-        .sort((a,b) => new Date(a.timestamp)-new Date(b.timestamp));
-      return ep.length && ep[ep.length-1].type === 'IN';
-    }).length;
-  })();
+  const todayN = all.filter(p=>p.punch_date===today).length;
+  const nowIn  = C.employees.filter(e=>e.active&&getEmpStatus(e.id).status==='IN').length;
+  const outs   = all.filter(p=>p.type==='OUT').length;
 
-  document.getElementById('activityStats').innerHTML = `
-    <div class="stat-card"><div class="label">Total Records</div><div class="value blue">${total}</div></div>
-    <div class="stat-card"><div class="label">Today's Punches</div><div class="value green">${todayPunches}</div></div>
-    <div class="stat-card"><div class="label">Currently In</div><div class="value" style="color:#a78bfa">${currentlyIn}</div></div>
-    <div class="stat-card"><div class="label">Clocked Out Today</div><div class="value">${outs}</div></div>`;
+  document.getElementById('activityStats').innerHTML=`
+    <div class="stat-card"><div class="label">Total Records</div><div class="value blue">${all.length}</div></div>
+    <div class="stat-card"><div class="label">Today's Punches</div><div class="value green">${todayN}</div></div>
+    <div class="stat-card"><div class="label">Currently In</div><div class="value purple">${nowIn}</div></div>
+    <div class="stat-card"><div class="label">Total Clock-Outs</div><div class="value">${outs}</div></div>`;
 
   const tbody = document.getElementById('activityBody');
-  if (!punches.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet. Clock in/out on the main page to see records here.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = punches.map(p => {
-    const co = companies.find(c => c.id === p.companyId);
-    const emp = employees.find(e => e.id === p.empId);
+  const show  = [...all].sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at)).slice(0,200);
+  if (!show.length) { tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet.</td></tr>`; return; }
+  tbody.innerHTML = show.map(p=>{
+    const co  = C.companies.find(c=>c.id===p.company_id);
+    const emp = C.employees.find(e=>e.id===p.emp_id);
     return `<tr>
-      <td style="font-weight:500">${p.empName}${emp?.empId ? `<span style="color:var(--text3);font-size:12px;margin-left:6px">${emp.empId}</span>` : ''}</td>
+      <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:12px;margin-left:6px">${emp.emp_code}</span>`:''}</td>
       <td>${co?.name||'—'}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type}</span></td>
-      <td style="color:var(--text2);font-size:13px;font-family:'DM Mono',monospace">${p.date}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:13px">${p.time}</td>
+      <td style="color:var(--text2);font-size:13px;font-family:'DM Mono',monospace">${p.punch_date}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:13px">${p.punch_time}</td>
     </tr>`;
   }).join('');
 }
 
-// ===== DELETE =====
+// ================================================================
+// DELETE
+// ================================================================
 function confirmDelete(type, id, name) {
   document.getElementById('deleteMsg').textContent = `Are you sure you want to delete "${name}"? This cannot be undone.`;
-  document.getElementById('confirmDeleteBtn').onclick = () => {
-    if (type === 'emp') {
-      DB.set('employees', DB.get('employees', []).filter(e => e.id !== id));
-      renderEmployees(); loadPunchPage();
-    } else if (type === 'company') {
-      DB.set('companies', DB.get('companies', []).filter(c => c.id !== id));
-      loadCompaniesPage(); loadCompanySwitcher();
-    }
-    closeModal('deleteModal');
+  document.getElementById('confirmDeleteBtn').onclick = async () => {
+    try {
+      if (type==='emp') {
+        await DB.del('employees',`id=eq.${id}`);
+        C.employees = C.employees.filter(e=>e.id!==id);
+        renderEmployees();
+      } else {
+        await DB.del('companies',`id=eq.${id}`);
+        C.companies = C.companies.filter(c=>c.id!==id);
+        loadCompaniesPage();
+      }
+      closeModal('deleteModal');
+    } catch(e) { alert('Delete failed: '+e.message); }
   };
   openModal('deleteModal');
 }
 
-// ===== MODAL UTILS =====
-function openModal(id) { document.getElementById(id).classList.add('open'); }
+// ================================================================
+// MODAL / UTIL
+// ================================================================
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
-});
+document.querySelectorAll('.modal-overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); }));
 
 function showMsg(id, msg, type) {
   const el = document.getElementById(id);
   if (el) el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
 }
 
-// ===== INIT =====
-updateNav();
-loadPunchPage();
-updateDateRange();
+// ================================================================
+// INIT
+// ================================================================
+async function init() {
+  try {
+    await refreshCache();
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    updateNav();
+    loadPunchPage();
+    updateDateRange();
+  } catch(e) {
+    document.getElementById('loadingOverlay').innerHTML=`
+      <div style="text-align:center;color:var(--red);max-width:400px;padding:24px">
+        <div style="font-size:32px;margin-bottom:12px">&#9888;&#65039;</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px">Cannot connect to database</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6">${e.message}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:12px">Check that your Supabase tables exist and the API key is correct.</div>
+      </div>`;
+  }
+}
+init();
 </script>
 </body>
 </html>
