@@ -167,18 +167,19 @@
   .punch-btns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 28px;
+    gap: 48px;
+    padding: 0 8px;
   }
   .punch-btn {
-    padding: 30px 16px;
+    padding: 34px 16px;
     border: none;
-    border-radius: 18px;
+    border-radius: 20px;
     font-family: inherit;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.15s;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     position: relative;
     overflow: hidden;
   }
@@ -1158,24 +1159,29 @@ function loadPunchPage() {
   refreshClockedIn();
 }
 
-function refreshClockedIn() {
+function getEmployeeStatus(empId) {
+  // Returns the employee's current status based on their most recent punch ever
   const punches = DB.get('punches', []);
+  const empPunches = punches
+    .filter(p => p.empId === empId)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  if (!empPunches.length) return { status: 'OUT', lastPunch: null };
+  const last = empPunches[empPunches.length - 1];
+  return { status: last.type, lastPunch: last };
+}
+
+function refreshClockedIn() {
   const employees = DB.get('employees', []).filter(e => e.active);
   const companies = DB.get('companies', []);
   const today = new Date().toLocaleDateString('en-CA');
 
-  // For each employee, find their last punch of today — if it's IN, they're clocked in
+  // Find everyone whose last punch EVER was IN (regardless of which day)
   const clockedIn = [];
   employees.forEach(emp => {
-    const empPunches = punches
-      .filter(p => p.empId === emp.id && p.date === today)
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-    if (empPunches.length > 0) {
-      const last = empPunches[empPunches.length - 1];
-      if (last.type === 'IN') {
-        const co = companies.find(c => c.id === emp.companyId);
-        clockedIn.push({ emp, lastIn: last, co });
-      }
+    const { status, lastPunch } = getEmployeeStatus(emp.id);
+    if (status === 'IN') {
+      const co = companies.find(c => c.id === emp.companyId);
+      clockedIn.push({ emp, lastIn: lastPunch, co });
     }
   });
 
@@ -1189,17 +1195,20 @@ function refreshClockedIn() {
     return;
   }
 
-  // Sort by punch-in time (earliest first)
   clockedIn.sort((a, b) => new Date(a.lastIn.timestamp) - new Date(b.lastIn.timestamp));
 
   list.innerHTML = clockedIn.map(({ emp, lastIn, co }) => {
     const initials = emp.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     const dur = getElapsedStr(lastIn.timestamp);
     const deptLine = [co?.name, emp.dept].filter(Boolean).join(' · ');
-    return `<div class="clocked-in-row">
+    const isOvernight = lastIn.date !== today;
+    const dateWarning = isOvernight
+      ? `<span style="color:var(--red);font-size:11px;font-weight:600;margin-left:4px">⚠ since ${lastIn.date}</span>`
+      : '';
+    return `<div class="clocked-in-row" style="${isOvernight ? 'border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.05)' : ''}">
       <div class="avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0">${initials}</div>
       <div style="flex:1;min-width:0">
-        <div class="ci-name">${emp.name}</div>
+        <div class="ci-name">${emp.name}${dateWarning}</div>
         ${deptLine ? `<div class="ci-duration">${deptLine}</div>` : ''}
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -1234,6 +1243,26 @@ function requestPunch(type) {
   if (!emp.pin) {
     // No PIN set — admin needs to set one first
     showPunchFeedback('⚠️ No PIN set for this employee. An admin must assign a PIN before clocking in/out.', 'error');
+    return;
+  }
+
+  // Pre-validate status before showing PIN pad — give immediate feedback
+  const { status, lastPunch } = getEmployeeStatus(empId);
+  if (type === 'IN' && status === 'IN') {
+    const today = new Date().toLocaleDateString('en-CA');
+    const whenStr = lastPunch.date === today
+      ? `since ${lastPunch.time} today`
+      : `since ${lastPunch.date} at ${lastPunch.time}`;
+    showPunchFeedback(`⚠ ${emp.name} is already clocked IN ${whenStr}. Please clock OUT first.`, 'error');
+    document.getElementById('empSelect').value = '';
+    return;
+  }
+  if (type === 'OUT' && status === 'OUT') {
+    const msg = lastPunch
+      ? `⚠ ${emp.name} is not clocked in. Last clock-out: ${lastPunch.date} at ${lastPunch.time}.`
+      : `⚠ ${emp.name} has never clocked in. Please clock IN first.`;
+    showPunchFeedback(msg, 'error');
+    document.getElementById('empSelect').value = '';
     return;
   }
 
@@ -1303,20 +1332,33 @@ function executePunch(empId, type) {
   const emp = employees.find(e => e.id === empId);
   if (!emp) return;
 
-  const now = new Date();
-  const punches = DB.get('punches', []);
-  const today = now.toLocaleDateString('en-CA');
+  // Check current status using ALL historical punches, not just today
+  const { status, lastPunch } = getEmployeeStatus(empId);
 
-  // Check for consecutive same punch type
-  const todayPunches = punches.filter(p => p.empId === empId && p.date === today);
-  if (todayPunches.length > 0) {
-    const last = todayPunches[todayPunches.length - 1];
-    if (last.type === type) {
-      showPunchFeedback(`${emp.name} is already clocked ${type}. Please clock ${type === 'IN' ? 'OUT' : 'IN'} first.`, 'error');
-      document.getElementById('empSelect').value = '';
-      return;
-    }
+  if (type === 'IN' && status === 'IN') {
+    const sinceDate = lastPunch.date;
+    const sinceTime = lastPunch.time;
+    const today = new Date().toLocaleDateString('en-CA');
+    const whenStr = sinceDate === today
+      ? `since ${sinceTime} today`
+      : `since ${sinceDate} at ${sinceTime}`;
+    showPunchFeedback(`⚠ ${emp.name} is already clocked IN ${whenStr}. Please clock OUT first.`, 'error');
+    document.getElementById('empSelect').value = '';
+    return;
   }
+
+  if (type === 'OUT' && status === 'OUT') {
+    const msg = lastPunch
+      ? `⚠ ${emp.name} is not clocked in. Their last clock-out was on ${lastPunch.date} at ${lastPunch.time}.`
+      : `⚠ ${emp.name} has no clock-in on record. Please clock IN first.`;
+    showPunchFeedback(msg, 'error');
+    document.getElementById('empSelect').value = '';
+    return;
+  }
+
+  const now = new Date();
+  const today = now.toLocaleDateString('en-CA');
+  const punches = DB.get('punches', []);
 
   const record = {
     id: uid(),
@@ -1341,7 +1383,7 @@ function showPunchFeedback(msg, type) {
   const el = document.getElementById('punchFeedback');
   el.textContent = msg;
   el.className = 'punch-feedback show ' + type;
-  setTimeout(() => el.classList.remove('show'), 4000);
+  setTimeout(() => el.classList.remove('show'), type === 'error' ? 7000 : 4000);
 }
 
 // ===== ADMIN PAGE =====
