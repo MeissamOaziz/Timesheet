@@ -186,6 +186,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .pill.admin{background:rgba(79,142,247,.15);color:var(--accent);}
 .pill.site{background:rgba(245,158,11,.15);color:var(--amber);}
 
+.send-period-option{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;border:1.5px solid var(--border);background:var(--surface2);transition:all .15s;}
+.send-period-option:hover{border-color:var(--accent);}
+.send-period-option input{margin-top:2px;flex-shrink:0;}
+
 /* MISC */
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;}
@@ -354,7 +358,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Site</th><th>Department</th><th>Status</th><th>PIN</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Employee</th><th>Site</th><th>Department</th><th>Status</th><th>PIN</th><th>Email Report</th><th>Actions</th></tr></thead>
       <tbody id="empTableBody"></tbody>
     </table></div>
   </div>
@@ -478,10 +482,90 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:4px">Exactly 4 digits. Share only with the employee.</div>
     </div>
+    <hr class="divider" style="margin:14px 0">
+    <!-- EMAIL REPORT TOGGLE -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleEmailReport()">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">&#128231; Send period hours report by email</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Automatically email this employee their punch summary at end of each pay period</div>
+      </div>
+      <div id="emailReportToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="emailReportThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
+    <div id="emailReportSection" style="display:none;margin-top:10px">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Employee Email Address</label>
+        <input type="email" id="empEmail" placeholder="employee@email.com">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Report will be sent automatically at the end of each pay period.</div>
+      </div>
+    </div>
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addEmpModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEmployee()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND REPORT MODAL -->
+<div class="modal-overlay" id="sendReportModal">
+  <div class="modal" style="max-width:420px">
+    <h3>&#128231; Send Report to Employee</h3>
+    <div id="sendReportMsg"></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:18px">
+      <div style="font-size:13px;font-weight:600;color:var(--text)" id="sendReportEmpName"></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px" id="sendReportEmpEmail"></div>
+    </div>
+    <div class="form-group">
+      <label>Select Period to Send</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px" id="sendReportPeriodList">
+        <label class="send-period-option" onclick="selectSendPeriod(this,'last_period')">
+          <input type="radio" name="sendPeriod" value="last_period" checked style="accent-color:var(--accent)">
+          <div>
+            <div style="font-weight:600;font-size:13px">Last Pay Period</div>
+            <div style="font-size:11px;color:var(--text2)" id="lastPeriodLabel">Based on company payroll settings</div>
+          </div>
+        </label>
+        <label class="send-period-option" onclick="selectSendPeriod(this,'last_month')">
+          <input type="radio" name="sendPeriod" value="last_month" style="accent-color:var(--accent)">
+          <div>
+            <div style="font-weight:600;font-size:13px">Last Month</div>
+            <div style="font-size:11px;color:var(--text2)" id="lastMonthLabel"></div>
+          </div>
+        </label>
+        <label class="send-period-option" onclick="selectSendPeriod(this,'last_quarter')">
+          <input type="radio" name="sendPeriod" value="last_quarter" style="accent-color:var(--accent)">
+          <div>
+            <div style="font-weight:600;font-size:13px">Last Quarter</div>
+            <div style="font-size:11px;color:var(--text2)" id="lastQuarterLabel"></div>
+          </div>
+        </label>
+        <label class="send-period-option" onclick="selectSendPeriod(this,'last_year')">
+          <input type="radio" name="sendPeriod" value="last_year" style="accent-color:var(--accent)">
+          <div>
+            <div style="font-weight:600;font-size:13px">Last Year</div>
+            <div style="font-size:11px;color:var(--text2)" id="lastYearLabel"></div>
+          </div>
+        </label>
+        <label class="send-period-option" onclick="selectSendPeriod(this,'custom')">
+          <input type="radio" name="sendPeriod" value="custom" style="accent-color:var(--accent)">
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:13px">Custom Range</div>
+            <div id="customRangeInputs" style="display:none;margin-top:8px">
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom:0"><label>Start</label><input type="date" id="sendReportStart"></div>
+                <div class="form-group" style="margin-bottom:0"><label>End</label><input type="date" id="sendReportEnd"></div>
+              </div>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <input type="hidden" id="sendReportEmpId">
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('sendReportModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 20px" id="sendReportBtn" onclick="executeSendReport()">&#128231; Send Now</button>
     </div>
   </div>
 </div>
@@ -1127,12 +1211,15 @@ function renderEmployees(){
   if(deptF)emps=emps.filter(e=>e.dept===deptF);
 
   const tbody=document.getElementById('empTableBody');
-  if(!emps.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:28px">${ctx?`No employees for ${ctx.co.name}.`:'No employees found.'}</td></tr>`;return;}
+  if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px">${ctx?`No employees for ${ctx.co.name}.`:'No employees found.'}</td></tr>`;return;}
 
   tbody.innerHTML=emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
     const ini=e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     const pin=e.pin?`<span class="pill in">&#128273; Set</span>`:`<span class="pill out">&#9888; None</span>`;
+    const emailStatus=e.send_report&&e.email
+      ?`<span class="pill" style="background:rgba(245,158,11,.15);color:var(--amber)">&#128231; ${e.email}</span>`
+      :`<span style="color:var(--text3);font-size:12px">—</span>`;
     return`<tr>
       <td><div class="emp-row"><div class="avatar">${ini}</div><div>
         <div style="font-weight:500">${e.name}</div>
@@ -1142,9 +1229,11 @@ function renderEmployees(){
       <td>${e.dept||'—'}</td>
       <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
       <td>${pin}</td>
+      <td>${emailStatus}</td>
       <td><div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editEmployee('${e.id}')">Edit</button>
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
+        <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">&#128231; Send Report</button>
         <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
       </div></td>
     </tr>`;
@@ -1188,13 +1277,24 @@ async function renderAdmins(){
 }
 
 // ---- Employee modal ----
+function toggleEmailReport(){
+  const cur=document.getElementById('emailReportSection').style.display!=='none';
+  setEmailToggle(!cur);
+}
+function setEmailToggle(on){
+  document.getElementById('emailReportSection').style.display=on?'':'none';
+  document.getElementById('emailReportToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('emailReportThumb').style.left=on?'20px':'2px';
+}
+
 function openAddEmpModal(){
   const ctx=Ctx.get();if(!ctx){alert('Please select a company first.');return;}
   document.getElementById('empModalTitle').textContent='Add Employee — '+ctx.co.name;
-  ['empName','empDept','empIdCode','empPin'].forEach(id=>document.getElementById(id).value='');
+  ['empName','empDept','empIdCode','empPin','empEmail'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
+  setEmailToggle(false);
   populateSiteDropdown('empSiteSelect',ctx.co.id,null);
   openModal('addEmpModal');
 }
@@ -1207,9 +1307,11 @@ function editEmployee(id){
   document.getElementById('empDept').value=e.dept||'';
   document.getElementById('empIdCode').value=e.emp_code||'';
   document.getElementById('empPin').value=e.pin||'';
+  document.getElementById('empEmail').value=e.email||'';
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value=e.id;
-  document.getElementById('empModalMsg').innerHTML=e.pin?'':'<div class="msg info">No PIN set — employee can\'t clock in/out until one is assigned.</div>';
+  document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">No PIN set — employee can't clock in/out until one is assigned.</div>`;
+  setEmailToggle(!!(e.send_report&&e.email));
   populateSiteDropdown('empSiteSelect',e.company_id||ctx?.co?.id,e.site_id);
   openModal('addEmpModal');
 }
@@ -1233,19 +1335,23 @@ async function saveEmployee(){
   const emp_code=document.getElementById('empIdCode').value.trim();
   const pin=document.getElementById('empPin').value.trim();
   const site_id=document.getElementById('empSiteSelect').value||null;
+  const send_report=document.getElementById('emailReportSection').style.display!=='none';
+  const email=document.getElementById('empEmail').value.trim()||null;
   const editId=document.getElementById('editEmpUid').value;
   if(!name){showMsg('empModalMsg','Name is required.','error');return;}
   if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg','PIN must be exactly 4 digits.','error');return;}
   if(!editId&&!pin){showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error');return;}
+  if(send_report&&!email){showMsg('empModalMsg','Please enter an email address for the report, or turn off the email report toggle.','error');return;}
+  if(send_report&&email&&!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('empModalMsg','Please enter a valid email address.','error');return;}
   try{
     if(editId){
-      const upd={name,dept,emp_code,site_id};if(pin)upd.pin=pin;
+      const upd={name,dept,emp_code,site_id,email,send_report};if(pin)upd.pin=pin;
       await DB.update('employees',`id=eq.${editId}`,upd);
       const idx=C.employees.findIndex(e=>e.id===editId);
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd};
     }else{
       if(!ctx){showMsg('empModalMsg','No active company.','error');return;}
-      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true});
+      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report});
       if(r?.[0])C.employees.push(r[0]);
     }
     closeModal('addEmpModal');renderEmployees();renderSitesAdmin();
@@ -1831,6 +1937,180 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 function showMsg(id,msg,type){const el=document.getElementById(id);if(el)el.innerHTML=`<div class="msg ${type}">${msg}</div>`;}
+
+// ═══════════════════════════════════════════════════
+// SEND REPORT MANUALLY
+// ═══════════════════════════════════════════════════
+
+function toDateStr(d){return d.toLocaleDateString('en-CA');}
+
+function getSendPeriodDates(periodVal, co){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const weekStart = co?.week_start||'monday';
+  const startDow = weekStart==='sunday'?0:1;
+  const freq = co?.payroll_frequency||'biweekly';
+
+  if(periodVal==='last_period'){
+    // Work out the period that just ended (same logic as edge function)
+    const todayDow = now.getDay();
+    if(freq==='monthly'){
+      // Last full month
+      const end = new Date(y, m, 0); // last day of prev month
+      const start = new Date(y, m-1, 1);
+      return{start:toDateStr(start),end:toDateStr(end),label:start.toLocaleDateString('en-US',{month:'long',year:'numeric'})};
+    }
+    const days = freq==='weekly'?7:14;
+    // Find last completed period boundary
+    const daysBack = ((todayDow - startDow + 7) % 7) || 7;
+    const periodEnd = new Date(now); periodEnd.setDate(now.getDate() - daysBack);
+    const periodStart = new Date(periodEnd); periodStart.setDate(periodEnd.getDate() - days + 1);
+    return{start:toDateStr(periodStart),end:toDateStr(periodEnd),
+      label:`${toDateStr(periodStart)} → ${toDateStr(periodEnd)}`};
+  }
+  if(periodVal==='last_month'){
+    const start = new Date(y, m-1, 1);
+    const end = new Date(y, m, 0);
+    return{start:toDateStr(start),end:toDateStr(end),
+      label:start.toLocaleDateString('en-US',{month:'long',year:'numeric'})};
+  }
+  if(periodVal==='last_quarter'){
+    const q = Math.floor(m/3);
+    const start = new Date(y, (q-1)*3, 1);
+    const end = new Date(y, q*3, 0);
+    const qn = ['Q1','Q2','Q3','Q4'][((q-1)+4)%4];
+    return{start:toDateStr(start),end:toDateStr(end),
+      label:`${qn} ${start.getFullYear()} (${toDateStr(start)} → ${toDateStr(end)})`};
+  }
+  if(periodVal==='last_year'){
+    const start = new Date(y-1, 0, 1);
+    const end = new Date(y-1, 11, 31);
+    return{start:toDateStr(start),end:toDateStr(end),label:`${y-1}`};
+  }
+  return null;
+}
+
+function openSendReportModal(empId){
+  const emp = C.employees.find(e=>e.id===empId);
+  if(!emp) return;
+  const co = C.companies.find(c=>c.id===emp.company_id);
+
+  document.getElementById('sendReportEmpId').value = empId;
+  document.getElementById('sendReportEmpName').textContent = emp.name + (emp.emp_code?' ('+emp.emp_code+')':'');
+  document.getElementById('sendReportMsg').innerHTML = '';
+
+  // Show email status
+  const emailEl = document.getElementById('sendReportEmpEmail');
+  if(emp.email){
+    emailEl.innerHTML = `&#128231; Will be sent to <strong style="color:var(--text)">${emp.email}</strong>`;
+  } else {
+    emailEl.innerHTML = `<span style="color:var(--red)">&#9888; No email address on file — please edit this employee and add one first.</span>`;
+  }
+
+  // Populate period labels
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const freq = co?.payroll_frequency||'biweekly';
+  const freqLabel = {weekly:'Weekly',biweekly:'Bi-Weekly',monthly:'Monthly'};
+
+  const lp = getSendPeriodDates('last_period', co);
+  document.getElementById('lastPeriodLabel').textContent =
+    `${freqLabel[freq]||''} · ${lp?lp.label:''}`;
+
+  const lm = getSendPeriodDates('last_month', co);
+  document.getElementById('lastMonthLabel').textContent = lm?lm.label:'';
+
+  const lq = getSendPeriodDates('last_quarter', co);
+  document.getElementById('lastQuarterLabel').textContent = lq?lq.label:'';
+
+  document.getElementById('lastYearLabel').textContent = String(y-1);
+
+  // Reset to first option
+  document.querySelector('input[name="sendPeriod"][value="last_period"]').checked = true;
+  document.getElementById('customRangeInputs').style.display = 'none';
+  document.getElementById('sendReportStart').value = toDateStr(new Date(y,m-1,1));
+  document.getElementById('sendReportEnd').value = toDateStr(new Date(y,m,0));
+
+  // Highlight selected option
+  document.querySelectorAll('.send-period-option').forEach(el=>{
+    el.style.borderColor = el.querySelector('input').checked?'var(--accent)':'var(--border)';
+    el.style.background = el.querySelector('input').checked?'rgba(79,142,247,.08)':'var(--surface2)';
+  });
+
+  openModal('sendReportModal');
+}
+
+function selectSendPeriod(label, val){
+  // Update visual highlight
+  document.querySelectorAll('.send-period-option').forEach(el=>{
+    const isThis = el===label;
+    el.style.borderColor = isThis?'var(--accent)':'var(--border)';
+    el.style.background = isThis?'rgba(79,142,247,.08)':'var(--surface2)';
+  });
+  document.getElementById('customRangeInputs').style.display = val==='custom'?'block':'none';
+}
+
+async function executeSendReport(){
+  const empId = document.getElementById('sendReportEmpId').value;
+  const emp = C.employees.find(e=>e.id===empId);
+  if(!emp){showMsg('sendReportMsg','Employee not found.','error');return;}
+  if(!emp.email){showMsg('sendReportMsg','This employee has no email address. Edit the employee and add one first.','error');return;}
+
+  const periodVal = document.querySelector('input[name="sendPeriod"]:checked')?.value||'last_period';
+  const co = C.companies.find(c=>c.id===emp.company_id);
+
+  let start, end, periodLabel;
+  if(periodVal==='custom'){
+    start = document.getElementById('sendReportStart').value;
+    end = document.getElementById('sendReportEnd').value;
+    if(!start||!end){showMsg('sendReportMsg','Please select a start and end date.','error');return;}
+    if(start>end){showMsg('sendReportMsg','Start date must be before end date.','error');return;}
+    periodLabel = `${start} → ${end}`;
+  } else {
+    const pd = getSendPeriodDates(periodVal, co);
+    if(!pd){showMsg('sendReportMsg','Could not calculate period dates.','error');return;}
+    start = pd.start; end = pd.end; periodLabel = pd.label;
+  }
+
+  const btn = document.getElementById('sendReportBtn');
+  btn.textContent = '⏳ Sending...';
+  btn.disabled = true;
+  document.getElementById('sendReportMsg').innerHTML = '';
+
+  try{
+    const SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
+    const SUPA_KEY='sb_publishable_Qn1tcjjwGyX1aYACba9udg_JYBOOxUq';
+
+    const res = await fetch(`${SUPA_URL}/functions/v1/send-period-summary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPA_KEY}`,
+      },
+      body: JSON.stringify({
+        manual: true,
+        emp_id: empId,
+        start_date: start,
+        end_date: end,
+      })
+    });
+
+    const data = await res.json();
+    if(data.success && (data.results?.[0]?.sent > 0 || data.manual_sent)){
+      showMsg('sendReportMsg',`&#10003; Report sent to ${emp.email} for period ${periodLabel}`,'success');
+      btn.textContent = '✓ Sent!';
+      setTimeout(()=>{btn.textContent='&#128231; Send Now';btn.disabled=false;},3000);
+    } else {
+      const err = data.results?.[0]?.errors?.[0] || data.error || 'Unknown error';
+      showMsg('sendReportMsg','Send failed: '+err,'error');
+      btn.textContent = '&#128231; Send Now'; btn.disabled = false;
+    }
+  }catch(e){
+    showMsg('sendReportMsg','Network error: '+e.message,'error');
+    btn.textContent = '&#128231; Send Now'; btn.disabled = false;
+  }
+}
+
 
 // ═══════════════════════════════════════════════════
 // INIT
