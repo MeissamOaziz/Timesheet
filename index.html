@@ -9,12 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;
-    --accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;
-    --text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;
-    --radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);
-  }
+  :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
 
@@ -25,10 +20,28 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .loading-overlay p{color:var(--text2);font-size:14px;}
 
+  /* COMPANY PICKER SCREEN */
+  .company-picker{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:8000;gap:24px;padding:24px;}
+  .company-picker.hidden{display:none;}
+  .company-picker h2{font-size:28px;font-weight:700;color:var(--text);}
+  .company-picker p{color:var(--text2);font-size:15px;margin-top:-12px;}
+  .company-picker-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;width:100%;max-width:640px;}
+  .company-pick-card{background:var(--surface);border:2px solid var(--border);border-radius:20px;padding:32px 24px;cursor:pointer;transition:all 0.2s;text-align:center;}
+  .company-pick-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 32px rgba(79,142,247,0.2);}
+  .company-pick-card .co-icon{font-size:36px;margin-bottom:12px;}
+  .company-pick-card h3{font-size:18px;font-weight:700;margin-bottom:4px;}
+  .company-pick-card p{font-size:12px;color:var(--text2);}
+  .picker-admin-hint{font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;margin-top:8px;}
+  .picker-admin-hint:hover{color:var(--text2);}
+
   /* NAV */
   .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:8px;height:60px;position:sticky;top:0;z-index:100;}
-  .nav-logo{font-weight:700;font-size:18px;color:var(--accent);letter-spacing:-0.5px;margin-right:16px;display:flex;align-items:center;gap:8px;}
+  .nav-logo{font-weight:700;font-size:18px;color:var(--accent);letter-spacing:-0.5px;margin-right:8px;display:flex;align-items:center;gap:8px;white-space:nowrap;}
   .nav-logo svg{width:22px;height:22px;}
+  .company-pill{display:flex;align-items:center;gap:6px;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;transition:all 0.15s;margin-right:8px;white-space:nowrap;}
+  .company-pill:hover{background:rgba(79,142,247,0.22);}
+  .company-pill .co-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+  .company-pill .co-chevron{font-size:10px;opacity:0.7;}
   .nav-links{display:flex;gap:4px;flex:1;}
   .nav-btn{background:none;border:none;color:var(--text2);padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;transition:all 0.15s;}
   .nav-btn:hover{background:var(--surface2);color:var(--text);}
@@ -42,9 +55,10 @@
 
   /* PUNCH */
   .punch-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 130px);gap:32px;}
-  .clock-display{text-align:center;margin-bottom:8px;}
+  .clock-display{text-align:center;}
   .clock-time{font-size:72px;font-weight:300;font-family:'DM Mono',monospace;color:var(--text);letter-spacing:-2px;line-height:1;}
   .clock-date{color:var(--text2);font-size:16px;margin-top:8px;}
+  .punch-company-banner{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:12px;padding:8px 18px;font-size:14px;font-weight:600;color:var(--accent);text-align:center;width:100%;max-width:480px;}
   .punch-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:480px;box-shadow:var(--shadow);}
   .punch-card h2{font-size:22px;font-weight:600;margin-bottom:24px;text-align:center;}
   .select-wrap{position:relative;margin-bottom:28px;}
@@ -143,11 +157,11 @@
   /* MODAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
   .modal-overlay.open{display:flex;}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-height:90vh;overflow-y:auto;}
   .modal h3{font-size:18px;font-weight:600;margin-bottom:20px;}
   .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
 
-  /* REPORTS */
+  /* REPORT FILTERS */
   .filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;align-items:end;}
   .filter-bar label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px;}
   .filter-bar input,.filter-bar select{width:100%;padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none;}
@@ -184,24 +198,46 @@
   ::-webkit-scrollbar{width:6px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-  @media(max-width:600px){.clock-time{font-size:48px;}.punch-card{padding:24px;}.page{padding:20px 16px;}}
+  @media(max-width:600px){.clock-time{font-size:48px;}.punch-card{padding:24px;}.page{padding:20px 16px;}.company-picker-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
+<!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <p id="loadingMsg">Connecting to database…</p>
+  <p>Connecting to database...</p>
 </div>
 
-<nav class="nav">
+<!-- COMPANY PICKER (shown on load and when switching) -->
+<div class="company-picker hidden" id="companyPicker">
+  <div style="text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">&#9201;</div>
+    <h2>PunchClock Pro</h2>
+    <p>Select a company to continue</p>
+  </div>
+  <div class="company-picker-grid" id="pickerGrid"></div>
+  <div id="pickerAdminRow" style="display:none;margin-top:8px;text-align:center">
+    <span class="picker-admin-hint" onclick="navigate('companies')">&#9881; Manage companies</span>
+    <span style="color:var(--text3);margin:0 8px">|</span>
+    <span class="picker-admin-hint" onclick="showPickerLogin()">&#128274; Admin login</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="mainNav">
   <div class="nav-logo">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     PunchClock
   </div>
+  <div class="company-pill" id="companyPill" onclick="switchCompany()" style="display:none">
+    <span class="co-dot"></span>
+    <span id="companyPillName"></span>
+    <span class="co-chevron">&#9660;</span>
+  </div>
   <div class="nav-links">
     <button class="nav-btn active" onclick="navigate('punch')">&#9201; Clock In/Out</button>
-    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none">&#9881;&#65039; Admin</button>
+    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none">&#9881; Admin</button>
     <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none">&#128202; Reports</button>
     <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" style="display:none">&#127970; Companies</button>
     <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none">&#128203; Activity Log</button>
@@ -220,6 +256,7 @@
       <div class="clock-time" id="liveTime">00:00:00</div>
       <div class="clock-date" id="liveDate"></div>
     </div>
+    <div class="punch-company-banner" id="punchCompanyBanner"></div>
     <div class="punch-card">
       <h2>Select Your Name</h2>
       <div class="select-wrap">
@@ -248,7 +285,7 @@
     <p>Sign in to access the admin dashboard.</p>
     <div id="loginMsg"></div>
     <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@company.com"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="..." onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn-primary" onclick="doLogin()">Sign In</button>
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px">No account? <button class="link-btn" onclick="navigate('register')">Register</button></p>
@@ -268,7 +305,7 @@
       <button class="btn-primary" onclick="doRegister()">Register &amp; Get Code</button>
     </div>
     <div id="verifyForm" style="display:none">
-      <p style="margin-bottom:12px">Your verification code (in production this would be emailed):</p>
+      <p style="margin-bottom:12px">Verification code (in production this would be emailed):</p>
       <div class="code-display" id="verifyCode"></div>
       <div class="form-group" style="margin-top:16px"><label>Enter Code</label><input type="text" id="codeInput" placeholder="6-digit code" maxlength="6"></div>
       <button class="btn-primary" onclick="doVerify()">Verify &amp; Activate</button>
@@ -278,10 +315,10 @@
   </div>
 </div>
 
-<!-- ADMIN -->
+<!-- ADMIN PAGE -->
 <div class="page" id="page-admin">
   <div class="page-header">
-    <div><h1>Admin Panel</h1><p>Manage employees across your companies</p></div>
+    <div><h1 id="adminPageTitle">Admin Panel</h1><p id="adminPageSub">Manage employees</p></div>
     <button class="btn-primary" style="width:auto;padding:10px 20px" onclick="openAddEmpModal()">+ Add Employee</button>
   </div>
   <div class="tabs">
@@ -296,7 +333,7 @@
       </div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>PIN</th><th>Company</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>PIN</th><th>Actions</th></tr></thead>
       <tbody id="empTableBody"></tbody>
     </table></div>
   </div>
@@ -308,7 +345,7 @@
   </div>
 </div>
 
-<!-- REPORTS -->
+<!-- REPORTS PAGE -->
 <div class="page" id="page-reports">
   <div class="page-header">
     <div><h1>Reports</h1><p>Generate time &amp; attendance reports</p></div>
@@ -319,26 +356,30 @@
     </div>
   </div>
   <div class="filter-bar">
+    <div><label>Company</label>
+      <select id="reportCompany" onchange="loadReportEmps()">
+        <option value="all">All Companies</option>
+      </select>
+    </div>
     <div><label>Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
-        <option value="custom">Custom Range</option>
         <option value="week" selected>This Week</option>
         <option value="biweek">Bi-Weekly</option>
         <option value="month">This Month</option>
         <option value="quarter">This Quarter</option>
         <option value="6months">Last 6 Months</option>
         <option value="year">This Year</option>
+        <option value="custom">Custom Range</option>
       </select>
     </div>
     <div><label>Start Date</label><input type="date" id="reportStart"></div>
     <div><label>End Date</label><input type="date" id="reportEnd"></div>
-    <div><label>Company</label><select id="reportCompany" onchange="loadReportEmps()"><option value="all">All Companies</option></select></div>
     <div style="display:flex;align-items:flex-end">
       <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0" onclick="generateReport()">Generate</button>
     </div>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px">
-    <p style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:10px">Filter Employees</p>
+    <p style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:10px">Select Employees</p>
     <div class="select-all-row">
       <button onclick="selAll(true)">Select All</button>
       <span style="color:var(--border)">|</span>
@@ -351,10 +392,10 @@
     <table><thead><tr><th>Employee</th><th>Company</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Hours</th></tr></thead>
     <tbody id="reportTableBody"></tbody></table>
   </div>
-  <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
+  <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for the selected filters.</p></div>
 </div>
 
-<!-- COMPANIES -->
+<!-- COMPANIES PAGE -->
 <div class="page" id="page-companies">
   <div class="page-header">
     <div><h1>Companies</h1><p>Manage organizations in the system</p></div>
@@ -363,11 +404,17 @@
   <div class="company-grid" id="companyGrid"></div>
 </div>
 
-<!-- ACTIVITY -->
+<!-- ACTIVITY LOG -->
 <div class="page" id="page-activity">
   <div class="page-header">
-    <div><h1>Activity Log</h1><p>Real-time punch records</p></div>
-    <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:13px">&#8635; Refresh</button>
+    <div><h1>Activity Log</h1><p id="activitySubtitle">Recent punch records</p></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="activityCompanyFilter" onchange="loadActivityPage()" style="padding:8px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none;">
+        <option value="current">Current Company</option>
+        <option value="all">All Companies</option>
+      </select>
+      <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:13px">&#8635; Refresh</button>
+    </div>
   </div>
   <div class="stats-grid" id="activityStats"></div>
   <div class="table-wrap"><table>
@@ -383,8 +430,7 @@
     <div id="empModalMsg"></div>
     <div class="form-group"><label>Full Name</label><input type="text" id="empName" placeholder="John Smith"></div>
     <div class="form-group"><label>Department</label><input type="text" id="empDept" placeholder="Engineering, Sales, HR..."></div>
-    <div class="form-group"><label>Company</label><select id="empCompany"></select></div>
-    <div class="form-group"><label>Employee ID (optional)</label><input type="text" id="empId" placeholder="EMP-001"></div>
+    <div class="form-group"><label>Employee ID (optional)</label><input type="text" id="empIdCode" placeholder="EMP-001"></div>
     <div class="form-group">
       <label>4-Digit PIN <span style="color:var(--text3);font-weight:400">(required for clock in/out)</span></label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -468,247 +514,324 @@
 const SUPA_URL = 'https://uziwymrwaeojhqaagqcm.supabase.co';
 const SUPA_KEY = 'sb_publishable_Qn1tcjjwGyX1aYACba9udg_JYBOOxUq';
 
-async function supaFetch(method, table, opts = {}) {
+async function supaFetch(method, table, opts={}) {
   let url = `${SUPA_URL}/rest/v1/${table}`;
   const qp = [];
   if (opts.filter) qp.push(opts.filter);
-  if (method === 'GET') qp.push('select=*');
+  if (method==='GET') qp.push('select=*');
   if (qp.length) url += '?' + qp.join('&');
-
-  const headers = {
-    'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + SUPA_KEY,
-    'Content-Type': 'application/json',
-  };
-  if (method === 'POST') headers['Prefer'] = 'return=representation';
-
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    let msg = txt;
-    try { msg = JSON.parse(txt).message || txt; } catch {}
-    throw new Error(msg);
-  }
-  if (method === 'DELETE' || method === 'PATCH') return true;
-  const txt = await res.text();
-  return txt ? JSON.parse(txt) : [];
+  const headers = { 'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json' };
+  if (method==='POST') headers['Prefer']='return=representation';
+  const res = await fetch(url,{method,headers,body:opts.body?JSON.stringify(opts.body):undefined});
+  if (!res.ok) { let t=await res.text(); try{t=JSON.parse(t).message||t;}catch{} throw new Error(t); }
+  if (method==='DELETE'||method==='PATCH') return true;
+  const t=await res.text(); return t?JSON.parse(t):[];
 }
-
-const DB = {
-  all:    (t, f)    => supaFetch('GET',    t, { filter: f }),
-  insert: (t, body) => supaFetch('POST',   t, { body }),
-  update: (t, f, b) => supaFetch('PATCH',  t, { filter: f, body: b }),
-  del:    (t, f)    => supaFetch('DELETE', t, { filter: f }),
+const DB={
+  all:(t,f)=>supaFetch('GET',t,{filter:f}),
+  insert:(t,b)=>supaFetch('POST',t,{body:b}),
+  update:(t,f,b)=>supaFetch('PATCH',t,{filter:f,body:b}),
+  del:(t,f)=>supaFetch('DELETE',t,{filter:f}),
 };
 
 // ================================================================
-// SESSION (localStorage for admin login only)
+// SESSION & ACTIVE COMPANY
 // ================================================================
-const Sess = {
-  get:   () => { try { return JSON.parse(localStorage.getItem('pc_sess')); } catch { return null; } },
-  set:   (v) => localStorage.setItem('pc_sess', JSON.stringify(v)),
-  clear: () => localStorage.removeItem('pc_sess'),
+const Sess={
+  get:()=>{try{return JSON.parse(localStorage.getItem('pc_sess'));}catch{return null;}},
+  set:(v)=>localStorage.setItem('pc_sess',JSON.stringify(v)),
+  clear:()=>localStorage.removeItem('pc_sess'),
+};
+// Active company stored in sessionStorage (cleared when browser tab closes)
+// so the picker shows fresh each time the tab is opened
+const ActiveCo={
+  get:()=>{try{return JSON.parse(sessionStorage.getItem('pc_active_co'));}catch{return null;}},
+  set:(v)=>sessionStorage.setItem('pc_active_co',JSON.stringify(v)),
+  clear:()=>sessionStorage.removeItem('pc_active_co'),
 };
 
 // ================================================================
 // CACHE
 // ================================================================
-let C = { companies: [], employees: [], punches: [] };
+let C={companies:[],employees:[],punches:[]};
 
-async function refreshCache() {
-  const [companies, employees, punches] = await Promise.all([
-    DB.all('companies', 'order=name.asc'),
-    DB.all('employees', 'order=name.asc'),
-    DB.all('punches',   'order=punched_at.desc&limit=2000'),
+async function refreshCache(coId) {
+  // Always refresh companies and employees
+  const [companies, employees] = await Promise.all([
+    DB.all('companies','order=name.asc'),
+    DB.all('employees','order=name.asc'),
   ]);
-  C.companies = companies || [];
-  C.employees = employees || [];
-  C.punches   = punches   || [];
+  C.companies = companies||[];
+  C.employees = employees||[];
+  // Punches: fetch for active company (or all)
+  const punchFilter = (coId && coId!=='all')
+    ? `company_id=eq.${coId}&order=punched_at.desc&limit=2000`
+    : 'order=punched_at.desc&limit=2000';
+  const punches = await DB.all('punches', punchFilter);
+  C.punches = punches||[];
 }
 
 // ================================================================
 // STATE
 // ================================================================
-let currentPage = 'punch';
-let reportData  = [];
-let pendingVerify = null;
-let pinState = { empId: null, punchType: null, entered: '' };
+let currentPage='punch';
+let reportData=[];
+let pendingVerify=null;
+let pinState={empId:null,punchType:null,entered:''};
 
 // ================================================================
 // CLOCK
 // ================================================================
-function updateClock() {
-  const n = new Date();
-  document.getElementById('liveTime').textContent = n.toLocaleTimeString('en-US', { hour12: false });
-  document.getElementById('liveDate').textContent = n.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+function updateClock(){
+  const n=new Date();
+  document.getElementById('liveTime').textContent=n.toLocaleTimeString('en-US',{hour12:false});
+  document.getElementById('liveDate').textContent=n.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(updateClock,1000); updateClock();
+
+// ================================================================
+// COMPANY PICKER
+// ================================================================
+function showPicker() {
+  document.getElementById('companyPicker').classList.remove('hidden');
+  document.getElementById('mainNav').style.display='none';
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  renderPicker();
+}
+
+function hidePicker() {
+  document.getElementById('companyPicker').classList.add('hidden');
+  document.getElementById('mainNav').style.display='';
+}
+
+function renderPicker() {
+  const grid = document.getElementById('pickerGrid');
+  const adminRow = document.getElementById('pickerAdminRow');
+  const logged = isLoggedIn();
+
+  if (!C.companies.length) {
+    grid.innerHTML=`<div style="text-align:center;color:var(--text2);grid-column:1/-1;padding:24px">
+      <p>No companies yet.</p>
+      ${logged ? '<button class="btn-primary" style="margin-top:12px;width:auto;padding:10px 24px" onclick="hidePicker();navigate(\'companies\')">Create First Company</button>' : '<p style="font-size:13px;margin-top:8px">Please ask an admin to create a company first.</p>'}
+    </div>`;
+    adminRow.style.display = logged ? 'none' : 'block';
+    return;
+  }
+
+  // Company color palette
+  const colors = ['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4','#ec4899'];
+  const icons  = ['&#127970;','&#127968;','&#127963;','&#127981;','&#127979;','&#128736;','&#127980;'];
+
+  grid.innerHTML = C.companies.map((co,i)=>{
+    const empCount = C.employees.filter(e=>e.company_id===co.id&&e.active).length;
+    const color = colors[i % colors.length];
+    const icon  = icons[i % icons.length];
+    return `<div class="company-pick-card" onclick="selectCompany('${co.id}')" style="border-color:${color}22">
+      <div class="co-icon">${icon}</div>
+      <h3 style="color:${color}">${co.name}</h3>
+      <p>${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</p>
+      <p style="margin-top:8px;font-weight:600;color:${color}">${empCount} employee${empCount!==1?'s':''}</p>
+    </div>`;
+  }).join('');
+
+  adminRow.style.display = logged ? 'none' : 'block';
+  if (logged) adminRow.style.display='block'; // always show for admin context actions
+}
+
+function selectCompany(coId) {
+  const co = C.companies.find(c=>c.id===coId);
+  if (!co) return;
+  ActiveCo.set(co);
+  hidePicker();
+  updateCompanyPill();
+  navigate('punch');
+}
+
+function switchCompany() {
+  // Only admins can switch
+  if (!isLoggedIn()) return;
+  showPicker();
+}
+
+function updateCompanyPill() {
+  const co = ActiveCo.get();
+  const pill = document.getElementById('companyPill');
+  if (co) {
+    document.getElementById('companyPillName').textContent = co.name;
+    pill.style.display = isLoggedIn() ? 'flex' : 'none'; // only admins see pill (clickable)
+  } else {
+    pill.style.display='none';
+  }
+}
+
+function showPickerLogin() {
+  hidePicker();
+  navigate('login');
+}
 
 // ================================================================
 // NAVIGATE
 // ================================================================
 function navigate(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const el = document.getElementById('page-' + page);
-  if (el) { el.classList.add('active'); currentPage = page; }
-  const map = { punch:0, admin:1, reports:2, companies:3, activity:4 };
-  const btns = document.querySelectorAll('.nav-links .nav-btn');
-  if (map[page] !== undefined && btns[map[page]]) btns[map[page]].classList.add('active');
-  if (page === 'punch')     loadPunchPage();
-  else if (page === 'admin')     loadAdminPage();
-  else if (page === 'reports')   loadReportsPage();
-  else if (page === 'companies') loadCompaniesPage();
-  else if (page === 'activity')  loadActivityPage();
+  // Guard: non-admin pages require login
+  const adminPages=['admin','reports','companies','activity'];
+  if (adminPages.includes(page) && !isLoggedIn()) { navigate('login'); return; }
+
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('page-'+page);
+  if (el){el.classList.add('active');currentPage=page;}
+  const map={punch:0,admin:1,reports:2,companies:3,activity:4};
+  const btns=document.querySelectorAll('.nav-links .nav-btn');
+  if (map[page]!==undefined&&btns[map[page]])btns[map[page]].classList.add('active');
+
+  if (page==='punch')         loadPunchPage();
+  else if (page==='admin')    loadAdminPage();
+  else if (page==='reports')  loadReportsPage();
+  else if (page==='companies')loadCompaniesPage();
+  else if (page==='activity') loadActivityPage();
 }
 
 // ================================================================
 // AUTH
 // ================================================================
-function isLoggedIn() { return !!Sess.get(); }
+function isLoggedIn(){return !!Sess.get();}
 
-function updateNav() {
-  const ok = isLoggedIn();
-  document.getElementById('loginBtn').style.display  = ok ? 'none' : '';
-  document.getElementById('logoutBtn').style.display = ok ? '' : 'none';
-  ['navAdmin','navReports','navCompanies','navActivity'].forEach(id =>
-    document.getElementById(id).style.display = ok ? '' : 'none');
-  if (ok) {
-    const a = Sess.get();
-    document.getElementById('adminBadge').innerHTML = `<span class="badge">${a.name}</span>`;
-    document.getElementById('adminBadge').style.display = '';
+function updateNav(){
+  const ok=isLoggedIn();
+  document.getElementById('loginBtn').style.display=ok?'none':'';
+  document.getElementById('logoutBtn').style.display=ok?'':'none';
+  ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
+    document.getElementById(id).style.display=ok?'':'none');
+  if (ok){
+    const a=Sess.get();
+    document.getElementById('adminBadge').innerHTML=`<span class="badge">${a.name}</span>`;
+    document.getElementById('adminBadge').style.display='';
   } else {
-    document.getElementById('adminBadge').style.display = 'none';
+    document.getElementById('adminBadge').style.display='none';
   }
+  updateCompanyPill();
 }
 
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-  const pass  = document.getElementById('loginPass').value;
-  try {
-    const rows = await DB.all('admins',
-      `email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
-    if (!rows.length) { showMsg('loginMsg','Invalid credentials or account not verified.','error'); return; }
-    Sess.set({ id: rows[0].id, name: rows[0].name, email: rows[0].email });
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value;
+  try{
+    const rows=await DB.all('admins',`email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
+    if (!rows.length){showMsg('loginMsg','Invalid credentials or account not verified.','error');return;}
+    Sess.set({id:rows[0].id,name:rows[0].name,email:rows[0].email});
     updateNav();
-    await refreshCache();
+    await refreshCache(ActiveCo.get()?.id);
     navigate('admin');
-  } catch(e) { showMsg('loginMsg','Connection error: '+e.message,'error'); }
+  }catch(e){showMsg('loginMsg','Connection error: '+e.message,'error');}
 }
 
-async function doRegister() {
-  const name  = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim().toLowerCase();
-  const pass  = document.getElementById('regPass').value;
-  if (!name||!email||!pass) { showMsg('registerMsg','All fields are required.','error'); return; }
-  if (pass.length < 6)      { showMsg('registerMsg','Password must be at least 6 characters.','error'); return; }
-  try {
-    const ex = await DB.all('admins', `email=eq.${encodeURIComponent(email)}`);
-    if (ex.length) { showMsg('registerMsg','Email already registered.','error'); return; }
-    const code = Math.floor(100000+Math.random()*900000).toString();
-    pendingVerify = { name, email, pass, code };
-    document.getElementById('verifyCode').textContent = code;
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('verifyForm').style.display = '';
+async function doRegister(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('regPass').value;
+  if (!name||!email||!pass){showMsg('registerMsg','All fields are required.','error');return;}
+  if (pass.length<6){showMsg('registerMsg','Password must be at least 6 characters.','error');return;}
+  try{
+    const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
+    if (ex.length){showMsg('registerMsg','Email already registered.','error');return;}
+    const code=Math.floor(100000+Math.random()*900000).toString();
+    pendingVerify={name,email,pass,code};
+    document.getElementById('verifyCode').textContent=code;
+    document.getElementById('registerForm').style.display='none';
+    document.getElementById('verifyForm').style.display='';
     showMsg('registerMsg','In production this code would be emailed. For this demo it is shown above.','info');
-  } catch(e) { showMsg('registerMsg','Error: '+e.message,'error'); }
+  }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
-async function doVerify() {
-  const entered = document.getElementById('codeInput').value.trim();
-  if (!pendingVerify || entered !== pendingVerify.code) { showMsg('registerMsg','Incorrect code.','error'); return; }
-  try {
-    const result = await DB.insert('admins', {
-      name: pendingVerify.name, email: pendingVerify.email,
-      password: pendingVerify.pass, verified: true
-    });
-    Sess.set({ id: result[0].id, name: result[0].name, email: result[0].email });
-    pendingVerify = null;
+async function doVerify(){
+  const entered=document.getElementById('codeInput').value.trim();
+  if (!pendingVerify||entered!==pendingVerify.code){showMsg('registerMsg','Incorrect code.','error');return;}
+  try{
+    const r=await DB.insert('admins',{name:pendingVerify.name,email:pendingVerify.email,password:pendingVerify.pass,verified:true});
+    Sess.set({id:r[0].id,name:r[0].name,email:r[0].email});
+    pendingVerify=null;
     updateNav();
-    await refreshCache();
+    await refreshCache(ActiveCo.get()?.id);
     showMsg('registerMsg','Account verified! Redirecting...','success');
-    setTimeout(() => navigate('admin'), 1200);
-  } catch(e) { showMsg('registerMsg','Error: '+e.message,'error'); }
+    setTimeout(()=>navigate('admin'),1200);
+  }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
-function logout() { Sess.clear(); updateNav(); navigate('punch'); }
+function logout(){
+  Sess.clear();
+  updateNav();
+  navigate('punch');
+}
 
 // ================================================================
-// STATUS HELPER
+// STATUS HELPER (uses cached punches for active company)
 // ================================================================
-function getEmpStatus(empId) {
-  const ep = C.punches
-    .filter(p => p.emp_id === empId)
-    .sort((a,b) => new Date(a.punched_at) - new Date(b.punched_at));
-  if (!ep.length) return { status:'OUT', last: null };
-  return { status: ep[ep.length-1].type, last: ep[ep.length-1] };
+function getEmpStatus(empId){
+  const ep=C.punches.filter(p=>p.emp_id===empId).sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+  if (!ep.length) return {status:'OUT',last:null};
+  return {status:ep[ep.length-1].type,last:ep[ep.length-1]};
 }
 
 // ================================================================
 // PUNCH PAGE
 // ================================================================
-async function loadPunchPage() {
-  await refreshCache();
-  const sel  = document.getElementById('empSelect');
-  const emps = C.employees.filter(e => e.active);
-  sel.innerHTML = '<option value="">-- Select your name --</option>';
-  const groups = {};
-  emps.forEach(e => {
-    const co = C.companies.find(c => c.id === e.company_id);
-    const g  = co ? co.name : 'General';
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(e);
-  });
-  Object.entries(groups).sort().forEach(([g, list]) => {
-    const og = document.createElement('optgroup');
-    og.label = g;
-    list.forEach(e => {
-      const o = document.createElement('option');
-      o.value = e.id;
-      o.textContent = e.name + (e.emp_code ? ` (${e.emp_code})` : '');
-      og.appendChild(o);
-    });
-    sel.appendChild(og);
+async function loadPunchPage(){
+  const co=ActiveCo.get();
+  if (!co){showPicker();return;}
+
+  await refreshCache(co.id);
+
+  // Banner
+  const banner=document.getElementById('punchCompanyBanner');
+  banner.textContent='&#127970; '+co.name;
+  banner.innerHTML=`&#127970;&nbsp; ${co.name}`;
+
+  // Employee dropdown — only this company's active employees
+  const sel=document.getElementById('empSelect');
+  const emps=C.employees.filter(e=>e.active&&e.company_id===co.id);
+  sel.innerHTML='<option value="">-- Select your name --</option>';
+  emps.sort((a,b)=>a.name.localeCompare(b.name)).forEach(e=>{
+    const o=document.createElement('option');
+    o.value=e.id;
+    o.textContent=e.name+(e.emp_code?` (${e.emp_code})`:'');
+    sel.appendChild(o);
   });
   refreshClockedIn();
 }
 
-function refreshClockedIn() {
-  const today = new Date().toLocaleDateString('en-CA');
-  const clockedIn = C.employees.filter(e => e.active)
-    .map(emp => {
-      const { status, last } = getEmpStatus(emp.id);
-      if (status !== 'IN') return null;
-      const co = C.companies.find(c => c.id === emp.company_id);
-      return { emp, last, co };
-    })
-    .filter(Boolean)
-    .sort((a,b) => new Date(a.last.punched_at) - new Date(b.last.punched_at));
+function refreshClockedIn(){
+  const co=ActiveCo.get();
+  const today=new Date().toLocaleDateString('en-CA');
+  // Only show employees of current company
+  const scopedEmps=co
+    ? C.employees.filter(e=>e.active&&e.company_id===co.id)
+    : C.employees.filter(e=>e.active);
 
-  const list    = document.getElementById('clockedInList');
-  const countEl = document.getElementById('clockedInCount');
-  if (!list || !countEl) return;
-  countEl.textContent = clockedIn.length;
+  const clockedIn=scopedEmps.map(emp=>{
+    const {status,last}=getEmpStatus(emp.id);
+    if (status!=='IN') return null;
+    return {emp,last,co:C.companies.find(c=>c.id===emp.company_id)};
+  }).filter(Boolean).sort((a,b)=>new Date(a.last.punched_at)-new Date(b.last.punched_at));
 
-  if (!clockedIn.length) { list.innerHTML = '<div class="ci-empty">No one is clocked in right now.</div>'; return; }
+  const list=document.getElementById('clockedInList');
+  const countEl=document.getElementById('clockedInCount');
+  if (!list||!countEl) return;
+  countEl.textContent=clockedIn.length;
 
-  list.innerHTML = clockedIn.map(({ emp, last, co }) => {
-    const ini    = emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const dur    = elapsed(last.punched_at);
-    const dept   = [co?.name, emp.dept].filter(Boolean).join(' · ');
-    const over   = last.punch_date !== today;
-    const warn   = over ? `<span style="color:var(--red);font-size:11px;font-weight:600;margin-left:4px">&#9888; since ${last.punch_date}</span>` : '';
+  if (!clockedIn.length){list.innerHTML='<div class="ci-empty">No one is clocked in right now.</div>';return;}
+
+  list.innerHTML=clockedIn.map(({emp,last})=>{
+    const ini=emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const dur=elapsed(last.punched_at);
+    const over=last.punch_date!==today;
+    const warn=over?`<span style="color:var(--red);font-size:11px;font-weight:600;margin-left:4px">&#9888; since ${last.punch_date}</span>`:'';
     return `<div class="clocked-in-row" style="${over?'border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.05)':''}">
       <div class="avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0">${ini}</div>
       <div style="flex:1;min-width:0">
         <div class="ci-name">${emp.name}${warn}</div>
-        ${dept ? `<div class="ci-duration">${dept}</div>` : ''}
+        ${emp.dept?`<div class="ci-duration">${emp.dept}</div>`:''}
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div class="ci-time">&#8593; ${last.punch_time}</div>
@@ -718,161 +841,142 @@ function refreshClockedIn() {
   }).join('');
 }
 
-function elapsed(iso) {
-  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
-  if (m < 1)  return 'just now';
-  if (m < 60) return `${m}m`;
-  return `${Math.floor(m/60)}h ${m%60}m`;
+function elapsed(iso){
+  const m=Math.floor((Date.now()-new Date(iso))/60000);
+  if (m<1)return'just now';
+  if (m<60)return`${m}m`;
+  return`${Math.floor(m/60)}h ${m%60}m`;
 }
 
-setInterval(async () => { if (currentPage==='punch') { await refreshCache(); refreshClockedIn(); } }, 30000);
+setInterval(async()=>{
+  if (currentPage==='punch'){await refreshCache(ActiveCo.get()?.id);refreshClockedIn();}
+},30000);
 
 // ================================================================
 // PIN FLOW
 // ================================================================
-function requestPunch(type) {
-  const empId = document.getElementById('empSelect').value;
-  if (!empId) { showPunchMsg('Please select your name first.','error'); return; }
-  const emp = C.employees.find(e => e.id === empId);
+function requestPunch(type){
+  const co=ActiveCo.get();
+  if (!co){showPicker();return;}
+  const empId=document.getElementById('empSelect').value;
+  if (!empId){showPunchMsg('Please select your name first.','error');return;}
+  const emp=C.employees.find(e=>e.id===empId);
   if (!emp) return;
-  if (!emp.pin) { showPunchMsg('No PIN set — an admin must assign one first.','error'); return; }
+  if (!emp.pin){showPunchMsg('No PIN set — an admin must assign one first.','error');return;}
 
-  const { status, last } = getEmpStatus(empId);
-  const today = new Date().toLocaleDateString('en-CA');
-  if (type==='IN' && status==='IN') {
-    const when = last.punch_date===today ? `since ${last.punch_time} today` : `since ${last.punch_date} at ${last.punch_time}`;
+  const {status,last}=getEmpStatus(empId);
+  const today=new Date().toLocaleDateString('en-CA');
+  if (type==='IN'&&status==='IN'){
+    const when=last.punch_date===today?`since ${last.punch_time} today`:`since ${last.punch_date} at ${last.punch_time}`;
     showPunchMsg(`&#9888; ${emp.name} is already clocked IN ${when}. Please clock OUT first.`,'error');
-    document.getElementById('empSelect').value=''; return;
+    document.getElementById('empSelect').value='';return;
   }
-  if (type==='OUT' && status==='OUT') {
-    const msg = last
-      ? `&#9888; ${emp.name} is not clocked in. Last clock-out: ${last.punch_date} at ${last.punch_time}.`
-      : `&#9888; ${emp.name} has no clock-in on record.`;
+  if (type==='OUT'&&status==='OUT'){
+    const msg=last?`&#9888; ${emp.name} is not clocked in. Last clock-out: ${last.punch_date} at ${last.punch_time}.`:`&#9888; ${emp.name} has no clock-in on record.`;
     showPunchMsg(msg,'error');
-    document.getElementById('empSelect').value=''; return;
+    document.getElementById('empSelect').value='';return;
   }
 
-  pinState = { empId, punchType: type, entered: '' };
-  document.getElementById('pinEmpName').textContent  = emp.name;
-  document.getElementById('pinActionLabel').textContent = `Enter PIN to clock ${type}`;
-  document.getElementById('pinActionLabel').style.color = type==='IN' ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pinErrorMsg').textContent  = '';
+  pinState={empId,punchType:type,entered:''};
+  document.getElementById('pinEmpName').textContent=emp.name;
+  document.getElementById('pinActionLabel').textContent=`Enter PIN to clock ${type}`;
+  document.getElementById('pinActionLabel').style.color=type==='IN'?'var(--green)':'var(--red)';
+  document.getElementById('pinErrorMsg').textContent='';
   resetPinDots();
   openModal('pinModal');
 }
 
-function pinKey(d) {
-  if (pinState.entered.length >= 4) return;
-  pinState.entered += d;
-  updatePinDots();
-  if (pinState.entered.length === 4) setTimeout(validatePin, 120);
-}
-function pinDel() { pinState.entered = pinState.entered.slice(0,-1); updatePinDots(); }
+function pinKey(d){if(pinState.entered.length>=4)return;pinState.entered+=d;updatePinDots();if(pinState.entered.length===4)setTimeout(validatePin,120);}
+function pinDel(){pinState.entered=pinState.entered.slice(0,-1);updatePinDots();}
+function updatePinDots(){for(let i=0;i<4;i++){document.getElementById('pd'+i).classList.toggle('filled',i<pinState.entered.length);document.getElementById('pd'+i).classList.remove('error');}}
+function resetPinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.remove('filled','error');}
 
-function updatePinDots() {
-  for (let i=0;i<4;i++) {
-    document.getElementById('pd'+i).classList.toggle('filled', i < pinState.entered.length);
-    document.getElementById('pd'+i).classList.remove('error');
+function validatePin(){
+  const emp=C.employees.find(e=>e.id===pinState.empId);
+  if (!emp||pinState.entered!==emp.pin){
+    for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
+    document.getElementById('pinErrorMsg').textContent='Incorrect PIN. Please try again.';
+    setTimeout(()=>{pinState.entered='';resetPinDots();},900);return;
   }
+  const empId=pinState.empId,punchType=pinState.punchType;
+  closeModal('pinModal');resetPin();
+  executePunch(empId,punchType);
 }
-function resetPinDots() { for (let i=0;i<4;i++) document.getElementById('pd'+i).classList.remove('filled','error'); }
+function resetPin(){pinState={empId:null,punchType:null,entered:''};resetPinDots();document.getElementById('pinErrorMsg').textContent='';}
 
-function validatePin() {
-  const emp = C.employees.find(e => e.id === pinState.empId);
-  if (!emp || pinState.entered !== emp.pin) {
-    for (let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('error');
-    document.getElementById('pinErrorMsg').textContent = 'Incorrect PIN. Please try again.';
-    setTimeout(() => { pinState.entered=''; resetPinDots(); }, 900);
-    return;
-  }
-  const empId = pinState.empId, punchType = pinState.punchType;
-  closeModal('pinModal'); resetPin();
-  executePunch(empId, punchType);
-}
-function resetPin() {
-  pinState = { empId:null, punchType:null, entered:'' };
-  resetPinDots();
-  document.getElementById('pinErrorMsg').textContent = '';
-}
-
-async function executePunch(empId, type) {
-  const emp = C.employees.find(e => e.id === empId);
-  if (!emp) return;
-  const { status, last } = getEmpStatus(empId);
-  const today = new Date().toLocaleDateString('en-CA');
-
-  if (type==='IN' && status==='IN') {
-    const when = last.punch_date===today ? `since ${last.punch_time} today` : `since ${last.punch_date} at ${last.punch_time}`;
-    showPunchMsg(`&#9888; ${emp.name} is already clocked IN ${when}.`,'error');
-    document.getElementById('empSelect').value=''; return;
-  }
-  if (type==='OUT' && status==='OUT') {
-    showPunchMsg(`&#9888; ${emp.name} is not currently clocked in.`,'error');
-    document.getElementById('empSelect').value=''; return;
-  }
-
-  const now   = new Date();
-  const ptime = now.toLocaleTimeString('en-US',{hour12:false});
-  try {
-    const result = await DB.insert('punches', {
-      emp_id: empId, emp_name: emp.name, company_id: emp.company_id,
-      type, punch_date: today, punch_time: ptime,
-    });
-    if (result?.[0]) C.punches.unshift(result[0]);
+async function executePunch(empId,type){
+  const emp=C.employees.find(e=>e.id===empId);
+  const co=ActiveCo.get();
+  if (!emp||!co) return;
+  const {status,last}=getEmpStatus(empId);
+  const today=new Date().toLocaleDateString('en-CA');
+  if (type==='IN'&&status==='IN'){showPunchMsg(`&#9888; ${emp.name} is already clocked IN.`,'error');document.getElementById('empSelect').value='';return;}
+  if (type==='OUT'&&status==='OUT'){showPunchMsg(`&#9888; ${emp.name} is not currently clocked in.`,'error');document.getElementById('empSelect').value='';return;}
+  const now=new Date();
+  const ptime=now.toLocaleTimeString('en-US',{hour12:false});
+  try{
+    const r=await DB.insert('punches',{emp_id:empId,emp_name:emp.name,company_id:co.id,type,punch_date:today,punch_time:ptime});
+    if (r?.[0]) C.punches.unshift(r[0]);
     showPunchMsg(`&#10003; ${emp.name} clocked ${type} at ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`,'success');
-    document.getElementById('empSelect').value = '';
+    document.getElementById('empSelect').value='';
     refreshClockedIn();
-  } catch(e) { showPunchMsg('Error saving punch: '+e.message,'error'); }
+  }catch(e){showPunchMsg('Error saving punch: '+e.message,'error');}
 }
 
-function showPunchMsg(msg, type) {
-  const el = document.getElementById('punchFeedback');
-  el.innerHTML = msg;
-  el.className = 'punch-feedback show '+type;
-  setTimeout(() => el.classList.remove('show'), type==='error' ? 7000 : 4000);
+function showPunchMsg(msg,type){
+  const el=document.getElementById('punchFeedback');
+  el.innerHTML=msg;el.className='punch-feedback show '+type;
+  setTimeout(()=>el.classList.remove('show'),type==='error'?7000:4000);
 }
 
 // ================================================================
 // ADMIN PAGE
 // ================================================================
-async function loadAdminPage() {
-  if (!isLoggedIn()) { navigate('login'); return; }
-  await refreshCache();
+async function loadAdminPage(){
+  if (!isLoggedIn()){navigate('login');return;}
+  const co=ActiveCo.get();
+  await refreshCache(co?.id);
+  // Update heading to reflect current company
+  if (co){
+    document.getElementById('adminPageTitle').textContent=co.name+' — Admin';
+    document.getElementById('adminPageSub').textContent='Managing employees for '+co.name;
+  }
   renderEmployees();
   renderAdmins();
 }
 
-function adminTab(tab, btn) {
+function adminTab(tab,btn){
   document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tab-employees').style.display = tab==='employees' ? '' : 'none';
-  document.getElementById('tab-admins').style.display    = tab==='admins'    ? '' : 'none';
+  document.getElementById('tab-employees').style.display=tab==='employees'?'':'none';
+  document.getElementById('tab-admins').style.display=tab==='admins'?'':'none';
 }
 
-function renderEmployees() {
-  const search = (document.getElementById('empSearch')?.value||'').toLowerCase();
-  const dept   = document.getElementById('empFilter')?.value || '';
+function renderEmployees(){
+  const co=ActiveCo.get();
+  const search=(document.getElementById('empSearch')?.value||'').toLowerCase();
+  const dept=document.getElementById('empFilter')?.value||'';
 
-  const depts = [...new Set(C.employees.map(e=>e.dept).filter(Boolean))].sort();
-  const df = document.getElementById('empFilter');
-  const cur = df.value;
-  df.innerHTML = '<option value="">All Departments</option>';
-  depts.forEach(d => df.innerHTML += `<option value="${d}"${d===cur?' selected':''}>${d}</option>`);
+  // Scope to active company
+  let emps=co ? C.employees.filter(e=>e.company_id===co.id) : C.employees;
 
-  const filtered = C.employees.filter(e => {
-    const s = (e.name+(e.dept||'')+(e.emp_code||'')).toLowerCase();
-    return (!search||s.includes(search)) && (!dept||e.dept===dept);
+  const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))].sort();
+  const df=document.getElementById('empFilter');
+  const cur=df.value;
+  df.innerHTML='<option value="">All Departments</option>';
+  depts.forEach(d=>df.innerHTML+=`<option value="${d}"${d===cur?' selected':''}>${d}</option>`);
+
+  emps=emps.filter(e=>{
+    const s=(e.name+(e.dept||'')+(e.emp_code||'')).toLowerCase();
+    return (!search||s.includes(search))&&(!dept||e.dept===dept);
   });
 
-  const tbody = document.getElementById('empTableBody');
-  if (!filtered.length) { tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">No employees found.</td></tr>`; return; }
+  const tbody=document.getElementById('empTableBody');
+  if (!emps.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px">${co?'No employees for '+co.name+' yet.':'No employees found.'}</td></tr>`;return;}
 
-  tbody.innerHTML = filtered.map(e => {
-    const co  = C.companies.find(c=>c.id===e.company_id);
-    const ini = e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const pin = e.pin
-      ? `<span class="pill in">&#128273; Set</span>`
-      : `<span class="pill out">&#9888;&#65039; No PIN</span>`;
+  tbody.innerHTML=emps.map(e=>{
+    const ini=e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const pin=e.pin?`<span class="pill in">&#128273; Set</span>`:`<span class="pill out">&#9888; No PIN</span>`;
     return `<tr>
       <td><div class="emp-row"><div class="avatar">${ini}</div><div>
         <div style="font-weight:500">${e.name}</div>
@@ -881,7 +985,6 @@ function renderEmployees() {
       <td>${e.dept||'—'}</td>
       <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
       <td>${pin}</td>
-      <td>${co?.name||'—'}</td>
       <td><div style="display:flex;gap:8px">
         <button class="btn-secondary" style="padding:6px 12px;font-size:12px" onclick="editEmployee('${e.id}')">Edit</button>
         <button class="btn-secondary" style="padding:6px 12px;font-size:12px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
@@ -891,239 +994,244 @@ function renderEmployees() {
   }).join('');
 }
 
-async function renderAdmins() {
-  const tbody = document.getElementById('adminsTableBody');
-  try {
-    const admins = await DB.all('admins','order=created_at.asc');
-    if (!admins.length) { tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:32px">No admins yet.</td></tr>`; return; }
-    tbody.innerHTML = admins.map(a=>`<tr>
+async function renderAdmins(){
+  const tbody=document.getElementById('adminsTableBody');
+  try{
+    const admins=await DB.all('admins','order=created_at.asc');
+    if (!admins.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:32px">No admins yet.</td></tr>`;return;}
+    tbody.innerHTML=admins.map(a=>`<tr>
       <td><div class="emp-row"><div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div><span style="font-weight:500">${a.name}</span></div></td>
       <td>${a.email}</td>
       <td><span class="pill ${a.verified?'admin':'out'}">${a.verified?'Active':'Pending'}</span></td>
       <td style="color:var(--text2);font-size:13px">${new Date(a.created_at).toLocaleDateString()}</td>
     </tr>`).join('');
-  } catch(e) { tbody.innerHTML=`<tr><td colspan="4" style="color:var(--red);padding:20px">Error: ${e.message}</td></tr>`; }
+  }catch(e){tbody.innerHTML=`<tr><td colspan="4" style="color:var(--red);padding:20px">Error: ${e.message}</td></tr>`;}
 }
 
-function openAddEmpModal() {
-  document.getElementById('empModalTitle').textContent = 'Add Employee';
-  ['empName','empDept','empId','empPin'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('pinPreview').style.display = 'none';
-  document.getElementById('editEmpUid').value = '';
-  document.getElementById('empModalMsg').innerHTML = '';
-  document.getElementById('empCompany').innerHTML = C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+function openAddEmpModal(){
+  const co=ActiveCo.get();
+  if (!co){alert('Please select a company first.');return;}
+  document.getElementById('empModalTitle').textContent='Add Employee — '+co.name;
+  ['empName','empDept','empIdCode','empPin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pinPreview').style.display='none';
+  document.getElementById('editEmpUid').value='';
+  document.getElementById('empModalMsg').innerHTML='';
   openModal('addEmpModal');
 }
 
-function editEmployee(id) {
-  const e = C.employees.find(e=>e.id===id);
+function editEmployee(id){
+  const e=C.employees.find(e=>e.id===id);
   if (!e) return;
-  document.getElementById('empModalTitle').textContent = 'Edit Employee';
-  document.getElementById('empName').value  = e.name;
-  document.getElementById('empDept').value  = e.dept||'';
-  document.getElementById('empId').value    = e.emp_code||'';
-  document.getElementById('empPin').value   = e.pin||'';
-  document.getElementById('pinPreview').style.display = 'none';
-  document.getElementById('editEmpUid').value = e.id;
-  document.getElementById('empModalMsg').innerHTML = e.pin ? '' : '<div class="msg info">This employee has no PIN yet — set one so they can clock in/out.</div>';
-  document.getElementById('empCompany').innerHTML = C.companies.map(c=>`<option value="${c.id}"${c.id===e.company_id?' selected':''}>${c.name}</option>`).join('');
+  document.getElementById('empModalTitle').textContent='Edit Employee';
+  document.getElementById('empName').value=e.name;
+  document.getElementById('empDept').value=e.dept||'';
+  document.getElementById('empIdCode').value=e.emp_code||'';
+  document.getElementById('empPin').value=e.pin||'';
+  document.getElementById('pinPreview').style.display='none';
+  document.getElementById('editEmpUid').value=e.id;
+  document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">This employee has no PIN — set one so they can clock in/out.</div>`;
   openModal('addEmpModal');
 }
 
-function generatePin() {
-  const pin = Math.floor(1000+Math.random()*9000).toString();
-  document.getElementById('empPin').value = pin;
-  const p = document.getElementById('pinPreview');
-  p.textContent = `PIN: ${pin}`; p.style.display='';
+function generatePin(){
+  const pin=Math.floor(1000+Math.random()*9000).toString();
+  document.getElementById('empPin').value=pin;
+  const p=document.getElementById('pinPreview');
+  p.textContent=`PIN: ${pin}`;p.style.display='';
 }
 
-async function saveEmployee() {
-  const name       = document.getElementById('empName').value.trim();
-  const dept       = document.getElementById('empDept').value.trim();
-  const emp_code   = document.getElementById('empId').value.trim();
-  const company_id = document.getElementById('empCompany').value;
-  const pin        = document.getElementById('empPin').value.trim();
-  const editId     = document.getElementById('editEmpUid').value;
-  if (!name)       { showMsg('empModalMsg','Name is required.','error'); return; }
-  if (!company_id) { showMsg('empModalMsg','Please select a company.','error'); return; }
-  if (pin && !/^\d{4}$/.test(pin)) { showMsg('empModalMsg','PIN must be exactly 4 digits.','error'); return; }
-  if (!editId && !pin)             { showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error'); return; }
-  try {
-    if (editId) {
-      const upd = { name, dept, emp_code, company_id };
-      if (pin) upd.pin = pin;
-      await DB.update('employees', `id=eq.${editId}`, upd);
-      const idx = C.employees.findIndex(e=>e.id===editId);
-      if (idx!==-1) C.employees[idx] = { ...C.employees[idx], ...upd };
+async function saveEmployee(){
+  const co=ActiveCo.get();
+  const name=document.getElementById('empName').value.trim();
+  const dept=document.getElementById('empDept').value.trim();
+  const emp_code=document.getElementById('empIdCode').value.trim();
+  const pin=document.getElementById('empPin').value.trim();
+  const editId=document.getElementById('editEmpUid').value;
+  if (!name){showMsg('empModalMsg','Name is required.','error');return;}
+  if (pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg','PIN must be exactly 4 digits.','error');return;}
+  if (!editId&&!pin){showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error');return;}
+  if (!co&&!editId){showMsg('empModalMsg','No active company selected.','error');return;}
+  try{
+    if (editId){
+      const upd={name,dept,emp_code};
+      if (pin) upd.pin=pin;
+      await DB.update('employees',`id=eq.${editId}`,upd);
+      const idx=C.employees.findIndex(e=>e.id===editId);
+      if (idx!==-1) C.employees[idx]={...C.employees[idx],...upd};
     } else {
-      const r = await DB.insert('employees', { name, dept, emp_code, company_id, pin, active:true });
+      const r=await DB.insert('employees',{name,dept,emp_code,company_id:co.id,pin,active:true});
       if (r?.[0]) C.employees.push(r[0]);
     }
     closeModal('addEmpModal');
     renderEmployees();
-  } catch(e) { showMsg('empModalMsg','Error: '+e.message,'error'); }
+  }catch(e){showMsg('empModalMsg','Error: '+e.message,'error');}
 }
 
-async function toggleEmp(id) {
-  const e = C.employees.find(e=>e.id===id);
+async function toggleEmp(id){
+  const e=C.employees.find(e=>e.id===id);
   if (!e) return;
-  await DB.update('employees',`id=eq.${id}`,{ active:!e.active });
-  e.active = !e.active;
+  await DB.update('employees',`id=eq.${id}`,{active:!e.active});
+  e.active=!e.active;
   renderEmployees();
 }
 
 // ================================================================
 // COMPANIES
 // ================================================================
-async function loadCompaniesPage() {
-  if (!isLoggedIn()) { navigate('login'); return; }
+async function loadCompaniesPage(){
+  if (!isLoggedIn()){navigate('login');return;}
   await refreshCache();
-  const grid = document.getElementById('companyGrid');
-  if (!C.companies.length) { grid.innerHTML=`<div class="empty"><p>No companies yet. Create your first one!</p></div>`; return; }
-  grid.innerHTML = C.companies.map(c => {
-    const cnt = C.employees.filter(e=>e.company_id===c.id).length;
-    return `<div class="company-card">
-      <h3>${c.name}</h3>
-      <div class="meta">${c.industry||''}${c.industry&&c.description?' · ':''}${c.description||''}</div>
-      <div class="meta" style="margin-top:6px;color:var(--text2)">&#128101; ${cnt} employee${cnt!==1?'s':''}</div>
+  const grid=document.getElementById('companyGrid');
+  if (!C.companies.length){grid.innerHTML=`<div class="empty"><p>No companies yet. Create your first one!</p></div>`;return;}
+  const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
+  grid.innerHTML=C.companies.map((co,i)=>{
+    const cnt=C.employees.filter(e=>e.company_id===co.id).length;
+    const active=C.employees.filter(e=>e.company_id===co.id&&e.active).length;
+    const color=colors[i%colors.length];
+    const isCurrent=ActiveCo.get()?.id===co.id;
+    return `<div class="company-card" style="${isCurrent?`border-color:${color};background:${color}0a`:''}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <h3 style="${isCurrent?'color:'+color:''}">${co.name}</h3>
+        ${isCurrent?`<span class="pill admin" style="font-size:10px;padding:2px 8px">Active</span>`:''}
+      </div>
+      <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
+      <div class="meta" style="margin-top:8px;display:flex;gap:12px">
+        <span>&#128101; ${cnt} total</span>
+        <span style="color:var(--green)">&#10003; ${active} active</span>
+      </div>
       <div class="actions">
-        <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="editCompany('${c.id}')">Edit</button>
-        <button class="btn-danger" style="font-size:12px;padding:6px 12px" onclick="confirmDelete('company','${c.id}','${c.name}')">Delete</button>
+        <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="selectCompany('${co.id}')">Switch To</button>
+        <button class="btn-secondary" style="font-size:12px;padding:6px 12px" onclick="editCompany('${co.id}')">Edit</button>
+        <button class="btn-danger" style="font-size:12px;padding:6px 12px" onclick="confirmDelete('company','${co.id}','${co.name}')">Delete</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function openAddCompanyModal() {
+function openAddCompanyModal(){
   document.getElementById('companyModalTitle').textContent='New Company';
   ['companyName','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('editCompanyUid').value='';
   document.getElementById('companyModalMsg').innerHTML='';
   openModal('addCompanyModal');
 }
-
-function editCompany(id) {
-  const c = C.companies.find(c=>c.id===id);
-  if (!c) return;
+function editCompany(id){
+  const co=C.companies.find(c=>c.id===id);if (!co) return;
   document.getElementById('companyModalTitle').textContent='Edit Company';
-  document.getElementById('companyName').value     = c.name;
-  document.getElementById('companyIndustry').value = c.industry||'';
-  document.getElementById('companyDesc').value     = c.description||'';
-  document.getElementById('editCompanyUid').value  = c.id;
+  document.getElementById('companyName').value=co.name;
+  document.getElementById('companyIndustry').value=co.industry||'';
+  document.getElementById('companyDesc').value=co.description||'';
+  document.getElementById('editCompanyUid').value=co.id;
   document.getElementById('companyModalMsg').innerHTML='';
   openModal('addCompanyModal');
 }
-
-async function saveCompany() {
-  const name        = document.getElementById('companyName').value.trim();
-  const industry    = document.getElementById('companyIndustry').value.trim();
-  const description = document.getElementById('companyDesc').value.trim();
-  const editId      = document.getElementById('editCompanyUid').value;
-  if (!name) { showMsg('companyModalMsg','Company name is required.','error'); return; }
-  try {
-    if (editId) {
+async function saveCompany(){
+  const name=document.getElementById('companyName').value.trim();
+  const industry=document.getElementById('companyIndustry').value.trim();
+  const description=document.getElementById('companyDesc').value.trim();
+  const editId=document.getElementById('editCompanyUid').value;
+  if (!name){showMsg('companyModalMsg','Company name is required.','error');return;}
+  try{
+    if (editId){
       await DB.update('companies',`id=eq.${editId}`,{name,industry,description});
-      const c = C.companies.find(c=>c.id===editId);
-      if (c) { c.name=name; c.industry=industry; c.description=description; }
+      const co=C.companies.find(c=>c.id===editId);
+      if (co){co.name=name;co.industry=industry;co.description=description;}
+      // Update session if this is the active company
+      const active=ActiveCo.get();
+      if (active?.id===editId){ActiveCo.set({...active,name,industry,description});updateCompanyPill();}
     } else {
-      const r = await DB.insert('companies',{name,industry,description});
+      const r=await DB.insert('companies',{name,industry,description});
       if (r?.[0]) C.companies.push(r[0]);
     }
     closeModal('addCompanyModal');
     loadCompaniesPage();
-  } catch(e) { showMsg('companyModalMsg','Error: '+e.message,'error'); }
+  }catch(e){showMsg('companyModalMsg','Error: '+e.message,'error');}
 }
 
 // ================================================================
 // REPORTS
 // ================================================================
-async function loadReportsPage() {
-  if (!isLoggedIn()) { navigate('login'); return; }
+async function loadReportsPage(){
+  if (!isLoggedIn()){navigate('login');return;}
   await refreshCache();
+  // Populate company filter
+  const rco=document.getElementById('reportCompany');
+  rco.innerHTML='<option value="all">All Companies</option>'+C.companies.map(c=>`<option value="${c.id}"${ActiveCo.get()?.id===c.id?' selected':''}>${c.name}</option>`).join('');
   updateDateRange();
-  document.getElementById('reportCompany').innerHTML =
-    '<option value="all">All Companies</option>' +
-    C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   loadReportEmps();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
 }
 
-function loadReportEmps() {
-  const coId = document.getElementById('reportCompany')?.value||'all';
-  let emps = C.employees.filter(e=>e.active);
-  if (coId!=='all') emps = emps.filter(e=>e.company_id===coId);
-  document.getElementById('empCheckList').innerHTML = emps.map(e=>{
-    const co = C.companies.find(c=>c.id===e.company_id);
+function loadReportEmps(){
+  const coId=document.getElementById('reportCompany')?.value||'all';
+  let emps=C.employees.filter(e=>e.active);
+  if (coId!=='all') emps=emps.filter(e=>e.company_id===coId);
+  document.getElementById('empCheckList').innerHTML=emps.map(e=>{
+    const co=C.companies.find(c=>c.id===e.company_id);
     return `<label class="emp-check-item">
       <input type="checkbox" class="emp-check" value="${e.id}" checked>
-      <span>${e.name}</span><span style="color:var(--text3);font-size:12px;margin-left:auto">${co?.name||''}</span>
+      <span>${e.name}</span>
+      <span style="color:var(--text3);font-size:12px;margin-left:auto">${co?.name||''}</span>
     </label>`;
   }).join('');
 }
 
-function selAll(v) { document.querySelectorAll('.emp-check').forEach(c=>c.checked=v); }
+function selAll(v){document.querySelectorAll('.emp-check').forEach(c=>c.checked=v);}
 
-function updateDateRange() {
-  const p   = document.getElementById('reportPeriod').value;
-  const now = new Date();
-  const y   = now.getFullYear(), m = now.getMonth();
-  const end = now.toLocaleDateString('en-CA');
-  let start;
-  switch(p) {
-    case 'week':    start = new Date(now-6*86400000).toLocaleDateString('en-CA'); break;
-    case 'biweek':  start = new Date(now-13*86400000).toLocaleDateString('en-CA'); break;
-    case 'month':   start = new Date(y,m,1).toLocaleDateString('en-CA'); break;
-    case 'quarter': start = new Date(y,Math.floor(m/3)*3,1).toLocaleDateString('en-CA'); break;
-    case '6months': start = new Date(y,m-5,1).toLocaleDateString('en-CA'); break;
-    case 'year':    start = new Date(y,0,1).toLocaleDateString('en-CA'); break;
-    default: return;
+function updateDateRange(){
+  const p=document.getElementById('reportPeriod').value;
+  const now=new Date();const y=now.getFullYear(),m=now.getMonth();
+  const end=now.toLocaleDateString('en-CA');let start;
+  switch(p){
+    case 'week':   start=new Date(now-6*86400000).toLocaleDateString('en-CA');break;
+    case 'biweek': start=new Date(now-13*86400000).toLocaleDateString('en-CA');break;
+    case 'month':  start=new Date(y,m,1).toLocaleDateString('en-CA');break;
+    case 'quarter':start=new Date(y,Math.floor(m/3)*3,1).toLocaleDateString('en-CA');break;
+    case '6months':start=new Date(y,m-5,1).toLocaleDateString('en-CA');break;
+    case 'year':   start=new Date(y,0,1).toLocaleDateString('en-CA');break;
+    default:return;
   }
-  document.getElementById('reportStart').value = start;
-  document.getElementById('reportEnd').value   = end;
+  document.getElementById('reportStart').value=start;
+  document.getElementById('reportEnd').value=end;
 }
 
-async function generateReport() {
-  const start   = document.getElementById('reportStart').value;
-  const end     = document.getElementById('reportEnd').value;
-  const selEmps = [...document.querySelectorAll('.emp-check:checked')].map(c=>c.value);
-  if (!start||!end)     { alert('Please select a date range.'); return; }
-  if (!selEmps.length)  { alert('Please select at least one employee.'); return; }
+async function generateReport(){
+  const start=document.getElementById('reportStart').value;
+  const end=document.getElementById('reportEnd').value;
+  const selEmps=[...document.querySelectorAll('.emp-check:checked')].map(c=>c.value);
+  if (!start||!end){alert('Please select a date range.');return;}
+  if (!selEmps.length){alert('Please select at least one employee.');return;}
 
   let punches;
-  try {
-    punches = await DB.all('punches', `punch_date=gte.${start}&punch_date=lte.${end}&order=punched_at.asc`);
-  } catch(e) { alert('Error: '+e.message); return; }
+  try{punches=await DB.all('punches',`punch_date=gte.${start}&punch_date=lte.${end}&order=punched_at.asc`);}
+  catch(e){alert('Error: '+e.message);return;}
 
-  const allRows = [];
-  selEmps.forEach(empId => {
-    const emp = C.employees.find(e=>e.id===empId);
-    if (!emp) return;
-    const co  = C.companies.find(c=>c.id===emp.company_id);
-    const eps = (punches||[]).filter(p=>p.emp_id===empId)
-      .sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
-    const empRows = [];
-    let i=0;
-    while (i<eps.length) {
+  const allRows=[];
+  selEmps.forEach(empId=>{
+    const emp=C.employees.find(e=>e.id===empId);if (!emp) return;
+    const co=C.companies.find(c=>c.id===emp.company_id);
+    const eps=(punches||[]).filter(p=>p.emp_id===empId).sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+    const empRows=[];let i=0;
+    while(i<eps.length){
       const p=eps[i];
-      if (p.type==='IN') {
-        const out = eps[i+1]?.type==='OUT' ? eps[i+1] : null;
-        const hrs = out ? (new Date(out.punched_at)-new Date(p.punched_at))/3600000 : null;
-        if (out) i+=2; else i++;
-        empRows.push({ empName:emp.name, empCode:emp.emp_code||'', company:co?.name||'—', dept:emp.dept||'—',
-          date:p.punch_date, punchIn:p.punch_time, punchOut:out?.punch_time||'—', hours:hrs, isSubtotal:false });
+      if (p.type==='IN'){
+        const out=eps[i+1]?.type==='OUT'?eps[i+1]:null;
+        const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:null;
+        if(out)i+=2;else i++;
+        empRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isSubtotal:false});
       } else i++;
     }
-    if (empRows.length) {
+    if (empRows.length){
       allRows.push(...empRows);
-      const tot = empRows.reduce((s,r)=>s+(r.hours??0),0);
-      allRows.push({ empName:emp.name, subtotalLabel:`${emp.name} — Total`, hours:tot, isSubtotal:true });
+      const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
+      allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total`,hours:tot,isSubtotal:true});
     }
   });
 
-  reportData = allRows;
-  const dataRows = allRows.filter(r=>!r.isSubtotal);
-  const totalH   = allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
-  const doneRows = dataRows.filter(r=>r.hours!==null);
+  reportData=allRows;
+  const dataRows=allRows.filter(r=>!r.isSubtotal);
+  const totalH=allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
+  const doneRows=dataRows.filter(r=>r.hours!==null);
 
   document.getElementById('reportStats').style.display='grid';
   document.getElementById('reportStats').innerHTML=`
@@ -1132,13 +1240,10 @@ async function generateReport() {
     <div class="stat-card"><div class="label">Employees</div><div class="value purple">${selEmps.length}</div></div>
     <div class="stat-card"><div class="label">Avg Hrs / Session</div><div class="value">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
 
-  if (!dataRows.length) {
-    document.getElementById('reportTableWrap').style.display='none';
-    document.getElementById('reportEmpty').style.display=''; return;
-  }
+  if (!dataRows.length){document.getElementById('reportTableWrap').style.display='none';document.getElementById('reportEmpty').style.display='';return;}
   document.getElementById('reportEmpty').style.display='none';
   document.getElementById('reportTableWrap').style.display='';
-  document.getElementById('reportTableBody').innerHTML = allRows.map(r => {
+  document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if (r.isSubtotal) return `<tr style="background:rgba(79,142,247,0.06);border-top:2px solid var(--border)">
       <td colspan="3" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 16px">&#128202; ${r.subtotalLabel}</td>
       <td></td><td></td>
@@ -1155,41 +1260,37 @@ async function generateReport() {
   }).join('');
 }
 
-function exportReport(fmt) {
-  if (!reportData.length) { alert('Generate a report first.'); return; }
-  const headers = ['Employee','Employee ID','Company','Department','Date','Punch In','Punch Out','Hours'];
-  const rows    = reportData.map(r => r.isSubtotal
-    ? [r.subtotalLabel,'','','','','','TOTAL', r.hours.toFixed(2)]
-    : [r.empName, r.empCode, r.company, r.dept, r.date, r.punchIn, r.punchOut, r.hours!==null?r.hours.toFixed(2):'Still In']);
-
-  if (fmt==='excel') {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([headers,...rows]);
-    ws['!cols'] = headers.map((_,i)=>({wch:i===0?22:14}));
+function exportReport(fmt){
+  if (!reportData.length){alert('Generate a report first.');return;}
+  const headers=['Employee','Employee ID','Company','Department','Date','Punch In','Punch Out','Hours'];
+  const rows=reportData.map(r=>r.isSubtotal
+    ?[r.subtotalLabel,'','','','','','TOTAL',r.hours.toFixed(2)]
+    :[r.empName,r.empCode,r.company,r.dept,r.date,r.punchIn,r.punchOut,r.hours!==null?r.hours.toFixed(2):'Still In']);
+  if (fmt==='excel'){
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+    ws['!cols']=headers.map((_,i)=>({wch:i===0?22:14}));
     XLSX.utils.book_append_sheet(wb,ws,'Time Report');
     XLSX.writeFile(wb,`time-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
-  } else if (fmt==='csv') {
-    const csv = [headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-    a.download = `time-report-${new Date().toLocaleDateString('en-CA')}.csv`;
-    a.click();
+  } else if (fmt==='csv'){
+    const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download=`time-report-${new Date().toLocaleDateString('en-CA')}.csv`;a.click();
   } else {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({orientation:'landscape'});
-    doc.setFontSize(16); doc.setFont('helvetica','bold');
+    const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape'});
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
     doc.text('PunchClock Pro — Time Report',14,16);
-    doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(120);
-    doc.text(`Period: ${document.getElementById('reportStart').value} to ${document.getElementById('reportEnd').value}  |  Generated: ${new Date().toLocaleString()}`,14,23);
+    doc.setFontSize(10);doc.setFont('helvetica','normal');doc.setTextColor(120);
+    const coLabel=document.getElementById('reportCompany').options[document.getElementById('reportCompany').selectedIndex].text;
+    doc.text(`Company: ${coLabel}  |  ${document.getElementById('reportStart').value} to ${document.getElementById('reportEnd').value}  |  ${new Date().toLocaleString()}`,14,23);
     doc.setTextColor(0);
     doc.autoTable({
       head:[['Employee','Company','Date','Punch In','Punch Out','Hours']],
-      body: reportData.map(r=>r.isSubtotal
-        ? [{ content:r.subtotalLabel,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]} },
-           { content:r.hours.toFixed(2)+'h',styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]} }]
-        : [r.empName+(r.empCode?` (${r.empCode})`:''),r.company,r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',r.hours!==null?r.hours.toFixed(2)+'h':'Still In']),
-      startY:28,
-      styles:{fontSize:9,cellPadding:4},
+      body:reportData.map(r=>r.isSubtotal
+        ?[{content:r.subtotalLabel,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2)+'h',styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}}]
+        :[r.empName+(r.empCode?` (${r.empCode})`:''),r.company,r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',r.hours!==null?r.hours.toFixed(2)+'h':'Still In']),
+      startY:28,styles:{fontSize:9,cellPadding:4},
       headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
       alternateRowStyles:{fillColor:[245,245,250]},
     });
@@ -1200,14 +1301,23 @@ function exportReport(fmt) {
 // ================================================================
 // ACTIVITY LOG
 // ================================================================
-async function loadActivityPage() {
-  if (!isLoggedIn()) { navigate('login'); return; }
-  await refreshCache();
-  const all   = C.punches;
-  const today = new Date().toLocaleDateString('en-CA');
-  const todayN = all.filter(p=>p.punch_date===today).length;
-  const nowIn  = C.employees.filter(e=>e.active&&getEmpStatus(e.id).status==='IN').length;
-  const outs   = all.filter(p=>p.type==='OUT').length;
+async function loadActivityPage(){
+  if (!isLoggedIn()){navigate('login');return;}
+  const filterVal=document.getElementById('activityCompanyFilter').value;
+  const co=ActiveCo.get();
+  const coId=(filterVal==='all'||!co)?null:co.id;
+  await refreshCache(coId||undefined);
+
+  const all=C.punches;
+  const today=new Date().toLocaleDateString('en-CA');
+  const todayN=all.filter(p=>p.punch_date===today).length;
+  // Currently in: scoped to active company if filtering
+  const scopeEmps=coId?C.employees.filter(e=>e.active&&e.company_id===coId):C.employees.filter(e=>e.active);
+  const nowIn=scopeEmps.filter(e=>getEmpStatus(e.id).status==='IN').length;
+  const outs=all.filter(p=>p.type==='OUT').length;
+
+  const subtitle=filterVal==='all'?'All Companies':(co?.name||'');
+  document.getElementById('activitySubtitle').textContent=`Recent punch records — ${subtitle}`;
 
   document.getElementById('activityStats').innerHTML=`
     <div class="stat-card"><div class="label">Total Records</div><div class="value blue">${all.length}</div></div>
@@ -1215,15 +1325,15 @@ async function loadActivityPage() {
     <div class="stat-card"><div class="label">Currently In</div><div class="value purple">${nowIn}</div></div>
     <div class="stat-card"><div class="label">Total Clock-Outs</div><div class="value">${outs}</div></div>`;
 
-  const tbody = document.getElementById('activityBody');
-  const show  = [...all].sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at)).slice(0,200);
-  if (!show.length) { tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet.</td></tr>`; return; }
-  tbody.innerHTML = show.map(p=>{
-    const co  = C.companies.find(c=>c.id===p.company_id);
-    const emp = C.employees.find(e=>e.id===p.emp_id);
+  const tbody=document.getElementById('activityBody');
+  const show=[...all].sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at)).slice(0,200);
+  if (!show.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">No punch records yet.</td></tr>`;return;}
+  tbody.innerHTML=show.map(p=>{
+    const pco=C.companies.find(c=>c.id===p.company_id);
+    const emp=C.employees.find(e=>e.id===p.emp_id);
     return `<tr>
       <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:12px;margin-left:6px">${emp.emp_code}</span>`:''}</td>
-      <td>${co?.name||'—'}</td>
+      <td>${pco?.name||'—'}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type}</span></td>
       <td style="color:var(--text2);font-size:13px;font-family:'DM Mono',monospace">${p.punch_date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:13px">${p.punch_time}</td>
@@ -1234,21 +1344,23 @@ async function loadActivityPage() {
 // ================================================================
 // DELETE
 // ================================================================
-function confirmDelete(type, id, name) {
-  document.getElementById('deleteMsg').textContent = `Are you sure you want to delete "${name}"? This cannot be undone.`;
-  document.getElementById('confirmDeleteBtn').onclick = async () => {
-    try {
-      if (type==='emp') {
+function confirmDelete(type,id,name){
+  document.getElementById('deleteMsg').textContent=`Are you sure you want to delete "${name}"? This cannot be undone.`;
+  document.getElementById('confirmDeleteBtn').onclick=async()=>{
+    try{
+      if (type==='emp'){
         await DB.del('employees',`id=eq.${id}`);
-        C.employees = C.employees.filter(e=>e.id!==id);
+        C.employees=C.employees.filter(e=>e.id!==id);
         renderEmployees();
       } else {
         await DB.del('companies',`id=eq.${id}`);
-        C.companies = C.companies.filter(c=>c.id!==id);
+        C.companies=C.companies.filter(c=>c.id!==id);
+        // If deleted company was active, clear it
+        if (ActiveCo.get()?.id===id){ActiveCo.clear();updateCompanyPill();}
         loadCompaniesPage();
       }
       closeModal('deleteModal');
-    } catch(e) { alert('Delete failed: '+e.message); }
+    }catch(e){alert('Delete failed: '+e.message);}
   };
   openModal('deleteModal');
 }
@@ -1256,27 +1368,32 @@ function confirmDelete(type, id, name) {
 // ================================================================
 // MODAL / UTIL
 // ================================================================
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(el =>
-  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); }));
-
-function showMsg(id, msg, type) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
-}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+function showMsg(id,msg,type){const el=document.getElementById(id);if(el)el.innerHTML=`<div class="msg ${type}">${msg}</div>`;}
 
 // ================================================================
 // INIT
 // ================================================================
-async function init() {
-  try {
+async function init(){
+  try{
     await refreshCache();
     document.getElementById('loadingOverlay').classList.add('hidden');
     updateNav();
-    loadPunchPage();
     updateDateRange();
-  } catch(e) {
+
+    const co=ActiveCo.get();
+    if (!co){
+      // First visit or new session — show picker
+      showPicker();
+    } else {
+      // Restore active company and go to punch page
+      updateCompanyPill();
+      navigate('punch');
+    }
+  }catch(e){
     document.getElementById('loadingOverlay').innerHTML=`
       <div style="text-align:center;color:var(--red);max-width:400px;padding:24px">
         <div style="font-size:32px;margin-bottom:12px">&#9888;&#65039;</div>
