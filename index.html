@@ -534,20 +534,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
             <div style="font-size:11px;color:var(--text2)" id="lastMonthLabel"></div>
           </div>
         </label>
-        <label class="send-period-option" onclick="selectSendPeriod(this,'last_quarter')">
-          <input type="radio" name="sendPeriod" value="last_quarter" style="accent-color:var(--accent)">
-          <div>
-            <div style="font-weight:600;font-size:13px">Last Quarter</div>
-            <div style="font-size:11px;color:var(--text2)" id="lastQuarterLabel"></div>
-          </div>
-        </label>
-        <label class="send-period-option" onclick="selectSendPeriod(this,'last_year')">
-          <input type="radio" name="sendPeriod" value="last_year" style="accent-color:var(--accent)">
-          <div>
-            <div style="font-weight:600;font-size:13px">Last Year</div>
-            <div style="font-size:11px;color:var(--text2)" id="lastYearLabel"></div>
-          </div>
-        </label>
         <label class="send-period-option" onclick="selectSendPeriod(this,'custom')">
           <input type="radio" name="sendPeriod" value="custom" style="accent-color:var(--accent)">
           <div style="flex:1">
@@ -565,7 +551,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <input type="hidden" id="sendReportEmpId">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('sendReportModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 20px" id="sendReportBtn" onclick="executeSendReport()">&#128231; Send Now</button>
+      <button class="btn-primary" style="width:auto;padding:9px 20px" id="sendReportBtn" onclick="executeSendReport()">📧 Send Now</button>
     </div>
   </div>
 </div>
@@ -2020,11 +2006,6 @@ function openSendReportModal(empId){
   const lm = getSendPeriodDates('last_month', co);
   document.getElementById('lastMonthLabel').textContent = lm?lm.label:'';
 
-  const lq = getSendPeriodDates('last_quarter', co);
-  document.getElementById('lastQuarterLabel').textContent = lq?lq.label:'';
-
-  document.getElementById('lastYearLabel').textContent = String(y-1);
-
   // Reset to first option
   document.querySelector('input[name="sendPeriod"][value="last_period"]').checked = true;
   document.getElementById('customRangeInputs').style.display = 'none';
@@ -2073,7 +2054,7 @@ async function executeSendReport(){
   }
 
   const btn = document.getElementById('sendReportBtn');
-  btn.textContent = '⏳ Sending...';
+  btn.innerHTML = '⏳ Sending...';
   btn.disabled = true;
   document.getElementById('sendReportMsg').innerHTML = '';
 
@@ -2098,16 +2079,16 @@ async function executeSendReport(){
     const data = await res.json();
     if(data.success && (data.results?.[0]?.sent > 0 || data.manual_sent)){
       showMsg('sendReportMsg',`&#10003; Report sent to ${emp.email} for period ${periodLabel}`,'success');
-      btn.textContent = '✓ Sent!';
+      btn.innerHTML = '✓ Sent!';
       setTimeout(()=>{btn.textContent='&#128231; Send Now';btn.disabled=false;},3000);
     } else {
       const err = data.results?.[0]?.errors?.[0] || data.error || 'Unknown error';
       showMsg('sendReportMsg','Send failed: '+err,'error');
-      btn.textContent = '&#128231; Send Now'; btn.disabled = false;
+      btn.innerHTML = '📧 Send Now'; btn.disabled = false;
     }
   }catch(e){
     showMsg('sendReportMsg','Network error: '+e.message,'error');
-    btn.textContent = '&#128231; Send Now'; btn.disabled = false;
+    btn.innerHTML = '📧 Send Now'; btn.disabled = false;
   }
 }
 
