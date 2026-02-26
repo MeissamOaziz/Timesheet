@@ -1934,23 +1934,26 @@ function getSendPeriodDates(periodVal, co){
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth();
   const weekStart = co?.week_start||'monday';
-  const startDow = weekStart==='sunday'?0:1;
+  const startDow = weekStart==='sunday'?0:1; // 0=Sun, 1=Mon
+  const endDow = (startDow + 6) % 7;        // last day of week: Sat=6 or Sun=0
   const freq = co?.payroll_frequency||'biweekly';
 
   if(periodVal==='last_period'){
-    // Work out the period that just ended (same logic as edge function)
-    const todayDow = now.getDay();
     if(freq==='monthly'){
-      // Last full month
-      const end = new Date(y, m, 0); // last day of prev month
+      const end = new Date(y, m, 0);
       const start = new Date(y, m-1, 1);
-      return{start:toDateStr(start),end:toDateStr(end),label:start.toLocaleDateString('en-US',{month:'long',year:'numeric'})};
+      return{start:toDateStr(start),end:toDateStr(end),
+        label:start.toLocaleDateString('en-US',{month:'long',year:'numeric'})};
     }
     const days = freq==='weekly'?7:14;
-    // Find last completed period boundary
-    const daysBack = ((todayDow - startDow + 7) % 7) || 7;
-    const periodEnd = new Date(now); periodEnd.setDate(now.getDate() - daysBack);
-    const periodStart = new Date(periodEnd); periodStart.setDate(periodEnd.getDate() - days + 1);
+    const todayDow = now.getDay();
+    // How many days ago was the most recent period-end day?
+    // e.g. Sun start → period ends Sat (endDow=6). If today is Wed(3), last Sat was 4 days ago.
+    let daysToLastEnd = ((todayDow - endDow + 7) % 7) || 7;
+    const periodEnd = new Date(now);
+    periodEnd.setDate(now.getDate() - daysToLastEnd);
+    const periodStart = new Date(periodEnd);
+    periodStart.setDate(periodEnd.getDate() - days + 1);
     return{start:toDateStr(periodStart),end:toDateStr(periodEnd),
       label:`${toDateStr(periodStart)} → ${toDateStr(periodEnd)}`};
   }
@@ -1959,19 +1962,6 @@ function getSendPeriodDates(periodVal, co){
     const end = new Date(y, m, 0);
     return{start:toDateStr(start),end:toDateStr(end),
       label:start.toLocaleDateString('en-US',{month:'long',year:'numeric'})};
-  }
-  if(periodVal==='last_quarter'){
-    const q = Math.floor(m/3);
-    const start = new Date(y, (q-1)*3, 1);
-    const end = new Date(y, q*3, 0);
-    const qn = ['Q1','Q2','Q3','Q4'][((q-1)+4)%4];
-    return{start:toDateStr(start),end:toDateStr(end),
-      label:`${qn} ${start.getFullYear()} (${toDateStr(start)} → ${toDateStr(end)})`};
-  }
-  if(periodVal==='last_year'){
-    const start = new Date(y-1, 0, 1);
-    const end = new Date(y-1, 11, 31);
-    return{start:toDateStr(start),end:toDateStr(end),label:`${y-1}`};
   }
   return null;
 }
@@ -2080,7 +2070,7 @@ async function executeSendReport(){
     if(data.success && (data.results?.[0]?.sent > 0 || data.manual_sent)){
       showMsg('sendReportMsg',`&#10003; Report sent to ${emp.email} for period ${periodLabel}`,'success');
       btn.innerHTML = '✓ Sent!';
-      setTimeout(()=>{btn.textContent='&#128231; Send Now';btn.disabled=false;},3000);
+      setTimeout(()=>{btn.textContent='📧 Send Now';btn.disabled=false;},3000);
     } else {
       const err = data.results?.[0]?.errors?.[0] || data.error || 'Unknown error';
       showMsg('sendReportMsg','Send failed: '+err,'error');
