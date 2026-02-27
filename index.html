@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PunchClock Pro</title>
+<title>PunchClock Pro — Time & Attendance Software</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -218,6 +218,244 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </head>
 <body>
 
+<!-- ═══════ LANDING PAGE ═══════ -->
+<div class="landing" id="landingPage">
+  <nav class="land-nav">
+    <div class="land-logo">⏱ PunchClock Pro</div>
+    <div class="land-nav-links">
+      <a onclick="document.getElementById('landingFeatures').scrollIntoView({behavior:'smooth'})">Features</a>
+      <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})">Pricing</a>
+      <a onclick="showLegal('tos')">Terms</a>
+      <a onclick="showLegal('privacy')">Privacy</a>
+      <a onclick="hideLanding();navigate('login')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-left:4px">Login</a>
+      <a onclick="hideLanding();navigate('register')" style="background:var(--accent);color:#fff;border-radius:8px;margin-left:2px">Get Started Free</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="land-hero">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:24px">
+      ✨ Now with automated payroll period reports
+    </div>
+    <h1>Time tracking that <span>actually works</span> for shift workers</h1>
+    <p>PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.</p>
+    <div class="land-cta-group">
+      <button class="land-btn-primary" onclick="hideLanding();navigate('register')">Start for free — no credit card</button>
+      <button class="land-btn-secondary" onclick="hideLanding();navigate('login')">Sign in to your account</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px">Free tier includes 1 company · 1 site · 5 employees</p>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="land-features" id="landingFeatures">
+    <h2>Everything you need to manage shift workers</h2>
+    <p class="sub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔢</div>
+        <h3>PIN Clock In/Out</h3>
+        <p>Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3>Multi-Site Support</h3>
+        <p>Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Automated Reports</h3>
+        <p>Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✏️</div>
+        <h3>Manual Punch Editing</h3>
+        <p>Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⏰</div>
+        <h3>Overtime Tracking</h3>
+        <p>Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h3>QuickBooks Export</h3>
+        <p>Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h3>Multi-Company</h3>
+        <p>Manage multiple businesses from a single admin account. Perfect for owners with more than one operation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Flexible Payroll Periods</h3>
+        <p>Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="land-pricing" id="landingPricing">
+    <h2>Simple, transparent pricing</h2>
+    <p class="sub">Start free. Upgrade as you grow. No hidden fees.</p>
+    <div class="pricing-grid">
+      <!-- FREE -->
+      <div class="price-card">
+        <div class="price-name">Free</div>
+        <div class="price-amount">$0<span>/mo</span></div>
+        <div class="price-sub">Perfect for trying it out</div>
+        <ul class="price-features">
+          <li>1 company</li>
+          <li>1 site</li>
+          <li>Up to 5 employees</li>
+          <li>Basic reports (Excel, CSV, PDF)</li>
+          <li>Manual punch editing</li>
+          <li class="dim">Automated email reports</li>
+          <li class="dim">Overtime tracking</li>
+          <li class="dim">QuickBooks export</li>
+        </ul>
+        <button class="price-cta ghost" onclick="hideLanding();navigate('register')">Get started free</button>
+      </div>
+      <!-- STARTER -->
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-amount">$19<span>/mo</span></div>
+        <div class="price-sub">1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee</div>
+        <ul class="price-features">
+          <li>1 company, 2 sites</li>
+          <li>Up to 10 employees</li>
+          <li>All Free features</li>
+          <li>Automated period email reports</li>
+          <li>Overtime tracking</li>
+          <li>QuickBooks IIF export</li>
+          <li class="dim">Multiple companies</li>
+        </ul>
+        <button class="price-cta ghost" onclick="hideLanding();navigate('register')">Start free trial</button>
+      </div>
+      <!-- GROWTH -->
+      <div class="price-card popular">
+        <div class="popular-badge">Most Popular</div>
+        <div class="price-name">Growth</div>
+        <div class="price-amount">$39<span>/mo</span></div>
+        <div class="price-sub">2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee</div>
+        <ul class="price-features">
+          <li>2 companies</li>
+          <li>Up to 5 sites per company</li>
+          <li>Up to 25 employees</li>
+          <li>All Starter features</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="price-cta accent" onclick="hideLanding();navigate('register')">Start free trial</button>
+      </div>
+      <!-- BUSINESS -->
+      <div class="price-card">
+        <div class="price-name">Business</div>
+        <div class="price-amount">$79<span>/mo</span></div>
+        <div class="price-sub">Unlimited everything</div>
+        <ul class="price-features">
+          <li>Unlimited companies</li>
+          <li>Unlimited sites</li>
+          <li>Unlimited employees</li>
+          <li>All Growth features</li>
+          <li>Dedicated support</li>
+          <li>Early access to new features</li>
+        </ul>
+        <button class="price-cta ghost" onclick="hideLanding();navigate('register')">Contact us</button>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px">All plans include a 14-day free trial. No credit card required to start.</p>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="border-top:1px solid var(--border);padding:36px 32px;">
+    <div class="land-footer">
+      <div>
+        <div class="land-logo" style="margin-bottom:6px">⏱ PunchClock Pro</div>
+        <p>Time & attendance software for modern shift workforces.</p>
+      </div>
+      <div class="land-footer-links">
+        <a onclick="showLegal('tos')">Terms of Service</a>
+        <a onclick="showLegal('privacy')">Privacy Policy</a>
+        <a onclick="hideLanding();navigate('login')">Admin Login</a>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:8px">© 2026 PunchClock Pro. All rights reserved.</p>
+  </div>
+</div>
+
+<!-- ═══════ TERMS OF SERVICE ═══════ -->
+<div class="legal-page" id="tosPage">
+  <div class="legal-content">
+    <button class="legal-back" onclick="hideLegal('tos')">← Back</button>
+    <h1>Terms of Service</h1>
+    <p class="meta">Last updated: January 1, 2026</p>
+    <h2>1. Acceptance of Terms</h2>
+    <p>By accessing or using PunchClock Pro ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
+    <h2>2. Description of Service</h2>
+    <p>PunchClock Pro is a time and attendance tracking software-as-a-service ("SaaS") platform that allows businesses to track employee work hours, manage multiple locations, generate reports, and integrate with payroll software.</p>
+    <h2>3. Account Registration</h2>
+    <p>You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.</p>
+    <h2>4. Subscription Plans and Billing</h2>
+    <p>PunchClock Pro offers several subscription tiers: Free, Starter ($19/month), Growth ($39.90/month), and Business ($79/month). Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. No refunds are provided for partial months.</p>
+    <p>Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan's included limit.</p>
+    <h2>5. Employee Data</h2>
+    <p>You are responsible for obtaining any necessary consent from your employees to collect and store their time and attendance data. You represent that you have the legal authority to use the Service on behalf of your organization and to submit employee data through the platform.</p>
+    <h2>6. Acceptable Use</h2>
+    <p>You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) interfere with or disrupt the integrity of the Service; (d) upload or transmit malicious code; (e) resell or sublicense the Service without our written consent.</p>
+    <h2>7. Data Retention and Deletion</h2>
+    <p>Your data is retained for the duration of your subscription. Upon account cancellation, your data will be retained for 30 days to allow for export, after which it will be permanently deleted. Free tier accounts inactive for 12 months may have their data deleted after notice.</p>
+    <h2>8. Limitation of Liability</h2>
+    <p>To the maximum extent permitted by law, PunchClock Pro shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service, including but not limited to lost profits, lost data, or business interruption, even if advised of the possibility of such damages.</p>
+    <h2>9. Service Availability</h2>
+    <p>We strive for 99.9% uptime but do not guarantee uninterrupted access to the Service. Scheduled maintenance will be communicated in advance where possible. We are not liable for damages resulting from service interruptions.</p>
+    <h2>10. Modifications to Terms</h2>
+    <p>We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms. We will provide notice of material changes via email or in-app notification.</p>
+    <h2>11. Governing Law</h2>
+    <p>These Terms are governed by the laws of the Province of Quebec, Canada, without regard to conflict of law principles.</p>
+    <h2>12. Contact</h2>
+    <p>For questions about these Terms, contact us through the app or at the email address on file with your account.</p>
+  </div>
+</div>
+
+<!-- ═══════ PRIVACY POLICY ═══════ -->
+<div class="legal-page" id="privacyPage">
+  <div class="legal-content">
+    <button class="legal-back" onclick="hideLegal('privacy')">← Back</button>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: January 1, 2026</p>
+    <h2>1. Information We Collect</h2>
+    <p>We collect information you provide directly to us, including:</p>
+    <ul>
+      <li>Admin account information: name, email address, password (hashed)</li>
+      <li>Company information: company name, industry, payroll settings</li>
+      <li>Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)</li>
+      <li>Time and attendance records: clock-in/out times, dates, site locations</li>
+    </ul>
+    <h2>2. How We Use Your Information</h2>
+    <p>We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.</p>
+    <h2>3. Data Storage and Security</h2>
+    <p>Your data is stored in Supabase, a secure cloud database platform hosted on AWS infrastructure. We implement industry-standard security measures including encrypted connections (TLS/SSL) for all data in transit. However, no method of transmission over the internet is 100% secure.</p>
+    <h2>4. Employee PIN Security</h2>
+    <p>Employee PINs are stored in the database and used solely for clock-in/out authentication. Admins should treat PINs as confidential and share them only with the respective employee. We recommend changing PINs if an employee leaves the organization.</p>
+    <h2>5. Email Communications</h2>
+    <p>When the automated email report feature is enabled for an employee, we will send periodic hours summary emails to the email address on file. These emails are sent via Resend, our email delivery provider. Employees can be removed from automated emails at any time by an admin.</p>
+    <h2>6. Data Sharing</h2>
+    <p>We do not sell, trade, or rent your personal information to third parties. We may share data with: (a) Supabase for data storage and hosting; (b) Resend for email delivery; (c) law enforcement when required by law. All third-party providers are bound by confidentiality agreements.</p>
+    <h2>7. Data Retention</h2>
+    <p>We retain your data for as long as your account is active. Upon cancellation, data is retained for 30 days before permanent deletion. You may request immediate deletion by contacting us.</p>
+    <h2>8. Your Rights (PIPEDA / Quebec Law 25)</h2>
+    <p>Under Canadian privacy law, you have the right to: access the personal information we hold about you; correct inaccurate information; withdraw consent for certain processing; request deletion of your data; and file a complaint with the Office of the Privacy Commissioner of Canada.</p>
+    <h2>9. Cookies</h2>
+    <p>PunchClock Pro uses localStorage in your browser to maintain your session and remember your selected company/site context. No third-party tracking cookies are used.</p>
+    <h2>10. Children's Privacy</h2>
+    <p>The Service is not directed to individuals under 16 years of age. We do not knowingly collect personal information from children.</p>
+    <h2>11. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of significant changes via email or in-app notice. Your continued use of the Service constitutes acceptance of the updated policy.</p>
+    <h2>12. Contact Us</h2>
+    <p>For privacy-related questions or to exercise your rights, contact us through the app. We will respond within 30 days.</p>
+  </div>
+</div>
+
 <!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
@@ -386,6 +624,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <button class="btn-export" onclick="exportReport('excel')">&#128229; Excel</button>
       <button class="btn-export" onclick="exportReport('csv')">&#128196; CSV</button>
       <button class="btn-export" onclick="exportReport('pdf')">&#128203; PDF</button>
+      <button class="btn-export" onclick="exportReport('qb')" style="border-color:rgba(34,197,94,.4);color:var(--green)">&#128230; QuickBooks IIF</button>
     </div>
   </div>
   <div class="filter-bar">
@@ -419,7 +658,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
   <div class="stats-grid" id="reportStats" style="display:none"></div>
   <div class="table-wrap" id="reportTableWrap" style="display:none">
-    <table><thead><tr><th>Employee</th><th>Site</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Hours</th></tr></thead>
+    <table><thead><tr><th>Employee</th><th>Site</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th>Reg Hours</th><th>OT Hours</th></tr></thead>
     <tbody id="reportTableBody"></tbody></table>
   </div>
   <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
@@ -600,6 +839,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </select>
       </div>
     </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Overtime Settings</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleOvertimeOpt()">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">⏰ Track Overtime</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Flag daily >8h and weekly >40h in reports</div>
+      </div>
+      <div id="overtimeToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="overtimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addCompanyModal')">Cancel</button>
@@ -727,6 +977,75 @@ const DB={
   update:(t,f,b)=>supaFetch('PATCH',t,{filter:f,body:b}),
   del:(t,f)=>supaFetch('DELETE',t,{filter:f}),
 };
+
+
+// ═══════════════════════════════════════════════════
+// PLAN SYSTEM
+// ═══════════════════════════════════════════════════
+const PLANS = {
+  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:5,  price:0    },
+  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:10, price:19   },
+  growth:   { name:'Growth',   maxCompanies:2, maxSites:5,  maxEmployees:25, price:39   },
+  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:79 },
+  unlimited:{ name:'Unlimited',maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:0  },
+};
+// Grandfathered companies — always unlimited regardless of plan
+const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
+
+function getCompanyPlan(co) {
+  if(!co) return PLANS.free;
+  if(GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
+  return PLANS[co.plan] || PLANS.free;
+}
+
+function getPlanBadgeHtml(co) {
+  if(!co) return '';
+  const plan = getCompanyPlan(co);
+  const cls = {Free:'plan-free',Starter:'plan-starter',Growth:'plan-growth',Business:'plan-business',Unlimited:'plan-unlimited'}[plan.name]||'plan-free';
+  return `<span class="plan-badge ${cls}">${plan.name}</span>`;
+}
+
+function canAddEmployee(co) {
+  const plan = getCompanyPlan(co);
+  const cur = C.employees.filter(e=>e.company_id===co.id&&e.active).length;
+  return { ok: cur < plan.maxEmployees, current: cur, max: plan.maxEmployees, plan };
+}
+
+function canAddSite(co) {
+  const plan = getCompanyPlan(co);
+  const cur = C.sites.filter(s=>s.company_id===co.id).length;
+  return { ok: cur < plan.maxSites, current: cur, max: plan.maxSites, plan };
+}
+
+function showUpgradePrompt(containerId, msg) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML = `<div class="upgrade-wall">
+    <h3>🔒 Plan Limit Reached</h3>
+    <p>${msg}</p>
+    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="navigate('companies');closeModal(document.querySelector('.modal-overlay.open')?.id||'')">Upgrade Plan</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// LANDING / LEGAL HELPERS
+// ═══════════════════════════════════════════════════
+function showLanding() {
+  document.getElementById('landingPage').classList.add('show');
+  document.getElementById('mainNav').style.display = 'none';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.picker-screen').forEach(p=>p.classList.add('hidden'));
+}
+function hideLanding() {
+  document.getElementById('landingPage').classList.remove('show');
+  document.getElementById('mainNav').style.display = '';
+}
+function showLegal(type) {
+  document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.add('show');
+}
+function hideLegal(type) {
+  document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
+}
 
 // ═══════════════════════════════════════════════════
 // STORAGE — session for company/site (localStorage so tablet stays locked)
@@ -987,7 +1306,7 @@ async function doVerify(){
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
-function logout(){Sess.clear();updateNav();navigate('punch');}
+function logout(){Sess.clear();Ctx.clear();updateNav();showLanding();}
 
 // ═══════════════════════════════════════════════════
 // STATUS HELPER
@@ -1275,6 +1594,17 @@ function setEmailToggle(on){
 
 function openAddEmpModal(){
   const ctx=Ctx.get();if(!ctx){alert('Please select a company first.');return;}
+  const {ok,current,max,plan}=canAddEmployee(ctx.co);
+  if(!ok){
+    showMsg('empModalMsg','','error');
+    showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
+    openModal('addEmpModal');
+    // Hide the form fields
+    document.getElementById('empName').closest('.form-group').style.display='none';
+    return;
+  }
+  // Show all fields in case they were hidden
+  document.querySelectorAll('#addEmpModal .form-group').forEach(el=>el.style.display='');
   document.getElementById('empModalTitle').textContent='Add Employee — '+ctx.co.name;
   ['empName','empDept','empIdCode','empPin','empEmail'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pinPreview').style.display='none';
@@ -1353,6 +1683,17 @@ async function toggleEmp(id){
 // ---- Site modal ----
 function openAddSiteModal(){
   const ctx=Ctx.get();if(!ctx){alert('Please select a company first.');return;}
+  const {ok,current,max,plan}=canAddSite(ctx.co);
+  if(!ok){
+    document.getElementById('siteModalMsg').innerHTML='';
+    showUpgradePrompt('siteModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} site${max!==1?'s':''}</strong>. You have ${current}. Upgrade to add more.`);
+    openModal('addSiteModal');
+    document.getElementById('siteName').style.display='none';
+    document.getElementById('siteDesc').style.display='none';
+    return;
+  }
+  document.getElementById('siteName').style.display='';
+  document.getElementById('siteDesc').style.display='';
   document.getElementById('siteModalTitle').textContent='Add Site — '+ctx.co.name;
   document.getElementById('siteName').value='';
   document.getElementById('siteDesc').value='';
@@ -1408,9 +1749,10 @@ async function loadCompaniesPage(){
     const col=colors[i%colors.length];
     const isCur=Ctx.get()?.co?.id===co.id;
     return`<div class="company-card" style="${isCur?`border-color:${col};background:${col}0a`:''}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
         <h3 style="${isCur?'color:'+col:''}">${co.name}</h3>
         ${isCur?`<span class="pill admin" style="font-size:10px;padding:1px 7px">Active</span>`:''}
+        ${getPlanBadgeHtml(co)}
       </div>
       <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
@@ -1420,6 +1762,7 @@ async function loadCompaniesPage(){
       <div class="meta" style="margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;color:var(--text2)">
         <span>&#128197; ${freqLabel[co.payroll_frequency]||'—'} payroll</span>
         <span>&#8634; Week: ${weekLabel[co.week_start]||'—'}</span>
+        ${co.track_overtime?'<span style="color:var(--amber)">⏰ Overtime on</span>':''}
       </div>
       <div class="actions">
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="selectCtxFromCompany('${co.id}')">Switch To</button>
@@ -1447,6 +1790,7 @@ function openAddCompanyModal(){
   document.getElementById('companyPayrollFreq').value='biweekly';
   document.getElementById('editCompanyUid').value='';
   document.getElementById('companyModalMsg').innerHTML='';
+  setOvertimeToggle(false);
   openModal('addCompanyModal');
 }
 
@@ -1460,7 +1804,18 @@ function editCompany(id){
   document.getElementById('companyPayrollFreq').value=co.payroll_frequency||'biweekly';
   document.getElementById('editCompanyUid').value=co.id;
   document.getElementById('companyModalMsg').innerHTML='';
+  setOvertimeToggle(!!co.track_overtime);
   openModal('addCompanyModal');
+}
+
+function toggleOvertimeOpt(){
+  const on=document.getElementById('overtimeThumb').style.left!=='20px';
+  document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
+}
+function setOvertimeToggle(on){
+  document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
 }
 
 async function saveCompany(){
@@ -1469,16 +1824,17 @@ async function saveCompany(){
   const description=document.getElementById('companyDesc').value.trim();
   const week_start=document.getElementById('companyWeekStart').value;
   const payroll_frequency=document.getElementById('companyPayrollFreq').value;
+  const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   try{
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,industry,description,week_start,payroll_frequency});
+      await DB.update('companies',`id=eq.${editId}`,{name,industry,description,week_start,payroll_frequency,track_overtime});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,industry,description,week_start,payroll_frequency});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,week_start,payroll_frequency}});updateContextPill();}
+      if(co)Object.assign(co,{name,industry,description,week_start,payroll_frequency,track_overtime});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,week_start,payroll_frequency,track_overtime}});updateContextPill();}
     }else{
-      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency});
+      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime});
       if(r?.[0])C.companies.push(r[0]);
     }
     closeModal('addCompanyModal');loadCompaniesPage();
@@ -1602,39 +1958,72 @@ async function generateReport(){
   const noSiteEmps=selEmps.map(id=>C.employees.find(e=>e.id===id)).filter(e=>e&&!addedEmps.has(e.id));
   if(noSiteEmps.length)siteGroups.push({site:null,emps:noSiteEmps});
 
+  // ── Overtime helper: compute OT for a set of sessions within a period ──
+  function calcOT(sessions, trackOT) {
+    // sessions: [{date, hours}]
+    if(!trackOT) return sessions.map(s=>({reg:s.hours,ot:0}));
+    // Daily OT: >8h/day
+    const dailyMap={};
+    sessions.forEach(s=>{
+      if(!dailyMap[s.date]) dailyMap[s.date]=0;
+      dailyMap[s.date]+=(s.hours||0);
+    });
+    // Weekly OT: >40h/week (accumulate reg after daily cap)
+    let weeklyReg=0;
+    return sessions.map(s=>{
+      const dayTotal=dailyMap[s.date];
+      const h=s.hours||0;
+      // Proportion of this session's daily OT
+      const dailyOT=dayTotal>8?Math.max(0,(h/dayTotal)*Math.max(0,dayTotal-8)):0;
+      const dailyReg=h-dailyOT;
+      // Weekly cap
+      let reg=dailyReg,ot=dailyOT;
+      if(weeklyReg+reg>40){
+        const over=weeklyReg+reg-40;
+        ot+=over;reg-=over;
+      }
+      weeklyReg+=reg;
+      return{reg:Math.max(0,reg),ot:Math.max(0,ot)};
+    });
+  }
+
   const allRows=[];
-  let grandTotal=0;
+  let grandTotal=0, grandOT=0;
 
   siteGroups.forEach(({site,emps})=>{
-    // Site header row
     if(siteGroups.length>1||site){
       allRows.push({isSiteHeader:true,siteName:site?site.name:'No Site Assigned'});
     }
     emps.forEach(emp=>{
       const co=C.companies.find(c=>c.id===emp.company_id);
+      const trackOT=!!(co?.track_overtime);
       const eps=(punches||[]).filter(p=>p.emp_id===emp.id).sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
-      const empRows=[];let i=0;
+      const rawRows=[];let i=0;
       while(i<eps.length){
         const p=eps[i];
         if(p.type==='IN'){
           const out=eps[i+1]?.type==='OUT'?eps[i+1]:null;
           const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:null;
           if(out)i+=2;else i++;
-          empRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false});
+          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT});
         }else i++;
       }
-      if(empRows.length){
+      if(rawRows.length){
+        // Calculate OT per session
+        const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT);
+        const empRows=rawRows.map((r,idx)=>({...r,regHours:otResults[idx].reg,otHours:otResults[idx].ot}));
         allRows.push(...empRows);
         const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
-        grandTotal+=tot;
-        allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total`,hours:tot,isSubtotal:true,isSiteHeader:false});
+        const totOT=empRows.reduce((s,r)=>s+(r.otHours||0),0);
+        grandTotal+=tot; grandOT+=totOT;
+        allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total`,hours:tot,otHours:totOT,trackOT,isSubtotal:true,isSiteHeader:false});
       }
     });
-    // Site subtotal
     if(siteGroups.length>1||site){
       const siteRows=allRows.filter(r=>!r.isSiteHeader&&r.isSubtotal&&emps.some(e=>e.name===r.empName));
       const siteTot=siteRows.reduce((s,r)=>s+(r.hours??0),0);
-      allRows.push({isSiteTotal:true,siteName:site?site.name:'No Site Assigned',hours:siteTot});
+      const siteOT=siteRows.reduce((s,r)=>s+(r.otHours||0),0);
+      allRows.push({isSiteTotal:true,siteName:site?site.name:'No Site Assigned',hours:siteTot,otHours:siteOT});
     }
   });
 
@@ -1643,11 +2032,13 @@ async function generateReport(){
   const totalH=allRows.filter(r=>r.isSiteTotal).reduce((s,r)=>s+(r.hours??0),0)||
     allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
   const doneRows=dataRows.filter(r=>r.hours!==null);
+  const hasOT=allRows.some(r=>r.trackOT);
 
   document.getElementById('reportStats').style.display='grid';
   document.getElementById('reportStats').innerHTML=`
     <div class="stat-card"><div class="lbl">Total Sessions</div><div class="val blue">${dataRows.length}</div></div>
     <div class="stat-card"><div class="lbl">Total Hours</div><div class="val green">${totalH.toFixed(2)}</div></div>
+    ${hasOT?`<div class="stat-card"><div class="lbl">Overtime Hours</div><div class="val amber">${grandOT.toFixed(2)}</div></div>`:''}
     <div class="stat-card"><div class="lbl">Employees</div><div class="val purple">${selEmps.length}</div></div>
     <div class="stat-card"><div class="lbl">Avg Hrs / Session</div><div class="val">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
 
@@ -1657,7 +2048,7 @@ async function generateReport(){
 
   document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if(r.isSiteHeader)return`<tr style="background:rgba(79,142,247,.1)">
-      <td colspan="6" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
+      <td colspan="7" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
         &#128205; ${r.siteName}
       </td>
     </tr>`;
@@ -1665,34 +2056,74 @@ async function generateReport(){
       <td colspan="4" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px">&#128202; ${r.siteName} — Site Total</td>
       <td></td>
       <td style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--accent)">${r.hours.toFixed(2)}h</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.otHours>0?r.otHours.toFixed(2)+'h OT':''}</td>
     </tr>`;
     if(r.isSubtotal)return`<tr style="background:rgba(255,255,255,.02)">
       <td colspan="4" style="font-weight:600;color:var(--text2);font-size:12px;padding:8px 15px;padding-left:28px">&#8627; ${r.subtotalLabel}</td>
       <td></td>
       <td style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px;color:var(--text2)">${r.hours.toFixed(2)}h</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.trackOT&&r.otHours>0?r.otHours.toFixed(2)+'h OT':''}</td>
     </tr>`;
-    return`<tr>
+    const otCell=r.trackOT&&r.otHours>0
+      ?`<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:600">${r.otHours.toFixed(2)}h</span>`
+      :`<span style="color:var(--text3)">—</span>`;
+    return`<tr ${r.trackOT&&r.otHours>0?'style="background:rgba(245,158,11,.04)"':''}>
       <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${r.empCode}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}</td>
       <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px">&#128205; ${r.siteName}</span>`:''}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${r.punchIn}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">${r.punchOut!=='—'?r.punchOut:'<span style="color:var(--text3)">—</span>'}</td>
-      <td style="font-family:'DM Mono',monospace;font-weight:600">${r.hours!==null?r.hours.toFixed(2)+'h':'<span style="color:var(--text3)">Still in</span>'}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${r.hours!==null?(r.trackOT?(r.hours-(r.otHours||0)).toFixed(2):r.hours.toFixed(2))+'h':'<span style="color:var(--text3)">Still in</span>'}</td>
+      <td>${r.hours!==null?otCell:'<span style="color:var(--text3)">—</span>'}</td>
     </tr>`;
   }).join('');
 }
 
 function exportReport(fmt){
   if(!reportData.length){alert('Generate a report first.');return;}
-  const headers=['Employee','Employee ID','Site','Date','Punch In','Punch Out','Hours'];
-  const rows=reportData.map(r=>{
-    if(r.isSiteHeader)return[`=== SITE: ${r.siteName} ===`,'','','','','',''];
-    if(r.isSiteTotal)return[`${r.siteName} — SITE TOTAL`,'','','','','',r.hours.toFixed(2)];
-    if(r.isSubtotal)return[r.subtotalLabel,'','','','','',r.hours.toFixed(2)];
-    return[r.empName+(r.isManual?' [MANUAL]':''),r.empCode,r.siteName,r.date,r.punchIn,r.punchOut,r.hours!==null?r.hours.toFixed(2):'Still In'];
-  });
   const coLabel=document.getElementById('reportCompany').options[document.getElementById('reportCompany').selectedIndex].text;
   const siteLabel=document.getElementById('reportSite').options[document.getElementById('reportSite').selectedIndex].text;
+  const startD=document.getElementById('reportStart').value;
+  const endD=document.getElementById('reportEnd').value;
+
+  if(fmt==='qb'){
+    // QuickBooks IIF export
+    const dataRows=reportData.filter(r=>!r.isSubtotal&&!r.isSiteHeader&&!r.isSiteTotal&&r.hours!==null);
+    // Group by employee, sum hours
+    const empMap={};
+    dataRows.forEach(r=>{
+      if(!empMap[r.empName]) empMap[r.empName]={name:r.empName,code:r.empCode,reg:0,ot:0};
+      empMap[r.empName].reg+=r.regHours||r.hours||0;
+      empMap[r.empName].ot+=r.otHours||0;
+    });
+    let iif = `!TIMEHDR	DATE	JOB	EMP	ITEM	DURATION	NOTE	BILLINGSTATUS
+`;
+    iif += `!TIMEDATA	DATE	JOB	EMP	ITEM	DURATION	NOTE	BILLINGSTATUS
+`;
+    Object.values(empMap).forEach(emp=>{
+      const regH=Math.floor(emp.reg), regM=Math.round((emp.reg%1)*60);
+      iif += `TIMEDATA	${endD}		${emp.name}	Regular Time	${regH}:${String(regM).padStart(2,'0')}	${startD} to ${endD}	0
+`;
+      if(emp.ot>0){
+        const otH=Math.floor(emp.ot), otM=Math.round((emp.ot%1)*60);
+        iif += `TIMEDATA	${endD}		${emp.name}	Overtime	${otH}:${String(otM).padStart(2,'0')}	${startD} to ${endD} OT	0
+`;
+      }
+    });
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([iif],{type:'text/plain'}));
+    a.download=`quickbooks-${startD}-to-${endD}.iif`;a.click();
+    return;
+  }
+
+  const headers=['Employee','Employee ID','Site','Date','Punch In','Punch Out','Reg Hours','OT Hours'];
+  const rows=reportData.map(r=>{
+    if(r.isSiteHeader)return[`=== SITE: ${r.siteName} ===`,'','','','','','',''];
+    if(r.isSiteTotal)return[`${r.siteName} — SITE TOTAL`,'','','','','',r.hours.toFixed(2),r.otHours>0?r.otHours.toFixed(2):''];
+    if(r.isSubtotal)return[r.subtotalLabel,'','','','','',r.hours.toFixed(2),r.otHours>0?r.otHours.toFixed(2):''];
+    const reg=r.regHours!=null?r.regHours:r.hours;
+    return[r.empName+(r.isManual?' [MANUAL]':''),r.empCode,r.siteName,r.date,r.punchIn,r.punchOut,reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
+  });
 
   if(fmt==='excel'){
     const wb=XLSX.utils.book_new();
@@ -1711,15 +2142,16 @@ function exportReport(fmt){
     doc.setFontSize(15);doc.setFont('helvetica','bold');
     doc.text('PunchClock Pro — Time Report',14,15);
     doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(120);
-    doc.text(`Company: ${coLabel}  |  Site: ${siteLabel}  |  ${document.getElementById('reportStart').value} → ${document.getElementById('reportEnd').value}  |  ${new Date().toLocaleString()}`,14,22);
+    doc.text(`Company: ${coLabel}  |  Site: ${siteLabel}  |  ${startD} → ${endD}  |  ${new Date().toLocaleString()}`,14,22);
     doc.setTextColor(0);
     doc.autoTable({
-      head:[['Employee','Site','Date','Punch In','Punch Out','Hours']],
+      head:[['Employee','Site','Date','In','Out','Reg Hrs','OT Hrs']],
       body:reportData.map(r=>{
-        if(r.isSiteHeader)return[{content:`SITE: ${r.siteName}`,colSpan:6,styles:{fontStyle:'bold',fillColor:[30,50,100],textColor:[150,190,255]}}];
-        if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2)+'h',styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}}];
-        if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2)+'h',styles:{fontStyle:'italic',textColor:[120,130,150]}}];
-        return[r.empName+(r.isManual?' [M]':''),r.siteName!=='—'?r.siteName:'',r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',r.hours!==null?r.hours.toFixed(2)+'h':'Still In'];
+        if(r.isSiteHeader)return[{content:`SITE: ${r.siteName}`,colSpan:7,styles:{fontStyle:'bold',fillColor:[30,50,100],textColor:[150,190,255]}}];
+        if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2)+'h',styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.otHours>0?r.otHours.toFixed(2)+'h':'',styles:{fillColor:[238,242,255],textColor:[200,140,0]}}];
+        if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2)+'h',styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.otHours>0?r.otHours.toFixed(2)+'h':'',styles:{textColor:[200,140,0]}}];
+        const reg=r.regHours!=null?r.regHours:r.hours;
+        return[r.empName+(r.isManual?' [M]':''),r.siteName!=='—'?r.siteName:'',r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2)+'h':'Still In',r.otHours>0?r.otHours.toFixed(2)+'h':''];
       }),
       startY:27,styles:{fontSize:8,cellPadding:3},
       headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
@@ -2099,7 +2531,11 @@ async function init(){
 
     const ctx=Ctx.get();
     if(!ctx){
-      showCompanyPicker();
+      if(!isLoggedIn()){
+        showLanding();
+      } else {
+        showCompanyPicker();
+      }
     }else{
       // Validate stored context is still valid
       const co=C.companies.find(c=>c.id===ctx.co.id);
