@@ -697,10 +697,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="page-header">
     <div><h1>Reports</h1><p>Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
-      <button class="btn-export" onclick="exportReport('excel')">&#128229; Excel</button>
-      <button class="btn-export" onclick="exportReport('csv')">&#128196; CSV</button>
+      <button class="btn-export" onclick="guardedExport('excel')">&#128229; Excel</button>
+      <button class="btn-export" onclick="guardedExport('csv')">&#128196; CSV</button>
       <button class="btn-export" onclick="exportReport('pdf')">&#128203; PDF</button>
-      <button class="btn-export" onclick="exportReport('qb')" style="border-color:rgba(34,197,94,.4);color:var(--green)">&#128230; QuickBooks IIF</button>
+      <button class="btn-export" onclick="guardedExport('qb')" style="border-color:rgba(34,197,94,.4);color:var(--green)">&#128230; QuickBooks IIF</button>
     </div>
   </div>
   <div class="filter-bar">
@@ -754,7 +754,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="page-header">
     <div><h1>Activity Log</h1><p id="activitySub">Punch records with manual edit capability</p></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="openAddPunchModal()">+ Add Punch</button>
+      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn">+ Add Punch</button>
       <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px">&#8635; Refresh</button>
     </div>
   </div>
@@ -799,7 +799,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <hr class="divider" style="margin:14px 0">
     <!-- EMAIL REPORT TOGGLE -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleEmailReport()">
+    <div id="emailReportToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleEmailReport()">
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text)">&#128231; Send period hours report by email</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">Automatically email this employee their punch summary at end of each pay period</div>
@@ -1054,6 +1054,53 @@ const DB={
   del:(t,f)=>supaFetch('DELETE',t,{filter:f}),
 };
 
+
+// ═══════════════════════════════════════════════════
+// FREE PLAN GUARDS
+// ═══════════════════════════════════════════════════
+function isPaidCompany(companyId) {
+  const co = C.companies.find(c=>c.id===companyId);
+  if(!co) return false;
+  const plan = getCompanyPlan(co);
+  return plan.name !== 'Free';
+}
+
+function isCurrentCompanyPaid() {
+  const ctx = Ctx.get();
+  if(!ctx) return false;
+  return isPaidCompany(ctx.co.id);
+}
+
+function guardedExport(fmt) {
+  if(!isCurrentCompanyPaid()){
+    showPlanGate('Excel, CSV, and QuickBooks exports are available on paid plans. Upgrade to export in these formats.','reports-upgrade-hint');
+    return;
+  }
+  exportReport(fmt);
+}
+
+function guardedAddPunch() {
+  if(!isCurrentCompanyPaid()){
+    showPlanGate('Manual punch editing is available on paid plans.','activity-upgrade-hint');
+    return;
+  }
+  openAddPunchModal();
+}
+
+function showPlanGate(msg, hintId) {
+  const existing = document.getElementById(hintId);
+  if(existing){ existing.remove(); return; }
+  const div = document.createElement('div');
+  div.id = hintId;
+  div.className = 'upgrade-wall';
+  div.style.margin = '12px 0 0';
+  div.innerHTML = `<h3>🔒 Paid Plan Required</h3><p>${msg}</p>
+    <button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px" onclick="navigate('companies')">View Plans</button>
+    <button onclick="document.getElementById('${hintId}').remove()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-left:10px">Dismiss</button>`;
+  // Insert after export buttons or add punch button
+  const refEl = document.querySelector('.export-btns') || document.getElementById('addPunchBtn');
+  if(refEl) refEl.insertAdjacentElement('afterend', div);
+}
 
 // ═══════════════════════════════════════════════════
 // PLAN SYSTEM
@@ -1687,6 +1734,20 @@ function openAddEmpModal(){
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
   setEmailToggle(false);
+  const emailRow = document.getElementById('emailReportToggleRow');
+  if(emailRow) emailRow.closest('div[style*="margin-top:10px"], div').parentElement;
+  // Hide entire email section for free plan
+  const emailBlock = document.getElementById('emailReportToggleRow')?.closest('hr')?.nextElementSibling || document.getElementById('emailReportToggleRow')?.parentElement;
+  const isPaid = isPaidCompany(ctx.co.id);
+  if(document.getElementById('emailReportToggleRow')) document.getElementById('emailReportToggleRow').style.display = isPaid ? '' : 'none';
+  if(document.getElementById('emailReportSection')) document.getElementById('emailReportSection').style.display = 'none';
+  if(!isPaid && document.getElementById('emailReportToggleRow')) {
+    let hint = document.getElementById('emp-email-plan-hint');
+    if(!hint){ hint=document.createElement('p'); hint.id='emp-email-plan-hint'; hint.style.cssText='font-size:11px;color:var(--text3);margin-top:6px'; hint.textContent='Automated email reports available on paid plans.'; document.getElementById('emailReportToggleRow').insertAdjacentElement('afterend',hint); }
+  } else {
+    const hint = document.getElementById('emp-email-plan-hint');
+    if(hint) hint.remove();
+  }
   populateSiteDropdown('empSiteSelect',ctx.co.id,null);
   openModal('addEmpModal');
 }
@@ -2291,8 +2352,10 @@ async function loadActivityPage(){
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${p.punch_time}</td>
       <td><div style="display:flex;gap:5px">
+        ${isPaidCompany(p.company_id)?`
         <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">&#9998; Edit</button>
-        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">Delete</button>
+        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">Delete</button>`
+        :'<span style="font-size:11px;color:var(--text3)">— Paid plan only</span>'}
       </div></td>
     </tr>`;
   }).join('');
