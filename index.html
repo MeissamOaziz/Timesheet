@@ -190,6 +190,82 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .send-period-option:hover{border-color:var(--accent);}
 .send-period-option input{margin-top:2px;flex-shrink:0;}
 
+
+/* ── LANDING PAGE ── */
+.landing{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:7000;display:none;}
+.landing.show{display:block;}
+.land-nav{position:sticky;top:0;background:rgba(15,17,23,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
+.land-logo{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
+.land-nav-links{display:flex;gap:6px;align-items:center;}
+.land-nav-links a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;transition:all .15s;cursor:pointer;display:inline-block;}
+.land-nav-links a:hover{color:var(--text);background:var(--surface2);}
+.land-hero{text-align:center;padding:90px 24px 70px;max-width:780px;margin:0 auto;}
+.land-hero h1{font-size:clamp(32px,5vw,58px);font-weight:700;line-height:1.1;letter-spacing:-1.5px;margin-bottom:22px;}
+.land-hero h1 span{background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.land-hero p{font-size:17px;color:var(--text2);line-height:1.7;max-width:560px;margin:0 auto 36px;}
+.land-cta-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.land-btn-primary{padding:14px 32px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;}
+.land-btn-primary:hover{opacity:.88;transform:translateY(-1px);}
+.land-btn-secondary{padding:14px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;}
+.land-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.land-section{padding:70px 24px;max-width:1080px;margin:0 auto;}
+.land-section h2{text-align:center;font-size:32px;font-weight:700;margin-bottom:10px;}
+.land-section .sub{text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px;transition:all .2s;}
+.feature-card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.feature-icon{font-size:28px;margin-bottom:14px;}
+.feature-card h3{font-size:16px;font-weight:600;margin-bottom:7px;}
+.feature-card p{font-size:13px;color:var(--text2);line-height:1.6;}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:start;}
+.price-card{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;position:relative;}
+.price-card.popular{border-color:var(--accent);background:rgba(79,142,247,.06);}
+.popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap;}
+.price-name{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+.price-amount{font-size:38px;font-weight:700;letter-spacing:-1px;margin-bottom:4px;line-height:1;}
+.price-amount span{font-size:16px;font-weight:400;color:var(--text2);}
+.price-sub{font-size:12px;color:var(--text3);margin-bottom:20px;min-height:36px;line-height:1.5;}
+.price-features{list-style:none;margin-bottom:24px;padding:0;}
+.price-features li{font-size:13px;color:var(--text2);padding:5px 0;display:flex;gap:8px;align-items:flex-start;border-bottom:1px solid var(--border);}
+.price-features li:last-child{border-bottom:none;}
+.price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px;}
+.price-features li.dim{color:var(--text3);}
+.price-features li.dim::before{content:'–';color:var(--text3);}
+.price-cta{width:100%;padding:11px;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;}
+.price-cta.accent{background:var(--accent);color:#fff;}
+.price-cta.accent:hover{opacity:.88;}
+.price-cta.ghost{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);}
+.price-cta.ghost:hover{border-color:var(--accent);color:var(--accent);}
+.land-footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;max-width:1080px;margin:0 auto;padding:36px 32px;}
+.land-footer-links{display:flex;gap:18px;}
+.land-footer-links a{font-size:12px;color:var(--text2);text-decoration:none;cursor:pointer;}
+.land-footer-links a:hover{color:var(--text);}
+/* ── LEGAL PAGES ── */
+.legal-page{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:7500;display:none;}
+.legal-page.show{display:block;}
+.legal-content{max-width:760px;margin:0 auto;padding:48px 24px 80px;}
+.legal-content h1{font-size:30px;font-weight:700;margin-bottom:8px;}
+.legal-content .meta{color:var(--text2);font-size:13px;margin-bottom:40px;}
+.legal-content h2{font-size:17px;font-weight:600;margin:30px 0 10px;color:var(--accent);}
+.legal-content p,.legal-content li{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:8px;}
+.legal-content ul{padding-left:20px;margin-bottom:12px;}
+.legal-back{display:flex;align-items:center;gap:6px;color:var(--text2);cursor:pointer;font-size:13px;font-weight:500;padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-bottom:32px;width:fit-content;}
+.legal-back:hover{color:var(--text);}
+/* ── PLAN BADGES ── */
+.plan-badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.plan-free{background:rgba(139,146,168,.15);color:var(--text2);}
+.plan-starter{background:rgba(34,197,94,.15);color:var(--green);}
+.plan-growth{background:rgba(79,142,247,.15);color:var(--accent);}
+.plan-business{background:rgba(124,92,191,.15);color:#a78bfa;}
+.plan-unlimited{background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(239,68,68,.2));color:var(--amber);}
+/* ── UPGRADE WALL ── */
+.upgrade-wall{background:rgba(79,142,247,.06);border:1.5px dashed rgba(79,142,247,.4);border-radius:14px;padding:24px;text-align:center;margin:8px 0;}
+.upgrade-wall h3{font-size:16px;font-weight:600;margin-bottom:7px;}
+.upgrade-wall p{font-size:13px;color:var(--text2);margin-bottom:14px;}
+/* ── AMBER BUTTON ── */
+.btn-amber{padding:6px 12px;background:rgba(245,158,11,.15);border:1.5px solid rgba(245,158,11,.4);border-radius:8px;color:var(--amber);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-amber:hover{background:rgba(245,158,11,.25);}
+
 /* MISC */
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
 .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;}
@@ -247,9 +323,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 
   <!-- FEATURES -->
-  <div class="land-features" id="landingFeatures">
+  <div class="land-section" id="landingFeatures">
     <h2>Everything you need to manage shift workers</h2>
-    <p class="sub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">🔢</div>
@@ -295,9 +371,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 
   <!-- PRICING -->
-  <div class="land-pricing" id="landingPricing">
+  <div class="land-section" id="landingPricing">
     <h2>Simple, transparent pricing</h2>
-    <p class="sub">Start free. Upgrade as you grow. No hidden fees.</p>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">Start free. Upgrade as you grow. No hidden fees.</p>
     <div class="pricing-grid">
       <!-- FREE -->
       <div class="price-card">
@@ -368,7 +444,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
   <!-- FOOTER -->
   <div style="border-top:1px solid var(--border);padding:36px 32px;">
-    <div class="land-footer">
+    <div class="land-footer-inner">
       <div>
         <div class="land-logo" style="margin-bottom:6px">⏱ PunchClock Pro</div>
         <p>Time & attendance software for modern shift workforces.</p>
@@ -466,7 +542,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="picker-screen hidden" id="pickerCompany">
   <div style="text-align:center"><div style="font-size:38px;margin-bottom:10px">&#9201;</div>
     <h2>PunchClock Pro</h2>
-    <p class="sub">Select your company</p>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">Select your company</p>
   </div>
   <div class="picker-grid" id="pickerCompanyGrid"></div>
   <div class="picker-hints" id="pickerCompanyHints">
