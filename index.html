@@ -642,21 +642,63 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <!-- ═══════════════ REGISTER ═══════════════ -->
 <div class="page" id="page-register">
-  <div class="form-card" style="margin-top:50px">
-    <h2>Admin Registration</h2><p>Create your admin account.</p>
+  <div class="form-card" style="margin-top:50px;max-width:520px">
+    <h2>Create Account</h2><p>Set up your PunchClock Pro admin account.</p>
     <div id="registerMsg"></div>
-    <div id="registerForm">
+
+    <!-- STEP 1: Basic info -->
+    <div id="regStep1">
       <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Smith"></div>
       <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
       <div class="form-group"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
-      <button class="btn-primary" onclick="doRegister()">Register &amp; Get Code</button>
+      <hr class="divider">
+      <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Account Type</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeNewLabel" onclick="setRegType('new')">
+          <input type="radio" name="regType" value="new" checked style="margin-top:2px;accent-color:var(--accent)">
+          <div>
+            <div style="font-size:13px;font-weight:600">🏢 New Company</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">I'm starting fresh. Creates a Free plan account with a new company.</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeJoinLabel" onclick="setRegType('join')">
+          <input type="radio" name="regType" value="join" style="margin-top:2px;accent-color:var(--accent)">
+          <div>
+            <div style="font-size:13px;font-weight:600">👥 Join Existing Company</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">My company already has an account. I'll request access from my administrator.</div>
+          </div>
+        </label>
+      </div>
+      <!-- Join existing: admin email input -->
+      <div id="regJoinSection" style="display:none">
+        <div class="msg info" style="margin-bottom:12px">Ask your administrator for their registered email address to request access.</div>
+        <div class="form-group"><label>Administrator's Registered Email</label><input type="email" id="regAdminEmail" placeholder="administrator@company.com"></div>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Continue →</button>
     </div>
-    <div id="verifyForm" style="display:none">
-      <p style="margin-bottom:10px">Verification code (in production this would be emailed):</p>
-      <div class="code-display" id="verifyCode"></div>
-      <div class="form-group" style="margin-top:14px"><label>Enter Code</label><input type="text" id="codeInput" placeholder="6-digit code" maxlength="6"></div>
+
+    <!-- STEP 2: Email verification -->
+    <div id="regStep2" style="display:none">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:40px;margin-bottom:10px">📧</div>
+        <h3 style="font-size:17px;font-weight:600">Check your email</h3>
+        <p style="color:var(--text2);font-size:13px;margin-top:6px">We sent a 6-digit verification code to <strong id="regEmailSent" style="color:var(--text)"></strong></p>
+      </div>
+      <div class="form-group"><label>Verification Code</label><input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px"></div>
       <button class="btn-primary" onclick="doVerify()">Verify &amp; Activate</button>
+      <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:14px">Didn't receive it? <button class="link-btn" style="font-size:12px" onclick="resendVerificationCode()">Resend code</button></p>
     </div>
+
+    <!-- STEP 3: Join request sent -->
+    <div id="regStep3" style="display:none">
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <h3 style="font-size:17px;font-weight:600">Access Request Sent!</h3>
+        <p style="color:var(--text2);font-size:13px;margin-top:8px;line-height:1.6">Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.</p>
+        <button class="btn-primary" style="margin-top:20px" onclick="navigate('login')">Go to Login</button>
+      </div>
+    </div>
+
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px">Already registered? <button class="link-btn" onclick="navigate('login')">Sign in</button></p>
   </div>
@@ -694,12 +736,90 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div class="site-list" id="siteListAdmin"></div>
   </div>
-  <!-- ADMINS TAB -->
+  <!-- ADMINS TAB (Super Admin only) -->
   <div id="tab-admins" style="display:none">
-    <div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Registered</th></tr></thead>
-      <tbody id="adminsTableBody"></tbody>
-    </table></div>
+    <div id="superAdminPanel">
+      <div id="joinRequestsSection" style="display:none;margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h3 style="font-size:14px;font-weight:600;color:var(--amber)">⏳ Pending Access Requests</h3>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Name</th><th>Email</th><th>Requested Admin</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="joinRequestsBody"></tbody>
+        </table></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="font-size:14px;font-weight:600">All Admin Accounts</h3>
+        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()">+ Create Admin</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody id="adminsTableBody"></tbody>
+      </table></div>
+    </div>
+    <div id="regularAdminPanel" style="display:none">
+      <div class="empty"><p style="color:var(--text2)">👤 Admin management is restricted to Super Admins.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE ADMIN MODAL -->
+<div class="modal-overlay" id="createAdminModal">
+  <div class="modal">
+    <h3>Create Admin Account</h3>
+    <div id="createAdminMsg"></div>
+    <div class="form-group"><label>Full Name</label><input type="text" id="newAdminName" placeholder="Jane Smith"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="newAdminEmail" placeholder="admin@company.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="newAdminPass" placeholder="Min 6 characters"></div>
+    <div class="form-group"><label>Plan Tier</label>
+      <select id="newAdminPlan">
+        <option value="free">Free</option>
+        <option value="starter">Starter</option>
+        <option value="growth">Growth</option>
+        <option value="business">Business</option>
+        <option value="unlimited">Unlimited</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('createAdminModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveCreateAdmin()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ADMIN MODAL -->
+<div class="modal-overlay" id="editAdminModal">
+  <div class="modal">
+    <h3>Edit Admin Account</h3>
+    <div id="editAdminMsg"></div>
+    <div class="form-group"><label>Name</label><input type="text" id="editAdminName"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="editAdminEmail" readonly style="opacity:.6;cursor:default"></div>
+    <div class="form-group"><label>Role</label>
+      <select id="editAdminRole">
+        <option value="admin">Admin</option>
+        <option value="super_admin">Super Admin</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Plan Tier</label>
+      <select id="editAdminPlan">
+        <option value="free">Free</option>
+        <option value="starter">Starter</option>
+        <option value="growth">Growth</option>
+        <option value="business">Business</option>
+        <option value="unlimited">Unlimited</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select id="editAdminStatus">
+        <option value="active">Active</option>
+        <option value="suspended">Suspended</option>
+      </select>
+    </div>
+    <input type="hidden" id="editAdminId">
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('editAdminModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditAdmin()">Save Changes</button>
+    </div>
   </div>
 </div>
 
@@ -1215,7 +1335,10 @@ const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
 function getCompanyPlan(co) {
   if(!co) return PLANS.free;
   if(GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
-  return PLANS[co.plan] || PLANS.free;
+  if(isSuperAdmin()) return PLANS.unlimited;
+  // Use the logged-in admin's plan tier
+  const s = Sess.get();
+  return PLANS[s?.plan] || PLANS.free;
 }
 
 function getPlanBadgeHtml(co) {
@@ -1228,13 +1351,22 @@ function getPlanBadgeHtml(co) {
 function canAddEmployee(co) {
   const plan = getCompanyPlan(co);
   const cur = C.employees.filter(e=>e.company_id===co.id&&e.active).length;
-  return { ok: cur < plan.maxEmployees, current: cur, max: plan.maxEmployees, plan };
+  // For multi-company plans, count across all companies
+  const totalEmps = C.employees.filter(e=>e.active).length;
+  const maxEmps = plan.maxEmployees;
+  return { ok: totalEmps < maxEmps, current: totalEmps, max: maxEmps, plan };
 }
 
 function canAddSite(co) {
   const plan = getCompanyPlan(co);
   const cur = C.sites.filter(s=>s.company_id===co.id).length;
   return { ok: cur < plan.maxSites, current: cur, max: plan.maxSites, plan };
+}
+
+function canAddCompany() {
+  const plan = getAdminPlan ? getAdminPlan() : PLANS.free;
+  const cur = C.companies.length;
+  return { ok: cur < plan.maxCompanies, current: cur, max: plan.maxCompanies, plan };
 }
 
 function showUpgradePrompt(containerId, msg) {
@@ -1288,14 +1420,25 @@ const Ctx={
 let C={companies:[],sites:[],employees:[],punches:[]};
 
 async function refreshCache(opts={}){
+  const sess = Sess.get();
+  // Scope queries: non-super-admins only see their own companies
+  const adminId = sess?.id;
+  const superAdmin = isSuperAdmin();
+
+  const companiesFilter = (!superAdmin && adminId)
+    ? `order=name.asc&admin_id=eq.${adminId}`
+    : 'order=name.asc';
+
   const[companies,sites,employees]=await Promise.all([
-    DB.all('companies','order=name.asc'),
+    DB.all('companies', companiesFilter),
     DB.all('sites','order=name.asc'),
     DB.all('employees','order=name.asc'),
   ]);
   C.companies=companies||[];
-  C.sites=sites||[];
-  C.employees=employees||[];
+  // Filter sites and employees to only those belonging to visible companies
+  const visibleCoIds = new Set(C.companies.map(c=>c.id));
+  C.sites=(sites||[]).filter(s=>visibleCoIds.has(s.company_id));
+  C.employees=(employees||[]).filter(e=>visibleCoIds.has(e.company_id));
 
   // Build punch filter
   const parts=['order=punched_at.desc'];
@@ -1468,6 +1611,41 @@ function navigate(page){
 // ═══════════════════════════════════════════════════
 function isLoggedIn(){return !!Sess.get();}
 
+// ═══════════════════════════════════════════════════
+// SUPER ADMIN HELPERS
+// ═══════════════════════════════════════════════════
+const SUPER_ADMIN_EMAIL = 'meissam@oaziz.ca';
+
+function isSuperAdmin() {
+  const s = Sess.get();
+  return s && (s.role === 'super_admin' || s.email === SUPER_ADMIN_EMAIL);
+}
+
+function currentAdminPlan() {
+  const s = Sess.get();
+  return s?.plan || 'free';
+}
+
+// Returns the plan to use for limit checks for logged-in admin
+function getAdminPlan() {
+  const s = Sess.get();
+  if(!s) return PLANS.free;
+  // Super admin is unlimited
+  if(isSuperAdmin()) return PLANS.unlimited;
+  return PLANS[s.plan] || PLANS.free;
+}
+
+// Override getCompanyPlan to use admin plan for the currently logged in user
+function getCompanyPlanForCurrentAdmin(co) {
+  if(!co) return PLANS.free;
+  if(GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
+  if(isSuperAdmin()) return PLANS.unlimited;
+  return getAdminPlan();
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH — updateNav, login, register, verify, logout
+// ═══════════════════════════════════════════════════
 function updateNav(){
   const ok=isLoggedIn();
   document.getElementById('loginBtn').style.display=ok?'none':'';
@@ -1476,7 +1654,8 @@ function updateNav(){
     document.getElementById(id).style.display=ok?'':'none');
   if(ok){
     const a=Sess.get();
-    document.getElementById('adminBadge').innerHTML=`<span class="badge">${a.name}</span>`;
+    const roleLabel = isSuperAdmin() ? '⭐ '+a.name : a.name;
+    document.getElementById('adminBadge').innerHTML=`<span class="badge">${roleLabel}</span>`;
     document.getElementById('adminBadge').style.display='';
   }else{
     document.getElementById('adminBadge').style.display='none';
@@ -1490,42 +1669,148 @@ async function doLogin(){
   try{
     const rows=await DB.all('admins',`email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
     if(!rows.length){showMsg('loginMsg','Invalid credentials or account not verified.','error');return;}
-    Sess.set({id:rows[0].id,name:rows[0].name,email:rows[0].email});
+    const admin = rows[0];
+    // Check if suspended
+    if(admin.status === 'suspended'){showMsg('loginMsg','Your account has been suspended. Contact support.','error');return;}
+    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
     updateNav();
     await refreshCache();
     navigate('admin');
   }catch(e){showMsg('loginMsg','Connection error: '+e.message,'error');}
 }
 
+// Registration type selection
+function setRegType(type) {
+  document.getElementById('regJoinSection').style.display = type==='join' ? '' : 'none';
+  // Update label styles
+  document.getElementById('regTypeNewLabel').style.borderColor = type==='new' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('regTypeNewLabel').style.background = type==='new' ? 'rgba(79,142,247,.08)' : 'var(--surface2)';
+  document.getElementById('regTypeJoinLabel').style.borderColor = type==='join' ? 'var(--accent)' : 'var(--border)';
+  document.getElementById('regTypeJoinLabel').style.background = type==='join' ? 'rgba(79,142,247,.08)' : 'var(--surface2)';
+}
+
 async function doRegister(){
   const name=document.getElementById('regName').value.trim();
   const email=document.getElementById('regEmail').value.trim().toLowerCase();
   const pass=document.getElementById('regPass').value;
+  const regType=document.querySelector('input[name="regType"]:checked')?.value||'new';
+  const adminEmail=document.getElementById('regAdminEmail')?.value.trim().toLowerCase()||'';
+
   if(!name||!email||!pass){showMsg('registerMsg','All fields required.','error');return;}
-  if(pass.length<6){showMsg('registerMsg','Password min 6 characters.','error');return;}
+  if(pass.length<6){showMsg('registerMsg','Password must be at least 6 characters.','error');return;}
+  if(regType==='join'&&!adminEmail){showMsg('registerMsg','Please enter your administrator's email address.','error');return;}
+  if(regType==='join'&&adminEmail===email){showMsg('registerMsg','That's your own email — please enter your administrator's email.','error');return;}
+
+  showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
+
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(ex.length){showMsg('registerMsg','Email already registered.','error');return;}
+    if(ex.length){showMsg('registerMsg','Email already registered. <button class="link-btn" onclick="navigate('login')">Sign in</button>','error');return;}
+
+    if(regType==='join'){
+      // Verify admin email exists
+      const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(adminEmail)}&verified=eq.true`);
+      if(!adminRows.length){showMsg('registerMsg','No active admin account found with that email. Please ask your administrator for their registered email.','error');return;}
+    }
+
+    // Send verification email via edge function
     const code=Math.floor(100000+Math.random()*900000).toString();
-    pendingVerify={name,email,pass,code};
-    document.getElementById('verifyCode').textContent=code;
-    document.getElementById('registerForm').style.display='none';
-    document.getElementById('verifyForm').style.display='';
-    showMsg('registerMsg','In production this code would be emailed. Shown here for demo.','info');
+    pendingVerify={name,email,pass,code,regType,adminEmail};
+
+    // Try to send via Supabase edge function
+    let emailSent = false;
+    try{
+      const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+        body:JSON.stringify({email, name, code})
+      });
+      const data = await res.json();
+      emailSent = data.success || data.sent;
+    }catch(e){ emailSent = false; }
+
+    document.getElementById('regEmailSent').textContent = email;
+    document.getElementById('regStep1').style.display = 'none';
+    document.getElementById('regStep2').style.display = '';
+
+    if(emailSent){
+      showMsg('registerMsg','Verification code sent to your email.','success');
+    } else {
+      // Fallback: show code in UI for dev/testing only
+      showMsg('registerMsg',`<strong>Email service unavailable.</strong> Your code is: <strong style="font-family:monospace;font-size:16px;letter-spacing:3px">${code}</strong>`,'info');
+    }
+
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
+}
+
+async function resendVerificationCode(){
+  if(!pendingVerify) return;
+  showMsg('registerMsg','⏳ Resending...','info');
+  try{
+    const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+      body:JSON.stringify({email:pendingVerify.email,name:pendingVerify.name,code:pendingVerify.code})
+    });
+    const data = await res.json();
+    if(data.success||data.sent){
+      showMsg('registerMsg','✓ Code resent to your email.','success');
+    } else {
+      showMsg('registerMsg',`Code: <strong style="font-family:monospace;font-size:16px;letter-spacing:3px">${pendingVerify.code}</strong>`,'info');
+    }
+  }catch(e){
+    showMsg('registerMsg',`Code: <strong style="font-family:monospace;font-size:16px;letter-spacing:3px">${pendingVerify.code}</strong>`,'info');
+  }
 }
 
 async function doVerify(){
   const entered=document.getElementById('codeInput').value.trim();
-  if(!pendingVerify||entered!==pendingVerify.code){showMsg('registerMsg','Incorrect code.','error');return;}
+  if(!pendingVerify){showMsg('registerMsg','Session expired. Please start over.','error');return;}
+  if(entered!==pendingVerify.code){showMsg('registerMsg','Incorrect code. Please try again.','error');return;}
   try{
-    const r=await DB.insert('admins',{name:pendingVerify.name,email:pendingVerify.email,password:pendingVerify.pass,verified:true});
-    Sess.set({id:r[0].id,name:r[0].name,email:r[0].email});
-    pendingVerify=null;
-    updateNav();
-    await refreshCache();
-    showMsg('registerMsg','Verified! Redirecting...','success');
-    setTimeout(()=>navigate('admin'),1200);
+    const isJoin = pendingVerify.regType === 'join';
+
+    // Create the admin account (unverified initially for join requests, active for new company)
+    const newAdmin = await DB.insert('admins',{
+      name: pendingVerify.name,
+      email: pendingVerify.email,
+      password: pendingVerify.pass,
+      verified: true,
+      role: 'admin',
+      plan: 'free',
+      status: isJoin ? 'pending_approval' : 'active'
+    });
+
+    if(isJoin){
+      // Create a join request record
+      const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(pendingVerify.adminEmail)}&verified=eq.true`);
+      if(adminRows.length){
+        await DB.insert('join_requests',{
+          requester_id: newAdmin[0].id,
+          requester_name: pendingVerify.name,
+          requester_email: pendingVerify.email,
+          target_admin_id: adminRows[0].id,
+          target_admin_email: pendingVerify.adminEmail,
+          status: 'pending'
+        });
+      }
+      pendingVerify=null;
+      document.getElementById('regStep2').style.display='none';
+      document.getElementById('regStep3').style.display='';
+      showMsg('registerMsg','','');
+    } else {
+      // New company registration: log in immediately
+      Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
+      pendingVerify=null;
+      updateNav();
+      await refreshCache();
+      showMsg('registerMsg','✓ Account created! Redirecting...','success');
+      setTimeout(()=>{
+        navigate('companies');
+        // Show welcome prompt
+        setTimeout(()=>alert('Welcome to PunchClock Pro! 🎉\n\nStart by creating your first company using the "+ New Company" button.'),500);
+      },1000);
+    }
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
@@ -1810,17 +2095,136 @@ function renderSitesAdmin(){
 }
 
 async function renderAdmins(){
+  const superAdmin = isSuperAdmin();
+  document.getElementById('superAdminPanel').style.display = superAdmin ? '' : 'none';
+  document.getElementById('regularAdminPanel').style.display = superAdmin ? 'none' : '';
+  if(!superAdmin) return;
+
   const tbody=document.getElementById('adminsTableBody');
+  const planColors = {free:'plan-free',starter:'plan-starter',growth:'plan-growth',business:'plan-business',unlimited:'plan-unlimited'};
+  const roleColors = {super_admin:'admin',admin:'site'};
+
   try{
     const admins=await DB.all('admins','order=created_at.asc');
-    if(!admins.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;return;}
-    tbody.innerHTML=admins.map(a=>`<tr>
-      <td><div class="emp-row"><div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div><span style="font-weight:500">${a.name}</span></div></td>
-      <td>${a.email}</td>
-      <td><span class="pill ${a.verified?'admin':'out'}">${a.verified?'Active':'Pending'}</span></td>
-      <td style="color:var(--text2);font-size:12px">${new Date(a.created_at).toLocaleDateString()}</td>
+    const sess = Sess.get();
+    if(!admins.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;return;}
+    tbody.innerHTML=admins.map(a=>{
+      const isMe = a.id === sess.id;
+      const isSA = a.role==='super_admin' || a.email===SUPER_ADMIN_EMAIL;
+      const planKey = a.plan||'free';
+      const status = a.status||'active';
+      const ini = a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      return `<tr>
+        <td><div class="emp-row">
+          <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${ini}</div>
+          <div><span style="font-weight:500">${a.name}</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
+        </div></td>
+        <td style="font-size:13px">${a.email}</td>
+        <td><span class="pill ${isSA?'admin':'site'}">${isSA?'⭐ Super Admin':'Admin'}</span></td>
+        <td><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
+        <td><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></td>
+        <td style="color:var(--text2);font-size:12px">${new Date(a.created_at).toLocaleDateString()}</td>
+        <td>${isMe?'<span style="font-size:11px;color:var(--text3)">—</span>':`<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal('${a.id}')">Edit</button>`}</td>
+      </tr>`;
+    }).join('');
+
+    // Load join requests
+    await renderJoinRequests();
+
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+}
+
+async function renderJoinRequests(){
+  try{
+    const requests = await DB.all('join_requests',`status=eq.pending&order=created_at.desc`);
+    const section = document.getElementById('joinRequestsSection');
+    const tbody = document.getElementById('joinRequestsBody');
+    if(!requests.length){section.style.display='none';return;}
+    section.style.display='';
+    tbody.innerHTML = requests.map(r=>`<tr>
+      <td style="font-weight:500">${r.requester_name}</td>
+      <td>${r.requester_email}</td>
+      <td style="font-size:12px;color:var(--text2)">${r.target_admin_email}</td>
+      <td style="font-size:12px;color:var(--text2)">${new Date(r.created_at).toLocaleDateString()}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${r.requester_id}')">✓ Approve</button>
+        <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${r.requester_id}')">✗ Deny</button>
+      </div></td>
     </tr>`).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="4" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+  }catch(e){console.error('Join requests error:',e);}
+}
+
+async function approveJoinRequest(reqId, adminId){
+  try{
+    await DB.update('admins',`id=eq.${adminId}`,{status:'active'});
+    await DB.update('join_requests',`id=eq.${reqId}`,{status:'approved'});
+    await renderAdmins();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+async function denyJoinRequest(reqId, adminId){
+  if(!confirm('Deny this access request? The user will not be able to log in.')) return;
+  try{
+    await DB.update('admins',`id=eq.${adminId}`,{status:'suspended'});
+    await DB.update('join_requests',`id=eq.${reqId}`,{status:'denied'});
+    await renderAdmins();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+function openCreateAdminModal(){
+  document.getElementById('createAdminMsg').innerHTML='';
+  ['newAdminName','newAdminEmail','newAdminPass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newAdminPlan').value='free';
+  openModal('createAdminModal');
+}
+
+async function saveCreateAdmin(){
+  const name=document.getElementById('newAdminName').value.trim();
+  const email=document.getElementById('newAdminEmail').value.trim().toLowerCase();
+  const pass=document.getElementById('newAdminPass').value;
+  const plan=document.getElementById('newAdminPlan').value;
+  if(!name||!email||!pass){showMsg('createAdminMsg','All fields required.','error');return;}
+  if(pass.length<6){showMsg('createAdminMsg','Password must be at least 6 characters.','error');return;}
+  try{
+    const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
+    if(ex.length){showMsg('createAdminMsg','Email already registered.','error');return;}
+    await DB.insert('admins',{name,email,password:pass,verified:true,role:'admin',plan,status:'active'});
+    closeModal('createAdminModal');
+    await renderAdmins();
+    showMsg('adminSub','','');// clear any sub message
+  }catch(e){showMsg('createAdminMsg','Error: '+e.message,'error');}
+}
+
+function openEditAdminModal(id){
+  // Fetch from cached admin list if possible, else from server
+  DB.all('admins',`id=eq.${id}`).then(rows=>{
+    if(!rows.length) return;
+    const a = rows[0];
+    document.getElementById('editAdminId').value = a.id;
+    document.getElementById('editAdminName').value = a.name;
+    document.getElementById('editAdminEmail').value = a.email;
+    document.getElementById('editAdminRole').value = a.role||'admin';
+    document.getElementById('editAdminPlan').value = a.plan||'free';
+    document.getElementById('editAdminStatus').value = a.status||'active';
+    document.getElementById('editAdminMsg').innerHTML='';
+    // Prevent editing super admin role if it's the main super admin email
+    document.getElementById('editAdminRole').disabled = a.email===SUPER_ADMIN_EMAIL;
+    openModal('editAdminModal');
+  }).catch(e=>alert('Error: '+e.message));
+}
+
+async function saveEditAdmin(){
+  const id=document.getElementById('editAdminId').value;
+  const name=document.getElementById('editAdminName').value.trim();
+  const role=document.getElementById('editAdminRole').value;
+  const plan=document.getElementById('editAdminPlan').value;
+  const status=document.getElementById('editAdminStatus').value;
+  if(!name){showMsg('editAdminMsg','Name is required.','error');return;}
+  try{
+    await DB.update('admins',`id=eq.${id}`,{name,role,plan,status});
+    closeModal('editAdminModal');
+    await renderAdmins();
+  }catch(e){showMsg('editAdminMsg','Error: '+e.message,'error');}
 }
 
 // ---- Employee modal ----
@@ -2055,6 +2459,16 @@ function selectCtxFromCompany(coId){
 }
 
 function openAddCompanyModal(){
+  // Check company limit for current admin plan
+  const {ok, current, max, plan} = canAddCompany();
+  if(!ok){
+    document.getElementById('companyModalMsg').innerHTML='';
+    showUpgradePrompt('companyModalMsg', `Your <strong>${plan.name}</strong> plan allows up to <strong>${max} compan${max===1?'y':'ies'}</strong>. You have ${current}. Upgrade to add more.`);
+    document.getElementById('companyModalTitle').textContent='New Company';
+    document.getElementById('editCompanyUid').value='';
+    openModal('addCompanyModal');
+    return;
+  }
   document.getElementById('companyModalTitle').textContent='New Company';
   ['companyName','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('companyWeekStart').value='monday';
@@ -2111,7 +2525,8 @@ async function saveCompany(){
       if(co)Object.assign(co,{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
       const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,week_start,payroll_frequency,track_overtime,logo_url}});updateContextPill();}
     }else{
-      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
+      const sess=Sess.get();
+      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
     }
     closeModal('addCompanyModal');loadCompaniesPage();
