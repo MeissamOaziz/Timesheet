@@ -1068,7 +1068,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 // SUPABASE
 // ═══════════════════════════════════════════════════
 const SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
-const SUPA_KEY='sb_publishable_Qn1tcjjwGyX1aYACba9udg_JYBOOxUq';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
 
 async function supaFetch(method,table,opts={}){
   let url=`${SUPA_URL}/rest/v1/${table}`;
@@ -2761,7 +2761,7 @@ async function executeSendReport(){
 
   try{
     const SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
-    const SUPA_KEY='sb_publishable_Qn1tcjjwGyX1aYACba9udg_JYBOOxUq';
+    const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
 
     const res = await fetch(`${SUPA_URL}/functions/v1/send-period-summary`, {
       method: 'POST',
