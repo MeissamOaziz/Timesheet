@@ -1698,14 +1698,14 @@ async function doRegister(){
 
   if(!name||!email||!pass){showMsg('registerMsg','All fields required.','error');return;}
   if(pass.length<6){showMsg('registerMsg','Password must be at least 6 characters.','error');return;}
-  if(regType==='join'&&!adminEmail){showMsg('registerMsg','Please enter your administrator's email address.','error');return;}
-  if(regType==='join'&&adminEmail===email){showMsg('registerMsg','That's your own email — please enter your administrator's email.','error');return;}
+  if(regType==='join'&&!adminEmail){showMsg('registerMsg','Please enter your administrator\'s email address.','error');return;}
+  if(regType==='join'&&adminEmail===email){showMsg('registerMsg','That\'s your own email — please enter your administrator\'s email.','error');return;}
 
   showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
 
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(ex.length){showMsg('registerMsg','Email already registered. <button class="link-btn" onclick="navigate('login')">Sign in</button>','error');return;}
+    if(ex.length){showMsg('registerMsg','Email already registered. <button class="link-btn" onclick="navigate(\'login\')">Sign in</button>','error');return;}
 
     if(regType==='join'){
       // Verify admin email exists
