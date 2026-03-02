@@ -2799,23 +2799,28 @@ async function executeSendReport(){
 // INIT
 // ═══════════════════════════════════════════════════
 async function init(){
-  try{
-    // Set default activity log dates (last 7 days)
-    const today=new Date();
-    document.getElementById('actEnd').value=today.toLocaleDateString('en-CA');
-    document.getElementById('actStart').value=new Date(today-6*86400000).toLocaleDateString('en-CA');
+  // Set default activity log dates (last 7 days)
+  const today=new Date();
+  document.getElementById('actEnd').value=today.toLocaleDateString('en-CA');
+  document.getElementById('actStart').value=new Date(today-6*86400000).toLocaleDateString('en-CA');
 
+  // If nobody is logged in, skip DB entirely — show landing page immediately
+  if(!isLoggedIn()){
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    updateNav();
+    showLanding();
+    return;
+  }
+
+  // Logged in — fetch data then restore session
+  try{
     await refreshCache();
     document.getElementById('loadingOverlay').classList.add('hidden');
     updateNav();
 
     const ctx=Ctx.get();
     if(!ctx){
-      if(!isLoggedIn()){
-        showLanding();
-      } else {
-        showCompanyPicker();
-      }
+      showCompanyPicker();
     }else{
       // Validate stored context is still valid
       const co=C.companies.find(c=>c.id===ctx.co.id);
@@ -2832,6 +2837,7 @@ async function init(){
         <div style="font-size:17px;font-weight:600;margin-bottom:7px">Cannot connect to database</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.6">${e.message}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:10px">Check Supabase tables and API key.</div>
+        <button onclick="location.reload()" style="margin-top:14px;padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:13px;cursor:pointer">Retry</button>
       </div>`;
   }
 }
