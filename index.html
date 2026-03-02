@@ -268,7 +268,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 /* MISC */
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
-.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.company-logo{width:52px;height:52px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.company-logo img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
+.upload-area{border:2px dashed var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.upload-area:hover{border-color:var(--accent);background:rgba(79,142,247,.05);}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-preview{width:72px;height:72px;border-radius:12px;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid var(--border);}
+.upload-preview.round{border-radius:50%;}
+.punch-co-logo{width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 12px;display:block;border:1px solid var(--border);}
+.punch-co-initials{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin:0 auto 12px;}
 .emp-row{display:flex;align-items:center;gap:10px;}
 .empty{text-align:center;padding:50px 20px;color:var(--text3);}
 .empty p{font-size:14px;}
@@ -598,7 +608,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div class="context-banner" id="punchBanner">Loading...</div>
     <div class="punch-card">
-      <h2>Select Your Name</h2>
+      <div id="punchCoLogo"></div>
+      <h2 id="punchCoName">Select Your Name</h2>
       <div class="select-wrap"><select id="empSelect"><option value="">-- Choose employee --</option></select></div>
       <div class="punch-btns">
         <button class="punch-btn btn-in" onclick="requestPunch('IN')">&#10003; IN</button>
@@ -782,7 +793,20 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="modal">
     <h3 id="empModalTitle">Add Employee</h3>
     <div id="empModalMsg"></div>
-    <div class="form-group"><label>Full Name</label><input type="text" id="empName" placeholder="John Smith"></div>
+    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Photo</div>
+        <div class="upload-area" style="padding:10px;width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0" id="empPhotoArea">
+          <input type="file" id="empPhotoInput" accept="image/*" onchange="previewUpload('empPhotoInput','empPhotoPreview','empPhotoArea',true)">
+          <img id="empPhotoPreview" style="display:none;width:76px;height:76px;border-radius:50%;object-fit:cover">
+          <div id="empPhotoHint" style="font-size:18px">👤</div>
+        </div>
+        <input type="hidden" id="existingPhotoUrl">
+      </div>
+      <div style="flex:1">
+        <div class="form-group" style="margin-bottom:0"><label>Full Name</label><input type="text" id="empName" placeholder="John Smith"></div>
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>Department</label><input type="text" id="empDept" placeholder="Engineering..."></div>
       <div class="form-group"><label>Employee ID</label><input type="text" id="empIdCode" placeholder="EMP-001"></div>
@@ -915,6 +939,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </select>
       </div>
     </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Company Logo</p>
+    <div class="upload-area" id="logoUploadArea">
+      <input type="file" id="logoFileInput" accept="image/*" onchange="previewUpload('logoFileInput','logoPreviewImg','logoUploadArea')">
+      <img id="logoPreviewImg" class="upload-preview" style="display:none;border-radius:12px">
+      <div id="logoUploadHint">
+        <div style="font-size:22px;margin-bottom:6px">🏢</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Upload Company Logo</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">PNG, JPG up to 2MB — shown on clock page and email reports</div>
+      </div>
+    </div>
+    <input type="hidden" id="existingLogoUrl">
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Overtime Settings</p>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleOvertimeOpt()">
@@ -1054,6 +1090,68 @@ const DB={
   del:(t,f)=>supaFetch('DELETE',t,{filter:f}),
 };
 
+
+
+// ═══════════════════════════════════════════════════
+// SUPABASE STORAGE — IMAGE UPLOAD
+// ═══════════════════════════════════════════════════
+const SUPA_KEY = 'sb_publishable_Qn1tcjjwGyX1aYACba9udg_JYBOOxUq';
+
+function previewUpload(inputId, previewId, areaId, isRound=false) {
+  const file = document.getElementById(inputId).files[0];
+  if(!file) return;
+  if(file.size > 2*1024*1024){ alert('File too large. Max 2MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(previewId);
+    const hint = document.getElementById(areaId.replace('Area','Hint').replace('empPhoto','empPhoto'));
+    img.src = e.target.result;
+    img.style.display = 'block';
+    if(isRound) img.style.borderRadius = '50%';
+    // hide hint text
+    const hintEl = document.getElementById(inputId.replace('Input','Hint').replace('FileInput','UploadHint').replace('empPhoto','empPhoto'));
+    if(hintEl) hintEl.style.display = 'none';
+    const logoHint = document.getElementById('logoUploadHint');
+    if(logoHint && inputId==='logoFileInput') logoHint.style.display = 'none';
+    const empHint = document.getElementById('empPhotoHint');
+    if(empHint && inputId==='empPhotoInput') empHint.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadImage(file, bucket, pathPrefix) {
+  if(!file) return null;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `${pathPrefix}-${Date.now()}.${ext}`;
+  const res = await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${fileName}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPA_KEY}`,
+      'Content-Type': file.type,
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if(!res.ok) { const e=await res.text(); throw new Error('Upload failed: '+e); }
+  return `${SUPA_URL}/storage/v1/object/public/${bucket}/${fileName}`;
+}
+
+function resetLogoUpload(existingUrl) {
+  document.getElementById('logoFileInput').value = '';
+  document.getElementById('existingLogoUrl').value = existingUrl||'';
+  const img = document.getElementById('logoPreviewImg');
+  if(existingUrl){ img.src=existingUrl; img.style.display='block'; document.getElementById('logoUploadHint').style.display='none'; }
+  else { img.style.display='none'; document.getElementById('logoUploadHint').style.display=''; }
+}
+
+function resetPhotoUpload(existingUrl) {
+  document.getElementById('empPhotoInput').value = '';
+  document.getElementById('existingPhotoUrl').value = existingUrl||'';
+  const img = document.getElementById('empPhotoPreview');
+  const hint = document.getElementById('empPhotoHint');
+  if(existingUrl){ img.src=existingUrl; img.style.display='block'; if(hint)hint.style.display='none'; }
+  else { img.style.display='none'; if(hint)hint.style.display=''; }
+}
 
 // ═══════════════════════════════════════════════════
 // FREE PLAN GUARDS
@@ -1255,8 +1353,11 @@ function showCompanyPicker(){
     const empCnt=C.employees.filter(e=>e.company_id===co.id&&e.active).length;
     const siteCnt=C.sites.filter(s=>s.company_id===co.id).length;
     const col=colors[i%colors.length];
+    const ini2=co.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
     return `<div class="pick-card" onclick="onCompanyPicked('${co.id}')" style="border-color:${col}33">
-      <div class="pick-icon">${icons[i%icons.length]}</div>
+      <div class="pick-icon" style="overflow:hidden;border-radius:12px;background:${co.logo_url?'transparent':'linear-gradient(135deg,'+col+','+col+'99)'};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff">
+        ${co.logo_url?`<img src="${co.logo_url}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:`${ini2}`}
+      </div>
       <h3 style="color:${col}">${co.name}</h3>
       <p>${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</p>
       <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} employees · ${siteCnt} site${siteCnt!==1?'s':''}</p>
@@ -1456,6 +1557,19 @@ async function loadPunchPage(){
     ?`&#127970; ${ctx.co.name} &nbsp;·&nbsp; &#128205; ${ctx.site.name}`
     :`&#127970; ${ctx.co.name}`;
 
+  // Company logo on punch card
+  const logoEl=document.getElementById('punchCoLogo');
+  const nameEl=document.getElementById('punchCoName');
+  if(logoEl){
+    const co=C.companies.find(co=>co.id===coId)||ctx.co;
+    if(co.logo_url){
+      logoEl.innerHTML=`<img src="${co.logo_url}" class="punch-co-logo" alt="${co.name}" onerror="this.style.display='none'">`;
+    } else {
+      logoEl.innerHTML=`<div class="punch-co-initials">${(ctx.co.name||'?').slice(0,1).toUpperCase()}</div>`;
+    }
+  }
+  if(nameEl) nameEl.textContent=ctx.co.name;
+
   // Employees scoped to site (if site selected) or company
   const sel=document.getElementById('empSelect');
   let emps=C.employees.filter(e=>e.active&&e.company_id===coId);
@@ -1494,11 +1608,14 @@ function refreshClockedIn(){
 
   list.innerHTML=clockedIn.map(({emp,last})=>{
     const ini=emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const ciAvatar=emp.photo_url
+      ?`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0"><img src="${emp.photo_url}" alt="${ini}" onerror="this.parentElement.innerHTML='${ini}'"></div>`
+      :`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">${ini}</div>`;
     const dur=elapsed(last.punched_at);
     const over=last.punch_date!==today;
     const warn=over?`<span style="color:var(--red);font-size:10px;font-weight:600;margin-left:4px">&#9888; since ${last.punch_date}</span>`:'';
     return `<div class="ci-row" style="${over?'border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.05)':''}">
-      <div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">${ini}</div>
+      ${ciAvatar}
       <div style="flex:1;min-width:0"><div class="ci-name">${emp.name}${warn}</div>
         ${emp.dept?`<div class="ci-dur">${emp.dept}</div>`:''}
       </div>
@@ -1648,8 +1765,11 @@ function renderEmployees(){
     const emailStatus=e.send_report&&e.email
       ?`<span class="pill" style="background:rgba(245,158,11,.15);color:var(--amber)">&#128231; ${e.email}</span>`
       :`<span style="color:var(--text3);font-size:12px">—</span>`;
+    const avatarHtml=e.photo_url
+      ?`<div class="avatar"><img src="${e.photo_url}" alt="${ini}" onerror="this.parentElement.innerHTML='${ini}'"></div>`
+      :`<div class="avatar">${ini}</div>`;
     return`<tr>
-      <td><div class="emp-row"><div class="avatar">${ini}</div><div>
+      <td><div class="emp-row">${avatarHtml}<div>
         <div style="font-weight:500">${e.name}</div>
         <div style="font-size:11px;color:var(--text2)">${e.emp_code||'—'}</div>
       </div></div></td>
@@ -1730,6 +1850,7 @@ function openAddEmpModal(){
   document.querySelectorAll('#addEmpModal .form-group').forEach(el=>el.style.display='');
   document.getElementById('empModalTitle').textContent='Add Employee — '+ctx.co.name;
   ['empName','empDept','empIdCode','empPin','empEmail'].forEach(id=>document.getElementById(id).value='');
+  resetPhotoUpload(null);
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
@@ -1761,6 +1882,7 @@ function editEmployee(id){
   document.getElementById('empIdCode').value=e.emp_code||'';
   document.getElementById('empPin').value=e.pin||'';
   document.getElementById('empEmail').value=e.email||'';
+  resetPhotoUpload(e.photo_url||null);
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value=e.id;
   document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">No PIN set — employee can't clock in/out until one is assigned.</div>`;
@@ -1797,14 +1919,19 @@ async function saveEmployee(){
   if(send_report&&!email){showMsg('empModalMsg','Please enter an email address for the report, or turn off the email report toggle.','error');return;}
   if(send_report&&email&&!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('empModalMsg','Please enter a valid email address.','error');return;}
   try{
+    // Upload photo if new file selected
+    const photoFile = document.getElementById('empPhotoInput').files[0];
+    let photo_url = document.getElementById('existingPhotoUrl').value || null;
+    if(photoFile) photo_url = await uploadImage(photoFile,'avatars',`emp-${Date.now()}`);
+
     if(editId){
-      const upd={name,dept,emp_code,site_id,email,send_report};if(pin)upd.pin=pin;
+      const upd={name,dept,emp_code,site_id,email,send_report,photo_url};if(pin)upd.pin=pin;
       await DB.update('employees',`id=eq.${editId}`,upd);
       const idx=C.employees.findIndex(e=>e.id===editId);
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd};
     }else{
       if(!ctx){showMsg('empModalMsg','No active company.','error');return;}
-      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report});
+      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,photo_url});
       if(r?.[0])C.employees.push(r[0]);
     }
     closeModal('addEmpModal');renderEmployees();renderSitesAdmin();
@@ -1886,10 +2013,18 @@ async function loadCompaniesPage(){
     const col=colors[i%colors.length];
     const isCur=Ctx.get()?.co?.id===co.id;
     return`<div class="company-card" style="${isCur?`border-color:${col};background:${col}0a`:''}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-        <h3 style="${isCur?'color:'+col:''}">${co.name}</h3>
-        ${isCur?`<span class="pill admin" style="font-size:10px;padding:1px 7px">Active</span>`:''}
-        ${getPlanBadgeHtml(co)}
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+        <div class="company-logo">
+          ${co.logo_url?`<img src="${co.logo_url}" alt="${co.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+          <span style="${co.logo_url?'display:none':''}">${co.name.slice(0,1).toUpperCase()}</span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <h3 style="${isCur?'color:'+col:''}">${co.name}</h3>
+            ${isCur?`<span class="pill admin" style="font-size:10px;padding:1px 7px">Active</span>`:''}
+            ${getPlanBadgeHtml(co)}
+          </div>
+        </div>
       </div>
       <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
@@ -1928,6 +2063,7 @@ function openAddCompanyModal(){
   document.getElementById('editCompanyUid').value='';
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
+  resetLogoUpload(null);
   openModal('addCompanyModal');
 }
 
@@ -1942,6 +2078,7 @@ function editCompany(id){
   document.getElementById('editCompanyUid').value=co.id;
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(!!co.track_overtime);
+  resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
 }
 
@@ -1965,13 +2102,17 @@ async function saveCompany(){
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   try{
+    const logoFile = document.getElementById('logoFileInput').files[0];
+    let logo_url = document.getElementById('existingLogoUrl').value || null;
+    if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
+
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,industry,description,week_start,payroll_frequency,track_overtime});
+      await DB.update('companies',`id=eq.${editId}`,{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,industry,description,week_start,payroll_frequency,track_overtime});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,week_start,payroll_frequency,track_overtime}});updateContextPill();}
+      if(co)Object.assign(co,{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,week_start,payroll_frequency,track_overtime,logo_url}});updateContextPill();}
     }else{
-      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime});
+      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
       if(r?.[0])C.companies.push(r[0]);
     }
     closeModal('addCompanyModal');loadCompaniesPage();
