@@ -1614,7 +1614,7 @@ function isLoggedIn(){return !!Sess.get();}
 // ═══════════════════════════════════════════════════
 // SUPER ADMIN HELPERS
 // ═══════════════════════════════════════════════════
-const SUPER_ADMIN_EMAIL = 'meissam@oaziz.ca';
+const SUPER_ADMIN_EMAIL = 'meissam.h.p@gmail.com';
 
 function isSuperAdmin() {
   const s = Sess.get();
@@ -1713,32 +1713,33 @@ async function doRegister(){
       if(!adminRows.length){showMsg('registerMsg','No active admin account found with that email. Please ask your administrator for their registered email.','error');return;}
     }
 
-    // Send verification email via edge function
+    // Generate code and send via edge function — never display it on screen
     const code=Math.floor(100000+Math.random()*900000).toString();
     pendingVerify={name,email,pass,code,regType,adminEmail};
 
-    // Try to send via Supabase edge function
-    let emailSent = false;
+    let sendRes, sendData;
     try{
-      const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
+      sendRes = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
         body:JSON.stringify({email, name, code})
       });
-      const data = await res.json();
-      emailSent = data.success || data.sent;
-    }catch(e){ emailSent = false; }
+      sendData = await sendRes.json();
+    }catch(e){
+      showMsg('registerMsg','Could not reach the email service. Please try again later.','error');
+      return;
+    }
+
+    if(!sendRes.ok || (!sendData.success && !sendData.sent)){
+      const errMsg = sendData?.error || 'Unknown error';
+      showMsg('registerMsg','Failed to send verification email: ' + errMsg + '. Please try again or contact support.','error');
+      return;
+    }
 
     document.getElementById('regEmailSent').textContent = email;
     document.getElementById('regStep1').style.display = 'none';
     document.getElementById('regStep2').style.display = '';
-
-    if(emailSent){
-      showMsg('registerMsg','Verification code sent to your email.','success');
-    } else {
-      // Fallback: show code in UI for dev/testing only
-      showMsg('registerMsg',`<strong>Email service unavailable.</strong> Your code is: <strong style="font-family:monospace;font-size:16px;letter-spacing:3px">${code}</strong>`,'info');
-    }
+    showMsg('registerMsg','Verification code sent! Check your inbox (and spam folder).','success');
 
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
@@ -1754,12 +1755,12 @@ async function resendVerificationCode(){
     });
     const data = await res.json();
     if(data.success||data.sent){
-      showMsg('registerMsg','✓ Code resent to your email.','success');
+      showMsg('registerMsg','✓ New code sent to your email.','success');
     } else {
-      showMsg('registerMsg',`Code: <strong style="font-family:monospace;font-size:16px;letter-spacing:3px">${pendingVerify.code}</strong>`,'info');
+      showMsg('registerMsg','Could not resend the code: '+(data.error||'Unknown error')+'. Please try again.','error');
     }
   }catch(e){
-    showMsg('registerMsg',`Code: <strong style="font-family:monospace;font-size:16px;letter-spacing:3px">${pendingVerify.code}</strong>`,'info');
+    showMsg('registerMsg','Network error while resending. Please check your connection and try again.','error');
   }
 }
 
@@ -2124,7 +2125,11 @@ async function renderAdmins(){
         <td><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
         <td><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></td>
         <td style="color:var(--text2);font-size:12px">${new Date(a.created_at).toLocaleDateString()}</td>
-        <td>${isMe?'<span style="font-size:11px;color:var(--text3)">—</span>':`<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal('${a.id}')">Edit</button>`}</td>
+        <td style="display:flex;gap:6px;align-items:center">${isMe
+          ? '<span style="font-size:11px;color:var(--text3)">—</span>'
+          : `<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal('${a.id}')">Edit</button>
+             <button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin('${a.id}','${a.name.replace(/'/g,"\\'")}')">Delete</button>`
+        }</td>
       </tr>`;
     }).join('');
 
@@ -2132,6 +2137,30 @@ async function renderAdmins(){
     await renderJoinRequests();
 
   }catch(e){tbody.innerHTML=`<tr><td colspan="7" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+}
+
+async function deleteAdmin(id, name){
+  if(!confirm(`Permanently delete "${name}"?\n\nThis will remove their account and all associated data. This cannot be undone.`)) return;
+  try{
+    // Delete associated join requests
+    await fetch(`${SUPA_URL}/rest/v1/join_requests?or=(requester_id.eq.${id},target_admin_id.eq.${id})`,{
+      method:'DELETE',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
+    });
+    // Delete their companies (and cascade to sites/employees if desired)
+    // For now just unlink companies so they don't get orphaned
+    await fetch(`${SUPA_URL}/rest/v1/companies?admin_id=eq.${id}`,{
+      method:'PATCH',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({admin_id:null})
+    });
+    // Delete the admin account
+    await DB.delete('admins',id);
+    await renderAdmins();
+    showToast(`${name} has been deleted.`);
+  }catch(e){
+    alert('Error deleting admin: '+e.message);
+  }
 }
 
 async function renderJoinRequests(){
