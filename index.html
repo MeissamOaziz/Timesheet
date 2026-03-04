@@ -491,7 +491,7 @@ const TRANSLATIONS = {
     'register.noCode': "Didn't receive it?",
     'register.resend': 'Resend code',
     'register.requestSent': 'Access Request Sent!',
-    'register.requestDesc': 'Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.',
+    'register.requestDesc': 'Your account has been created and a request has been sent to the administrator. You\'ll be able to log in once they approve your access.',
     'register.goToLogin': 'Go to Login',
     'register.alreadyHave': 'Already registered?',
     'register.signIn': 'Sign in',
@@ -687,7 +687,7 @@ const TRANSLATIONS = {
     'register.verify': 'Vérifier et activer',
     'register.noCode': 'Pas reçu?',
     'register.resend': 'Renvoyer le code',
-    'register.requestSent': 'Demande d'accès envoyée!',
+    'register.requestSent': "Demande d'accès envoyée!",
     'register.requestDesc': "Votre compte a été créé et une demande a été envoyée à l'administrateur. Vous pourrez vous connecter une fois approuvé.",
     'register.goToLogin': 'Aller à la connexion',
     'register.alreadyHave': 'Déjà inscrit?',
@@ -723,7 +723,7 @@ const TRANSLATIONS = {
     'admin.deactivate': 'Désactiver',
     'admin.activate': 'Activer',
     'admin.sendReport': '📧 Envoyer rapport',
-    'admin.pendingRequests': '⏳ Demandes d'accès en attente',
+    'admin.pendingRequests': "⏳ Demandes d'accès en attente",
     'admin.allAdmins': 'Tous les comptes admin',
     'admin.createAdmin': '+ Créer un admin',
     'admin.col.name': 'Nom',
@@ -748,7 +748,7 @@ const TRANSLATIONS = {
     'reports.allEmployees': 'Tous les employés',
 
     // ACTIVITY
-    'activity.title': 'Journal d'activité',
+    'activity.title': "Journal d'activité",
 
     // MODALS — Employee
     'modal.addEmployee': 'Ajouter un employé',
@@ -1882,10 +1882,20 @@ async function supaFetch(method,table,opts={}){
   if(qp.length)url+='?'+qp.join('&');
   const h={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
   if(method==='POST')h['Prefer']='return=representation';
-  const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined});
-  if(!r.ok){let t=await r.text();try{t=JSON.parse(t).message||t;}catch{}throw new Error(t);}
-  if(method==='DELETE'||method==='PATCH')return true;
-  const t=await r.text();return t?JSON.parse(t):[];
+  // 8-second timeout — prevents infinite "Connecting to database..." hang on HTTP/network issues
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),8000);
+  try{
+    const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined,signal:controller.signal});
+    clearTimeout(timer);
+    if(!r.ok){let t=await r.text();try{t=JSON.parse(t).message||t;}catch{}throw new Error(t);}
+    if(method==='DELETE'||method==='PATCH')return true;
+    const t=await r.text();return t?JSON.parse(t):[];
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError')throw new Error('Connection timed out. Check your internet connection.');
+    throw e;
+  }
 }
 const DB={
   all:(t,f)=>supaFetch('GET',t,{filter:f}),
@@ -4166,14 +4176,19 @@ async function init(){
       navigate('punch');
     }
   }catch(e){
-    document.getElementById('loadingOverlay').innerHTML=`
-      <div style="text-align:center;color:var(--red);max-width:400px;padding:22px">
-        <div style="font-size:32px;margin-bottom:10px">&#9888;&#65039;</div>
-        <div style="font-size:17px;font-weight:600;margin-bottom:7px">Cannot connect to database</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.6">${e.message}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:10px">Check Supabase tables and API key.</div>
-        <button onclick="location.reload()" style="margin-top:14px;padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:13px;cursor:pointer">Retry</button>
-      </div>`;
+    // DB failed — clear loading overlay and show landing page with a retry option
+    // This prevents the infinite "Connecting to database..." spinner
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    updateNav();
+    showLanding();
+    // Show a non-blocking toast-style error after landing loads
+    setTimeout(()=>{
+      const msg=document.createElement('div');
+      msg.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1d27;border:1px solid var(--red);border-radius:10px;padding:12px 20px;color:var(--text);font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+      msg.innerHTML=`<span style="color:var(--red)">&#9888;</span> Database connection failed. <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:6px;color:#fff;padding:4px 12px;font-family:inherit;font-size:12px;cursor:pointer;margin-left:4px">Retry</button> <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 4px">&times;</button>`;
+      document.body.appendChild(msg);
+      setTimeout(()=>msg.remove(),10000);
+    },300);
   }
 }
 init();
