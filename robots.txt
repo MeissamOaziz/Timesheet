@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+
+Sitemap: https://www.punchclock.ca/sitemap.xml
+
+# Block crawlers from accessing app state URLs (hash-based routing)
+
+Disallow: /index.html#login
+Disallow: /index.html#admin
+Disallow: /index.html#reports
+Disallow: /index.html#activity
+Disallow: /index.html#register
