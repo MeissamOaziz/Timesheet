@@ -2263,10 +2263,10 @@ let pinState={empId:null,punchType:null,entered:''};
 function updateClock(){
   const n=new Date();
   document.getElementById('liveTime').textContent=n.toLocaleTimeString('en-US',{hour12:false});
-  const locale = _appLang==='fr' ? 'fr-CA' : 'en-US';
+  const locale = (typeof _appLang !== 'undefined' && _appLang==='fr') ? 'fr-CA' : 'en-US';
   document.getElementById('liveDate').textContent=n.toLocaleDateString(locale,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
-setInterval(updateClock,1000);updateClock();
+// Clock started inside init() after all variables are initialized
 
 // ═══════════════════════════════════════════════════
 // PICKERS
@@ -4246,6 +4246,7 @@ async function init(){
   // Initialize language system first
   initLang();
   applyAllTranslations();
+  setInterval(updateClock,1000);updateClock();
 
   // Set default activity log dates (last 7 days)
   const today=new Date();
