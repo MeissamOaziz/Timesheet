@@ -404,509 +404,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   .tabs{gap:1px;}
   .tab{padding:6px 10px;font-size:12px;}
 }
-
-/* ── LANGUAGE SWITCHER ── */
-.lang-switcher{display:flex;gap:3px;background:var(--surface2);border-radius:8px;padding:3px;}
-.lang-btn{padding:4px 10px;border:none;border-radius:6px;background:none;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
-.lang-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3);}
-.lang-flag{font-size:14px;margin-right:3px;}
 </style>
-
-<script>
-// ══════════════════════════════════════════════════════════════
-// i18n — Translation System
-// ══════════════════════════════════════════════════════════════
-const TRANSLATIONS = {
-  en: {
-    // NAV
-    'nav.clockInOut': '⏱ Clock In/Out',
-    'nav.admin': '⚙ Admin',
-    'nav.reports': '📊 Reports',
-    'nav.companies': '🏢 Companies',
-    'nav.activity': '📋 Activity',
-    'nav.login': '🔒 Admin Login',
-    'nav.logout': '✕ Logout',
-
-    // PUNCH PAGE
-    'punch.selectName': 'Select Your Name',
-    'punch.chooseEmployee': '-- Choose employee --',
-    'punch.in': '✓ IN',
-    'punch.out': '✕ OUT',
-    'punch.currentlyIn': 'Currently Clocked In',
-    'punch.loading': 'Loading...',
-    'punch.noSite': 'No site selected',
-    'punch.alreadyIn': 'is already clocked IN.',
-    'punch.notIn': 'is not clocked in.',
-    'punch.pleaseSelect': 'Please select your name first.',
-    'punch.successIn': 'Clocked IN successfully!',
-    'punch.successOut': 'Clocked OUT successfully!',
-
-    // LOGIN
-    'login.title': 'Admin Login',
-    'login.subtitle': 'Sign in to access the admin dashboard.',
-    'login.email': 'Email',
-    'login.password': 'Password',
-    'login.forgot': 'Forgot password?',
-    'login.signIn': 'Sign In',
-    'login.noAccount': 'No account?',
-    'login.register': 'Register',
-    'login.invalid': 'Invalid credentials or account not verified.',
-    'login.suspended': 'Your account has been suspended. Contact support.',
-
-    // FORGOT PASSWORD
-    'forgot.title': 'Reset Password',
-    'forgot.subtitle': "Enter your email and we'll send you a 6-digit reset code.",
-    'forgot.email': 'Email',
-    'forgot.sendCode': 'Send Reset Code',
-    'forgot.backToLogin': '← Back to login',
-    'forgot.codeSent': 'We sent a 6-digit code to',
-    'forgot.codeLabel': 'Verification Code',
-    'forgot.verify': 'Verify Code',
-    'forgot.noCode': "Didn't receive it?",
-    'forgot.resend': 'Resend',
-    'forgot.newPass': 'New Password',
-    'forgot.confirmPass': 'Confirm Password',
-    'forgot.setPass': 'Set New Password',
-    'forgot.almostThere': 'Almost there! Set your new password for',
-    'forgot.success': '✓ Password updated successfully! Redirecting to login...',
-
-    // REGISTER
-    'register.title': 'Create Account',
-    'register.subtitle': 'Set up your PunchClock Pro admin account.',
-    'register.name': 'Full Name',
-    'register.email': 'Email',
-    'register.password': 'Password',
-    'register.accountType': 'Account Type',
-    'register.newCompany': '🏢 New Company',
-    'register.newCompanyDesc': "I'm starting fresh. Creates a Free plan account with a new company.",
-    'register.joinCompany': '👥 Join Existing Company',
-    'register.joinCompanyDesc': "My company already has an account. I'll request access from my administrator.",
-    'register.adminEmail': "Administrator's Registered Email",
-    'register.adminEmailHint': 'Ask your administrator for their registered email address to request access.',
-    'register.continue': 'Continue →',
-    'register.checkEmail': 'Check your email',
-    'register.codeSentTo': 'We sent a 6-digit verification code to',
-    'register.codeLabel': 'Verification Code',
-    'register.verify': 'Verify & Activate',
-    'register.noCode': "Didn't receive it?",
-    'register.resend': 'Resend code',
-    'register.requestSent': 'Access Request Sent!',
-    'register.requestDesc': 'Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.',
-    'register.goToLogin': 'Go to Login',
-    'register.alreadyHave': 'Already registered?',
-    'register.signIn': 'Sign in',
-    'register.language': 'Preferred Language',
-
-    // ADMIN PAGE
-    'admin.title': 'Admin Panel',
-    'admin.subtitle': 'Manage employees and sites',
-    'admin.addEmployee': '+ Add Employee',
-    'admin.tabs.employees': 'Employees',
-    'admin.tabs.sites': 'Sites',
-    'admin.tabs.admins': 'Admins',
-    'admin.search': 'Search',
-    'admin.searchPlaceholder': 'Name, department...',
-    'admin.site': 'Site',
-    'admin.allSites': 'All Sites',
-    'admin.allDepts': 'All Depts',
-    'admin.addSite': '+ Add Site',
-    'admin.noEmployees': 'No employees found.',
-    'admin.noSites': 'No sites yet for this company. Click "+ Add Site" to create one.',
-    'admin.col.employee': 'Employee',
-    'admin.col.site': 'Site',
-    'admin.col.dept': 'Department',
-    'admin.col.status': 'Status',
-    'admin.col.pin': 'PIN',
-    'admin.col.email': 'Email Report',
-    'admin.col.actions': 'Actions',
-    'admin.active': 'Active',
-    'admin.inactive': 'Inactive',
-    'admin.edit': 'Edit',
-    'admin.delete': 'Delete',
-    'admin.deactivate': 'Deactivate',
-    'admin.activate': 'Activate',
-    'admin.sendReport': '📧 Send Report',
-    'admin.pendingRequests': '⏳ Pending Access Requests',
-    'admin.allAdmins': 'All Admin Accounts',
-    'admin.createAdmin': '+ Create Admin',
-    'admin.col.name': 'Name',
-    'admin.col.role': 'Role',
-    'admin.col.plan': 'Plan',
-    'admin.col.registered': 'Registered',
-    'admin.restrictedMsg': '👤 Admin management is restricted to Super Admins.',
-
-    // COMPANIES
-    'companies.title': 'Companies',
-    'companies.subtitle': 'Manage organizations and their payroll settings',
-    'companies.new': '+ New Company',
-    'companies.switchTo': 'Switch To',
-    'companies.noCompanies': 'No companies yet.',
-
-    // REPORTS
-    'reports.title': 'Reports',
-    'reports.generate': 'Generate Report',
-    'reports.employees': 'Employees',
-    'reports.startDate': 'Start Date',
-    'reports.endDate': 'End Date',
-    'reports.allEmployees': 'All Employees',
-
-    // ACTIVITY
-    'activity.title': 'Activity Log',
-
-    // MODALS — Employee
-    'modal.addEmployee': 'Add Employee',
-    'modal.editEmployee': 'Edit Employee',
-    'modal.name': 'Full Name',
-    'modal.empCode': 'Employee Code',
-    'modal.dept': 'Department',
-    'modal.site': 'Assign to Site',
-    'modal.noSite': 'No Site',
-    'modal.pin': 'PIN (4-6 digits)',
-    'modal.email': 'Email (for reports)',
-    'modal.sendEmailReports': 'Send automated email reports',
-    'modal.save': 'Save',
-    'modal.cancel': 'Cancel',
-    'modal.saving': 'Saving...',
-
-    // MODALS — Site
-    'modal.addSite': 'Add Site',
-    'modal.editSite': 'Edit Site',
-    'modal.siteName': 'Site Name',
-    'modal.siteDesc': 'Description (optional)',
-    'modal.siteLanguage': 'Clock In/Out Page Language',
-
-    // MODALS — Company
-    'modal.newCompany': 'New Company',
-    'modal.editCompany': 'Edit Company',
-    'modal.companyName': 'Company Name',
-    'modal.industry': 'Industry',
-    'modal.description': 'Description',
-    'modal.payrollSettings': 'Payroll Settings',
-    'modal.weekStarts': 'Week Starts On',
-    'modal.payrollFreq': 'Payroll Frequency',
-    'modal.companyLogo': 'Company Logo',
-    'modal.overtimeSettings': 'Overtime Settings',
-    'modal.trackOvertime': '⏰ Track Overtime',
-    'modal.trackOvertimeDesc': 'Flag daily >8h and weekly >40h in reports',
-    'modal.monday': 'Monday',
-    'modal.sunday': 'Sunday',
-    'modal.weekly': 'Weekly',
-    'modal.biweekly': 'Bi-Weekly',
-    'modal.monthly': 'Monthly',
-
-    // COMMON
-    'common.loading': 'Loading...',
-    'common.error': 'Error',
-    'common.success': 'Success',
-    'common.selectCompany': 'Select your company',
-    'common.selectSite': 'Select Site',
-    'common.chooseSite': 'Choose your work location',
-    'common.manageCompanies': '⚙ Manage companies',
-    'common.logout': '✕ Logout',
-    'common.pinSet': '🔑 Set',
-    'common.pinNone': '⚠ None',
-    'common.upgrade': 'Upgrade Plan',
-    'common.planLimit': 'Plan Limit Reached',
-    'common.on': 'on',
-    'common.off': 'off',
-    'common.yes': 'Yes',
-    'common.no': 'No',
-    'common.days.mon': 'Mon', 'common.days.tue': 'Tue', 'common.days.wed': 'Wed',
-    'common.days.thu': 'Thu', 'common.days.fri': 'Fri', 'common.days.sat': 'Sat', 'common.days.sun': 'Sun',
-  },
-  fr: {
-    // NAV
-    'nav.clockInOut': '⏱ Entrée/Sortie',
-    'nav.admin': '⚙ Admin',
-    'nav.reports': '📊 Rapports',
-    'nav.companies': '🏢 Compagnies',
-    'nav.activity': '📋 Activité',
-    'nav.login': '🔒 Connexion Admin',
-    'nav.logout': '✕ Déconnexion',
-
-    // PUNCH PAGE
-    'punch.selectName': 'Sélectionnez votre nom',
-    'punch.chooseEmployee': '-- Choisir un employé --',
-    'punch.in': '✓ ENTRÉE',
-    'punch.out': '✕ SORTIE',
-    'punch.currentlyIn': 'Actuellement pointés',
-    'punch.loading': 'Chargement...',
-    'punch.noSite': 'Aucun site sélectionné',
-    'punch.alreadyIn': 'est déjà pointé EN.',
-    'punch.notIn': "n'est pas pointé.",
-    'punch.pleaseSelect': 'Veuillez sélectionner votre nom.',
-    'punch.successIn': 'Entrée enregistrée!',
-    'punch.successOut': 'Sortie enregistrée!',
-
-    // LOGIN
-    'login.title': 'Connexion Admin',
-    'login.subtitle': "Connectez-vous pour accéder au tableau de bord.",
-    'login.email': 'Courriel',
-    'login.password': 'Mot de passe',
-    'login.forgot': 'Mot de passe oublié?',
-    'login.signIn': 'Se connecter',
-    'login.noAccount': 'Pas de compte?',
-    'login.register': "S'inscrire",
-    'login.invalid': 'Identifiants invalides ou compte non vérifié.',
-    'login.suspended': 'Votre compte a été suspendu. Contactez le support.',
-
-    // FORGOT PASSWORD
-    'forgot.title': 'Réinitialiser le mot de passe',
-    'forgot.subtitle': "Entrez votre courriel et nous vous enverrons un code à 6 chiffres.",
-    'forgot.email': 'Courriel',
-    'forgot.sendCode': 'Envoyer le code',
-    'forgot.backToLogin': '← Retour à la connexion',
-    'forgot.codeSent': 'Nous avons envoyé un code à 6 chiffres à',
-    'forgot.codeLabel': 'Code de vérification',
-    'forgot.verify': 'Vérifier le code',
-    'forgot.noCode': 'Pas reçu?',
-    'forgot.resend': 'Renvoyer',
-    'forgot.newPass': 'Nouveau mot de passe',
-    'forgot.confirmPass': 'Confirmer le mot de passe',
-    'forgot.setPass': 'Définir le nouveau mot de passe',
-    'forgot.almostThere': 'Presque! Définissez votre nouveau mot de passe pour',
-    'forgot.success': '✓ Mot de passe mis à jour! Redirection...',
-
-    // REGISTER
-    'register.title': 'Créer un compte',
-    'register.subtitle': 'Configurez votre compte administrateur PunchClock Pro.',
-    'register.name': 'Nom complet',
-    'register.email': 'Courriel',
-    'register.password': 'Mot de passe',
-    'register.accountType': 'Type de compte',
-    'register.newCompany': '🏢 Nouvelle compagnie',
-    'register.newCompanyDesc': "Je pars de zéro. Crée un compte gratuit avec une nouvelle compagnie.",
-    'register.joinCompany': '👥 Rejoindre une compagnie existante',
-    'register.joinCompanyDesc': "Ma compagnie a déjà un compte. Je demanderai l'accès à mon administrateur.",
-    'register.adminEmail': "Courriel enregistré de l'administrateur",
-    'register.adminEmailHint': "Demandez à votre administrateur son courriel enregistré pour demander l'accès.",
-    'register.continue': 'Continuer →',
-    'register.checkEmail': 'Vérifiez votre courriel',
-    'register.codeSentTo': 'Nous avons envoyé un code de vérification à 6 chiffres à',
-    'register.codeLabel': 'Code de vérification',
-    'register.verify': 'Vérifier et activer',
-    'register.noCode': 'Pas reçu?',
-    'register.resend': 'Renvoyer le code',
-    'register.requestSent': 'Demande d'accès envoyée!',
-    'register.requestDesc': "Votre compte a été créé et une demande a été envoyée à l'administrateur. Vous pourrez vous connecter une fois approuvé.",
-    'register.goToLogin': 'Aller à la connexion',
-    'register.alreadyHave': 'Déjà inscrit?',
-    'register.signIn': 'Se connecter',
-    'register.language': 'Langue préférée',
-
-    // ADMIN PAGE
-    'admin.title': 'Panneau Admin',
-    'admin.subtitle': 'Gérer les employés et les sites',
-    'admin.addEmployee': '+ Ajouter un employé',
-    'admin.tabs.employees': 'Employés',
-    'admin.tabs.sites': 'Sites',
-    'admin.tabs.admins': 'Admins',
-    'admin.search': 'Recherche',
-    'admin.searchPlaceholder': 'Nom, département...',
-    'admin.site': 'Site',
-    'admin.allSites': 'Tous les sites',
-    'admin.allDepts': 'Tous les dép.',
-    'admin.addSite': '+ Ajouter un site',
-    'admin.noEmployees': 'Aucun employé trouvé.',
-    'admin.noSites': 'Aucun site pour cette compagnie. Cliquez "+ Ajouter un site".',
-    'admin.col.employee': 'Employé',
-    'admin.col.site': 'Site',
-    'admin.col.dept': 'Département',
-    'admin.col.status': 'Statut',
-    'admin.col.pin': 'NIP',
-    'admin.col.email': 'Rapport courriel',
-    'admin.col.actions': 'Actions',
-    'admin.active': 'Actif',
-    'admin.inactive': 'Inactif',
-    'admin.edit': 'Modifier',
-    'admin.delete': 'Supprimer',
-    'admin.deactivate': 'Désactiver',
-    'admin.activate': 'Activer',
-    'admin.sendReport': '📧 Envoyer rapport',
-    'admin.pendingRequests': '⏳ Demandes d'accès en attente',
-    'admin.allAdmins': 'Tous les comptes admin',
-    'admin.createAdmin': '+ Créer un admin',
-    'admin.col.name': 'Nom',
-    'admin.col.role': 'Rôle',
-    'admin.col.plan': 'Plan',
-    'admin.col.registered': 'Inscrit le',
-    'admin.restrictedMsg': '👤 La gestion des admins est réservée aux super admins.',
-
-    // COMPANIES
-    'companies.title': 'Compagnies',
-    'companies.subtitle': 'Gérer les organisations et leurs paramètres de paie',
-    'companies.new': '+ Nouvelle compagnie',
-    'companies.switchTo': 'Sélectionner',
-    'companies.noCompanies': 'Aucune compagnie.',
-
-    // REPORTS
-    'reports.title': 'Rapports',
-    'reports.generate': 'Générer le rapport',
-    'reports.employees': 'Employés',
-    'reports.startDate': 'Date de début',
-    'reports.endDate': 'Date de fin',
-    'reports.allEmployees': 'Tous les employés',
-
-    // ACTIVITY
-    'activity.title': 'Journal d'activité',
-
-    // MODALS — Employee
-    'modal.addEmployee': 'Ajouter un employé',
-    'modal.editEmployee': "Modifier l'employé",
-    'modal.name': 'Nom complet',
-    'modal.empCode': 'Code employé',
-    'modal.dept': 'Département',
-    'modal.site': 'Assigner au site',
-    'modal.noSite': 'Aucun site',
-    'modal.pin': 'NIP (4-6 chiffres)',
-    'modal.email': 'Courriel (pour rapports)',
-    'modal.sendEmailReports': 'Envoyer des rapports par courriel automatiquement',
-    'modal.save': 'Enregistrer',
-    'modal.cancel': 'Annuler',
-    'modal.saving': 'Enregistrement...',
-
-    // MODALS — Site
-    'modal.addSite': 'Ajouter un site',
-    'modal.editSite': 'Modifier le site',
-    'modal.siteName': 'Nom du site',
-    'modal.siteDesc': 'Description (optionnel)',
-    'modal.siteLanguage': 'Langue de la page de pointage',
-
-    // MODALS — Company
-    'modal.newCompany': 'Nouvelle compagnie',
-    'modal.editCompany': 'Modifier la compagnie',
-    'modal.companyName': 'Nom de la compagnie',
-    'modal.industry': 'Industrie',
-    'modal.description': 'Description',
-    'modal.payrollSettings': 'Paramètres de paie',
-    'modal.weekStarts': 'La semaine commence le',
-    'modal.payrollFreq': 'Fréquence de paie',
-    'modal.companyLogo': 'Logo de la compagnie',
-    'modal.overtimeSettings': 'Paramètres de temps supplémentaire',
-    'modal.trackOvertime': '⏰ Suivre les heures supplémentaires',
-    'modal.trackOvertimeDesc': 'Signaler >8h/jour et >40h/semaine dans les rapports',
-    'modal.monday': 'Lundi',
-    'modal.sunday': 'Dimanche',
-    'modal.weekly': 'Hebdomadaire',
-    'modal.biweekly': 'Aux deux semaines',
-    'modal.monthly': 'Mensuel',
-
-    // COMMON
-    'common.loading': 'Chargement...',
-    'common.error': 'Erreur',
-    'common.success': 'Succès',
-    'common.selectCompany': 'Sélectionnez votre compagnie',
-    'common.selectSite': 'Sélectionner un site',
-    'common.chooseSite': 'Choisissez votre lieu de travail',
-    'common.manageCompanies': '⚙ Gérer les compagnies',
-    'common.logout': '✕ Déconnexion',
-    'common.upgrade': 'Améliorer le plan',
-    'common.planLimit': 'Limite du plan atteinte',
-    'common.pinSet': '🔑 Défini',
-    'common.pinNone': '⚠ Aucun',
-    'common.on': 'activé',
-    'common.off': 'désactivé',
-    'common.yes': 'Oui',
-    'common.no': 'Non',
-    'common.days.mon': 'Lun', 'common.days.tue': 'Mar', 'common.days.wed': 'Mer',
-    'common.days.thu': 'Jeu', 'common.days.fri': 'Ven', 'common.days.sat': 'Sam', 'common.days.sun': 'Dim',
-  }
-};
-
-// ── Language state ──────────────────────────────────────────
-// Priority: site.lang > admin.lang > browser > 'en'
-let _appLang = 'en';
-let _punchLang = 'en'; // separate lang for punch page (site-specific)
-
-function getStoredAdminLang() {
-  try { return localStorage.getItem('pc_admin_lang') || null; } catch(e){ return null; }
-}
-function setStoredAdminLang(l) {
-  try { localStorage.setItem('pc_admin_lang', l); } catch(e){}
-}
-function getBrowserLang() {
-  const bl = (navigator.language||navigator.userLanguage||'en').toLowerCase();
-  return bl.startsWith('fr') ? 'fr' : 'en';
-}
-function initLang() {
-  const stored = getStoredAdminLang();
-  _appLang = stored || getBrowserLang();
-  _punchLang = _appLang;
-  document.documentElement.lang = _appLang;
-}
-
-function setLang(lang, scope='app') {
-  if(!TRANSLATIONS[lang]) return;
-  if(scope === 'punch') {
-    _punchLang = lang;
-    applyPunchTranslations();
-  } else {
-    _appLang = lang;
-    _punchLang = lang;
-    setStoredAdminLang(lang);
-    document.documentElement.lang = lang;
-    applyAllTranslations();
-    // Update all lang switcher buttons
-    document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-  }
-}
-
-function t(key, lang) {
-  const l = lang || _appLang;
-  return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) || TRANSLATIONS['en'][key] || key;
-}
-function tp(key) { return t(key, _punchLang); } // punch-page translation
-
-function applyAllTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      el.placeholder = t(key);
-    } else {
-      el.textContent = t(key);
-    }
-  });
-  document.querySelectorAll('[data-i18n-html]').forEach(el => {
-    el.innerHTML = t(el.dataset.i18nHtml);
-  });
-}
-
-function applyPunchTranslations() {
-  // Update punch page elements dynamically
-  const empSel = document.getElementById('empSelect');
-  if(empSel && empSel.options[0]) empSel.options[0].text = tp('punch.chooseEmployee');
-  const punchCoName = document.getElementById('punchCoName');
-  if(punchCoName && punchCoName.textContent === t('punch.selectName','en') || 
-     punchCoName && punchCoName.textContent === t('punch.selectName','fr')) {
-    punchCoName.textContent = tp('punch.selectName');
-  }
-  const ciHeader = document.querySelector('.ci-header h3');
-  if(ciHeader) ciHeader.innerHTML = '<span class="live-dot"></span> ' + tp('punch.currentlyIn');
-  const btnIn = document.querySelector('.btn-in');
-  const btnOut = document.querySelector('.btn-out');
-  if(btnIn) btnIn.textContent = tp('punch.in');
-  if(btnOut) btnOut.textContent = tp('punch.out');
-  // Update punch page lang switcher buttons
-  document.querySelectorAll('.punch-lang-btn[data-lang]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === _punchLang);
-  });
-}
-
-function makeLangSwitcher(scope='app', extraClass='') {
-  return `<div class="lang-switcher ${extraClass}">
-    <button class="lang-btn ${_appLang==='en'?'active':''}" data-lang="en" onclick="setLang('en','${scope}')"><span class="lang-flag">🇨🇦</span>EN</button>
-    <button class="lang-btn ${_appLang==='fr'?'active':''}" data-lang="fr" onclick="setLang('fr','${scope}')"><span class="lang-flag">🇫🇷</span>FR</button>
-  </div>`;
-}
-function makePunchLangSwitcher() {
-  return `<div class="lang-switcher" style="position:absolute;top:12px;right:16px">
-    <button class="lang-btn punch-lang-btn ${_punchLang==='en'?'active':''}" data-lang="en" onclick="setLang('en','punch')"><span class="lang-flag">🇨🇦</span>EN</button>
-    <button class="lang-btn punch-lang-btn ${_punchLang==='fr'?'active':''}" data-lang="fr" onclick="setLang('fr','punch')"><span class="lang-flag">🇫🇷</span>FR</button>
-  </div>`;
-}
-</script>
 </head>
 <body>
 
@@ -1158,7 +656,7 @@ function makePunchLangSwitcher() {
 <div class="picker-screen hidden" id="pickerCompany">
   <div style="text-align:center"><div style="font-size:38px;margin-bottom:10px">&#9201;</div>
     <h2>PunchClock Pro</h2>
-    <p class="sub" id="companyPickerSub" data-i18n="common.selectCompany" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">Select your company</p>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">Select your company</p>
   </div>
   <div class="picker-grid" id="pickerCompanyGrid"></div>
   <div class="picker-hints" id="pickerCompanyHints">
@@ -1192,49 +690,35 @@ function makePunchLangSwitcher() {
     <span style="font-size:10px;opacity:.7">&#9660;</span>
   </div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="navigate('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
-    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none" data-i18n="nav.admin">⚙ Admin</button>
-    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none" data-i18n="nav.reports">📊 Reports</button>
-    <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" style="display:none" data-i18n="nav.companies">🏢 Companies</button>
-    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none" data-i18n="nav.activity">📋 Activity</button>
+    <button class="nav-btn active" onclick="navigate('punch')">&#9201; Clock In/Out</button>
+    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" data-i18n="nav.admin" style="display:none">&#9881; Admin</button>
+    <button class="nav-btn" onclick="navigate('reports')" id="navReports" data-i18n="nav.reports" style="display:none">&#128202; Reports</button>
+    <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" data-i18n="nav.companies" style="display:none">&#127970; Companies</button>
+    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" data-i18n="nav.activity" style="display:none">&#128203; Activity</button>
   </div>
   <div class="nav-right">
     <span id="adminBadge" style="display:none"></span>
-    <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" style="font-size:12px;padding:6px 13px;">Admin Login</button>
-    <button class="btn-secondary" id="logoutBtn" onclick="logout()" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
-    <div class="lang-switcher" id="navLangSwitcher" style="margin-left:4px">
-      <button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button>
-      <button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button>
-    </div>
-    <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+    <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
+    <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
+    <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div><button class="lang-switcher-mobile" style="display:none"></button><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-nav-btn" onclick="mobileNav('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
+  <button class="mobile-nav-btn" onclick="mobileNav('punch')">&#9201; Clock In/Out</button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none">&#9881; Admin</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('reports')" data-i18n="nav.reports" id="mobileNavReports" style="display:none">&#128202; Reports</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('companies')" data-i18n="nav.companies" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('activity')" data-i18n="nav.activity" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
-  <div style="padding:4px 8px"><div class="lang-switcher" style="width:fit-content">
-    <button class="lang-btn active" data-lang="en" onclick="setLang('en');closeMobileMenu()"><span class="lang-flag">🇨🇦</span>EN</button>
-    <button class="lang-btn" data-lang="fr" onclick="setLang('fr');closeMobileMenu()"><span class="lang-flag">🇫🇷</span>FR</button>
-  </div></div>
+  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
+  <button class="mobile-nav-btn" onclick="mobileNav('companies')" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
+  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
   <hr class="mobile-nav-divider">
-  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')" data-i18n="nav.login">🔒 Admin Login</button>
-  <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)" data-i18n="nav.logout">✕ Logout</button>
+  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')">&#128274; Admin Login</button>
+  <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)">&#10005; Logout</button>
 </div>
 
 <!-- ═══════════════ PUNCH PAGE ═══════════════ -->
 <div class="page active" id="page-punch">
-  <div class="punch-wrap" style="position:relative">
-    <div style="position:absolute;top:0;right:0;z-index:10">
-      <div class="lang-switcher">
-        <button class="lang-btn punch-lang-btn active" data-lang="en" onclick="setLang('en','punch')"><span class="lang-flag">🇨🇦</span>EN</button>
-        <button class="lang-btn punch-lang-btn" data-lang="fr" onclick="setLang('fr','punch')"><span class="lang-flag">🇫🇷</span>FR</button>
-      </div>
-    </div>
+  <div class="punch-wrap">
     <div class="clock-display">
       <div class="clock-time" id="liveTime">00:00:00</div>
       <div class="clock-date" id="liveDate"></div>
@@ -1242,17 +726,17 @@ function makePunchLangSwitcher() {
     <div class="context-banner" id="punchBanner">Loading...</div>
     <div class="punch-card">
       <div id="punchCoLogo"></div>
-      <h2 id="punchCoName" data-i18n="punch.selectName">Select Your Name</h2>
-      <div class="select-wrap"><select id="empSelect"><option value="" data-i18n="punch.chooseEmployee">-- Choose employee --</option></select></div>
+      <h2 id="punchCoName">Select Your Name</h2>
+      <div class="select-wrap"><select id="empSelect"><option value="">-- Choose employee --</option></select></div>
       <div class="punch-btns">
-        <button class="punch-btn btn-in" onclick="requestPunch('IN')" data-i18n="punch.in">✓ IN</button>
-        <button class="punch-btn btn-out" onclick="requestPunch('OUT')" data-i18n="punch.out">✕ OUT</button>
+        <button class="punch-btn btn-in" onclick="requestPunch('IN')">&#10003; IN</button>
+        <button class="punch-btn btn-out" onclick="requestPunch('OUT')">&#10005; OUT</button>
       </div>
       <div class="punch-feedback" id="punchFeedback"></div>
     </div>
     <div class="currently-in">
       <div class="ci-header">
-        <h3><span class="live-dot"></span> <span data-i18n="punch.currentlyIn">Currently Clocked In</span></h3>
+        <h3><span class="live-dot"></span> Currently Clocked In</h3>
         <span class="ci-count" id="ciCount">0</span>
       </div>
       <div class="ci-list" id="ciList"><div class="ci-empty">Loading...</div></div>
@@ -1263,7 +747,7 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ LOGIN ═══════════════ -->
 <div class="page" id="page-login">
   <div class="form-card" style="margin-top:50px">
-    <h2 data-i18n="login.title">Admin Login</h2><p data-i18n="login.subtitle">Sign in to access the admin dashboard.</p>
+    <h2>Admin Login</h2><p>Sign in to access the admin dashboard.</p>
     <div id="loginMsg"></div>
     <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@company.com"></div>
     <div class="form-group">
@@ -1273,7 +757,7 @@ function makePunchLangSwitcher() {
       </div>
       <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="btn-primary" onclick="doLogin()" data-i18n="login.signIn">Sign In</button>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px">No account? <button class="link-btn" onclick="navigate('register')">Register</button></p>
   </div>
@@ -1282,24 +766,24 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ FORGOT PASSWORD ═══════════════ -->
 <div class="page" id="page-forgot">
   <div class="form-card" style="margin-top:50px">
-    <h2 data-i18n="forgot.title">Reset Password</h2><p data-i18n="forgot.subtitle">Enter your email and we'll send you a 6-digit reset code.</p>
+    <h2>Reset Password</h2><p>Enter your email and we'll send you a 6-digit reset code.</p>
     <div id="forgotMsg"></div>
     <div id="forgotStep1">
       <div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@company.com" onkeydown="if(event.key==='Enter')sendResetCode()"></div>
-      <button class="btn-primary" onclick="sendResetCode()" data-i18n="forgot.sendCode">Send Reset Code</button>
+      <button class="btn-primary" onclick="sendResetCode()">Send Reset Code</button>
       <p style="text-align:center;color:var(--text2);font-size:13px;margin-top:14px"><button class="link-btn" onclick="navigate('login')">&#8592; Back to login</button></p>
     </div>
     <div id="forgotStep2" style="display:none">
       <p style="font-size:13px;color:var(--text2);margin-bottom:16px">We sent a 6-digit code to <strong id="forgotEmailSent"></strong></p>
       <div class="form-group"><label>Verification Code</label><input type="text" id="forgotCode" placeholder="000000" maxlength="6" style="letter-spacing:6px;font-size:20px;text-align:center" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyResetCode()"></div>
-      <button class="btn-primary" onclick="verifyResetCode()" data-i18n="forgot.verify">Verify Code</button>
+      <button class="btn-primary" onclick="verifyResetCode()">Verify Code</button>
       <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:12px">Didn't receive it? <button class="link-btn" style="font-size:12px" onclick="sendResetCode(true)">Resend</button></p>
     </div>
     <div id="forgotStep3" style="display:none">
       <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Almost there! Set your new password for <strong id="forgotEmailFinal"></strong></p>
       <div class="form-group"><label>New Password</label><input type="password" id="forgotNewPass" placeholder="Min 6 characters"></div>
       <div class="form-group"><label>Confirm Password</label><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doPasswordReset()"></div>
-      <button class="btn-primary" onclick="doPasswordReset()" data-i18n="forgot.setPass">Set New Password</button>
+      <button class="btn-primary" onclick="doPasswordReset()">Set New Password</button>
     </div>
   </div>
 </div>
@@ -1307,7 +791,7 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ REGISTER ═══════════════ -->
 <div class="page" id="page-register">
   <div class="form-card" style="margin-top:50px;max-width:520px">
-    <h2 data-i18n="register.title">Create Account</h2><p data-i18n="register.subtitle">Set up your PunchClock Pro admin account.</p>
+    <h2>Create Account</h2><p>Set up your PunchClock Pro admin account.</p>
     <div id="registerMsg"></div>
 
     <!-- STEP 1: Basic info -->
@@ -1338,15 +822,7 @@ function makePunchLangSwitcher() {
         <div class="msg info" style="margin-bottom:12px">Ask your administrator for their registered email address to request access.</div>
         <div class="form-group"><label>Administrator's Registered Email</label><input type="email" id="regAdminEmail" placeholder="administrator@company.com"></div>
       </div>
-      <div class="form-group" style="margin-bottom:18px">
-        <label data-i18n="register.language">Preferred Language</label>
-        <div class="lang-switcher" style="width:fit-content;margin-top:6px">
-          <button class="lang-btn active" id="regLangEn" data-lang="en" onclick="setRegLang('en')"><span class="lang-flag">🇨🇦</span>English</button>
-          <button class="lang-btn" id="regLangFr" data-lang="fr" onclick="setRegLang('fr')"><span class="lang-flag">🇫🇷</span>Français</button>
-        </div>
-        <input type="hidden" id="regLang" value="en">
-      </div>
-      <button class="btn-primary" onclick="doRegister()" data-i18n="register.continue">Continue →</button>
+      <button class="btn-primary" onclick="doRegister()">Continue →</button>
     </div>
 
     <!-- STEP 2: Email verification -->
@@ -1357,7 +833,7 @@ function makePunchLangSwitcher() {
         <p style="color:var(--text2);font-size:13px;margin-top:6px">We sent a 6-digit verification code to <strong id="regEmailSent" style="color:var(--text)"></strong></p>
       </div>
       <div class="form-group"><label>Verification Code</label><input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px"></div>
-      <button class="btn-primary" onclick="doVerify()" data-i18n="register.verify">Verify &amp; Activate</button>
+      <button class="btn-primary" onclick="doVerify()">Verify &amp; Activate</button>
       <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:14px">Didn't receive it? <button class="link-btn" style="font-size:12px" onclick="resendVerificationCode()">Resend code</button></p>
     </div>
 
@@ -1367,7 +843,7 @@ function makePunchLangSwitcher() {
         <div style="font-size:48px;margin-bottom:16px">✅</div>
         <h3 style="font-size:17px;font-weight:600">Access Request Sent!</h3>
         <p style="color:var(--text2);font-size:13px;margin-top:8px;line-height:1.6">Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.</p>
-        <button class="btn-primary" style="margin-top:20px" onclick="navigate('login')" data-i18n="register.goToLogin">Go to Login</button>
+        <button class="btn-primary" style="margin-top:20px" onclick="navigate('login')">Go to Login</button>
       </div>
     </div>
 
@@ -1379,13 +855,13 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ ADMIN PAGE ═══════════════ -->
 <div class="page" id="page-admin">
   <div class="page-header">
-    <div><h1 id="adminTitle" data-i18n="admin.title">Admin Panel</h1><p id="adminSub" data-i18n="admin.subtitle">Manage employees and sites</p></div>
-    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()" data-i18n="admin.addEmployee">+ Add Employee</button>
+    <div><h1 id="adminTitle">Admin Panel</h1><p id="adminSub">Manage employees and sites</p></div>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()">+ Add Employee</button>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
-    <button class="tab" onclick="adminTab('sites',this)" data-i18n="admin.tabs.sites">Sites</button>
-    <button class="tab" onclick="adminTab('admins',this)" data-i18n="admin.tabs.admins">Admins</button>
+    <button class="tab active" onclick="adminTab('employees',this)">Employees</button>
+    <button class="tab" onclick="adminTab('sites',this)">Sites</button>
+    <button class="tab" onclick="adminTab('admins',this)">Admins</button>
   </div>
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
@@ -1405,7 +881,7 @@ function makePunchLangSwitcher() {
   <!-- SITES TAB -->
   <div id="tab-sites" style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddSiteModal()" data-i18n="admin.addSite">+ Add Site</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddSiteModal()">+ Add Site</button>
     </div>
     <div class="site-list" id="siteListAdmin"></div>
   </div>
@@ -1455,7 +931,7 @@ function makePunchLangSwitcher() {
       </select>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('createAdminModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="closeModal('createAdminModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveCreateAdmin()">Create</button>
     </div>
   </div>
@@ -1491,7 +967,7 @@ function makePunchLangSwitcher() {
     </div>
     <input type="hidden" id="editAdminId">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('editAdminModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="closeModal('editAdminModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditAdmin()">Save Changes</button>
     </div>
   </div>
@@ -1500,7 +976,7 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ REPORTS PAGE ═══════════════ -->
 <div class="page" id="page-reports">
   <div class="page-header">
-    <div><h1 data-i18n="reports.title">Reports</h1><p>Generate time &amp; attendance reports</p></div>
+    <div><h1>Reports</h1><p>Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
       <button class="btn-export" onclick="guardedExport('excel')">&#128229; Excel</button>
       <button class="btn-export" onclick="guardedExport('csv')">&#128196; CSV</button>
@@ -1549,7 +1025,7 @@ function makePunchLangSwitcher() {
 <div class="page" id="page-companies">
   <div class="page-header">
     <div><h1>Companies</h1><p>Manage organizations and their payroll settings</p></div>
-    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddCompanyModal()" data-i18n="companies.new">+ New Company</button>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddCompanyModal()">+ New Company</button>
   </div>
   <div class="company-grid" id="companyGrid"></div>
 </div>
@@ -1557,7 +1033,7 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
 <div class="page" id="page-activity">
   <div class="page-header">
-    <div><h1 data-i18n="activity.title">Activity Log</h1><p id="activitySub">Punch records with manual edit capability</p></div>
+    <div><h1>Activity Log</h1><p id="activitySub">Punch records with manual edit capability</p></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn">+ Add Punch</button>
       <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px">&#8635; Refresh</button>
@@ -1694,20 +1170,12 @@ function makePunchLangSwitcher() {
   <div class="modal">
     <h3 id="siteModalTitle">Add Site</h3>
     <div id="siteModalMsg"></div>
-    <div class="form-group"><label data-i18n="modal.siteName">Site Name</label><input type="text" id="siteName" placeholder="Main Office, Warehouse A..."></div>
-    <div class="form-group"><label data-i18n="modal.siteDesc">Description (optional)</label><input type="text" id="siteDesc" placeholder="Brief description"></div>
-    <div class="form-group">
-      <label data-i18n="modal.siteLanguage">Clock In/Out Page Language</label>
-      <select id="siteLang" style="width:100%;padding:10px 13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none">
-        <option value="auto">🌐 Auto (follows admin preference)</option>
-        <option value="en">🇨🇦 English</option>
-        <option value="fr">🇫🇷 Français</option>
-      </select>
-    </div>
+    <div class="form-group"><label>Site Name</label><input type="text" id="siteName" placeholder="Main Office, Warehouse A..."></div>
+    <div class="form-group"><label>Description (optional)</label><input type="text" id="siteDesc" placeholder="Brief description"></div>
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()" data-i18n="modal.save">Save</button>
+      <button class="btn-secondary" onclick="closeModal('addSiteModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()">Save</button>
     </div>
   </div>
 </div>
@@ -1768,7 +1236,7 @@ function makePunchLangSwitcher() {
     </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('addCompanyModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="closeModal('addCompanyModal')">Cancel</button>
       <button class="btn-primary" id="companySaveBtn" style="width:auto;padding:9px 18px" onclick="saveCompany()">Save</button>
     </div>
   </div>
@@ -1882,10 +1350,19 @@ async function supaFetch(method,table,opts={}){
   if(qp.length)url+='?'+qp.join('&');
   const h={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
   if(method==='POST')h['Prefer']='return=representation';
-  const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined});
-  if(!r.ok){let t=await r.text();try{t=JSON.parse(t).message||t;}catch{}throw new Error(t);}
-  if(method==='DELETE'||method==='PATCH')return true;
-  const t=await r.text();return t?JSON.parse(t):[];
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),8000);
+  try{
+    const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined,signal:controller.signal});
+    clearTimeout(timer);
+    if(!r.ok){let t=await r.text();try{t=JSON.parse(t).message||t;}catch{}throw new Error(t);}
+    if(method==='DELETE'||method==='PATCH')return true;
+    const t=await r.text();return t?JSON.parse(t):[];
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError')throw new Error('Connection timed out. Check your internet connection.');
+    throw e;
+  }
 }
 const DB={
   all:(t,f)=>supaFetch('GET',t,{filter:f}),
@@ -2157,9 +1634,9 @@ let pinState={empId:null,punchType:null,entered:''};
 function updateClock(){
   const n=new Date();
   document.getElementById('liveTime').textContent=n.toLocaleTimeString('en-US',{hour12:false});
-  document.getElementById('liveDate').textContent=n.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const locale=(typeof _appLang!=='undefined'&&_appLang==='fr')?'fr-CA':'en-US';
+  document.getElementById('liveDate').textContent=n.toLocaleDateString(locale,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
-setInterval(updateClock,1000);updateClock();
 
 // ═══════════════════════════════════════════════════
 // PICKERS
@@ -2201,8 +1678,8 @@ function showCompanyPicker(){
   hints.style.display=logged?'none':'flex';
   if(logged){
     hints.style.display='flex';
-    hints.innerHTML=`<span class="picker-hint" onclick="closePicker();navigate('companies')">&#9881; ${t('common.manageCompanies').replace('⚙ ','')}</span>`
-      +`<span class="picker-hint" style="color:var(--red)" onclick="logout()">&#10005; ${t('common.logout').replace('✕ ','')}</span>`;
+    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'companies\')">&#9881; Manage companies</span>'
+      +'<span class="picker-hint" style="color:var(--red)" onclick="logout()">&#10005; Logout</span>';
   }
 }
 
@@ -2214,8 +1691,6 @@ function onCompanyPicked(coId){
     // No sites — use company only context (no site)
     Ctx.set({co,site:null});
     closePicker();
-    _punchLang = _appLang;
-    applyPunchTranslations();
     updateContextPill();
     navigate('punch');
     return;
@@ -2236,7 +1711,7 @@ function showSitePicker(co,sites){
   document.getElementById('pickerCompany').classList.add('hidden');
   document.getElementById('pickerSite').classList.remove('hidden');
   document.getElementById('sitePickerTitle').textContent=co.name;
-  document.getElementById('sitePickerSub').textContent=t('common.chooseSite');
+  document.getElementById('sitePickerSub').textContent='Choose your work site';
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
   const icons=['&#128205;','&#127970;','&#127968;','&#128336;','&#127963;','&#9962;'];
   const grid=document.getElementById('pickerSiteGrid');
@@ -2258,14 +1733,6 @@ function onSitePicked(coId,siteId){
   if(!co||!site)return;
   Ctx.set({co,site});
   closePicker();
-  // Apply site-specific punch language
-  const siteLangPref = site.lang || 'auto';
-  if(siteLangPref !== 'auto' && TRANSLATIONS[siteLangPref]) {
-    _punchLang = siteLangPref;
-  } else {
-    _punchLang = _appLang;
-  }
-  applyPunchTranslations();
   updateContextPill();
   navigate('punch');
 }
@@ -2311,6 +1778,7 @@ function navigate(page){
   else if(page==='reports')loadReportsPage();
   else if(page==='companies')loadCompaniesPage();
   else if(page==='activity')loadActivityPage();
+  if(typeof applyAllTranslations==='function')applyAllTranslations();
 }
 
 // ═══════════════════════════════════════════════════
@@ -2392,14 +1860,6 @@ function mobileNav(page){
   navigate(page);
 }
 
-function setRegLang(lang){
-  document.getElementById('regLang').value = lang;
-  document.getElementById('regLangEn').classList.toggle('active', lang==='en');
-  document.getElementById('regLangFr').classList.toggle('active', lang==='fr');
-  // Also switch the whole UI to chosen language
-  setLang(lang);
-}
-
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPass').value;
@@ -2409,10 +1869,7 @@ async function doLogin(){
     const admin = rows[0];
     // Check if suspended
     if(admin.status === 'suspended'){showMsg('loginMsg','Your account has been suspended. Contact support.','error');return;}
-    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free',lang:admin.lang||'en'});
-    // Restore admin's preferred language
-    const adminLang = admin.lang || getStoredAdminLang() || getBrowserLang();
-    setLang(adminLang);
+    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
     updateNav();
     await refreshCache();
     navigate('admin');
@@ -2586,12 +2043,10 @@ async function doVerify(){
     const isJoin = pendingVerify.regType === 'join';
 
     // Create the admin account (unverified initially for join requests, active for new company)
-    const regLangVal = document.getElementById('regLang')?.value || _appLang || 'en';
     const newAdmin = await DB.insert('admins',{
       name: pendingVerify.name,
       email: pendingVerify.email,
       password: pendingVerify.pass,
-      lang: regLangVal,
       verified: true,
       role: 'admin',
       plan: 'free',
@@ -2652,12 +2107,6 @@ async function loadPunchPage(){
   const siteId=ctx.site?.id||null;
   await refreshCache({coId,siteId});
 
-  // Apply site-specific punch page language
-  const site=ctx.site?C.sites.find(s=>s.id===siteId):null;
-  const siteLangPref=site?.lang||'auto';
-  _punchLang=(siteLangPref!=='auto'&&TRANSLATIONS[siteLangPref])?siteLangPref:_appLang;
-  applyPunchTranslations();
-
   // Banner
   const banner=document.getElementById('punchBanner');
   banner.innerHTML=siteId
@@ -2682,7 +2131,7 @@ async function loadPunchPage(){
   let emps=C.employees.filter(e=>e.active&&e.company_id===coId);
   if(siteId)emps=emps.filter(e=>e.site_id===siteId);
   emps.sort((a,b)=>a.name.localeCompare(b.name));
-  sel.innerHTML=`<option value="">${tp('punch.chooseEmployee')}</option>`;
+  sel.innerHTML='<option value="">-- Select your name --</option>';
   emps.forEach(e=>{
     const o=document.createElement('option');
     o.value=e.id;
@@ -2750,17 +2199,14 @@ setInterval(async()=>{
 function requestPunch(type){
   const ctx=Ctx.get();if(!ctx){showCompanyPicker();return;}
   const empId=document.getElementById('empSelect').value;
-  if(!empId){showPunchMsg(tp('punch.pleaseSelect'),'error');return;}
+  if(!empId){showPunchMsg('Please select your name first.','error');return;}
   const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
   if(!emp.pin){showPunchMsg('No PIN set — ask an admin to assign one.','error');return;}
   const{status,last}=getEmpStatus(empId);
   const today=new Date().toLocaleDateString('en-CA');
   if(type==='IN'&&status==='IN'){
     const when=last.punch_date===today?`since ${last.punch_time} today`:`since ${last.punch_date} at ${last.punch_time}`;
-    const alreadyMsg = _punchLang==='fr'
-      ? `&#9888; ${emp.name} est déjà pointé EN. Pointer SORTIE d'abord.`
-      : `&#9888; ${emp.name} is already clocked IN ${when}. Clock OUT first.`;
-    showPunchMsg(alreadyMsg,'error');
+    showPunchMsg(`&#9888; ${emp.name} is already clocked IN ${when}. Clock OUT first.`,'error');
     document.getElementById('empSelect').value='';return;
   }
   if(type==='OUT'&&status==='OUT'){
@@ -2796,8 +2242,8 @@ async function executePunch(empId,type){
   const emp=C.employees.find(e=>e.id===empId);
   const ctx=Ctx.get();if(!emp||!ctx)return;
   const{status}=getEmpStatus(empId);
-  if(type==='IN'&&status==='IN'){showPunchMsg(`&#9888; ${emp.name} ${tp('punch.alreadyIn')}`,'error');document.getElementById('empSelect').value='';return;}
-  if(type==='OUT'&&status==='OUT'){showPunchMsg(`&#9888; ${emp.name} ${tp('punch.notIn')}`,'error');document.getElementById('empSelect').value='';return;}
+  if(type==='IN'&&status==='IN'){showPunchMsg(`&#9888; ${emp.name} is already clocked IN.`,'error');document.getElementById('empSelect').value='';return;}
+  if(type==='OUT'&&status==='OUT'){showPunchMsg(`&#9888; ${emp.name} is not clocked in.`,'error');document.getElementById('empSelect').value='';return;}
   const now=new Date();
   const punch_date=now.toLocaleDateString('en-CA');
   const punch_time=now.toLocaleTimeString('en-US',{hour12:false});
@@ -2806,8 +2252,7 @@ async function executePunch(empId,type){
     if(ctx.site){payload.site_id=ctx.site.id;payload.site_name=ctx.site.name;}
     const r=await DB.insert('punches',payload);
     if(r?.[0])C.punches.unshift(r[0]);
-    const punchVerb = type==='IN' ? tp('punch.in').replace('✓','').trim() : tp('punch.out').replace('✕','').trim();
-    showPunchMsg(`&#10003; ${emp.name} — ${punchVerb} ${now.toLocaleTimeString(_punchLang==='fr'?'fr-CA':'en-US',{hour:'2-digit',minute:'2-digit'})}`,'success');
+    showPunchMsg(`&#10003; ${emp.name} clocked ${type} at ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`,'success');
     document.getElementById('empSelect').value='';
     refreshClockedIn();
   }catch(e){showPunchMsg('Error saving punch: '+e.message,'error');}
@@ -3273,8 +2718,6 @@ function editSite(id){
   document.getElementById('siteName').value=s.name;
   document.getElementById('siteDesc').value=s.description||'';
   document.getElementById('editSiteUid').value=s.id;
-  const siteLangEl=document.getElementById('siteLang');
-  if(siteLangEl) siteLangEl.value=s.lang||'auto';
   document.getElementById('siteModalMsg').innerHTML='';
   openModal('addSiteModal');
 }
@@ -3283,16 +2726,15 @@ async function saveSite(){
   const ctx=Ctx.get();
   const name=document.getElementById('siteName').value.trim();
   const description=document.getElementById('siteDesc').value.trim();
-  const lang=document.getElementById('siteLang')?.value||'auto';
   const editId=document.getElementById('editSiteUid').value;
   if(!name){showMsg('siteModalMsg','Site name is required.','error');return;}
   try{
     if(editId){
-      await DB.update('sites',`id=eq.${editId}`,{name,description,lang});
+      await DB.update('sites',`id=eq.${editId}`,{name,description});
       const s=C.sites.find(s=>s.id===editId);if(s){s.name=name;s.description=description;}
     }else{
       if(!ctx){showMsg('siteModalMsg','No active company.','error');return;}
-      const r=await DB.insert('sites',{company_id:ctx.co.id,name,description,lang});
+      const r=await DB.insert('sites',{company_id:ctx.co.id,name,description});
       if(r?.[0])C.sites.push(r[0]);
     }
     closeModal('addSiteModal');renderSitesAdmin();populateEmpSiteFilter();
@@ -4130,10 +3572,11 @@ async function executeSendReport(){
 // INIT
 // ═══════════════════════════════════════════════════
 async function init(){
-  // Initialize language system first
-  initLang();
-  applyAllTranslations();
-
+  // Init language first
+  if(typeof initLang==='function')initLang();
+  if(typeof applyAllTranslations==='function')applyAllTranslations();
+  // Start clock after lang is ready
+  setInterval(updateClock,1000);updateClock();
   // Set default activity log dates (last 7 days)
   const today=new Date();
   document.getElementById('actEnd').value=today.toLocaleDateString('en-CA');
@@ -4166,16 +3609,168 @@ async function init(){
       navigate('punch');
     }
   }catch(e){
-    document.getElementById('loadingOverlay').innerHTML=`
-      <div style="text-align:center;color:var(--red);max-width:400px;padding:22px">
-        <div style="font-size:32px;margin-bottom:10px">&#9888;&#65039;</div>
-        <div style="font-size:17px;font-weight:600;margin-bottom:7px">Cannot connect to database</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.6">${e.message}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:10px">Check Supabase tables and API key.</div>
-        <button onclick="location.reload()" style="margin-top:14px;padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:inherit;font-size:13px;cursor:pointer">Retry</button>
-      </div>`;
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    updateNav();
+    showLanding();
+    setTimeout(()=>{
+      const msg=document.createElement('div');
+      msg.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1d27;border:1px solid var(--red);border-radius:10px;padding:12px 20px;color:var(--text);font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+      msg.innerHTML=`<span style="color:var(--red)">&#9888;</span> Database connection failed. <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:6px;color:#fff;padding:4px 12px;font-family:inherit;font-size:12px;cursor:pointer;margin-left:4px">Retry</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 4px">&times;</button>`;
+      document.body.appendChild(msg);
+      setTimeout(()=>msg.remove(),10000);
+    },300);
   }
 }
+
+// ═══════════════════════════════════════════════
+// BILINGUAL i18n SYSTEM
+// ═══════════════════════════════════════════════
+var _appLang='en';
+var _punchLang='en';
+var TRANSLATIONS={
+en:{
+'nav.clockInOut':'⏱ Clock In/Out','nav.admin':'⚙ Admin','nav.reports':'📊 Reports',
+'nav.companies':'🏢 Companies','nav.activity':'📋 Activity',
+'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
+'punch.selectName':'Select Your Name','punch.chooseEmployee':'-- Choose employee --',
+'punch.in':'✓ IN','punch.out':'✕ OUT',
+'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
+'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.',
+'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
+'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
+'admin.addEmployee':'+ Add Employee','admin.tabs.employees':'Employees',
+'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
+'admin.search':'Search','admin.searchPlaceholder':'Name, department...',
+'admin.site':'Site','admin.allSites':'All Sites','admin.allDepts':'All Depts',
+'admin.col.employee':'Employee','admin.col.site':'Site','admin.col.dept':'Department',
+'admin.col.status':'Status','admin.col.pin':'PIN','admin.col.email':'Email Report',
+'admin.col.actions':'Actions','admin.active':'Active','admin.inactive':'Inactive',
+'admin.deactivate':'Deactivate','admin.activate':'Activate','admin.sendReport':'📧 Send Report',
+'admin.pendingRequests':'⏳ Pending Access Requests',
+'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
+'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All',
+'activity.title':'Activity Log','activity.subtitle':'Punch records with manual edit capability',
+'activity.addPunch':'+ Add Punch','activity.refresh':'↻ Refresh',
+'activity.recordsShown':'Records Shown','activity.todayPunches':"Today's Punches",
+'activity.currentlyIn':'Currently In','activity.manualEntries':'Manual Entries',
+'activity.employee':'EMPLOYEE','activity.companySite':'COMPANY / SITE',
+'activity.type':'TYPE','activity.date':'DATE','activity.time':'TIME','activity.actions':'ACTIONS',
+'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
+'companies.new':'+ New Company',
+'common.filter':'Filter','common.company':'Company','common.allCompanies':'All Companies',
+'common.edit':'Edit','common.delete':'Delete','common.activate':'Activate',
+'common.deactivate':'Deactivate','common.sendReport':'📧 Send Report',
+'common.switchTo':'Switch To','common.total':'total','common.active':'active','common.sites':'sites',
+'common.biweeklyPayroll':'Bi-Weekly payroll','common.weekStarts':'Week',
+'common.overtimeOn':'⏰ Overtime on',
+'modal.weekly':'Weekly','modal.biweekly':'Bi-Weekly','modal.monthly':'Monthly',
+'common.days.mon':'Mon','common.days.tue':'Tue','common.days.wed':'Wed',
+'common.days.thu':'Thu','common.days.fri':'Fri','common.days.sat':'Sat','common.days.sun':'Sun',
+},
+fr:{
+'nav.clockInOut':'⏱ Entrée/Sortie','nav.admin':'⚙ Admin','nav.reports':'📊 Rapports',
+'nav.companies':'🏢 Compagnies','nav.activity':'📋 Activité',
+'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
+'punch.selectName':'Sélectionnez votre nom','punch.chooseEmployee':'-- Choisir un employé --',
+'punch.in':'✓ ENTRÉE','punch.out':'✕ SORTIE',
+'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
+'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",
+'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
+'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',
+'admin.addEmployee':'+ Ajouter un employé','admin.tabs.employees':'Employés',
+'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
+'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...',
+'admin.site':'Site','admin.allSites':'Tous les sites','admin.allDepts':'Tous les depts',
+'admin.col.employee':'Employé','admin.col.site':'Site','admin.col.dept':'Département',
+'admin.col.status':'Statut','admin.col.pin':'NIP','admin.col.email':'Rapport courriel',
+'admin.col.actions':'Actions','admin.active':'Actif','admin.inactive':'Inactif',
+'admin.deactivate':'Désactiver','admin.activate':'Activer','admin.sendReport':'📧 Envoyer rapport',
+"admin.pendingRequests":"⏳ Demandes d'accès en attente",
+'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
+'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner',
+"activity.title":"Journal d'activité",'activity.subtitle':'Registre des pointages avec modification manuelle',
+'activity.addPunch':'+ Ajouter pointage','activity.refresh':'↻ Actualiser',
+'activity.recordsShown':'Entrées affichées','activity.todayPunches':"Pointages aujourd'hui",
+'activity.currentlyIn':'Actuellement pointés','activity.manualEntries':'Entrées manuelles',
+'activity.employee':'EMPLOYÉ','activity.companySite':'COMPAGNIE / SITE',
+'activity.type':'TYPE','activity.date':'DATE','activity.time':'HEURE','activity.actions':'ACTIONS',
+'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
+'companies.new':'+ Nouvelle compagnie',
+'common.filter':'Filtrer','common.company':'Compagnie','common.allCompanies':'Toutes les compagnies',
+'common.edit':'Modifier','common.delete':'Supprimer','common.activate':'Activer',
+'common.deactivate':'Désactiver','common.sendReport':'📧 Envoyer rapport',
+'common.switchTo':'Sélectionner','common.total':'total','common.active':'actif','common.sites':'sites',
+'common.biweeklyPayroll':'Paie aux deux semaines','common.weekStarts':'Semaine',
+'common.overtimeOn':'⏰ Heures supp. activées',
+'modal.weekly':'Hebdomadaire','modal.biweekly':'Aux deux semaines','modal.monthly':'Mensuel',
+'common.days.mon':'Lun','common.days.tue':'Mar','common.days.wed':'Mer',
+'common.days.thu':'Jeu','common.days.fri':'Ven','common.days.sat':'Sam','common.days.sun':'Dim',
+}
+};
+
+function getStoredAdminLang(){try{return localStorage.getItem('pc_admin_lang');}catch(e){return null;}}
+function setStoredAdminLang(l){try{localStorage.setItem('pc_admin_lang',l);}catch(e){}}
+function getBrowserLang(){var bl=(navigator.language||'en').toLowerCase();return bl.startsWith('fr')?'fr':'en';}
+
+function initLang(){
+  var stored=getStoredAdminLang();
+  _appLang=stored||getBrowserLang();
+  _punchLang=_appLang;
+  document.documentElement.lang=_appLang;
+}
+
+function setLang(lang,scope){
+  scope=scope||'app';
+  if(!TRANSLATIONS[lang])return;
+  if(scope==='punch'){
+    _punchLang=lang;
+    applyPunchTranslations();
+  }else{
+    _appLang=lang;_punchLang=lang;
+    setStoredAdminLang(lang);
+    document.documentElement.lang=lang;
+    applyAllTranslations();
+  }
+  document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
+    var active=(scope==='punch'?_punchLang:_appLang);
+    btn.classList.toggle('active',btn.dataset.lang===active);
+  });
+}
+
+function t(key,lang){
+  var l=lang||_appLang||'en';
+  if(!TRANSLATIONS)return key;
+  var dict=TRANSLATIONS[l]||TRANSLATIONS.en||{};
+  return dict[key]||(TRANSLATIONS.en&&TRANSLATIONS.en[key])||key;
+}
+function tp(key){return t(key,_punchLang);}
+
+function applyAllTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key=el.dataset.i18n;
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'){el.placeholder=t(key);}
+    else{el.textContent=t(key);}
+  });
+  // Sync lang switcher button states
+  document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
+    btn.classList.toggle('active',btn.dataset.lang===_appLang);
+  });
+}
+
+function applyPunchTranslations(){
+  var empSel=document.getElementById('empSelect');
+  if(empSel&&empSel.options[0])empSel.options[0].text=tp('punch.chooseEmployee');
+  var btnIn=document.querySelector('.btn-in');
+  var btnOut=document.querySelector('.btn-out');
+  if(btnIn)btnIn.textContent=tp('punch.in');
+  if(btnOut)btnOut.textContent=tp('punch.out');
+  var ciHeader=document.querySelector('.ci-header h3');
+  if(ciHeader)ciHeader.innerHTML='<span class="live-dot"></span>'+tp('punch.currentlyIn');
+  document.querySelectorAll('.punch-lang-btn[data-lang]').forEach(function(btn){
+    btn.classList.toggle('active',btn.dataset.lang===_punchLang);
+  });
+}
+
 init();
 </script>
 </body>
