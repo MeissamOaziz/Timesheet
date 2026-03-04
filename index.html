@@ -750,10 +750,41 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <h2>Admin Login</h2><p>Sign in to access the admin dashboard.</p>
     <div id="loginMsg"></div>
     <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="admin@company.com"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label style="font-size:12px;font-weight:500;color:var(--text2)">Password</label>
+        <button class="link-btn" style="font-size:12px" onclick="navigate('forgot')">Forgot password?</button>
+      </div>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
     <button class="btn-primary" onclick="doLogin()">Sign In</button>
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px">No account? <button class="link-btn" onclick="navigate('register')">Register</button></p>
+  </div>
+</div>
+
+<!-- ═══════════════ FORGOT PASSWORD ═══════════════ -->
+<div class="page" id="page-forgot">
+  <div class="form-card" style="margin-top:50px">
+    <h2>Reset Password</h2><p>Enter your email and we'll send you a 6-digit reset code.</p>
+    <div id="forgotMsg"></div>
+    <div id="forgotStep1">
+      <div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@company.com" onkeydown="if(event.key==='Enter')sendResetCode()"></div>
+      <button class="btn-primary" onclick="sendResetCode()">Send Reset Code</button>
+      <p style="text-align:center;color:var(--text2);font-size:13px;margin-top:14px"><button class="link-btn" onclick="navigate('login')">&#8592; Back to login</button></p>
+    </div>
+    <div id="forgotStep2" style="display:none">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">We sent a 6-digit code to <strong id="forgotEmailSent"></strong></p>
+      <div class="form-group"><label>Verification Code</label><input type="text" id="forgotCode" placeholder="000000" maxlength="6" style="letter-spacing:6px;font-size:20px;text-align:center" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyResetCode()"></div>
+      <button class="btn-primary" onclick="verifyResetCode()">Verify Code</button>
+      <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:12px">Didn't receive it? <button class="link-btn" style="font-size:12px" onclick="sendResetCode(true)">Resend</button></p>
+    </div>
+    <div id="forgotStep3" style="display:none">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Almost there! Set your new password for <strong id="forgotEmailFinal"></strong></p>
+      <div class="form-group"><label>New Password</label><input type="password" id="forgotNewPass" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Confirm Password</label><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doPasswordReset()"></div>
+      <button class="btn-primary" onclick="doPasswordReset()">Set New Password</button>
+    </div>
   </div>
 </div>
 
@@ -1154,6 +1185,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="modal">
     <h3 id="companyModalTitle">New Company</h3>
     <div id="companyModalMsg"></div>
+    <div id="companyFormBody">
     <div class="form-group"><label>Company Name</label><input type="text" id="companyName" placeholder="Acme Corp"></div>
     <div class="form-row">
       <div class="form-group"><label>Industry</label><input type="text" id="companyIndustry" placeholder="Technology, Retail..."></div>
@@ -1201,10 +1233,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div id="overtimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
       </div>
     </div>
+    </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addCompanyModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveCompany()">Save</button>
+      <button class="btn-primary" id="companySaveBtn" style="width:auto;padding:9px 18px" onclick="saveCompany()">Save</button>
     </div>
   </div>
 </div>
@@ -1833,6 +1866,68 @@ async function doLogin(){
   }catch(e){showMsg('loginMsg','Connection error: '+e.message,'error');}
 }
 
+// ═══════════════════════════════════════════════════
+// FORGOT PASSWORD
+// ═══════════════════════════════════════════════════
+let pendingReset = null;
+
+async function sendResetCode(resend=false){
+  const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
+  if(!email){ showMsg('forgotMsg','Please enter your email address.','error'); return; }
+  showMsg('forgotMsg','<span style="color:var(--text2)">&#8987; Sending reset code...</span>','info');
+  try{
+    const rows = await DB.all('admins', `email=eq.${encodeURIComponent(email)}&verified=eq.true`);
+    if(!rows.length){ showMsg('forgotMsg','No verified account found with that email.','error'); return; }
+    const code = Math.floor(100000+Math.random()*900000).toString();
+    pendingReset = { email, code, adminId: rows[0].id };
+    const controller = new AbortController();
+    const timeout = setTimeout(()=>controller.abort(), 20000);
+    const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+      body: JSON.stringify({ email, name: rows[0].name, code, subject: 'Reset your PunchClock Pro password', purpose: 'password_reset' }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const data = await res.json();
+    if(!res.ok && !data.success && !data.sent){
+      showMsg('forgotMsg','Failed to send reset email. Please try again.','error'); return;
+    }
+    document.getElementById('forgotEmailSent').textContent = email;
+    document.getElementById('forgotStep1').style.display = 'none';
+    document.getElementById('forgotStep2').style.display = '';
+    showMsg('forgotMsg', resend ? '&#10003; New code sent!' : '&#10003; Reset code sent! Check your inbox.','success');
+  }catch(e){
+    if(e.name==='AbortError') showMsg('forgotMsg','Request timed out. Please try again.','error');
+    else showMsg('forgotMsg','Error: '+e.message,'error');
+  }
+}
+
+function verifyResetCode(){
+  const entered = document.getElementById('forgotCode').value.trim();
+  if(!entered || entered.length !== 6){ showMsg('forgotMsg','Please enter the 6-digit code.','error'); return; }
+  if(!pendingReset){ showMsg('forgotMsg','Session expired. Please start over.','error'); navigate('forgot'); return; }
+  if(entered !== pendingReset.code){ showMsg('forgotMsg','Incorrect code. Please try again.','error'); return; }
+  document.getElementById('forgotStep2').style.display = 'none';
+  document.getElementById('forgotStep3').style.display = '';
+  document.getElementById('forgotEmailFinal').textContent = pendingReset.email;
+  showMsg('forgotMsg','Code verified! Now set your new password.','success');
+}
+
+async function doPasswordReset(){
+  const newPass = document.getElementById('forgotNewPass').value;
+  const confirmPass = document.getElementById('forgotConfirmPass').value;
+  if(!newPass || newPass.length < 6){ showMsg('forgotMsg','Password must be at least 6 characters.','error'); return; }
+  if(newPass !== confirmPass){ showMsg('forgotMsg','Passwords do not match.','error'); return; }
+  if(!pendingReset){ showMsg('forgotMsg','Session expired. Please start over.','error'); navigate('forgot'); return; }
+  try{
+    await DB.update('admins', `id=eq.${pendingReset.adminId}`, { password: newPass });
+    pendingReset = null;
+    showMsg('forgotMsg','&#10003; Password updated successfully! Redirecting to login...','success');
+    setTimeout(()=>navigate('login'), 2000);
+  }catch(e){ showMsg('forgotMsg','Error updating password: '+e.message,'error'); }
+}
+
 // Registration type selection
 function setRegType(type) {
   document.getElementById('regJoinSection').style.display = type==='join' ? '' : 'none';
@@ -1873,14 +1968,26 @@ async function doRegister(){
 
     let sendRes, sendData;
     try{
+      const controller = new AbortController();
+      const timeout = setTimeout(()=>controller.abort(), 20000); // 20s timeout for cold starts
       sendRes = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-        body:JSON.stringify({email, name, code})
+        body:JSON.stringify({email, name, code}),
+        signal: controller.signal
       });
+      clearTimeout(timeout);
       sendData = await sendRes.json();
     }catch(e){
-      showMsg('registerMsg','Could not reach the email service. Please try again later.','error');
+      if(e.name==='AbortError'){
+        showMsg('registerMsg','The email service took too long to respond. Please try again.','error');
+      } else {
+        const isHttps = location.protocol === 'https:';
+        const msg = !isHttps
+          ? 'This page must be loaded over HTTPS to send emails. Please visit <strong>https://www.punchclock.ca</strong> and try again.'
+          : 'Network error sending verification email. Please check your connection and try again.';
+        showMsg('registerMsg', msg, 'error');
+      }
       return;
     }
 
@@ -2685,21 +2792,24 @@ function selectCtxFromCompany(coId){
 }
 
 function openAddCompanyModal(){
-  // Check company limit for current admin plan
   const {ok, current, max, plan} = canAddCompany();
+  document.getElementById('companyModalTitle').textContent='New Company';
+  document.getElementById('editCompanyUid').value='';
+  const form = document.getElementById('companyFormBody');
+  const saveBtn = document.getElementById('companySaveBtn');
   if(!ok){
     document.getElementById('companyModalMsg').innerHTML='';
     showUpgradePrompt('companyModalMsg', `Your <strong>${plan.name}</strong> plan allows up to <strong>${max} compan${max===1?'y':'ies'}</strong>. You have ${current}. Upgrade to add more.`);
-    document.getElementById('companyModalTitle').textContent='New Company';
-    document.getElementById('editCompanyUid').value='';
+    if(form) form.style.display='none';
+    if(saveBtn) saveBtn.style.display='none';
     openModal('addCompanyModal');
     return;
   }
-  document.getElementById('companyModalTitle').textContent='New Company';
+  if(form) form.style.display='';
+  if(saveBtn) saveBtn.style.display='';
   ['companyName','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('companyWeekStart').value='monday';
   document.getElementById('companyPayrollFreq').value='biweekly';
-  document.getElementById('editCompanyUid').value='';
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
   resetLogoUpload(null);
@@ -2708,6 +2818,11 @@ function openAddCompanyModal(){
 
 function editCompany(id){
   const co=C.companies.find(c=>c.id===id);if(!co)return;
+  // Always show form fields when editing
+  const form=document.getElementById('companyFormBody');
+  const saveBtn=document.getElementById('companySaveBtn');
+  if(form) form.style.display='';
+  if(saveBtn) saveBtn.style.display='';
   document.getElementById('companyModalTitle').textContent='Edit Company';
   document.getElementById('companyName').value=co.name;
   document.getElementById('companyIndustry').value=co.industry||'';
@@ -2740,6 +2855,14 @@ async function saveCompany(){
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
+  // Hard enforce plan limit on new company creation
+  if(!editId){
+    const {ok,current,max,plan}=canAddCompany();
+    if(!ok){
+      showUpgradePrompt('companyModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} compan${max===1?'y':'ies'}</strong>. You have ${current}. Upgrade to add more.`);
+      return;
+    }
+  }
   try{
     const logoFile = document.getElementById('logoFileInput').files[0];
     let logo_url = document.getElementById('existingLogoUrl').value || null;
