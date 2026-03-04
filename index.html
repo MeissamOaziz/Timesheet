@@ -404,6 +404,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
   .tabs{gap:1px;}
   .tab{padding:6px 10px;font-size:12px;}
 }
+/* ── LANG SWITCHER ── */
+.lang-switcher{display:flex;gap:2px;background:rgba(0,0,0,.2);border-radius:20px;padding:3px;border:1px solid var(--border)}
+.lang-btn{padding:3px 11px;border:none;border-radius:20px;background:none;color:var(--text3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.5px}
+.lang-btn.active{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(79,142,247,.35)}
+.lang-btn:not(.active):hover{color:var(--text);background:var(--surface2)}
 </style>
 </head>
 <body>
@@ -417,7 +422,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})">Pricing</a>
       <a onclick="showLegal('tos')">Terms</a>
       <a onclick="showLegal('privacy')">Privacy</a>
-      <a onclick="hideLanding();navigate('login')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-left:4px">Login</a>
+      <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div>
+      <a onclick="hideLanding();navigate('login')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-left:4px" data-i18n="nav.login">Login</a>
       <a onclick="hideLanding();navigate('register')" style="background:var(--accent);color:#fff;border-radius:8px;margin-left:2px">Get Started Free</a>
     </div>
   </nav>
@@ -700,7 +706,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
-    <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div><button class="lang-switcher-mobile" style="display:none"></button><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇨🇦 EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">🇫🇷 FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
@@ -859,15 +865,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()">+ Add Employee</button>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="adminTab('employees',this)">Employees</button>
-    <button class="tab" onclick="adminTab('sites',this)">Sites</button>
+    <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
+    <button class="tab" onclick="adminTab('sites',this)" data-i18n="admin.tabs.sites">Sites</button>
     <button class="tab" onclick="adminTab('admins',this)">Admins</button>
   </div>
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
     <div class="filter-bar" style="grid-template-columns:1fr 1fr auto;margin-bottom:14px;padding:12px 15px">
       <div><label>Search</label><input type="text" id="empSearch" placeholder="Name, department..." oninput="renderEmployees()"></div>
-      <div><label>Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="">All Sites</option></select></div>
+      <div><label data-i18n="admin.site">Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allSites">All Sites</option></select></div>
       <div style="display:flex;align-items:flex-end">
         <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="">All Depts</option></select>
       </div>
@@ -985,8 +991,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
   </div>
   <div class="filter-bar">
-    <div><label>Company</label><select id="reportCompany" onchange="onReportCompanyChange()"><option value="all">All Companies</option></select></div>
-    <div><label>Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all">All Sites</option></select></div>
+    <div><label data-i18n="common.company">Company</label><select id="reportCompany" onchange="onReportCompanyChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
+    <div><label data-i18n="admin.site">Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
     <div><label>Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
         <option value="week" selected>This Week</option>
@@ -1001,15 +1007,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div><label>Start Date</label><input type="date" id="reportStart"></div>
     <div><label>End Date</label><input type="date" id="reportEnd"></div>
     <div style="display:flex;align-items:flex-end">
-      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()">Generate</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
     </div>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:18px">
     <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px">Select Employees</p>
     <div class="sel-all-row">
-      <button onclick="selAll(true)">Select All</button>
+      <button onclick="selAll(true)" data-i18n="reports.selectAll">Select All</button>
       <span style="color:var(--border)">|</span>
-      <button onclick="selAll(false)">Deselect All</button>
+      <button onclick="selAll(false)" data-i18n="reports.deselectAll">Deselect All</button>
     </div>
     <div class="emp-list-check" id="empCheckList"></div>
   </div>
@@ -1035,18 +1041,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="page-header">
     <div><h1>Activity Log</h1><p id="activitySub">Punch records with manual edit capability</p></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn">+ Add Punch</button>
-      <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px">&#8635; Refresh</button>
+      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn" data-i18n="activity.addPunch">+ Add Punch</button>
+      <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px" data-i18n="activity.refresh">↻ Refresh</button>
     </div>
   </div>
   <!-- ACTIVITY FILTERS -->
   <div class="filter-bar" style="margin-bottom:16px">
-    <div><label>Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all">All Companies</option></select></div>
-    <div><label>Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all">All Sites</option></select></div>
+    <div><label data-i18n="common.company">Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
+    <div><label data-i18n="admin.site">Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
     <div><label>Start Date</label><input type="date" id="actStart"></div>
     <div><label>End Date</label><input type="date" id="actEnd"></div>
     <div style="display:flex;align-items:flex-end">
-      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="loadActivityPage()">Filter</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
     </div>
   </div>
   <div class="stats-grid" id="activityStats"></div>
@@ -2139,6 +2145,7 @@ async function loadPunchPage(){
     sel.appendChild(o);
   });
   refreshClockedIn();
+  applyPunchTranslations();
 }
 
 function refreshClockedIn(){
@@ -2160,7 +2167,7 @@ function refreshClockedIn(){
   const countEl=document.getElementById('ciCount');
   if(!list||!countEl)return;
   countEl.textContent=clockedIn.length;
-  if(!clockedIn.length){list.innerHTML='<div class="ci-empty">No one is clocked in right now.</div>';return;}
+  if(!clockedIn.length){list.innerHTML=`<div class="ci-empty">${tp('punch.noOneIn')}</div>`;return;}
 
   list.innerHTML=clockedIn.map(({emp,last})=>{
     const ini=emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
@@ -2278,6 +2285,7 @@ async function loadAdminPage(){
   renderEmployees();
   renderSitesAdmin();
   renderAdmins();
+  applyAllTranslations();
 }
 
 function adminTab(tab,btn){
@@ -2290,7 +2298,7 @@ function populateEmpSiteFilter(){
   const ctx=Ctx.get();
   const sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
   const sf=document.getElementById('empSiteFilter');
-  sf.innerHTML='<option value="">All Sites</option>'+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  sf.innerHTML=`<option value="">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
 }
 
 function renderEmployees(){
@@ -2340,8 +2348,8 @@ function renderEmployees(){
       <td>${emailStatus}</td>
       <td><div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editEmployee('${e.id}')">Edit</button>
-        <button class="btn-secondary" style="padding:5px 11px;font-size:11px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
-        <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">&#128231; Send Report</button>
+        <button class="btn-secondary" style="padding:5px 11px;font-size:11px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?t('admin.deactivate'):t('admin.activate')}</button>
+        <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">${t('admin.sendReport')}</button>
         <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
       </div></td>
     </tr>`).join('');
@@ -2750,8 +2758,8 @@ async function loadCompaniesPage(){
   const grid=document.getElementById('companyGrid');
   if(!C.companies.length){grid.innerHTML=`<div class="empty"><p>No companies yet. Create your first one!</p></div>`;return;}
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
-  const freqLabel={weekly:'Weekly',biweekly:'Bi-Weekly',monthly:'Monthly'};
-  const weekLabel={monday:'Mon–Sun',sunday:'Sun–Sat'};
+  const freqLabel={weekly:t('modal.weekly'),biweekly:t('modal.biweekly'),monthly:t('modal.monthly')};
+  const weekLabel={monday:`${t('common.days.mon')}–${t('common.days.sun')}`,sunday:`${t('common.days.sun')}–${t('common.days.sat')}`};
   grid.innerHTML=C.companies.map((co,i)=>{
     const total=C.employees.filter(e=>e.company_id===co.id).length;
     const active=C.employees.filter(e=>e.company_id===co.id&&e.active).length;
@@ -2774,21 +2782,22 @@ async function loadCompaniesPage(){
       </div>
       <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
-        <span>&#128101; ${total} total · ${active} active</span>
-        <span>&#128205; ${siteCnt} site${siteCnt!==1?'s':''}</span>
+        <span>&#128101; ${total} ${t('common.total')} · ${active} ${t('common.active')}</span>
+        <span>&#128205; ${siteCnt} ${t('common.sites')}</span>
       </div>
       <div class="meta" style="margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;color:var(--text2)">
-        <span>&#128197; ${freqLabel[co.payroll_frequency]||'—'} payroll</span>
-        <span>&#8634; Week: ${weekLabel[co.week_start]||'—'}</span>
-        ${co.track_overtime?'<span style="color:var(--amber)">⏰ Overtime on</span>':''}
+        <span>&#128197; ${freqLabel[co.payroll_frequency]||'—'}</span>
+        <span>&#8634; ${t('common.weekStarts')}: ${weekLabel[co.week_start]||'—'}</span>
+        ${co.track_overtime?`<span style="color:var(--amber)">${t('common.overtimeOn')}</span>`:''}
       </div>
       <div class="actions">
-        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="selectCtxFromCompany('${co.id}')">Switch To</button>
-        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editCompany('${co.id}')">Edit</button>
-        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('company','${co.id}','${co.name}')">Delete</button>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="selectCtxFromCompany('${co.id}')">${t('common.switchTo')}</button>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editCompany('${co.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('company','${co.id}','${co.name}')">${t('common.delete')}</button>
       </div>
     </div>`;
   }).join('');
+  applyAllTranslations();
 }
 
 function selectCtxFromCompany(coId){
@@ -2900,17 +2909,18 @@ async function loadReportsPage(){
   await refreshCache();
   const ctx=Ctx.get();
   const rco=document.getElementById('reportCompany');
-  rco.innerHTML='<option value="all">All Companies</option>'+C.companies.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
+  rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+C.companies.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
   onReportCompanyChange();
   updateDateRange();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
+  applyAllTranslations();
 }
 
 function onReportCompanyChange(){
   const coId=document.getElementById('reportCompany').value;
   const sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
   const rs=document.getElementById('reportSite');
-  rs.innerHTML='<option value="all">All Sites</option>'+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  rs.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   loadReportEmps();
   // Auto-load payroll settings for date range
   if(coId!=='all'){
@@ -3225,7 +3235,7 @@ async function loadActivityPage(){
   // Populate company filter on first load
   const acf=document.getElementById('actCoFilter');
   if(acf.options.length<=1){
-    acf.innerHTML='<option value="all">All Companies</option>'+C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    acf.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   }
   const opts={};
   if(coId!=='all')opts.coId=coId;
@@ -3245,11 +3255,12 @@ async function loadActivityPage(){
   const outs=all.filter(p=>p.type==='OUT').length;
   const manualCnt=all.filter(p=>p.is_manual).length;
 
+  applyAllTranslations();
   document.getElementById('activityStats').innerHTML=`
-    <div class="stat-card"><div class="lbl">Records Shown</div><div class="val blue">${all.length}</div></div>
-    <div class="stat-card"><div class="lbl">Today's Punches</div><div class="val green">${todayN}</div></div>
-    <div class="stat-card"><div class="lbl">Currently In</div><div class="val purple">${nowIn}</div></div>
-    <div class="stat-card"><div class="lbl">Manual Entries</div><div class="val amber">${manualCnt}</div></div>`;
+    <div class="stat-card"><div class="lbl">${t('activity.recordsShown')}</div><div class="val blue">${all.length}</div></div>
+    <div class="stat-card"><div class="lbl">${t('activity.todayPunches')}</div><div class="val green">${todayN}</div></div>
+    <div class="stat-card"><div class="lbl">${t('activity.currentlyIn')}</div><div class="val purple">${nowIn}</div></div>
+    <div class="stat-card"><div class="lbl">${t('activity.manualEntries')}</div><div class="val amber">${manualCnt}</div></div>`;
 
   const tbody=document.getElementById('activityBody');
   const show=[...all].sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
@@ -3267,8 +3278,8 @@ async function loadActivityPage(){
       <td style="font-family:'DM Mono',monospace;font-size:12px">${p.punch_time}</td>
       <td><div style="display:flex;gap:5px">
         ${isPaidCompany(p.company_id)?`
-        <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">&#9998; Edit</button>
-        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">Delete</button>`
+        <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">${t('common.delete')}</button>`
         :'<span style="font-size:11px;color:var(--text3)">— Paid plan only</span>'}
       </div></td>
     </tr>`;
@@ -3279,7 +3290,7 @@ function updateActSiteFilter(coId){
   const asf=document.getElementById('actSiteFilter');
   const prev=asf.value;
   const sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
-  asf.innerHTML='<option value="all">All Sites</option>'+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
+  asf.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
 }
 
 function onActCoChange(){
