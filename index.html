@@ -1,4 +1,594 @@
-<!DOCTYPE html>
+<!DOCTYP
+// ══ i18n (merged) ══
+
+// ══════════════════════════════════════════════════════════════
+// i18n — Translation System
+// ══════════════════════════════════════════════════════════════
+var TRANSLATIONS = {
+  en: {
+    // NAV
+    'nav.clockInOut': '⏱ Clock In/Out',
+    'nav.admin': '⚙ Admin',
+    'nav.reports': '📊 Reports',
+    'nav.companies': '🏢 Companies',
+    'nav.activity': '📋 Activity',
+    'nav.login': '🔒 Admin Login',
+    'nav.logout': '✕ Logout',
+
+    // PUNCH PAGE
+    'punch.selectName': 'Select Your Name',
+    'punch.chooseEmployee': '-- Choose employee --',
+    'punch.in': '✓ IN',
+    'punch.out': '✕ OUT',
+    'punch.currentlyIn': 'Currently Clocked In',
+    'punch.loading': 'Loading...',
+    'punch.noSite': 'No site selected',
+    'punch.alreadyIn': 'is already clocked IN.',
+    'punch.notIn': 'is not clocked in.',
+    'punch.pleaseSelect': 'Please select your name first.',
+    'punch.successIn': 'Clocked IN successfully!',
+    'punch.successOut': 'Clocked OUT successfully!',
+
+    // LOGIN
+    'login.title': 'Admin Login',
+    'login.subtitle': 'Sign in to access the admin dashboard.',
+    'login.email': 'Email',
+    'login.password': 'Password',
+    'login.forgot': 'Forgot password?',
+    'login.signIn': 'Sign In',
+    'login.noAccount': 'No account?',
+    'login.register': 'Register',
+    'login.invalid': 'Invalid credentials or account not verified.',
+    'login.suspended': 'Your account has been suspended. Contact support.',
+
+    // FORGOT PASSWORD
+    'forgot.title': 'Reset Password',
+    'forgot.subtitle': "Enter your email and we'll send you a 6-digit reset code.",
+    'forgot.email': 'Email',
+    'forgot.sendCode': 'Send Reset Code',
+    'forgot.backToLogin': '← Back to login',
+    'forgot.codeSent': 'We sent a 6-digit code to',
+    'forgot.codeLabel': 'Verification Code',
+    'forgot.verify': 'Verify Code',
+    'forgot.noCode': "Didn't receive it?",
+    'forgot.resend': 'Resend',
+    'forgot.newPass': 'New Password',
+    'forgot.confirmPass': 'Confirm Password',
+    'forgot.setPass': 'Set New Password',
+    'forgot.almostThere': 'Almost there! Set your new password for',
+    'forgot.success': '✓ Password updated successfully! Redirecting to login...',
+
+    // REGISTER
+    'register.title': 'Create Account',
+    'register.subtitle': 'Set up your PunchClock Pro admin account.',
+    'register.name': 'Full Name',
+    'register.email': 'Email',
+    'register.password': 'Password',
+    'register.accountType': 'Account Type',
+    'register.newCompany': '🏢 New Company',
+    'register.newCompanyDesc': "I'm starting fresh. Creates a Free plan account with a new company.",
+    'register.joinCompany': '👥 Join Existing Company',
+    'register.joinCompanyDesc': "My company already has an account. I'll request access from my administrator.",
+    'register.adminEmail': "Administrator's Registered Email",
+    'register.adminEmailHint': 'Ask your administrator for their registered email address to request access.',
+    'register.continue': 'Continue →',
+    'register.checkEmail': 'Check your email',
+    'register.codeSentTo': 'We sent a 6-digit verification code to',
+    'register.codeLabel': 'Verification Code',
+    'register.verify': 'Verify & Activate',
+    'register.noCode': "Didn't receive it?",
+    'register.resend': 'Resend code',
+    'register.requestSent': 'Access Request Sent!',
+    'register.requestDesc': 'Your account has been created and a request has been sent to the administrator. You\'ll be able to log in once they approve your access.',
+    'register.goToLogin': 'Go to Login',
+    'register.alreadyHave': 'Already registered?',
+    'register.signIn': 'Sign in',
+    'register.language': 'Preferred Language',
+
+    // ADMIN PAGE
+    'admin.title': 'Admin Panel',
+    'admin.subtitle': 'Manage employees and sites',
+    'admin.addEmployee': '+ Add Employee',
+    'admin.tabs.employees': 'Employees',
+    'admin.tabs.sites': 'Sites',
+    'admin.tabs.admins': 'Admins',
+    'admin.search': 'Search',
+    'admin.searchPlaceholder': 'Name, department...',
+    'admin.site': 'Site',
+    'admin.allSites': 'All Sites',
+    'admin.allDepts': 'All Depts',
+    'admin.addSite': '+ Add Site',
+    'admin.noEmployees': 'No employees found.',
+    'admin.noSites': 'No sites yet for this company. Click "+ Add Site" to create one.',
+    'admin.col.employee': 'Employee',
+    'admin.col.site': 'Site',
+    'admin.col.dept': 'Department',
+    'admin.col.status': 'Status',
+    'admin.col.pin': 'PIN',
+    'admin.col.email': 'Email Report',
+    'admin.col.actions': 'Actions',
+    'admin.active': 'Active',
+    'admin.inactive': 'Inactive',
+    'admin.edit': 'Edit',
+    'admin.delete': 'Delete',
+    'admin.deactivate': 'Deactivate',
+    'admin.activate': 'Activate',
+    'admin.sendReport': '📧 Send Report',
+    'admin.pendingRequests': '⏳ Pending Access Requests',
+    'admin.allAdmins': 'All Admin Accounts',
+    'admin.createAdmin': '+ Create Admin',
+    'admin.col.name': 'Name',
+    'admin.col.role': 'Role',
+    'admin.col.plan': 'Plan',
+    'admin.col.registered': 'Registered',
+    'admin.restrictedMsg': '👤 Admin management is restricted to Super Admins.',
+
+    // COMPANIES
+    'companies.title': 'Companies',
+    'companies.subtitle': 'Manage organizations and their payroll settings',
+    'companies.new': '+ New Company',
+    'companies.switchTo': 'Switch To',
+    'companies.noCompanies': 'No companies yet.',
+
+    // REPORTS
+    'reports.title': 'Reports',
+    'reports.generate': 'Generate Report',
+    'reports.employees': 'Employees',
+    'reports.startDate': 'Start Date',
+    'reports.endDate': 'End Date',
+    'reports.allEmployees': 'All Employees',
+
+    // ACTIVITY
+    'activity.title': 'Activity Log',
+
+    // MODALS — Employee
+    'modal.addEmployee': 'Add Employee',
+    'modal.editEmployee': 'Edit Employee',
+    'modal.name': 'Full Name',
+    'modal.empCode': 'Employee Code',
+    'modal.dept': 'Department',
+    'modal.site': 'Assign to Site',
+    'modal.noSite': 'No Site',
+    'modal.pin': 'PIN (4-6 digits)',
+    'modal.email': 'Email (for reports)',
+    'modal.sendEmailReports': 'Send automated email reports',
+    'modal.save': 'Save',
+    'modal.cancel': 'Cancel',
+    'modal.saving': 'Saving...',
+
+    // MODALS — Site
+    'modal.addSite': 'Add Site',
+    'modal.editSite': 'Edit Site',
+    'modal.siteName': 'Site Name',
+    'modal.siteDesc': 'Description (optional)',
+    'modal.siteLanguage': 'Clock In/Out Page Language',
+
+    // MODALS — Company
+    'modal.newCompany': 'New Company',
+    'modal.editCompany': 'Edit Company',
+    'modal.companyName': 'Company Name',
+    'modal.industry': 'Industry',
+    'modal.description': 'Description',
+    'modal.payrollSettings': 'Payroll Settings',
+    'modal.weekStarts': 'Week Starts On',
+    'modal.payrollFreq': 'Payroll Frequency',
+    'modal.companyLogo': 'Company Logo',
+    'modal.overtimeSettings': 'Overtime Settings',
+    'modal.trackOvertime': '⏰ Track Overtime',
+    'modal.trackOvertimeDesc': 'Flag daily >8h and weekly >40h in reports',
+    'modal.monday': 'Monday',
+    'modal.sunday': 'Sunday',
+    'modal.weekly': 'Weekly',
+    'modal.biweekly': 'Bi-Weekly',
+    'modal.monthly': 'Monthly',
+
+    // COMMON
+    'common.loading': 'Loading...',
+    'common.error': 'Error',
+    'common.success': 'Success',
+    'common.selectCompany': 'Select your company',
+    'common.selectSite': 'Select Site',
+    'common.chooseSite': 'Choose your work location',
+    'common.manageCompanies': '⚙ Manage companies',
+    'common.logout': '✕ Logout',
+    'common.pinSet': '🔑 Set',
+    'common.pinNone': '⚠ None',
+    'common.upgrade': 'Upgrade Plan',
+    'common.planLimit': 'Plan Limit Reached',
+    'common.on': 'on',
+    'common.off': 'off',
+    'common.yes': 'Yes',
+    'common.no': 'No',
+    'common.days.mon': 'Mon', 'common.days.tue': 'Tue', 'common.days.wed': 'Wed',
+    'common.days.thu': 'Thu', 'common.days.fri': 'Fri', 'common.days.sat': 'Sat', 'common.days.sun': 'Sun',
+    // Extra keys added post-launch
+    'punch.noOneIn': 'No one is clocked in right now.',
+    'punch.currentlyIn2': 'CURRENTLY CLOCKED IN',
+    'activity.subtitle': 'Punch records with manual edit capability',
+    'activity.addPunch': '+ Add Punch',
+    'activity.refresh': '↻ Refresh',
+    'activity.recordsShown': t('activity.recordsShown'),
+    'activity.todayPunches': "TODAY'S PUNCHES",
+    'activity.currentlyIn': t('activity.currentlyIn'),
+    'activity.manualEntries': t('activity.manualEntries'),
+    'activity.employee': 'EMPLOYEE',
+    'activity.companySite': 'COMPANY / SITE',
+    'activity.type': 'TYPE',
+    'activity.date': 'DATE',
+    'activity.time': 'TIME',
+    'activity.actions': 'ACTIONS',
+    'reports.subtitle': 'Generate time & attendance reports',
+    'reports.selectAll': 'Select All',
+    'reports.deselectAll': 'Deselect All',
+    'reports.selectEmployees': 'SELECT EMPLOYEES',
+    'reports.period': 'PERIOD',
+    'reports.startDate': 'START DATE',
+    'reports.endDate': 'END DATE',
+    'reports.company': 'COMPANY',
+    'reports.site': 'SITE',
+    'reports.thisWeek': 'This Week',
+    'reports.lastWeek': 'Last Week',
+    'reports.biweekly': 'Bi-Weekly',
+    'reports.monthly': 'Monthly',
+    'common.filter': 'Filter',
+    'common.company': 'Company',
+    'common.allCompanies': 'All Companies',
+    'common.search': 'SEARCH',
+    'common.biweeklyPayroll': 'Bi-Weekly payroll',
+    'common.weekStarts': 'Week',
+    'common.overtimeOn': '⏰ Overtime on',
+    'common.switchTo': 'Switch To',
+    'common.edit': 'Edit',
+    'common.delete': 'Delete',
+    'common.activate': 'Activate',
+    'common.deactivate': 'Deactivate',
+    'common.sendReport': '📧 Send Report',
+    'common.total': 'total',
+    'common.active': 'active',
+    'common.sites': 'sites',
+  },
+  fr: {
+    // NAV
+    'nav.clockInOut': '⏱ Entrée/Sortie',
+    'nav.admin': '⚙ Admin',
+    'nav.reports': '📊 Rapports',
+    'nav.companies': '🏢 Compagnies',
+    'nav.activity': '📋 Activité',
+    'nav.login': '🔒 Connexion Admin',
+    'nav.logout': '✕ Déconnexion',
+
+    // PUNCH PAGE
+    'punch.selectName': 'Sélectionnez votre nom',
+    'punch.chooseEmployee': '-- Choisir un employé --',
+    'punch.in': '✓ ENTRÉE',
+    'punch.out': '✕ SORTIE',
+    'punch.currentlyIn': 'Actuellement pointés',
+    'punch.loading': 'Chargement...',
+    'punch.noSite': 'Aucun site sélectionné',
+    'punch.alreadyIn': 'est déjà pointé EN.',
+    'punch.notIn': "n'est pas pointé.",
+    'punch.pleaseSelect': 'Veuillez sélectionner votre nom.',
+    'punch.successIn': 'Entrée enregistrée!',
+    'punch.successOut': 'Sortie enregistrée!',
+
+    // LOGIN
+    'login.title': 'Connexion Admin',
+    'login.subtitle': "Connectez-vous pour accéder au tableau de bord.",
+    'login.email': 'Courriel',
+    'login.password': 'Mot de passe',
+    'login.forgot': 'Mot de passe oublié?',
+    'login.signIn': 'Se connecter',
+    'login.noAccount': 'Pas de compte?',
+    'login.register': "S'inscrire",
+    'login.invalid': 'Identifiants invalides ou compte non vérifié.',
+    'login.suspended': 'Votre compte a été suspendu. Contactez le support.',
+
+    // FORGOT PASSWORD
+    'forgot.title': 'Réinitialiser le mot de passe',
+    'forgot.subtitle': "Entrez votre courriel et nous vous enverrons un code à 6 chiffres.",
+    'forgot.email': 'Courriel',
+    'forgot.sendCode': 'Envoyer le code',
+    'forgot.backToLogin': '← Retour à la connexion',
+    'forgot.codeSent': 'Nous avons envoyé un code à 6 chiffres à',
+    'forgot.codeLabel': 'Code de vérification',
+    'forgot.verify': 'Vérifier le code',
+    'forgot.noCode': 'Pas reçu?',
+    'forgot.resend': 'Renvoyer',
+    'forgot.newPass': 'Nouveau mot de passe',
+    'forgot.confirmPass': 'Confirmer le mot de passe',
+    'forgot.setPass': 'Définir le nouveau mot de passe',
+    'forgot.almostThere': 'Presque! Définissez votre nouveau mot de passe pour',
+    'forgot.success': '✓ Mot de passe mis à jour! Redirection...',
+
+    // REGISTER
+    'register.title': 'Créer un compte',
+    'register.subtitle': 'Configurez votre compte administrateur PunchClock Pro.',
+    'register.name': 'Nom complet',
+    'register.email': 'Courriel',
+    'register.password': 'Mot de passe',
+    'register.accountType': 'Type de compte',
+    'register.newCompany': '🏢 Nouvelle compagnie',
+    'register.newCompanyDesc': "Je pars de zéro. Crée un compte gratuit avec une nouvelle compagnie.",
+    'register.joinCompany': '👥 Rejoindre une compagnie existante',
+    'register.joinCompanyDesc': "Ma compagnie a déjà un compte. Je demanderai l'accès à mon administrateur.",
+    'register.adminEmail': "Courriel enregistré de l'administrateur",
+    'register.adminEmailHint': "Demandez à votre administrateur son courriel enregistré pour demander l'accès.",
+    'register.continue': 'Continuer →',
+    'register.checkEmail': 'Vérifiez votre courriel',
+    'register.codeSentTo': 'Nous avons envoyé un code de vérification à 6 chiffres à',
+    'register.codeLabel': 'Code de vérification',
+    'register.verify': 'Vérifier et activer',
+    'register.noCode': 'Pas reçu?',
+    'register.resend': 'Renvoyer le code',
+    'register.requestSent': "Demande d'accès envoyée!",
+    'register.requestDesc': "Votre compte a été créé et une demande a été envoyée à l'administrateur. Vous pourrez vous connecter une fois approuvé.",
+    'register.goToLogin': 'Aller à la connexion',
+    'register.alreadyHave': 'Déjà inscrit?',
+    'register.signIn': 'Se connecter',
+    'register.language': 'Langue préférée',
+
+    // ADMIN PAGE
+    'admin.title': 'Panneau Admin',
+    'admin.subtitle': 'Gérer les employés et les sites',
+    'admin.addEmployee': '+ Ajouter un employé',
+    'admin.tabs.employees': 'Employés',
+    'admin.tabs.sites': 'Sites',
+    'admin.tabs.admins': 'Admins',
+    'admin.search': 'Recherche',
+    'admin.searchPlaceholder': 'Nom, département...',
+    'admin.site': 'Site',
+    'admin.allSites': 'Tous les sites',
+    'admin.allDepts': 'Tous les dép.',
+    'admin.addSite': '+ Ajouter un site',
+    'admin.noEmployees': 'Aucun employé trouvé.',
+    'admin.noSites': 'Aucun site pour cette compagnie. Cliquez "+ Ajouter un site".',
+    'admin.col.employee': 'Employé',
+    'admin.col.site': 'Site',
+    'admin.col.dept': 'Département',
+    'admin.col.status': 'Statut',
+    'admin.col.pin': 'NIP',
+    'admin.col.email': 'Rapport courriel',
+    'admin.col.actions': 'Actions',
+    'admin.active': 'Actif',
+    'admin.inactive': 'Inactif',
+    'admin.edit': 'Modifier',
+    'admin.delete': 'Supprimer',
+    'admin.deactivate': 'Désactiver',
+    'admin.activate': 'Activer',
+    'admin.sendReport': '📧 Envoyer rapport',
+    'admin.pendingRequests': "⏳ Demandes d'accès en attente",
+    'admin.allAdmins': 'Tous les comptes admin',
+    'admin.createAdmin': '+ Créer un admin',
+    'admin.col.name': 'Nom',
+    'admin.col.role': 'Rôle',
+    'admin.col.plan': 'Plan',
+    'admin.col.registered': 'Inscrit le',
+    'admin.restrictedMsg': '👤 La gestion des admins est réservée aux super admins.',
+
+    // COMPANIES
+    'companies.title': 'Compagnies',
+    'companies.subtitle': 'Gérer les organisations et leurs paramètres de paie',
+    'companies.new': '+ Nouvelle compagnie',
+    'companies.switchTo': 'Sélectionner',
+    'companies.noCompanies': 'Aucune compagnie.',
+
+    // REPORTS
+    'reports.title': 'Rapports',
+    'reports.generate': 'Générer le rapport',
+    'reports.employees': 'Employés',
+    'reports.startDate': 'Date de début',
+    'reports.endDate': 'Date de fin',
+    'reports.allEmployees': 'Tous les employés',
+
+    // ACTIVITY
+    'activity.title': "Journal d'activité",
+
+    // MODALS — Employee
+    'modal.addEmployee': 'Ajouter un employé',
+    'modal.editEmployee': "Modifier l'employé",
+    'modal.name': 'Nom complet',
+    'modal.empCode': 'Code employé',
+    'modal.dept': 'Département',
+    'modal.site': 'Assigner au site',
+    'modal.noSite': 'Aucun site',
+    'modal.pin': 'NIP (4-6 chiffres)',
+    'modal.email': 'Courriel (pour rapports)',
+    'modal.sendEmailReports': 'Envoyer des rapports par courriel automatiquement',
+    'modal.save': 'Enregistrer',
+    'modal.cancel': 'Annuler',
+    'modal.saving': 'Enregistrement...',
+
+    // MODALS — Site
+    'modal.addSite': 'Ajouter un site',
+    'modal.editSite': 'Modifier le site',
+    'modal.siteName': 'Nom du site',
+    'modal.siteDesc': 'Description (optionnel)',
+    'modal.siteLanguage': 'Langue de la page de pointage',
+
+    // MODALS — Company
+    'modal.newCompany': 'Nouvelle compagnie',
+    'modal.editCompany': 'Modifier la compagnie',
+    'modal.companyName': 'Nom de la compagnie',
+    'modal.industry': 'Industrie',
+    'modal.description': 'Description',
+    'modal.payrollSettings': 'Paramètres de paie',
+    'modal.weekStarts': 'La semaine commence le',
+    'modal.payrollFreq': 'Fréquence de paie',
+    'modal.companyLogo': 'Logo de la compagnie',
+    'modal.overtimeSettings': 'Paramètres de temps supplémentaire',
+    'modal.trackOvertime': '⏰ Suivre les heures supplémentaires',
+    'modal.trackOvertimeDesc': 'Signaler >8h/jour et >40h/semaine dans les rapports',
+    'modal.monday': 'Lundi',
+    'modal.sunday': 'Dimanche',
+    'modal.weekly': 'Hebdomadaire',
+    'modal.biweekly': 'Aux deux semaines',
+    'modal.monthly': 'Mensuel',
+
+    // COMMON
+    'common.loading': 'Chargement...',
+    'common.error': 'Erreur',
+    'common.success': 'Succès',
+    'common.selectCompany': 'Sélectionnez votre compagnie',
+    'common.selectSite': 'Sélectionner un site',
+    'common.chooseSite': 'Choisissez votre lieu de travail',
+    'common.manageCompanies': '⚙ Gérer les compagnies',
+    'common.logout': '✕ Déconnexion',
+    'common.upgrade': 'Améliorer le plan',
+    'common.planLimit': 'Limite du plan atteinte',
+    'common.pinSet': '🔑 Défini',
+    'common.pinNone': '⚠ Aucun',
+    'common.on': 'activé',
+    'common.off': 'désactivé',
+    'common.yes': 'Oui',
+    'common.no': 'Non',
+    'common.days.mon': 'Lun', 'common.days.tue': 'Mar', 'common.days.wed': 'Mer',
+    'common.days.thu': 'Jeu', 'common.days.fri': 'Ven', 'common.days.sat': 'Sam', 'common.days.sun': 'Dim',
+    // Extra keys added post-launch
+    'punch.noOneIn': 'Personne de pointé en ce moment.',
+    'punch.currentlyIn2': 'ACTUELLEMENT POINTÉS',
+    'activity.subtitle': 'Registre des pointages avec modification manuelle',
+    'activity.addPunch': '+ Ajouter pointage',
+    'activity.refresh': '↻ Actualiser',
+    'activity.recordsShown': 'ENTRÉES AFFICHÉES',
+    'activity.todayPunches': "POINTAGES AUJOURD'HUI",
+    'activity.currentlyIn': 'ACTUELLEMENT POINTÉS',
+    'activity.manualEntries': 'ENTRÉES MANUELLES',
+    'activity.employee': 'EMPLOYÉ',
+    'activity.companySite': 'COMPAGNIE / SITE',
+    'activity.type': 'TYPE',
+    'activity.date': 'DATE',
+    'activity.time': 'HEURE',
+    'activity.actions': 'ACTIONS',
+    'reports.subtitle': 'Générer des rapports de présence',
+    'reports.selectAll': 'Tout sélectionner',
+    'reports.deselectAll': 'Tout désélectionner',
+    'reports.selectEmployees': 'SÉLECTIONNER LES EMPLOYÉS',
+    'reports.period': 'PÉRIODE',
+    'reports.startDate': 'DATE DE DÉBUT',
+    'reports.endDate': 'DATE DE FIN',
+    'reports.company': 'COMPAGNIE',
+    'reports.site': 'SITE',
+    'reports.thisWeek': 'Cette semaine',
+    'reports.lastWeek': 'Semaine dernière',
+    'reports.biweekly': 'Aux deux semaines',
+    'reports.monthly': 'Mensuel',
+    'common.filter': 'Filtrer',
+    'common.company': 'Compagnie',
+    'common.allCompanies': 'Toutes les compagnies',
+    'common.search': 'RECHERCHE',
+    'common.biweeklyPayroll': 'Paie aux deux semaines',
+    'common.weekStarts': 'Semaine',
+    'common.overtimeOn': '⏰ Heures supp. activées',
+    'common.switchTo': 'Sélectionner',
+    'common.edit': 'Modifier',
+    'common.delete': 'Supprimer',
+    'common.activate': 'Activer',
+    'common.deactivate': 'Désactiver',
+    'common.sendReport': '📧 Envoyer rapport',
+    'common.total': 'total',
+    'common.active': 'actif',
+    'common.sites': 'sites',
+  }
+};
+
+// ── Language state ──────────────────────────────────────────
+// Priority: site.lang > admin.lang > browser > 'en'
+var _appLang = 'en';
+var _punchLang = 'en'; // separate lang for punch page (site-specific)
+
+function getStoredAdminLang() {
+  try { return localStorage.getItem('pc_admin_lang') || null; } catch(e){ return null; }
+}
+function setStoredAdminLang(l) {
+  try { localStorage.setItem('pc_admin_lang', l); } catch(e){}
+}
+function getBrowserLang() {
+  const bl = (navigator.language||navigator.userLanguage||'en').toLowerCase();
+  return bl.startsWith('fr') ? 'fr' : 'en';
+}
+function initLang() {
+  const stored = getStoredAdminLang();
+  _appLang = stored || getBrowserLang();
+  _punchLang = _appLang;
+  document.documentElement.lang = _appLang;
+}
+
+function setLang(lang, scope='app') {
+  if(!TRANSLATIONS[lang]) return;
+  if(scope === 'punch') {
+    _punchLang = lang;
+    applyPunchTranslations();
+  } else {
+    _appLang = lang;
+    _punchLang = lang;
+    setStoredAdminLang(lang);
+    document.documentElement.lang = lang;
+    applyAllTranslations();
+    // Update all lang switcher buttons
+    document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+  }
+}
+
+function t(key, lang) {
+  if(!TRANSLATIONS) return key;
+  const l = lang || _appLang || 'en';
+  const dict = TRANSLATIONS[l] || TRANSLATIONS['en'] || {};
+  return dict[key] || (TRANSLATIONS['en'] && TRANSLATIONS['en'][key]) || key;
+}
+function tp(key) { return t(key, _punchLang); } // punch-page translation
+
+function applyAllTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.placeholder = t(key);
+    } else {
+      el.textContent = t(key);
+    }
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18nHtml);
+  });
+}
+
+function applyPunchTranslations() {
+  // Update punch page elements dynamically
+  const empSel = document.getElementById('empSelect');
+  if(empSel && empSel.options[0]) empSel.options[0].text = tp('punch.chooseEmployee');
+  const punchCoName = document.getElementById('punchCoName');
+  if(punchCoName && punchCoName.textContent === t('punch.selectName','en') || 
+     punchCoName && punchCoName.textContent === t('punch.selectName','fr')) {
+    punchCoName.textContent = tp('punch.selectName');
+  }
+  const ciHeader = document.querySelector('.ci-header h3');
+  if(ciHeader) ciHeader.innerHTML = '<span class="live-dot"></span> ' + tp('punch.currentlyIn');
+  const btnIn = document.querySelector('.btn-in');
+  const btnOut = document.querySelector('.btn-out');
+  if(btnIn) btnIn.textContent = tp('punch.in');
+  if(btnOut) btnOut.textContent = tp('punch.out');
+  // Update punch page lang switcher buttons
+  document.querySelectorAll('.punch-lang-btn[data-lang]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === _punchLang);
+  });
+}
+
+function makeLangSwitcher(scope='app', extraClass='') {
+  return `<div class="lang-switcher ${extraClass}">
+    <button class="lang-btn ${_appLang==='en'?'active':''}" data-lang="en" onclick="setLang('en','${scope}')"><span class="lang-flag">🇨🇦</span>EN</button>
+    <button class="lang-btn ${_appLang==='fr'?'active':''}" data-lang="fr" onclick="setLang('fr','${scope}')"><span class="lang-flag">🇫🇷</span>FR</button>
+  </div>`;
+}
+function makePunchLangSwitcher() {
+  return `<div class="lang-switcher" style="position:absolute;top:12px;right:16px">
+    <button class="lang-btn punch-lang-btn ${_punchLang==='en'?'active':''}" data-lang="en" onclick="setLang('en','punch')"><span class="lang-flag">🇨🇦</span>EN</button>
+    <button class="lang-btn punch-lang-btn ${_punchLang==='fr'?'active':''}" data-lang="fr" onclick="setLang('fr','punch')"><span class="lang-flag">🇫🇷</span>FR</button>
+  </div>`;
+}
+
+// ══ end i18n ══
+E html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -412,501 +1002,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .lang-flag{font-size:14px;margin-right:3px;}
 </style>
 
-<script>
-// ══════════════════════════════════════════════════════════════
-// i18n — Translation System
-// ══════════════════════════════════════════════════════════════
-const TRANSLATIONS = {
-  en: {
-    // NAV
-    'nav.clockInOut': '⏱ Clock In/Out',
-    'nav.admin': '⚙ Admin',
-    'nav.reports': '📊 Reports',
-    'nav.companies': '🏢 Companies',
-    'nav.activity': '📋 Activity',
-    'nav.login': '🔒 Admin Login',
-    'nav.logout': '✕ Logout',
 
-    // PUNCH PAGE
-    'punch.selectName': 'Select Your Name',
-    'punch.chooseEmployee': '-- Choose employee --',
-    'punch.in': '✓ IN',
-    'punch.out': '✕ OUT',
-    'punch.currentlyIn': 'Currently Clocked In',
-    'punch.loading': 'Loading...',
-    'punch.noSite': 'No site selected',
-    'punch.alreadyIn': 'is already clocked IN.',
-    'punch.notIn': 'is not clocked in.',
-    'punch.pleaseSelect': 'Please select your name first.',
-    'punch.successIn': 'Clocked IN successfully!',
-    'punch.successOut': 'Clocked OUT successfully!',
-
-    // LOGIN
-    'login.title': 'Admin Login',
-    'login.subtitle': 'Sign in to access the admin dashboard.',
-    'login.email': 'Email',
-    'login.password': 'Password',
-    'login.forgot': 'Forgot password?',
-    'login.signIn': 'Sign In',
-    'login.noAccount': 'No account?',
-    'login.register': 'Register',
-    'login.invalid': 'Invalid credentials or account not verified.',
-    'login.suspended': 'Your account has been suspended. Contact support.',
-
-    // FORGOT PASSWORD
-    'forgot.title': 'Reset Password',
-    'forgot.subtitle': "Enter your email and we'll send you a 6-digit reset code.",
-    'forgot.email': 'Email',
-    'forgot.sendCode': 'Send Reset Code',
-    'forgot.backToLogin': '← Back to login',
-    'forgot.codeSent': 'We sent a 6-digit code to',
-    'forgot.codeLabel': 'Verification Code',
-    'forgot.verify': 'Verify Code',
-    'forgot.noCode': "Didn't receive it?",
-    'forgot.resend': 'Resend',
-    'forgot.newPass': 'New Password',
-    'forgot.confirmPass': 'Confirm Password',
-    'forgot.setPass': 'Set New Password',
-    'forgot.almostThere': 'Almost there! Set your new password for',
-    'forgot.success': '✓ Password updated successfully! Redirecting to login...',
-
-    // REGISTER
-    'register.title': 'Create Account',
-    'register.subtitle': 'Set up your PunchClock Pro admin account.',
-    'register.name': 'Full Name',
-    'register.email': 'Email',
-    'register.password': 'Password',
-    'register.accountType': 'Account Type',
-    'register.newCompany': '🏢 New Company',
-    'register.newCompanyDesc': "I'm starting fresh. Creates a Free plan account with a new company.",
-    'register.joinCompany': '👥 Join Existing Company',
-    'register.joinCompanyDesc': "My company already has an account. I'll request access from my administrator.",
-    'register.adminEmail': "Administrator's Registered Email",
-    'register.adminEmailHint': 'Ask your administrator for their registered email address to request access.',
-    'register.continue': 'Continue →',
-    'register.checkEmail': 'Check your email',
-    'register.codeSentTo': 'We sent a 6-digit verification code to',
-    'register.codeLabel': 'Verification Code',
-    'register.verify': 'Verify & Activate',
-    'register.noCode': "Didn't receive it?",
-    'register.resend': 'Resend code',
-    'register.requestSent': 'Access Request Sent!',
-    'register.requestDesc': 'Your account has been created and a request has been sent to the administrator. You\'ll be able to log in once they approve your access.',
-    'register.goToLogin': 'Go to Login',
-    'register.alreadyHave': 'Already registered?',
-    'register.signIn': 'Sign in',
-    'register.language': 'Preferred Language',
-
-    // ADMIN PAGE
-    'admin.title': 'Admin Panel',
-    'admin.subtitle': 'Manage employees and sites',
-    'admin.addEmployee': '+ Add Employee',
-    'admin.tabs.employees': 'Employees',
-    'admin.tabs.sites': 'Sites',
-    'admin.tabs.admins': 'Admins',
-    'admin.search': 'Search',
-    'admin.searchPlaceholder': 'Name, department...',
-    'admin.site': 'Site',
-    'admin.allSites': 'All Sites',
-    'admin.allDepts': 'All Depts',
-    'admin.addSite': '+ Add Site',
-    'admin.noEmployees': 'No employees found.',
-    'admin.noSites': 'No sites yet for this company. Click "+ Add Site" to create one.',
-    'admin.col.employee': 'Employee',
-    'admin.col.site': 'Site',
-    'admin.col.dept': 'Department',
-    'admin.col.status': 'Status',
-    'admin.col.pin': 'PIN',
-    'admin.col.email': 'Email Report',
-    'admin.col.actions': 'Actions',
-    'admin.active': 'Active',
-    'admin.inactive': 'Inactive',
-    'admin.edit': 'Edit',
-    'admin.delete': 'Delete',
-    'admin.deactivate': 'Deactivate',
-    'admin.activate': 'Activate',
-    'admin.sendReport': '📧 Send Report',
-    'admin.pendingRequests': '⏳ Pending Access Requests',
-    'admin.allAdmins': 'All Admin Accounts',
-    'admin.createAdmin': '+ Create Admin',
-    'admin.col.name': 'Name',
-    'admin.col.role': 'Role',
-    'admin.col.plan': 'Plan',
-    'admin.col.registered': 'Registered',
-    'admin.restrictedMsg': '👤 Admin management is restricted to Super Admins.',
-
-    // COMPANIES
-    'companies.title': 'Companies',
-    'companies.subtitle': 'Manage organizations and their payroll settings',
-    'companies.new': '+ New Company',
-    'companies.switchTo': 'Switch To',
-    'companies.noCompanies': 'No companies yet.',
-
-    // REPORTS
-    'reports.title': 'Reports',
-    'reports.generate': 'Generate Report',
-    'reports.employees': 'Employees',
-    'reports.startDate': 'Start Date',
-    'reports.endDate': 'End Date',
-    'reports.allEmployees': 'All Employees',
-
-    // ACTIVITY
-    'activity.title': 'Activity Log',
-
-    // MODALS — Employee
-    'modal.addEmployee': 'Add Employee',
-    'modal.editEmployee': 'Edit Employee',
-    'modal.name': 'Full Name',
-    'modal.empCode': 'Employee Code',
-    'modal.dept': 'Department',
-    'modal.site': 'Assign to Site',
-    'modal.noSite': 'No Site',
-    'modal.pin': 'PIN (4-6 digits)',
-    'modal.email': 'Email (for reports)',
-    'modal.sendEmailReports': 'Send automated email reports',
-    'modal.save': 'Save',
-    'modal.cancel': 'Cancel',
-    'modal.saving': 'Saving...',
-
-    // MODALS — Site
-    'modal.addSite': 'Add Site',
-    'modal.editSite': 'Edit Site',
-    'modal.siteName': 'Site Name',
-    'modal.siteDesc': 'Description (optional)',
-    'modal.siteLanguage': 'Clock In/Out Page Language',
-
-    // MODALS — Company
-    'modal.newCompany': 'New Company',
-    'modal.editCompany': 'Edit Company',
-    'modal.companyName': 'Company Name',
-    'modal.industry': 'Industry',
-    'modal.description': 'Description',
-    'modal.payrollSettings': 'Payroll Settings',
-    'modal.weekStarts': 'Week Starts On',
-    'modal.payrollFreq': 'Payroll Frequency',
-    'modal.companyLogo': 'Company Logo',
-    'modal.overtimeSettings': 'Overtime Settings',
-    'modal.trackOvertime': '⏰ Track Overtime',
-    'modal.trackOvertimeDesc': 'Flag daily >8h and weekly >40h in reports',
-    'modal.monday': 'Monday',
-    'modal.sunday': 'Sunday',
-    'modal.weekly': 'Weekly',
-    'modal.biweekly': 'Bi-Weekly',
-    'modal.monthly': 'Monthly',
-
-    // COMMON
-    'common.loading': 'Loading...',
-    'common.error': 'Error',
-    'common.success': 'Success',
-    'common.selectCompany': 'Select your company',
-    'common.selectSite': 'Select Site',
-    'common.chooseSite': 'Choose your work location',
-    'common.manageCompanies': '⚙ Manage companies',
-    'common.logout': '✕ Logout',
-    'common.pinSet': '🔑 Set',
-    'common.pinNone': '⚠ None',
-    'common.upgrade': 'Upgrade Plan',
-    'common.planLimit': 'Plan Limit Reached',
-    'common.on': 'on',
-    'common.off': 'off',
-    'common.yes': 'Yes',
-    'common.no': 'No',
-    'common.days.mon': 'Mon', 'common.days.tue': 'Tue', 'common.days.wed': 'Wed',
-    'common.days.thu': 'Thu', 'common.days.fri': 'Fri', 'common.days.sat': 'Sat', 'common.days.sun': 'Sun',
-  },
-  fr: {
-    // NAV
-    'nav.clockInOut': '⏱ Entrée/Sortie',
-    'nav.admin': '⚙ Admin',
-    'nav.reports': '📊 Rapports',
-    'nav.companies': '🏢 Compagnies',
-    'nav.activity': '📋 Activité',
-    'nav.login': '🔒 Connexion Admin',
-    'nav.logout': '✕ Déconnexion',
-
-    // PUNCH PAGE
-    'punch.selectName': 'Sélectionnez votre nom',
-    'punch.chooseEmployee': '-- Choisir un employé --',
-    'punch.in': '✓ ENTRÉE',
-    'punch.out': '✕ SORTIE',
-    'punch.currentlyIn': 'Actuellement pointés',
-    'punch.loading': 'Chargement...',
-    'punch.noSite': 'Aucun site sélectionné',
-    'punch.alreadyIn': 'est déjà pointé EN.',
-    'punch.notIn': "n'est pas pointé.",
-    'punch.pleaseSelect': 'Veuillez sélectionner votre nom.',
-    'punch.successIn': 'Entrée enregistrée!',
-    'punch.successOut': 'Sortie enregistrée!',
-
-    // LOGIN
-    'login.title': 'Connexion Admin',
-    'login.subtitle': "Connectez-vous pour accéder au tableau de bord.",
-    'login.email': 'Courriel',
-    'login.password': 'Mot de passe',
-    'login.forgot': 'Mot de passe oublié?',
-    'login.signIn': 'Se connecter',
-    'login.noAccount': 'Pas de compte?',
-    'login.register': "S'inscrire",
-    'login.invalid': 'Identifiants invalides ou compte non vérifié.',
-    'login.suspended': 'Votre compte a été suspendu. Contactez le support.',
-
-    // FORGOT PASSWORD
-    'forgot.title': 'Réinitialiser le mot de passe',
-    'forgot.subtitle': "Entrez votre courriel et nous vous enverrons un code à 6 chiffres.",
-    'forgot.email': 'Courriel',
-    'forgot.sendCode': 'Envoyer le code',
-    'forgot.backToLogin': '← Retour à la connexion',
-    'forgot.codeSent': 'Nous avons envoyé un code à 6 chiffres à',
-    'forgot.codeLabel': 'Code de vérification',
-    'forgot.verify': 'Vérifier le code',
-    'forgot.noCode': 'Pas reçu?',
-    'forgot.resend': 'Renvoyer',
-    'forgot.newPass': 'Nouveau mot de passe',
-    'forgot.confirmPass': 'Confirmer le mot de passe',
-    'forgot.setPass': 'Définir le nouveau mot de passe',
-    'forgot.almostThere': 'Presque! Définissez votre nouveau mot de passe pour',
-    'forgot.success': '✓ Mot de passe mis à jour! Redirection...',
-
-    // REGISTER
-    'register.title': 'Créer un compte',
-    'register.subtitle': 'Configurez votre compte administrateur PunchClock Pro.',
-    'register.name': 'Nom complet',
-    'register.email': 'Courriel',
-    'register.password': 'Mot de passe',
-    'register.accountType': 'Type de compte',
-    'register.newCompany': '🏢 Nouvelle compagnie',
-    'register.newCompanyDesc': "Je pars de zéro. Crée un compte gratuit avec une nouvelle compagnie.",
-    'register.joinCompany': '👥 Rejoindre une compagnie existante',
-    'register.joinCompanyDesc': "Ma compagnie a déjà un compte. Je demanderai l'accès à mon administrateur.",
-    'register.adminEmail': "Courriel enregistré de l'administrateur",
-    'register.adminEmailHint': "Demandez à votre administrateur son courriel enregistré pour demander l'accès.",
-    'register.continue': 'Continuer →',
-    'register.checkEmail': 'Vérifiez votre courriel',
-    'register.codeSentTo': 'Nous avons envoyé un code de vérification à 6 chiffres à',
-    'register.codeLabel': 'Code de vérification',
-    'register.verify': 'Vérifier et activer',
-    'register.noCode': 'Pas reçu?',
-    'register.resend': 'Renvoyer le code',
-    'register.requestSent': "Demande d'accès envoyée!",
-    'register.requestDesc': "Votre compte a été créé et une demande a été envoyée à l'administrateur. Vous pourrez vous connecter une fois approuvé.",
-    'register.goToLogin': 'Aller à la connexion',
-    'register.alreadyHave': 'Déjà inscrit?',
-    'register.signIn': 'Se connecter',
-    'register.language': 'Langue préférée',
-
-    // ADMIN PAGE
-    'admin.title': 'Panneau Admin',
-    'admin.subtitle': 'Gérer les employés et les sites',
-    'admin.addEmployee': '+ Ajouter un employé',
-    'admin.tabs.employees': 'Employés',
-    'admin.tabs.sites': 'Sites',
-    'admin.tabs.admins': 'Admins',
-    'admin.search': 'Recherche',
-    'admin.searchPlaceholder': 'Nom, département...',
-    'admin.site': 'Site',
-    'admin.allSites': 'Tous les sites',
-    'admin.allDepts': 'Tous les dép.',
-    'admin.addSite': '+ Ajouter un site',
-    'admin.noEmployees': 'Aucun employé trouvé.',
-    'admin.noSites': 'Aucun site pour cette compagnie. Cliquez "+ Ajouter un site".',
-    'admin.col.employee': 'Employé',
-    'admin.col.site': 'Site',
-    'admin.col.dept': 'Département',
-    'admin.col.status': 'Statut',
-    'admin.col.pin': 'NIP',
-    'admin.col.email': 'Rapport courriel',
-    'admin.col.actions': 'Actions',
-    'admin.active': 'Actif',
-    'admin.inactive': 'Inactif',
-    'admin.edit': 'Modifier',
-    'admin.delete': 'Supprimer',
-    'admin.deactivate': 'Désactiver',
-    'admin.activate': 'Activer',
-    'admin.sendReport': '📧 Envoyer rapport',
-    'admin.pendingRequests': "⏳ Demandes d'accès en attente",
-    'admin.allAdmins': 'Tous les comptes admin',
-    'admin.createAdmin': '+ Créer un admin',
-    'admin.col.name': 'Nom',
-    'admin.col.role': 'Rôle',
-    'admin.col.plan': 'Plan',
-    'admin.col.registered': 'Inscrit le',
-    'admin.restrictedMsg': '👤 La gestion des admins est réservée aux super admins.',
-
-    // COMPANIES
-    'companies.title': 'Compagnies',
-    'companies.subtitle': 'Gérer les organisations et leurs paramètres de paie',
-    'companies.new': '+ Nouvelle compagnie',
-    'companies.switchTo': 'Sélectionner',
-    'companies.noCompanies': 'Aucune compagnie.',
-
-    // REPORTS
-    'reports.title': 'Rapports',
-    'reports.generate': 'Générer le rapport',
-    'reports.employees': 'Employés',
-    'reports.startDate': 'Date de début',
-    'reports.endDate': 'Date de fin',
-    'reports.allEmployees': 'Tous les employés',
-
-    // ACTIVITY
-    'activity.title': "Journal d'activité",
-
-    // MODALS — Employee
-    'modal.addEmployee': 'Ajouter un employé',
-    'modal.editEmployee': "Modifier l'employé",
-    'modal.name': 'Nom complet',
-    'modal.empCode': 'Code employé',
-    'modal.dept': 'Département',
-    'modal.site': 'Assigner au site',
-    'modal.noSite': 'Aucun site',
-    'modal.pin': 'NIP (4-6 chiffres)',
-    'modal.email': 'Courriel (pour rapports)',
-    'modal.sendEmailReports': 'Envoyer des rapports par courriel automatiquement',
-    'modal.save': 'Enregistrer',
-    'modal.cancel': 'Annuler',
-    'modal.saving': 'Enregistrement...',
-
-    // MODALS — Site
-    'modal.addSite': 'Ajouter un site',
-    'modal.editSite': 'Modifier le site',
-    'modal.siteName': 'Nom du site',
-    'modal.siteDesc': 'Description (optionnel)',
-    'modal.siteLanguage': 'Langue de la page de pointage',
-
-    // MODALS — Company
-    'modal.newCompany': 'Nouvelle compagnie',
-    'modal.editCompany': 'Modifier la compagnie',
-    'modal.companyName': 'Nom de la compagnie',
-    'modal.industry': 'Industrie',
-    'modal.description': 'Description',
-    'modal.payrollSettings': 'Paramètres de paie',
-    'modal.weekStarts': 'La semaine commence le',
-    'modal.payrollFreq': 'Fréquence de paie',
-    'modal.companyLogo': 'Logo de la compagnie',
-    'modal.overtimeSettings': 'Paramètres de temps supplémentaire',
-    'modal.trackOvertime': '⏰ Suivre les heures supplémentaires',
-    'modal.trackOvertimeDesc': 'Signaler >8h/jour et >40h/semaine dans les rapports',
-    'modal.monday': 'Lundi',
-    'modal.sunday': 'Dimanche',
-    'modal.weekly': 'Hebdomadaire',
-    'modal.biweekly': 'Aux deux semaines',
-    'modal.monthly': 'Mensuel',
-
-    // COMMON
-    'common.loading': 'Chargement...',
-    'common.error': 'Erreur',
-    'common.success': 'Succès',
-    'common.selectCompany': 'Sélectionnez votre compagnie',
-    'common.selectSite': 'Sélectionner un site',
-    'common.chooseSite': 'Choisissez votre lieu de travail',
-    'common.manageCompanies': '⚙ Gérer les compagnies',
-    'common.logout': '✕ Déconnexion',
-    'common.upgrade': 'Améliorer le plan',
-    'common.planLimit': 'Limite du plan atteinte',
-    'common.pinSet': '🔑 Défini',
-    'common.pinNone': '⚠ Aucun',
-    'common.on': 'activé',
-    'common.off': 'désactivé',
-    'common.yes': 'Oui',
-    'common.no': 'Non',
-    'common.days.mon': 'Lun', 'common.days.tue': 'Mar', 'common.days.wed': 'Mer',
-    'common.days.thu': 'Jeu', 'common.days.fri': 'Ven', 'common.days.sat': 'Sam', 'common.days.sun': 'Dim',
-  }
-};
-
-// ── Language state ──────────────────────────────────────────
-// Priority: site.lang > admin.lang > browser > 'en'
-let _appLang = 'en';
-let _punchLang = 'en'; // separate lang for punch page (site-specific)
-
-function getStoredAdminLang() {
-  try { return localStorage.getItem('pc_admin_lang') || null; } catch(e){ return null; }
-}
-function setStoredAdminLang(l) {
-  try { localStorage.setItem('pc_admin_lang', l); } catch(e){}
-}
-function getBrowserLang() {
-  const bl = (navigator.language||navigator.userLanguage||'en').toLowerCase();
-  return bl.startsWith('fr') ? 'fr' : 'en';
-}
-function initLang() {
-  const stored = getStoredAdminLang();
-  _appLang = stored || getBrowserLang();
-  _punchLang = _appLang;
-  document.documentElement.lang = _appLang;
-}
-
-function setLang(lang, scope='app') {
-  if(!TRANSLATIONS[lang]) return;
-  if(scope === 'punch') {
-    _punchLang = lang;
-    applyPunchTranslations();
-  } else {
-    _appLang = lang;
-    _punchLang = lang;
-    setStoredAdminLang(lang);
-    document.documentElement.lang = lang;
-    applyAllTranslations();
-    // Update all lang switcher buttons
-    document.querySelectorAll('.lang-btn[data-lang]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
-  }
-}
-
-function t(key, lang) {
-  const l = lang || _appLang;
-  return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) || TRANSLATIONS['en'][key] || key;
-}
-function tp(key) { return t(key, _punchLang); } // punch-page translation
-
-function applyAllTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      el.placeholder = t(key);
-    } else {
-      el.textContent = t(key);
-    }
-  });
-  document.querySelectorAll('[data-i18n-html]').forEach(el => {
-    el.innerHTML = t(el.dataset.i18nHtml);
-  });
-}
-
-function applyPunchTranslations() {
-  // Update punch page elements dynamically
-  const empSel = document.getElementById('empSelect');
-  if(empSel && empSel.options[0]) empSel.options[0].text = tp('punch.chooseEmployee');
-  const punchCoName = document.getElementById('punchCoName');
-  if(punchCoName && punchCoName.textContent === t('punch.selectName','en') || 
-     punchCoName && punchCoName.textContent === t('punch.selectName','fr')) {
-    punchCoName.textContent = tp('punch.selectName');
-  }
-  const ciHeader = document.querySelector('.ci-header h3');
-  if(ciHeader) ciHeader.innerHTML = '<span class="live-dot"></span> ' + tp('punch.currentlyIn');
-  const btnIn = document.querySelector('.btn-in');
-  const btnOut = document.querySelector('.btn-out');
-  if(btnIn) btnIn.textContent = tp('punch.in');
-  if(btnOut) btnOut.textContent = tp('punch.out');
-  // Update punch page lang switcher buttons
-  document.querySelectorAll('.punch-lang-btn[data-lang]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === _punchLang);
-  });
-}
-
-function makeLangSwitcher(scope='app', extraClass='') {
-  return `<div class="lang-switcher ${extraClass}">
-    <button class="lang-btn ${_appLang==='en'?'active':''}" data-lang="en" onclick="setLang('en','${scope}')"><span class="lang-flag">🇨🇦</span>EN</button>
-    <button class="lang-btn ${_appLang==='fr'?'active':''}" data-lang="fr" onclick="setLang('fr','${scope}')"><span class="lang-flag">🇫🇷</span>FR</button>
-  </div>`;
-}
-function makePunchLangSwitcher() {
-  return `<div class="lang-switcher" style="position:absolute;top:12px;right:16px">
-    <button class="lang-btn punch-lang-btn ${_punchLang==='en'?'active':''}" data-lang="en" onclick="setLang('en','punch')"><span class="lang-flag">🇨🇦</span>EN</button>
-    <button class="lang-btn punch-lang-btn ${_punchLang==='fr'?'active':''}" data-lang="fr" onclick="setLang('fr','punch')"><span class="lang-flag">🇫🇷</span>FR</button>
-  </div>`;
-}
-</script>
 </head>
 <body>
 
@@ -1200,8 +1296,8 @@ function makePunchLangSwitcher() {
   </div>
   <div class="nav-right">
     <span id="adminBadge" style="display:none"></span>
-    <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" style="font-size:12px;padding:6px 13px;">Admin Login</button>
-    <button class="btn-secondary" id="logoutBtn" onclick="logout()" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
+    <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" style="font-size:12px;padding:6px 13px;" data-i18n="nav.login">Admin Login</button>
+    <button class="btn-secondary" id="logoutBtn" onclick="logout()" style="display:none;font-size:12px;padding:6px 13px;" data-i18n="nav.logout">Logout</button>
     <div class="lang-switcher" id="navLangSwitcher" style="margin-left:4px">
       <button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button>
       <button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button>
@@ -1390,14 +1486,14 @@ function makePunchLangSwitcher() {
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
     <div class="filter-bar" style="grid-template-columns:1fr 1fr auto;margin-bottom:14px;padding:12px 15px">
-      <div><label>Search</label><input type="text" id="empSearch" placeholder="Name, department..." oninput="renderEmployees()"></div>
-      <div><label>Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="">All Sites</option></select></div>
+      <div><label data-i18n="admin.search">Search</label><input type="text" id="empSearch" data-i18n="admin.searchPlaceholder" placeholder="Name, department..." oninput="renderEmployees()"></div>
+      <div><label data-i18n="admin.site">Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allSites">All Sites</option></select></div>
       <div style="display:flex;align-items:flex-end">
-        <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="">All Depts</option></select>
+        <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allDepts">All Depts</option></select>
       </div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Site</th><th>Department</th><th>Status</th><th>PIN</th><th>Email Report</th><th>Actions</th></tr></thead>
+      <thead><tr><th data-i18n="admin.col.employee">Employee</th><th data-i18n="admin.col.site">Site</th><th data-i18n="admin.col.dept">Department</th><th data-i18n="admin.col.status">Status</th><th data-i18n="admin.col.pin">PIN</th><th data-i18n="admin.col.email">Email Report</th><th data-i18n="admin.col.actions">Actions</th></tr></thead>
       <tbody id="empTableBody"></tbody>
     </table></div>
     <div id="empCardsContainer"></div>
@@ -1500,7 +1596,7 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ REPORTS PAGE ═══════════════ -->
 <div class="page" id="page-reports">
   <div class="page-header">
-    <div><h1 data-i18n="reports.title">Reports</h1><p>Generate time &amp; attendance reports</p></div>
+    <div><h1 data-i18n="reports.title">Reports</h1><p data-i18n="reports.subtitle">Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
       <button class="btn-export" onclick="guardedExport('excel')">&#128229; Excel</button>
       <button class="btn-export" onclick="guardedExport('csv')">&#128196; CSV</button>
@@ -1509,12 +1605,12 @@ function makePunchLangSwitcher() {
     </div>
   </div>
   <div class="filter-bar">
-    <div><label>Company</label><select id="reportCompany" onchange="onReportCompanyChange()"><option value="all">All Companies</option></select></div>
-    <div><label>Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all">All Sites</option></select></div>
+    <div><label data-i18n="common.company">Company</label><select id="reportCompany" onchange="onReportCompanyChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
+    <div><label data-i18n="admin.site">Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
     <div><label>Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
         <option value="week" selected>This Week</option>
-        <option value="biweek">Bi-Weekly</option>
+        <option value="biweek" data-i18n="reports.biweekly">Bi-Weekly</option>
         <option value="month">This Month</option>
         <option value="quarter">This Quarter</option>
         <option value="6months">Last 6 Months</option>
@@ -1525,15 +1621,15 @@ function makePunchLangSwitcher() {
     <div><label>Start Date</label><input type="date" id="reportStart"></div>
     <div><label>End Date</label><input type="date" id="reportEnd"></div>
     <div style="display:flex;align-items:flex-end">
-      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()">Generate</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
     </div>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:18px">
     <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px">Select Employees</p>
     <div class="sel-all-row">
-      <button onclick="selAll(true)">Select All</button>
+      <button onclick="selAll(true)" data-i18n="reports.selectAll">Select All</button>
       <span style="color:var(--border)">|</span>
-      <button onclick="selAll(false)">Deselect All</button>
+      <button onclick="selAll(false)" data-i18n="reports.deselectAll">Deselect All</button>
     </div>
     <div class="emp-list-check" id="empCheckList"></div>
   </div>
@@ -1557,20 +1653,20 @@ function makePunchLangSwitcher() {
 <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
 <div class="page" id="page-activity">
   <div class="page-header">
-    <div><h1 data-i18n="activity.title">Activity Log</h1><p id="activitySub">Punch records with manual edit capability</p></div>
+    <div><h1 data-i18n="activity.title">Activity Log</h1><p id="activitySub" data-i18n="activity.subtitle">Punch records with manual edit capability</p></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn">+ Add Punch</button>
-      <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px">&#8635; Refresh</button>
+      <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn" data-i18n="activity.addPunch">+ Add Punch</button>
+      <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px" data-i18n="activity.refresh">↻ Refresh</button>
     </div>
   </div>
   <!-- ACTIVITY FILTERS -->
   <div class="filter-bar" style="margin-bottom:16px">
-    <div><label>Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all">All Companies</option></select></div>
-    <div><label>Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all">All Sites</option></select></div>
+    <div><label data-i18n="common.company">Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
+    <div><label data-i18n="admin.site">Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
     <div><label>Start Date</label><input type="date" id="actStart"></div>
     <div><label>End Date</label><input type="date" id="actEnd"></div>
     <div style="display:flex;align-items:flex-end">
-      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="loadActivityPage()">Filter</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
     </div>
   </div>
   <div class="stats-grid" id="activityStats"></div>
@@ -2167,7 +2263,8 @@ let pinState={empId:null,punchType:null,entered:''};
 function updateClock(){
   const n=new Date();
   document.getElementById('liveTime').textContent=n.toLocaleTimeString('en-US',{hour12:false});
-  document.getElementById('liveDate').textContent=n.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const locale = _appLang==='fr' ? 'fr-CA' : 'en-US';
+  document.getElementById('liveDate').textContent=n.toLocaleDateString(locale,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
 setInterval(updateClock,1000);updateClock();
 
@@ -2321,6 +2418,12 @@ function navigate(page){
   else if(page==='reports')loadReportsPage();
   else if(page==='companies')loadCompaniesPage();
   else if(page==='activity')loadActivityPage();
+  // Re-apply translations on every navigation so language persists across pages
+  applyAllTranslations();
+  // Sync lang switcher button states
+  document.querySelectorAll('.lang-btn[data-lang]').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.lang===_appLang);
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -2721,7 +2824,7 @@ function refreshClockedIn(){
   const countEl=document.getElementById('ciCount');
   if(!list||!countEl)return;
   countEl.textContent=clockedIn.length;
-  if(!clockedIn.length){list.innerHTML='<div class="ci-empty">No one is clocked in right now.</div>';return;}
+  if(!clockedIn.length){list.innerHTML=`<div class="ci-empty">${tp('punch.noOneIn')}</div>`;return;}
 
   list.innerHTML=clockedIn.map(({emp,last})=>{
     const ini=emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
@@ -2905,8 +3008,8 @@ function renderEmployees(){
       <td>${emailStatus}</td>
       <td><div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editEmployee('${e.id}')">Edit</button>
-        <button class="btn-secondary" style="padding:5px 11px;font-size:11px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
-        <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">&#128231; Send Report</button>
+        <button class="btn-secondary" style="padding:5px 11px;font-size:11px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?t('common.deactivate'):t('common.activate')}</button>
+        <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">${t('common.sendReport')}</button>
         <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
       </div></td>
     </tr>`).join('');
@@ -2922,7 +3025,7 @@ function renderEmployees(){
       <div class="mc-row"><span>Email Report</span>${emailStatus}</div>
       <div class="mc-actions">
         <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')">Edit</button>
-        <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
+        <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?t('common.deactivate'):t('common.activate')}</button>
         <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')">&#128231; Report</button>
         <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
       </div>
@@ -3318,8 +3421,8 @@ async function loadCompaniesPage(){
   const grid=document.getElementById('companyGrid');
   if(!C.companies.length){grid.innerHTML=`<div class="empty"><p>No companies yet. Create your first one!</p></div>`;return;}
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
-  const freqLabel={weekly:'Weekly',biweekly:'Bi-Weekly',monthly:'Monthly'};
-  const weekLabel={monday:'Mon–Sun',sunday:'Sun–Sat'};
+  const freqLabel={weekly:t('modal.weekly'),biweekly:t('modal.biweekly'),monthly:t('modal.monthly')};
+  const weekLabel={monday:`${t('common.days.mon')}–${t('common.days.sun')}`,sunday:`${t('common.days.sun')}–${t('common.days.sat')}`};
   grid.innerHTML=C.companies.map((co,i)=>{
     const total=C.employees.filter(e=>e.company_id===co.id).length;
     const active=C.employees.filter(e=>e.company_id===co.id&&e.active).length;
@@ -3342,18 +3445,18 @@ async function loadCompaniesPage(){
       </div>
       <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
-        <span>&#128101; ${total} total · ${active} active</span>
-        <span>&#128205; ${siteCnt} site${siteCnt!==1?'s':''}</span>
+        <span>&#128101; ${total} ${t('common.total')} · ${active} ${t('common.active')}</span>
+        <span>&#128205; ${siteCnt} ${t('common.sites')}</span>
       </div>
       <div class="meta" style="margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;color:var(--text2)">
-        <span>&#128197; ${freqLabel[co.payroll_frequency]||'—'} payroll</span>
-        <span>&#8634; Week: ${weekLabel[co.week_start]||'—'}</span>
-        ${co.track_overtime?'<span style="color:var(--amber)">⏰ Overtime on</span>':''}
+        <span>&#128197; ${freqLabel[co.payroll_frequency]||'—'}</span>
+        <span>&#8634; ${t('common.weekStarts')}: ${weekLabel[co.week_start]||'—'}</span>
+        ${co.track_overtime?`<span style="color:var(--amber)">${t('common.overtimeOn')}</span>`:''}
       </div>
       <div class="actions">
-        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="selectCtxFromCompany('${co.id}')">Switch To</button>
-        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editCompany('${co.id}')">Edit</button>
-        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('company','${co.id}','${co.name}')">Delete</button>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="selectCtxFromCompany('${co.id}')">${t('common.switchTo')}</button>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editCompany('${co.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('company','${co.id}','${co.name}')">${t('common.delete')}</button>
       </div>
     </div>`;
   }).join('');
@@ -3814,10 +3917,10 @@ async function loadActivityPage(){
   const manualCnt=all.filter(p=>p.is_manual).length;
 
   document.getElementById('activityStats').innerHTML=`
-    <div class="stat-card"><div class="lbl">Records Shown</div><div class="val blue">${all.length}</div></div>
-    <div class="stat-card"><div class="lbl">Today's Punches</div><div class="val green">${todayN}</div></div>
-    <div class="stat-card"><div class="lbl">Currently In</div><div class="val purple">${nowIn}</div></div>
-    <div class="stat-card"><div class="lbl">Manual Entries</div><div class="val amber">${manualCnt}</div></div>`;
+    <div class="stat-card"><div class="lbl">${t('activity.recordsShown')}</div><div class="val blue">${all.length}</div></div>
+    <div class="stat-card"><div class="lbl">${t('activity.todayPunches')}</div><div class="val green">${todayN}</div></div>
+    <div class="stat-card"><div class="lbl">${t('activity.currentlyIn')}</div><div class="val purple">${nowIn}</div></div>
+    <div class="stat-card"><div class="lbl">${t('activity.manualEntries')}</div><div class="val amber">${manualCnt}</div></div>`;
 
   const tbody=document.getElementById('activityBody');
   const show=[...all].sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
@@ -3835,8 +3938,8 @@ async function loadActivityPage(){
       <td style="font-family:'DM Mono',monospace;font-size:12px">${p.punch_time}</td>
       <td><div style="display:flex;gap:5px">
         ${isPaidCompany(p.company_id)?`
-        <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">&#9998; Edit</button>
-        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">Delete</button>`
+        <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">&#9998; ${t('common.edit')}</button>
+        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">${t('common.delete')}</button>`
         :'<span style="font-size:11px;color:var(--text3)">— Paid plan only</span>'}
       </div></td>
     </tr>`;
@@ -3847,7 +3950,7 @@ function updateActSiteFilter(coId){
   const asf=document.getElementById('actSiteFilter');
   const prev=asf.value;
   const sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
-  asf.innerHTML='<option value="all">All Sites</option>'+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
+  asf.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
 }
 
 function onActCoChange(){
