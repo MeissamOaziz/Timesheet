@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- Homepage (English) -->
+  <url>
+    <loc>https://www.punchclock.ca/</loc>
+    <lastmod>2026-03-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.punchclock.ca/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.punchclock.ca/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.punchclock.ca/"/>
+  </url>
+
+</urlset>
