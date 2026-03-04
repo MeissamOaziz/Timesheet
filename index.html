@@ -418,88 +418,88 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <nav class="land-nav">
     <div class="land-logo">⏱ PunchClock Pro</div>
     <div class="land-nav-links">
-      <a onclick="document.getElementById('landingFeatures').scrollIntoView({behavior:'smooth'})">Features</a>
-      <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})">Pricing</a>
-      <a onclick="showLegal('tos')">Terms</a>
-      <a onclick="showLegal('privacy')">Privacy</a>
+      <a onclick="document.getElementById('landingFeatures').scrollIntoView({behavior:'smooth'})" data-i18n="land.features">Features</a>
+      <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.pricing">Pricing</a>
+      <a onclick="showLegal('tos')" data-i18n="land.terms">Terms</a>
+      <a onclick="showLegal('privacy')" data-i18n="land.privacy">Privacy</a>
       <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div>
       <a onclick="hideLanding();navigate('login')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-left:4px" data-i18n="nav.login">Login</a>
-      <a onclick="hideLanding();navigate('register')" style="background:var(--accent);color:#fff;border-radius:8px;margin-left:2px">Get Started Free</a>
+      <a onclick="hideLanding();navigate('register')" style="background:var(--accent);color:#fff;border-radius:8px;margin-left:2px" data-i18n="land.getStarted">Get Started Free</a>
     </div>
   </nav>
 
   <!-- HERO -->
   <div class="land-hero">
     <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:24px">
-      ✨ Now with automated payroll period reports
+      <span data-i18n="land.badge">✨ Now with automated payroll period reports</span>
     </div>
-    <h1>Time tracking that <span>actually works</span> for shift workers</h1>
-    <p>PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.</p>
+    <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
+    <p data-i18n="land.heroSub">PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.</p>
     <div class="land-cta-group">
-      <button class="land-btn-primary" onclick="hideLanding();navigate('register')">Start for free — no credit card</button>
-      <button class="land-btn-secondary" onclick="hideLanding();navigate('login')">Sign in to your account</button>
+      <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
+      <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-top:16px">Free tier includes 1 company · 1 site · 5 employees</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free tier includes 1 company · 1 site · 5 employees</p>
   </div>
 
   <!-- FEATURES -->
   <div class="land-section" id="landingFeatures">
-    <h2>Everything you need to manage shift workers</h2>
-    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
+    <h2 data-i18n="land.featTitle">Everything you need to manage shift workers</h2>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="land.featSub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">🔢</div>
-        <h3>PIN Clock In/Out</h3>
-        <p>Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.</p>
+        <h3 data-i18n="land.feat1Title">PIN Clock In/Out</h3>
+        <p data-i18n="land.feat1Desc">Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📍</div>
-        <h3>Multi-Site Support</h3>
-        <p>Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.</p>
+        <h3 data-i18n="land.feat2Title">Multi-Site Support</h3>
+        <p data-i18n="land.feat2Desc">Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📊</div>
-        <h3>Automated Reports</h3>
-        <p>Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
+        <h3 data-i18n="land.feat3Title">Automated Reports</h3>
+        <p data-i18n="land.feat3Desc">Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">✏️</div>
-        <h3>Manual Punch Editing</h3>
-        <p>Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
+        <h3 data-i18n="land.feat4Title">Manual Punch Editing</h3>
+        <p data-i18n="land.feat4Desc">Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">⏰</div>
-        <h3>Overtime Tracking</h3>
-        <p>Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
+        <h3 data-i18n="land.feat5Title">Overtime Tracking</h3>
+        <p data-i18n="land.feat5Desc">Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📦</div>
-        <h3>QuickBooks Export</h3>
-        <p>Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.</p>
+        <h3 data-i18n="land.feat6Title">QuickBooks Export</h3>
+        <p data-i18n="land.feat6Desc">Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🏢</div>
-        <h3>Multi-Company</h3>
-        <p>Manage multiple businesses from a single admin account. Perfect for owners with more than one operation.</p>
+        <h3 data-i18n="land.feat7Title">Multi-Company</h3>
+        <p data-i18n="land.feat7Desc">Manage multiple businesses from a single admin account. Perfect for owners with more than one operation.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📅</div>
-        <h3>Flexible Payroll Periods</h3>
-        <p>Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
+        <h3 data-i18n="land.feat8Title">Flexible Payroll Periods</h3>
+        <p data-i18n="land.feat8Desc">Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
       </div>
     </div>
   </div>
 
   <!-- PRICING -->
   <div class="land-section" id="landingPricing">
-    <h2>Simple, transparent pricing</h2>
-    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">Start free. Upgrade as you grow. No hidden fees.</p>
+    <h2 data-i18n="land.priceTitle">Simple, transparent pricing</h2>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="land.priceSub">Start free. Upgrade as you grow. No hidden fees.</p>
     <div class="pricing-grid">
       <!-- FREE -->
       <div class="price-card">
         <div class="price-name">Free</div>
         <div class="price-amount">$0<span>/mo</span></div>
-        <div class="price-sub">Perfect for trying it out</div>
+        <div class="price-sub" data-i18n="land.freeSub">Perfect for trying it out</div>
         <ul class="price-features">
           <li>1 company</li>
           <li>1 site</li>
@@ -510,7 +510,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li class="dim">Overtime tracking</li>
           <li class="dim">QuickBooks export</li>
         </ul>
-        <button class="price-cta ghost" onclick="hideLanding();navigate('register')">Get started free</button>
+        <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.getStartedFree">Get started free</button>
       </div>
       <!-- STARTER -->
       <div class="price-card">
@@ -526,11 +526,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li>QuickBooks IIF export</li>
           <li class="dim">Multiple companies</li>
         </ul>
-        <button class="price-cta ghost" onclick="hideLanding();navigate('register')">Start free trial</button>
+        <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.freeTrial">Start free trial</button>
       </div>
       <!-- GROWTH -->
       <div class="price-card popular">
-        <div class="popular-badge">Most Popular</div>
+        <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
         <div class="price-name">Growth</div>
         <div class="price-amount">$39<span>/mo</span></div>
         <div class="price-sub">2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee</div>
@@ -541,13 +541,13 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li>All Starter features</li>
           <li>Priority support</li>
         </ul>
-        <button class="price-cta accent" onclick="hideLanding();navigate('register')">Start free trial</button>
+        <button class="price-cta accent" onclick="hideLanding();navigate('register')" data-i18n="land.freeTrial2">Start free trial</button>
       </div>
       <!-- BUSINESS -->
       <div class="price-card">
         <div class="price-name">Business</div>
         <div class="price-amount">$79<span>/mo</span></div>
-        <div class="price-sub">Unlimited everything</div>
+        <div class="price-sub" data-i18n="land.unlimitedSub">Unlimited everything</div>
         <ul class="price-features">
           <li>Unlimited companies</li>
           <li>Unlimited sites</li>
@@ -556,10 +556,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li>Dedicated support</li>
           <li>Early access to new features</li>
         </ul>
-        <button class="price-cta ghost" onclick="hideLanding();navigate('register')">Contact us</button>
+        <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.contactUs">Contact us</button>
       </div>
     </div>
-    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px">All plans include a 14-day free trial. No credit card required to start.</p>
+    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">All plans include a 14-day free trial. No credit card required to start.</p>
   </div>
 
   <!-- FOOTER -->
@@ -567,15 +567,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="land-footer-inner">
       <div>
         <div class="land-logo" style="margin-bottom:6px">⏱ PunchClock Pro</div>
-        <p>Time & attendance software for modern shift workforces.</p>
+        <p data-i18n="land.footerTagline">Time & attendance software for modern shift workforces.</p>
       </div>
       <div class="land-footer-links">
-        <a onclick="showLegal('tos')">Terms of Service</a>
-        <a onclick="showLegal('privacy')">Privacy Policy</a>
-        <a onclick="hideLanding();navigate('login')">Admin Login</a>
+        <a onclick="showLegal('tos')" data-i18n="land.tos">Terms of Service</a>
+        <a onclick="showLegal('privacy')" data-i18n="land.privacyPolicy">Privacy Policy</a>
+        <a onclick="hideLanding();navigate('login')" data-i18n="land.adminLogin">Admin Login</a>
       </div>
     </div>
-    <p style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:8px">© 2026 PunchClock Pro. All rights reserved.</p>
+    <p style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:8px" data-i18n="land.copyright">© 2026 PunchClock Pro. All rights reserved.</p>
   </div>
 </div>
 
@@ -696,7 +696,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <span style="font-size:10px;opacity:.7">&#9660;</span>
   </div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="navigate('punch')">&#9201; Clock In/Out</button>
+    <button class="nav-btn active" onclick="navigate('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
     <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" data-i18n="nav.admin" style="display:none">&#9881; Admin</button>
     <button class="nav-btn" onclick="navigate('reports')" id="navReports" data-i18n="nav.reports" style="display:none">&#128202; Reports</button>
     <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" data-i18n="nav.companies" style="display:none">&#127970; Companies</button>
@@ -712,7 +712,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-nav-btn" onclick="mobileNav('punch')">&#9201; Clock In/Out</button>
+  <button class="mobile-nav-btn" onclick="mobileNav('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none">&#9881; Admin</button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
   <button class="mobile-nav-btn" onclick="mobileNav('companies')" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
@@ -811,7 +811,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeNewLabel" onclick="setRegType('new')">
           <input type="radio" name="regType" value="new" checked style="margin-top:2px;accent-color:var(--accent)">
           <div>
-            <div style="font-size:13px;font-weight:600">🏢 New Company</div>
+            <div style="font-size:13px;font-weight:600" data-i18n="companies.new">+ New Company</div>
             <div style="font-size:12px;color:var(--text2);margin-top:2px">I'm starting fresh. Creates a Free plan account with a new company.</div>
           </div>
         </label>
@@ -862,7 +862,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="page" id="page-admin">
   <div class="page-header">
     <div><h1 id="adminTitle">Admin Panel</h1><p id="adminSub">Manage employees and sites</p></div>
-    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()">+ Add Employee</button>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()" data-i18n="admin.addEmployee">+ Add Employee</button>
   </div>
   <div class="tabs">
     <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
@@ -982,7 +982,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ═══════════════ REPORTS PAGE ═══════════════ -->
 <div class="page" id="page-reports">
   <div class="page-header">
-    <div><h1>Reports</h1><p>Generate time &amp; attendance reports</p></div>
+    <div><h1 data-i18n="reports.title">Reports</h1><p data-i18n="reports.subtitle">Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
       <button class="btn-export" onclick="guardedExport('excel')">&#128229; Excel</button>
       <button class="btn-export" onclick="guardedExport('csv')">&#128196; CSV</button>
@@ -1004,14 +1004,14 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <option value="custom">Custom Range</option>
       </select>
     </div>
-    <div><label>Start Date</label><input type="date" id="reportStart"></div>
-    <div><label>End Date</label><input type="date" id="reportEnd"></div>
+    <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="reportStart"></div>
+    <div><label data-i18n="common.endDate">End Date</label><input type="date" id="reportEnd"></div>
     <div style="display:flex;align-items:flex-end">
       <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
     </div>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:18px">
-    <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px">Select Employees</p>
+    <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px" data-i18n="reports.selectEmployees">Select Employees</p>
     <div class="sel-all-row">
       <button onclick="selAll(true)" data-i18n="reports.selectAll">Select All</button>
       <span style="color:var(--border)">|</span>
@@ -1030,8 +1030,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ═══════════════ COMPANIES PAGE ═══════════════ -->
 <div class="page" id="page-companies">
   <div class="page-header">
-    <div><h1>Companies</h1><p>Manage organizations and their payroll settings</p></div>
-    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddCompanyModal()">+ New Company</button>
+    <div><h1 data-i18n="companies.title">Companies</h1><p data-i18n="companies.subtitle">Manage organizations and their payroll settings</p></div>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddCompanyModal()" data-i18n="companies.new">+ New Company</button>
   </div>
   <div class="company-grid" id="companyGrid"></div>
 </div>
@@ -1039,7 +1039,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
 <div class="page" id="page-activity">
   <div class="page-header">
-    <div><h1>Activity Log</h1><p id="activitySub">Punch records with manual edit capability</p></div>
+    <div><h1 data-i18n="activity.title">Activity Log</h1><p id="activitySub" data-i18n="activity.subtitle">Punch records with manual edit capability</p></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn-primary" style="width:auto;padding:8px 16px;margin-top:0" onclick="guardedAddPunch()" id="addPunchBtn" data-i18n="activity.addPunch">+ Add Punch</button>
       <button class="btn-secondary" onclick="loadActivityPage()" style="font-size:12px" data-i18n="activity.refresh">↻ Refresh</button>
@@ -1049,8 +1049,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="filter-bar" style="margin-bottom:16px">
     <div><label data-i18n="common.company">Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
     <div><label data-i18n="admin.site">Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
-    <div><label>Start Date</label><input type="date" id="actStart"></div>
-    <div><label>End Date</label><input type="date" id="actEnd"></div>
+    <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="actStart"></div>
+    <div><label data-i18n="common.endDate">End Date</label><input type="date" id="actEnd"></div>
     <div style="display:flex;align-items:flex-end">
       <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
     </div>
@@ -1512,7 +1512,9 @@ function getPlanBadgeHtml(co) {
   if(!co) return '';
   const plan = getCompanyPlan(co);
   const cls = {Free:'plan-free',Starter:'plan-starter',Growth:'plan-growth',Business:'plan-business',Unlimited:'plan-unlimited'}[plan.name]||'plan-free';
-  return `<span class="plan-badge ${cls}">${plan.name}</span>`;
+  const planKey='plan.'+plan.name.toLowerCase();
+  const planLabel=t(planKey)||plan.name;
+  return `<span class="plan-badge ${cls}">${planLabel}</span>`;
 }
 
 function canAddEmployee(co) {
@@ -1561,6 +1563,7 @@ function showLanding() {
   document.getElementById('mainNav').style.display = 'none';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.picker-screen').forEach(p=>p.classList.add('hidden'));
+  if(typeof applyAllTranslations==='function') applyAllTranslations();
 }
 function hideLanding() {
   const nav = document.getElementById('mainNav');
@@ -1717,7 +1720,7 @@ function showSitePicker(co,sites){
   document.getElementById('pickerCompany').classList.add('hidden');
   document.getElementById('pickerSite').classList.remove('hidden');
   document.getElementById('sitePickerTitle').textContent=co.name;
-  document.getElementById('sitePickerSub').textContent='Choose your work site';
+  document.getElementById('sitePickerSub').textContent=t('msg.chooseSite');
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
   const icons=['&#128205;','&#127970;','&#127968;','&#128336;','&#127963;','&#9962;'];
   const grid=document.getElementById('pickerSiteGrid');
@@ -1871,15 +1874,15 @@ async function doLogin(){
   const pass=document.getElementById('loginPass').value;
   try{
     const rows=await DB.all('admins',`email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
-    if(!rows.length){showMsg('loginMsg','Invalid credentials or account not verified.','error');return;}
+    if(!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
     const admin = rows[0];
     // Check if suspended
-    if(admin.status === 'suspended'){showMsg('loginMsg','Your account has been suspended. Contact support.','error');return;}
+    if(admin.status === 'suspended'){showMsg('loginMsg',t('msg.suspended'),'error');return;}
     Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
     updateNav();
     await refreshCache();
     navigate('admin');
-  }catch(e){showMsg('loginMsg','Connection error: '+e.message,'error');}
+  }catch(e){showMsg('loginMsg',t('msg.connError')+': '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -1889,11 +1892,11 @@ let pendingReset = null;
 
 async function sendResetCode(resend=false){
   const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
-  if(!email){ showMsg('forgotMsg','Please enter your email address.','error'); return; }
+  if(!email){ showMsg('forgotMsg',t('msg.enterEmail'),'error'); return; }
   showMsg('forgotMsg','<span style="color:var(--text2)">&#8987; Sending reset code...</span>','info');
   try{
     const rows = await DB.all('admins', `email=eq.${encodeURIComponent(email)}&verified=eq.true`);
-    if(!rows.length){ showMsg('forgotMsg','No verified account found with that email.','error'); return; }
+    if(!rows.length){ showMsg('forgotMsg',t('msg.noAccount'),'error'); return; }
     const code = Math.floor(100000+Math.random()*900000).toString();
     pendingReset = { email, code, adminId: rows[0].id };
     const controller = new AbortController();
@@ -1907,12 +1910,12 @@ async function sendResetCode(resend=false){
     clearTimeout(timeout);
     const data = await res.json();
     if(!res.ok && !data.success && !data.sent){
-      showMsg('forgotMsg','Failed to send reset email. Please try again.','error'); return;
+      showMsg('forgotMsg',t('msg.sendFailed'),'error'); return;
     }
     document.getElementById('forgotEmailSent').textContent = email;
     document.getElementById('forgotStep1').style.display = 'none';
     document.getElementById('forgotStep2').style.display = '';
-    showMsg('forgotMsg', resend ? '&#10003; New code sent!' : '&#10003; Reset code sent! Check your inbox.','success');
+    showMsg('forgotMsg', resend ? t('msg.newCodeSent') : t('msg.resetCodeSent'),'success');
   }catch(e){
     if(e.name==='AbortError') showMsg('forgotMsg','Request timed out. Please try again.','error');
     else showMsg('forgotMsg','Error: '+e.message,'error');
@@ -1921,25 +1924,25 @@ async function sendResetCode(resend=false){
 
 function verifyResetCode(){
   const entered = document.getElementById('forgotCode').value.trim();
-  if(!entered || entered.length !== 6){ showMsg('forgotMsg','Please enter the 6-digit code.','error'); return; }
-  if(!pendingReset){ showMsg('forgotMsg','Session expired. Please start over.','error'); navigate('forgot'); return; }
-  if(entered !== pendingReset.code){ showMsg('forgotMsg','Incorrect code. Please try again.','error'); return; }
+  if(!entered || entered.length !== 6){ showMsg('forgotMsg',t('msg.enter6Digit'),'error'); return; }
+  if(!pendingReset){ showMsg('forgotMsg',t('msg.sessionExpired'),'error'); navigate('forgot'); return; }
+  if(entered !== pendingReset.code){ showMsg('forgotMsg',t('msg.incorrectCode'),'error'); return; }
   document.getElementById('forgotStep2').style.display = 'none';
   document.getElementById('forgotStep3').style.display = '';
   document.getElementById('forgotEmailFinal').textContent = pendingReset.email;
-  showMsg('forgotMsg','Code verified! Now set your new password.','success');
+  showMsg('forgotMsg',t('msg.codeVerified'),'success');
 }
 
 async function doPasswordReset(){
   const newPass = document.getElementById('forgotNewPass').value;
   const confirmPass = document.getElementById('forgotConfirmPass').value;
-  if(!newPass || newPass.length < 6){ showMsg('forgotMsg','Password must be at least 6 characters.','error'); return; }
-  if(newPass !== confirmPass){ showMsg('forgotMsg','Passwords do not match.','error'); return; }
+  if(!newPass || newPass.length < 6){ showMsg('forgotMsg',t('msg.shortPassword'),'error'); return; }
+  if(newPass !== confirmPass){ showMsg('forgotMsg',t('msg.passwordMismatch'),'error'); return; }
   if(!pendingReset){ showMsg('forgotMsg','Session expired. Please start over.','error'); navigate('forgot'); return; }
   try{
     await DB.update('admins', `id=eq.${pendingReset.adminId}`, { password: newPass });
     pendingReset = null;
-    showMsg('forgotMsg','&#10003; Password updated successfully! Redirecting to login...','success');
+    showMsg('forgotMsg',t('msg.passwordUpdated'),'success');
     setTimeout(()=>navigate('login'), 2000);
   }catch(e){ showMsg('forgotMsg','Error updating password: '+e.message,'error'); }
 }
@@ -1961,21 +1964,21 @@ async function doRegister(){
   const regType=document.querySelector('input[name="regType"]:checked')?.value||'new';
   const adminEmail=document.getElementById('regAdminEmail')?.value.trim().toLowerCase()||'';
 
-  if(!name||!email||!pass){showMsg('registerMsg','All fields required.','error');return;}
-  if(pass.length<6){showMsg('registerMsg','Password must be at least 6 characters.','error');return;}
-  if(regType==='join'&&!adminEmail){showMsg('registerMsg','Please enter your administrator\'s email address.','error');return;}
-  if(regType==='join'&&adminEmail===email){showMsg('registerMsg','That\'s your own email — please enter your administrator\'s email.','error');return;}
+  if(!name||!email||!pass){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
+  if(pass.length<6){showMsg('registerMsg',t('msg.shortPassword'),'error');return;}
+  if(regType==='join'&&!adminEmail){showMsg('registerMsg',t('msg.enterAdminEmail'),'error');return;}
+  if(regType==='join'&&adminEmail===email){showMsg('registerMsg',t('msg.ownEmail'),'error');return;}
 
   showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
 
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(ex.length){showMsg('registerMsg','Email already registered. <button class="link-btn" onclick="navigate(\'login\')">Sign in</button>','error');return;}
+    if(ex.length){showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');return;}
 
     if(regType==='join'){
       // Verify admin email exists
       const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(adminEmail)}&verified=eq.true`);
-      if(!adminRows.length){showMsg('registerMsg','No active admin account found with that email. Please ask your administrator for their registered email.','error');return;}
+      if(!adminRows.length){showMsg('registerMsg',t('msg.adminNotFound'),'error');return;}
     }
 
     // Generate code and send via edge function — never display it on screen
@@ -2016,7 +2019,7 @@ async function doRegister(){
     document.getElementById('regEmailSent').textContent = email;
     document.getElementById('regStep1').style.display = 'none';
     document.getElementById('regStep2').style.display = '';
-    showMsg('registerMsg','Verification code sent! Check your inbox (and spam folder).','success');
+    showMsg('registerMsg',t('msg.codeSent'),'success');
 
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
@@ -2043,8 +2046,8 @@ async function resendVerificationCode(){
 
 async function doVerify(){
   const entered=document.getElementById('codeInput').value.trim();
-  if(!pendingVerify){showMsg('registerMsg','Session expired. Please start over.','error');return;}
-  if(entered!==pendingVerify.code){showMsg('registerMsg','Incorrect code. Please try again.','error');return;}
+  if(!pendingVerify){showMsg('registerMsg',t('msg.sessionExpired'),'error');return;}
+  if(entered!==pendingVerify.code){showMsg('registerMsg',t('msg.incorrectCode'),'error');return;}
   try{
     const isJoin = pendingVerify.regType === 'join';
 
@@ -2082,7 +2085,7 @@ async function doVerify(){
       pendingVerify=null;
       updateNav();
       await refreshCache();
-      showMsg('registerMsg','✓ Account created! Redirecting...','success');
+      showMsg('registerMsg',t('msg.accountCreated'),'success');
       setTimeout(()=>{
         navigate('companies');
         // Show welcome prompt
@@ -2206,14 +2209,14 @@ setInterval(async()=>{
 function requestPunch(type){
   const ctx=Ctx.get();if(!ctx){showCompanyPicker();return;}
   const empId=document.getElementById('empSelect').value;
-  if(!empId){showPunchMsg('Please select your name first.','error');return;}
+  if(!empId){showPunchMsg(t('msg.selectName'),'error');return;}
   const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
-  if(!emp.pin){showPunchMsg('No PIN set — ask an admin to assign one.','error');return;}
+  if(!emp.pin){showPunchMsg(t('msg.noPin'),'error');return;}
   const{status,last}=getEmpStatus(empId);
   const today=new Date().toLocaleDateString('en-CA');
   if(type==='IN'&&status==='IN'){
     const when=last.punch_date===today?`since ${last.punch_time} today`:`since ${last.punch_date} at ${last.punch_time}`;
-    showPunchMsg(`&#9888; ${emp.name} is already clocked IN ${when}. Clock OUT first.`,'error');
+    showPunchMsg(`&#9888; ${emp.name} ${t('punch.alreadyIn')} ${when}. ${t('msg.clockOutFirst')}`,'error');
     document.getElementById('empSelect').value='';return;
   }
   if(type==='OUT'&&status==='OUT'){
@@ -2249,7 +2252,7 @@ async function executePunch(empId,type){
   const emp=C.employees.find(e=>e.id===empId);
   const ctx=Ctx.get();if(!emp||!ctx)return;
   const{status}=getEmpStatus(empId);
-  if(type==='IN'&&status==='IN'){showPunchMsg(`&#9888; ${emp.name} is already clocked IN.`,'error');document.getElementById('empSelect').value='';return;}
+  if(type==='IN'&&status==='IN'){showPunchMsg(`&#9888; ${emp.name} ${t('punch.alreadyIn')}.`,'error');document.getElementById('empSelect').value='';return;}
   if(type==='OUT'&&status==='OUT'){showPunchMsg(`&#9888; ${emp.name} is not clocked in.`,'error');document.getElementById('empSelect').value='';return;}
   const now=new Date();
   const punch_date=now.toLocaleDateString('en-CA');
@@ -2262,7 +2265,7 @@ async function executePunch(empId,type){
     showPunchMsg(`&#10003; ${emp.name} clocked ${type} at ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`,'success');
     document.getElementById('empSelect').value='';
     refreshClockedIn();
-  }catch(e){showPunchMsg('Error saving punch: '+e.message,'error');}
+  }catch(e){showPunchMsg(t('msg.errorSaving')+': '+e.message,'error');}
 }
 
 function showPunchMsg(msg,type){
@@ -2462,7 +2465,7 @@ async function renderAdmins(){
 }
 
 async function deleteAdmin(id, name){
-  if(!confirm(`Permanently delete "${name}"?\n\nThis will remove their account and all associated data. This cannot be undone.`)) return;
+  if(!confirm(`${t('msg.deleteAdmin1')} "${name}"?\n\n${t('msg.deleteAdmin2')}`)) return;
   try{
     // Delete associated join requests
     await fetch(`${SUPA_URL}/rest/v1/join_requests?or=(requester_id.eq.${id},target_admin_id.eq.${id})`,{
@@ -2514,7 +2517,7 @@ async function approveJoinRequest(reqId, adminId){
 }
 
 async function denyJoinRequest(reqId, adminId){
-  if(!confirm('Deny this access request? The user will not be able to log in.')) return;
+  if(!confirm(t('msg.denyRequest'))) return;
   try{
     await DB.update('admins',`id=eq.${adminId}`,{status:'suspended'});
     await DB.update('join_requests',`id=eq.${reqId}`,{status:'denied'});
@@ -3338,7 +3341,7 @@ async function savePunchEdit(){
 }
 
 function confirmDeletePunch(id){
-  document.getElementById('deleteMsg').textContent='Delete this punch record? This is permanent and will affect reports.';
+  document.getElementById('deleteMsg').textContent=t('msg.deletePunch');
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{await DB.del('punches',`id=eq.${id}`);C.punches=C.punches.filter(p=>p.id!==id);closeModal('deleteModal');loadActivityPage();}
     catch(e){alert('Delete failed: '+e.message);}
@@ -3392,7 +3395,7 @@ async function saveAddPunch(){
 // DELETE
 // ═══════════════════════════════════════════════════
 function confirmDelete(type,id,name){
-  document.getElementById('deleteMsg').textContent=`Are you sure you want to delete "${name}"? This cannot be undone.`;
+  document.getElementById('deleteMsg').textContent=`${t('msg.deleteConfirm1')} "${name}"? ${t('msg.deleteConfirm2')}`;
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{
       if(type==='emp'){await DB.del('employees',`id=eq.${id}`);C.employees=C.employees.filter(e=>e.id!==id);renderEmployees();}
@@ -3530,7 +3533,7 @@ async function executeSendReport(){
   if(periodVal==='custom'){
     start = document.getElementById('sendReportStart').value;
     end = document.getElementById('sendReportEnd').value;
-    if(!start||!end){showMsg('sendReportMsg','Please select a start and end date.','error');return;}
+    if(!start||!end){showMsg('sendReportMsg',t('msg.selectDates'),'error');return;}
     if(start>end){showMsg('sendReportMsg','Start date must be before end date.','error');return;}
     periodLabel = `${start} → ${end}`;
   } else {
@@ -3677,6 +3680,60 @@ en:{
 'modal.weekly':'Weekly','modal.biweekly':'Bi-Weekly','modal.monthly':'Monthly',
 'common.days.mon':'Mon','common.days.tue':'Tue','common.days.wed':'Wed',
 'common.days.thu':'Thu','common.days.fri':'Fri','common.days.sat':'Sat','common.days.sun':'Sun',
+'common.startDate':'Start Date','common.endDate':'End Date',
+'reports.selectEmployees':'SELECT EMPLOYEES',
+'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
+'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
+'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
+'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
+'land.heroSub':'PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.',
+'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
+'land.freeNote':'Free tier includes 1 company · 1 site · 5 employees',
+'land.featTitle':'Everything you need to manage shift workers',
+'land.featSub':'No complicated setup. No per-feature upsells. Just the tools your team needs.',
+'land.feat1Title':'PIN Clock In/Out','land.feat1Desc':'Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.',
+'land.feat2Title':'Multi-Site Support','land.feat2Desc':'Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.',
+'land.feat3Title':'Automated Reports','land.feat3Desc':'Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.',
+'land.feat4Title':'Manual Punch Editing','land.feat4Desc':'Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.',
+'land.feat5Title':'Overtime Tracking','land.feat5Desc':'Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.',
+'land.feat6Title':'QuickBooks Export','land.feat6Desc':'Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.',
+'land.feat7Title':'Multi-Company','land.feat7Desc':'Manage multiple businesses from a single admin account. Perfect for owners with more than one operation.',
+'land.feat8Title':'Flexible Payroll Periods','land.feat8Desc':'Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.',
+'land.priceTitle':'Simple, transparent pricing','land.priceSub':'Start free. Upgrade as you grow. No hidden fees.',
+'land.freeSub':'Perfect for trying it out','land.getStartedFree':'Get started free',
+'land.freeTrial':'Start free trial','land.freeTrial2':'Start free trial',
+'land.mostPopular':'Most Popular','land.unlimitedSub':'Unlimited everything','land.contactUs':'Contact us',
+'land.trialNote':'All plans include a 14-day free trial. No credit card required to start.',
+'land.footerTagline':'Time & attendance software for modern shift workforces.',
+'land.tos':'Terms of Service','land.privacyPolicy':'Privacy Policy','land.adminLogin':'Admin Login',
+'land.copyright':'© 2026 PunchClock Pro. All rights reserved.',
+'msg.deleteConfirm1':'Are you sure you want to delete','msg.deleteConfirm2':'This cannot be undone.',
+'msg.deletePunch':'Delete this punch record? This is permanent and will affect reports.',
+'msg.deleteAdmin1':'Permanently delete','msg.deleteAdmin2':'This will remove their account and all associated data. This cannot be undone.',
+'msg.denyRequest':'Deny this access request? The user will not be able to log in.',
+'msg.selectName':'Please select your name first.','msg.noPin':'No PIN set — ask an admin to assign one.',
+'msg.clockOutFirst':'Clock OUT first.','msg.errorSaving':'Error saving punch',
+'msg.invalidLogin':'Invalid credentials or account not verified.',
+'msg.suspended':'Your account has been suspended. Contact support.',
+'msg.connError':'Connection error',
+'msg.allRequired':'All fields required.','msg.shortPassword':'Password must be at least 6 characters.',
+'msg.enterAdminEmail':"Please enter your administrator's email address.",
+'msg.ownEmail':"That's your own email — please enter your administrator's email.",
+'msg.emailTaken':'Email already registered.','msg.adminNotFound':'No active admin account found with that email. Please ask your administrator for their registered email.',
+'msg.codeSent':'Verification code sent! Check your inbox (and spam folder).',
+'msg.sessionExpired':'Session expired. Please start over.',
+'msg.incorrectCode':'Incorrect code. Please try again.',
+'msg.accountCreated':'✓ Account created! Redirecting...',
+'msg.enterEmail':'Please enter your email address.',
+'msg.noAccount':'No verified account found with that email.',
+'msg.sendFailed':'Failed to send reset email. Please try again.',
+'msg.newCodeSent':'✓ New code sent!','msg.resetCodeSent':'✓ Reset code sent! Check your inbox.',
+'msg.enter6Digit':'Please enter the 6-digit code.',
+'msg.codeVerified':'Code verified! Now set your new password.',
+'msg.passwordMismatch':'Passwords do not match.',
+'msg.passwordUpdated':'✓ Password updated successfully! Redirecting to login...',
+'msg.selectDates':'Please select a start and end date.',
+'msg.chooseSite':'Choose your work site',
 },
 fr:{
 'nav.clockInOut':'⏱ Entrée/Sortie','nav.admin':'⚙ Admin','nav.reports':'📊 Rapports',
@@ -3716,6 +3773,60 @@ fr:{
 'modal.weekly':'Hebdomadaire','modal.biweekly':'Aux deux semaines','modal.monthly':'Mensuel',
 'common.days.mon':'Lun','common.days.tue':'Mar','common.days.wed':'Mer',
 'common.days.thu':'Jeu','common.days.fri':'Ven','common.days.sat':'Sam','common.days.sun':'Dim',
+'common.startDate':'Date de début','common.endDate':'Date de fin',
+'reports.selectEmployees':'SÉLECTIONNER LES EMPLOYÉS',
+'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
+'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
+'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
+'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
+'land.heroSub':'Pointage par NIP, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — conçu pour le commerce, l\'hôtellerie et la production.',
+'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
+'land.freeNote':'Forfait gratuit : 1 compagnie · 1 site · 5 employés',
+'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
+'land.featSub':'Pas de configuration compliquée. Pas de frais cachés. Juste les outils dont votre équipe a besoin.',
+'land.feat1Title':'Pointage par NIP','land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur n\'importe quelle tablette ou ordinateur partagé. Aucun téléphone requis.',
+'land.feat2Title':'Multi-sites','land.feat2Desc':'Gérez plusieurs emplacements sous une même compagnie. Chaque site a sa propre liste d\'employés et son terminal de pointage.',
+'land.feat3Title':'Rapports automatisés','land.feat3Desc':'Des courriels de résumé de période sont envoyés automatiquement à chaque employé en fin de période de paie.',
+'land.feat4Title':'Modification manuelle','land.feat4Desc':'Les admins peuvent corriger les oublis de pointage, modifier les heures ou ajouter des entrées manquantes depuis le journal.',
+'land.feat5Title':'Suivi des heures supp.','land.feat5Desc':'Signale automatiquement les heures supplémentaires quotidiennes (>8h) et hebdomadaires (>40h). Activable par compagnie.',
+'land.feat6Title':'Export QuickBooks','land.feat6Desc':'Exportez des fichiers IIF prêts pour la paie qui s\'importent directement dans QuickBooks. Un seul clic.',
+'land.feat7Title':'Multi-compagnies','land.feat7Desc':'Gérez plusieurs entreprises depuis un seul compte admin. Parfait pour les propriétaires de plusieurs établissements.',
+'land.feat8Title':'Périodes de paie flexibles','land.feat8Desc':'Paie hebdomadaire, aux deux semaines ou mensuelle. Début de semaine dimanche ou lundi. Préréglages automatiques par compagnie.',
+'land.priceTitle':'Tarifs simples et transparents','land.priceSub':'Commencez gratuitement. Évoluez selon vos besoins. Aucun frais caché.',
+'land.freeSub':'Parfait pour essayer','land.getStartedFree':'Commencer gratuitement',
+'land.freeTrial':'Essai gratuit','land.freeTrial2':'Essai gratuit',
+'land.mostPopular':'Le plus populaire','land.unlimitedSub':'Tout illimité','land.contactUs':'Nous contacter',
+'land.trialNote':'Tous les forfaits incluent un essai gratuit de 14 jours. Aucune carte de crédit requise.',
+'land.footerTagline':'Logiciel de pointage pour les équipes de travail modernes.',
+'land.tos':'Conditions d\'utilisation','land.privacyPolicy':'Politique de confidentialité','land.adminLogin':'Connexion Admin',
+'land.copyright':'© 2026 PunchClock Pro. Tous droits réservés.',
+'msg.deleteConfirm1':'Voulez-vous vraiment supprimer','msg.deleteConfirm2':'Cette action est irréversible.',
+'msg.deletePunch':'Supprimer ce pointage? Cette action est permanente et affectera les rapports.',
+'msg.deleteAdmin1':'Supprimer définitivement','msg.deleteAdmin2':'Cela supprimera leur compte et toutes les données associées. Cette action est irréversible.',
+'msg.denyRequest':'Refuser cette demande d\'accès? L\'utilisateur ne pourra pas se connecter.',
+'msg.selectName':'Veuillez sélectionner votre nom.','msg.noPin':'Aucun NIP défini — demandez à un admin d\'en assigner un.',
+'msg.clockOutFirst':'Pointez SORTIE d\'abord.','msg.errorSaving':'Erreur lors de l\'enregistrement',
+'msg.invalidLogin':'Identifiants invalides ou compte non vérifié.',
+'msg.suspended':'Votre compte a été suspendu. Contactez le support.',
+'msg.connError':'Erreur de connexion',
+'msg.allRequired':'Tous les champs sont requis.','msg.shortPassword':'Le mot de passe doit contenir au moins 6 caractères.',
+'msg.enterAdminEmail':'Veuillez entrer le courriel de votre administrateur.',
+'msg.ownEmail':'C\'est votre propre courriel — veuillez entrer celui de votre administrateur.',
+'msg.emailTaken':'Courriel déjà enregistré.','msg.adminNotFound':'Aucun compte admin actif trouvé avec ce courriel. Demandez le courriel enregistré de votre administrateur.',
+'msg.codeSent':'Code de vérification envoyé! Vérifiez votre boîte de réception (et les indésirables).',
+'msg.sessionExpired':'Session expirée. Veuillez recommencer.',
+'msg.incorrectCode':'Code incorrect. Veuillez réessayer.',
+'msg.accountCreated':'✓ Compte créé! Redirection en cours...',
+'msg.enterEmail':'Veuillez entrer votre adresse courriel.',
+'msg.noAccount':'Aucun compte vérifié trouvé avec ce courriel.',
+'msg.sendFailed':'Échec de l\'envoi du courriel de réinitialisation. Veuillez réessayer.',
+'msg.newCodeSent':'✓ Nouveau code envoyé!','msg.resetCodeSent':'✓ Code envoyé! Vérifiez votre boîte de réception.',
+'msg.enter6Digit':'Veuillez entrer le code à 6 chiffres.',
+'msg.codeVerified':'Code vérifié! Définissez votre nouveau mot de passe.',
+'msg.passwordMismatch':'Les mots de passe ne correspondent pas.',
+'msg.passwordUpdated':'✓ Mot de passe mis à jour! Redirection vers la connexion...',
+'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
+'msg.chooseSite':'Choisissez votre site de travail',
 }
 };
 
@@ -3761,6 +3872,10 @@ function applyAllTranslations(){
     var key=el.dataset.i18n;
     if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'){el.placeholder=t(key);}
     else{el.textContent=t(key);}
+  });
+  // Handle HTML translations (e.g. hero title with <span>)
+  document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+    el.innerHTML=t(el.dataset.i18nHtml);
   });
   // Sync lang switcher button states
   document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
