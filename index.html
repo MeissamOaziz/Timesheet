@@ -872,14 +872,14 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
     <div class="filter-bar" style="grid-template-columns:1fr 1fr auto;margin-bottom:14px;padding:12px 15px">
-      <div><label>Search</label><input type="text" id="empSearch" placeholder="Name, department..." oninput="renderEmployees()"></div>
+      <div><label data-i18n="admin.search">Search</label><input type="text" id="empSearch" data-i18n="admin.searchPlaceholder" placeholder="Name, department..." oninput="renderEmployees()"></div>
       <div><label data-i18n="admin.site">Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allSites">All Sites</option></select></div>
       <div style="display:flex;align-items:flex-end">
-        <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="">All Depts</option></select>
+        <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allDepts">All Depts</option></select>
       </div>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Site</th><th>Department</th><th>Status</th><th>PIN</th><th>Email Report</th><th>Actions</th></tr></thead>
+      <thead><tr><th data-i18n="admin.col.employee">Employee</th><th data-i18n="admin.col.site">Site</th><th data-i18n="admin.col.dept">Department</th><th data-i18n="admin.col.status">Status</th><th data-i18n="admin.col.pin">PIN</th><th data-i18n="admin.col.email">Email Report</th><th data-i18n="admin.col.actions">Actions</th></tr></thead>
       <tbody id="empTableBody"></tbody>
     </table></div>
     <div id="empCardsContainer"></div>
@@ -967,7 +967,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div class="form-group"><label>Status</label>
       <select id="editAdminStatus">
-        <option value="active">Active</option>
+        <option value="active" data-i18n="admin.active">Active</option>
         <option value="suspended">Suspended</option>
       </select>
     </div>
@@ -993,15 +993,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="filter-bar">
     <div><label data-i18n="common.company">Company</label><select id="reportCompany" onchange="onReportCompanyChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
     <div><label data-i18n="admin.site">Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
-    <div><label>Period</label>
+    <div><label data-i18n="reports.period">Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
-        <option value="week" selected>This Week</option>
-        <option value="biweek">Bi-Weekly</option>
-        <option value="month">This Month</option>
-        <option value="quarter">This Quarter</option>
-        <option value="6months">Last 6 Months</option>
-        <option value="year">This Year</option>
-        <option value="custom">Custom Range</option>
+        <option value="week" selected data-i18n="reports.thisWeek">This Week</option>
+        <option value="biweek" data-i18n="reports.biweekly">Bi-Weekly</option>
+        <option value="month" data-i18n="reports.thisMonth">This Month</option>
+        <option value="quarter" data-i18n="reports.thisQuarter">This Quarter</option>
+        <option value="6months" data-i18n="reports.last6">Last 6 Months</option>
+        <option value="year" data-i18n="reports.thisYear">This Year</option>
+        <option value="custom" data-i18n="reports.custom">Custom Range</option>
       </select>
     </div>
     <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="reportStart"></div>
@@ -1057,7 +1057,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
   <div class="stats-grid" id="activityStats"></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Employee</th><th>Company / Site</th><th>Type</th><th>Date</th><th>Time</th><th>Actions</th></tr></thead>
+    <thead><tr><th data-i18n="activity.employee">Employee</th><th data-i18n="activity.companySite">Company / Site</th><th data-i18n="activity.type">Type</th><th data-i18n="activity.date">Date</th><th data-i18n="activity.time">Time</th><th data-i18n="activity.actions">Actions</th></tr></thead>
     <tbody id="activityBody"></tbody>
   </table></div>
 </div>
@@ -2315,7 +2315,7 @@ function renderEmployees(){
   const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))].sort();
   const df=document.getElementById('empDeptFilter');
   const cur=df.value;
-  df.innerHTML='<option value="">All Depts</option>';
+  df.innerHTML=`<option value="">${t('admin.allDepts')}</option>`;
   depts.forEach(d=>df.innerHTML+=`<option value="${d}"${d===cur?' selected':''}>${d}</option>`);
 
   if(search)emps=emps.filter(e=>(e.name+(e.dept||'')+(e.emp_code||'')).toLowerCase().includes(search));
@@ -2917,6 +2917,13 @@ async function loadReportsPage(){
   updateDateRange();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
   applyAllTranslations();
+  // Re-translate period dropdown options (browser ignores data-i18n on <option> in some cases)
+  var pOpts=[
+    ['week','reports.thisWeek'],['biweek','reports.biweekly'],['month','reports.thisMonth'],
+    ['quarter','reports.thisQuarter'],['6months','reports.last6'],['year','reports.thisYear'],['custom','reports.custom']
+  ];
+  var pSel=document.getElementById('reportPeriod');
+  if(pSel){pOpts.forEach(function(o){var opt=pSel.querySelector('option[value="'+o[0]+'"]');if(opt)opt.textContent=t(o[1]);});}
 }
 
 function onReportCompanyChange(){
@@ -3276,7 +3283,7 @@ async function loadActivityPage(){
     return`<tr class="${p.is_manual?'edited-row':''}">
       <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}</td>
       <td style="font-size:12px">${coSite||'—'}</td>
-      <td><span class="pill ${p.type.toLowerCase()}">${p.type}</span></td>
+      <td><span class="pill ${p.type.toLowerCase()}">${p.type==="IN"?t("punch.in").replace("✓ ",""):t("punch.out").replace("✕ ","")}</span></td>
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${p.punch_time}</td>
       <td><div style="display:flex;gap:5px">
@@ -3660,9 +3667,12 @@ en:{
 'admin.col.status':'Status','admin.col.pin':'PIN','admin.col.email':'Email Report',
 'admin.col.actions':'Actions','admin.active':'Active','admin.inactive':'Inactive',
 'admin.deactivate':'Deactivate','admin.activate':'Activate','admin.sendReport':'📧 Send Report',
-'admin.pendingRequests':'⏳ Pending Access Requests',
+'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All',
+'reports.period':'Period','reports.thisWeek':'This Week','reports.biweekly':'Bi-Weekly',
+'reports.thisMonth':'This Month','reports.thisQuarter':'This Quarter',
+'reports.last6':'Last 6 Months','reports.thisYear':'This Year','reports.custom':'Custom Range',
 'activity.title':'Activity Log','activity.subtitle':'Punch records with manual edit capability',
 'activity.addPunch':'+ Add Punch','activity.refresh':'↻ Refresh',
 'activity.recordsShown':'Records Shown','activity.todayPunches':"Today's Punches",
@@ -3765,9 +3775,12 @@ fr:{
 'admin.col.status':'Statut','admin.col.pin':'NIP','admin.col.email':'Rapport courriel',
 'admin.col.actions':'Actions','admin.active':'Actif','admin.inactive':'Inactif',
 'admin.deactivate':'Désactiver','admin.activate':'Activer','admin.sendReport':'📧 Envoyer rapport',
-"admin.pendingRequests":"⏳ Demandes d'accès en attente",
+"admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Définir',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner',
+'reports.period':'Période','reports.thisWeek':'Cette semaine','reports.biweekly':'Aux deux semaines',
+'reports.thisMonth':'Ce mois','reports.thisQuarter':'Ce trimestre',
+'reports.last6':'6 derniers mois','reports.thisYear':'Cette année','reports.custom':'Plage personnalisée',
 "activity.title":"Journal d'activité",'activity.subtitle':'Registre des pointages avec modification manuelle',
 'activity.addPunch':'+ Ajouter pointage','activity.refresh':'↻ Actualiser',
 'activity.recordsShown':'Entrées affichées','activity.todayPunches':"Pointages aujourd'hui",
