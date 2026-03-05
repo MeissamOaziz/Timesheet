@@ -497,64 +497,64 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="pricing-grid">
       <!-- FREE -->
       <div class="price-card">
-        <div class="price-name">Free</div>
+        <div class="price-name" data-i18n="plan.free">Free</div>
         <div class="price-amount">$0<span>/mo</span></div>
         <div class="price-sub" data-i18n="land.freeSub">Perfect for trying it out</div>
         <ul class="price-features">
-          <li>1 company</li>
-          <li>1 site</li>
-          <li>Up to 5 employees</li>
-          <li>Basic reports (Excel, CSV, PDF)</li>
-          <li>Manual punch editing</li>
-          <li class="dim">Automated email reports</li>
-          <li class="dim">Overtime tracking</li>
-          <li class="dim">QuickBooks export</li>
+          <li data-i18n="land.f.free1">1 company</li>
+          <li data-i18n="land.f.free2">1 site</li>
+          <li data-i18n="land.f.free3">Up to 5 employees</li>
+          <li data-i18n="land.f.free4">Basic reports (Excel, CSV, PDF)</li>
+          <li data-i18n="land.f.free5">Manual punch editing</li>
+          <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
+          <li class="dim" data-i18n="land.f.free7">Overtime tracking</li>
+          <li class="dim" data-i18n="land.f.free8">QuickBooks export</li>
         </ul>
         <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.getStartedFree">Get started free</button>
       </div>
       <!-- STARTER -->
       <div class="price-card">
-        <div class="price-name">Starter</div>
+        <div class="price-name" data-i18n="plan.starter">Starter</div>
         <div class="price-amount">$19<span>/mo</span></div>
-        <div class="price-sub">1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee</div>
+        <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee</div>
         <ul class="price-features">
-          <li>1 company, 2 sites</li>
-          <li>Up to 10 employees</li>
-          <li>All Free features</li>
-          <li>Automated period email reports</li>
-          <li>Overtime tracking</li>
-          <li>QuickBooks IIF export</li>
-          <li class="dim">Multiple companies</li>
+          <li data-i18n="land.f.start1">1 company, 2 sites</li>
+          <li data-i18n="land.f.start2">Up to 10 employees</li>
+          <li data-i18n="land.f.start3">All Free features</li>
+          <li data-i18n="land.f.start4">Automated period email reports</li>
+          <li data-i18n="land.f.start5">Overtime tracking</li>
+          <li data-i18n="land.f.start6">QuickBooks IIF export</li>
+          <li class="dim" data-i18n="land.f.start7">Multiple companies</li>
         </ul>
         <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.freeTrial">Start free trial</button>
       </div>
       <!-- GROWTH -->
       <div class="price-card popular">
         <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
-        <div class="price-name">Growth</div>
+        <div class="price-name" data-i18n="plan.growth">Growth</div>
         <div class="price-amount">$39<span>/mo</span></div>
-        <div class="price-sub">2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee</div>
+        <div class="price-sub" data-i18n-html="land.growthSub">2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee</div>
         <ul class="price-features">
-          <li>2 companies</li>
-          <li>Up to 5 sites per company</li>
-          <li>Up to 25 employees</li>
-          <li>All Starter features</li>
-          <li>Priority support</li>
+          <li data-i18n="land.f.grow1">2 companies</li>
+          <li data-i18n="land.f.grow2">Up to 5 sites per company</li>
+          <li data-i18n="land.f.grow3">Up to 25 employees</li>
+          <li data-i18n="land.f.grow4">All Starter features</li>
+          <li data-i18n="land.f.grow5">Priority support</li>
         </ul>
         <button class="price-cta accent" onclick="hideLanding();navigate('register')" data-i18n="land.freeTrial2">Start free trial</button>
       </div>
       <!-- BUSINESS -->
       <div class="price-card">
-        <div class="price-name">Business</div>
+        <div class="price-name" data-i18n="plan.business">Business</div>
         <div class="price-amount">$79<span>/mo</span></div>
         <div class="price-sub" data-i18n="land.unlimitedSub">Unlimited everything</div>
         <ul class="price-features">
-          <li>Unlimited companies</li>
-          <li>Unlimited sites</li>
-          <li>Unlimited employees</li>
-          <li>All Growth features</li>
-          <li>Dedicated support</li>
-          <li>Early access to new features</li>
+          <li data-i18n="land.f.biz1">Unlimited companies</li>
+          <li data-i18n="land.f.biz2">Unlimited sites</li>
+          <li data-i18n="land.f.biz3">Unlimited employees</li>
+          <li data-i18n="land.f.biz4">All Growth features</li>
+          <li data-i18n="land.f.biz5">Dedicated support</li>
+          <li data-i18n="land.f.biz6">Early access to new features</li>
         </ul>
         <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.contactUs">Contact us</button>
       </div>
@@ -3734,6 +3734,18 @@ en:{
 'msg.passwordUpdated':'✓ Password updated successfully! Redirecting to login...',
 'msg.selectDates':'Please select a start and end date.',
 'msg.chooseSite':'Choose your work site',
+'land.starterSub':'1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee',
+'land.growthSub':'2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee',
+'land.f.free1':'1 company','land.f.free2':'1 site','land.f.free3':'Up to 5 employees',
+'land.f.free4':'Basic reports (Excel, CSV, PDF)','land.f.free5':'Manual punch editing',
+'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free8':'QuickBooks export',
+'land.f.start1':'1 company, 2 sites','land.f.start2':'Up to 10 employees','land.f.start3':'All Free features',
+'land.f.start4':'Automated period email reports','land.f.start5':'Overtime tracking',
+'land.f.start6':'QuickBooks IIF export','land.f.start7':'Multiple companies',
+'land.f.grow1':'2 companies','land.f.grow2':'Up to 5 sites per company','land.f.grow3':'Up to 25 employees',
+'land.f.grow4':'All Starter features','land.f.grow5':'Priority support',
+'land.f.biz1':'Unlimited companies','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
+'land.f.biz4':'All Growth features','land.f.biz5':'Dedicated support','land.f.biz6':'Early access to new features',
 },
 fr:{
 'nav.clockInOut':'⏱ Entrée/Sortie','nav.admin':'⚙ Admin','nav.reports':'📊 Rapports',
@@ -3827,6 +3839,18 @@ fr:{
 'msg.passwordUpdated':'✓ Mot de passe mis à jour! Redirection vers la connexion...',
 'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
 'msg.chooseSite':'Choisissez votre site de travail',
+'land.starterSub':'1 compagnie · 2 sites · jusqu\'à 10 employés<br>+4,90$/mois par employé supplémentaire',
+'land.growthSub':'2 compagnies · 5 sites chacune · jusqu\'à 25 employés<br>+4,90$/mois par employé supplémentaire',
+'land.f.free1':'1 compagnie','land.f.free2':'1 site','land.f.free3':'Jusqu\'à 5 employés',
+'land.f.free4':'Rapports de base (Excel, CSV, PDF)','land.f.free5':'Modification manuelle des pointages',
+'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free8':'Export QuickBooks',
+'land.f.start1':'1 compagnie, 2 sites','land.f.start2':'Jusqu\'à 10 employés','land.f.start3':'Toutes les fonctions Gratuit',
+'land.f.start4':'Rapports de période automatisés','land.f.start5':'Suivi des heures supp.',
+'land.f.start6':'Export QuickBooks IIF','land.f.start7':'Plusieurs compagnies',
+'land.f.grow1':'2 compagnies','land.f.grow2':'Jusqu\'à 5 sites par compagnie','land.f.grow3':'Jusqu\'à 25 employés',
+'land.f.grow4':'Toutes les fonctions Débutant','land.f.grow5':'Support prioritaire',
+'land.f.biz1':'Compagnies illimitées','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
+'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Support dédié','land.f.biz6':'Accès anticipé aux nouvelles fonctions',
 }
 };
 
@@ -3852,6 +3876,18 @@ function setLang(lang,scope){
     setStoredAdminLang(lang);
     document.documentElement.lang=lang;
     applyAllTranslations();
+    // Instantly re-render the current page so all JS-rendered strings update
+    var lp=document.getElementById('landingPage');
+    var landingVisible=lp&&lp.classList.contains('show');
+    if(landingVisible){
+      // landing page — applyAllTranslations already handles it
+    }else if(typeof currentPage!=='undefined'){
+      if(currentPage==='punch')loadPunchPage();
+      else if(currentPage==='admin')loadAdminPage();
+      else if(currentPage==='reports')loadReportsPage();
+      else if(currentPage==='companies')loadCompaniesPage();
+      else if(currentPage==='activity')loadActivityPage();
+    }
   }
   document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
     var active=(scope==='punch'?_punchLang:_appLang);
