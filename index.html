@@ -2268,7 +2268,13 @@ async function doVerify(){
       plan: 'free',
       status: isJoin ? 'pending_approval' : 'active'
     });
-    await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pendingVerify.pass});
+    // Hash the password — if this fails, delete the broken record so user can try again
+    try{
+      await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pendingVerify.pass});
+    }catch(hashErr){
+      await DB.del('admins',`id=eq.${newAdmin[0].id}`);
+      throw new Error('Account setup failed. Please try again. ('+hashErr.message+')');
+    }
 
     if(isJoin){
       // Create a join request record
