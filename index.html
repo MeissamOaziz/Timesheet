@@ -135,6 +135,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:40px !important;}
+.pw-toggle{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:2px;line-height:1;transition:color .15s;}
+.pw-toggle:hover{color:var(--text2);}
+.pw-toggle svg{width:16px;height:16px;display:block;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .btn-primary{width:100%;padding:11px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;margin-top:6px;}
 .btn-primary:hover{opacity:.88;}
@@ -780,7 +785,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <label style="font-size:12px;font-weight:500;color:var(--text2)" data-i18n="login.password">Password</label>
         <button class="link-btn" style="font-size:12px" onclick="navigate('forgot')" data-i18n="login.forgot">Forgot password?</button>
       </div>
-      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="pw-wrap"><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-toggle" onclick="togglePw('loginPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <button class="btn-primary" onclick="doLogin()" data-i18n="login.signIn">Sign In</button>
     <hr class="divider">
@@ -794,8 +799,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <h2>Welcome to PunchClock Pro! 👋</h2>
     <p>You've been invited as a co-admin. Please set your password to activate your account.</p>
     <div id="setpassMsg"></div>
-    <div class="form-group"><label>New Password</label><input type="password" id="setpassNew" placeholder="Min 6 characters"></div>
-    <div class="form-group"><label>Confirm Password</label><input type="password" id="setpassConfirm" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetInvitePassword()"></div>
+    <div class="form-group"><label>New Password</label><div class="pw-wrap"><input type="password" id="setpassNew" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('setpassNew',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="form-group"><label>Confirm Password</label><div class="pw-wrap"><input type="password" id="setpassConfirm" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetInvitePassword()"><button type="button" class="pw-toggle" onclick="togglePw('setpassConfirm',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <button class="btn-primary" onclick="doSetInvitePassword()">Activate Account</button>
   </div>
 </div>
@@ -818,8 +823,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div id="forgotStep3" style="display:none">
       <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Almost there! Set your new password for <strong id="forgotEmailFinal"></strong></p>
-      <div class="form-group"><label>New Password</label><input type="password" id="forgotNewPass" placeholder="Min 6 characters"></div>
-      <div class="form-group"><label>Confirm Password</label><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doPasswordReset()"></div>
+      <div class="form-group"><label>New Password</label><div class="pw-wrap"><input type="password" id="forgotNewPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('forgotNewPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-group"><label>Confirm Password</label><div class="pw-wrap"><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doPasswordReset()"><button type="button" class="pw-toggle" onclick="togglePw('forgotConfirmPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <button class="btn-primary" onclick="doPasswordReset()" data-i18n="forgot.setPassword">Set New Password</button>
     </div>
   </div>
@@ -835,7 +840,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div id="regStep1">
       <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Smith"></div>
       <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
-      <div class="form-group"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <hr class="divider">
       <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Account Type</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
@@ -970,7 +975,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div id="createAdminMsg"></div>
     <div class="form-group"><label>Full Name</label><input type="text" id="newAdminName" placeholder="Jane Smith"></div>
     <div class="form-group"><label>Email</label><input type="email" id="newAdminEmail" placeholder="admin@company.com"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="newAdminPass" placeholder="Min 6 characters"></div>
+    <div class="form-group"><label>Password</label><div class="pw-wrap"><input type="password" id="newAdminPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('newAdminPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <div class="form-group"><label>Plan Tier</label>
       <select id="newAdminPlan">
         <option value="free">Free</option>
@@ -1736,10 +1741,8 @@ async function refreshCache(opts={}){
 
   let companiesFilter = 'order=name.asc';
   if (!sess && ctx) {
-    // KIOSK MODE: Only fetch the one locked company
     companiesFilter += `&id=eq.${ctx.co.id}`;
   } else if (!superAdmin && adminId) {
-    // REGULAR ADMIN: Fetch only their companies
     companiesFilter += `&admin_id=eq.${adminId}`;
   }
 
@@ -1751,12 +1754,9 @@ async function refreshCache(opts={}){
 
   C.companies = companies || [];
   const visibleCoIds = new Set(C.companies.map(c => c.id));
-
-  // Further restrict sites and employees to the visible companies
   C.sites = (sites || []).filter(s => visibleCoIds.has(s.company_id));
   C.employees = (employees || []).filter(e => visibleCoIds.has(e.company_id));
 
-  // Restrict Kiosk to only the specific site's employees
   if (!sess && ctx?.site) {
     C.employees = C.employees.filter(e => e.site_id === ctx.site.id);
   }
@@ -1782,6 +1782,20 @@ let pinState={empId:null,punchType:null,entered:''};
 // ═══════════════════════════════════════════════════
 // CLOCK
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// PASSWORD VISIBILITY TOGGLE
+// ═══════════════════════════════════════════════════
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.innerHTML = show
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+}
+
 function updateClock(){
   const n=new Date();
   document.getElementById('liveTime').textContent=n.toLocaleTimeString('en-US',{hour12:false});
@@ -2031,11 +2045,8 @@ function getCompanyPlanForCurrentAdmin(co) {
 function updateNav(){
   const ok=isLoggedIn();
   const isKiosk = !!Ctx.get();
-
-  // Hide Clock In/Out from public, show only if logged in OR device is locked as Kiosk
   const punchBtn = document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
   if(punchBtn) punchBtn.style.display = (ok || isKiosk) ? '' : 'none';
-
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
   ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
@@ -2080,7 +2091,6 @@ async function doLogin(){
     const rows=await DB.rpc('verify_admin_login',{p_email:email,p_pass:pass});
     if(!rows||!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
     const admin = rows[0];
-    // Expiration check for temporary developers
     if(admin.expires_at && new Date(admin.expires_at) < new Date()){
       showMsg('loginMsg','Your temporary access has expired.','error');
       return;
@@ -2276,7 +2286,6 @@ async function doVerify(){
       plan: 'free',
       status: isJoin ? 'pending_approval' : 'active'
     });
-    // Hash the password securely via DB function
     await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pendingVerify.pass});
 
     if(isJoin){
@@ -2869,12 +2878,11 @@ async function saveCreateAdmin(){
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('createAdminMsg','Email already registered.','error');return;}
     await DB.insert('admins',{name,email,password:'pending_hash',verified:true,role,plan,status:'active',expires_at});
-    // Hash the password securely via DB function
     const created=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(created.length) await DB.rpc('set_admin_password',{p_id:created[0].id,p_pass:pass});
     closeModal('createAdminModal');
     await renderAdmins();
-    showMsg('adminSub','','');// clear any sub message
+    showMsg('adminSub','','');
   }catch(e){showMsg('createAdminMsg','Error: '+e.message,'error');}
 }
 
@@ -3985,6 +3993,22 @@ en:{
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
 'login.email':'Email','login.password':'Password','login.forgot':'Forgot password?',
 'login.signIn':'Sign In','login.noAccount':'No account?','login.register':'Register',
+'login.alreadyReg':'Already registered?',
+'reg.title':'Create Account','reg.subtitle':'Set up your PunchClock Pro admin account.',
+'reg.fullName':'Full Name','reg.passwordPlaceholder':'Min 6 characters',
+'reg.accountType':'Account Type',
+'reg.newCompany':'+ New Company','reg.newCompanyDesc':"I'm starting fresh. Creates a Free plan account with a new company.",
+'reg.joinCompany':'👥 Join Existing Company','reg.joinCompanyDesc':"My company already has an account. I'll request access from my administrator.",
+'reg.joinHint':'Ask your administrator for their registered email address to request access.',
+'reg.adminEmail':"Administrator's Registered Email",
+'reg.continue':'Continue →',
+'reg.checkEmail':'Check your email','reg.checkEmailDesc':'We sent a 6-digit verification code to',
+'reg.verificationCode':'Verification Code','reg.codePlaceholder':'Enter 6-digit code',
+'reg.verifyActivate':'Verify & Activate',
+'reg.noCode':"Didn't receive it?",'reg.resend':'Resend code',
+'reg.requestSent':'Access Request Sent!',
+'reg.requestSentDesc':"Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.",
+'reg.goToLogin':'Go to Login',
 'punch.selectName':'Select Your Name','punch.chooseEmployee':'-- Choose employee --',
 'punch.in':'✓ IN','punch.out':'✕ OUT',
 'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
@@ -4140,6 +4164,22 @@ fr:{
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
 'login.email':'Courriel','login.password':'Mot de passe','login.forgot':'Mot de passe oublié?',
 'login.signIn':'Se connecter','login.noAccount':'Pas de compte?','login.register':'S\'inscrire',
+'login.alreadyReg':'Déjà inscrit?',
+'reg.title':'Créer un compte','reg.subtitle':'Configurez votre compte administrateur PunchClock Pro.',
+'reg.fullName':'Nom complet','reg.passwordPlaceholder':'Min. 6 caractères',
+'reg.accountType':'Type de compte',
+'reg.newCompany':'+ Nouvelle compagnie','reg.newCompanyDesc':'Je commence à zéro. Crée un compte gratuit avec une nouvelle compagnie.',
+'reg.joinCompany':'👥 Rejoindre une compagnie existante','reg.joinCompanyDesc':"Ma compagnie a déjà un compte. Je vais demander l'accès à mon administrateur.",
+'reg.joinHint':"Demandez à votre administrateur son courriel enregistré pour faire une demande d'accès.",
+'reg.adminEmail':"Courriel enregistré de l'administrateur",
+'reg.continue':'Continuer →',
+'reg.checkEmail':'Vérifiez votre courriel','reg.checkEmailDesc':'Nous avons envoyé un code de vérification à 6 chiffres à',
+'reg.verificationCode':'Code de vérification','reg.codePlaceholder':'Entrez le code à 6 chiffres',
+'reg.verifyActivate':'Vérifier et activer',
+'reg.noCode':"Vous ne l'avez pas reçu?",'reg.resend':'Renvoyer le code',
+'reg.requestSent':"Demande d'accès envoyée!",
+'reg.requestSentDesc':"Votre compte a été créé et une demande a été envoyée à l'administrateur. Vous pourrez vous connecter une fois qu'il aura approuvé votre accès.",
+'reg.goToLogin':'Aller à la connexion',
 'punch.selectName':'Sélectionnez votre nom','punch.chooseEmployee':'-- Choisir un employé --',
 'punch.in':'✓ ENTRÉE','punch.out':'✕ SORTIE',
 'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
