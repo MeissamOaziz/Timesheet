@@ -981,7 +981,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </select>
     </div>
     <div class="form-group"><label>Role</label>
-      <select id="newAdminRole" onchange="document.getElementById('saExpiryGroup').style.display = this.value === 'super_admin' ? 'block' : 'none'">
+      <select id="newAdminRole" onchange="document.getElementById('saExpiryGroup').style.display=this.value==='super_admin'?'block':'none'">
         <option value="admin">Admin</option>
         <option value="super_admin">Super Admin</option>
       </select>
@@ -1482,6 +1482,15 @@ const DB={
   insert:(t,b)=>supaFetch('POST',t,{body:b}),
   update:(t,f,b)=>supaFetch('PATCH',t,{filter:f,body:b}),
   del:(t,f)=>supaFetch('DELETE',t,{filter:f}),
+  rpc:async(fn,params)=>{
+    const res=await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`,{
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify(params)
+    });
+    if(!res.ok)throw new Error(await res.text());
+    return res.json();
+  },
 };
 
 
@@ -2068,11 +2077,11 @@ async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPass').value;
   try{
-    const rows=await DB.all('admins',`email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
-    if(!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
+    const rows=await DB.rpc('verify_admin_login',{p_email:email,p_pass:pass});
+    if(!rows||!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
     const admin = rows[0];
     // Expiration check for temporary developers
-    if (admin.expires_at && new Date(admin.expires_at) < new Date()) {
+    if(admin.expires_at && new Date(admin.expires_at) < new Date()){
       showMsg('loginMsg','Your temporary access has expired.','error');
       return;
     }
@@ -2146,7 +2155,7 @@ async function doPasswordReset(){
   if(newPass !== confirmPass){ showMsg('forgotMsg',t('msg.passwordMismatch'),'error'); return; }
   if(!pendingReset){ showMsg('forgotMsg','Session expired. Please start over.','error'); navigate('forgot'); return; }
   try{
-    await DB.update('admins', `id=eq.${pendingReset.adminId}`, { password: newPass });
+    await DB.rpc('set_admin_password',{p_id:pendingReset.adminId,p_pass:newPass});
     pendingReset = null;
     showMsg('forgotMsg',t('msg.passwordUpdated'),'success');
     setTimeout(()=>navigate('login'), 2000);
@@ -2261,12 +2270,14 @@ async function doVerify(){
     const newAdmin = await DB.insert('admins',{
       name: pendingVerify.name,
       email: pendingVerify.email,
-      password: pendingVerify.pass,
+      password: 'pending_hash',
       verified: true,
       role: 'admin',
       plan: 'free',
       status: isJoin ? 'pending_approval' : 'active'
     });
+    // Hash the password securely via DB function
+    await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pendingVerify.pass});
 
     if(isJoin){
       // Create a join request record
@@ -2850,14 +2861,17 @@ async function saveCreateAdmin(){
   const email=document.getElementById('newAdminEmail').value.trim().toLowerCase();
   const pass=document.getElementById('newAdminPass').value;
   const plan=document.getElementById('newAdminPlan').value;
-  const role = document.getElementById('newAdminRole').value;
-  const expires_at = role === 'super_admin' ? (document.getElementById('newAdminExpires').value || null) : null;
+  const role=document.getElementById('newAdminRole').value;
+  const expires_at=role==='super_admin'?(document.getElementById('newAdminExpires').value||null):null;
   if(!name||!email||!pass){showMsg('createAdminMsg','All fields required.','error');return;}
   if(pass.length<6){showMsg('createAdminMsg','Password must be at least 6 characters.','error');return;}
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('createAdminMsg','Email already registered.','error');return;}
-    await DB.insert('admins',{name,email,password:pass,verified:true,role,plan,status:'active',expires_at});
+    await DB.insert('admins',{name,email,password:'pending_hash',verified:true,role,plan,status:'active',expires_at});
+    // Hash the password securely via DB function
+    const created=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
+    if(created.length) await DB.rpc('set_admin_password',{p_id:created[0].id,p_pass:pass});
     closeModal('createAdminModal');
     await renderAdmins();
     showMsg('adminSub','','');// clear any sub message
