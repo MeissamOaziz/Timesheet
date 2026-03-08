@@ -833,64 +833,64 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ═══════════════ REGISTER ═══════════════ -->
 <div class="page" id="page-register">
   <div class="form-card" style="margin-top:50px;max-width:520px">
-    <h2>Create Account</h2><p>Set up your PunchClock Pro admin account.</p>
+    <h2 data-i18n="reg.title">Create Account</h2><p data-i18n="reg.subtitle">Set up your PunchClock Pro admin account.</p>
     <div id="registerMsg"></div>
 
     <!-- STEP 1: Basic info -->
     <div id="regStep1">
-      <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Smith"></div>
-      <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
-      <div class="form-group"><label>Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-group"><label data-i18n="reg.fullName">Full Name</label><input type="text" id="regName" placeholder="Jane Smith"></div>
+      <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
+      <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <hr class="divider">
-      <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Account Type</p>
+      <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.accountType">Account Type</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
         <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeNewLabel" onclick="setRegType('new')">
           <input type="radio" name="regType" value="new" checked style="margin-top:2px;accent-color:var(--accent)">
           <div>
-            <div style="font-size:13px;font-weight:600" data-i18n="companies.new">+ New Company</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">I'm starting fresh. Creates a Free plan account with a new company.</div>
+            <div style="font-size:13px;font-weight:600" data-i18n="reg.newCompany">+ New Company</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="reg.newCompanyDesc">I'm starting fresh. Creates a Free plan account with a new company.</div>
           </div>
         </label>
         <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeJoinLabel" onclick="setRegType('join')">
           <input type="radio" name="regType" value="join" style="margin-top:2px;accent-color:var(--accent)">
           <div>
-            <div style="font-size:13px;font-weight:600">👥 Join Existing Company</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">My company already has an account. I'll request access from my administrator.</div>
+            <div style="font-size:13px;font-weight:600" data-i18n="reg.joinCompany">👥 Join Existing Company</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="reg.joinCompanyDesc">My company already has an account. I'll request access from my administrator.</div>
           </div>
         </label>
       </div>
       <!-- Join existing: admin email input -->
       <div id="regJoinSection" style="display:none">
-        <div class="msg info" style="margin-bottom:12px">Ask your administrator for their registered email address to request access.</div>
-        <div class="form-group"><label>Administrator's Registered Email</label><input type="email" id="regAdminEmail" placeholder="administrator@company.com"></div>
+        <div class="msg info" style="margin-bottom:12px" data-i18n="reg.joinHint">Ask your administrator for their registered email address to request access.</div>
+        <div class="form-group"><label data-i18n="reg.adminEmail">Administrator's Registered Email</label><input type="email" id="regAdminEmail" placeholder="administrator@company.com"></div>
       </div>
-      <button class="btn-primary" onclick="doRegister()">Continue →</button>
+      <button class="btn-primary" onclick="doRegister()" data-i18n="reg.continue">Continue →</button>
     </div>
 
     <!-- STEP 2: Email verification -->
     <div id="regStep2" style="display:none">
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:40px;margin-bottom:10px">📧</div>
-        <h3 style="font-size:17px;font-weight:600">Check your email</h3>
-        <p style="color:var(--text2);font-size:13px;margin-top:6px">We sent a 6-digit verification code to <strong id="regEmailSent" style="color:var(--text)"></strong></p>
+        <h3 style="font-size:17px;font-weight:600" data-i18n="reg.checkEmail">Check your email</h3>
+        <p style="color:var(--text2);font-size:13px;margin-top:6px"><span data-i18n="reg.checkEmailDesc">We sent a 6-digit verification code to</span> <strong id="regEmailSent" style="color:var(--text)"></strong></p>
       </div>
-      <div class="form-group"><label>Verification Code</label><input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px"></div>
-      <button class="btn-primary" onclick="doVerify()">Verify &amp; Activate</button>
-      <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:14px">Didn't receive it? <button class="link-btn" style="font-size:12px" onclick="resendVerificationCode()">Resend code</button></p>
+      <div class="form-group"><label data-i18n="reg.verificationCode">Verification Code</label><input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px"></div>
+      <button class="btn-primary" onclick="doVerify()" data-i18n="reg.verifyActivate">Verify &amp; Activate</button>
+      <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:14px"><span data-i18n="reg.noCode">Didn't receive it?</span> <button class="link-btn" style="font-size:12px" onclick="resendVerificationCode()" data-i18n="reg.resend">Resend code</button></p>
     </div>
 
     <!-- STEP 3: Join request sent -->
     <div id="regStep3" style="display:none">
       <div style="text-align:center;padding:20px 0">
         <div style="font-size:48px;margin-bottom:16px">✅</div>
-        <h3 style="font-size:17px;font-weight:600">Access Request Sent!</h3>
-        <p style="color:var(--text2);font-size:13px;margin-top:8px;line-height:1.6">Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.</p>
-        <button class="btn-primary" style="margin-top:20px" onclick="navigate('login')">Go to Login</button>
+        <h3 style="font-size:17px;font-weight:600" data-i18n="reg.requestSent">Access Request Sent!</h3>
+        <p style="color:var(--text2);font-size:13px;margin-top:8px;line-height:1.6" data-i18n="reg.requestSentDesc">Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.</p>
+        <button class="btn-primary" style="margin-top:20px" onclick="navigate('login')" data-i18n="reg.goToLogin">Go to Login</button>
       </div>
     </div>
 
     <hr class="divider">
-    <p style="text-align:center;color:var(--text2);font-size:13px">Already registered? <button class="link-btn" onclick="navigate('login')">Sign in</button></p>
+    <p style="text-align:center;color:var(--text2);font-size:13px"><span data-i18n="login.alreadyReg">Already registered?</span> <button class="link-btn" onclick="navigate('login')" data-i18n="login.signIn">Sign in</button></p>
   </div>
 </div>
 
@@ -1728,39 +1728,24 @@ async function getEffectiveAdminId(){
 }
 
 async function refreshCache(opts={}){
-  const sess = Sess.get();
-  const superAdmin = isSuperAdmin();
-  const adminId = sess?.parent_admin_id || sess?.id;
-  const ctx = Ctx.get();
-
-  // FATAL LEAK FIX: If not logged in and no Kiosk context is set, fetch NOTHING.
-  if (!sess && !ctx) {
-    C.companies = []; C.sites = []; C.employees = []; C.punches = [];
-    return;
-  }
-
-  let companiesFilter = 'order=name.asc';
-  if (!sess && ctx) {
-    companiesFilter += `&id=eq.${ctx.co.id}`;
-  } else if (!superAdmin && adminId) {
-    companiesFilter += `&admin_id=eq.${adminId}`;
-  }
-
+  const sess=Sess.get();
+  const superAdmin=isSuperAdmin();
+  const adminId=sess?.parent_admin_id||sess?.id;
+  const ctx=Ctx.get();
+  if(!sess&&!ctx){C.companies=[];C.sites=[];C.employees=[];C.punches=[];return;}
+  let companiesFilter='order=name.asc';
+  if(!sess&&ctx){companiesFilter+=`&id=eq.${ctx.co.id}`;}
+  else if(!superAdmin&&adminId){companiesFilter+=`&admin_id=eq.${adminId}`;}
   const[companies,sites,employees]=await Promise.all([
-    DB.all('companies', companiesFilter),
+    DB.all('companies',companiesFilter),
     DB.all('sites','order=name.asc'),
     DB.all('employees','order=name.asc'),
   ]);
-
-  C.companies = companies || [];
-  const visibleCoIds = new Set(C.companies.map(c => c.id));
-  C.sites = (sites || []).filter(s => visibleCoIds.has(s.company_id));
-  C.employees = (employees || []).filter(e => visibleCoIds.has(e.company_id));
-
-  if (!sess && ctx?.site) {
-    C.employees = C.employees.filter(e => e.site_id === ctx.site.id);
-  }
-
+  C.companies=companies||[];
+  const visibleCoIds=new Set(C.companies.map(c=>c.id));
+  C.sites=(sites||[]).filter(s=>visibleCoIds.has(s.company_id));
+  C.employees=(employees||[]).filter(e=>visibleCoIds.has(e.company_id));
+  if(!sess&&ctx?.site){C.employees=C.employees.filter(e=>e.site_id===ctx.site.id);}
   // Build punch filter
   const parts=['order=punched_at.desc'];
   if(opts.coId)parts.push(`company_id=eq.${opts.coId}`);
@@ -1785,15 +1770,15 @@ let pinState={empId:null,punchType:null,entered:''};
 // ═══════════════════════════════════════════════════
 // PASSWORD VISIBILITY TOGGLE
 // ═══════════════════════════════════════════════════
-function togglePw(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const show = input.type === 'password';
-  input.type = show ? 'text' : 'password';
-  btn.innerHTML = show
-    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+function togglePw(inputId,btn){
+  const input=document.getElementById(inputId);
+  if(!input)return;
+  const show=input.type==='password';
+  input.type=show?'text':'password';
+  btn.innerHTML=show
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  btn.setAttribute('aria-label',show?'Hide password':'Show password');
 }
 
 function updateClock(){
@@ -2044,9 +2029,9 @@ function getCompanyPlanForCurrentAdmin(co) {
 // ═══════════════════════════════════════════════════
 function updateNav(){
   const ok=isLoggedIn();
-  const isKiosk = !!Ctx.get();
-  const punchBtn = document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
-  if(punchBtn) punchBtn.style.display = (ok || isKiosk) ? '' : 'none';
+  const isKiosk=!!Ctx.get();
+  const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
+  if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
   ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
@@ -2090,11 +2075,8 @@ async function doLogin(){
   try{
     const rows=await DB.rpc('verify_admin_login',{p_email:email,p_pass:pass});
     if(!rows||!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
-    const admin = rows[0];
-    if(admin.expires_at && new Date(admin.expires_at) < new Date()){
-      showMsg('loginMsg','Your temporary access has expired.','error');
-      return;
-    }
+    const admin=rows[0];
+    if(admin.expires_at&&new Date(admin.expires_at)<new Date()){showMsg('loginMsg','Your temporary access has expired.','error');return;}
     // Check if suspended
     if(admin.status === 'suspended'){showMsg('loginMsg',t('msg.suspended'),'error');return;}
     if(admin.status === 'pending_invite'){
@@ -2879,7 +2861,7 @@ async function saveCreateAdmin(){
     if(ex.length){showMsg('createAdminMsg','Email already registered.','error');return;}
     await DB.insert('admins',{name,email,password:'pending_hash',verified:true,role,plan,status:'active',expires_at});
     const created=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(created.length) await DB.rpc('set_admin_password',{p_id:created[0].id,p_pass:pass});
+    if(created.length)await DB.rpc('set_admin_password',{p_id:created[0].id,p_pass:pass});
     closeModal('createAdminModal');
     await renderAdmins();
     showMsg('adminSub','','');
@@ -3995,16 +3977,14 @@ en:{
 'login.signIn':'Sign In','login.noAccount':'No account?','login.register':'Register',
 'login.alreadyReg':'Already registered?',
 'reg.title':'Create Account','reg.subtitle':'Set up your PunchClock Pro admin account.',
-'reg.fullName':'Full Name','reg.passwordPlaceholder':'Min 6 characters',
-'reg.accountType':'Account Type',
+'reg.fullName':'Full Name','reg.accountType':'Account Type',
 'reg.newCompany':'+ New Company','reg.newCompanyDesc':"I'm starting fresh. Creates a Free plan account with a new company.",
 'reg.joinCompany':'👥 Join Existing Company','reg.joinCompanyDesc':"My company already has an account. I'll request access from my administrator.",
 'reg.joinHint':'Ask your administrator for their registered email address to request access.',
 'reg.adminEmail':"Administrator's Registered Email",
 'reg.continue':'Continue →',
 'reg.checkEmail':'Check your email','reg.checkEmailDesc':'We sent a 6-digit verification code to',
-'reg.verificationCode':'Verification Code','reg.codePlaceholder':'Enter 6-digit code',
-'reg.verifyActivate':'Verify & Activate',
+'reg.verificationCode':'Verification Code','reg.verifyActivate':'Verify & Activate',
 'reg.noCode':"Didn't receive it?",'reg.resend':'Resend code',
 'reg.requestSent':'Access Request Sent!',
 'reg.requestSentDesc':"Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.",
@@ -4166,16 +4146,14 @@ fr:{
 'login.signIn':'Se connecter','login.noAccount':'Pas de compte?','login.register':'S\'inscrire',
 'login.alreadyReg':'Déjà inscrit?',
 'reg.title':'Créer un compte','reg.subtitle':'Configurez votre compte administrateur PunchClock Pro.',
-'reg.fullName':'Nom complet','reg.passwordPlaceholder':'Min. 6 caractères',
-'reg.accountType':'Type de compte',
+'reg.fullName':'Nom complet','reg.accountType':'Type de compte',
 'reg.newCompany':'+ Nouvelle compagnie','reg.newCompanyDesc':'Je commence à zéro. Crée un compte gratuit avec une nouvelle compagnie.',
 'reg.joinCompany':'👥 Rejoindre une compagnie existante','reg.joinCompanyDesc':"Ma compagnie a déjà un compte. Je vais demander l'accès à mon administrateur.",
 'reg.joinHint':"Demandez à votre administrateur son courriel enregistré pour faire une demande d'accès.",
 'reg.adminEmail':"Courriel enregistré de l'administrateur",
 'reg.continue':'Continuer →',
 'reg.checkEmail':'Vérifiez votre courriel','reg.checkEmailDesc':'Nous avons envoyé un code de vérification à 6 chiffres à',
-'reg.verificationCode':'Code de vérification','reg.codePlaceholder':'Entrez le code à 6 chiffres',
-'reg.verifyActivate':'Vérifier et activer',
+'reg.verificationCode':'Code de vérification','reg.verifyActivate':'Vérifier et activer',
 'reg.noCode':"Vous ne l'avez pas reçu?",'reg.resend':'Renvoyer le code',
 'reg.requestSent':"Demande d'accès envoyée!",
 'reg.requestSentDesc':"Votre compte a été créé et une demande a été envoyée à l'administrateur. Vous pourrez vous connecter une fois qu'il aura approuvé votre accès.",
