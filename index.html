@@ -980,6 +980,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <option value="unlimited">Unlimited</option>
       </select>
     </div>
+    <div class="form-group"><label>Role</label>
+      <select id="newAdminRole" onchange="document.getElementById('saExpiryGroup').style.display = this.value === 'super_admin' ? 'block' : 'none'">
+        <option value="admin">Admin</option>
+        <option value="super_admin">Super Admin</option>
+      </select>
+    </div>
+    <div class="form-group" id="saExpiryGroup" style="display:none">
+      <label>Access Expiration Date (Optional)</label>
+      <input type="date" id="newAdminExpires">
+    </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('createAdminModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveCreateAdmin()">Create</button>
@@ -1705,24 +1715,42 @@ async function getEffectiveAdminId(){
 
 async function refreshCache(opts={}){
   const sess = Sess.get();
-  // Co-admins see parent admin's companies; regular admins see their own
-  const adminId = sess?.parent_admin_id || sess?.id;
   const superAdmin = isSuperAdmin();
+  const adminId = sess?.parent_admin_id || sess?.id;
+  const ctx = Ctx.get();
 
-  const companiesFilter = (!superAdmin && adminId)
-    ? `order=name.asc&admin_id=eq.${adminId}`
-    : 'order=name.asc';
+  // FATAL LEAK FIX: If not logged in and no Kiosk context is set, fetch NOTHING.
+  if (!sess && !ctx) {
+    C.companies = []; C.sites = []; C.employees = []; C.punches = [];
+    return;
+  }
+
+  let companiesFilter = 'order=name.asc';
+  if (!sess && ctx) {
+    // KIOSK MODE: Only fetch the one locked company
+    companiesFilter += `&id=eq.${ctx.co.id}`;
+  } else if (!superAdmin && adminId) {
+    // REGULAR ADMIN: Fetch only their companies
+    companiesFilter += `&admin_id=eq.${adminId}`;
+  }
 
   const[companies,sites,employees]=await Promise.all([
     DB.all('companies', companiesFilter),
     DB.all('sites','order=name.asc'),
     DB.all('employees','order=name.asc'),
   ]);
-  C.companies=companies||[];
-  // Filter sites and employees to only those belonging to visible companies
-  const visibleCoIds = new Set(C.companies.map(c=>c.id));
-  C.sites=(sites||[]).filter(s=>visibleCoIds.has(s.company_id));
-  C.employees=(employees||[]).filter(e=>visibleCoIds.has(e.company_id));
+
+  C.companies = companies || [];
+  const visibleCoIds = new Set(C.companies.map(c => c.id));
+
+  // Further restrict sites and employees to the visible companies
+  C.sites = (sites || []).filter(s => visibleCoIds.has(s.company_id));
+  C.employees = (employees || []).filter(e => visibleCoIds.has(e.company_id));
+
+  // Restrict Kiosk to only the specific site's employees
+  if (!sess && ctx?.site) {
+    C.employees = C.employees.filter(e => e.site_id === ctx.site.id);
+  }
 
   // Build punch filter
   const parts=['order=punched_at.desc'];
@@ -1993,6 +2021,12 @@ function getCompanyPlanForCurrentAdmin(co) {
 // ═══════════════════════════════════════════════════
 function updateNav(){
   const ok=isLoggedIn();
+  const isKiosk = !!Ctx.get();
+
+  // Hide Clock In/Out from public, show only if logged in OR device is locked as Kiosk
+  const punchBtn = document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
+  if(punchBtn) punchBtn.style.display = (ok || isKiosk) ? '' : 'none';
+
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
   ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
@@ -2037,6 +2071,11 @@ async function doLogin(){
     const rows=await DB.all('admins',`email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(pass)}&verified=eq.true`);
     if(!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
     const admin = rows[0];
+    // Expiration check for temporary developers
+    if (admin.expires_at && new Date(admin.expires_at) < new Date()) {
+      showMsg('loginMsg','Your temporary access has expired.','error');
+      return;
+    }
     // Check if suspended
     if(admin.status === 'suspended'){showMsg('loginMsg',t('msg.suspended'),'error');return;}
     if(admin.status === 'pending_invite'){
@@ -2811,12 +2850,14 @@ async function saveCreateAdmin(){
   const email=document.getElementById('newAdminEmail').value.trim().toLowerCase();
   const pass=document.getElementById('newAdminPass').value;
   const plan=document.getElementById('newAdminPlan').value;
+  const role = document.getElementById('newAdminRole').value;
+  const expires_at = role === 'super_admin' ? (document.getElementById('newAdminExpires').value || null) : null;
   if(!name||!email||!pass){showMsg('createAdminMsg','All fields required.','error');return;}
   if(pass.length<6){showMsg('createAdminMsg','Password must be at least 6 characters.','error');return;}
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('createAdminMsg','Email already registered.','error');return;}
-    await DB.insert('admins',{name,email,password:pass,verified:true,role:'admin',plan,status:'active'});
+    await DB.insert('admins',{name,email,password:pass,verified:true,role,plan,status:'active',expires_at});
     closeModal('createAdminModal');
     await renderAdmins();
     showMsg('adminSub','','');// clear any sub message
