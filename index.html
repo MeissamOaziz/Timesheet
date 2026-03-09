@@ -1178,7 +1178,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ══════════════ MODALS ══════════════ -->
 
 <!-- PROFILE MODAL -->
-<div class="modal-overlay" id="profileModal">
+<div class="modal-overlay" id="profileModal" style="z-index:9500">
   <div class="modal" style="max-width:460px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div id="profileAvatar" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0"></div>
@@ -2392,7 +2392,7 @@ function openProfile(){
   // Hide upgrade button if already on top plan
   const upgradeBtn=document.querySelector('#profilePlanBadge .btn-primary');
   if(upgradeBtn)upgradeBtn.style.display=(plan==='enterprise'||isSuperAdmin())?'none':'';
-  document.getElementById('profileModal').classList.add('active');
+  document.getElementById('profileModal').classList.add('open');
 }
 
 async function saveProfile(){
