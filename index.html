@@ -1358,51 +1358,51 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ADD / EDIT COMPANY MODAL -->
 <div class="modal-overlay" id="addCompanyModal">
   <div class="modal">
-    <h3 id="companyModalTitle">New Company</h3>
+    <h3 id="companyModalTitle" data-i18n="modal.newCompany">New Company</h3>
     <div id="companyModalMsg"></div>
     <div id="companyFormBody">
-    <div class="form-group"><label>Company Name</label><input type="text" id="companyName" placeholder="Acme Corp"></div>
+    <div class="form-group"><label data-i18n="modal.companyName">Company Name</label><input type="text" id="companyName" placeholder="Acme Corp"></div>
     <div class="form-row">
-      <div class="form-group"><label>Industry</label><input type="text" id="companyIndustry" placeholder="Technology, Retail..."></div>
-      <div class="form-group"><label>Description</label><input type="text" id="companyDesc" placeholder="Optional"></div>
+      <div class="form-group"><label data-i18n="modal.industry">Industry</label><input type="text" id="companyIndustry" data-i18n="modal.industryPlaceholder" placeholder="Technology, Retail..."></div>
+      <div class="form-group"><label data-i18n="modal.description">Description</label><input type="text" id="companyDesc" data-i18n="modal.descPlaceholder" placeholder="Optional"></div>
     </div>
     <hr class="divider" style="margin:14px 0">
-    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Payroll Settings</p>
+    <p id="payrollSettingsLabel" style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.payrollSettings">Payroll Settings</p>
     <div class="form-row">
       <div class="form-group">
-        <label>Week Starts On</label>
+        <label data-i18n="modal.weekStartsOn">Week Starts On</label>
         <select id="companyWeekStart">
-          <option value="monday">Monday</option>
-          <option value="sunday">Sunday</option>
+          <option value="monday" data-i18n="modal.monday">Monday</option>
+          <option value="sunday" data-i18n="modal.sunday">Sunday</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Payroll Frequency</label>
+        <label data-i18n="modal.payrollFreq">Payroll Frequency</label>
         <select id="companyPayrollFreq">
-          <option value="weekly">Weekly</option>
-          <option value="biweekly">Bi-Weekly</option>
-          <option value="monthly">Monthly</option>
+          <option value="weekly" data-i18n="modal.weekly">Weekly</option>
+          <option value="biweekly" data-i18n="modal.biweekly">Bi-Weekly</option>
+          <option value="monthly" data-i18n="modal.monthly">Monthly</option>
         </select>
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
-    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Company Logo</p>
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.companyLogo">Company Logo</p>
     <div class="upload-area" id="logoUploadArea">
       <input type="file" id="logoFileInput" accept="image/*" onchange="previewUpload('logoFileInput','logoPreviewImg','logoUploadArea')">
       <img id="logoPreviewImg" class="upload-preview" style="display:none;border-radius:12px">
       <div id="logoUploadHint">
         <div style="font-size:22px;margin-bottom:6px">🏢</div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">Upload Company Logo</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">PNG, JPG up to 2MB — shown on clock page and email reports</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.uploadLogo">Upload Company Logo</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px" data-i18n="modal.logoHint">PNG, JPG up to 2MB — shown on clock page and email reports</div>
       </div>
     </div>
     <input type="hidden" id="existingLogoUrl">
     <hr class="divider" style="margin:14px 0">
-    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Overtime Settings</p>
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.overtimeSettings">Overtime Settings</p>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleOvertimeOpt()">
       <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">⏰ Track Overtime</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Flag daily >8h and weekly >40h in reports</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.trackOvertime">⏰ Track Overtime</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.overtimeDesc">Flag daily >8h and weekly >40h in reports</div>
       </div>
       <div id="overtimeToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
         <div id="overtimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
@@ -1411,8 +1411,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('addCompanyModal')">Cancel</button>
-      <button class="btn-primary" id="companySaveBtn" style="width:auto;padding:9px 18px" onclick="saveCompany()">Save</button>
+      <button class="btn-secondary" onclick="closeModal('addCompanyModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" id="companySaveBtn" style="width:auto;padding:9px 18px" onclick="saveCompany()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -1420,11 +1420,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- DELETE MODAL -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal">
-    <h3>Confirm Delete</h3>
+    <h3 data-i18n="modal.confirmDelete">Confirm Delete</h3>
     <p id="deleteMsg" style="color:var(--text2);margin-top:7px;font-size:14px;line-height:1.6"></p>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
-      <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
+      <button class="btn-secondary" onclick="closeModal('deleteModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-danger" id="confirmDeleteBtn" data-i18n="modal.delete">Delete</button>
     </div>
   </div>
 </div>
@@ -1726,9 +1726,9 @@ function showUpgradePrompt(containerId, msg) {
   const el = document.getElementById(containerId);
   if(!el) return;
   el.innerHTML = `<div class="upgrade-wall">
-    <h3>🔒 Plan Limit Reached</h3>
+    <h3>${t('modal.planLimit')}</h3>
     <p>${msg}</p>
-    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="showUpgradePlans()">⬆ Upgrade Plan</button>
+    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="showUpgradePlans()">${t('modal.upgradePlan')}</button>
   </div>`;
 }
 
@@ -2368,7 +2368,7 @@ async function doVerify(){
       setTimeout(()=>{
         navigate('companies');
         // Show welcome prompt
-        setTimeout(()=>alert('Welcome to PunchClock Pro! 🎉\n\nStart by creating your first company using the "+ New Company" button.'),500);
+        setTimeout(()=>alert(t('modal.welcomeTitle')+'\n\n'+t('modal.welcomeBody')),500);
       },1000);
     }
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
@@ -2408,21 +2408,21 @@ function showUpgradePlans(){
   const s=Sess.get();
   const cur=s?.plan||'free';
   const plans=[
-    {key:'starter', name:'Starter', price:'$19.49/mo CAD', desc:'1 company · 2 sites · 10 employees'},
-    {key:'growth',  name:'Growth',  price:'$39.49/mo CAD', desc:'2 companies · 5 sites · 25 employees', popular:true},
-    {key:'business',name:'Business',price:'$79.49/mo CAD', desc:'Unlimited everything'},
+    {key:'starter', nameKey:'plan.starter', price:'$19.49/mo CAD', descKey:'upgrade.desc.starter'},
+    {key:'growth',  nameKey:'plan.growth',  price:'$39.49/mo CAD', descKey:'upgrade.desc.growth', popular:true},
+    {key:'business',nameKey:'plan.business',price:'$79.49/mo CAD', descKey:'upgrade.desc.business'},
   ];
   const html=plans.map(p=>`
     <div style="border:1.5px solid ${p.popular?'var(--accent)':'var(--border)'};border-radius:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:${p.popular?'rgba(79,142,247,.06)':'var(--surface2)'}">
       <div>
-        ${p.popular?'<span style="font-size:10px;background:var(--accent);color:#fff;border-radius:4px;padding:2px 7px;margin-bottom:5px;display:inline-block">Most Popular</span><br>':''}
-        <strong style="font-size:15px">${p.name}</strong>
+        ${p.popular?`<span style="font-size:10px;background:var(--accent);color:#fff;border-radius:4px;padding:2px 7px;margin-bottom:5px;display:inline-block">${t('modal.mostPopular')}</span><br>`:''}
+        <strong style="font-size:15px">${t(p.nameKey)}</strong>
         <span style="font-size:13px;color:var(--text2);margin-left:8px">${p.price}</span>
-        <div style="font-size:12px;color:var(--text3);margin-top:3px">${p.desc}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">${t(p.descKey)}</div>
       </div>
       ${cur===p.key
-        ?'<span style="font-size:12px;color:var(--green);font-weight:600">✓ Current plan</span>'
-        :`<button class="btn-primary" style="width:auto;padding:8px 18px;font-size:13px;flex-shrink:0" onclick="closeModal('upgradePlansModal');startCheckout('${p.key}')">Select</button>`
+        ?`<span style="font-size:12px;color:var(--green);font-weight:600">${t('modal.currentPlan')}</span>`
+        :`<button class="btn-primary" style="width:auto;padding:8px 18px;font-size:13px;flex-shrink:0" onclick="closeModal('upgradePlansModal');startCheckout('${p.key}')">${t('modal.select')}</button>`
       }
     </div>`).join('');
 
@@ -2432,15 +2432,14 @@ function showUpgradePlans(){
     modal.id='upgradePlansModal';
     modal.className='modal-overlay';
     modal.style.zIndex='9600';
-    modal.innerHTML=`<div class="modal" style="max-width:520px">
-      <h3 style="margin-bottom:6px">⬆ Upgrade Your Plan</h3>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:20px">All plans are billed monthly in CAD. Cancel anytime.</p>
-      <div id="upgradePlansList" style="display:flex;flex-direction:column;gap:12px"></div>
-      <button class="btn-secondary" style="margin-top:18px;width:100%" onclick="closeModal('upgradePlansModal')">Cancel</button>
-    </div>`;
     document.body.appendChild(modal);
   }
-  document.getElementById('upgradePlansList').innerHTML=html;
+  modal.innerHTML=`<div class="modal" style="max-width:520px">
+    <h3 style="margin-bottom:6px">${t('modal.upgradeTitle')}</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:20px">${t('modal.upgradeSub')}</p>
+    <div id="upgradePlansList" style="display:flex;flex-direction:column;gap:12px">${html}</div>
+    <button class="btn-secondary" style="margin-top:18px;width:100%" onclick="closeModal('upgradePlansModal')">${t('modal.cancel')}</button>
+  </div>`;
   openModal('upgradePlansModal');
 }
 
@@ -3428,7 +3427,7 @@ async function loadCompaniesPage(){
   if(!isLoggedIn()){navigate('login');return;}
   await refreshCache();
   const grid=document.getElementById('companyGrid');
-  if(!C.companies.length){grid.innerHTML=`<div class="empty"><p>No companies yet. Create your first one!</p></div>`;return;}
+  if(!C.companies.length){grid.innerHTML=`<div class="empty"><p>${t('companies.empty')}</p></div>`;return;}
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
   const freqLabel={weekly:t('modal.weekly'),biweekly:t('modal.biweekly'),monthly:t('modal.monthly')};
   const weekLabel={monday:`${t('common.days.mon')}–${t('common.days.sun')}`,sunday:`${t('common.days.sun')}–${t('common.days.sat')}`};
@@ -3484,7 +3483,7 @@ function selectCtxFromCompany(coId){
 
 function openAddCompanyModal(){
   const {ok, current, max, plan} = canAddCompany();
-  document.getElementById('companyModalTitle').textContent='New Company';
+  document.getElementById('companyModalTitle').textContent=t('modal.newCompany');
   document.getElementById('editCompanyUid').value='';
   const form = document.getElementById('companyFormBody');
   const saveBtn = document.getElementById('companySaveBtn');
@@ -3513,8 +3512,8 @@ function editCompany(id){
   const form=document.getElementById('companyFormBody');
   const saveBtn=document.getElementById('companySaveBtn');
   if(form) form.style.display='';
-  if(saveBtn) saveBtn.style.display='';
-  document.getElementById('companyModalTitle').textContent='Edit Company';
+  if(saveBtn){ saveBtn.style.display=''; saveBtn.textContent=t('modal.saveChanges'); }
+  document.getElementById('companyModalTitle').textContent=t('modal.editCompany');
   document.getElementById('companyName').value=co.name;
   document.getElementById('companyIndustry').value=co.industry||'';
   document.getElementById('companyDesc').value=co.description||'';
@@ -4499,6 +4498,27 @@ en:{
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
 'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email to set up their account.',
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
+'companies.empty':'No companies yet. Create your first one!',
+'modal.newCompany':'New Company','modal.editCompany':'Edit Company',
+'modal.companyName':'Company Name','modal.industry':'Industry','modal.description':'Description',
+'modal.industryPlaceholder':'Technology, Retail...','modal.descPlaceholder':'Optional',
+'modal.payrollSettings':'Payroll Settings','modal.weekStartsOn':'Week Starts On',
+'modal.payrollFreq':'Payroll Frequency',
+'modal.monday':'Monday','modal.sunday':'Sunday',
+'modal.companyLogo':'Company Logo','modal.uploadLogo':'Upload Company Logo',
+'modal.logoHint':'PNG, JPG up to 2MB — shown on clock page and email reports',
+'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'⏰ Track Overtime',
+'modal.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
+'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
+'modal.confirmDelete':'Confirm Delete','modal.delete':'Delete',
+'modal.planLimit':'🔒 Plan Limit Reached','modal.upgradePlan':'⬆ Upgrade Plan',
+'modal.upgradeTitle':'⬆ Upgrade Your Plan','modal.upgradeSub':'All plans are billed monthly in CAD. Cancel anytime.',
+'modal.currentPlan':'✓ Current plan','modal.select':'Select','modal.mostPopular':'Most Popular',
+'modal.welcomeTitle':'Welcome to PunchClock Pro! 🎉',
+'modal.welcomeBody':'Start by creating your first company using the "+ New Company" button.',
+'upgrade.desc.starter':'1 company · 2 sites · 10 employees',
+'upgrade.desc.growth':'2 companies · 5 sites · 25 employees',
+'upgrade.desc.business':'Unlimited everything',
 
 },
 fr:{
@@ -4679,6 +4699,27 @@ fr:{
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
 'coAdmin.sendInvite':'Envoyer l\'invitation','coAdmin.inviteSent':'Invitation envoyée! Il recevra un courriel pour configurer son compte.',
 'coAdmin.myCoAdmins':'Mes co-admins','coAdmin.noCoAdmins':'Aucun co-admin pour l\'instant. Invitez quelqu\'un pour commencer.',
+'companies.empty':'Aucune compagnie. Créez-en une première!',
+'modal.newCompany':'Nouvelle compagnie','modal.editCompany':'Modifier la compagnie',
+'modal.companyName':'Nom de la compagnie','modal.industry':'Secteur','modal.description':'Description',
+'modal.industryPlaceholder':'Technologie, Commerce...','modal.descPlaceholder':'Optionnel',
+'modal.payrollSettings':'Paramètres de paie','modal.weekStartsOn':'Début de semaine',
+'modal.payrollFreq':'Fréquence de paie',
+'modal.monday':'Lundi','modal.sunday':'Dimanche',
+'modal.companyLogo':'Logo de la compagnie','modal.uploadLogo':'Télécharger le logo',
+'modal.logoHint':'PNG, JPG jusqu\'à 2 Mo — affiché sur la page de pointage et les rapports',
+'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'⏰ Suivi des heures supp.',
+'modal.overtimeDesc':'Signaler les journées >8h et les semaines >40h dans les rapports',
+'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
+'modal.confirmDelete':'Confirmer la suppression','modal.delete':'Supprimer',
+'modal.planLimit':'🔒 Limite du forfait atteinte','modal.upgradePlan':'⬆ Mettre à niveau',
+'modal.upgradeTitle':'⬆ Mettre à niveau votre forfait','modal.upgradeSub':'Tous les forfaits sont facturés mensuellement en CAD. Annulez à tout moment.',
+'modal.currentPlan':'✓ Forfait actuel','modal.select':'Choisir','modal.mostPopular':'Le plus populaire',
+'modal.welcomeTitle':'Bienvenue sur PunchClock Pro! 🎉',
+'modal.welcomeBody':'Commencez par créer votre première compagnie en cliquant sur le bouton « + Nouvelle compagnie ».',
+'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés',
+'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés',
+'upgrade.desc.business':'Tout illimité',
 
 }
 };
