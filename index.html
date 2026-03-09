@@ -1145,6 +1145,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div><h1 data-i18n="companies.title">Companies</h1><p data-i18n="companies.subtitle">Manage organizations and their payroll settings</p></div>
     <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddCompanyModal()" data-i18n="companies.new">+ New Company</button>
   </div>
+  <div id="companiesMsg" style="display:none;margin-bottom:16px"></div>
   <div class="company-grid" id="companyGrid"></div>
 </div>
 
@@ -1175,6 +1176,59 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </div>
 
 <!-- ══════════════ MODALS ══════════════ -->
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:460px">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div id="profileAvatar" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0"></div>
+      <div>
+        <h3 style="margin:0" data-i18n="profile.title">My Profile</h3>
+        <p style="margin:0;font-size:12px;color:var(--text2)" id="profileEmail"></p>
+      </div>
+    </div>
+    <div id="profileMsg" style="display:none;margin-bottom:12px"></div>
+
+    <!-- Plan badge -->
+    <div id="profilePlanBadge" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:20px">
+      <div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:3px" data-i18n="profile.plan">Subscription Plan</div>
+        <div id="profilePlanName" style="font-weight:700;font-size:15px"></div>
+      </div>
+      <button class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');navigate('landing')" data-i18n="profile.upgrade">⬆ Upgrade</button>
+    </div>
+
+    <!-- Edit name -->
+    <div class="form-group">
+      <label data-i18n="profile.name">Display Name</label>
+      <input type="text" id="profileName" placeholder="Your name" autocomplete="off">
+    </div>
+
+    <!-- Change password -->
+    <div style="margin-top:4px;margin-bottom:4px">
+      <button class="link-btn" style="font-size:13px" onclick="document.getElementById('profilePwSection').classList.toggle('hidden')" data-i18n="profile.changePw">🔑 Change password</button>
+    </div>
+    <div id="profilePwSection" class="hidden" style="margin-bottom:4px">
+      <div class="form-group" style="margin-top:10px">
+        <label data-i18n="profile.currentPw">Current Password</label>
+        <div class="pw-wrap"><input type="password" id="profileCurPw" autocomplete="current-password"><button type="button" class="pw-toggle" onclick="togglePw('profileCurPw',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="profile.newPw">New Password</label>
+        <div class="pw-wrap"><input type="password" id="profileNewPw" autocomplete="new-password"><button type="button" class="pw-toggle" onclick="togglePw('profileNewPw',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="profile.confirmPw">Confirm New Password</label>
+        <div class="pw-wrap"><input type="password" id="profileConfirmPw" autocomplete="new-password"><button type="button" class="pw-toggle" onclick="togglePw('profileConfirmPw',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn-primary" onclick="saveProfile()" data-i18n="profile.save">Save Changes</button>
+      <button class="btn-secondary" onclick="closeModal('profileModal')" data-i18n="profile.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADD EMPLOYEE MODAL -->
 <div class="modal-overlay" id="addEmpModal">
@@ -2046,7 +2100,7 @@ function updateNav(){
   if(ok){
     const a=Sess.get();
     const roleLabel = isSuperAdmin() ? '\u2b50 '+a.name : a.name;
-    document.getElementById('adminBadge').innerHTML='<span class="badge">'+roleLabel+'</span>';
+    document.getElementById('adminBadge').innerHTML='<span class="badge" onclick="openProfile()" style="cursor:pointer;user-select:none" title="My Profile">'+roleLabel+'</span>';
     document.getElementById('adminBadge').style.display='';
   }else{
     document.getElementById('adminBadge').style.display='none';
@@ -2313,6 +2367,88 @@ async function doVerify(){
 function logout(){Sess.clear();Ctx.clear();updateNav();showLanding();}
 
 // ═══════════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════════
+function openProfile(){
+  const s=Sess.get();
+  if(!s)return;
+  document.getElementById('profileName').value=s.name||'';
+  document.getElementById('profileEmail').textContent=s.email||'';
+  document.getElementById('profileCurPw').value='';
+  document.getElementById('profileNewPw').value='';
+  document.getElementById('profileConfirmPw').value='';
+  document.getElementById('profilePwSection').classList.add('hidden');
+  document.getElementById('profileMsg').style.display='none';
+  // Avatar initials
+  const av=document.getElementById('profileAvatar');
+  av.textContent=(s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  // Plan
+  const planNames={free:'Free',starter:'Starter',growth:'Growth',enterprise:'Enterprise'};
+  const plan=s.plan||'free';
+  const planEl=document.getElementById('profilePlanName');
+  const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',enterprise:'#a78bfa'};
+  planEl.textContent=planNames[plan]||plan;
+  planEl.style.color=planColors[plan]||'var(--text)';
+  // Hide upgrade button if already on top plan
+  const upgradeBtn=document.querySelector('#profilePlanBadge .btn-primary');
+  if(upgradeBtn)upgradeBtn.style.display=(plan==='enterprise'||isSuperAdmin())?'none':'';
+  document.getElementById('profileModal').classList.add('active');
+}
+
+async function saveProfile(){
+  const s=Sess.get();
+  if(!s)return;
+  const newName=document.getElementById('profileName').value.trim();
+  const curPw=document.getElementById('profileCurPw').value;
+  const newPw=document.getElementById('profileNewPw').value;
+  const confirmPw=document.getElementById('profileConfirmPw').value;
+  const msg=(txt,type)=>showMsg('profileMsg',txt,type);
+
+  if(!newName){msg(t('profile.nameRequired')||'Name cannot be empty.','error');return;}
+
+  // Check if name is taken by another admin
+  if(newName!==s.name){
+    const existing=await DB.all('admins',`name=eq.${encodeURIComponent(newName)}&id=neq.${s.id}`);
+    if(existing&&existing.length){msg(t('profile.nameTaken')||'That name is already taken by another user.','error');return;}
+  }
+
+  // Validate password change if requested
+  const changingPw=curPw||newPw||confirmPw;
+  if(changingPw){
+    if(!curPw){msg(t('profile.curPwRequired')||'Please enter your current password.','error');return;}
+    if(!newPw){msg(t('profile.newPwRequired')||'Please enter a new password.','error');return;}
+    if(newPw!==confirmPw){msg(t('msg.passwordMismatch'),'error');return;}
+    if(newPw.length<6){msg(t('profile.pwTooShort')||'Password must be at least 6 characters.','error');return;}
+    // Verify current password
+    try{
+      const verified=await DB.rpc('verify_admin_login',{p_email:s.email,p_pass:curPw});
+      if(!verified||!verified.length){msg(t('profile.wrongCurPw')||'Current password is incorrect.','error');return;}
+    }catch(e){msg('Error verifying password: '+e.message,'error');return;}
+  }
+
+  try{
+    // Update name
+    await DB.update('admins',`id=eq.${s.id}`,{name:newName});
+    // Update password if requested
+    if(changingPw){
+      await DB.rpc('set_admin_password',{p_id:s.id,p_pass:newPw});
+    }
+    // Update session
+    const updated={...s,name:newName};
+    Sess.set(updated);
+    updateNav();
+    msg(t('profile.saved')||'✓ Profile updated successfully.','success');
+    // Clear pw fields
+    document.getElementById('profileCurPw').value='';
+    document.getElementById('profileNewPw').value='';
+    document.getElementById('profileConfirmPw').value='';
+    document.getElementById('profilePwSection').classList.add('hidden');
+  }catch(e){
+    msg('Error saving profile: '+e.message,'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════
 // STATUS HELPER
 // ═══════════════════════════════════════════════════
 function getEmpStatus(empId){
@@ -2326,7 +2462,17 @@ function getEmpStatus(empId){
 // ═══════════════════════════════════════════════════
 async function loadPunchPage(){
   const ctx=Ctx.get();
-  if(!ctx){await refreshCache();showCompanyPicker();return;}
+  if(!ctx){
+    await refreshCache();
+    // If logged in but no companies yet, force them to create one
+    if(isLoggedIn()&&!C.companies.length){
+      navigate('companies');
+      setTimeout(()=>showMsg('companiesMsg',t('msg.noCompanyYet')||'You have no companies yet. Please create a company before accessing the Clock In/Out page.','info'),200);
+      return;
+    }
+    showCompanyPicker();
+    return;
+  }
   const coId=ctx.co.id;
   const siteId=ctx.site?.id||null;
   await refreshCache({coId,siteId});
@@ -4087,6 +4233,15 @@ en:{
 'msg.passwordUpdated':'✓ Password updated successfully! Redirecting to login...',
 'msg.selectDates':'Please select a start and end date.',
 'msg.chooseSite':'Choose your work site',
+'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
+'profile.title':'My Profile','profile.plan':'Subscription Plan','profile.upgrade':'⬆ Upgrade',
+'profile.name':'Display Name','profile.changePw':'🔑 Change password','profile.currentPw':'Current Password',
+'profile.newPw':'New Password','profile.confirmPw':'Confirm New Password',
+'profile.save':'Save Changes','profile.cancel':'Cancel',
+'profile.nameRequired':'Name cannot be empty.','profile.nameTaken':'That name is already taken by another user.',
+'profile.curPwRequired':'Please enter your current password.','profile.newPwRequired':'Please enter a new password.',
+'profile.pwTooShort':'Password must be at least 6 characters.','profile.wrongCurPw':'Current password is incorrect.',
+'profile.saved':'✓ Profile updated successfully.',
 'land.starterSub':'1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee',
 'land.growthSub':'2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee',
 'land.f.free1':'1 company','land.f.free2':'1 site','land.f.free3':'Up to 5 employees',
@@ -4256,6 +4411,15 @@ fr:{
 'msg.passwordUpdated':'✓ Mot de passe mis à jour! Redirection vers la connexion...',
 'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
 'msg.chooseSite':'Choisissez votre site de travail',
+'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
+'profile.title':'Mon profil','profile.plan':'Abonnement','profile.upgrade':'⬆ Mettre à niveau',
+'profile.name':'Nom affiché','profile.changePw':'🔑 Changer le mot de passe','profile.currentPw':'Mot de passe actuel',
+'profile.newPw':'Nouveau mot de passe','profile.confirmPw':'Confirmer le nouveau mot de passe',
+'profile.save':'Sauvegarder','profile.cancel':'Annuler',
+'profile.nameRequired':'Le nom ne peut pas être vide.','profile.nameTaken':'Ce nom est déjà utilisé par un autre utilisateur.',
+'profile.curPwRequired':'Veuillez entrer votre mot de passe actuel.','profile.newPwRequired':'Veuillez entrer un nouveau mot de passe.',
+'profile.pwTooShort':'Le mot de passe doit comporter au moins 6 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
+'profile.saved':'✓ Profil mis à jour avec succès.',
 'land.starterSub':'1 compagnie · 2 sites · jusqu\'à 10 employés<br>+4,90$/mois par employé supplémentaire',
 'land.growthSub':'2 compagnies · 5 sites chacune · jusqu\'à 25 employés<br>+4,90$/mois par employé supplémentaire',
 'land.f.free1':'1 compagnie','land.f.free2':'1 site','land.f.free3':'Jusqu\'à 5 employés',
