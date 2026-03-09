@@ -2642,27 +2642,17 @@ function showOnboardStep2(){
 }
 
 function onboardCreateCompany(){
+  // Don't navigate — just close this modal and open the company form directly
+  document.getElementById('onboardingModal').classList.remove('open');
   window._onboardingActive=true;
-  window._onboardingSuppressed=true;
-  closeModal('onboardingModal');
-  navigate('companies');
-  setTimeout(()=>{
-    window._onboardingSuppressed=false;
-    openAddCompanyModal();
-  },300);
+  openAddCompanyModal();
 }
 
 function onboardCreateSite(){
+  // Don't navigate — just close this modal and open the site form directly
+  document.getElementById('onboardingModal').classList.remove('open');
   window._onboardingActive=false;
-  window._onboardingSuppressed=true;
-  closeModal('onboardingModal');
-  navigate('admin');
-  setTimeout(()=>{
-    window._onboardingSuppressed=false;
-    const siteTab=document.querySelectorAll('#page-admin .tabs .tab')[1];
-    if(siteTab)adminTab('sites',siteTab);
-    setTimeout(()=>openAddSiteModal(),200);
-  },300);
+  openAddSiteModal();
 }
 
 function onboardSkipSite(){
@@ -3742,15 +3732,21 @@ async function saveSite(){
       if(r?.[0])C.sites.push(r[0]);
     }
     closeModal('addSiteModal');
-    window._onboardingSiteShown=false; // allow re-check to clear now that a site exists
-    renderSitesAdmin();populateEmpSiteFilter();
-    // If this was the first site, show a success toast and switch to employees tab
+    window._onboardingSiteShown=false;
+    // If this was the first site (onboarding), navigate to admin and land on employees tab
     const ctx2=Ctx.get();
-    if(ctx2&&C.sites.filter(s=>s.company_id===ctx2.co.id).length===1){
-      showToast('✓ '+t('ob.siteCreated')||'✓ Site created! You can now add employees.','success');
-      const empTab=document.querySelectorAll('#page-admin .tabs .tab')[0];
-      if(empTab)adminTab('employees',empTab);
+    const isFirstSite=ctx2&&C.sites.filter(s=>s.company_id===ctx2.co.id).length===1;
+    if(isFirstSite){
+      showToast('✓ '+(t('ob.siteCreated')||'Site created! You can now add employees.'),'success');
+      // Navigate properly to admin page, then switch to employees tab
+      navigate('admin');
+      setTimeout(()=>{
+        const empTab=document.querySelectorAll('#page-admin .tabs .tab')[0];
+        if(empTab)adminTab('employees',empTab);
+      },350);
+      return;
     }
+    renderSitesAdmin();populateEmpSiteFilter();
   }catch(e){showMsg('siteModalMsg','Error: '+e.message,'error');}
 }
 
