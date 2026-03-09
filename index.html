@@ -1302,20 +1302,21 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </div>
 
 <!-- ONBOARDING MODAL -->
-<div class="modal-overlay" id="onboardingModal" style="z-index:9800">
+<div class="modal-overlay" id="onboardingModal" style="z-index:9800" data-no-dismiss>
   <div class="modal" style="max-width:480px;text-align:center">
     <div id="onboardStep1">
       <div style="font-size:40px;margin-bottom:12px">🏢</div>
       <h3 id="ob1Title" style="margin-bottom:8px"></h3>
-      <p id="ob1Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px"></p>
+      <p id="ob1Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:6px"></p>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:24px" id="ob1Note"></p>
       <button class="btn-primary" style="width:100%;padding:12px;font-size:15px" id="ob1Btn" onclick="onboardCreateCompany()"></button>
     </div>
     <div id="onboardStep2" style="display:none">
       <div style="font-size:40px;margin-bottom:12px">🎉</div>
       <h3 id="ob2Title" style="margin-bottom:8px"></h3>
-      <p id="ob2Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px"></p>
+      <p id="ob2Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:6px"></p>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:24px" id="ob2Note"></p>
       <button class="btn-primary" style="width:100%;padding:12px;font-size:15px" id="ob2Btn" onclick="onboardCreateSite()"></button>
-      <button class="btn-secondary" style="width:100%;padding:10px;margin-top:8px;font-size:13px" id="ob2Skip" onclick="onboardSkipSite()"></button>
     </div>
   </div>
 </div>
@@ -1436,7 +1437,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="form-group"><label>Description (optional)</label><input type="text" id="siteDesc" placeholder="Brief description"></div>
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('addSiteModal')">Cancel</button>
+      <button class="btn-secondary" onclick="needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()">Save</button>
     </div>
   </div>
@@ -1498,7 +1499,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('addCompanyModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="window._onboardingActive?showOnboardStep1():closeModal('addCompanyModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" id="companySaveBtn" style="width:auto;padding:9px 18px" onclick="saveCompany()" data-i18n="modal.save">Save</button>
     </div>
   </div>
@@ -2155,7 +2156,7 @@ function navigate(page){
       // Switch to sites tab
       const siteTab=document.querySelectorAll('#page-admin .tabs .tab')[1];
       if(siteTab)adminTab('sites',siteTab);
-      showOnboardStep2('');
+      showOnboardStep2();
       return;
     }
   }
@@ -2621,42 +2622,43 @@ function needsSiteOnboarding(){
 }
 
 function showOnboardStep1(){
-  // Populate text from translations
   document.getElementById('ob1Title').textContent=t('ob.step1Title');
   document.getElementById('ob1Desc').textContent=t('ob.step1Desc');
+  document.getElementById('ob1Note').textContent=t('ob.step1Note');
   document.getElementById('ob1Btn').textContent=t('ob.step1Btn');
   document.getElementById('onboardStep1').style.display='';
   document.getElementById('onboardStep2').style.display='none';
   openModal('onboardingModal');
 }
 
-function showOnboardStep2(companyName){
+function showOnboardStep2(){
   document.getElementById('ob2Title').textContent=t('ob.step2Title');
-  // Personalise description with company name
-  const desc=t('ob.step2Desc');
-  document.getElementById('ob2Desc').textContent=desc;
+  document.getElementById('ob2Desc').textContent=t('ob.step2Desc');
+  document.getElementById('ob2Note').textContent=t('ob.step2Note');
   document.getElementById('ob2Btn').textContent=t('ob.step2Btn');
-  document.getElementById('ob2Skip').textContent=t('ob.step2Skip');
   document.getElementById('onboardStep1').style.display='none';
   document.getElementById('onboardStep2').style.display='';
-  // Make sure onboarding modal is open
   openModal('onboardingModal');
 }
 
 function onboardCreateCompany(){
-  closeModal('onboardingModal');
-  // Flag that after saving, we should show step 2
   window._onboardingActive=true;
+  window._onboardingSuppressed=true;
+  closeModal('onboardingModal');
   navigate('companies');
-  setTimeout(()=>openAddCompanyModal(),300);
+  setTimeout(()=>{
+    window._onboardingSuppressed=false;
+    openAddCompanyModal();
+  },300);
 }
 
 function onboardCreateSite(){
-  closeModal('onboardingModal');
   window._onboardingActive=false;
+  window._onboardingSuppressed=true;
+  closeModal('onboardingModal');
   navigate('admin');
   setTimeout(()=>{
-    // Switch to sites tab and open add site modal
+    window._onboardingSuppressed=false;
     const siteTab=document.querySelectorAll('#page-admin .tabs .tab')[1];
     if(siteTab)adminTab('sites',siteTab);
     setTimeout(()=>openAddSiteModal(),200);
@@ -2664,9 +2666,7 @@ function onboardCreateSite(){
 }
 
 function onboardSkipSite(){
-  closeModal('onboardingModal');
-  window._onboardingActive=false;
-  navigate('admin');
+  // Removed — skip is no longer allowed
 }
 
 function showUpgradePlans(){
@@ -3067,7 +3067,7 @@ async function loadAdminPage(){
   // Trigger site onboarding if company exists but no sites yet
   if(needsSiteOnboarding()&&!window._onboardingSiteShown){
     window._onboardingSiteShown=true;
-    showOnboardStep2(Ctx.get()?.co?.name||'');
+    showOnboardStep2();
     return;
   }
   const co=ctx?.co;
@@ -3911,7 +3911,7 @@ async function saveCompany(){
           await refreshCache({coId:r[0].id});
         }
         closeModal('addCompanyModal');
-        showOnboardStep2(name);
+        showOnboardStep2();
         return;
       }
     }
@@ -4442,7 +4442,10 @@ function confirmDelete(type,id,name){
 // ═══════════════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  if(el.hasAttribute('data-no-dismiss'))return;
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
+});
 function showMsg(id,msg,type){const el=document.getElementById(id);if(el)el.innerHTML=`<div class="msg ${type}">${msg}</div>`;}
 
 let _toastTimer=null;
@@ -4874,12 +4877,13 @@ en:{
 'modal.welcomeTitle':'Welcome to PunchClock Pro! 🎉',
 'modal.welcomeBody':'Start by creating your first company using the "+ New Company" button.',
 'ob.step1Title':'Welcome to PunchClock Pro! 👋',
-'ob.step1Desc':'Before you can manage employees, you need to set up your first company. This only takes a moment.',
+'ob.step1Desc':'Let\'s get you set up in two quick steps. First, create your company.',
+'ob.step1Note':'You can edit your company name and settings at any time.',
 'ob.step1Btn':'🏢 Create My First Company',
-'ob.step2Title':'Company created! Now let\'s add a site.',
-'ob.step2Desc':'Sites are the physical locations where your employees clock in and out. Create at least one site before adding employees.',
+'ob.step2Title':'Company created! One more step. 📍',
+'ob.step2Desc':'Now create your first site — the physical location where your employees will clock in.',
+'ob.step2Note':'You can edit your site name and add more sites at any time.',
 'ob.step2Btn':'📍 Create My First Site',
-'ob.step2Skip':'I\'ll do this later',
 'ob.siteCreated':'Site created! You can now add employees.',
 'nav.help':'❓ Help',
 'help.title':'How to Use PunchClock Pro',
@@ -5136,12 +5140,13 @@ fr:{
 'modal.welcomeTitle':'Bienvenue sur PunchClock Pro! 🎉',
 'modal.welcomeBody':'Commencez par créer votre première compagnie en cliquant sur le bouton « + Nouvelle compagnie ».',
 'ob.step1Title':'Bienvenue sur PunchClock Pro! 👋',
-'ob.step1Desc':'Avant de gérer des employés, vous devez créer votre première compagnie. Cela ne prend qu\'un moment.',
+'ob.step1Desc':'Configurons votre compte en deux étapes rapides. Commencez par créer votre compagnie.',
+'ob.step1Note':'Vous pourrez modifier le nom et les paramètres de votre compagnie à tout moment.',
 'ob.step1Btn':'🏢 Créer ma première compagnie',
-'ob.step2Title':'Compagnie créée! Maintenant, ajoutons un site.',
-'ob.step2Desc':'Les sites sont les emplacements physiques où vos employés pointent. Créez au moins un site avant d\'ajouter des employés.',
+'ob.step2Title':'Compagnie créée! Une dernière étape. 📍',
+'ob.step2Desc':'Créez maintenant votre premier site — l\'emplacement physique où vos employés pointeront.',
+'ob.step2Note':'Vous pourrez modifier votre site et en ajouter d\'autres à tout moment.',
 'ob.step2Btn':'📍 Créer mon premier site',
-'ob.step2Skip':'Je ferai ça plus tard',
 'ob.siteCreated':'Site créé! Vous pouvez maintenant ajouter des employés.',
 'nav.help':'❓ Aide',
 'help.title':'Comment utiliser PunchClock Pro',
