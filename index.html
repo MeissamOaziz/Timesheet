@@ -2417,15 +2417,19 @@ async function startCheckout(plan){
 }
 
 // Extra per-seat purchase ($4.90/mo add-on)
-// Price ID must be created in Stripe as a recurring $4.90/mo product
-const EXTRA_SEAT_PRICE_ID = 'price_1T92h6I87MWWhn5d4UTWLL4x'; // TODO: replace with real Stripe price ID
+const EXTRA_SEAT_PRICE_ID = 'price_1T92h6I87MWWhn5d4UTWLL4x';
 async function startExtraSeatCheckout(){
   const s=Sess.get();
   if(!s){navigate('login');return;}
-  if(!s.stripe_customer_id){
-    // No subscription yet — prompt to upgrade first
-    showToast('Please upgrade to a paid plan first to add extra seats.');
-    setTimeout(()=>showUpgradePlans(),1500);
+  // Free plan users must upgrade to a base plan first
+  if(!s.plan || s.plan==='free'){
+    showToast('Upgrade to a base plan first to add extra seats.');
+    setTimeout(()=>showUpgradePlans(),1200);
+    return;
+  }
+  // Business/Unlimited already has unlimited employees
+  if(s.plan==='business'||s.plan==='unlimited'){
+    showToast('Your plan already includes unlimited employees.');
     return;
   }
   showToast('Redirecting to checkout...');
@@ -2531,20 +2535,34 @@ async function handleStripeReturn(){
   // Clean the URL
   window.history.replaceState({},'',window.location.pathname);
   if(checkout==='success'&&plan){
-    // Re-fetch the admin record to get updated plan from DB
     const s=Sess.get();
     if(s){
-      try{
-        const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id`);
-        if(rows?.[0]){
-          const updated={...s,...rows[0]};
-          Sess.set(updated);
-          updateNav();
-        }
-      }catch(e){console.warn('Could not refresh session after checkout',e);}
+      // Poll DB up to 12 seconds waiting for webhook to update the plan
+      showToast('⏳ Activating your plan...');
+      let activated=false;
+      for(let i=0;i<8;i++){
+        await new Promise(r=>setTimeout(r,1500));
+        try{
+          const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id,status`);
+          if(rows?.[0]){
+            const updated={...s,...rows[0]};
+            Sess.set(updated);
+            updateNav();
+            if(rows[0].plan && rows[0].plan!=='free'){
+              activated=true;
+              break;
+            }
+          }
+        }catch(e){console.warn('Session refresh error',e);}
+      }
+      const planNames={starter:'Starter',growth:'Growth',business:'Business'};
+      if(activated){
+        showToast('🎉 Welcome to '+(planNames[plan]||plan)+'! Your plan is now active.','success');
+      } else {
+        // Webhook may still be in flight — show softer message, plan will update shortly
+        showToast('✅ Payment received! Your plan will activate within a minute.','success');
+      }
     }
-    const planNames={starter:'Starter',growth:'Growth',business:'Business'};
-    showToast('🎉 Welcome to '+( planNames[plan]||plan)+'! Your plan is now active.');
     navigate('admin');
   } else if(checkout==='cancelled'){
     showToast('Checkout cancelled — no charge was made.');
@@ -3324,9 +3342,9 @@ function openAddEmpModal(){
     document.getElementById('empModalTitle').textContent=t('admin.addEmployee')||'Add Employee';
     document.querySelectorAll('#addEmpModal .form-group, #addEmpModal hr, #addEmpModal .pin-row, #addEmpModal [id="emp-email-plan-hint"]').forEach(el=>el.style.display='none');
     document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='none');
-    // Show options: per-seat add OR upgrade plan
-    const isPaidPlan = plan.name!=='Free' && plan.name!=='Unlimited';
-    const seatHtml = isPaidPlan ? `
+    // Show extra seat option for all non-unlimited plans
+    const isUnlimited = plan.name==='Unlimited' || plan.name==='Business';
+    const seatHtml = !isUnlimited ? `
       <div style="border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:rgba(79,142,247,.06)">
         <div style="font-weight:600;font-size:14px;margin-bottom:4px">➕ ${t('msg.addSeat')||'Add an Extra Seat'}</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${t('msg.seatPrice')||'+$4.90/mo per additional employee, billed via Stripe.'}</div>
