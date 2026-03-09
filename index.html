@@ -951,13 +951,13 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ═══════════════ ADMIN PAGE ═══════════════ -->
 <div class="page" id="page-admin">
   <div class="page-header">
-    <div><h1 id="adminTitle">Admin Panel</h1><p id="adminSub">Manage employees and sites</p></div>
+    <div><h1 id="adminTitle" data-i18n="admin.title">Admin Panel</h1><p id="adminSub" data-i18n="admin.subtitle">Manage employees and sites</p></div>
     <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()" data-i18n="admin.addEmployee">+ Add Employee</button>
   </div>
   <div class="tabs">
     <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
     <button class="tab" onclick="adminTab('sites',this)" data-i18n="admin.tabs.sites">Sites</button>
-    <button class="tab" onclick="adminTab('admins',this)">Admins</button>
+    <button class="tab" onclick="adminTab('admins',this)" data-i18n="admin.tabs.admins">Admins</button>
   </div>
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
@@ -977,7 +977,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <!-- SITES TAB -->
   <div id="tab-sites" style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddSiteModal()">+ Add Site</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddSiteModal()" data-i18n="admin.addSite">+ Add Site</button>
     </div>
     <div class="site-list" id="siteListAdmin"></div>
   </div>
@@ -994,8 +994,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </table></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h3 style="font-size:14px;font-weight:600">All Admin Accounts</h3>
-        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()">+ Create Admin</button>
+        <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">All Admin Accounts</h3>
+        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()" data-i18n="admin.createAdmin">+ Create Admin</button>
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
@@ -1433,8 +1433,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="modal">
     <h3 id="siteModalTitle">Add Site</h3>
     <div id="siteModalMsg"></div>
-    <div class="form-group"><label>Site Name</label><input type="text" id="siteName" placeholder="Main Office, Warehouse A..."></div>
-    <div class="form-group"><label>Description (optional)</label><input type="text" id="siteDesc" placeholder="Brief description"></div>
+    <div class="form-group"><label data-i18n="site.name">Site Name</label><input type="text" id="siteName" data-i18n="site.namePlaceholder" placeholder="Main Office, Warehouse A..."></div>
+    <div class="form-group"><label data-i18n="site.desc">Description (optional)</label><input type="text" id="siteDesc" data-i18n="site.descPlaceholder" placeholder="Brief description"></div>
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')">Cancel</button>
@@ -3061,8 +3061,8 @@ async function loadAdminPage(){
     return;
   }
   const co=ctx?.co;
-  document.getElementById('adminTitle').textContent=co?`${co.name} — Admin`:'Admin Panel';
-  document.getElementById('adminSub').textContent=co?`Managing employees and sites for ${co.name}`:'Select a company from the picker to scope this panel';
+  document.getElementById('adminTitle').textContent=co?`${co.name} — ${t('admin.title')||'Admin'}`:t('admin.title')||'Admin Panel';
+  document.getElementById('adminSub').textContent=co?`${t('admin.managing')||'Managing employees and sites for'} ${co.name}`:t('admin.subtitle')||'Manage employees and sites';
   populateEmpSiteFilter();
   renderEmployees();
   renderSitesAdmin();
@@ -3167,7 +3167,7 @@ function renderSitesAdmin(){
   const ctx=Ctx.get();
   const sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
   const list=document.getElementById('siteListAdmin');
-  if(!sites.length){list.innerHTML=`<div class="empty"><p>No sites yet for this company. Click "+ Add Site" to create one.</p></div>`;return;}
+  if(!sites.length){list.innerHTML=`<div class="empty"><p>${t('site.noSites')||'No sites yet for this company. Click \"+ Add Site\" to create one.'}</p></div>`;return;}
   list.innerHTML=sites.map(s=>{
     const empCnt=C.employees.filter(e=>e.site_id===s.id).length;
     const co=C.companies.find(c=>c.id===s.company_id);
@@ -3698,7 +3698,7 @@ function openAddSiteModal(){
   }
   document.getElementById('siteName').style.display='';
   document.getElementById('siteDesc').style.display='';
-  document.getElementById('siteModalTitle').textContent='Add Site — '+ctx.co.name;
+  document.getElementById('siteModalTitle').textContent=(t('modal.addSite')||'Add Site')+' — '+ctx.co.name;
   document.getElementById('siteName').value='';
   document.getElementById('siteDesc').value='';
   document.getElementById('editSiteUid').value='';
@@ -3708,7 +3708,7 @@ function openAddSiteModal(){
 
 function editSite(id){
   const s=C.sites.find(s=>s.id===id);if(!s)return;
-  document.getElementById('siteModalTitle').textContent='Edit Site';
+  document.getElementById('siteModalTitle').textContent=t('modal.editSite')||'Edit Site';
   document.getElementById('siteName').value=s.name;
   document.getElementById('siteDesc').value=s.description||'';
   document.getElementById('editSiteUid').value=s.id;
@@ -4703,6 +4703,11 @@ en:{
 'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.',
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
+'admin.managing':'Managing employees and sites for',
+'admin.addSite':'+ Add Site','admin.allAdminAccounts':'All Admin Accounts','admin.createAdmin':'+ Create Admin',
+'site.name':'Site Name','site.namePlaceholder':'Main Office, Warehouse A...',
+'site.desc':'Description (optional)','site.descPlaceholder':'Brief description',
+'site.noSites':'No sites yet for this company. Click \"+ Add Site\" to create one.',
 'admin.addEmployee':'+ Add Employee','admin.tabs.employees':'Employees',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
 'admin.search':'Search','admin.searchPlaceholder':'Name, department...',
@@ -4856,6 +4861,7 @@ en:{
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
 'companies.empty':'No companies yet. Create your first one!',
 'modal.newCompany':'New Company','modal.editCompany':'Edit Company',
+'modal.addSite':'Add Site','modal.editSite':'Edit Site',
 'modal.companyName':'Company Name','modal.industry':'Industry','modal.description':'Description',
 'modal.industryPlaceholder':'Technology, Retail...','modal.descPlaceholder':'Optional',
 'modal.payrollSettings':'Payroll Settings','modal.weekStartsOn':'Week Starts On',
@@ -4966,6 +4972,11 @@ fr:{
 'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',
+'admin.managing':'Gestion des employés et sites pour',
+'admin.addSite':'+ Ajouter un site','admin.allAdminAccounts':'Tous les comptes admin','admin.createAdmin':'+ Créer un admin',
+'site.name':'Nom du site','site.namePlaceholder':'Bureau principal, Entrepôt A...',
+'site.desc':'Description (optionnel)','site.descPlaceholder':'Brève description',
+'site.noSites':'Aucun site pour cette compagnie. Cliquez sur \"+ Ajouter un site\" pour en créer un.',
 'admin.addEmployee':'+ Ajouter un employé','admin.tabs.employees':'Employés',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
 'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...',
@@ -5119,6 +5130,7 @@ fr:{
 'coAdmin.myCoAdmins':'Mes co-admins','coAdmin.noCoAdmins':'Aucun co-admin pour l\'instant. Invitez quelqu\'un pour commencer.',
 'companies.empty':'Aucune compagnie. Créez-en une première!',
 'modal.newCompany':'Nouvelle compagnie','modal.editCompany':'Modifier la compagnie',
+'modal.addSite':'Ajouter un site','modal.editSite':'Modifier le site',
 'modal.companyName':'Nom de la compagnie','modal.industry':'Secteur','modal.description':'Description',
 'modal.industryPlaceholder':'Technologie, Commerce...','modal.descPlaceholder':'Optionnel',
 'modal.payrollSettings':'Paramètres de paie','modal.weekStartsOn':'Début de semaine',
