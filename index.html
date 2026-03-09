@@ -2382,7 +2382,10 @@ function logout(){Sess.clear();Ctx.clear();updateNav();showLanding();}
 async function startCheckout(plan){
   const s=Sess.get();
   if(!s){navigate('login');return;}
-  if(s.plan===plan){showToast('You are already on the '+plan+' plan.');return;}
+  if(s.plan===plan){showToast(t('toast.alreadyOnPlan')||'You are already on this plan.');return;}
+  // Open the window immediately (user gesture) before async fetch
+  const win=window.open('','_blank');
+  if(win) win.document.write('<html><body style="background:#0f0f17;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><p style="font-size:18px">⏳ Redirecting to secure checkout...</p></body></html>');
   showToast('Redirecting to secure checkout...');
   try{
     const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
@@ -2398,8 +2401,10 @@ async function startCheckout(plan){
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error);
-    window.location.href=data.url;
+    if(win) win.location.href=data.url;
+    else window.location.href=data.url;
   }catch(e){
+    if(win) win.close();
     showToast('Checkout error: '+e.message);
   }
 }
@@ -2448,6 +2453,8 @@ async function openBillingPortal(){
   if(!s||!s.stripe_customer_id){
     showToast('No active subscription found.');return;
   }
+  const win=window.open('','_blank');
+  if(win) win.document.write('<html><body style="background:#0f0f17;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><p style="font-size:18px">⏳ Opening billing portal...</p></body></html>');
   showToast('Opening billing portal...');
   try{
     const res=await fetch(`${EDGE_URL}?action=create-portal`,{
@@ -2460,8 +2467,10 @@ async function openBillingPortal(){
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error);
-    window.location.href=data.url;
+    if(win) win.location.href=data.url;
+    else window.location.href=data.url;
   }catch(e){
+    if(win) win.close();
     showToast('Portal error: '+e.message);
   }
 }
