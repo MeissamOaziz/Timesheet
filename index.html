@@ -520,7 +520,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <!-- STARTER -->
       <div class="price-card">
         <div class="price-name" data-i18n="plan.starter">Starter</div>
-        <div class="price-amount">$19<span>/mo</span></div>
+        <div class="price-amount">$19.49<span>/mo CAD</span></div>
         <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee</div>
         <ul class="price-features">
           <li data-i18n="land.f.start1">1 company, 2 sites</li>
@@ -531,13 +531,13 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li data-i18n="land.f.start6">QuickBooks IIF export</li>
           <li class="dim" data-i18n="land.f.start7">Multiple companies</li>
         </ul>
-        <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.freeTrial">Start free trial</button>
+        <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
       </div>
       <!-- GROWTH -->
       <div class="price-card popular">
         <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
         <div class="price-name" data-i18n="plan.growth">Growth</div>
-        <div class="price-amount">$39<span>/mo</span></div>
+        <div class="price-amount">$39.49<span>/mo CAD</span></div>
         <div class="price-sub" data-i18n-html="land.growthSub">2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee</div>
         <ul class="price-features">
           <li data-i18n="land.f.grow1">2 companies</li>
@@ -546,12 +546,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li data-i18n="land.f.grow4">All Starter features</li>
           <li data-i18n="land.f.grow5">Priority support</li>
         </ul>
-        <button class="price-cta accent" onclick="hideLanding();navigate('register')" data-i18n="land.freeTrial2">Start free trial</button>
+        <button class="price-cta accent" onclick="isLoggedIn()?startCheckout('growth'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial2">Get Growth</button>
       </div>
       <!-- BUSINESS -->
       <div class="price-card">
         <div class="price-name" data-i18n="plan.business">Business</div>
-        <div class="price-amount">$79<span>/mo</span></div>
+        <div class="price-amount">$79.49<span>/mo CAD</span></div>
         <div class="price-sub" data-i18n="land.unlimitedSub">Unlimited everything</div>
         <ul class="price-features">
           <li data-i18n="land.f.biz1">Unlimited companies</li>
@@ -561,7 +561,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li data-i18n="land.f.biz5">Dedicated support</li>
           <li data-i18n="land.f.biz6">Early access to new features</li>
         </ul>
-        <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.contactUs">Contact us</button>
+        <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('business'):(hideLanding(),navigate('register'))" data-i18n="land.contactUs">Get Business</button>
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">All plans include a 14-day free trial. No credit card required to start.</p>
@@ -1195,7 +1195,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div style="font-size:11px;color:var(--text2);margin-bottom:3px" data-i18n="profile.plan">Subscription Plan</div>
         <div id="profilePlanName" style="font-weight:700;font-size:15px"></div>
       </div>
-      <button class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');navigate('landing')" data-i18n="profile.upgrade">⬆ Upgrade</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()" data-i18n="profile.upgrade">⬆ Upgrade</button>
+        <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()">⚙ Manage Billing</button>
+      </div>
     </div>
 
     <!-- Edit name -->
@@ -1513,6 +1516,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
 // ═══════════════════════════════════════════════════
 const SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
+const STRIPE_PK='pk_test_51T90YNI87MWWhn5dTVwguCNGbL3WTR53ixLMqGWU8uLBadFeFiUblRhS8HWYXkj8guSt3PjTozDIhGhYkmDjN3SA00q3P2T5l1';
+const EDGE_URL='https://uziwymrwaeojhqaagqcm.supabase.co/functions/v1/stripe-handler';
 
 async function supaFetch(method,table,opts={}){
   let url=`${SUPA_URL}/rest/v1/${table}`;
@@ -1666,10 +1671,10 @@ function showPlanGate(msg, hintId) {
 // PLAN SYSTEM
 // ═══════════════════════════════════════════════════
 const PLANS = {
-  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:5,  price:0    },
-  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:10, price:19   },
-  growth:   { name:'Growth',   maxCompanies:2, maxSites:5,  maxEmployees:25, price:39   },
-  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:79 },
+  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:5,  price:0     },
+  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:10, price:19.49 },
+  growth:   { name:'Growth',   maxCompanies:2, maxSites:5,  maxEmployees:25, price:39.49 },
+  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:79.49 },
   unlimited:{ name:'Unlimited',maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:0  },
 };
 // Grandfathered companies — always unlimited regardless of plan
@@ -1723,7 +1728,7 @@ function showUpgradePrompt(containerId, msg) {
   el.innerHTML = `<div class="upgrade-wall">
     <h3>🔒 Plan Limit Reached</h3>
     <p>${msg}</p>
-    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="navigate('companies');closeModal(document.querySelector('.modal-overlay.open')?.id||'')">Upgrade Plan</button>
+    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="showUpgradePlans()">⬆ Upgrade Plan</button>
   </div>`;
 }
 
@@ -1800,6 +1805,11 @@ async function refreshCache(opts={}){
   const visibleCoIds=new Set(C.companies.map(c=>c.id));
   C.sites=(sites||[]).filter(s=>visibleCoIds.has(s.company_id));
   C.employees=(employees||[]).filter(e=>visibleCoIds.has(e.company_id));
+  // Superadmin also loads orphaned employees (company deleted when admin was removed)
+  if(superAdmin){
+    const orphaned=await DB.all('employees',`company_id=is.null&dept=eq.${encodeURIComponent('⚠️ Admin Deleted')}&order=name.asc`);
+    if(orphaned?.length) C.employees=[...C.employees,...orphaned];
+  }
   if(!sess&&ctx?.site){C.employees=C.employees.filter(e=>e.site_id===ctx.site.id);}
   // Build punch filter
   const parts=['order=punched_at.desc'];
@@ -2367,6 +2377,126 @@ async function doVerify(){
 function logout(){Sess.clear();Ctx.clear();updateNav();showLanding();}
 
 // ═══════════════════════════════════════════════════
+// STRIPE PAYMENTS
+// ═══════════════════════════════════════════════════
+async function startCheckout(plan){
+  const s=Sess.get();
+  if(!s){navigate('login');return;}
+  if(s.plan===plan){showToast('You are already on the '+plan+' plan.');return;}
+  showToast('Redirecting to secure checkout...');
+  try{
+    const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      body:JSON.stringify({
+        plan,
+        adminId:s.id,
+        adminEmail:s.email,
+        successUrl:'https://www.punchclock.ca',
+        cancelUrl:'https://www.punchclock.ca',
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    window.location.href=data.url;
+  }catch(e){
+    showToast('Checkout error: '+e.message);
+  }
+}
+
+function showUpgradePlans(){
+  const s=Sess.get();
+  const cur=s?.plan||'free';
+  const plans=[
+    {key:'starter', name:'Starter', price:'$19.49/mo CAD', desc:'1 company · 2 sites · 10 employees'},
+    {key:'growth',  name:'Growth',  price:'$39.49/mo CAD', desc:'2 companies · 5 sites · 25 employees', popular:true},
+    {key:'business',name:'Business',price:'$79.49/mo CAD', desc:'Unlimited everything'},
+  ];
+  const html=plans.map(p=>`
+    <div style="border:1.5px solid ${p.popular?'var(--accent)':'var(--border)'};border-radius:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:${p.popular?'rgba(79,142,247,.06)':'var(--surface2)'}">
+      <div>
+        ${p.popular?'<span style="font-size:10px;background:var(--accent);color:#fff;border-radius:4px;padding:2px 7px;margin-bottom:5px;display:inline-block">Most Popular</span><br>':''}
+        <strong style="font-size:15px">${p.name}</strong>
+        <span style="font-size:13px;color:var(--text2);margin-left:8px">${p.price}</span>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">${p.desc}</div>
+      </div>
+      ${cur===p.key
+        ?'<span style="font-size:12px;color:var(--green);font-weight:600">✓ Current plan</span>'
+        :`<button class="btn-primary" style="width:auto;padding:8px 18px;font-size:13px;flex-shrink:0" onclick="closeModal('upgradePlansModal');startCheckout('${p.key}')">Select</button>`
+      }
+    </div>`).join('');
+
+  let modal=document.getElementById('upgradePlansModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='upgradePlansModal';
+    modal.className='modal-overlay';
+    modal.style.zIndex='9600';
+    modal.innerHTML=`<div class="modal" style="max-width:520px">
+      <h3 style="margin-bottom:6px">⬆ Upgrade Your Plan</h3>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:20px">All plans are billed monthly in CAD. Cancel anytime.</p>
+      <div id="upgradePlansList" style="display:flex;flex-direction:column;gap:12px"></div>
+      <button class="btn-secondary" style="margin-top:18px;width:100%" onclick="closeModal('upgradePlansModal')">Cancel</button>
+    </div>`;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('upgradePlansList').innerHTML=html;
+  openModal('upgradePlansModal');
+}
+
+async function openBillingPortal(){
+  const s=Sess.get();
+  if(!s||!s.stripe_customer_id){
+    showToast('No active subscription found.');return;
+  }
+  showToast('Opening billing portal...');
+  try{
+    const res=await fetch(`${EDGE_URL}?action=create-portal`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      body:JSON.stringify({
+        customerId:s.stripe_customer_id,
+        returnUrl:'https://www.punchclock.ca',
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    window.location.href=data.url;
+  }catch(e){
+    showToast('Portal error: '+e.message);
+  }
+}
+
+// Handle return from Stripe Checkout (success or cancel)
+async function handleStripeReturn(){
+  const params=new URLSearchParams(window.location.search);
+  const checkout=params.get('checkout');
+  const plan=params.get('plan');
+  if(!checkout)return;
+  // Clean the URL
+  window.history.replaceState({},'',window.location.pathname);
+  if(checkout==='success'&&plan){
+    // Re-fetch the admin record to get updated plan from DB
+    const s=Sess.get();
+    if(s){
+      try{
+        const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id`);
+        if(rows?.[0]){
+          const updated={...s,...rows[0]};
+          Sess.set(updated);
+          updateNav();
+        }
+      }catch(e){console.warn('Could not refresh session after checkout',e);}
+    }
+    const planNames={starter:'Starter',growth:'Growth',business:'Business'};
+    showToast('🎉 Welcome to '+( planNames[plan]||plan)+'! Your plan is now active.');
+    navigate('admin');
+  } else if(checkout==='cancelled'){
+    showToast('Checkout cancelled — no charge was made.');
+  }
+}
+
+// ═══════════════════════════════════════════════════
 // PROFILE
 // ═══════════════════════════════════════════════════
 function openProfile(){
@@ -2389,9 +2519,13 @@ function openProfile(){
   const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',enterprise:'#a78bfa'};
   planEl.textContent=planNames[plan]||plan;
   planEl.style.color=planColors[plan]||'var(--text)';
-  // Hide upgrade button if already on top plan
-  const upgradeBtn=document.querySelector('#profilePlanBadge .btn-primary');
-  if(upgradeBtn)upgradeBtn.style.display=(plan==='enterprise'||isSuperAdmin())?'none':'';
+  // Hide upgrade button if already on top plan; show manage billing if paid
+  const upgradeBtn=document.getElementById('profileUpgradeBtn');
+  const manageBtn=document.getElementById('profileManageBtn');
+  const isPaid=plan!=='free'&&plan!=='unlimited';
+  const isTopPlan=plan==='business'||plan==='enterprise'||isSuperAdmin();
+  if(upgradeBtn)upgradeBtn.style.display=isTopPlan?'none':'';
+  if(manageBtn)manageBtn.style.display=isPaid?'':'none';
   document.getElementById('profileModal').classList.add('open');
 }
 
@@ -2700,13 +2834,17 @@ function renderEmployees(){
   });
 
   // Desktop table
-  tbody.innerHTML=rows.map(({e,site,avatarHtml,pin,emailStatus})=>`<tr>
+  tbody.innerHTML=rows.map(({e,site,avatarHtml,pin,emailStatus})=>{
+    const isOrphaned = e.dept==='⚠️ Admin Deleted';
+    const orphanBadge = isOrphaned ? `<span style="display:inline-block;margin-left:6px;font-size:10px;padding:1px 6px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:4px">⚠️ Admin Deleted</span>` : '';
+    const rowStyle = isOrphaned ? ' style="opacity:0.7;background:rgba(239,68,68,0.04)"' : '';
+    return `<tr${rowStyle}>
       <td><div class="emp-row">${avatarHtml}<div>
-        <div style="font-weight:500">${e.name}</div>
+        <div style="font-weight:500">${e.name}${orphanBadge}</div>
         <div style="font-size:11px;color:var(--text2)">${e.emp_code||'—'}</div>
       </div></div></td>
       <td>${site?`<span class="pill site">&#128205; ${site.name}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
-      <td>${e.dept||'—'}</td>
+      <td>${isOrphaned?'<span style="color:#ef4444;font-size:12px">⚠️ Admin Deleted</span>':e.dept||'—'}</td>
       <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
       <td>${pin}</td>
       <td>${emailStatus}</td>
@@ -2716,15 +2854,19 @@ function renderEmployees(){
         <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">${t('admin.sendReport')}</button>
         <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
       </div></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   // Mobile cards
   const cards=document.getElementById('empCardsContainer');
-  if(cards) cards.innerHTML=rows.map(({e,site,avatarHtml,pin,emailStatus})=>`
-    <div class="mobile-card-row">
-      <div class="mc-name">${avatarHtml}<span>${e.name}</span><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></div>
+  if(cards) cards.innerHTML=rows.map(({e,site,avatarHtml,pin,emailStatus})=>{
+    const isOrphaned = e.dept==='⚠️ Admin Deleted';
+    const orphanBadge = isOrphaned ? `<span style="font-size:10px;padding:1px 6px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:4px">⚠️ Admin Deleted</span>` : '';
+    return `
+    <div class="mobile-card-row"${isOrphaned?' style="border-color:rgba(239,68,68,0.3);opacity:0.75"':''}>
+      <div class="mc-name">${avatarHtml}<span>${e.name}</span><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span>${orphanBadge}</div>
       ${site?`<div class="mc-row"><span>Site</span><span>&#128205; ${site.name}</span></div>`:''}
-      ${e.dept?`<div class="mc-row"><span>Dept</span><span>${e.dept}</span></div>`:''}
+      <div class="mc-row"><span>Dept</span><span>${isOrphaned?'<span style="color:#ef4444">⚠️ Admin Deleted</span>':e.dept||'—'}</span></div>
       <div class="mc-row"><span>PIN</span>${pin}</div>
       <div class="mc-row"><span>Email Report</span>${emailStatus}</div>
       <div class="mc-actions">
@@ -2733,7 +2875,8 @@ function renderEmployees(){
         <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')">&#128231; Report</button>
         <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderSitesAdmin(){
@@ -2935,22 +3078,57 @@ async function renderAdmins(){
 async function deleteAdmin(id, name){
   if(!confirm(`${t('msg.deleteAdmin1')} "${name}"?\n\n${t('msg.deleteAdmin2')}`)) return;
   try{
-    // Delete associated join requests
+    // 1. Find all companies owned by this admin
+    const ownedCompanies = await DB.all('companies',`admin_id=eq.${id}`);
+    const coIds = (ownedCompanies||[]).map(c=>c.id);
+
+    if(coIds.length){
+      // 2. For each company: mark employees as orphaned (deactivate + flag dept), then delete sites + company
+      for(const coId of coIds){
+        // Mark all employees of this company as orphaned
+        await fetch(`${SUPA_URL}/rest/v1/employees?company_id=eq.${coId}`,{
+          method:'PATCH',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({active:false, dept:'⚠️ Admin Deleted', site_id:null, company_id:null})
+        });
+        // Delete all sites for this company
+        await fetch(`${SUPA_URL}/rest/v1/sites?company_id=eq.${coId}`,{
+          method:'DELETE',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
+        });
+        // Delete all punches for this company
+        await fetch(`${SUPA_URL}/rest/v1/punches?company_id=eq.${coId}`,{
+          method:'DELETE',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
+        });
+        // Delete the company
+        await fetch(`${SUPA_URL}/rest/v1/companies?id=eq.${coId}`,{
+          method:'DELETE',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
+        });
+      }
+    }
+
+    // 3. Delete join requests involving this admin
     await fetch(`${SUPA_URL}/rest/v1/join_requests?or=(requester_id.eq.${id},target_admin_id.eq.${id})`,{
       method:'DELETE',
       headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
     });
-    // Delete their companies (and cascade to sites/employees if desired)
-    // For now just unlink companies so they don't get orphaned
-    await fetch(`${SUPA_URL}/rest/v1/companies?admin_id=eq.${id}`,{
+
+    // 4. Delete any co-admins under this admin (set parent to null or delete)
+    await fetch(`${SUPA_URL}/rest/v1/admins?parent_admin_id=eq.${id}`,{
       method:'PATCH',
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({admin_id:null})
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({parent_admin_id:null})
     });
-    // Delete the admin account
+
+    // 5. Delete the admin account
     await DB.del('admins',`id=eq.${id}`);
+
+    await refreshCache();
     await renderAdmins();
-    showToast(`${name} has been deleted.`);
+    const empCount = coIds.length ? ` ${t('msg.deleteAdminEmpsOrphaned')||'Orphaned employees have been flagged for review.'}` : '';
+    showToast(`${name} ${t('msg.deleteAdminDone')||'has been deleted. Their companies and sites have been removed.'}${empCount}`);
   }catch(e){
     alert('Error deleting admin: '+e.message);
   }
@@ -4108,6 +4286,9 @@ async function init(){
     document.getElementById('loadingOverlay').classList.add('hidden');
     updateNav();
 
+    // Handle return from Stripe Checkout before anything else
+    await handleStripeReturn();
+
     const ctx=Ctx.get();
     if(!ctx){
       showCompanyPicker();
@@ -4227,7 +4408,9 @@ en:{
 'land.copyright':'© 2026 PunchClock Pro. All rights reserved.',
 'msg.deleteConfirm1':'Are you sure you want to delete','msg.deleteConfirm2':'This cannot be undone.',
 'msg.deletePunch':'Delete this punch record? This is permanent and will affect reports.',
-'msg.deleteAdmin1':'Permanently delete','msg.deleteAdmin2':'This will remove their account and all associated data. This cannot be undone.',
+'msg.deleteAdmin1':'Permanently delete','msg.deleteAdmin2':'This will delete their account, all their companies, and all associated sites. Their employees will be flagged as "Admin Deleted" and deactivated. This cannot be undone.',
+'msg.deleteAdminDone':'deleted. Their companies and sites have been permanently removed.',
+'msg.deleteAdminEmpsOrphaned':'Orphaned employees have been flagged for review.',
 'msg.denyRequest':'Deny this access request? The user will not be able to log in.',
 'msg.selectName':'Please select your name first.','msg.noPin':'No PIN set — ask an admin to assign one.',
 'msg.clockOutFirst':'Clock OUT first.','msg.errorSaving':'Error saving punch',
@@ -4405,7 +4588,9 @@ fr:{
 'land.copyright':'© 2026 PunchClock Pro. Tous droits réservés.',
 'msg.deleteConfirm1':'Voulez-vous vraiment supprimer','msg.deleteConfirm2':'Cette action est irréversible.',
 'msg.deletePunch':'Supprimer ce pointage? Cette action est permanente et affectera les rapports.',
-'msg.deleteAdmin1':'Supprimer définitivement','msg.deleteAdmin2':'Cela supprimera leur compte et toutes les données associées. Cette action est irréversible.',
+'msg.deleteAdmin1':'Supprimer définitivement','msg.deleteAdmin2':'Cela supprimera leur compte, toutes leurs compagnies et tous les sites associés. Leurs employés seront marqués "Admin supprimé" et désactivés. Cette action est irréversible.',
+'msg.deleteAdminDone':'supprimé. Ses compagnies et sites ont été définitivement supprimés.',
+'msg.deleteAdminEmpsOrphaned':'Les employés orphelins ont été marqués pour révision.',
 'msg.denyRequest':'Refuser cette demande d\'accès? L\'utilisateur ne pourra pas se connecter.',
 'msg.selectName':'Veuillez sélectionner votre nom.','msg.noPin':'Aucun NIP défini — demandez à un admin d\'en assigner un.',
 'msg.clockOutFirst':'Pointez SORTIE d\'abord.','msg.errorSaving':'Erreur lors de l\'enregistrement',
