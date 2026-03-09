@@ -1239,6 +1239,25 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div>
 
+<!-- ONBOARDING MODAL -->
+<div class="modal-overlay" id="onboardingModal" style="z-index:9800">
+  <div class="modal" style="max-width:480px;text-align:center">
+    <div id="onboardStep1">
+      <div style="font-size:40px;margin-bottom:12px">🏢</div>
+      <h3 id="ob1Title" style="margin-bottom:8px"></h3>
+      <p id="ob1Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px"></p>
+      <button class="btn-primary" style="width:100%;padding:12px;font-size:15px" id="ob1Btn" onclick="onboardCreateCompany()"></button>
+    </div>
+    <div id="onboardStep2" style="display:none">
+      <div style="font-size:40px;margin-bottom:12px">🎉</div>
+      <h3 id="ob2Title" style="margin-bottom:8px"></h3>
+      <p id="ob2Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px"></p>
+      <button class="btn-primary" style="width:100%;padding:12px;font-size:15px" id="ob2Btn" onclick="onboardCreateSite()"></button>
+      <button class="btn-secondary" style="width:100%;padding:10px;margin-top:8px;font-size:13px" id="ob2Skip" onclick="onboardSkipSite()"></button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD EMPLOYEE MODAL -->
 <div class="modal-overlay" id="addEmpModal">
   <div class="modal">
@@ -2372,9 +2391,10 @@ async function doVerify(){
       await refreshCache();
       showMsg('registerMsg',t('msg.accountCreated'),'success');
       setTimeout(()=>{
-        navigate('companies');
-        // Show welcome prompt
-        setTimeout(()=>alert(t('modal.welcomeTitle')+'\n\n'+t('modal.welcomeBody')),500);
+        navigate('admin');
+        // Start guided onboarding flow
+        window._onboardingActive=true;
+        setTimeout(()=>showOnboardStep1(),400);
       },1000);
     }
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
@@ -2457,6 +2477,70 @@ async function startExtraSeatCheckout(){
   }catch(e){
     showToast('Checkout error: '+e.message);
   }
+}
+
+// ═══════════════════════════════════════════════════
+// ONBOARDING — guided first-time setup flow
+// ═══════════════════════════════════════════════════
+function needsOnboarding(){
+  if(!isLoggedIn()||isSuperAdmin())return false;
+  return C.companies.length===0;
+}
+
+function needsSiteOnboarding(){
+  if(!isLoggedIn()||isSuperAdmin())return false;
+  const ctx=Ctx.get();
+  if(!ctx)return false;
+  return C.sites.filter(s=>s.company_id===ctx.co.id).length===0;
+}
+
+function showOnboardStep1(){
+  // Populate text from translations
+  document.getElementById('ob1Title').textContent=t('ob.step1Title');
+  document.getElementById('ob1Desc').textContent=t('ob.step1Desc');
+  document.getElementById('ob1Btn').textContent=t('ob.step1Btn');
+  document.getElementById('onboardStep1').style.display='';
+  document.getElementById('onboardStep2').style.display='none';
+  openModal('onboardingModal');
+}
+
+function showOnboardStep2(companyName){
+  document.getElementById('ob2Title').textContent=t('ob.step2Title');
+  // Personalise description with company name
+  const desc=t('ob.step2Desc');
+  document.getElementById('ob2Desc').textContent=desc;
+  document.getElementById('ob2Btn').textContent=t('ob.step2Btn');
+  document.getElementById('ob2Skip').textContent=t('ob.step2Skip');
+  document.getElementById('onboardStep1').style.display='none';
+  document.getElementById('onboardStep2').style.display='';
+  // Make sure onboarding modal is open
+  openModal('onboardingModal');
+}
+
+function onboardCreateCompany(){
+  closeModal('onboardingModal');
+  // Flag that after saving, we should show step 2
+  window._onboardingActive=true;
+  navigate('companies');
+  setTimeout(()=>openAddCompanyModal(),300);
+}
+
+function onboardCreateSite(){
+  closeModal('onboardingModal');
+  window._onboardingActive=false;
+  navigate('admin');
+  setTimeout(()=>{
+    // Switch to sites tab and open add site modal
+    const siteTab=document.querySelectorAll('#page-admin .tabs .tab')[1];
+    if(siteTab)adminTab('sites',siteTab);
+    setTimeout(()=>openAddSiteModal(),200);
+  },300);
+}
+
+function onboardSkipSite(){
+  closeModal('onboardingModal');
+  window._onboardingActive=false;
+  navigate('admin');
 }
 
 function showUpgradePlans(){
@@ -2849,6 +2933,17 @@ async function loadAdminPage(){
   if(!isLoggedIn()){navigate('login');return;}
   const ctx=Ctx.get();
   await refreshCache(ctx?{coId:ctx.co.id}:{});
+  // Trigger onboarding for new accounts with no company
+  if(needsOnboarding()){
+    showOnboardStep1();
+    return;
+  }
+  // Trigger site onboarding if company exists but no sites yet
+  if(needsSiteOnboarding()&&!window._onboardingSiteShown){
+    window._onboardingSiteShown=true;
+    showOnboardStep2(Ctx.get()?.co?.name||'');
+    return;
+  }
   const co=ctx?.co;
   document.getElementById('adminTitle').textContent=co?`${co.name} — Admin`:'Admin Panel';
   document.getElementById('adminSub').textContent=co?`Managing employees and sites for ${co.name}`:'Select a company from the picker to scope this panel';
@@ -3316,7 +3411,7 @@ function setEmailToggle(on){
 }
 
 function openAddEmpModal(){
-  const ctx=Ctx.get();if(!ctx){alert('Please select a company first.');return;}
+  const ctx=Ctx.get();if(!ctx){if(needsOnboarding()){showOnboardStep1();return;}else{showCompanyPicker();}return;}
 
   // ── HARD BLOCK: must have at least one site first ──
   const coSites=C.sites.filter(s=>s.company_id===ctx.co.id);
@@ -3475,7 +3570,7 @@ async function toggleEmp(id){
 
 // ---- Site modal ----
 function openAddSiteModal(){
-  const ctx=Ctx.get();if(!ctx){alert('Please select a company first.');return;}
+  const ctx=Ctx.get();if(!ctx){if(needsOnboarding()){showOnboardStep1();return;}else{showCompanyPicker();}return;}
   const {ok,current,max,plan}=canAddSite(ctx.co);
   if(!ok){
     document.getElementById('siteModalMsg').innerHTML='';
@@ -3520,7 +3615,16 @@ async function saveSite(){
       const r=await DB.insert('sites',{company_id:ctx.co.id,name,description});
       if(r?.[0])C.sites.push(r[0]);
     }
-    closeModal('addSiteModal');renderSitesAdmin();populateEmpSiteFilter();
+    closeModal('addSiteModal');
+    window._onboardingSiteShown=false; // allow re-check to clear now that a site exists
+    renderSitesAdmin();populateEmpSiteFilter();
+    // If this was the first site, show a success toast and switch to employees tab
+    const ctx2=Ctx.get();
+    if(ctx2&&C.sites.filter(s=>s.company_id===ctx2.co.id).length===1){
+      showToast('✓ '+t('ob.siteCreated')||'✓ Site created! You can now add employees.','success');
+      const empTab=document.querySelectorAll('#page-admin .tabs .tab')[0];
+      if(empTab)adminTab('employees',empTab);
+    }
   }catch(e){showMsg('siteModalMsg','Error: '+e.message,'error');}
 }
 
@@ -3671,6 +3775,19 @@ async function saveCompany(){
       const sess=Sess.get();
       const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
+      // If this is onboarding (first company), auto-select it and show step 2
+      if(window._onboardingActive){
+        window._onboardingActive=false;
+        if(r?.[0]){
+          // Auto-select the new company as context
+          Ctx.set({co:r[0],site:null});
+          updateContextPill();
+          await refreshCache({coId:r[0].id});
+        }
+        closeModal('addCompanyModal');
+        showOnboardStep2(name);
+        return;
+      }
     }
     closeModal('addCompanyModal');loadCompaniesPage();
   }catch(e){showMsg('companyModalMsg','Error: '+e.message,'error');}
@@ -4630,6 +4747,14 @@ en:{
 'modal.currentPlan':'✓ Current plan','modal.select':'Select','modal.mostPopular':'Most Popular',
 'modal.welcomeTitle':'Welcome to PunchClock Pro! 🎉',
 'modal.welcomeBody':'Start by creating your first company using the "+ New Company" button.',
+'ob.step1Title':'Welcome to PunchClock Pro! 👋',
+'ob.step1Desc':'Before you can manage employees, you need to set up your first company. This only takes a moment.',
+'ob.step1Btn':'🏢 Create My First Company',
+'ob.step2Title':'Company created! Now let\'s add a site.',
+'ob.step2Desc':'Sites are the physical locations where your employees clock in and out. Create at least one site before adding employees.',
+'ob.step2Btn':'📍 Create My First Site',
+'ob.step2Skip':'I\'ll do this later',
+'ob.siteCreated':'Site created! You can now add employees.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees',
 'upgrade.desc.business':'Unlimited everything',
@@ -4840,6 +4965,14 @@ fr:{
 'modal.currentPlan':'✓ Forfait actuel','modal.select':'Choisir','modal.mostPopular':'Le plus populaire',
 'modal.welcomeTitle':'Bienvenue sur PunchClock Pro! 🎉',
 'modal.welcomeBody':'Commencez par créer votre première compagnie en cliquant sur le bouton « + Nouvelle compagnie ».',
+'ob.step1Title':'Bienvenue sur PunchClock Pro! 👋',
+'ob.step1Desc':'Avant de gérer des employés, vous devez créer votre première compagnie. Cela ne prend qu\'un moment.',
+'ob.step1Btn':'🏢 Créer ma première compagnie',
+'ob.step2Title':'Compagnie créée! Maintenant, ajoutons un site.',
+'ob.step2Desc':'Les sites sont les emplacements physiques où vos employés pointent. Créez au moins un site avant d\'ajouter des employés.',
+'ob.step2Btn':'📍 Créer mon premier site',
+'ob.step2Skip':'Je ferai ça plus tard',
+'ob.siteCreated':'Site créé! Vous pouvez maintenant ajouter des employés.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés',
 'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés',
 'upgrade.desc.business':'Tout illimité',
