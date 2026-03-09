@@ -414,9 +414,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .lang-btn{padding:3px 11px;border:none;border-radius:20px;background:none;color:var(--text3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.5px}
 .lang-btn.active{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(79,142,247,.35)}
 .lang-btn:not(.active):hover{color:var(--text);background:var(--surface2)}
+/* ── TOAST ── */
+#pcToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;}
+#pcToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#pcToast.toast-error{border-color:var(--red);color:var(--red);}
+#pcToast.toast-success{border-color:var(--green);color:var(--green);}
 </style>
 </head>
 <body>
+<div id="pcToast"></div>
 
 <!-- ═══════ LANDING PAGE ═══════ -->
 <div class="landing" id="landingPage">
@@ -2410,6 +2416,45 @@ async function startCheckout(plan){
   }
 }
 
+// Extra per-seat purchase ($4.90/mo add-on)
+// Price ID must be created in Stripe as a recurring $4.90/mo product
+const EXTRA_SEAT_PRICE_ID = 'price_1T92h6I87MWWhn5d4UTWLL4x'; // TODO: replace with real Stripe price ID
+async function startExtraSeatCheckout(){
+  const s=Sess.get();
+  if(!s){navigate('login');return;}
+  if(!s.stripe_customer_id){
+    // No subscription yet — prompt to upgrade first
+    showToast('Please upgrade to a paid plan first to add extra seats.');
+    setTimeout(()=>showUpgradePlans(),1500);
+    return;
+  }
+  showToast('Redirecting to checkout...');
+  try{
+    const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      body:JSON.stringify({
+        plan:'extra_seat',
+        priceId:EXTRA_SEAT_PRICE_ID,
+        adminId:s.id,
+        adminEmail:s.email,
+        successUrl:'https://www.punchclock.ca',
+        cancelUrl:'https://www.punchclock.ca',
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    const a=document.createElement('a');
+    a.href=data.url;
+    a.rel='noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(e){
+    showToast('Checkout error: '+e.message);
+  }
+}
+
 function showUpgradePlans(){
   const s=Sess.get();
   const cur=s?.plan||'free';
@@ -3012,8 +3057,8 @@ async function deleteCoAdmin(id,name){
   try{
     await DB.del('admins',`id=eq.${id}`);
     await loadCoAdmins();
-    showToast(`${name} removed.`);
-  }catch(e){alert('Error: '+e.message);}
+    showToast(`✓ ${name} removed.`,'success');
+  }catch(e){showToast('Error: '+e.message,'error');}
 }
 
 // ─── END CO-ADMIN MANAGEMENT ──────────────────────────────────────────────
@@ -3138,9 +3183,9 @@ async function deleteAdmin(id, name){
     await refreshCache();
     await renderAdmins();
     const empCount = coIds.length ? ` ${t('msg.deleteAdminEmpsOrphaned')||'Orphaned employees have been flagged for review.'}` : '';
-    showToast(`${name} ${t('msg.deleteAdminDone')||'has been deleted. Their companies and sites have been removed.'}${empCount}`);
+    showToast(`✓ ${name} ${t('msg.deleteAdminDone')||'has been deleted. Their companies and sites have been removed.'}${empCount}`,'success');
   }catch(e){
-    alert('Error deleting admin: '+e.message);
+    showToast('Error deleting admin: '+e.message,'error');
   }
 }
 
@@ -3254,17 +3299,52 @@ function setEmailToggle(on){
 
 function openAddEmpModal(){
   const ctx=Ctx.get();if(!ctx){alert('Please select a company first.');return;}
-  const {ok,current,max,plan}=canAddEmployee(ctx.co);
-  if(!ok){
-    showMsg('empModalMsg','','error');
-    showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
+
+  // ── HARD BLOCK: must have at least one site first ──
+  const coSites=C.sites.filter(s=>s.company_id===ctx.co.id);
+  if(!coSites.length){
     openModal('addEmpModal');
-    // Hide ALL form fields and save button — user cannot proceed
-    document.querySelectorAll('#addEmpModal .form-group, #addEmpModal hr, #addEmpModal .pin-row, #addEmpModal [id="emp-email-plan-hint"]').forEach(el=>el.style.display='none');
+    document.getElementById('empModalTitle').textContent=t('admin.addEmployee')||'Add Employee';
+    document.querySelectorAll('#addEmpModal .form-group, #addEmpModal hr, #addEmpModal .pin-row').forEach(el=>el.style.display='none');
     document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='none');
-    document.getElementById('empModalTitle').textContent='Add Employee';
+    const msg=t('msg.noSiteFirst')||'You need to create at least one site before adding employees.';
+    const btnLabel=t('msg.goToSites')||'→ Go to Sites tab';
+    document.getElementById('empModalMsg').innerHTML=`<div class="upgrade-wall" style="border-color:var(--amber)">
+      <div style="font-size:22px;margin-bottom:8px">🏗️</div>
+      <h3 style="color:var(--amber)">${t('msg.noSiteTitle')||'Create a Site First'}</h3>
+      <p style="margin:8px 0 16px">${msg}</p>
+      <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="closeModal('addEmpModal');adminTab('sites',document.querySelector('[onclick*=adminTab]~[onclick*=sites]')||document.querySelectorAll('.tab')[1])">${btnLabel}</button>
+    </div>`;
     return;
   }
+
+  const {ok,current,max,plan}=canAddEmployee(ctx.co);
+  if(!ok){
+    openModal('addEmpModal');
+    document.getElementById('empModalTitle').textContent=t('admin.addEmployee')||'Add Employee';
+    document.querySelectorAll('#addEmpModal .form-group, #addEmpModal hr, #addEmpModal .pin-row, #addEmpModal [id="emp-email-plan-hint"]').forEach(el=>el.style.display='none');
+    document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='none');
+    // Show options: per-seat add OR upgrade plan
+    const isPaidPlan = plan.name!=='Free' && plan.name!=='Unlimited';
+    const seatHtml = isPaidPlan ? `
+      <div style="border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:rgba(79,142,247,.06)">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">➕ ${t('msg.addSeat')||'Add an Extra Seat'}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${t('msg.seatPrice')||'+$4.90/mo per additional employee, billed via Stripe.'}</div>
+        <button class="btn-primary" style="width:100%;padding:9px;font-size:13px" onclick="closeModal('addEmpModal');startExtraSeatCheckout()">${t('msg.addSeatBtn')||'💳 Add Seat — $4.90/mo'}</button>
+      </div>` : '';
+    document.getElementById('empModalMsg').innerHTML=`<div style="padding:4px 0">
+      <h3 style="margin-bottom:6px">${t('modal.planLimit')||'🔒 Plan Limit Reached'}</h3>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">${t('msg.empLimitDesc')||'Your'} <strong>${t('plan.'+plan.name.toLowerCase())||plan.name}</strong> ${t('msg.empLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.empLimitDesc3')||'active employees'}. ${t('msg.empLimitDesc4')||'You have'} ${current}.</p>
+      ${seatHtml}
+      <div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface2)">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">⬆ ${t('msg.upgradePlanOption')||'Upgrade Your Plan'}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${t('msg.upgradePlanDesc')||'Get more employees, sites, and companies.'}</div>
+        <button class="btn-primary" style="width:100%;padding:9px;font-size:13px;background:var(--surface2);border:1.5px solid var(--accent);color:var(--accent)" onclick="closeModal('addEmpModal');showUpgradePlans()">${t('modal.upgradePlan')||'⬆ Upgrade Plan'}</button>
+      </div>
+    </div>`;
+    return;
+  }
+
   // Show all fields and save button in case they were hidden from a previous limit-reached state
   document.querySelectorAll('#addEmpModal .form-group').forEach(el=>el.style.display='');
   document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='');
@@ -3274,11 +3354,6 @@ function openAddEmpModal(){
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
-  // Warn if no sites exist yet — employees will have no site assigned
-  const coSites=C.sites.filter(s=>s.company_id===ctx.co.id);
-  if(!coSites.length){
-    showMsg('empModalMsg','ℹ️ No sites created yet. This employee will have no site assigned. You can create a site first from the Sites tab, or assign them later by editing.','info');
-  }
   setEmailToggle(false);
   const emailRow = document.getElementById('emailReportToggleRow');
   if(emailRow) emailRow.closest('div[style*="margin-top:10px"], div').parentElement;
@@ -4109,6 +4184,16 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 function showMsg(id,msg,type){const el=document.getElementById(id);if(el)el.innerHTML=`<div class="msg ${type}">${msg}</div>`;}
 
+let _toastTimer=null;
+function showToast(msg, type=''){
+  const el=document.getElementById('pcToast');
+  if(!el)return;
+  el.textContent=msg;
+  el.className='show'+(type?' toast-'+type:'');
+  if(_toastTimer)clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{el.classList.remove('show');},3500);
+}
+
 // ═══════════════════════════════════════════════════
 // SEND REPORT MANUALLY
 // ═══════════════════════════════════════════════════
@@ -4530,6 +4615,15 @@ en:{
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees',
 'upgrade.desc.business':'Unlimited everything',
+'msg.noSiteTitle':'Create a Site First',
+'msg.noSiteFirst':'You need to create at least one site before adding employees.',
+'msg.goToSites':'→ Go to Sites tab',
+'msg.addSeat':'Add an Extra Seat',
+'msg.seatPrice':'+$4.90/mo per additional employee, billed via Stripe.',
+'msg.addSeatBtn':'💳 Add Seat — $4.90/mo',
+'msg.empLimitDesc':'Your','msg.empLimitDesc2':'plan allows up to','msg.empLimitDesc3':'active employees.','msg.empLimitDesc4':'You have',
+'msg.upgradePlanOption':'Upgrade Your Plan',
+'msg.upgradePlanDesc':'Get more employees, sites, and companies.',
 
 },
 fr:{
@@ -4731,6 +4825,15 @@ fr:{
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés',
 'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés',
 'upgrade.desc.business':'Tout illimité',
+'msg.noSiteTitle':'Créez d\'abord un site',
+'msg.noSiteFirst':'Vous devez créer au moins un site avant d\'ajouter des employés.',
+'msg.goToSites':'→ Aller à l\'onglet Sites',
+'msg.addSeat':'Ajouter un siège supplémentaire',
+'msg.seatPrice':'+4,90 $/mois par employé supplémentaire, via Stripe.',
+'msg.addSeatBtn':'💳 Ajouter un siège — 4,90 $/mois',
+'msg.empLimitDesc':'Votre','msg.empLimitDesc2':'forfait permet jusqu\'à','msg.empLimitDesc3':'employés actifs.','msg.empLimitDesc4':'Vous en avez',
+'msg.upgradePlanOption':'Mettre à niveau votre forfait',
+'msg.upgradePlanDesc':'Obtenez plus d\'employés, de sites et de compagnies.',
 
 }
 };
