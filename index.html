@@ -440,6 +440,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.pricing">Pricing</a>
       <a onclick="document.getElementById('landingHowItWorks').scrollIntoView({behavior:'smooth'})" data-i18n="land.howNav">How It Works</a>
       <a onclick="document.getElementById('landingFAQ').scrollIntoView({behavior:'smooth'})" data-i18n="land.faqNav">FAQ</a>
+      <a onclick="document.getElementById('landingContact').scrollIntoView({behavior:'smooth'})" data-i18n="land.contactNav">Contact</a>
       <a onclick="showLegal('tos')" data-i18n="land.terms">Terms</a>
       <a onclick="showLegal('privacy')" data-i18n="land.privacy">Privacy</a>
       <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div>
@@ -617,6 +618,33 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div style="max-width:720px;margin:0 auto" id="faqAccordion"></div>
   </div>
 
+  <!-- CONTACT / SALES SECTION -->
+  <div class="land-section" id="landingContact" style="background:var(--surface);padding:70px 24px">
+    <h2 data-i18n="land.contactTitle">Get in Touch</h2>
+    <p class="sub" data-i18n="land.contactSub">Have a question before signing up? We're happy to help.</p>
+    <div style="max-width:560px;margin:0 auto;background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:32px">
+      <div id="landContactMsg"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="form-group" style="margin:0"><label data-i18n="contact.name">Your Name</label><input type="text" id="landContactName" data-i18n="contact.namePlaceholder" placeholder="Jane Smith"></div>
+        <div class="form-group" style="margin:0"><label data-i18n="contact.email">Email Address</label><input type="email" id="landContactEmail" placeholder="you@company.com"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label data-i18n="contact.subject">Subject</label>
+        <select id="landContactSubject" style="width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none">
+          <option value="sales" data-i18n="contact.subjectSales">Sales / Pricing question</option>
+          <option value="trial" data-i18n="contact.subjectTrial">Help getting started</option>
+          <option value="feature" data-i18n="contact.subjectFeature">Feature request</option>
+          <option value="other" data-i18n="contact.subjectOther">Other</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label data-i18n="contact.message">Message</label>
+        <textarea id="landContactMessage" rows="4" data-i18n="contact.messagePlaceholder" placeholder="Tell us how we can help..." style="width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="submitLandingContact()" id="landContactBtn" data-i18n="contact.send">Send Message</button>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <div style="border-top:1px solid var(--border);padding:36px 32px;">
     <div class="land-footer-inner">
@@ -625,6 +653,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <p data-i18n="land.footerTagline">Time & attendance software for modern shift workforces.</p>
       </div>
       <div class="land-footer-links">
+        <a onclick="document.getElementById('landingContact').scrollIntoView({behavior:'smooth'})" data-i18n="land.contactNav">Contact</a>
         <a onclick="document.getElementById('landingFAQ').scrollIntoView({behavior:'smooth'})" data-i18n="land.faqNav">FAQ</a>
         <a onclick="document.getElementById('landingHowItWorks').scrollIntoView({behavior:'smooth'})" data-i18n="land.howNav">How It Works</a>
         <a onclick="showLegal('tos')" data-i18n="land.tos">Terms of Service</a>
@@ -781,6 +810,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="nav-right">
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="helpNavBtn" onclick="showHelpModal()" data-i18n="nav.help" style="font-size:12px;padding:6px 13px;display:none">❓ Help</button>
+    <button class="btn-secondary" id="supportNavBtn" onclick="showSupportModal()" data-i18n="nav.support" style="font-size:12px;padding:6px 13px;display:none">🎧 Support</button>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
     <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇨🇦 EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">🇫🇷 FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -795,6 +825,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <button class="mobile-nav-btn" onclick="mobileNav('companies')" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none" data-i18n="nav.help">❓ Help</button>
+  <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none" data-i18n="nav.support">🎧 Support</button>
   <hr class="mobile-nav-divider">
   <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')">&#128274; Admin Login</button>
   <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)">&#10005; Logout</button>
@@ -1283,6 +1314,36 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn-primary" onclick="saveProfile()" data-i18n="profile.save">Save Changes</button>
       <button class="btn-secondary" onclick="closeModal('profileModal')" data-i18n="profile.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPORT MODAL (logged-in users) -->
+<div class="modal-overlay" id="supportModal" style="z-index:9900">
+  <div class="modal" style="max-width:500px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h3 id="supportModalTitle" style="margin:0;font-size:18px">🎧 Contact Support</h3>
+      <button onclick="closeModal('supportModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
+    </div>
+    <div id="supportMsg"></div>
+    <div class="form-group">
+      <label data-i18n="contact.subject">Subject</label>
+      <select id="supportSubject" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none">
+        <option value="billing" data-i18n="support.subjectBilling">Billing / Subscription</option>
+        <option value="technical" data-i18n="support.subjectTech">Technical issue</option>
+        <option value="account" data-i18n="support.subjectAccount">Account help</option>
+        <option value="feature" data-i18n="contact.subjectFeature">Feature request</option>
+        <option value="other" data-i18n="contact.subjectOther">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label data-i18n="contact.message">Message</label>
+      <textarea id="supportMessage" rows="5" data-i18n="support.messagePlaceholder" placeholder="Describe your issue or question..." style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:16px" data-i18n="support.replyNote">We'll reply to the email address on your account.</p>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('supportModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 20px" onclick="submitSupport()" id="supportSendBtn" data-i18n="contact.send">Send Message</button>
     </div>
   </div>
 </div>
@@ -2178,6 +2239,77 @@ function navigate(page){
 // ═══════════════════════════════════════════════════
 // HELP MODAL
 // ═══════════════════════════════════════════════════
+function showSupportModal(){
+  const s=Sess.get();
+  document.getElementById('supportModalTitle').textContent=t('support.title')||'🎧 Contact Support';
+  document.getElementById('supportMessage').value='';
+  document.getElementById('supportMsg').innerHTML='';
+  document.getElementById('supportSendBtn').textContent=t('contact.send')||'Send Message';
+  // Pre-fill subject hint with account email
+  if(s) document.getElementById('supportMsg').innerHTML=
+    `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">📧 ${s.email}</div>`;
+  applyAllTranslations();
+  openModal('supportModal');
+}
+
+async function submitSupport(){
+  const s=Sess.get();
+  const subject=document.getElementById('supportSubject').value;
+  const message=document.getElementById('supportMessage').value.trim();
+  if(!message){showMsg('supportMsg',t('contact.msgRequired')||'Please enter a message.','error');return;}
+  const btn=document.getElementById('supportSendBtn');
+  btn.disabled=true;btn.textContent=t('contact.sending')||'Sending...';
+  try{
+    const res=await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        type:'support',
+        name:s?.name||'Admin',
+        email:s?.email||'unknown',
+        subject,
+        message,
+        adminId:s?.id
+      })
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Failed');
+    showMsg('supportMsg',t('contact.successMsg')||'✅ Message sent! We\'ll be in touch shortly.','success');
+    document.getElementById('supportMessage').value='';
+    setTimeout(()=>closeModal('supportModal'),2500);
+  }catch(e){
+    showMsg('supportMsg',(t('contact.errorMsg')||'Failed to send: ')+e.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent=t('contact.send')||'Send Message';
+  }
+}
+
+async function submitLandingContact(){
+  const name=document.getElementById('landContactName').value.trim();
+  const email=document.getElementById('landContactEmail').value.trim();
+  const subject=document.getElementById('landContactSubject').value;
+  const message=document.getElementById('landContactMessage').value.trim();
+  if(!name||!email||!message){showMsg('landContactMsg',t('contact.allRequired')||'Please fill in all fields.','error');return;}
+  if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('landContactMsg',t('contact.invalidEmail')||'Please enter a valid email.','error');return;}
+  const btn=document.getElementById('landContactBtn');
+  btn.disabled=true;btn.textContent=t('contact.sending')||'Sending...';
+  try{
+    const res=await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:'sales',name,email,subject,message})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Failed');
+    showMsg('landContactMsg',t('contact.successMsg')||'✅ Message sent! We\'ll be in touch shortly.','success');
+    ['landContactName','landContactEmail','landContactMessage'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){
+    showMsg('landContactMsg',(t('contact.errorMsg')||'Failed to send: ')+e.message,'error');
+  }finally{
+    btn.disabled=false;btn.textContent=t('contact.send')||'Send Message';
+  }
+}
+
 function showHelpModal(){
   document.getElementById('helpModalTitle').textContent=t('help.title')||'❓ How to Use PunchClock Pro';
   document.getElementById('helpCloseBtn').textContent=t('help.close')||'Got it';
@@ -2249,6 +2381,7 @@ function updateNav(){
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
   document.getElementById('helpNavBtn').style.display=ok?'':'none';
+  document.getElementById('supportNavBtn').style.display=ok?'':'none';
   ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
     document.getElementById(id).style.display=ok?'':'none');
   // Sync mobile menu
@@ -2256,6 +2389,8 @@ function updateNav(){
   document.getElementById('mobileLogoutBtn').style.display=ok?'':'none';
   const mobileHelpBtn=document.getElementById('mobileHelpBtn');
   if(mobileHelpBtn)mobileHelpBtn.style.display=ok?'':'none';
+  const mobileSupportBtn=document.getElementById('mobileSupportBtn');
+  if(mobileSupportBtn)mobileSupportBtn.style.display=ok?'':'none';
   ['mobileNavAdmin','mobileNavReports','mobileNavCompanies','mobileNavActivity'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display=ok?'':'none';
   });
@@ -3578,7 +3713,7 @@ function openAddEmpModal(){
   // Show all fields and save button in case they were hidden from a previous limit-reached state
   document.querySelectorAll('#addEmpModal .form-group').forEach(el=>el.style.display='');
   document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='');
-  document.getElementById('empModalTitle').textContent='Add Employee — '+ctx.co.name;
+  document.getElementById('empModalTitle').textContent=(t('emp.addTitle')||'Add Employee')+' — '+ctx.co.name;
   ['empName','empDept','empIdCode','empPin','empEmail'].forEach(id=>document.getElementById(id).value='');
   resetPhotoUpload(null);
   document.getElementById('pinPreview').style.display='none';
@@ -3594,7 +3729,7 @@ function openAddEmpModal(){
   if(document.getElementById('emailReportSection')) document.getElementById('emailReportSection').style.display = 'none';
   if(!isPaid && document.getElementById('emailReportToggleRow')) {
     let hint = document.getElementById('emp-email-plan-hint');
-    if(!hint){ hint=document.createElement('p'); hint.id='emp-email-plan-hint'; hint.style.cssText='font-size:11px;color:var(--text3);margin-top:6px'; hint.textContent='Automated email reports available on paid plans.'; document.getElementById('emailReportToggleRow').insertAdjacentElement('afterend',hint); }
+    if(!hint){ hint=document.createElement('p'); hint.id='emp-email-plan-hint'; hint.style.cssText='font-size:11px;color:var(--text3);margin-top:6px'; hint.textContent=t('emp.paidPlansHint')||'Automated email reports available on paid plans.'; document.getElementById('emailReportToggleRow').insertAdjacentElement('afterend',hint); }
   } else {
     const hint = document.getElementById('emp-email-plan-hint');
     if(hint) hint.remove();
@@ -3606,7 +3741,7 @@ function openAddEmpModal(){
 function editEmployee(id){
   const e=C.employees.find(e=>e.id===id);if(!e)return;
   const ctx=Ctx.get();
-  document.getElementById('empModalTitle').textContent='Edit Employee';
+  document.getElementById('empModalTitle').textContent=t('emp.editTitle')||'Edit Employee';
   document.getElementById('empName').value=e.name;
   document.getElementById('empDept').value=e.dept||'';
   document.getElementById('empIdCode').value=e.emp_code||'';
@@ -4720,6 +4855,8 @@ en:{
 'emp.emailToggleDesc':'Automatically email this employee their punch summary at end of each pay period',
 'emp.emailLabel':'Employee Email Address','emp.emailPlaceholder':'employee@email.com',
 'emp.emailHint':'Report will be sent automatically at the end of each pay period.',
+'emp.addTitle':'Add Employee','emp.editTitle':'Edit Employee',
+'emp.paidPlansHint':'Automated email reports available on paid plans.',
 'admin.addEmployee':'+ Add Employee','admin.tabs.employees':'Employees',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
 'admin.search':'Search','admin.searchPlaceholder':'Name, department...',
@@ -4924,7 +5061,20 @@ en:{
 'land.how2Title':'2. Add Sites','land.how2Desc':'Create one or more physical locations — stores, warehouses, offices.',
 'land.how3Title':'3. Add Employees','land.how3Desc':'Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.',
 'land.how4Title':'4. Start Tracking','land.how4Desc':'Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.',
-'land.howNav':'How It Works','land.faqNav':'FAQ',
+'land.howNav':'How It Works','land.faqNav':'FAQ','land.contactNav':'Contact',
+'land.contactTitle':'Get in Touch','land.contactSub':'Have a question before signing up? We\'re happy to help.',
+'contact.name':'Your Name','contact.namePlaceholder':'Jane Smith','contact.email':'Email Address',
+'contact.subject':'Subject','contact.subjectSales':'Sales / Pricing question',
+'contact.subjectTrial':'Help getting started','contact.subjectFeature':'Feature request','contact.subjectOther':'Other',
+'contact.message':'Message','contact.messagePlaceholder':'Tell us how we can help...',
+'contact.send':'Send Message','contact.sending':'Sending...','contact.allRequired':'Please fill in all fields.',
+'contact.invalidEmail':'Please enter a valid email address.',
+'contact.successMsg':'✅ Message sent! We\'ll be in touch shortly.','contact.errorMsg':'Failed to send: ',
+'contact.msgRequired':'Please enter a message.',
+'nav.support':'🎧 Support',
+'support.title':'🎧 Contact Support','support.subjectBilling':'Billing / Subscription',
+'support.subjectTech':'Technical issue','support.subjectAccount':'Account help',
+'support.messagePlaceholder':'Describe your issue or question...','support.replyNote':'We\'ll reply to the email address on your account.',
 'land.faqTitle':'Frequently Asked Questions','land.faqSub':'Everything you need to know before signing up.',
 'faq.q1':'Do employees need smartphones or apps to clock in?',
 'faq.a1':'No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required.',
@@ -5003,6 +5153,8 @@ fr:{
 'emp.emailToggleDesc':'Envoi automatique du résumé de pointage à la fin de chaque période de paie',
 'emp.emailLabel':'Adresse courriel de l\'employé','emp.emailPlaceholder':'employe@courriel.com',
 'emp.emailHint':'Le rapport sera envoyé automatiquement à la fin de chaque période de paie.',
+'emp.addTitle':'Ajouter un employé','emp.editTitle':'Modifier l\'employé',
+'emp.paidPlansHint':'Les rapports par courriel sont disponibles sur les plans payants.',
 'admin.addEmployee':'+ Ajouter un employé','admin.tabs.employees':'Employés',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
 'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...',
@@ -5207,7 +5359,20 @@ fr:{
 'land.how2Title':'2. Ajouter des sites','land.how2Desc':'Créez un ou plusieurs emplacements physiques — magasins, entrepôts, bureaux.',
 'land.how3Title':'3. Ajouter des employés','land.how3Desc':'Enregistrez le personnel avec un nom, un site et un NIP à 4 chiffres. Ajoutez optionnellement les courriels pour les rapports automatiques.',
 'land.how4Title':'4. Commencer le suivi','land.how4Desc':'Pointez n\'importe quelle tablette ou PC vers la page de pointage, déconnectez-vous de l\'admin, et les employés pointent avec leur NIP.',
-'land.howNav':'Comment ça marche','land.faqNav':'FAQ',
+'land.howNav':'Comment ça marche','land.faqNav':'FAQ','land.contactNav':'Contact',
+'land.contactTitle':'Nous contacter','land.contactSub':'Une question avant de vous inscrire? Nous sommes là pour vous aider.',
+'contact.name':'Votre nom','contact.namePlaceholder':'Jean Dupont','contact.email':'Adresse courriel',
+'contact.subject':'Sujet','contact.subjectSales':'Question ventes / tarifs',
+'contact.subjectTrial':'Aide pour démarrer','contact.subjectFeature':'Demande de fonctionnalité','contact.subjectOther':'Autre',
+'contact.message':'Message','contact.messagePlaceholder':'Dites-nous comment nous pouvons vous aider...',
+'contact.send':'Envoyer','contact.sending':'Envoi en cours...','contact.allRequired':'Veuillez remplir tous les champs.',
+'contact.invalidEmail':'Veuillez entrer une adresse courriel valide.',
+'contact.successMsg':'✅ Message envoyé! Nous vous répondrons sous peu.','contact.errorMsg':'Échec de l\'envoi: ',
+'contact.msgRequired':'Veuillez entrer un message.',
+'nav.support':'🎧 Support',
+'support.title':'🎧 Contacter le support','support.subjectBilling':'Facturation / Abonnement',
+'support.subjectTech':'Problème technique','support.subjectAccount':'Aide compte',
+'support.messagePlaceholder':'Décrivez votre problème ou question...','support.replyNote':'Nous vous répondrons à l\'adresse courriel de votre compte.',
 'land.faqTitle':'Questions fréquentes','land.faqSub':'Tout ce que vous devez savoir avant de vous inscrire.',
 'faq.q1':'Les employés ont-ils besoin d\'un téléphone ou d\'une application?',
 'faq.a1':'Non. Les employés pointent avec un NIP à 4 chiffres sur n\'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis.',
