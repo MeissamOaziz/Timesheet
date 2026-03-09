@@ -234,6 +234,13 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .land-section{padding:70px 24px;max-width:1080px;margin:0 auto;}
 .land-section h2{text-align:center;font-size:32px;font-weight:700;margin-bottom:10px;}
 .land-section .sub{text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px;}
+.faq-item{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.faq-q{width:100%;background:var(--surface);border:none;padding:16px 20px;text-align:left;font-family:inherit;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:background .15s;}
+.faq-q:hover{background:var(--surface2);}
+.faq-q .faq-arrow{font-size:11px;color:var(--text3);transition:transform .2s;flex-shrink:0;}
+.faq-item.open .faq-arrow{transform:rotate(180deg);}
+.faq-a{display:none;padding:0 20px 16px;font-size:13px;color:var(--text2);line-height:1.65;}
+.faq-item.open .faq-a{display:block;}
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
 .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px;transition:all .2s;}
 .feature-card:hover{border-color:var(--accent);transform:translateY(-3px);}
@@ -431,6 +438,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="land-nav-links">
       <a onclick="document.getElementById('landingFeatures').scrollIntoView({behavior:'smooth'})" data-i18n="land.features">Features</a>
       <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.pricing">Pricing</a>
+      <a onclick="document.getElementById('landingHowItWorks').scrollIntoView({behavior:'smooth'})" data-i18n="land.howNav">How It Works</a>
+      <a onclick="document.getElementById('landingFAQ').scrollIntoView({behavior:'smooth'})" data-i18n="land.faqNav">FAQ</a>
       <a onclick="showLegal('tos')" data-i18n="land.terms">Terms</a>
       <a onclick="showLegal('privacy')" data-i18n="land.privacy">Privacy</a>
       <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div>
@@ -573,6 +582,41 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">All plans include a 14-day free trial. No credit card required to start.</p>
   </div>
 
+  <!-- HOW IT WORKS -->
+  <div class="land-section" id="landingHowItWorks" style="background:var(--surface);border-radius:0;padding:70px 24px">
+    <h2 data-i18n="land.howTitle">How It Works</h2>
+    <p class="sub" data-i18n="land.howSub">Up and running in under 10 minutes.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-top:40px">
+      <div style="text-align:center;padding:24px 16px">
+        <div style="font-size:36px;margin-bottom:12px">🏢</div>
+        <div style="font-weight:700;margin-bottom:6px;font-size:15px" data-i18n="land.how1Title">1. Create a Company</div>
+        <p style="font-size:13px;color:var(--text2)" data-i18n="land.how1Desc">Register your business, set your payroll frequency and week start day.</p>
+      </div>
+      <div style="text-align:center;padding:24px 16px">
+        <div style="font-size:36px;margin-bottom:12px">📍</div>
+        <div style="font-weight:700;margin-bottom:6px;font-size:15px" data-i18n="land.how2Title">2. Add Sites</div>
+        <p style="font-size:13px;color:var(--text2)" data-i18n="land.how2Desc">Create one or more physical locations — stores, warehouses, offices.</p>
+      </div>
+      <div style="text-align:center;padding:24px 16px">
+        <div style="font-size:36px;margin-bottom:12px">👥</div>
+        <div style="font-weight:700;margin-bottom:6px;font-size:15px" data-i18n="land.how3Title">3. Add Employees</div>
+        <p style="font-size:13px;color:var(--text2)" data-i18n="land.how3Desc">Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.</p>
+      </div>
+      <div style="text-align:center;padding:24px 16px">
+        <div style="font-size:36px;margin-bottom:12px">⏱</div>
+        <div style="font-weight:700;margin-bottom:6px;font-size:15px" data-i18n="land.how4Title">4. Start Tracking</div>
+        <p style="font-size:13px;color:var(--text2)" data-i18n="land.how4Desc">Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="land-section" id="landingFAQ">
+    <h2 data-i18n="land.faqTitle">Frequently Asked Questions</h2>
+    <p class="sub" data-i18n="land.faqSub">Everything you need to know before signing up.</p>
+    <div style="max-width:720px;margin:0 auto" id="faqAccordion"></div>
+  </div>
+
   <!-- FOOTER -->
   <div style="border-top:1px solid var(--border);padding:36px 32px;">
     <div class="land-footer-inner">
@@ -581,6 +625,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <p data-i18n="land.footerTagline">Time & attendance software for modern shift workforces.</p>
       </div>
       <div class="land-footer-links">
+        <a onclick="document.getElementById('landingFAQ').scrollIntoView({behavior:'smooth'})" data-i18n="land.faqNav">FAQ</a>
+        <a onclick="document.getElementById('landingHowItWorks').scrollIntoView({behavior:'smooth'})" data-i18n="land.howNav">How It Works</a>
         <a onclick="showLegal('tos')" data-i18n="land.tos">Terms of Service</a>
         <a onclick="showLegal('privacy')" data-i18n="land.privacyPolicy">Privacy Policy</a>
         <a onclick="hideLanding();navigate('login')" data-i18n="land.adminLogin">Admin Login</a>
@@ -734,6 +780,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
   <div class="nav-right">
     <span id="adminBadge" style="display:none"></span>
+    <button class="btn-secondary" id="helpNavBtn" onclick="showHelpModal()" data-i18n="nav.help" style="font-size:12px;padding:6px 13px;display:none">❓ Help</button>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
     <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇨🇦 EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">🇫🇷 FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -747,6 +794,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
   <button class="mobile-nav-btn" onclick="mobileNav('companies')" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
+  <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none" data-i18n="nav.help">❓ Help</button>
   <hr class="mobile-nav-divider">
   <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')">&#128274; Admin Login</button>
   <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)">&#10005; Logout</button>
@@ -1235,6 +1283,20 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn-primary" onclick="saveProfile()" data-i18n="profile.save">Save Changes</button>
       <button class="btn-secondary" onclick="closeModal('profileModal')" data-i18n="profile.cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal-overlay" id="helpModal" style="z-index:9900">
+  <div class="modal" style="max-width:560px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h3 id="helpModalTitle" style="margin:0;font-size:18px">❓ How to Use PunchClock Pro</h3>
+      <button onclick="closeModal('helpModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
+    </div>
+    <div id="helpStepsList"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+      <button class="btn-secondary" onclick="closeModal('helpModal')" id="helpCloseBtn" style="width:auto;padding:8px 24px">Got it</button>
     </div>
   </div>
 </div>
@@ -1770,6 +1832,7 @@ function showLanding() {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.picker-screen').forEach(p=>p.classList.add('hidden'));
   if(typeof applyAllTranslations==='function') applyAllTranslations();
+  renderFAQ();
 }
 function hideLanding() {
   const nav = document.getElementById('mainNav');
@@ -1784,9 +1847,27 @@ function hideLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
 }
 
-// ═══════════════════════════════════════════════════
-// STORAGE — session for company/site (localStorage so tablet stays locked)
-// ═══════════════════════════════════════════════════
+function renderFAQ(){
+  const acc=document.getElementById('faqAccordion');
+  if(!acc)return;
+  const qs=[1,2,3,4,5,6,7,8,9,10];
+  acc.innerHTML=qs.map(i=>`
+    <div class="faq-item" id="faqItem${i}">
+      <button class="faq-q" onclick="toggleFAQ(${i})">
+        <span>${t('faq.q'+i)||'...'}</span>
+        <span class="faq-arrow">▼</span>
+      </button>
+      <div class="faq-a">${t('faq.a'+i)||''}</div>
+    </div>`).join('');
+}
+
+function toggleFAQ(n){
+  const item=document.getElementById('faqItem'+n);
+  const wasOpen=item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-item.open').forEach(el=>el.classList.remove('open'));
+  if(!wasOpen)item.classList.add('open');
+}
 const Sess={
   get:()=>{try{return JSON.parse(localStorage.getItem('pc_sess'));}catch{return null;}},
   set:v=>localStorage.setItem('pc_sess',JSON.stringify(v)),
@@ -2062,6 +2143,22 @@ function updateContextPill(){
 function navigate(page){
   const adminPages=['admin','reports','companies','activity'];
   if(adminPages.includes(page)&&!isLoggedIn()){navigate('login');return;}
+  // ── HARD BLOCK: force site creation before anything else ──
+  if(adminPages.includes(page)&&isLoggedIn()&&!isSuperAdmin()){
+    if(needsOnboarding()){showOnboardStep1();return;}
+    // Has company but no site → block ALL pages except companies tab (so they can't run away)
+    if(needsSiteOnboarding()&&page!=='companies'){
+      // Briefly navigate to admin/sites then show step 2
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      const el=document.getElementById('page-admin');
+      if(el){el.classList.add('active');currentPage='admin';}
+      // Switch to sites tab
+      const siteTab=document.querySelectorAll('#page-admin .tabs .tab')[1];
+      if(siteTab)adminTab('sites',siteTab);
+      showOnboardStep2('');
+      return;
+    }
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('page-'+page);
@@ -2075,6 +2172,32 @@ function navigate(page){
   else if(page==='companies')loadCompaniesPage();
   else if(page==='activity')loadActivityPage();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
+}
+
+// ═══════════════════════════════════════════════════
+// HELP MODAL
+// ═══════════════════════════════════════════════════
+function showHelpModal(){
+  document.getElementById('helpModalTitle').textContent=t('help.title')||'❓ How to Use PunchClock Pro';
+  document.getElementById('helpCloseBtn').textContent=t('help.close')||'Got it';
+  const steps=[
+    {icon:'🏢',title:t('help.s1title'),desc:t('help.s1desc')},
+    {icon:'📍',title:t('help.s2title'),desc:t('help.s2desc')},
+    {icon:'👥',title:t('help.s3title'),desc:t('help.s3desc')},
+    {icon:'⏱',title:t('help.s4title'),desc:t('help.s4desc')},
+    {icon:'📊',title:t('help.s5title'),desc:t('help.s5desc')},
+    {icon:'📧',title:t('help.s6title'),desc:t('help.s6desc')},
+    {icon:'📋',title:t('help.s7title'),desc:t('help.s7desc')},
+  ];
+  document.getElementById('helpStepsList').innerHTML=steps.map((s,i)=>`
+    <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-start">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(79,142,247,.12);border:1.5px solid rgba(79,142,247,.25);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${s.icon}</div>
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--accent);margin-bottom:2px">${i+1}. ${s.title}</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.55">${s.desc}</div>
+      </div>
+    </div>`).join('');
+  openModal('helpModal');
 }
 
 // ═══════════════════════════════════════════════════
@@ -2124,11 +2247,14 @@ function updateNav(){
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
+  document.getElementById('helpNavBtn').style.display=ok?'':'none';
   ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
     document.getElementById(id).style.display=ok?'':'none');
   // Sync mobile menu
   document.getElementById('mobileLoginBtn').style.display=ok?'none':'';
   document.getElementById('mobileLogoutBtn').style.display=ok?'':'none';
+  const mobileHelpBtn=document.getElementById('mobileHelpBtn');
+  if(mobileHelpBtn)mobileHelpBtn.style.display=ok?'':'none';
   ['mobileNavAdmin','mobileNavReports','mobileNavCompanies','mobileNavActivity'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display=ok?'':'none';
   });
@@ -4755,6 +4881,50 @@ en:{
 'ob.step2Btn':'📍 Create My First Site',
 'ob.step2Skip':'I\'ll do this later',
 'ob.siteCreated':'Site created! You can now add employees.',
+'nav.help':'❓ Help',
+'help.title':'How to Use PunchClock Pro',
+'help.close':'Got it',
+'help.s1title':'Create a Company',
+'help.s1desc':'Go to the <strong>Companies</strong> tab and click <em>+ New Company</em>. Enter your business name, industry, payroll frequency, and timezone. You can manage multiple companies from one account.',
+'help.s2title':'Create a Site',
+'help.s2desc':'In <strong>Admin → Sites</strong>, click <em>+ Add Site</em>. Sites are the physical locations (stores, warehouses, offices) where employees clock in. Each company needs at least one site.',
+'help.s3title':'Add Employees',
+'help.s3desc':'In <strong>Admin → Employees</strong>, click <em>+ Add Employee</em>. Assign them to a site, set a 4-digit PIN they\'ll use to clock in, and optionally add their email for automated reports.',
+'help.s4title':'Set Up the Clock In/Out Page',
+'help.s4desc':'On the device(s) your employees will use (tablet, shared PC), open PunchClock Pro and use the company/site picker to select the right site. You can then log out of your admin account — the clock page stays active and records punches automatically.',
+'help.s5title':'Generate Reports',
+'help.s5desc':'Go to the <strong>Reports</strong> tab (you must be logged in as admin). Filter by company, site, date range, or employee. Export to Excel, CSV, or PDF. QuickBooks IIF export is also available.',
+'help.s6title':'Automated Email Reports',
+'help.s6desc':'At the end of each pay period, employees with a registered email address automatically receive a summary of their hours worked. The period is determined by the payroll frequency set in your company settings.',
+'help.s7title':'Audit Logs & Manual Corrections',
+'help.s7desc':'The <strong>Activity</strong> tab shows a full audit log of all clock-in and clock-out events. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
+'land.howTitle':'How It Works','land.howSub':'Up and running in under 10 minutes.',
+'land.how1Title':'1. Create a Company','land.how1Desc':'Register your business, set your payroll frequency and week start day.',
+'land.how2Title':'2. Add Sites','land.how2Desc':'Create one or more physical locations — stores, warehouses, offices.',
+'land.how3Title':'3. Add Employees','land.how3Desc':'Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.',
+'land.how4Title':'4. Start Tracking','land.how4Desc':'Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.',
+'land.howNav':'How It Works','land.faqNav':'FAQ',
+'land.faqTitle':'Frequently Asked Questions','land.faqSub':'Everything you need to know before signing up.',
+'faq.q1':'Do employees need smartphones or apps to clock in?',
+'faq.a1':'No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required.',
+'faq.q2':'Can I manage multiple locations or businesses?',
+'faq.a2':'Yes. You can create multiple companies under a single admin account (Starter allows 1, Growth allows 2, Business is unlimited). Each company supports multiple sites, each with its own employee roster.',
+'faq.q3':'How do automated email reports work?',
+'faq.a3':'At the end of each pay period (weekly, bi-weekly, or monthly — your choice per company), every employee with a registered email address automatically receives a PDF summary of their hours worked during that period.',
+'faq.q4':'Can I edit a punch after the fact?',
+'faq.a4':'Yes. Admins can correct, add, or delete any punch record from the Activity tab. All changes are logged in the audit trail with a timestamp.',
+'faq.q5':'What happens to the clock page when I log out?',
+'faq.a5':'The clock in/out page stays active after you log out of your admin account. It keeps recording punches for the selected company and site. Only the admin panel (reports, employee management, etc.) requires a login.',
+'faq.q6':'Does PunchClock Pro integrate with QuickBooks?',
+'faq.a6':'Yes. You can export payroll-ready IIF files from the Reports tab that import directly into QuickBooks Desktop. CSV and Excel exports are also available for other payroll systems.',
+'faq.q7':'What is overtime tracking?',
+'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day, and weeks that exceed 40 total hours. These are highlighted in reports and exports.',
+'faq.q8':'Is there a free plan?',
+'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 5 active employees — no credit card required. Paid plans start at $19.49/month CAD and unlock more companies, sites, employees, and automated email reports.',
+'faq.q9':'Can I add more employees beyond my plan limit?',
+'faq.a9':'On Starter and Growth plans, you can add individual employee seats for $4.90/month per seat, billed through Stripe. Alternatively, upgrade to the next plan tier for a higher included limit.',
+'faq.q10':'How secure is my data?',
+'faq.a10':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees',
 'upgrade.desc.business':'Unlimited everything',
@@ -4973,6 +5143,50 @@ fr:{
 'ob.step2Btn':'📍 Créer mon premier site',
 'ob.step2Skip':'Je ferai ça plus tard',
 'ob.siteCreated':'Site créé! Vous pouvez maintenant ajouter des employés.',
+'nav.help':'❓ Aide',
+'help.title':'Comment utiliser PunchClock Pro',
+'help.close':'Compris',
+'help.s1title':'Créer une compagnie',
+'help.s1desc':'Allez dans l\'onglet <strong>Compagnies</strong> et cliquez sur <em>+ Nouvelle compagnie</em>. Entrez le nom de votre entreprise, l\'industrie, la fréquence de paie et le fuseau horaire. Vous pouvez gérer plusieurs compagnies depuis un seul compte.',
+'help.s2title':'Créer un site',
+'help.s2desc':'Dans <strong>Admin → Sites</strong>, cliquez sur <em>+ Ajouter un site</em>. Les sites sont les emplacements physiques (magasins, entrepôts, bureaux) où les employés pointent. Chaque compagnie doit avoir au moins un site.',
+'help.s3title':'Ajouter des employés',
+'help.s3desc':'Dans <strong>Admin → Employés</strong>, cliquez sur <em>+ Ajouter un employé</em>. Assignez-les à un site, définissez un NIP à 4 chiffres pour pointer, et ajoutez optionnellement leur courriel pour les rapports automatiques.',
+'help.s4title':'Configurer la page de pointage',
+'help.s4desc':'Sur les appareils utilisés par vos employés (tablette, PC partagé), ouvrez PunchClock Pro et sélectionnez le bon site via le sélecteur. Vous pouvez ensuite vous déconnecter de votre compte admin — la page de pointage reste active et enregistre automatiquement.',
+'help.s5title':'Générer des rapports',
+'help.s5desc':'Allez dans l\'onglet <strong>Rapports</strong> (vous devez être connecté en tant qu\'admin). Filtrez par compagnie, site, période ou employé. Exportez en Excel, CSV ou PDF. L\'export IIF pour QuickBooks est aussi disponible.',
+'help.s6title':'Rapports par courriel automatiques',
+'help.s6desc':'À la fin de chaque période de paie, les employés ayant un courriel enregistré reçoivent automatiquement un résumé de leurs heures travaillées. La période est déterminée par la fréquence de paie définie dans les paramètres de votre compagnie.',
+'help.s7title':'Journaux d\'audit et corrections manuelles',
+'help.s7desc':'L\'onglet <strong>Activité</strong> affiche un journal complet de tous les pointages. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections après coup.',
+'land.howTitle':'Comment ça marche','land.howSub':'Opérationnel en moins de 10 minutes.',
+'land.how1Title':'1. Créer une compagnie','land.how1Desc':'Enregistrez votre entreprise, définissez la fréquence de paie et le début de semaine.',
+'land.how2Title':'2. Ajouter des sites','land.how2Desc':'Créez un ou plusieurs emplacements physiques — magasins, entrepôts, bureaux.',
+'land.how3Title':'3. Ajouter des employés','land.how3Desc':'Enregistrez le personnel avec un nom, un site et un NIP à 4 chiffres. Ajoutez optionnellement les courriels pour les rapports automatiques.',
+'land.how4Title':'4. Commencer le suivi','land.how4Desc':'Pointez n\'importe quelle tablette ou PC vers la page de pointage, déconnectez-vous de l\'admin, et les employés pointent avec leur NIP.',
+'land.howNav':'Comment ça marche','land.faqNav':'FAQ',
+'land.faqTitle':'Questions fréquentes','land.faqSub':'Tout ce que vous devez savoir avant de vous inscrire.',
+'faq.q1':'Les employés ont-ils besoin d\'un téléphone ou d\'une application?',
+'faq.a1':'Non. Les employés pointent avec un NIP à 4 chiffres sur n\'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis.',
+'faq.q2':'Puis-je gérer plusieurs emplacements ou entreprises?',
+'faq.a2':'Oui. Vous pouvez créer plusieurs compagnies sous un seul compte admin (Starter = 1, Croissance = 2, Affaires = illimité). Chaque compagnie prend en charge plusieurs sites avec son propre registre d\'employés.',
+'faq.q3':'Comment fonctionnent les rapports par courriel automatiques?',
+'faq.a3':'À la fin de chaque période de paie (hebdomadaire, bimensuelle ou mensuelle — votre choix par compagnie), chaque employé avec un courriel enregistré reçoit automatiquement un résumé PDF de ses heures travaillées.',
+'faq.q4':'Puis-je modifier un pointage après coup?',
+'faq.a4':'Oui. Les admins peuvent corriger, ajouter ou supprimer n\'importe quel pointage depuis l\'onglet Activité. Toutes les modifications sont enregistrées dans le journal d\'audit.',
+'faq.q5':'Que se passe-t-il sur la page de pointage quand je me déconnecte?',
+'faq.a5':'La page de pointage reste active après la déconnexion admin. Elle continue d\'enregistrer les pointages pour la compagnie et le site sélectionnés. Seul le panneau admin (rapports, gestion des employés, etc.) nécessite une connexion.',
+'faq.q6':'PunchClock Pro s\'intègre-t-il avec QuickBooks?',
+'faq.a6':'Oui. Vous pouvez exporter des fichiers IIF prêts pour la paie depuis l\'onglet Rapports, importables directement dans QuickBooks Desktop. Les exports CSV et Excel sont également disponibles.',
+'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
+'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 heures par jour et les semaines dépassant 40 heures au total. Ces cas sont mis en évidence dans les rapports.',
+'faq.q8':'Y a-t-il un plan gratuit?',
+'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 5 employés actifs — sans carte de crédit requise. Les plans payants commencent à 19,49$/mois CAD.',
+'faq.q9':'Puis-je ajouter plus d\'employés au-delà de la limite de mon plan?',
+'faq.a9':'Sur les plans Starter et Croissance, vous pouvez ajouter des sièges individuels pour 4,90$/mois par siège, facturés via Stripe. Vous pouvez aussi passer au plan supérieur.',
+'faq.q10':'Mes données sont-elles sécurisées?',
+'faq.a10':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés',
 'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés',
 'upgrade.desc.business':'Tout illimité',
@@ -5015,7 +5229,8 @@ function setLang(lang,scope){
     var lp=document.getElementById('landingPage');
     var landingVisible=lp&&lp.classList.contains('show');
     if(landingVisible){
-      // landing page — applyAllTranslations already handles it
+      renderFAQ();
+      // landing page — applyAllTranslations already handles static strings
     }else if(typeof currentPage!=='undefined'){
       if(currentPage==='punch')loadPunchPage();
       else if(currentPage==='admin')loadAdminPage();
