@@ -989,7 +989,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <h3 style="font-size:14px;font-weight:600;color:var(--amber)">⏳ Pending Access Requests</h3>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>Name</th><th>Email</th><th>Requested Admin</th><th>Date</th><th>Actions</th></tr></thead>
+          <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.requestedAdmin">Requested Admin</th><th data-i18n="col.date">Date</th><th data-i18n="col.actions">Actions</th></tr></thead>
           <tbody id="joinRequestsBody"></tbody>
         </table></div>
       </div>
@@ -998,7 +998,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()" data-i18n="admin.createAdmin">+ Create Admin</button>
       </div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Status</th><th>Registered</th><th>Actions</th></tr></thead>
+        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th data-i18n="col.actions">Actions</th></tr></thead>
         <tbody id="adminsTableBody"></tbody>
       </table></div>
       <div id="adminCardsContainer"></div>
@@ -1014,7 +1014,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div id="coAdminMsg" style="margin-bottom:8px"></div>
       <div class="table-wrap"><table>
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.status">Status</th><th data-i18n="col.actions">Actions</th></tr></thead>
         <tbody id="coAdminsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">No co-admins yet.</td></tr></tbody>
       </table></div>
       <div id="coAdminCardsContainer"></div>
@@ -1437,8 +1437,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="form-group"><label data-i18n="site.desc">Description (optional)</label><input type="text" id="siteDesc" data-i18n="site.descPlaceholder" placeholder="Brief description"></div>
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()">Save</button>
+      <button class="btn-secondary" onclick="needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -3074,6 +3074,7 @@ function adminTab(tab,btn){
   document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   ['employees','sites','admins'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'':'none');
+  applyAllTranslations();
 }
 
 function populateEmpSiteFilter(){
@@ -3102,7 +3103,7 @@ function renderEmployees(){
   if(deptF)emps=emps.filter(e=>e.dept===deptF);
 
   const tbody=document.getElementById('empTableBody');
-  if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px">${ctx?`No employees for ${ctx.co.name}.`:'No employees found.'}</td></tr>`;return;}
+  if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px">${ctx?`${t('admin.noEmployeesFor')||'No employees for'} ${ctx.co.name}.`:t('admin.noEmployees')||'No employees found.'}</td></tr>`;return;}
 
   const rows = emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
@@ -3175,11 +3176,11 @@ function renderSitesAdmin(){
       <div style="width:34px;height:34px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">&#128205;</div>
       <div style="flex:1">
         <div class="site-name">${s.name}</div>
-        <div class="site-meta">${co?co.name+' · ':''} ${empCnt} employee${empCnt!==1?'s':''} ${s.description?'· '+s.description:''}</div>
+        <div class="site-meta">${co?co.name+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+s.description:''}</div>
       </div>
       <div style="display:flex;gap:7px">
-        <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">Edit</button>
-        <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name}')">Delete</button>
+        <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
       </div>
     </div>`;
   }).join('');
@@ -4704,10 +4705,12 @@ en:{
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
 'admin.managing':'Managing employees and sites for',
+'admin.noEmployeesFor':'No employees for','admin.noEmployees':'No employees found.',
 'admin.addSite':'+ Add Site','admin.allAdminAccounts':'All Admin Accounts','admin.createAdmin':'+ Create Admin',
 'site.name':'Site Name','site.namePlaceholder':'Main Office, Warehouse A...',
 'site.desc':'Description (optional)','site.descPlaceholder':'Brief description',
 'site.noSites':'No sites yet for this company. Click \"+ Add Site\" to create one.',
+'site.employee':'employee','site.employees':'employees',
 'admin.addEmployee':'+ Add Employee','admin.tabs.employees':'Employees',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
 'admin.search':'Search','admin.searchPlaceholder':'Name, department...',
@@ -4731,6 +4734,9 @@ en:{
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
 'common.filter':'Filter','common.company':'Company','common.allCompanies':'All Companies',
+'col.name':'Name','col.email':'Email','col.role':'Role','col.plan':'Plan',
+'col.status':'Status','col.registered':'Registered','col.actions':'Actions',
+'col.requestedAdmin':'Requested Admin','col.date':'Date',
 'common.edit':'Edit','common.delete':'Delete','common.activate':'Activate',
 'common.deactivate':'Deactivate','common.sendReport':'📧 Send Report',
 'common.switchTo':'Switch To','common.total':'total','common.active':'active','common.sites':'sites',
@@ -4973,10 +4979,12 @@ fr:{
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',
 'admin.managing':'Gestion des employés et sites pour',
+'admin.noEmployeesFor':'Aucun employé pour','admin.noEmployees':'Aucun employé trouvé.',
 'admin.addSite':'+ Ajouter un site','admin.allAdminAccounts':'Tous les comptes admin','admin.createAdmin':'+ Créer un admin',
 'site.name':'Nom du site','site.namePlaceholder':'Bureau principal, Entrepôt A...',
 'site.desc':'Description (optionnel)','site.descPlaceholder':'Brève description',
 'site.noSites':'Aucun site pour cette compagnie. Cliquez sur \"+ Ajouter un site\" pour en créer un.',
+'site.employee':'employé','site.employees':'employés',
 'admin.addEmployee':'+ Ajouter un employé','admin.tabs.employees':'Employés',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
 'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...',
@@ -5000,6 +5008,9 @@ fr:{
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
 'common.filter':'Filtrer','common.company':'Compagnie','common.allCompanies':'Toutes les compagnies',
+'col.name':'Nom','col.email':'Courriel','col.role':'Rôle','col.plan':'Plan',
+'col.status':'Statut','col.registered':'Inscrit','col.actions':'Actions',
+'col.requestedAdmin':'Admin demandé','col.date':'Date',
 'common.edit':'Modifier','common.delete':'Supprimer','common.activate':'Activer',
 'common.deactivate':'Désactiver','common.sendReport':'📧 Envoyer rapport',
 'common.switchTo':'Sélectionner','common.total':'total','common.active':'actif','common.sites':'sites',
