@@ -1494,7 +1494,8 @@ const DB={
       body:JSON.stringify(params)
     });
     if(!res.ok)throw new Error(await res.text());
-    return res.json();
+    const text=await res.text();
+    return text?JSON.parse(text):null;
   },
 };
 
