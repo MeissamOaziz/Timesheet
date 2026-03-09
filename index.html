@@ -1871,13 +1871,83 @@ function canAddCompany() {
   return { ok: cur < plan.maxCompanies, current: cur, max: plan.maxCompanies, plan };
 }
 
+// Rich gate UI: shows extra-seat option OR next-plan upgrade depending on resource type
+// type: 'employee' | 'site' | 'company'
+function showLimitGate(containerId, type, current, max, plan) {
+  const el = document.getElementById(containerId);
+  if(!el) return;
+
+  const planKey = plan.name.toLowerCase();
+  const isUnlimited = plan.name==='Unlimited'||plan.name==='Business';
+
+  // Next plan map
+  const nextPlan = {free:'starter', starter:'growth', growth:'business'};
+  const nextPlanKey = nextPlan[planKey];
+  const nextPlanPrices = {starter:'$19.49/mo', growth:'$39.49/mo', business:'$79.49/mo'};
+  const nextPlanLimits = {
+    starter: {employees:10, sites:2,  companies:1},
+    growth:  {employees:25, sites:5,  companies:2},
+    business:{employees:'∞',sites:'∞',companies:'∞'},
+  };
+
+  let html = `<div style="padding:4px 0">
+    <h3 style="margin-bottom:6px">${t('modal.planLimit')||'🔒 Plan Limit Reached'}</h3>`;
+
+  if(type==='employee') {
+    html += `<p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+      ${t('msg.empLimitDesc')||'Your'} <strong>${plan.name}</strong> ${t('msg.empLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.empLimitDesc3')||'active employees'}. ${t('msg.empLimitDesc4')||'You have'} ${current}.
+    </p>`;
+    if(!isUnlimited) {
+      html += `<div style="border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:rgba(79,142,247,.06)">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px">➕ ${t('msg.addSeat')||'Add an Extra Seat'}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${t('msg.seatPrice')||'+$4.90/mo per additional employee, billed via Stripe.'}</div>
+        <button class="btn-primary" style="width:100%;padding:9px;font-size:13px" onclick="closeAllLimitGates();startExtraSeatCheckout()">${t('msg.addSeatBtn')||'💳 Add Seat — $4.90/mo'}</button>
+      </div>`;
+    }
+  } else if(type==='site') {
+    html += `<p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+      ${t('msg.siteLimitDesc')||'Your'} <strong>${plan.name}</strong> ${t('msg.siteLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.siteLimitDesc3')||'site(s)'}. ${t('msg.siteLimitDesc4')||'You have'} ${current}.
+    </p>`;
+  } else if(type==='company') {
+    html += `<p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+      ${t('msg.coLimitDesc')||'Your'} <strong>${plan.name}</strong> ${t('msg.coLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.coLimitDesc3')||'company(ies)'}. ${t('msg.coLimitDesc4')||'You have'} ${current}.
+    </p>`;
+  }
+
+  // Upgrade plan option — show next plan specifically
+  if(nextPlanKey && !isUnlimited) {
+    const np = nextPlanLimits[nextPlanKey];
+    const npPrice = nextPlanPrices[nextPlanKey];
+    const npName = nextPlanKey.charAt(0).toUpperCase()+nextPlanKey.slice(1);
+    let npDesc = `${np.employees} employees · ${np.sites} sites · ${np.companies} company(ies)`;
+    html += `<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface2)">
+      <div style="font-weight:600;font-size:14px;margin-bottom:2px">⬆ ${t('msg.upgradeTo')||'Upgrade to'} ${npName} — ${npPrice}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${npDesc}</div>
+      <button class="btn-primary" style="width:100%;padding:9px;font-size:13px;background:var(--surface2);border:1.5px solid var(--accent);color:var(--accent)" onclick="closeAllLimitGates();startCheckout('${nextPlanKey}')">${t('modal.upgradePlan')||'⬆ Upgrade Plan'}</button>
+    </div>`;
+  }
+
+  // Also always offer to see all plans
+  html += `<button class="btn-secondary" style="width:100%;padding:8px;font-size:12px;margin-top:10px" onclick="showUpgradePlans()">${t('msg.seeAllPlans')||'See all plans'}</button>`;
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function closeAllLimitGates(){
+  ['addEmpModal','addSiteModal','addCompanyModal'].forEach(id=>{
+    const m=document.getElementById(id);
+    if(m&&m.classList.contains('open')) closeModal(id);
+  });
+}
+
 function showUpgradePrompt(containerId, msg) {
+  // Legacy wrapper — now calls showLimitGate with basic info
   const el = document.getElementById(containerId);
   if(!el) return;
   el.innerHTML = `<div class="upgrade-wall">
     <h3>${t('modal.planLimit')}</h3>
     <p>${msg}</p>
-    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="showUpgradePlans()">${t('modal.upgradePlan')}</button>
+    <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px;margin-bottom:8px" onclick="showUpgradePlans()">${t('modal.upgradePlan')}</button>
   </div>`;
 }
 
@@ -2703,18 +2773,12 @@ const EXTRA_SEAT_PRICE_ID = 'price_1T92h6I87MWWhn5d4UTWLL4x';
 async function startExtraSeatCheckout(){
   const s=Sess.get();
   if(!s){navigate('login');return;}
-  // Free plan users must upgrade to a base plan first
-  if(!s.plan || s.plan==='free'){
-    showToast('Upgrade to a base plan first to add extra seats.');
-    setTimeout(()=>showUpgradePlans(),1200);
-    return;
-  }
   // Business/Unlimited already has unlimited employees
   if(s.plan==='business'||s.plan==='unlimited'){
-    showToast('Your plan already includes unlimited employees.');
+    showToast(t('msg.alreadyUnlimited')||'Your plan already includes unlimited employees.');
     return;
   }
-  showToast('Redirecting to checkout...');
+  showToast(t('msg.redirectingCheckout')||'Redirecting to checkout...');
   try{
     const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
       method:'POST',
@@ -3689,24 +3753,7 @@ function openAddEmpModal(){
     document.getElementById('empModalTitle').textContent=t('admin.addEmployee')||'Add Employee';
     document.querySelectorAll('#addEmpModal .form-group, #addEmpModal hr, #addEmpModal .pin-row, #addEmpModal [id="emp-email-plan-hint"]').forEach(el=>el.style.display='none');
     document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='none');
-    // Show extra seat option for all non-unlimited plans
-    const isUnlimited = plan.name==='Unlimited' || plan.name==='Business';
-    const seatHtml = !isUnlimited ? `
-      <div style="border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:rgba(79,142,247,.06)">
-        <div style="font-weight:600;font-size:14px;margin-bottom:4px">➕ ${t('msg.addSeat')||'Add an Extra Seat'}</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${t('msg.seatPrice')||'+$4.90/mo per additional employee, billed via Stripe.'}</div>
-        <button class="btn-primary" style="width:100%;padding:9px;font-size:13px" onclick="closeModal('addEmpModal');startExtraSeatCheckout()">${t('msg.addSeatBtn')||'💳 Add Seat — $4.90/mo'}</button>
-      </div>` : '';
-    document.getElementById('empModalMsg').innerHTML=`<div style="padding:4px 0">
-      <h3 style="margin-bottom:6px">${t('modal.planLimit')||'🔒 Plan Limit Reached'}</h3>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">${t('msg.empLimitDesc')||'Your'} <strong>${t('plan.'+plan.name.toLowerCase())||plan.name}</strong> ${t('msg.empLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.empLimitDesc3')||'active employees'}. ${t('msg.empLimitDesc4')||'You have'} ${current}.</p>
-      ${seatHtml}
-      <div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface2)">
-        <div style="font-weight:600;font-size:14px;margin-bottom:4px">⬆ ${t('msg.upgradePlanOption')||'Upgrade Your Plan'}</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${t('msg.upgradePlanDesc')||'Get more employees, sites, and companies.'}</div>
-        <button class="btn-primary" style="width:100%;padding:9px;font-size:13px;background:var(--surface2);border:1.5px solid var(--accent);color:var(--accent)" onclick="closeModal('addEmpModal');showUpgradePlans()">${t('modal.upgradePlan')||'⬆ Upgrade Plan'}</button>
-      </div>
-    </div>`;
+    showLimitGate('empModalMsg','employee',current,max,plan);
     return;
   }
 
@@ -3826,7 +3873,7 @@ function openAddSiteModal(){
   const {ok,current,max,plan}=canAddSite(ctx.co);
   if(!ok){
     document.getElementById('siteModalMsg').innerHTML='';
-    showUpgradePrompt('siteModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} site${max!==1?'s':''}</strong>. You have ${current}. Upgrade to add more.`);
+    showLimitGate('siteModalMsg','site',current,max,plan);
     openModal('addSiteModal');
     document.getElementById('siteName').style.display='none';
     document.getElementById('siteDesc').style.display='none';
@@ -3955,7 +4002,7 @@ function openAddCompanyModal(){
   const saveBtn = document.getElementById('companySaveBtn');
   if(!ok){
     document.getElementById('companyModalMsg').innerHTML='';
-    showUpgradePrompt('companyModalMsg', `Your <strong>${plan.name}</strong> plan allows up to <strong>${max} compan${max===1?'y':'ies'}</strong>. You have ${current}. Upgrade to add more.`);
+    showLimitGate('companyModalMsg','company',current,max,plan);
     if(form) form.style.display='none';
     if(saveBtn) saveBtn.style.display='none';
     openModal('addCompanyModal');
@@ -5106,6 +5153,11 @@ en:{
 'msg.seatPrice':'+$4.90/mo per additional employee, billed via Stripe.',
 'msg.addSeatBtn':'💳 Add Seat — $4.90/mo',
 'msg.empLimitDesc':'Your','msg.empLimitDesc2':'plan allows up to','msg.empLimitDesc3':'active employees.','msg.empLimitDesc4':'You have',
+'msg.siteLimitDesc':'Your','msg.siteLimitDesc2':'plan allows up to','msg.siteLimitDesc3':'site(s).','msg.siteLimitDesc4':'You have',
+'msg.coLimitDesc':'Your','msg.coLimitDesc2':'plan allows up to','msg.coLimitDesc3':'company(ies).','msg.coLimitDesc4':'You have',
+'msg.upgradeTo':'Upgrade to','msg.seeAllPlans':'See all plans',
+'msg.alreadyUnlimited':'Your plan already includes unlimited employees.',
+'msg.redirectingCheckout':'Redirecting to checkout...',
 'msg.upgradePlanOption':'Upgrade Your Plan',
 'msg.upgradePlanDesc':'Get more employees, sites, and companies.',
 
@@ -5404,6 +5456,11 @@ fr:{
 'msg.seatPrice':'+4,90 $/mois par employé supplémentaire, via Stripe.',
 'msg.addSeatBtn':'💳 Ajouter un siège — 4,90 $/mois',
 'msg.empLimitDesc':'Votre','msg.empLimitDesc2':'forfait permet jusqu\'à','msg.empLimitDesc3':'employés actifs.','msg.empLimitDesc4':'Vous en avez',
+'msg.siteLimitDesc':'Votre','msg.siteLimitDesc2':'forfait permet jusqu\'à','msg.siteLimitDesc3':'site(s).','msg.siteLimitDesc4':'Vous en avez',
+'msg.coLimitDesc':'Votre','msg.coLimitDesc2':'forfait permet jusqu\'à','msg.coLimitDesc3':'compagnie(s).','msg.coLimitDesc4':'Vous en avez',
+'msg.upgradeTo':'Mettre à niveau vers','msg.seeAllPlans':'Voir tous les forfaits',
+'msg.alreadyUnlimited':'Votre forfait inclut déjà des employés illimités.',
+'msg.redirectingCheckout':'Redirection vers le paiement...',
 'msg.upgradePlanOption':'Mettre à niveau votre forfait',
 'msg.upgradePlanDesc':'Obtenez plus d\'employés, de sites et de compagnies.',
 
