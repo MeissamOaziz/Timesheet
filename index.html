@@ -2262,7 +2262,7 @@ async function submitSupport(){
   try{
     const res=await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`,'apikey':SUPA_KEY},
       body:JSON.stringify({
         type:'support',
         name:s?.name||'Admin',
@@ -2272,8 +2272,8 @@ async function submitSupport(){
         adminId:s?.id
       })
     });
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Failed');
+    const rawText=await res.text();
+    if(!res.ok)throw new Error(`HTTP ${res.status}: ${rawText}`);
     showMsg('supportMsg',t('contact.successMsg')||'✅ Message sent! We\'ll be in touch shortly.','success');
     document.getElementById('supportMessage').value='';
     setTimeout(()=>closeModal('supportModal'),2500);
@@ -2296,11 +2296,11 @@ async function submitLandingContact(){
   try{
     const res=await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`,'apikey':SUPA_KEY},
       body:JSON.stringify({type:'sales',name,email,subject,message})
     });
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Failed');
+    const rawText=await res.text();
+    if(!res.ok)throw new Error(`HTTP ${res.status}: ${rawText}`);
     showMsg('landContactMsg',t('contact.successMsg')||'✅ Message sent! We\'ll be in touch shortly.','success');
     ['landContactName','landContactEmail','landContactMessage'].forEach(id=>document.getElementById(id).value='');
   }catch(e){
