@@ -3071,18 +3071,26 @@ function openAddEmpModal(){
     showMsg('empModalMsg','','error');
     showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
     openModal('addEmpModal');
-    // Hide the form fields
-    document.getElementById('empName').closest('.form-group').style.display='none';
+    // Hide ALL form fields and save button — user cannot proceed
+    document.querySelectorAll('#addEmpModal .form-group, #addEmpModal hr, #addEmpModal .pin-row, #addEmpModal [id="emp-email-plan-hint"]').forEach(el=>el.style.display='none');
+    document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='none');
+    document.getElementById('empModalTitle').textContent='Add Employee';
     return;
   }
-  // Show all fields in case they were hidden
+  // Show all fields and save button in case they were hidden from a previous limit-reached state
   document.querySelectorAll('#addEmpModal .form-group').forEach(el=>el.style.display='');
+  document.querySelectorAll('#addEmpModal button.btn-primary').forEach(el=>el.style.display='');
   document.getElementById('empModalTitle').textContent='Add Employee — '+ctx.co.name;
   ['empName','empDept','empIdCode','empPin','empEmail'].forEach(id=>document.getElementById(id).value='');
   resetPhotoUpload(null);
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
+  // Warn if no sites exist yet — employees will have no site assigned
+  const coSites=C.sites.filter(s=>s.company_id===ctx.co.id);
+  if(!coSites.length){
+    showMsg('empModalMsg','ℹ️ No sites created yet. This employee will have no site assigned. You can create a site first from the Sites tab, or assign them later by editing.','info');
+  }
   setEmailToggle(false);
   const emailRow = document.getElementById('emailReportToggleRow');
   if(emailRow) emailRow.closest('div[style*="margin-top:10px"], div').parentElement;
@@ -3124,6 +3132,10 @@ function populateSiteDropdown(selectId,coId,selectedSiteId){
   const sel=document.getElementById(selectId);
   const sites=C.sites.filter(s=>s.company_id===coId);
   sel.innerHTML='<option value="">No Site Assigned</option>'+sites.map(s=>`<option value="${s.id}"${s.id===selectedSiteId?' selected':''}>${s.name}</option>`).join('');
+  // Auto-select if only one site exists and no selection is specified
+  if(!selectedSiteId && sites.length===1){
+    sel.value=sites[0].id;
+  }
 }
 
 function generatePin(){
@@ -3160,6 +3172,13 @@ async function saveEmployee(){
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd};
     }else{
       if(!ctx){showMsg('empModalMsg','No active company.','error');return;}
+      // Hard enforce limit — re-check even if UI was bypassed
+      const {ok,current,max,plan}=canAddEmployee(ctx.co);
+      if(!ok){
+        showMsg('empModalMsg','','error');
+        showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
+        return;
+      }
       const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,photo_url});
       if(r?.[0])C.employees.push(r[0]);
     }
