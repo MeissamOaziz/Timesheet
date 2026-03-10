@@ -1853,10 +1853,10 @@ function getPlanBadgeHtml(co) {
 
 function canAddEmployee(co) {
   const plan = getCompanyPlan(co);
-  const cur = C.employees.filter(e=>e.company_id===co.id&&e.active).length;
-  // For multi-company plans, count across all companies
+  const s = Sess.get();
+  const extraSeats = Number(s?.extra_seats ?? 0);
   const totalEmps = C.employees.filter(e=>e.active).length;
-  const maxEmps = plan.maxEmployees;
+  const maxEmps = plan.maxEmployees === Infinity ? Infinity : plan.maxEmployees + extraSeats;
   return { ok: totalEmps < maxEmps, current: totalEmps, max: maxEmps, plan };
 }
 
@@ -2938,13 +2938,17 @@ async function handleStripeReturn(){
 
   if(checkout==='cancelled'){
     showToast(t('toast.checkoutCancelled')||'Checkout cancelled — no charge was made.');
+    navigate('admin');
     return;
   }
 
   if(checkout!=='success')return;
 
   const s=Sess.get();
-  if(!s)return;
+  if(!s){navigate('login');return;}
+
+  // Navigate to admin first so overlay appears over the right page
+  navigate('admin');
 
   const isExtraSeat = plan==='extra_seat';
   const planNames={starter:'Starter',growth:'Growth',business:'Business',extra_seat:'Extra Seat'};
@@ -2954,8 +2958,8 @@ async function handleStripeReturn(){
     business:'Unlimited companies, sites & employees',
   };
 
-  // Show activation overlay — stays on current page
-  showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s);
+  // Small delay to let admin page render before showing overlay
+  setTimeout(()=>showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s), 300);
 }
 
 function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
@@ -2979,6 +2983,8 @@ function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
   // Poll for activation
   let attempts=0;
   const maxAttempts=12;
+  const prevExtraSeats=Number(s.extra_seats??0);
+  const prevPlan=s.plan||'free';
   const poll=async()=>{
     attempts++;
     try{
@@ -2988,12 +2994,15 @@ function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
         Sess.set(updated);
         updateNav();
 
-        const activated = isExtraSeat
-          ? (rows[0].extra_seats>0 || (rows[0].stripe_subscription_id && rows[0].stripe_subscription_id!==s.stripe_subscription_id) || rows[0].stripe_customer_id)
-          : (rows[0].plan && rows[0].plan===plan);
+        const newExtraSeats=Number(rows[0].extra_seats??0);
+        const newPlan=rows[0].plan||'free';
 
-        if(activated || attempts>=maxAttempts){
-          showActivationSuccess(overlay, isExtraSeat, plan, planNames, planIncludes, updated, attempts>=maxAttempts && !activated);
+        const activated = isExtraSeat
+          ? newExtraSeats > prevExtraSeats   // seat count went up
+          : newPlan === plan && newPlan !== prevPlan; // plan changed to the target
+
+        if(activated){
+          showActivationSuccess(overlay, isExtraSeat, plan, planNames, planIncludes, updated, false);
           return;
         }
       }
@@ -3129,6 +3138,8 @@ function openProfile(){
   const usedCompanies=C.companies.length;
   const usedSites=C.sites.filter(si=>C.companies.some(co=>co.id===si.company_id)).length;
   const usedEmployees=C.employees.filter(e=>e.active&&C.companies.some(co=>co.id===e.company_id)).length;
+  const extraSeats=Number(s?.extra_seats??0);
+  const effectiveMaxEmps=planDef.maxEmployees===Infinity?Infinity:planDef.maxEmployees+extraSeats;
 
   function usageBar(label, used, max, color){
     const isUnlim=max===Infinity;
@@ -3148,7 +3159,7 @@ function openProfile(){
   const statsEl=document.getElementById('profileUsageStats');
   if(statsEl){
     statsEl.innerHTML=
-      usageBar(t('profile.employees')||'Employees', usedEmployees, planDef.maxEmployees, planDef.color)+
+      usageBar(t('profile.employees')||'Employees', usedEmployees, effectiveMaxEmps, planDef.color)+
       usageBar(t('profile.sites')||'Sites', usedSites, planDef.maxSites, planDef.color)+
       usageBar(t('profile.companies')||'Companies', usedCompanies, planDef.maxCompanies, planDef.color);
   }
