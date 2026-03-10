@@ -2747,9 +2747,9 @@ async function startCheckout(plan){
   if(s.plan===plan){showToast(t('toast.alreadyOnPlan')||'You are already on this plan.');return;}
   showToast('Redirecting to secure checkout...');
   try{
-    const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
+    const res=await fetch(`${EDGE_URL}/checkout`,{
       method:'POST',
-      headers:{'Content-Type':'text/plain'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
         plan,
         adminId:s.id,
@@ -2760,12 +2760,8 @@ async function startCheckout(plan){
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error);
-    const a=document.createElement('a');
-    a.href=data.url;
-    a.rel='noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if(!data.url)throw new Error('No checkout URL returned. Please try again.');
+    window.location.href=data.url;
   }catch(e){
     showToast('Checkout error: '+e.message);
   }
@@ -2783,9 +2779,9 @@ async function startExtraSeatCheckout(){
   }
   showToast(t('msg.redirectingCheckout')||'Redirecting to checkout...');
   try{
-    const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
+    const res=await fetch(`${EDGE_URL}/checkout`,{
       method:'POST',
-      headers:{'Content-Type':'text/plain'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
         plan:'extra_seat',
         priceId:EXTRA_SEAT_PRICE_ID,
@@ -2797,12 +2793,8 @@ async function startExtraSeatCheckout(){
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error);
-    const a=document.createElement('a');
-    a.href=data.url;
-    a.rel='noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if(!data.url)throw new Error('No checkout URL returned. Please try again.');
+    window.location.href=data.url;
   }catch(e){
     showToast('Checkout error: '+e.message);
   }
@@ -2907,22 +2899,18 @@ async function openBillingPortal(){
   }
   showToast('Opening billing portal...');
   try{
-    const res=await fetch(`${EDGE_URL}?action=create-portal`,{
+    const res=await fetch(`${EDGE_URL}/portal`,{
       method:'POST',
-      headers:{'Content-Type':'text/plain'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
-        customerId:s.stripe_customer_id,
+        adminId:s.id,
         returnUrl:'https://www.punchclock.ca',
       })
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error);
-    const a=document.createElement('a');
-    a.href=data.url;
-    a.rel='noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if(!data.url)throw new Error('No portal URL returned. Please try again.');
+    window.location.href=data.url;
   }catch(e){
     showToast('Portal error: '+e.message);
   }
