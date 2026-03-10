@@ -1274,16 +1274,20 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div id="profileMsg" style="display:none;margin-bottom:12px"></div>
 
-    <!-- Plan badge -->
-    <div id="profilePlanBadge" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:20px">
-      <div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:3px" data-i18n="profile.plan">Subscription Plan</div>
-        <div id="profilePlanName" style="font-weight:700;font-size:15px"></div>
+    <!-- Plan badge + usage stats -->
+    <div id="profilePlanBadge" style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px" data-i18n="profile.plan">Subscription Plan</div>
+          <div id="profilePlanName" style="font-weight:700;font-size:17px"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()" data-i18n="profile.upgrade">⬆ Upgrade</button>
+          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()">⚙ Manage Billing</button>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-        <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()" data-i18n="profile.upgrade">⬆ Upgrade</button>
-        <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()">⚙ Manage Billing</button>
-      </div>
+      <!-- Usage bars -->
+      <div id="profileUsageStats" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
 
     <!-- Edit name -->
@@ -2750,13 +2754,12 @@ async function startCheckout(plan){
         plan,
         adminId:s.id,
         adminEmail:s.email,
-        successUrl:'https://www.punchclock.ca',
-        cancelUrl:'https://www.punchclock.ca',
+        successUrl:`https://www.punchclock.ca?checkout=success&plan=${plan}`,
+        cancelUrl:`https://www.punchclock.ca?checkout=cancelled`,
       })
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error);
-    // Use anchor click to avoid async redirect blocking
     const a=document.createElement('a');
     a.href=data.url;
     a.rel='noopener noreferrer';
@@ -2788,8 +2791,8 @@ async function startExtraSeatCheckout(){
         priceId:EXTRA_SEAT_PRICE_ID,
         adminId:s.id,
         adminEmail:s.email,
-        successUrl:'https://www.punchclock.ca',
-        cancelUrl:'https://www.punchclock.ca',
+        successUrl:`https://www.punchclock.ca?checkout=success&plan=extra_seat`,
+        cancelUrl:`https://www.punchclock.ca?checkout=cancelled`,
       })
     });
     const data=await res.json();
@@ -2931,40 +2934,155 @@ async function handleStripeReturn(){
   const checkout=params.get('checkout');
   const plan=params.get('plan');
   if(!checkout)return;
-  // Clean the URL
   window.history.replaceState({},'',window.location.pathname);
-  if(checkout==='success'&&plan){
-    const s=Sess.get();
-    if(s){
-      // Poll DB up to 12 seconds waiting for webhook to update the plan
-      showToast('⏳ Activating your plan...');
-      let activated=false;
-      for(let i=0;i<8;i++){
-        await new Promise(r=>setTimeout(r,1500));
-        try{
-          const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id,status`);
-          if(rows?.[0]){
-            const updated={...s,...rows[0]};
-            Sess.set(updated);
-            updateNav();
-            if(rows[0].plan && rows[0].plan!=='free'){
-              activated=true;
-              break;
-            }
-          }
-        }catch(e){console.warn('Session refresh error',e);}
+
+  if(checkout==='cancelled'){
+    showToast(t('toast.checkoutCancelled')||'Checkout cancelled — no charge was made.');
+    return;
+  }
+
+  if(checkout!=='success')return;
+
+  const s=Sess.get();
+  if(!s)return;
+
+  const isExtraSeat = plan==='extra_seat';
+  const planNames={starter:'Starter',growth:'Growth',business:'Business',extra_seat:'Extra Seat'};
+  const planIncludes={
+    starter:'1 company · 2 sites · up to 10 employees',
+    growth: '2 companies · 5 sites · up to 25 employees',
+    business:'Unlimited companies, sites & employees',
+  };
+
+  // Show activation overlay — stays on current page
+  showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s);
+}
+
+function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
+  // Remove existing overlay if any
+  const existing=document.getElementById('activationOverlay');
+  if(existing)existing.remove();
+
+  const overlay=document.createElement('div');
+  overlay.id='activationOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML=`
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:32px;max-width:480px;width:100%;text-align:center">
+      <div id="activationSpinner" style="font-size:40px;margin-bottom:16px">⏳</div>
+      <h3 id="activationTitle" style="margin:0 0 8px;font-size:20px">${t('activation.processing')||'Processing your payment...'}</h3>
+      <p id="activationDesc" style="font-size:14px;color:var(--text2);margin:0 0 24px">${t('activation.wait')||'Please wait while we activate your purchase. This usually takes a few seconds.'}</p>
+      <div id="activationForm" style="display:none"></div>
+      <button id="activationDismiss" style="display:none" class="btn-secondary" onclick="document.getElementById('activationOverlay').remove();navigate('admin')">${t('activation.goToAdmin')||'Go to Admin Panel'}</button>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Poll for activation
+  let attempts=0;
+  const maxAttempts=12;
+  const poll=async()=>{
+    attempts++;
+    try{
+      const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id,status,extra_seats`);
+      if(rows?.[0]){
+        const updated={...s,...rows[0]};
+        Sess.set(updated);
+        updateNav();
+
+        const activated = isExtraSeat
+          ? (rows[0].extra_seats>0 || (rows[0].stripe_subscription_id && rows[0].stripe_subscription_id!==s.stripe_subscription_id) || rows[0].stripe_customer_id)
+          : (rows[0].plan && rows[0].plan===plan);
+
+        if(activated || attempts>=maxAttempts){
+          showActivationSuccess(overlay, isExtraSeat, plan, planNames, planIncludes, updated, attempts>=maxAttempts && !activated);
+          return;
+        }
       }
-      const planNames={starter:'Starter',growth:'Growth',business:'Business'};
-      if(activated){
-        showToast('🎉 Welcome to '+(planNames[plan]||plan)+'! Your plan is now active.','success');
-      } else {
-        // Webhook may still be in flight — show softer message, plan will update shortly
-        showToast('✅ Payment received! Your plan will activate within a minute.','success');
-      }
+    }catch(e){console.warn('Activation poll error',e);}
+    if(attempts<maxAttempts) setTimeout(poll,1500);
+    else showActivationSuccess(overlay, isExtraSeat, plan, planNames, planIncludes, s, true);
+  };
+  setTimeout(poll,1500);
+}
+
+function showActivationSuccess(overlay, isExtraSeat, plan, planNames, planIncludes, s, delayed){
+  const spinner=document.getElementById('activationSpinner');
+  const title=document.getElementById('activationTitle');
+  const desc=document.getElementById('activationDesc');
+  const form=document.getElementById('activationForm');
+  const dismiss=document.getElementById('activationDismiss');
+
+  if(delayed){
+    // Webhook still in flight
+    spinner.textContent='✅';
+    title.textContent=t('activation.paymentReceived')||'Payment received!';
+    desc.textContent=t('activation.activatingSoon')||'Your purchase will activate within a minute. You can close this and try adding the employee shortly.';
+    dismiss.style.display='';
+    return;
+  }
+
+  if(isExtraSeat){
+    spinner.textContent='🎉';
+    title.textContent=t('activation.seatAdded')||'Extra seat activated!';
+    desc.textContent=t('activation.seatDesc')||'Your extra employee seat is now active. Fill in the details below to add your new employee.';
+    // Show inline add-employee mini form
+    const ctx=Ctx.get();
+    if(ctx){
+      form.style.display='';
+      form.innerHTML=`
+        <div style="text-align:left;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:12px">
+            <label style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${t('emp.fullName')||'Full Name'}</label>
+            <input type="text" id="quickEmpName" placeholder="${t('emp.fullNamePlaceholder')||'John Smith'}" style="width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;outline:none;box-sizing:border-box">
+          </div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">${t('emp.pin')||'4-Digit PIN'}</label>
+            <input type="password" id="quickEmpPin" maxlength="4" placeholder="••••" style="width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:13px;letter-spacing:6px;outline:none;box-sizing:border-box">
+          </div>
+          <div id="quickEmpMsg"></div>
+          <button class="btn-primary" style="width:100%;padding:10px" onclick="quickAddEmployee('${ctx.co.id}')">${t('activation.addEmployeeNow')||'➕ Add Employee Now'}</button>
+        </div>
+        <button class="btn-secondary" style="width:100%;padding:8px;font-size:12px" onclick="document.getElementById('activationOverlay').remove();openAddEmpModal()">${t('activation.fillFullForm')||'Or fill in the full employee form'}</button>`;
+    } else {
+      dismiss.style.display='';
     }
+  } else {
+    // Plan upgrade
+    const oldPlan=(Sess.get()?.plan||'free');
+    const newPlanName=planNames[plan]||plan;
+    const includes=planIncludes[plan]||'';
+    spinner.textContent='🎉';
+    title.textContent=`${t('activation.planUpgraded')||'Plan upgraded!'} → ${newPlanName}`;
+    desc.innerHTML=`<strong>${newPlanName}</strong> ${t('activation.nowActive')||'is now active.'}<br><span style="font-size:12px;color:var(--text3)">${includes}</span>`;
+    dismiss.style.display='';
+    dismiss.textContent=t('activation.goToAdmin')||'Go to Admin Panel';
+  }
+}
+
+async function quickAddEmployee(coId){
+  const name=document.getElementById('quickEmpName')?.value.trim();
+  const pin=document.getElementById('quickEmpPin')?.value.trim();
+  const msgEl=document.getElementById('quickEmpMsg');
+  if(!name){if(msgEl)msgEl.innerHTML='<div class="msg error">Name is required.</div>';return;}
+  if(!pin||!/^\d{4}$/.test(pin)){if(msgEl)msgEl.innerHTML='<div class="msg error">PIN must be exactly 4 digits.</div>';return;}
+  const co=C.companies.find(c=>c.id===coId);
+  if(!co){if(msgEl)msgEl.innerHTML='<div class="msg error">Company not found.</div>';return;}
+  const sites=C.sites.filter(s=>s.company_id===coId);
+  if(!sites.length){
+    document.getElementById('activationOverlay').remove();
     navigate('admin');
-  } else if(checkout==='cancelled'){
-    showToast('Checkout cancelled — no charge was made.');
+    setTimeout(()=>adminTab('sites',document.querySelectorAll('#page-admin .tabs .tab')[1]),400);
+    return;
+  }
+  if(msgEl)msgEl.innerHTML='<div class="msg info">Saving...</div>';
+  try{
+    const r=await DB.insert('employees',{name,pin,company_id:coId,site_id:sites[0].id,active:true,dept:'',emp_code:''});
+    if(r?.[0])C.employees.push(r[0]);
+    document.getElementById('activationOverlay').remove();
+    await refreshCache();
+    navigate('admin');
+    showToast(`✓ ${name} added successfully!`,'success');
+  }catch(e){
+    if(msgEl)msgEl.innerHTML=`<div class="msg error">Error: ${e.message}</div>`;
   }
 }
 
@@ -2998,6 +3116,43 @@ function openProfile(){
   const isTopPlan=plan==='business'||plan==='enterprise'||isSuperAdmin();
   if(upgradeBtn)upgradeBtn.style.display=isTopPlan?'none':'';
   if(manageBtn)manageBtn.style.display=isPaid?'':'none';
+
+  // Usage stats
+  const planDef=Object.values({
+    free:     {name:'Free',    maxCompanies:1,          maxSites:1,          maxEmployees:5,          color:'var(--text2)'},
+    starter:  {name:'Starter', maxCompanies:1,          maxSites:2,          maxEmployees:10,         color:'#4f8ef7'},
+    growth:   {name:'Growth',  maxCompanies:2,          maxSites:5,          maxEmployees:25,         color:'#22c55e'},
+    business: {name:'Business',maxCompanies:Infinity,   maxSites:Infinity,   maxEmployees:Infinity,   color:'#a78bfa'},
+    unlimited:{name:'Unlimited',maxCompanies:Infinity,  maxSites:Infinity,   maxEmployees:Infinity,   color:'#f59e0b'},
+  }).find(p=>p.name.toLowerCase()===plan)||{name:plan,maxCompanies:1,maxSites:1,maxEmployees:5,color:'var(--text2)'};
+
+  const usedCompanies=C.companies.length;
+  const usedSites=C.sites.filter(si=>C.companies.some(co=>co.id===si.company_id)).length;
+  const usedEmployees=C.employees.filter(e=>e.active&&C.companies.some(co=>co.id===e.company_id)).length;
+
+  function usageBar(label, used, max, color){
+    const isUnlim=max===Infinity;
+    const pct=isUnlim?0:Math.min(100,Math.round(used/max*100));
+    const barColor=pct>=100?'var(--red)':pct>=80?'var(--amber)':color||'var(--accent)';
+    const maxLabel=isUnlim?'∞':max;
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--text2)">${label}</span>
+        <span style="font-size:12px;font-weight:600;color:${barColor}">${used} / ${maxLabel}</span>
+      </div>
+      ${isUnlim?`<div style="height:4px;background:var(--border);border-radius:2px"><div style="height:4px;width:20%;background:${barColor};border-radius:2px;opacity:.4"></div></div>`
+      :`<div style="height:4px;background:var(--border);border-radius:2px"><div style="height:4px;width:${pct}%;background:${barColor};border-radius:2px;transition:width .3s"></div></div>`}
+    </div>`;
+  }
+
+  const statsEl=document.getElementById('profileUsageStats');
+  if(statsEl){
+    statsEl.innerHTML=
+      usageBar(t('profile.employees')||'Employees', usedEmployees, planDef.maxEmployees, planDef.color)+
+      usageBar(t('profile.sites')||'Sites', usedSites, planDef.maxSites, planDef.color)+
+      usageBar(t('profile.companies')||'Companies', usedCompanies, planDef.maxCompanies, planDef.color);
+  }
+
   document.getElementById('profileModal').classList.add('open');
 }
 
@@ -4999,6 +5154,14 @@ en:{
 'profile.name':'Display Name','profile.changePw':'🔑 Change password','profile.currentPw':'Current Password',
 'profile.newPw':'New Password','profile.confirmPw':'Confirm New Password',
 'profile.save':'Save Changes','profile.cancel':'Cancel',
+'profile.employees':'Employees','profile.sites':'Sites','profile.companies':'Companies',
+'activation.processing':'Processing your payment...','activation.wait':'Please wait while we activate your purchase. This usually takes a few seconds.',
+'activation.paymentReceived':'Payment received!','activation.activatingSoon':'Your purchase will activate within a minute. You can close this and try adding the employee shortly.',
+'activation.seatAdded':'Extra seat activated!','activation.seatDesc':'Your extra employee seat is now active. Fill in the details below to add your new employee.',
+'activation.planUpgraded':'Plan upgraded!','activation.nowActive':'is now active.',
+'activation.addEmployeeNow':'➕ Add Employee Now','activation.fillFullForm':'Or fill in the full employee form',
+'activation.goToAdmin':'Go to Admin Panel',
+'toast.checkoutCancelled':'Checkout cancelled — no charge was made.',
 'profile.nameRequired':'Name cannot be empty.','profile.nameTaken':'That name is already taken by another user.',
 'profile.curPwRequired':'Please enter your current password.','profile.newPwRequired':'Please enter a new password.',
 'profile.pwTooShort':'Password must be at least 6 characters.','profile.wrongCurPw':'Current password is incorrect.',
@@ -5302,6 +5465,14 @@ fr:{
 'profile.name':'Nom affiché','profile.changePw':'🔑 Changer le mot de passe','profile.currentPw':'Mot de passe actuel',
 'profile.newPw':'Nouveau mot de passe','profile.confirmPw':'Confirmer le nouveau mot de passe',
 'profile.save':'Sauvegarder','profile.cancel':'Annuler',
+'profile.employees':'Employés','profile.sites':'Sites','profile.companies':'Compagnies',
+'activation.processing':'Traitement du paiement...','activation.wait':'Veuillez patienter pendant l\'activation de votre achat. Cela prend généralement quelques secondes.',
+'activation.paymentReceived':'Paiement reçu!','activation.activatingSoon':'Votre achat sera activé dans une minute. Vous pouvez fermer ceci et réessayer d\'ajouter l\'employé sous peu.',
+'activation.seatAdded':'Siège supplémentaire activé!','activation.seatDesc':'Votre siège supplémentaire est maintenant actif. Remplissez les informations ci-dessous pour ajouter votre nouvel employé.',
+'activation.planUpgraded':'Forfait mis à niveau!','activation.nowActive':'est maintenant actif.',
+'activation.addEmployeeNow':'➕ Ajouter l\'employé maintenant','activation.fillFullForm':'Ou remplir le formulaire complet',
+'activation.goToAdmin':'Aller au panneau admin',
+'toast.checkoutCancelled':'Paiement annulé — aucun montant débité.',
 'profile.nameRequired':'Le nom ne peut pas être vide.','profile.nameTaken':'Ce nom est déjà utilisé par un autre utilisateur.',
 'profile.curPwRequired':'Veuillez entrer votre mot de passe actuel.','profile.newPwRequired':'Veuillez entrer un nouveau mot de passe.',
 'profile.pwTooShort':'Le mot de passe doit comporter au moins 6 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
