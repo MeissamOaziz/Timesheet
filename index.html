@@ -2336,7 +2336,7 @@ async function submitSupport(){
   try{
     const res=await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`,'apikey':SUPA_KEY},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         type:'support',
         name:s?.name||'Admin',
@@ -2370,7 +2370,7 @@ async function submitLandingContact(){
   try{
     const res=await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`,'apikey':SUPA_KEY},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({type:'sales',name,email,subject,message})
     });
     const rawText=await res.text();
@@ -2749,7 +2749,7 @@ async function startCheckout(plan){
   try{
     const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
         plan,
         adminId:s.id,
@@ -2785,7 +2785,7 @@ async function startExtraSeatCheckout(){
   try{
     const res=await fetch(`${EDGE_URL}?action=create-checkout`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
         plan:'extra_seat',
         priceId:EXTRA_SEAT_PRICE_ID,
@@ -2909,7 +2909,7 @@ async function openBillingPortal(){
   try{
     const res=await fetch(`${EDGE_URL}?action=create-portal`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
         customerId:s.stripe_customer_id,
         returnUrl:'https://www.punchclock.ca',
