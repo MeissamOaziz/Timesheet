@@ -2511,7 +2511,11 @@ async function doLogin(){
       navigate('setpassword');
       return;
     }
-    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
+    // Fetch latest plan + extra_seats from DB (RPC may not return these)
+    const fullAdmin = await DB.all('admins',`id=eq.${admin.id}&select=plan,extra_seats`);
+    const extra_seats = Number(fullAdmin?.[0]?.extra_seats ?? 0);
+    const latestPlan = fullAdmin?.[0]?.plan || admin.plan || 'free';
+    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:latestPlan,extra_seats});
     updateNav();
     await refreshCache();
     navigate('admin');
