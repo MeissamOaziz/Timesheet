@@ -3158,11 +3158,10 @@ function openProfile(){
   const av=document.getElementById('profileAvatar');
   av.textContent=(s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   // Plan
-  const planNames={free:'Free',starter:'Starter',growth:'Growth',enterprise:'Enterprise'};
   const plan=s.plan||'free';
   const planEl=document.getElementById('profilePlanName');
-  const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',enterprise:'#a78bfa'};
-  planEl.textContent=planNames[plan]||plan;
+  const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',business:'#a78bfa',enterprise:'#a78bfa',unlimited:'#f59e0b'};
+  planEl.textContent=t('plan.'+plan)||plan.charAt(0).toUpperCase()+plan.slice(1);
   planEl.style.color=planColors[plan]||'var(--text)';
   // Hide upgrade button if already on top plan; show manage billing if paid
   const upgradeBtn=document.getElementById('profileUpgradeBtn');
