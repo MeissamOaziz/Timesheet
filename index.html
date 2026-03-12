@@ -537,7 +537,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="price-card">
         <div class="price-name" data-i18n="plan.starter">Starter</div>
         <div class="price-amount">$19.49<span>/mo CAD</span></div>
-        <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee</div>
+        <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · up to 10 employees · 1 admin<br>+$4.90/mo per extra employee or admin</div>
         <ul class="price-features">
           <li data-i18n="land.f.start1">1 company, 2 sites</li>
           <li data-i18n="land.f.start2">Up to 10 employees</li>
@@ -546,6 +546,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li data-i18n="land.f.start5">Overtime tracking</li>
           <li data-i18n="land.f.start6">QuickBooks IIF export</li>
           <li class="dim" data-i18n="land.f.start7">Multiple companies</li>
+          <li class="dim" data-i18n="land.f.start8">Co-admin access (upgrade to add)</li>
         </ul>
         <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
       </div>
@@ -554,13 +555,14 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
         <div class="price-name" data-i18n="plan.growth">Growth</div>
         <div class="price-amount">$39.49<span>/mo CAD</span></div>
-        <div class="price-sub" data-i18n-html="land.growthSub">2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee</div>
+        <div class="price-sub" data-i18n-html="land.growthSub">2 companies · 5 sites · up to 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin</div>
         <ul class="price-features">
           <li data-i18n="land.f.grow1">2 companies</li>
           <li data-i18n="land.f.grow2">Up to 5 sites per company</li>
           <li data-i18n="land.f.grow3">Up to 25 employees</li>
           <li data-i18n="land.f.grow4">All Starter features</li>
           <li data-i18n="land.f.grow5">Priority support</li>
+          <li data-i18n="land.f.grow6">Up to 2 admins per account</li>
         </ul>
         <button class="price-cta accent" onclick="isLoggedIn()?startCheckout('growth'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial2">Get Growth</button>
       </div>
@@ -574,8 +576,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li data-i18n="land.f.biz2">Unlimited sites</li>
           <li data-i18n="land.f.biz3">Unlimited employees</li>
           <li data-i18n="land.f.biz4">All Growth features</li>
-          <li data-i18n="land.f.biz5">Dedicated support</li>
-          <li data-i18n="land.f.biz6">Early access to new features</li>
+          <li data-i18n="land.f.biz5">Up to 3 admins per account</li>
+          <li data-i18n="land.f.biz6">Dedicated support</li>
+          <li data-i18n="land.f.biz7">Early access to new features</li>
         </ul>
         <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('business'):(hideLanding(),navigate('register'))" data-i18n="land.contactUs">Get Business</button>
       </div>
@@ -1039,7 +1042,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
         <div>
           <h3 style="font-size:14px;font-weight:600" data-i18n="coAdmin.myCoAdmins">My Co-Admins</h3>
-          <p style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="coAdmin.desc">Invite another admin to manage your companies.</p>
+          <p style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="coAdmin.desc">Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.</p>
         </div>
         <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openInviteCoAdminModal()" data-i18n="coAdmin.inviteBtn">+ Invite Co-Admin</button>
       </div>
@@ -1263,29 +1266,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ══════════════ MODALS ══════════════ -->
 
 <!-- PROFILE MODAL -->
-<!-- Manage Subscription Modal -->
-<div class="modal-overlay" id="manageSubModal" style="z-index:9600">
-  <div class="modal" style="max-width:460px">
-    <h3 style="margin:0 0 6px;font-size:18px" data-i18n="manageSub.title">Manage Subscription</h3>
-    <p id="manageSubCurrentPlan" style="font-size:13px;color:var(--text2);margin:0 0 20px"></p>
-
-    <!-- Downgrade section -->
-    <div id="manageSubDowngradeSection" style="display:none">
-      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);margin-bottom:10px" data-i18n="manageSub.changePlan">Change Plan</div>
-      <div id="manageSubPlansList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
-    </div>
-
-    <!-- Cancel section -->
-    <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
-      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);margin-bottom:8px" data-i18n="manageSub.cancelSection">Cancel Subscription</div>
-      <p style="font-size:12px;color:var(--text3);margin:0 0 10px" data-i18n="manageSub.cancelDesc">You'll keep access until the end of your billing period. You'll be redirected to Stripe to confirm.</p>
-      <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="closeModal('manageSubModal');openBillingPortal()" data-i18n="manageSub.cancelBtn">Cancel Subscription via Stripe →</button>
-    </div>
-
-    <button class="btn-secondary" style="margin-top:12px;width:100%" onclick="closeModal('manageSubModal')" data-i18n="modal.cancel">Cancel</button>
-  </div>
-</div>
-
 <div class="modal-overlay" id="profileModal" style="z-index:9500">
   <div class="modal" style="max-width:460px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
@@ -1306,7 +1286,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
           <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()" data-i18n="profile.upgrade">⬆ Upgrade</button>
-          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="closeModal('profileModal');openManageSubscriptionModal()">⚙ Manage Billing</button>
+          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()">⚙ Manage Billing</button>
         </div>
       </div>
       <!-- Usage bars -->
@@ -1847,11 +1827,11 @@ function showPlanGate(msg, hintId) {
 // PLAN SYSTEM
 // ═══════════════════════════════════════════════════
 const PLANS = {
-  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:5,  price:0     },
-  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:10, price:19.49 },
-  growth:   { name:'Growth',   maxCompanies:2, maxSites:5,  maxEmployees:25, price:39.49 },
-  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:79.49 },
-  unlimited:{ name:'Unlimited',maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, price:0  },
+  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:5,  maxCoAdmins:1, price:0     },
+  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:10, maxCoAdmins:1, price:19.49 },
+  growth:   { name:'Growth',   maxCompanies:2, maxSites:5,  maxEmployees:25, maxCoAdmins:2, price:39.49 },
+  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:3, price:79.49 },
+  unlimited:{ name:'Unlimited',maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:Infinity, price:0  },
 };
 // Grandfathered companies — always unlimited regardless of plan
 const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
@@ -2084,6 +2064,9 @@ async function refreshCache(opts={}){
   if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
   if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
   C.punches=await DB.all('punches',parts.join('&'))||[];
+  if(sess&&sess.id&&!sess.parent_admin_id&&!superAdmin){
+    C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
+  } else { C.coAdmins=[]; }
 }
 
 // ═══════════════════════════════════════════════════
@@ -2418,6 +2401,7 @@ function showHelpModal(){
     {icon:'📊',title:t('help.s5title'),desc:t('help.s5desc')},
     {icon:'📧',title:t('help.s6title'),desc:t('help.s6desc')},
     {icon:'📋',title:t('help.s7title'),desc:t('help.s7desc')},
+    {icon:'👥',title:t('help.s8title')||'Co-Admins & Team Access',desc:t('help.s8desc')||'Invite team members to help manage your account. Limits depend on your plan.'},
   ];
   document.getElementById('helpStepsList').innerHTML=steps.map((s,i)=>`
     <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-start">
@@ -2532,6 +2516,10 @@ async function doLogin(){
       // First login for co-admin — redirect to set password
       pendingInviteAdmin = admin;
       navigate('setpassword');
+      return;
+    }
+    if(admin.status === 'pending_approval'){
+      showMsg('loginMsg',t('msg.pendingApproval')||'Your request is pending approval. You will receive an email once the administrator approves it.','info');
       return;
     }
     Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
@@ -2737,6 +2725,20 @@ async function doVerify(){
           target_admin_email: pendingVerify.adminEmail,
           status: 'pending'
         });
+        // Notify target admin by email
+        try{
+          await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+            body:JSON.stringify({
+              email: pendingVerify.adminEmail,
+              name: adminRows[0].name||pendingVerify.adminEmail,
+              type: 'join_request',
+              requesterName: pendingVerify.name,
+              requesterEmail: pendingVerify.email
+            })
+          });
+        }catch(e){console.warn('Join request notification failed:',e);}
       }
       pendingVerify=null;
       document.getElementById('regStep2').style.display='none';
@@ -2913,41 +2915,6 @@ function showUpgradePlans(){
     <button class="btn-secondary" style="margin-top:18px;width:100%" onclick="closeModal('upgradePlansModal')">${t('modal.cancel')}</button>
   </div>`;
   openModal('upgradePlansModal');
-}
-
-function openManageSubscriptionModal(){
-  const s=Sess.get();
-  if(!s)return;
-  const plan=s.plan||'free';
-  const planName=t('plan.'+plan)||plan.charAt(0).toUpperCase()+plan.slice(1);
-
-  // Current plan label
-  const currentEl=document.getElementById('manageSubCurrentPlan');
-  if(currentEl) currentEl.textContent=(t('manageSub.currentPlan')||'Current plan:')+' '+planName;
-
-  // Build downgrade options (plans below current)
-  const planOrder=['free','starter','growth','business'];
-  const currentIdx=planOrder.indexOf(plan);
-  const downgrades=planOrder.slice(1,currentIdx); // plans below current, skip free
-
-  const downSection=document.getElementById('manageSubDowngradeSection');
-  const plansList=document.getElementById('manageSubPlansList');
-  if(downgrades.length>0 && plansList){
-    downSection.style.display='';
-    const planPrices={starter:'$19.49/mo',growth:'$39.49/mo'};
-    plansList.innerHTML=downgrades.map(p=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px">
-        <div>
-          <div style="font-weight:600;font-size:14px">${t('plan.'+p)||p}</div>
-          <div style="font-size:12px;color:var(--text2)">${t('upgrade.desc.'+p)||''} · ${planPrices[p]||''} CAD</div>
-        </div>
-        <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="closeModal('manageSubModal');startCheckout('${p}')">${t('manageSub.switchTo')||'Switch'}</button>
-      </div>`).join('');
-  } else {
-    if(downSection) downSection.style.display='none';
-  }
-
-  openModal('manageSubModal');
 }
 
 async function openBillingPortal(){
@@ -3158,10 +3125,11 @@ function openProfile(){
   const av=document.getElementById('profileAvatar');
   av.textContent=(s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   // Plan
+  const planNames={free:'Free',starter:'Starter',growth:'Growth',enterprise:'Enterprise'};
   const plan=s.plan||'free';
   const planEl=document.getElementById('profilePlanName');
-  const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',business:'#a78bfa',enterprise:'#a78bfa',unlimited:'#f59e0b'};
-  planEl.textContent=t('plan.'+plan)||plan.charAt(0).toUpperCase()+plan.slice(1);
+  const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',enterprise:'#a78bfa'};
+  planEl.textContent=planNames[plan]||plan;
   planEl.style.color=planColors[plan]||'var(--text)';
   // Hide upgrade button if already on top plan; show manage billing if paid
   const upgradeBtn=document.getElementById('profileUpgradeBtn');
@@ -3203,10 +3171,13 @@ function openProfile(){
 
   const statsEl=document.getElementById('profileUsageStats');
   if(statsEl){
+    const usedAdmins=1+(C.coAdmins?C.coAdmins.length:0);
+    const maxAdmins=(planDef.maxCoAdmins===Infinity?Infinity:planDef.maxCoAdmins)+extraSeats;
     statsEl.innerHTML=
       usageBar(t('profile.employees')||'Employees', usedEmployees, effectiveMaxEmps, planDef.color)+
       usageBar(t('profile.sites')||'Sites', usedSites, planDef.maxSites, planDef.color)+
-      usageBar(t('profile.companies')||'Companies', usedCompanies, planDef.maxCompanies, planDef.color);
+      usageBar(t('profile.companies')||'Companies', usedCompanies, planDef.maxCompanies, planDef.color)+
+      usageBar(t('profile.admins')||'Admins', usedAdmins, maxAdmins, planDef.color);
   }
 
   document.getElementById('profileModal').classList.add('open');
@@ -3598,7 +3569,24 @@ function renderSitesAdmin(){
 
 // ─── CO-ADMIN MANAGEMENT (for regular admins) ─────────────────────────────
 
+
+function canAddCoAdmin(){
+  const sess=Sess.get();
+  if(!sess||isSuperAdmin())return{ok:true,current:0,max:Infinity};
+  const plan=getAdminPlan();
+  const extraSeats=Number(sess.extra_seats??0);
+  // maxCoAdmins in plan includes primary admin, so available co-admin slots = maxCoAdmins - 1 + extraSeats
+  const maxSlots=(plan.maxCoAdmins===Infinity?Infinity:(plan.maxCoAdmins-1))+extraSeats;
+  const current=C.coAdmins?C.coAdmins.length:0;
+  return{ok:current<maxSlots||maxSlots===Infinity,current,max:maxSlots};
+}
+
 function openInviteCoAdminModal(){
+  const check=canAddCoAdmin();
+  if(!check.ok){
+    showToast((t('coAdmin.limitReached')||'Co-admin limit reached.')+' '+(t('coAdmin.limitHint')||'Upgrade your plan or add an extra admin seat ($4.90/mo).'),'error');
+    return;
+  }
   ['coAdminName','coAdminEmail'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('coAdminRole').value='admin';
   document.getElementById('inviteCoAdminMsg').innerHTML='';
@@ -3851,9 +3839,38 @@ async function renderJoinRequests(){
 
 async function approveJoinRequest(reqId, adminId){
   try{
-    await DB.update('admins',`id=eq.${adminId}`,{status:'active'});
+    const sess=Sess.get();
+    if(!sess)return;
+    // Check co-admin limit before approving
+    const plan=getAdminPlan();
+    const currentCoAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`);
+    const extraSeats=Number(sess.extra_seats??0);
+    const maxCoAdmins=(plan.maxCoAdmins===Infinity?Infinity:plan.maxCoAdmins-1)+extraSeats; // -1 because primary admin counts
+    if(currentCoAdmins.length>=maxCoAdmins){
+      alert((t('coAdmin.limitReached')||'Co-admin limit reached for your plan. Upgrade or add an extra seat.'));
+      return;
+    }
+    // Approve: set parent_admin_id so co-admin sees the right companies
+    await DB.update('admins',`id=eq.${adminId}`,{status:'active', parent_admin_id:sess.id});
     await DB.update('join_requests',`id=eq.${reqId}`,{status:'approved'});
+    // Send approval email to co-admin
+    const req=await DB.all('join_requests',`id=eq.${reqId}`);
+    if(req?.[0]?.requester_email){
+      try{
+        await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+          body:JSON.stringify({
+            email:req[0].requester_email,
+            name:req[0].requester_name,
+            type:'join_approved',
+            adminName:sess.name||sess.email
+          })
+        });
+      }catch(e){console.warn('Approval email failed:',e);}
+    }
     await renderAdmins();
+    showToast(t('coAdmin.approved')||'Co-admin approved successfully.');
   }catch(e){alert('Error: '+e.message);}
 }
 
@@ -5151,7 +5168,7 @@ en:{
 'common.days.thu':'Thu','common.days.fri':'Fri','common.days.sat':'Sat','common.days.sun':'Sun',
 'common.startDate':'Start Date','common.endDate':'End Date',
 'reports.selectEmployees':'SELECT EMPLOYEES',
-'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited','plan.extra_seat':'Extra Seat','toast.noSubscription':'No active subscription found.','manageSub.title':'Manage Subscription','manageSub.currentPlan':'Current plan:','manageSub.changePlan':'Change Plan','manageSub.cancelSection':'Cancel Subscription','manageSub.cancelDesc':"You\'ll keep access until the end of your billing period.", 'manageSub.cancelBtn':'Cancel Subscription via Stripe →','manageSub.switchTo':'Switch to this plan',
+'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
@@ -5271,7 +5288,7 @@ en:{
 'siteCode.invalid':'Invalid code. Please check with your administrator.',
 'siteCode.hint':'Ask your site administrator for the access code.',
 'modal.siteCode':'Site Access Code','modal.siteCodeNote':'Share only with employees at this site',
-'coAdmin.inviteBtn':'+ Invite Co-Admin','coAdmin.title':'Invite Co-Admin',
+'coAdmin.inviteBtn':'+ Invite Co-Admin','coAdmin.title':'Invite Co-Admin','coAdmin.desc':'Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.',
 'coAdmin.desc':'Invite another admin to manage your companies. They will have the role you assign.',
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
@@ -5322,6 +5339,8 @@ en:{
 'help.s6desc':'At the end of each pay period, employees with a registered email address automatically receive a summary of their hours worked. The period is determined by the payroll frequency set in your company settings.',
 'help.s7title':'Audit Logs & Manual Corrections',
 'help.s7desc':'The <strong>Activity</strong> tab shows a full audit log of all clock-in and clock-out events. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
+'help.s8title':'Co-Admins & Team Access',
+'help.s8desc':'In <strong>Settings → Co-Admins</strong>, invite someone to help manage your account. Free/Starter: 1 admin total; Growth: 2 admins; Business: 3 admins. Extra admin seats are $4.90/mo. Co-admins receive an email invitation and you approve their access before they can log in.',
 'land.howTitle':'How It Works','land.howSub':'Up and running in under 10 minutes.',
 'land.how1Title':'1. Create a Company','land.how1Desc':'Register your business, set your payroll frequency and week start day.',
 'land.how2Title':'2. Add Sites','land.how2Desc':'Create one or more physical locations — stores, warehouses, offices.',
@@ -5344,8 +5363,8 @@ en:{
 'land.faqTitle':'Frequently Asked Questions','land.faqSub':'Everything you need to know before signing up.',
 'faq.q1':'Do employees need smartphones or apps to clock in?',
 'faq.a1':'No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required.',
-'faq.q2':'Can I manage multiple locations or businesses?',
-'faq.a2':'Yes. You can create multiple companies under a single admin account (Starter allows 1, Growth allows 2, Business is unlimited). Each company supports multiple sites, each with its own employee roster.',
+'faq.q2':'Can I manage multiple locations and share access with another admin?',
+'faq.a2':'Yes. Manage multiple companies under one account (Starter: 1, Growth: 2, Business: unlimited). You can also invite co-admins — Free/Starter include 1 admin total; Growth includes 2; Business includes 3. Additional admin seats are $4.90/mo each.',
 'faq.q3':'How do automated email reports work?',
 'faq.a3':'At the end of each pay period (weekly, bi-weekly, or monthly — your choice per company), every employee with a registered email address automatically receives a PDF summary of their hours worked during that period.',
 'faq.q4':'Can I edit a punch after the fact?',
@@ -5358,8 +5377,8 @@ en:{
 'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day, and weeks that exceed 40 total hours. These are highlighted in reports and exports.',
 'faq.q8':'Is there a free plan?',
 'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 5 active employees — no credit card required. Paid plans start at $19.49/month CAD and unlock more companies, sites, employees, and automated email reports.',
-'faq.q9':'Can I add more employees beyond my plan limit?',
-'faq.a9':'On Starter and Growth plans, you can add individual employee seats for $4.90/month per seat, billed through Stripe. Alternatively, upgrade to the next plan tier for a higher included limit.',
+'faq.q9':'Can I add more employees or admins beyond my plan limit?',
+'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Free: 1 admin max. Starter: 1 admin included. Growth: 2 admins included. Business: 3 admins included. Extra admins beyond those limits are $4.90/mo each.',
 'faq.q10':'How secure is my data?',
 'faq.a10':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees',
@@ -5462,7 +5481,7 @@ fr:{
 'common.days.thu':'Jeu','common.days.fri':'Ven','common.days.sat':'Sam','common.days.sun':'Dim',
 'common.startDate':'Date de début','common.endDate':'Date de fin',
 'reports.selectEmployees':'SÉLECTIONNER LES EMPLOYÉS',
-'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité','plan.extra_seat':'Siège supplémentaire','toast.noSubscription':'Aucun abonnement actif trouvé.','manageSub.title':'Gérer l\'abonnement','manageSub.currentPlan':'Forfait actuel :','manageSub.changePlan':'Changer de forfait','manageSub.cancelSection':'Annuler l\'abonnement','manageSub.cancelDesc':"Vous conserverez l\'accès jusqu\'à la fin de votre période de facturation.",'manageSub.cancelBtn':'Annuler l\'abonnement via Stripe →','manageSub.switchTo':'Passer à ce forfait',
+'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
@@ -5582,7 +5601,7 @@ fr:{
 'siteCode.invalid':'Code invalide. Vérifiez avec votre administrateur.',
 'siteCode.hint':'Demandez le code d\'accès à votre responsable de site.',
 'modal.siteCode':'Code d\'accès du site','modal.siteCodeNote':'Partagez uniquement avec les employés de ce site',
-'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin',
+'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.',
 'coAdmin.desc':'Invitez un autre admin pour gérer vos compagnies. Il aura le rôle que vous lui assignez.',
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
@@ -5633,6 +5652,8 @@ fr:{
 'help.s6desc':'À la fin de chaque période de paie, les employés ayant un courriel enregistré reçoivent automatiquement un résumé de leurs heures travaillées. La période est déterminée par la fréquence de paie définie dans les paramètres de votre compagnie.',
 'help.s7title':'Journaux d\'audit et corrections manuelles',
 'help.s7desc':'L\'onglet <strong>Activité</strong> affiche un journal complet de tous les pointages. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections après coup.',
+'help.s8title':'Co-admins et accès d\'équipe',
+'help.s8desc':'Dans <strong>Paramètres → Co-admins</strong>, invitez quelqu\'un pour gérer votre compte. Gratuit/Débutant: 1 admin total; Croissance: 2 admins; Entreprise: 3 admins. Sièges admin supplémentaires: 4,90$/mois. Les co-admins invités reçoivent un courriel et vous devez approuver leur accès avant qu\'ils puissent se connecter.',
 'land.howTitle':'Comment ça marche','land.howSub':'Opérationnel en moins de 10 minutes.',
 'land.how1Title':'1. Créer une compagnie','land.how1Desc':'Enregistrez votre entreprise, définissez la fréquence de paie et le début de semaine.',
 'land.how2Title':'2. Ajouter des sites','land.how2Desc':'Créez un ou plusieurs emplacements physiques — magasins, entrepôts, bureaux.',
@@ -5655,8 +5676,8 @@ fr:{
 'land.faqTitle':'Questions fréquentes','land.faqSub':'Tout ce que vous devez savoir avant de vous inscrire.',
 'faq.q1':'Les employés ont-ils besoin d\'un téléphone ou d\'une application?',
 'faq.a1':'Non. Les employés pointent avec un NIP à 4 chiffres sur n\'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis.',
-'faq.q2':'Puis-je gérer plusieurs emplacements ou entreprises?',
-'faq.a2':'Oui. Vous pouvez créer plusieurs compagnies sous un seul compte admin (Starter = 1, Croissance = 2, Affaires = illimité). Chaque compagnie prend en charge plusieurs sites avec son propre registre d\'employés.',
+'faq.q2':'Puis-je gérer plusieurs emplacements et partager l\'accès avec un autre admin?',
+'faq.a2':'Oui. Gérez plusieurs compagnies sous un compte (Débutant: 1, Croissance: 2, Entreprise: illimité). Invitez aussi des co-admins — Gratuit/Débutant: 1 admin total; Croissance: 2 inclus; Entreprise: 3 inclus. Admins supplémentaires: 4,90$/mois chacun.',
 'faq.q3':'Comment fonctionnent les rapports par courriel automatiques?',
 'faq.a3':'À la fin de chaque période de paie (hebdomadaire, bimensuelle ou mensuelle — votre choix par compagnie), chaque employé avec un courriel enregistré reçoit automatiquement un résumé PDF de ses heures travaillées.',
 'faq.q4':'Puis-je modifier un pointage après coup?',
@@ -5669,12 +5690,16 @@ fr:{
 'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 heures par jour et les semaines dépassant 40 heures au total. Ces cas sont mis en évidence dans les rapports.',
 'faq.q8':'Y a-t-il un plan gratuit?',
 'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 5 employés actifs — sans carte de crédit requise. Les plans payants commencent à 19,49$/mois CAD.',
-'faq.q9':'Puis-je ajouter plus d\'employés au-delà de la limite de mon plan?',
-'faq.a9':'Sur les plans Starter et Croissance, vous pouvez ajouter des sièges individuels pour 4,90$/mois par siège, facturés via Stripe. Vous pouvez aussi passer au plan supérieur.',
+'faq.q9':'Puis-je ajouter plus d\'employés ou d\'administrateurs au-delà de la limite?',
+'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Gratuit: 1 admin max. Débutant: 1 admin inclus. Croissance: 2 admins inclus. Entreprise: 3 admins inclus.',
 'faq.q10':'Mes données sont-elles sécurisées?',
 'faq.a10':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés',
+'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
+'land.f.start8':'Accès co-admin (avec mise à niveau)',
 'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés',
+'land.growthSub':'2 compagnies · 5 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
+'land.f.grow6':'Jusqu\'à 2 admins par compte',
 'upgrade.desc.business':'Tout illimité',
 'msg.noSiteTitle':'Créez d\'abord un site',
 'msg.noSiteFirst':'Vous devez créer au moins un site avant d\'ajouter des employés.',
