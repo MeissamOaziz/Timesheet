@@ -2522,7 +2522,20 @@ async function doLogin(){
       showMsg('loginMsg',t('msg.pendingApproval')||'Your request is pending approval. You will receive an email once the administrator approves it.','info');
       return;
     }
-    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
+    // Fetch full admin record to get parent_admin_id, extra_seats, stripe info
+    const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id`);
+    const full = fullRows?.[0] || admin;
+    Sess.set({
+      id: full.id,
+      name: full.name,
+      email: full.email,
+      role: full.role||'admin',
+      plan: full.plan||'free',
+      parent_admin_id: full.parent_admin_id||null,
+      extra_seats: Number(full.extra_seats||0),
+      stripe_customer_id: full.stripe_customer_id||null,
+      stripe_subscription_id: full.stripe_subscription_id||null,
+    });
     updateNav();
     await refreshCache();
     navigate('admin');
@@ -2830,6 +2843,8 @@ async function startExtraSeatCheckout(){
 // ═══════════════════════════════════════════════════
 function needsOnboarding(){
   if(!isLoggedIn()||isSuperAdmin())return false;
+  const s=Sess.get();
+  if(s?.parent_admin_id) return false; // co-admin: companies belong to primary admin
   return C.companies.length===0;
 }
 
