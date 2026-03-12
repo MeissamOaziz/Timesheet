@@ -460,7 +460,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
       <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free tier includes 1 company · 1 site · 5 employees</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free tier includes 1 company · 1 site · 5 employees · 1 admin</p>
   </div>
 
   <!-- FEATURES -->
@@ -3140,13 +3140,8 @@ function openProfile(){
   if(manageBtn)manageBtn.style.display=isPaid?'':'none';
 
   // Usage stats
-  const planDef=Object.values({
-    free:     {name:'Free',    maxCompanies:1,          maxSites:1,          maxEmployees:5,          color:'var(--text2)'},
-    starter:  {name:'Starter', maxCompanies:1,          maxSites:2,          maxEmployees:10,         color:'#4f8ef7'},
-    growth:   {name:'Growth',  maxCompanies:2,          maxSites:5,          maxEmployees:25,         color:'#22c55e'},
-    business: {name:'Business',maxCompanies:Infinity,   maxSites:Infinity,   maxEmployees:Infinity,   color:'#a78bfa'},
-    unlimited:{name:'Unlimited',maxCompanies:Infinity,  maxSites:Infinity,   maxEmployees:Infinity,   color:'#f59e0b'},
-  }).find(p=>p.name.toLowerCase()===plan)||{name:plan,maxCompanies:1,maxSites:1,maxEmployees:5,color:'var(--text2)'};
+  const planColors_={'free':'var(--text2)','starter':'#4f8ef7','growth':'#22c55e','business':'#a78bfa','unlimited':'#f59e0b'};
+  const planDef={...(PLANS[plan]||PLANS.free), color:planColors_[plan]||'var(--text2)'};
 
   const usedCompanies=C.companies.length;
   const usedSites=C.sites.filter(si=>C.companies.some(co=>co.id===si.company_id)).length;
@@ -3581,6 +3576,14 @@ function canAddCoAdmin(){
   return{ok:current<maxSlots||maxSlots===Infinity,current,max:maxSlots};
 }
 
+
+function showUpgradePlanForCoAdmin(){
+  closeModal('profileModal');
+  showUpgradePlans();
+  // Show a hint toast
+  setTimeout(()=>showToast((t('coAdmin.upgradeToApprove')||'Upgrade your plan to approve co-admin requests.'),'info'),300);
+}
+
 function openInviteCoAdminModal(){
   const check=canAddCoAdmin();
   if(!check.ok){
@@ -3621,6 +3624,48 @@ async function loadCoAdmins(){
   const tbody=document.getElementById('coAdminsTableBody');
   const cards=document.getElementById('coAdminCardsContainer');
   try{
+    // Load pending join requests targeted at this admin
+    const pendingReqs=await DB.all('join_requests',`target_admin_id=eq.${sess.id}&status=eq.pending&order=created_at.desc`);
+    const plan=getAdminPlan();
+    const extraSeats=Number(sess.extra_seats??0);
+    const maxSlots=(plan.maxCoAdmins===Infinity?Infinity:(plan.maxCoAdmins-1))+extraSeats;
+    const canApprove=maxSlots>0||maxSlots===Infinity;
+
+    // Render pending requests section
+    let reqSection=document.getElementById('regularAdminJoinRequests');
+    if(!reqSection){
+      reqSection=document.createElement('div');
+      reqSection.id='regularAdminJoinRequests';
+      reqSection.style.cssText='margin-bottom:20px';
+      // Insert before the co-admins table
+      const coAdminSection=tbody?.closest('div')||tbody?.closest('table')?.parentNode;
+      const settingsContent=document.getElementById('regularAdminPanel');
+      if(settingsContent) settingsContent.insertBefore(reqSection, settingsContent.firstChild);
+    }
+    if(pendingReqs.length){
+      reqSection.innerHTML=`
+        <div style="background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:10px">🔔 ${t('coAdmin.pendingRequests')||'Pending Access Requests'}</div>
+          ${pendingReqs.map(r=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-weight:500;font-size:13px">${r.requester_name}</div>
+                <div style="font-size:12px;color:var(--text2)">${r.requester_email}</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                ${canApprove
+                  ? `<button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${r.requester_id}')">${t('coAdmin.approveBtn')||'Approve'}</button>`
+                  : `<button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px;opacity:.6" onclick="showUpgradePlanForCoAdmin()">${t('coAdmin.approveBtn')||'Approve'}</button>`
+                }
+                <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${r.requester_id}')">${t('coAdmin.denyBtn')||'Deny'}</button>
+              </div>
+            </div>`).join('')}
+          ${!canApprove?`<p style="font-size:12px;color:var(--amber);margin-top:10px">⚠ ${t('coAdmin.upgradeToApprove')||'Your plan does not include co-admins. Upgrade or add an extra admin seat to approve.'} <button class="link-btn" onclick="showUpgradePlanForCoAdmin()" style="color:var(--accent)">Upgrade →</button></p>`:''}
+        </div>`;
+    } else {
+      reqSection.innerHTML='';
+    }
+
     const coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&order=created_at.asc`);
     if(!coAdmins.length){
       tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">${t('coAdmin.noCoAdmins')}</td></tr>`;
@@ -3819,6 +3864,7 @@ async function deleteAdmin(id, name){
 
 async function renderJoinRequests(){
   try{
+    // Superadmin sees all; regular admin query is handled in loadCoAdmins
     const requests = await DB.all('join_requests',`status=eq.pending&order=created_at.desc`);
     const section = document.getElementById('joinRequestsSection');
     const tbody = document.getElementById('joinRequestsBody');
@@ -3869,17 +3915,18 @@ async function approveJoinRequest(reqId, adminId){
         });
       }catch(e){console.warn('Approval email failed:',e);}
     }
-    await renderAdmins();
     showToast(t('coAdmin.approved')||'Co-admin approved successfully.');
+    if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
   }catch(e){alert('Error: '+e.message);}
 }
 
 async function denyJoinRequest(reqId, adminId){
-  if(!confirm(t('msg.denyRequest'))) return;
+  if(!confirm(t('msg.denyRequest')||'Deny this access request?')) return;
   try{
     await DB.update('admins',`id=eq.${adminId}`,{status:'suspended'});
     await DB.update('join_requests',`id=eq.${reqId}`,{status:'denied'});
-    await renderAdmins();
+    if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
+    showToast('Access request denied.','info');
   }catch(e){alert('Error: '+e.message);}
 }
 
@@ -5174,7 +5221,7 @@ en:{
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
 'land.heroSub':'PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
-'land.freeNote':'Free tier includes 1 company · 1 site · 5 employees',
+'land.freeNote':'Free tier includes 1 company · 1 site · 5 employees · 1 admin',
 'land.featTitle':'Everything you need to manage shift workers',
 'land.featSub':'No complicated setup. No per-feature upsells. Just the tools your team needs.',
 'land.feat1Title':'PIN Clock In/Out','land.feat1Desc':'Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.',
@@ -5250,7 +5297,7 @@ en:{
 'land.f.grow1':'2 companies','land.f.grow2':'Up to 5 sites per company','land.f.grow3':'Up to 25 employees',
 'land.f.grow4':'All Starter features','land.f.grow5':'Priority support',
 'land.f.biz1':'Unlimited companies','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
-'land.f.biz4':'All Growth features','land.f.biz5':'Dedicated support','land.f.biz6':'Early access to new features',
+'land.f.biz4':'All Growth features','land.f.biz5':'Up to 3 admins per account','land.f.biz6':'Dedicated support','land.f.biz7':'Early access to new features','land.f.start8':'Co-admin access (upgrade to add)','land.f.grow6':'Up to 2 admins per account',
 
 'legal.back':'← Back',
 'tos.title':'Terms of Service','tos.updated':'Last updated: January 1, 2026',
@@ -5288,7 +5335,7 @@ en:{
 'siteCode.invalid':'Invalid code. Please check with your administrator.',
 'siteCode.hint':'Ask your site administrator for the access code.',
 'modal.siteCode':'Site Access Code','modal.siteCodeNote':'Share only with employees at this site',
-'coAdmin.inviteBtn':'+ Invite Co-Admin','coAdmin.title':'Invite Co-Admin','coAdmin.desc':'Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.',
+'coAdmin.inviteBtn':'+ Invite Co-Admin','coAdmin.title':'Invite Co-Admin','coAdmin.desc':'Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.','msg.pendingApproval':'Your access request is pending approval. You will receive an email once the administrator approves it.','coAdmin.limitReached':'Co-admin limit reached for your plan.','coAdmin.limitHint':'Upgrade your plan or add an extra admin seat ($4.90/mo).','coAdmin.approved':'Co-admin approved successfully.','profile.admins':'Admins','coAdmin.pendingRequests':'Pending Access Requests','coAdmin.noRequests':'No pending requests.','coAdmin.approveBtn':'Approve','coAdmin.denyBtn':'Deny','coAdmin.upgradeToApprove':'Your plan does not include co-admins. Upgrade or add an extra admin seat to approve this request.',
 'coAdmin.desc':'Invite another admin to manage your companies. They will have the role you assign.',
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
@@ -5487,7 +5534,7 @@ fr:{
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
 'land.heroSub':'Pointage par NIP, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — conçu pour le commerce, l\'hôtellerie et la production.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
-'land.freeNote':'Forfait gratuit : 1 compagnie · 1 site · 5 employés',
+'land.freeNote':'Forfait gratuit : 1 compagnie · 1 site · 5 employés · 1 admin',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
 'land.featSub':'Pas de configuration compliquée. Pas de frais cachés. Juste les outils dont votre équipe a besoin.',
 'land.feat1Title':'Pointage par NIP','land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur n\'importe quelle tablette ou ordinateur partagé. Aucun téléphone requis.',
@@ -5563,7 +5610,7 @@ fr:{
 'land.f.grow1':'2 compagnies','land.f.grow2':'Jusqu\'à 5 sites par compagnie','land.f.grow3':'Jusqu\'à 25 employés',
 'land.f.grow4':'Toutes les fonctions Débutant','land.f.grow5':'Support prioritaire',
 'land.f.biz1':'Compagnies illimitées','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
-'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Support dédié','land.f.biz6':'Accès anticipé aux nouvelles fonctions',
+'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Jusqu\'à 3 admins par compte','land.f.biz6':'Assistance dédiée','land.f.biz7':'Accès anticipé aux nouvelles fonctionnalités','land.f.start8':'Accès co-admin (avec mise à niveau)','land.f.grow6':'Jusqu\'à 2 admins par compte',
 
 'legal.back':'← Retour',
 'tos.title':'Conditions d\'utilisation','tos.updated':'Dernière mise à jour : 1er janvier 2026',
@@ -5601,7 +5648,7 @@ fr:{
 'siteCode.invalid':'Code invalide. Vérifiez avec votre administrateur.',
 'siteCode.hint':'Demandez le code d\'accès à votre responsable de site.',
 'modal.siteCode':'Code d\'accès du site','modal.siteCodeNote':'Partagez uniquement avec les employés de ce site',
-'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.',
+'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
 'coAdmin.desc':'Invitez un autre admin pour gérer vos compagnies. Il aura le rôle que vous lui assignez.',
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
