@@ -1263,6 +1263,29 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ══════════════ MODALS ══════════════ -->
 
 <!-- PROFILE MODAL -->
+<!-- Manage Subscription Modal -->
+<div class="modal-overlay" id="manageSubModal" style="z-index:9600">
+  <div class="modal" style="max-width:460px">
+    <h3 style="margin:0 0 6px;font-size:18px" data-i18n="manageSub.title">Manage Subscription</h3>
+    <p id="manageSubCurrentPlan" style="font-size:13px;color:var(--text2);margin:0 0 20px"></p>
+
+    <!-- Downgrade section -->
+    <div id="manageSubDowngradeSection" style="display:none">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);margin-bottom:10px" data-i18n="manageSub.changePlan">Change Plan</div>
+      <div id="manageSubPlansList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+    </div>
+
+    <!-- Cancel section -->
+    <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);margin-bottom:8px" data-i18n="manageSub.cancelSection">Cancel Subscription</div>
+      <p style="font-size:12px;color:var(--text3);margin:0 0 10px" data-i18n="manageSub.cancelDesc">You'll keep access until the end of your billing period. You'll be redirected to Stripe to confirm.</p>
+      <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="closeModal('manageSubModal');openBillingPortal()" data-i18n="manageSub.cancelBtn">Cancel Subscription via Stripe →</button>
+    </div>
+
+    <button class="btn-secondary" style="margin-top:12px;width:100%" onclick="closeModal('manageSubModal')" data-i18n="modal.cancel">Cancel</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="profileModal" style="z-index:9500">
   <div class="modal" style="max-width:460px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
@@ -1283,7 +1306,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
           <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()" data-i18n="profile.upgrade">⬆ Upgrade</button>
-          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()">⚙ Manage Billing</button>
+          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="closeModal('profileModal');openManageSubscriptionModal()">⚙ Manage Billing</button>
         </div>
       </div>
       <!-- Usage bars -->
@@ -2511,11 +2534,7 @@ async function doLogin(){
       navigate('setpassword');
       return;
     }
-    // Fetch latest plan + extra_seats from DB (RPC may not return these)
-    const fullAdmin = await DB.all('admins',`id=eq.${admin.id}&select=plan,extra_seats`);
-    const extra_seats = Number(fullAdmin?.[0]?.extra_seats ?? 0);
-    const latestPlan = fullAdmin?.[0]?.plan || admin.plan || 'free';
-    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:latestPlan,extra_seats});
+    Sess.set({id:admin.id,name:admin.name,email:admin.email,role:admin.role||'admin',plan:admin.plan||'free'});
     updateNav();
     await refreshCache();
     navigate('admin');
@@ -2894,6 +2913,41 @@ function showUpgradePlans(){
     <button class="btn-secondary" style="margin-top:18px;width:100%" onclick="closeModal('upgradePlansModal')">${t('modal.cancel')}</button>
   </div>`;
   openModal('upgradePlansModal');
+}
+
+function openManageSubscriptionModal(){
+  const s=Sess.get();
+  if(!s)return;
+  const plan=s.plan||'free';
+  const planName=t('plan.'+plan)||plan.charAt(0).toUpperCase()+plan.slice(1);
+
+  // Current plan label
+  const currentEl=document.getElementById('manageSubCurrentPlan');
+  if(currentEl) currentEl.textContent=(t('manageSub.currentPlan')||'Current plan:')+' '+planName;
+
+  // Build downgrade options (plans below current)
+  const planOrder=['free','starter','growth','business'];
+  const currentIdx=planOrder.indexOf(plan);
+  const downgrades=planOrder.slice(1,currentIdx); // plans below current, skip free
+
+  const downSection=document.getElementById('manageSubDowngradeSection');
+  const plansList=document.getElementById('manageSubPlansList');
+  if(downgrades.length>0 && plansList){
+    downSection.style.display='';
+    const planPrices={starter:'$19.49/mo',growth:'$39.49/mo'};
+    plansList.innerHTML=downgrades.map(p=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px">
+        <div>
+          <div style="font-weight:600;font-size:14px">${t('plan.'+p)||p}</div>
+          <div style="font-size:12px;color:var(--text2)">${t('upgrade.desc.'+p)||''} · ${planPrices[p]||''} CAD</div>
+        </div>
+        <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="closeModal('manageSubModal');startCheckout('${p}')">${t('manageSub.switchTo')||'Switch'}</button>
+      </div>`).join('');
+  } else {
+    if(downSection) downSection.style.display='none';
+  }
+
+  openModal('manageSubModal');
 }
 
 async function openBillingPortal(){
@@ -5098,7 +5152,7 @@ en:{
 'common.days.thu':'Thu','common.days.fri':'Fri','common.days.sat':'Sat','common.days.sun':'Sun',
 'common.startDate':'Start Date','common.endDate':'End Date',
 'reports.selectEmployees':'SELECT EMPLOYEES',
-'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
+'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited','plan.extra_seat':'Extra Seat','toast.noSubscription':'No active subscription found.','manageSub.title':'Manage Subscription','manageSub.currentPlan':'Current plan:','manageSub.changePlan':'Change Plan','manageSub.cancelSection':'Cancel Subscription','manageSub.cancelDesc':"You\'ll keep access until the end of your billing period.", 'manageSub.cancelBtn':'Cancel Subscription via Stripe →','manageSub.switchTo':'Switch to this plan',
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
@@ -5409,7 +5463,7 @@ fr:{
 'common.days.thu':'Jeu','common.days.fri':'Ven','common.days.sat':'Sam','common.days.sun':'Dim',
 'common.startDate':'Date de début','common.endDate':'Date de fin',
 'reports.selectEmployees':'SÉLECTIONNER LES EMPLOYÉS',
-'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
+'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité','plan.extra_seat':'Siège supplémentaire','toast.noSubscription':'Aucun abonnement actif trouvé.','manageSub.title':'Gérer l\'abonnement','manageSub.currentPlan':'Forfait actuel :','manageSub.changePlan':'Changer de forfait','manageSub.cancelSection':'Annuler l\'abonnement','manageSub.cancelDesc':"Vous conserverez l\'accès jusqu\'à la fin de votre période de facturation.",'manageSub.cancelBtn':'Annuler l\'abonnement via Stripe →','manageSub.switchTo':'Passer à ce forfait',
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
