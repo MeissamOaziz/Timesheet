@@ -2066,7 +2066,16 @@ async function refreshCache(opts={}){
   C.punches=await DB.all('punches',parts.join('&'))||[];
   if(sess&&sess.id&&!sess.parent_admin_id&&!superAdmin){
     C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
-  } else { C.coAdmins=[]; }
+    C.primaryAdmin=null;
+  } else if(sess&&sess.parent_admin_id){
+    // Co-admin: fetch primary admin's full record to inherit their plan/extra_seats
+    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id`);
+    C.primaryAdmin=primRows?.[0]||null;
+    C.coAdmins=[];
+  } else {
+    C.coAdmins=[];
+    C.primaryAdmin=null;
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -2438,8 +2447,11 @@ function currentAdminPlan() {
 function getAdminPlan() {
   const s = Sess.get();
   if(!s) return PLANS.free;
-  // Super admin is unlimited
   if(isSuperAdmin()) return PLANS.unlimited;
+  // Co-admin inherits the primary admin's plan
+  if(s.parent_admin_id && C.primaryAdmin?.plan) {
+    return PLANS[C.primaryAdmin.plan] || PLANS.free;
+  }
   return PLANS[s.plan] || PLANS.free;
 }
 
@@ -3139,23 +3151,27 @@ function openProfile(){
   // Avatar initials
   const av=document.getElementById('profileAvatar');
   av.textContent=(s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  // Plan
-  const planNames={free:'Free',starter:'Starter',growth:'Growth',enterprise:'Enterprise'};
-  const plan=s.plan||'free';
+  // Plan — co-admins inherit primary admin's plan
+  const isCoAdmin=!!(s.parent_admin_id);
+  const plan=isCoAdmin?(C.primaryAdmin?.plan||'free'):(s.plan||'free');
   const planEl=document.getElementById('profilePlanName');
-  const planColors={free:'var(--text2)',starter:'#4f8ef7',growth:'#22c55e',enterprise:'#a78bfa'};
-  planEl.textContent=planNames[plan]||plan;
-  planEl.style.color=planColors[plan]||'var(--text)';
-  // Hide upgrade button if already on top plan; show manage billing if paid
+  const planColors_={'free':'var(--text2)','starter':'#4f8ef7','growth':'#22c55e','business':'#a78bfa','unlimited':'#f59e0b'};
+  planEl.textContent=t('plan.'+plan)||plan.charAt(0).toUpperCase()+plan.slice(1);
+  planEl.style.color=planColors_[plan]||'var(--text)';
+  // Co-admins cannot manage billing — only the primary admin can
   const upgradeBtn=document.getElementById('profileUpgradeBtn');
   const manageBtn=document.getElementById('profileManageBtn');
-  const isPaid=plan!=='free'&&plan!=='unlimited';
-  const isTopPlan=plan==='business'||plan==='enterprise'||isSuperAdmin();
-  if(upgradeBtn)upgradeBtn.style.display=isTopPlan?'none':'';
-  if(manageBtn)manageBtn.style.display=isPaid?'':'none';
+  if(isCoAdmin){
+    if(upgradeBtn)upgradeBtn.style.display='none';
+    if(manageBtn)manageBtn.style.display='none';
+  } else {
+    const isPaid=plan!=='free'&&plan!=='unlimited';
+    const isTopPlan=plan==='business'||plan==='enterprise'||isSuperAdmin();
+    if(upgradeBtn)upgradeBtn.style.display=isTopPlan?'none':'';
+    if(manageBtn)manageBtn.style.display=isPaid?'':'none';
+  }
 
-  // Usage stats
-  const planColors_={'free':'var(--text2)','starter':'#4f8ef7','growth':'#22c55e','business':'#a78bfa','unlimited':'#f59e0b'};
+  // Usage stats — use effective plan
   const planDef={...(PLANS[plan]||PLANS.free), color:planColors_[plan]||'var(--text2)'};
 
   const usedCompanies=C.companies.length;
@@ -3681,34 +3697,43 @@ async function loadCoAdmins(){
       reqSection.innerHTML='';
     }
 
-    const coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&order=created_at.asc`);
+    // Co-admin sees primary admin + any siblings; primary admin sees their co-admins
+    let coAdmins;
+    if(sess.parent_admin_id){
+      const primary=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,role,status,created_at`);
+      const siblings=await DB.all('admins',`parent_admin_id=eq.${sess.parent_admin_id}&id=neq.${sess.id}&status=neq.suspended&order=created_at.asc`);
+      coAdmins=[...(primary||[]).map(a=>({...a,_isPrimary:true})),...(siblings||[])];
+    } else {
+      coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&order=created_at.asc`);
+    }
     if(!coAdmins.length){
       tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">${t('coAdmin.noCoAdmins')}</td></tr>`;
       if(cards) cards.innerHTML='';
       return;
     }
-    const roleLabel=r=>r==='manager'?t('coAdmin.role.manager').split('—')[0].trim():t('coAdmin.role.admin').split('—')[0].trim();
-    const statusClass=s=>s==='active'?'in':s==='pending_invite'?'site':'out';
-    const statusLabel=s=>s==='active'?t('admin.active'):s==='pending_invite'?'Pending Invite':'Suspended';
+    const roleLabel=a=>a._isPrimary?('★ '+(t('coAdmin.primaryAdmin')||'Primary Admin')):a.role==='manager'?t('coAdmin.role.manager').split('—')[0].trim():t('coAdmin.role.admin').split('—')[0].trim();
+    const statusClass=st=>st==='active'?'in':st==='pending_invite'?'site':'out';
+    const statusLabel=st=>st==='active'?t('admin.active'):st==='pending_invite'?'Pending Invite':'Suspended';
+    const isMe=a=>a.id===sess.id;
     tbody.innerHTML=coAdmins.map(a=>`<tr>
-      <td style="font-weight:500">${a.name}</td>
+      <td style="font-weight:500">${a.name}${isMe(a)?` <span style="font-size:10px;color:var(--text3)">(${t('common.you')||'you'})</span>`:''}</td>
       <td style="font-size:13px">${a.email}</td>
-      <td><span class="pill site" style="font-size:10px">${roleLabel(a.role)}</span></td>
+      <td><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></td>
       <td><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></td>
-      <td><div style="display:flex;gap:5px">
+      <td>${(a._isPrimary||isMe(a))?'<span style="font-size:11px;color:var(--text3)">—</span>':`<div style="display:flex;gap:5px">
         <button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
         <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="deleteCoAdmin('${a.id}','${a.name.replace(/'/g,"\'")}')">Delete</button>
-      </div></td>
+      </div>`}</td>
     </tr>`).join('');
     if(cards) cards.innerHTML=coAdmins.map(a=>`
       <div class="mobile-card-row">
-        <div class="mc-name"><span>${a.name}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
+        <div class="mc-name"><span>${a.name}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
         <div class="mc-row"><span>Email</span><span style="font-size:12px">${a.email}</span></div>
-        <div class="mc-row"><span>Role</span><span class="pill site" style="font-size:10px">${roleLabel(a.role)}</span></div>
-        <div class="mc-actions">
+        <div class="mc-row"><span>Role</span><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></div>
+        ${(!a._isPrimary&&!isMe(a))?`<div class="mc-actions">
           <button class="btn-secondary" style="font-size:12px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
           <button class="btn-danger" style="font-size:12px" onclick="deleteCoAdmin('${a.id}','${a.name.replace(/'/g,"\'")}')">Delete</button>
-        </div>
+        </div>`:''}
       </div>`).join('');
   }catch(e){tbody.innerHTML=`<tr><td colspan="5" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
 }
@@ -5350,7 +5375,7 @@ en:{
 'siteCode.invalid':'Invalid code. Please check with your administrator.',
 'siteCode.hint':'Ask your site administrator for the access code.',
 'modal.siteCode':'Site Access Code','modal.siteCodeNote':'Share only with employees at this site',
-'coAdmin.inviteBtn':'+ Invite Co-Admin','coAdmin.title':'Invite Co-Admin','coAdmin.desc':'Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.','msg.pendingApproval':'Your access request is pending approval. You will receive an email once the administrator approves it.','coAdmin.limitReached':'Co-admin limit reached for your plan.','coAdmin.limitHint':'Upgrade your plan or add an extra admin seat ($4.90/mo).','coAdmin.approved':'Co-admin approved successfully.','profile.admins':'Admins','coAdmin.pendingRequests':'Pending Access Requests','coAdmin.noRequests':'No pending requests.','coAdmin.approveBtn':'Approve','coAdmin.denyBtn':'Deny','coAdmin.upgradeToApprove':'Your plan does not include co-admins. Upgrade or add an extra admin seat to approve this request.',
+'coAdmin.inviteBtn':'+ Invite Co-Admin','coAdmin.title':'Invite Co-Admin','coAdmin.desc':'Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.','msg.pendingApproval':'Your access request is pending approval. You will receive an email once the administrator approves it.','coAdmin.limitReached':'Co-admin limit reached for your plan.','coAdmin.limitHint':'Upgrade your plan or add an extra admin seat ($4.90/mo).','coAdmin.approved':'Co-admin approved successfully.','profile.admins':'Admins','coAdmin.pendingRequests':'Pending Access Requests','coAdmin.noRequests':'No pending requests.','coAdmin.approveBtn':'Approve','coAdmin.denyBtn':'Deny','coAdmin.primaryAdmin':'Primary Admin','coAdmin.upgradeToApprove':'Your plan does not include co-admins. Upgrade or add an extra admin seat to approve this request.',
 'coAdmin.desc':'Invite another admin to manage your companies. They will have the role you assign.',
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
@@ -5443,9 +5468,9 @@ en:{
 'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Free: 1 admin max. Starter: 1 admin included. Growth: 2 admins included. Business: 3 admins included. Extra admins beyond those limits are $4.90/mo each.',
 'faq.q10':'How secure is my data?',
 'faq.a10':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
-'upgrade.desc.starter':'1 company · 2 sites · 10 employees',
-'upgrade.desc.growth':'2 companies · 5 sites · 25 employees',
-'upgrade.desc.business':'Unlimited everything',
+'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
+'upgrade.desc.growth':'2 companies · 5 sites · 25 employees · 2 admins',
+'upgrade.desc.business':'Unlimited everything · up to 3 admins',
 'msg.noSiteTitle':'Create a Site First',
 'msg.noSiteFirst':'You need to create at least one site before adding employees.',
 'msg.goToSites':'→ Go to Sites tab',
@@ -5663,7 +5688,7 @@ fr:{
 'siteCode.invalid':'Code invalide. Vérifiez avec votre administrateur.',
 'siteCode.hint':'Demandez le code d\'accès à votre responsable de site.',
 'modal.siteCode':'Code d\'accès du site','modal.siteCodeNote':'Partagez uniquement avec les employés de ce site',
-'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
+'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
 'coAdmin.desc':'Invitez un autre admin pour gérer vos compagnies. Il aura le rôle que vous lui assignez.',
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
@@ -5756,13 +5781,13 @@ fr:{
 'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Gratuit: 1 admin max. Débutant: 1 admin inclus. Croissance: 2 admins inclus. Entreprise: 3 admins inclus.',
 'faq.q10':'Mes données sont-elles sécurisées?',
 'faq.a10':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
-'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés',
+'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
-'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés',
+'upgrade.desc.growth':'2 compagnies · 5 sites · 25 employés · 2 admins',
 'land.growthSub':'2 compagnies · 5 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.grow6':'Jusqu\'à 2 admins par compte',
-'upgrade.desc.business':'Tout illimité',
+'upgrade.desc.business':'Tout illimité · jusqu\'à 3 admins',
 'msg.noSiteTitle':'Créez d\'abord un site',
 'msg.noSiteFirst':'Vous devez créer au moins un site avant d\'ajouter des employés.',
 'msg.goToSites':'→ Aller à l\'onglet Sites',
