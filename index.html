@@ -455,7 +455,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <span data-i18n="land.badge">✨ Now with automated payroll period reports</span>
     </div>
     <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
-    <p data-i18n="land.heroSub">PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.</p>
+    <p data-i18n="land.heroSub">PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
       <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
@@ -525,9 +525,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <li data-i18n="land.f.free1">1 company</li>
           <li data-i18n="land.f.free2">1 site</li>
           <li data-i18n="land.f.free3">Up to 5 employees</li>
-          <li data-i18n="land.f.free4">Basic reports (Excel, CSV, PDF)</li>
+          <li data-i18n="land.f.free4">Basic reports (PDF only)</li>
           <li data-i18n="land.f.free5">Manual punch editing</li>
           <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
+          <li class="dim" data-i18n="land.f.free9">Excel &amp; CSV export</li>
           <li class="dim" data-i18n="land.f.free7">Overtime tracking</li>
           <li class="dim" data-i18n="land.f.free8">QuickBooks export</li>
         </ul>
@@ -1844,8 +1845,12 @@ function isCurrentCompanyPaid() {
 }
 
 function guardedExport(fmt) {
+  if(fmt==='pdf'){
+    exportReport(fmt); // PDF available on all plans
+    return;
+  }
   if(!isCurrentCompanyPaid()){
-    showPlanGate('Excel, CSV, and QuickBooks exports are available on paid plans. Upgrade to export in these formats.','reports-upgrade-hint');
+    showPlanGate('Excel, CSV, and QuickBooks exports require a paid plan (Starter or above). Upgrade to unlock these formats.','reports-upgrade-hint');
     return;
   }
   exportReport(fmt);
@@ -5413,7 +5418,7 @@ en:{
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
-'land.heroSub':'PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, and manufacturing.',
+'land.heroSub':'PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free tier includes 1 company · 1 site · 5 employees · 1 admin',
 'land.featTitle':'Everything you need to manage shift workers',
@@ -5483,9 +5488,9 @@ en:{
 'land.starterSub':'1 company · 2 sites · up to 10 employees<br>+$4.90/mo per additional employee',
 'land.growthSub':'2 companies · 5 sites each · up to 25 employees<br>+$4.90/mo per additional employee',
 'land.f.free1':'1 company','land.f.free2':'1 site','land.f.free3':'Up to 5 employees',
-'land.f.free4':'Basic reports (Excel, CSV, PDF)','land.f.free5':'Manual punch editing',
-'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free8':'QuickBooks export',
-'land.f.start1':'1 company, 2 sites','land.f.start2':'Up to 10 employees','land.f.start3':'All Free features',
+'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Manual punch editing',
+'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free8':'QuickBooks export','land.f.free9':'Excel & CSV export',
+'land.f.start1':'1 company, 2 sites','land.f.start2':'Up to 10 employees','land.f.start3':'All Free features + Excel & CSV exports',
 'land.f.start4':'Automated period email reports','land.f.start5':'Overtime tracking',
 'land.f.start6':'QuickBooks IIF export','land.f.start7':'Multiple companies',
 'land.f.grow1':'2 companies','land.f.grow2':'Up to 5 sites per company','land.f.grow3':'Up to 25 employees',
@@ -5735,7 +5740,7 @@ fr:{
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
-'land.heroSub':'Pointage par NIP, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — conçu pour le commerce, l\'hôtellerie et la production.',
+'land.heroSub':'Pointage par NIP, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
 'land.freeNote':'Forfait gratuit : 1 compagnie · 1 site · 5 employés · 1 admin',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
@@ -5805,9 +5810,9 @@ fr:{
 'land.starterSub':'1 compagnie · 2 sites · jusqu\'à 10 employés<br>+4,90$/mois par employé supplémentaire',
 'land.growthSub':'2 compagnies · 5 sites chacune · jusqu\'à 25 employés<br>+4,90$/mois par employé supplémentaire',
 'land.f.free1':'1 compagnie','land.f.free2':'1 site','land.f.free3':'Jusqu\'à 5 employés',
-'land.f.free4':'Rapports de base (Excel, CSV, PDF)','land.f.free5':'Modification manuelle des pointages',
-'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free8':'Export QuickBooks',
-'land.f.start1':'1 compagnie, 2 sites','land.f.start2':'Jusqu\'à 10 employés','land.f.start3':'Toutes les fonctions Gratuit',
+'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Modification manuelle des pointages',
+'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free8':'Export QuickBooks','land.f.free9':'Export Excel et CSV',
+'land.f.start1':'1 compagnie, 2 sites','land.f.start2':'Jusqu\'à 10 employés','land.f.start3':'Toutes les fonctions Gratuit + exports Excel et CSV',
 'land.f.start4':'Rapports de période automatisés','land.f.start5':'Suivi des heures supp.',
 'land.f.start6':'Export QuickBooks IIF','land.f.start7':'Plusieurs compagnies',
 'land.f.grow1':'2 compagnies','land.f.grow2':'Jusqu\'à 5 sites par compagnie','land.f.grow3':'Jusqu\'à 25 employés',
