@@ -881,6 +881,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="clock-date" id="liveDate"></div>
     </div>
     <div class="context-banner" id="punchBanner">Loading...</div>
+    <div id="kioskSetupBar" style="display:none;justify-content:center;gap:10px;flex-wrap:wrap;padding:8px 16px;background:rgba(79,142,247,.06);border-bottom:1px solid var(--border)">
+      <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="kioskMode()" data-i18n="punch.kioskMode">🖥 Set up for employees (stay on this page)</button>
+      <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="logout()" data-i18n="punch.logoutHome">↩ Logout &amp; go to PunchClock.ca</button>
+    </div>
     <div class="punch-card">
       <div id="punchCoLogo"></div>
       <h2 id="punchCoName">Select Your Name</h2>
@@ -1157,7 +1161,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </select>
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px">
-      <p style="font-size:12px;color:var(--text2);line-height:1.5">📧 An email invitation will be sent. They will set their own password when they first log in.</p>
+      <p style="font-size:12px;color:var(--text2);line-height:1.5">📧 <span data-i18n="coAdmin.inviteNote">An email invitation will be sent. They will set their own password when they first log in.</span></p>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('inviteCoAdminModal')">Cancel</button>
@@ -1942,6 +1946,7 @@ function showLimitGate(containerId, type, current, max, plan) {
 
   const planKey = plan.name.toLowerCase();
   const isUnlimited = plan.name==='Unlimited'||plan.name==='Business';
+  const planDisplayName = t('plan.'+planKey)||plan.name;
 
   // Next plan map
   const nextPlan = {free:'starter', starter:'growth', growth:'business'};
@@ -1958,7 +1963,7 @@ function showLimitGate(containerId, type, current, max, plan) {
 
   if(type==='employee') {
     html += `<p style="font-size:13px;color:var(--text2);margin-bottom:16px">
-      ${t('msg.empLimitDesc')||'Your'} <strong>${plan.name}</strong> ${t('msg.empLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.empLimitDesc3')||'active employees'}. ${t('msg.empLimitDesc4')||'You have'} ${current}.
+      ${t('msg.empLimitDesc')||'Your'} <strong>${planDisplayName}</strong> ${t('msg.empLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.empLimitDesc3')||'active employees'}. ${t('msg.empLimitDesc4')||'You have'} ${current}.
     </p>`;
     if(!isUnlimited) {
       html += `<div style="border:1.5px solid var(--accent);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:rgba(79,142,247,.06)">
@@ -1969,11 +1974,11 @@ function showLimitGate(containerId, type, current, max, plan) {
     }
   } else if(type==='site') {
     html += `<p style="font-size:13px;color:var(--text2);margin-bottom:16px">
-      ${t('msg.siteLimitDesc')||'Your'} <strong>${plan.name}</strong> ${t('msg.siteLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.siteLimitDesc3')||'site(s)'}. ${t('msg.siteLimitDesc4')||'You have'} ${current}.
+      ${t('msg.siteLimitDesc')||'Your'} <strong>${planDisplayName}</strong> ${t('msg.siteLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.siteLimitDesc3')||'site(s)'}. ${t('msg.siteLimitDesc4')||'You have'} ${current}.
     </p>`;
   } else if(type==='company') {
     html += `<p style="font-size:13px;color:var(--text2);margin-bottom:16px">
-      ${t('msg.coLimitDesc')||'Your'} <strong>${plan.name}</strong> ${t('msg.coLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.coLimitDesc3')||'company(ies)'}. ${t('msg.coLimitDesc4')||'You have'} ${current}.
+      ${t('msg.coLimitDesc')||'Your'} <strong>${planDisplayName}</strong> ${t('msg.coLimitDesc2')||'plan allows up to'} <strong>${max}</strong> ${t('msg.coLimitDesc3')||'company(ies)'}. ${t('msg.coLimitDesc4')||'You have'} ${current}.
     </p>`;
   }
 
@@ -1981,7 +1986,7 @@ function showLimitGate(containerId, type, current, max, plan) {
   if(nextPlanKey && !isUnlimited) {
     const np = nextPlanLimits[nextPlanKey];
     const npPrice = nextPlanPrices[nextPlanKey];
-    const npName = nextPlanKey.charAt(0).toUpperCase()+nextPlanKey.slice(1);
+    const npName = t('plan.'+nextPlanKey)||(nextPlanKey.charAt(0).toUpperCase()+nextPlanKey.slice(1));
     let npDesc = `${np.employees} employees · ${np.sites} sites · ${np.companies} company(ies)`;
     html += `<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface2)">
       <div style="font-weight:600;font-size:14px;margin-bottom:2px">⬆ ${t('msg.upgradeTo')||'Upgrade to'} ${npName} — ${npPrice}</div>
@@ -2112,10 +2117,11 @@ async function refreshCache(opts={}){
     if(orphaned?.length) C.employees=[...C.employees,...orphaned];
   }
   if(!sess&&ctx?.site){C.employees=C.employees.filter(e=>e.site_id===ctx.site.id);}
-  // Build punch filter
+  // Build punch filter — always load by company (never site-filtered) so getEmpStatus works
+  // correctly for employees who may punch in/out across sessions with different site contexts
   const parts=['order=punched_at.desc'];
   if(opts.coId)parts.push(`company_id=eq.${opts.coId}`);
-  if(opts.siteId)parts.push(`site_id=eq.${opts.siteId}`);
+  // NOTE: intentionally NOT filtering by siteId here — we need full punch history per employee
   if(opts.startDate)parts.push(`punch_date=gte.${opts.startDate}`);
   if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
   if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
@@ -2844,6 +2850,17 @@ async function doVerify(){
 
 function logout(){Sess.clear();Ctx.clear();updateNav();showLanding();}
 
+function kioskMode(){
+  // Log out admin but keep Ctx (company+site) so punch page stays active
+  const ctx=Ctx.get();
+  if(!ctx){return;}
+  Sess.clear();
+  updateNav();
+  navigate('punch');
+  document.getElementById('kioskSetupBar').style.display='none';
+  showToast((t('punch.kioskActive')||'Kiosk mode active. Employees can now clock in and out.'),'success');
+}
+
 // ═══════════════════════════════════════════════════
 // STRIPE PAYMENTS
 // ═══════════════════════════════════════════════════
@@ -3047,7 +3064,7 @@ async function handleStripeReturn(){
   navigate('admin');
 
   const isExtraSeat = plan==='extra_seat';
-  const planNames={starter:'Starter',growth:'Growth',business:'Business',extra_seat:'Extra Seat'};
+  const planNames={starter:t('plan.starter')||'Starter',growth:t('plan.growth')||'Growth',business:t('plan.business')||'Business',extra_seat:'Extra Seat'};
   const planIncludes={
     starter:'1 company · 2 sites · up to 10 employees',
     growth: '2 companies · 5 sites · up to 25 employees',
@@ -3154,7 +3171,8 @@ function showActivationSuccess(overlay, isExtraSeat, plan, planNames, planInclud
     // Plan upgrade
     const oldPlan=(Sess.get()?.plan||'free');
     const newPlanName=planNames[plan]||plan;
-    const includes=planIncludes[plan]||'';
+    const planIncludesRaw=planIncludes[plan]||'';
+    const includes=t('upgrade.desc.'+plan)||planIncludesRaw;
     spinner.textContent='🎉';
     title.textContent=`${t('activation.planUpgraded')||'Plan upgraded!'} → ${newPlanName}`;
     desc.innerHTML=`<strong>${newPlanName}</strong> ${t('activation.nowActive')||'is now active.'}<br><span style="font-size:12px;color:var(--text3)">${includes}</span>`;
@@ -3352,6 +3370,9 @@ async function loadPunchPage(){
   banner.innerHTML=siteId
     ?`&#127970; ${ctx.co.name} &nbsp;·&nbsp; &#128205; ${ctx.site.name}`
     :`&#127970; ${ctx.co.name}`;
+  // Show kiosk setup bar only when admin is logged in
+  const kioskBar=document.getElementById('kioskSetupBar');
+  if(kioskBar) kioskBar.style.display=isLoggedIn()?'flex':'none';
 
   // Company logo on punch card
   const logoEl=document.getElementById('punchCoLogo');
@@ -3803,6 +3824,18 @@ async function saveInviteCoAdmin(){
       role,plan:sess.plan||'free',status:'pending_invite',
       parent_admin_id:sess.id,invited_by:sess.email
     });
+    // Send invitation email
+    try{
+      await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+        body:JSON.stringify({
+          email,name,type:'co_admin_invite',
+          adminName:sess.name||sess.email,
+          loginUrl:'https://www.punchclock.ca'
+        })
+      });
+    }catch(emailErr){console.warn('Invite email failed:',emailErr);}
     showMsg('inviteCoAdminMsg',t('coAdmin.inviteSent'),'success');
     await loadCoAdmins();
     setTimeout(()=>closeModal('inviteCoAdminModal'),2200);
@@ -4280,7 +4313,7 @@ function editEmployee(id){
 function populateSiteDropdown(selectId,coId,selectedSiteId){
   const sel=document.getElementById(selectId);
   const sites=C.sites.filter(s=>s.company_id===coId);
-  sel.innerHTML='<option value="">No Site Assigned</option>'+sites.map(s=>`<option value="${s.id}"${s.id===selectedSiteId?' selected':''}>${s.name}</option>`).join('');
+  sel.innerHTML=`<option value="">${t('emp.noSiteAssigned')||'No Site Assigned'}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===selectedSiteId?' selected':''}>${s.name}</option>`).join('');
   // Auto-select if only one site exists and no selection is specified
   if(!selectedSiteId && sites.length===1){
     sel.value=sites[0].id;
@@ -4554,19 +4587,16 @@ async function saveCompany(){
       const sess=Sess.get();
       const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
-      // If this is onboarding (first company), auto-select it and show step 2
-      if(window._onboardingActive){
-        window._onboardingActive=false;
-        if(r?.[0]){
-          // Auto-select the new company as context
-          Ctx.set({co:r[0],site:null});
-          updateContextPill();
-          await refreshCache({coId:r[0].id});
-        }
-        closeModal('addCompanyModal');
-        showOnboardStep2();
-        return;
+      // Always auto-select new company and prompt for first site
+      if(r?.[0]){
+        Ctx.set({co:r[0],site:null});
+        updateContextPill();
+        await refreshCache({coId:r[0].id});
       }
+      if(window._onboardingActive) window._onboardingActive=false;
+      closeModal('addCompanyModal');
+      showOnboardStep2();
+      return;
     }
     closeModal('addCompanyModal');loadCompaniesPage();
   }catch(e){showMsg('companyModalMsg','Error: '+e.message,'error');}
@@ -5357,7 +5387,7 @@ en:{
 'punch.selectName':'Select Your Name','punch.chooseEmployee':'-- Choose employee --',
 'punch.in':'✓ IN','punch.out':'✕ OUT',
 'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
-'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.',
+'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.','punch.kioskMode':'🖥 Set up for employees (stay on this page)','punch.logoutHome':'↩ Logout & go to PunchClock.ca','punch.kioskActive':'Kiosk mode active. Employees can now clock in and out.',
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
 'admin.managing':'Managing employees and sites for',
@@ -5385,7 +5415,7 @@ en:{
 'admin.col.employee':'Employee','admin.col.site':'Site','admin.col.dept':'Department',
 'admin.col.status':'Status','admin.col.pin':'PIN','admin.col.email':'Email Report',
 'admin.col.actions':'Actions','admin.active':'Active','admin.inactive':'Inactive',
-'admin.deactivate':'Deactivate','admin.activate':'Activate','admin.sendReport':'📧 Send Report',
+'admin.deactivate':'Deactivate','admin.activate':'Activate','emp.noSiteAssigned':'No Site Assigned','admin.sendReport':'📧 Send Report',
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All',
@@ -5538,7 +5568,7 @@ en:{
 'coAdmin.desc':'Invite another admin to manage your companies. They will have the role you assign.',
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
-'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email to set up their account.',
+'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email to set up their account.','coAdmin.inviteNote':'An email invitation will be sent. They will set their own password when they first log in.',
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
 'companies.empty':'No companies yet. Create your first one!',
 'modal.newCompany':'New Company','modal.editCompany':'Edit Company',
@@ -5578,7 +5608,7 @@ en:{
 'help.s3title':'Add Employees',
 'help.s3desc':'In <strong>Admin → Employees</strong>, click <em>+ Add Employee</em>. Assign them to a site, set a 4-digit PIN they\'ll use to clock in, and optionally add their email for automated reports.',
 'help.s4title':'Set Up the Clock In/Out Page',
-'help.s4desc':'On the device(s) your employees will use (tablet, shared PC), open PunchClock Pro and use the company/site picker to select the right site. You can then log out of your admin account — the clock page stays active and records punches automatically.',
+'help.s4desc':'On the device employees will use, log in as admin, select the company and site, then click <strong>&ldquo;Set up for employees&rdquo;</strong> at the top of the clock page. This logs you out while keeping the punch page active — employees can clock in/out without accessing your admin account. Use <strong>&ldquo;Logout &amp; go to PunchClock.ca&rdquo;</strong> to fully exit instead.',
 'help.s5title':'Generate Reports',
 'help.s5desc':'Go to the <strong>Reports</strong> tab (you must be logged in as admin). Filter by company, site, date range, or employee. Export to Excel, CSV, or PDF. QuickBooks IIF export is also available.',
 'help.s6title':'Automated Email Reports',
@@ -5623,7 +5653,7 @@ en:{
 'faq.q4':'Can I edit or correct time punches after the fact?',
 'faq.a4':'Yes. Admins can correct, add, or delete any punch record from the Activity tab. All changes are logged in the audit trail with a timestamp.',
 'faq.q5':'What happens to the clock page when I log out?',
-'faq.a5':'The clock in/out page stays active after you log out of your admin account. It keeps recording punches for the selected company and site. Only the admin panel (reports, employee management, etc.) requires a login.',
+'faq.a5':'The clock in/out page stays active after you log out of your admin account — it keeps recording punches for the selected company and site. For tablet setup, log in as admin, pick your company and site, then tap <strong>"Set up for employees"</strong> at the top of the clock page. This logs you out while keeping the page active, so employees can punch in/out without touching your admin account. Use <strong>"Logout & go to PunchClock.ca"</strong> if you want to fully exit instead.',
 'faq.q6':'Does PunchClock Pro integrate with QuickBooks?',
 'faq.a6':'Yes. You can export payroll-ready IIF files from the Reports tab that import directly into QuickBooks Desktop. CSV and Excel exports are also available for other payroll systems.',
 'faq.q7':'What is overtime tracking?',
@@ -5679,7 +5709,7 @@ fr:{
 'punch.selectName':'Sélectionnez votre nom','punch.chooseEmployee':'-- Choisir un employé --',
 'punch.in':'✓ ENTRÉE','punch.out':'✕ SORTIE',
 'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
-'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",
+'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",'punch.kioskMode':'🖥 Configurer pour les employés (rester sur cette page)','punch.logoutHome':'↩ Se déconnecter et aller sur PunchClock.ca','punch.kioskActive':'Mode kiosque actif. Les employés peuvent maintenant pointer.',
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',
 'admin.managing':'Gestion des employés et sites pour',
@@ -5707,7 +5737,7 @@ fr:{
 'admin.col.employee':'Employé','admin.col.site':'Site','admin.col.dept':'Département',
 'admin.col.status':'Statut','admin.col.pin':'NIP','admin.col.email':'Rapport courriel',
 'admin.col.actions':'Actions','admin.active':'Actif','admin.inactive':'Inactif',
-'admin.deactivate':'Désactiver','admin.activate':'Activer','admin.sendReport':'📧 Envoyer rapport',
+'admin.deactivate':'Désactiver','admin.activate':'Activer','emp.noSiteAssigned':'Aucun site attribué','admin.sendReport':'📧 Envoyer rapport',
 "admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Définir',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner',
@@ -5856,7 +5886,7 @@ fr:{
 'siteCode.invalid':'Code invalide. Vérifiez avec votre administrateur.',
 'siteCode.hint':'Demandez le code d\'accès à votre responsable de site.',
 'modal.siteCode':'Code d\'accès du site','modal.siteCodeNote':'Partagez uniquement avec les employés de ce site',
-'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
+'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','coAdmin.inviteNote':'Une invitation par courriel sera envoyée. Ils définiront leur mot de passe lors de leur première connexion.','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
 'coAdmin.desc':'Invitez un autre admin pour gérer vos compagnies. Il aura le rôle que vous lui assignez.',
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
@@ -5900,7 +5930,7 @@ fr:{
 'help.s3title':'Ajouter des employés',
 'help.s3desc':'Dans <strong>Admin → Employés</strong>, cliquez sur <em>+ Ajouter un employé</em>. Assignez-les à un site, définissez un NIP à 4 chiffres pour pointer, et ajoutez optionnellement leur courriel pour les rapports automatiques.',
 'help.s4title':'Configurer la page de pointage',
-'help.s4desc':'Sur les appareils utilisés par vos employés (tablette, PC partagé), ouvrez PunchClock Pro et sélectionnez le bon site via le sélecteur. Vous pouvez ensuite vous déconnecter de votre compte admin — la page de pointage reste active et enregistre automatiquement.',
+'help.s4desc':'Sur l\'appareil des employés, connectez-vous en admin, sélectionnez la compagnie et le site, puis cliquez sur <strong>&laquo;Configurer pour les employés&raquo;</strong> en haut de la page. Cela vous déconnecte tout en maintenant la page active. Utilisez <strong>&laquo;Se déconnecter et aller sur PunchClock.ca&raquo;</strong> pour revenir au site principal.',
 'help.s5title':'Générer des rapports',
 'help.s5desc':'Allez dans l\'onglet <strong>Rapports</strong> (vous devez être connecté en tant qu\'admin). Filtrez par compagnie, site, période ou employé. Exportez en Excel, CSV ou PDF. L\'export IIF pour QuickBooks est aussi disponible.',
 'help.s6title':'Rapports par courriel automatiques',
@@ -5945,7 +5975,7 @@ fr:{
 'faq.q4':'Puis-je corriger des pointages après coup?',
 'faq.a4':'Oui. Les admins peuvent corriger, ajouter ou supprimer n\'importe quel pointage depuis l\'onglet Activité. Toutes les modifications sont enregistrées dans le journal d\'audit.',
 'faq.q5':'Que se passe-t-il sur la page de pointage quand je me déconnecte?',
-'faq.a5':'La page de pointage reste active après la déconnexion admin. Elle continue d\'enregistrer les pointages pour la compagnie et le site sélectionnés. Seul le panneau admin (rapports, gestion des employés, etc.) nécessite une connexion.',
+'faq.a5':'La page de pointage reste active après la déconnexion admin. Pour configurer une tablette, connectez-vous en admin, choisissez la compagnie et le site, puis appuyez sur <strong>«Configurer pour les employés»</strong> en haut de la page de pointage. Cela vous déconnecte tout en maintenant la page active — les employés peuvent pointer sans accéder à votre compte. Utilisez <strong>«Se déconnecter et aller sur PunchClock.ca»</strong> pour revenir au site principal.',
 'faq.q6':'PunchClock Pro s\'intègre-t-il avec QuickBooks?',
 'faq.a6':'Oui. Vous pouvez exporter des fichiers IIF prêts pour la paie depuis l\'onglet Rapports, importables directement dans QuickBooks Desktop. Les exports CSV et Excel sont également disponibles.',
 'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
