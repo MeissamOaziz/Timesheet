@@ -918,6 +918,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="pw-wrap"><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-toggle" onclick="togglePw('loginPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <input type="checkbox" id="rememberMe" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+      <label for="rememberMe" style="font-size:13px;color:var(--text2);cursor:pointer" data-i18n="login.rememberMe">Stay logged in</label>
+    </div>
     <button class="btn-primary" onclick="doLogin()" data-i18n="login.signIn">Sign In</button>
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px"><span data-i18n="login.noAccount">No account?</span> <button class="link-btn" onclick="navigate('register')" data-i18n="login.register">Register</button></p>
@@ -1151,17 +1155,21 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="modal">
     <h3 data-i18n="coAdmin.title">Invite Co-Admin</h3>
     <div id="inviteCoAdminMsg"></div>
-    <div class="form-group"><label>Full Name</label><input type="text" id="coAdminName" placeholder="Jane Smith"></div>
+    <div class="form-group"><label data-i18n="coAdmin.fullName">Full Name</label><input type="text" id="coAdminName" placeholder="Jane Smith"></div>
     <div class="form-group"><label>Email</label><input type="email" id="coAdminEmail" placeholder="colleague@company.com"></div>
     <div class="form-group">
-      <label>Role</label>
+      <label data-i18n="coAdmin.roleLabel">Role</label>
       <select id="coAdminRole">
         <option value="admin" data-i18n="coAdmin.role.admin">Full Admin — same access as you (your companies only)</option>
         <option value="manager" data-i18n="coAdmin.role.manager">Manager — can manage employees &amp; view reports, cannot delete companies</option>
       </select>
     </div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px">
-      <p style="font-size:12px;color:var(--text2);line-height:1.5">📧 <span data-i18n="coAdmin.inviteNote">An email invitation will be sent. They will set their own password when they first log in.</span></p>
+    <div class="form-group">
+      <label data-i18n="coAdmin.tempPass">Temporary Password <span style="color:var(--text3);font-weight:400;font-size:11px" data-i18n="coAdmin.tempPassHint">(share this privately with the invitee)</span></label>
+      <div class="pw-wrap"><input type="password" id="coAdminTempPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('coAdminTempPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+    </div>
+    <div style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.25);border-radius:8px;padding:12px;margin-bottom:16px">
+      <p style="font-size:12px;color:var(--text2);line-height:1.6">📧 <span data-i18n="coAdmin.inviteNote">An email invitation will be sent.</span> <span data-i18n="coAdmin.inviteNoteTemp">The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.</span></p>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('inviteCoAdminModal')">Cancel</button>
@@ -2069,9 +2077,22 @@ function toggleFAQ(n){
   if(!wasOpen)item.classList.add('open');
 }
 const Sess={
-  get:()=>{try{return JSON.parse(localStorage.getItem('pc_sess'));}catch{return null;}},
-  set:v=>localStorage.setItem('pc_sess',JSON.stringify(v)),
-  clear:()=>localStorage.removeItem('pc_sess'),
+  get:()=>{
+    try{
+      return JSON.parse(localStorage.getItem('pc_sess')) ||
+             JSON.parse(sessionStorage.getItem('pc_sess'));
+    }catch{return null;}
+  },
+  set:(v,remember)=>{
+    const store = remember===undefined
+      ? (localStorage.getItem('pc_sess') ? localStorage : sessionStorage)
+      : (remember ? localStorage : sessionStorage);
+    store.setItem('pc_sess',JSON.stringify(v));
+  },
+  clear:()=>{
+    localStorage.removeItem('pc_sess');
+    sessionStorage.removeItem('pc_sess');
+  },
 };
 // Active context stored in localStorage so tablet stays locked across sessions
 const Ctx={
@@ -2599,6 +2620,7 @@ async function doLogin(){
     // Fetch full admin record to get parent_admin_id, extra_seats, stripe info
     const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id`);
     const full = fullRows?.[0] || admin;
+    const rememberMe = document.getElementById('rememberMe')?.checked || false;
     Sess.set({
       id: full.id,
       name: full.name,
@@ -2609,7 +2631,7 @@ async function doLogin(){
       extra_seats: Number(full.extra_seats||0),
       stripe_customer_id: full.stripe_customer_id||null,
       stripe_subscription_id: full.stripe_subscription_id||null,
-    });
+    }, rememberMe);
     updateNav();
     await refreshCache();
     navigate('admin');
@@ -2617,9 +2639,44 @@ async function doLogin(){
 }
 
 // ═══════════════════════════════════════════════════
+// SET INVITE PASSWORD (first login for co-admin invites)
+// ═══════════════════════════════════════════════════
+async function doSetInvitePassword(){
+  if(!pendingInviteAdmin){showMsg('setpassMsg','Session expired. Please log in again.','error');return;}
+  const pw=document.getElementById('setpassNew').value;
+  const pw2=document.getElementById('setpassConfirm').value;
+  if(!pw||pw.length<6){showMsg('setpassMsg',t('msg.passShort')||'Password must be at least 6 characters.','error');return;}
+  if(pw!==pw2){showMsg('setpassMsg',t('msg.passMismatch')||'Passwords do not match.','error');return;}
+  try{
+    showMsg('setpassMsg','Saving...','info');
+    await DB.rpc('set_admin_password',{p_id:pendingInviteAdmin.id,p_pass:pw});
+    await DB.update('admins',`id=eq.${pendingInviteAdmin.id}`,{status:'active',verified:true});
+    // Log in as the co-admin
+    const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id`);
+    const full=fullRows?.[0]||pendingInviteAdmin;
+    Sess.set({
+      id:full.id,name:full.name,email:full.email,
+      role:full.role||'admin',plan:full.plan||'free',
+      parent_admin_id:full.parent_admin_id||null,
+      extra_seats:Number(full.extra_seats||0),
+      stripe_customer_id:full.stripe_customer_id||null,
+      stripe_subscription_id:full.stripe_subscription_id||null,
+    },false); // session only — they can choose remember me next login
+    pendingInviteAdmin=null;
+    document.getElementById('setpassNew').value='';
+    document.getElementById('setpassConfirm').value='';
+    updateNav();
+    await refreshCache();
+    navigate('admin');
+    showToast(t('coAdmin.accountActivated')||'Account activated! Welcome to PunchClock Pro. 🎉','success');
+  }catch(e){showMsg('setpassMsg','Error: '+e.message,'error');}
+}
+
+// ═══════════════════════════════════════════════════
 // FORGOT PASSWORD
 // ═══════════════════════════════════════════════════
 let pendingReset = null;
+let pendingInviteAdmin = null;
 
 async function sendResetCode(resend=false){
   const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
@@ -3801,7 +3858,7 @@ function openInviteCoAdminModal(){
     showToast((t('coAdmin.limitReached')||'Co-admin limit reached.')+' '+(t('coAdmin.limitHint')||'Upgrade your plan or add an extra admin seat ($4.90/mo).'),'error');
     return;
   }
-  ['coAdminName','coAdminEmail'].forEach(id=>document.getElementById(id).value='');
+  ['coAdminName','coAdminEmail','coAdminTempPass'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('coAdminRole').value='admin';
   document.getElementById('inviteCoAdminMsg').innerHTML='';
   openModal('inviteCoAdminModal');
@@ -3812,19 +3869,21 @@ async function saveInviteCoAdmin(){
   const name=document.getElementById('coAdminName').value.trim();
   const email=document.getElementById('coAdminEmail').value.trim().toLowerCase();
   const role=document.getElementById('coAdminRole').value;
+  const tempPass=document.getElementById('coAdminTempPass').value;
   if(!name||!email){showMsg('inviteCoAdminMsg',t('msg.allRequired'),'error');return;}
+  if(!tempPass||tempPass.length<6){showMsg('inviteCoAdminMsg',t('coAdmin.tempPassRequired')||'Please set a temporary password (min 6 characters).','error');return;}
   if(email===sess.email){showMsg('inviteCoAdminMsg',t('msg.ownEmail'),'error');return;}
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('inviteCoAdminMsg',t('msg.emailTaken'),'error');return;}
-    // Create account with pending_invite status — they set password on first login
-    const tempPass='invite_'+Math.random().toString(36).slice(2,10);
-    await DB.insert('admins',{
-      name,email,password:tempPass,verified:false,
+    // Create account — password is set by admin, status pending_invite forces password change on first login
+    const r=await DB.insert('admins',{
+      name,email,password:'PENDING',verified:false,
       role,plan:sess.plan||'free',status:'pending_invite',
       parent_admin_id:sess.id,invited_by:sess.email
     });
-    // Send invitation email
+    if(r?.[0]) await DB.rpc('set_admin_password',{p_id:r[0].id,p_pass:tempPass});
+    // Send invitation email with login instructions (no temp pass in email for security)
     try{
       await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
         method:'POST',
@@ -5568,7 +5627,7 @@ en:{
 'coAdmin.desc':'Invite another admin to manage your companies. They will have the role you assign.',
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
-'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email to set up their account.','coAdmin.inviteNote':'An email invitation will be sent. They will set their own password when they first log in.',
+'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email with login instructions.','coAdmin.inviteNote':'An email invitation will be sent.','coAdmin.inviteNoteTemp':'The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.','coAdmin.tempPass':'Temporary Password','coAdmin.tempPassHint':'(share this privately with the invitee)','coAdmin.tempPassRequired':'Please set a temporary password (min 6 characters).','coAdmin.accountActivated':'Account activated! Welcome to PunchClock Pro. 🎉','login.rememberMe':'Stay logged in','coAdmin.fullName':'Full Name','coAdmin.roleLabel':'Role',
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
 'companies.empty':'No companies yet. Create your first one!',
 'modal.newCompany':'New Company','modal.editCompany':'Edit Company',
@@ -5886,7 +5945,7 @@ fr:{
 'siteCode.invalid':'Code invalide. Vérifiez avec votre administrateur.',
 'siteCode.hint':'Demandez le code d\'accès à votre responsable de site.',
 'modal.siteCode':'Code d\'accès du site','modal.siteCodeNote':'Partagez uniquement avec les employés de ce site',
-'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','coAdmin.inviteNote':'Une invitation par courriel sera envoyée. Ils définiront leur mot de passe lors de leur première connexion.','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
+'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','coAdmin.desc':'Invitez des co-admins pour gérer votre compte. Gratuit/Débutant: 1 admin total. Croissance: 2 admins. Entreprise: 3 admins. Admins supplémentaires: 4,90$/mois chacun.','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','coAdmin.inviteNote':'Une invitation par courriel sera envoyée.','coAdmin.inviteNoteTemp':'L\'invité se connecte avec le mot de passe temporaire que vous définissez, puis est immédiatement invité à en choisir un nouveau.','coAdmin.tempPass':'Mot de passe temporaire','coAdmin.tempPassHint':'(à partager en privé avec l\'invité)','coAdmin.tempPassRequired':'Veuillez définir un mot de passe temporaire (6 caractères min.).','coAdmin.accountActivated':'Compte activé ! Bienvenue sur PunchClock Pro. 🎉','login.rememberMe':'Rester connecté','coAdmin.fullName':'Nom complet','coAdmin.roleLabel':'Rôle','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
 'coAdmin.desc':'Invitez un autre admin pour gérer vos compagnies. Il aura le rôle que vous lui assignez.',
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
