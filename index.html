@@ -5162,14 +5162,42 @@ function confirmDelete(type,id,name){
   document.getElementById('deleteMsg').textContent=`${t('msg.deleteConfirm1')} "${name}"? ${t('msg.deleteConfirm2')}`;
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{
-      if(type==='emp'){await DB.del('employees',`id=eq.${id}`);C.employees=C.employees.filter(e=>e.id!==id);renderEmployees();}
-      else if(type==='site'){
-        await DB.del('sites',`id=eq.${id}`);C.sites=C.sites.filter(s=>s.id!==id);
+      if(type==='emp'){
+        // Delete punches for this employee first, then the employee
+        await DB.del('punches',`emp_id=eq.${id}`);
+        await DB.del('employees',`id=eq.${id}`);
+        C.punches=C.punches.filter(p=>p.emp_id!==id);
+        C.employees=C.employees.filter(e=>e.id!==id);
+        renderEmployees();
+      } else if(type==='site'){
+        // Delete punches → employees → site (cascade manually)
+        const siteEmps=C.employees.filter(e=>e.site_id===id).map(e=>e.id);
+        for(const eid of siteEmps) await DB.del('punches',`emp_id=eq.${eid}`);
+        await DB.del('punches',`site_id=eq.${id}`);
+        await DB.del('employees',`site_id=eq.${id}`);
+        await DB.del('sites',`id=eq.${id}`);
+        C.punches=C.punches.filter(p=>p.site_id!==id&&!siteEmps.includes(p.emp_id));
+        C.employees=C.employees.filter(e=>e.site_id!==id);
+        C.sites=C.sites.filter(s=>s.id!==id);
         // Clear site from context if deleted
         const ctx=Ctx.get();if(ctx?.site?.id===id){Ctx.set({...ctx,site:null});updateContextPill();}
         renderSitesAdmin();populateEmpSiteFilter();
-      }else{
-        await DB.del('companies',`id=eq.${id}`);C.companies=C.companies.filter(c=>c.id!==id);
+      } else {
+        // Company delete: cascade punches → employees → sites → company
+        const coEmps=C.employees.filter(e=>e.company_id===id).map(e=>e.id);
+        const coSites=C.sites.filter(s=>s.company_id===id).map(s=>s.id);
+        // Delete all punches for this company
+        await DB.del('punches',`company_id=eq.${id}`);
+        // Delete all employees
+        for(const eid of coEmps) await DB.del('employees',`id=eq.${eid}`);
+        // Delete all sites
+        for(const sid of coSites) await DB.del('sites',`id=eq.${sid}`);
+        // Now delete the company
+        await DB.del('companies',`id=eq.${id}`);
+        C.punches=C.punches.filter(p=>p.company_id!==id);
+        C.employees=C.employees.filter(e=>e.company_id!==id);
+        C.sites=C.sites.filter(s=>s.company_id!==id);
+        C.companies=C.companies.filter(co=>co.id!==id);
         const ctx=Ctx.get();if(ctx?.co?.id===id){Ctx.clear();updateContextPill();}
         loadCompaniesPage();
       }
