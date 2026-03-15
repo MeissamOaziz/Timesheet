@@ -69,6 +69,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nav-right{display:flex;gap:6px;align-items:center;}
 .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;background:rgba(79,142,247,.2);color:var(--accent);}
 
+/* USER DROPDOWN */
+.user-menu{position:relative;display:none;}
+.user-menu.visible{display:flex;}
+.user-menu-btn{display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:6px 12px 6px 7px;cursor:pointer;transition:all .15s;font-family:inherit;}
+.user-menu-btn:hover{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.07);}
+.user-avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:.5px;}
+.user-menu-info{display:flex;flex-direction:column;align-items:flex-start;gap:1px;}
+.user-menu-name{font-size:13px;font-weight:600;color:var(--text);line-height:1;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+.user-menu-plan{font-size:10px;font-weight:600;color:var(--accent2);line-height:1;white-space:nowrap;}
+.user-menu-caret{font-size:9px;color:var(--text3);margin-left:2px;transition:transform .2s;}
+.user-menu.open .user-menu-caret{transform:rotate(180deg);}
+.user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:6px;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9000;display:none;flex-direction:column;gap:2px;}
+.user-menu.open .user-dropdown{display:flex;}
+.user-dropdown-header{padding:10px 12px 8px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.user-dropdown-header .uh-name{font-size:14px;font-weight:700;color:var(--text);}
+.user-dropdown-header .uh-email{font-size:11px;color:var(--text3);margin-top:2px;}
+.user-dropdown-header .uh-plan{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:rgba(79,142,247,.12);color:var(--accent);}
+.user-dd-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background .12s;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;font-family:inherit;width:100%;text-align:left;}
+.user-dd-item:hover{background:var(--surface2);color:var(--text);}
+.user-dd-item .dd-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.user-dd-item.danger{color:var(--red);}
+.user-dd-item.danger:hover{background:rgba(239,68,68,.1);}
+.user-dd-sep{border:none;border-top:1px solid var(--border);margin:4px 0;}
+.user-dd-addon{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:9px;cursor:pointer;transition:background .12s;border:none;background:none;font-family:inherit;width:100%;}
+.user-dd-addon:hover{background:var(--surface2);}
+.user-dd-addon-left{display:flex;align-items:center;gap:10px;}
+.user-dd-addon-label{font-size:13px;font-weight:500;color:var(--text2);}
+.user-dd-addon-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+.user-dd-addon-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.addon-active{background:rgba(34,197,94,.15);color:var(--green);}
+.addon-inactive{background:rgba(124,92,191,.15);color:#a78bfa;}
+
 /* PAGES */
 .page{display:none;padding:28px 22px;max-width:1120px;margin:0 auto;}
 .page.active{display:block;}
@@ -910,6 +942,67 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <button class="nav-btn" onclick="navigate('activity')" id="navActivity" data-i18n="nav.activity" style="display:none">&#128203; Activity</button>
   </div>
   <div class="nav-right">
+    <!-- User dropdown menu (shown when logged in) -->
+    <div class="user-menu" id="userMenu">
+      <button class="user-menu-btn" onclick="toggleUserMenu(event)" id="userMenuBtn">
+        <div class="user-avatar" id="navAvatar">?</div>
+        <div class="user-menu-info">
+          <div class="user-menu-name" id="navUserName">Admin</div>
+          <div class="user-menu-plan" id="navUserPlan"></div>
+        </div>
+        <span class="user-menu-caret">▼</span>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <!-- Header -->
+        <div class="user-dropdown-header">
+          <div class="uh-name" id="ddUserName"></div>
+          <div class="uh-email" id="ddUserEmail"></div>
+          <div class="uh-plan" id="ddUserPlan"></div>
+        </div>
+        <!-- Profile -->
+        <button class="user-dd-item" onclick="closeUserMenu();openProfile()">
+          <div class="dd-icon" style="background:rgba(79,142,247,.12)">👤</div>
+          <div>
+            <div id="ddProfileLabel" data-i18n="profile.title">My Profile</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.profileSub">Account settings &amp; password</div>
+          </div>
+        </button>
+        <!-- Subscription -->
+        <button class="user-dd-item" id="ddSubscriptionBtn" onclick="closeUserMenu();showUpgradePlans()" style="display:none">
+          <div class="dd-icon" style="background:rgba(34,197,94,.12)">⬆️</div>
+          <div>
+            <div data-i18n="nav.dd.upgrade">Upgrade Plan</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.upgradeSub">Change your subscription</div>
+          </div>
+        </button>
+        <button class="user-dd-item" id="ddManageBillingBtn" onclick="closeUserMenu();openBillingPortal()" style="display:none">
+          <div class="dd-icon" style="background:rgba(245,158,11,.12)">💳</div>
+          <div>
+            <div data-i18n="nav.dd.billing">Manage Billing</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.billingSub">Invoices &amp; payment method</div>
+          </div>
+        </button>
+        <hr class="user-dd-sep">
+        <!-- Scheduling Add-On -->
+        <div class="user-dd-addon" id="ddSchedulingAddon" style="display:none" onclick="closeUserMenu();handleSchedulingAddonClick()">
+          <div class="user-dd-addon-left">
+            <div class="dd-icon" style="background:rgba(124,92,191,.12)">🗓️</div>
+            <div>
+              <div class="user-dd-addon-label" data-i18n="addon.scheduling">Scheduling Add-On</div>
+              <div class="user-dd-addon-sub">$14.95/mo · <span data-i18n="nav.dd.addonDesc">shift builder &amp; weekly schedule</span></div>
+            </div>
+          </div>
+          <span class="user-dd-addon-badge" id="ddSchedulingBadge"></span>
+        </div>
+        <hr class="user-dd-sep" id="ddAddonSep" style="display:none">
+        <!-- Logout -->
+        <button class="user-dd-item danger" onclick="closeUserMenu();logout()">
+          <div class="dd-icon" style="background:rgba(239,68,68,.1)">✕</div>
+          <div data-i18n="nav.logout">Logout</div>
+        </button>
+      </div>
+    </div>
+    <!-- Legacy hidden span kept for JS compatibility -->
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="helpNavBtn" onclick="showHelpModal()" data-i18n="nav.help" style="font-size:12px;padding:6px 13px;display:none">❓ Help</button>
     <button class="btn-secondary" id="supportNavBtn" onclick="showSupportModal()" data-i18n="nav.support" style="font-size:12px;padding:6px 13px;display:none">🎧 Support</button>
@@ -928,6 +1021,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none" data-i18n="nav.help">❓ Help</button>
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none" data-i18n="nav.support">🎧 Support</button>
+  <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa">🗓️ <span id="mobileSchedulingLabel"></span></button>
   <hr class="mobile-nav-divider">
   <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')">&#128274; Admin Login</button>
   <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)">&#10005; Logout</button>
@@ -2637,19 +2731,113 @@ function updateNav(){
   if(mobileHelpBtn)mobileHelpBtn.style.display=ok?'':'none';
   const mobileSupportBtn=document.getElementById('mobileSupportBtn');
   if(mobileSupportBtn)mobileSupportBtn.style.display=ok?'':'none';
+  // Mobile scheduling add-on button
+  const mobileSchedBtn=document.getElementById('mobileSchedulingBtn');
+  const mobileSchedLabel=document.getElementById('mobileSchedulingLabel');
+  if(mobileSchedBtn&&ok){
+    const a2=Sess.get();
+    const plan2=a2?.plan||'free';
+    const isCoAdmin2=!!(a2?.parent_admin_id);
+    const showMobileSched=!isCoAdmin2&&plan2!=='free'&&plan2!=='unlimited';
+    mobileSchedBtn.style.display=showMobileSched?'':'none';
+    if(showMobileSched&&mobileSchedLabel){
+      const hasAddon2=!!(a2?.scheduling_addon);
+      mobileSchedLabel.textContent=hasAddon2
+        ?(t('addon.scheduling')+' — '+(t('addon.active')||'Active'))
+        :(t('addon.scheduling')+' — '+(t('nav.dd.addonAdd')||'+ Add'));
+    }
+  } else if(mobileSchedBtn){
+    mobileSchedBtn.style.display='none';
+  }
   ['mobileNavAdmin','mobileNavReports','mobileNavCompanies','mobileNavActivity'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display=ok?'':'none';
   });
   if(ok){
     const a=Sess.get();
-    const roleLabel = isSuperAdmin() ? '\u2b50 '+a.name : a.name;
-    document.getElementById('adminBadge').innerHTML='<span class="badge" onclick="openProfile()" style="cursor:pointer;user-select:none" title="My Profile">'+roleLabel+'</span>';
-    document.getElementById('adminBadge').style.display='';
+    const roleLabel = isSuperAdmin() ? '⭐ '+a.name : a.name;
+    // Legacy badge (kept hidden, used by some internal checks)
+    document.getElementById('adminBadge').innerHTML='<span class="badge" onclick="openProfile()" style="cursor:pointer;user-select:none">'+roleLabel+'</span>';
+    document.getElementById('adminBadge').style.display='none';
+    // Show user dropdown
+    const menu=document.getElementById('userMenu');
+    if(menu){
+      menu.classList.add('visible');
+      const isCoAdmin=!!(a.parent_admin_id);
+      const plan=isCoAdmin?(C.primaryAdmin?.plan||a.plan||'free'):(a.plan||'free');
+      const planColors={'free':'var(--text2)','starter':'#4f8ef7','growth':'#22c55e','business':'#a78bfa','unlimited':'#f59e0b'};
+      const planColor=planColors[plan]||'var(--accent)';
+      // Avatar initials
+      const initials=(a.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      document.getElementById('navAvatar').textContent=initials;
+      // Name + plan in button
+      document.getElementById('navUserName').textContent=a.name||a.email||'Admin';
+      const planLabelShort=t('plan.'+plan)||plan;
+      const navPlanEl=document.getElementById('navUserPlan');
+      navPlanEl.textContent=planLabelShort;
+      navPlanEl.style.color=planColor;
+      // Dropdown header
+      document.getElementById('ddUserName').textContent=a.name||'Admin';
+      document.getElementById('ddUserEmail').textContent=a.email||'';
+      const ddPlan=document.getElementById('ddUserPlan');
+      ddPlan.textContent=planLabelShort;
+      ddPlan.style.background=planColor==='var(--text2)'?'rgba(139,146,168,.12)':`${planColor}22`;
+      ddPlan.style.color=planColor;
+      // Upgrade / Manage billing buttons
+      const ddUpBtn=document.getElementById('ddSubscriptionBtn');
+      const ddBillBtn=document.getElementById('ddManageBillingBtn');
+      if(!isCoAdmin){
+        const isPaid=plan!=='free'&&plan!=='unlimited';
+        const isTop=plan==='business'||isSuperAdmin();
+        if(ddUpBtn) ddUpBtn.style.display=isTop?'none':'';
+        if(ddBillBtn) ddBillBtn.style.display=isPaid?'':'none';
+      } else {
+        if(ddUpBtn) ddUpBtn.style.display='none';
+        if(ddBillBtn) ddBillBtn.style.display='none';
+      }
+      // Scheduling add-on row
+      const ddSched=document.getElementById('ddSchedulingAddon');
+      const ddSchedSep=document.getElementById('ddAddonSep');
+      const ddSchedBadge=document.getElementById('ddSchedulingBadge');
+      const showSched=!isCoAdmin&&plan!=='free'&&plan!=='unlimited';
+      if(ddSched){
+        ddSched.style.display=showSched?'':'none';
+        if(ddSchedSep) ddSchedSep.style.display=showSched?'':'none';
+        if(showSched&&ddSchedBadge){
+          const hasAddon=!!(a.scheduling_addon);
+          ddSchedBadge.textContent=hasAddon?(t('addon.active')||'✓ Active'):(t('nav.dd.addonAdd')||'+ Add');
+          ddSchedBadge.className='user-dd-addon-badge '+(hasAddon?'addon-active':'addon-inactive');
+        }
+      }
+    }
   }else{
+    const menu=document.getElementById('userMenu');
+    if(menu) menu.classList.remove('visible');
     document.getElementById('adminBadge').style.display='none';
   }
   updateContextPill();
 }
+
+function toggleUserMenu(e){
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('open');
+}
+function closeUserMenu(){
+  document.getElementById('userMenu').classList.remove('open');
+}
+function handleSchedulingAddonClick(){
+  const s=Sess.get();
+  if(!s) return;
+  if(s.scheduling_addon){
+    openBillingPortal();
+  } else {
+    startSchedulingAddonCheckout();
+  }
+}
+// Close dropdown when clicking anywhere outside
+document.addEventListener('click', function(e){
+  const menu=document.getElementById('userMenu');
+  if(menu&&!menu.contains(e.target)) closeUserMenu();
+});
 
 function toggleMobileMenu(){
   const menu=document.getElementById('mobileMenu');
@@ -3051,7 +3239,7 @@ async function startExtraSeatCheckout(){
 }
 
 // Scheduling add-on ($14.95/mo) — replace PRICE_ID below with your real Stripe price ID
-const SCHEDULING_ADDON_PRICE_ID = 'price_1TB4cSI87MWWhn5dU3kGRGtl';
+const SCHEDULING_ADDON_PRICE_ID = 'price_SCHEDULING_PLACEHOLDER';
 async function startSchedulingAddonCheckout(){
   const s=Sess.get();
   if(!s){navigate('login');return;}
@@ -5721,6 +5909,11 @@ en:{
 'msg.chooseSite':'Choose your work site',
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
 'profile.title':'My Profile','profile.plan':'Subscription Plan','profile.upgrade':'⬆ Upgrade',
+'nav.dd.profileSub':'Account settings & password',
+'nav.dd.upgrade':'Upgrade Plan','nav.dd.upgradeSub':'Change your subscription',
+'nav.dd.billing':'Manage Billing','nav.dd.billingSub':'Invoices & payment method',
+'nav.dd.addonDesc':'shift builder & weekly schedule',
+'nav.dd.addonAdd':'+ Add',
 'profile.name':'Display Name','profile.changePw':'🔑 Change password','profile.currentPw':'Current Password',
 'profile.newPw':'New Password','profile.confirmPw':'Confirm New Password',
 'profile.save':'Save Changes','profile.cancel':'Cancel',
@@ -6083,6 +6276,11 @@ fr:{
 'msg.chooseSite':'Choisissez votre site de travail',
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
 'profile.title':'Mon profil','profile.plan':'Abonnement','profile.upgrade':'⬆ Mettre à niveau',
+'nav.dd.profileSub':'Paramètres du compte et mot de passe',
+'nav.dd.upgrade':'Mettre à niveau','nav.dd.upgradeSub':'Changer votre abonnement',
+'nav.dd.billing':'Gérer la facturation','nav.dd.billingSub':'Factures et mode de paiement',
+'nav.dd.addonDesc':'créateur de quarts et horaire hebdomadaire',
+'nav.dd.addonAdd':'+ Ajouter',
 'profile.name':'Nom affiché','profile.changePw':'🔑 Changer le mot de passe','profile.currentPw':'Mot de passe actuel',
 'profile.newPw':'Nouveau mot de passe','profile.confirmPw':'Confirmer le nouveau mot de passe',
 'profile.save':'Sauvegarder','profile.cancel':'Annuler',
