@@ -535,6 +535,13 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
     <p data-i18n="land.heroSub">PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
+    <!-- Feature pills -->
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px;margin-top:-8px">
+      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">🖥️ <span data-i18n="land.pill1">Tablet terminal clock-in</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">📊 <span data-i18n="land.pill2">Automated payroll reports</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">📦 <span data-i18n="land.pill3">QuickBooks export</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,92,191,.15);border:1px solid rgba(124,92,191,.35);border-radius:20px;padding:4px 13px;font-size:12px;color:#a78bfa">🗓️ <span data-i18n="land.pill4">Employee scheduling</span> <span style="font-size:10px;background:#7c5cbf;color:#fff;border-radius:10px;padding:1px 6px;margin-left:2px" data-i18n="land.pillAddon">Add-On</span></span>
+    </div>
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
       <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
@@ -788,6 +795,21 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div style="font-size:34px;margin-bottom:10px">&#128274;</div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA6Title">Co-Admin Access</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA6Desc">Invite co-admins to share management duties. Each co-admin sees the same companies, sites, and employees.</p>
+      </div>
+    </div>
+
+    <!-- Scheduling add-on callout in How It Works -->
+    <div style="margin-top:44px;background:linear-gradient(135deg,rgba(124,92,191,.1),rgba(79,142,247,.06));border:1.5px solid rgba(124,92,191,.3);border-radius:16px;padding:28px 32px;max-width:760px;margin-left:auto;margin-right:auto">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:36px">🗓️</div>
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <strong style="font-size:15px" data-i18n="land.howSchedTitle">Employee Scheduling Add-On</strong>
+            <span style="font-size:10px;font-weight:700;background:#7c5cbf;color:#fff;padding:2px 8px;border-radius:10px" data-i18n="land.pillAddon">Add-On</span>
+          </div>
+          <p style="font-size:13px;color:var(--text2);margin:0;line-height:1.6" data-i18n="land.howSchedDesc">Once your team is set up, unlock the Scheduling Add-On to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page — all for $14.95/mo added to any paid plan.</p>
+        </div>
+        <button class="btn-secondary" style="padding:9px 20px;font-size:13px;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.howSchedCta">See pricing →</button>
       </div>
     </div>
   </div>
@@ -2383,7 +2405,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -6543,6 +6565,10 @@ en:{
 'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
+'land.pill1':'Tablet terminal clock-in','land.pill2':'Automated payroll reports','land.pill3':'QuickBooks export','land.pill4':'Employee scheduling','land.pillAddon':'Add-On',
+'land.howSchedTitle':'Employee Scheduling Add-On',
+'land.howSchedDesc':'Once your team is set up, unlock the Scheduling Add-On to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page — all for $14.95/mo added to any paid plan.',
+'land.howSchedCta':'See pricing →',
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
 'land.heroSub':'PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
@@ -6769,8 +6795,10 @@ en:{
 'faq.a11':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
 'faq.q12':'Why use a tablet terminal instead of a GPS mobile app?',
 'faq.a12':'A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There\'s also no app to install, no personal device required, and no battery or connectivity excuses.',
-'faq.q13':'What is the Scheduling Add-On?',
-'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees, directly inside PunchClock Pro. Assign shifts per site, view your week at a glance, and keep your team informed about upcoming schedules. It\'s available as an optional add-on on any paid plan (Starter, Growth, or Business) and can be purchased from your profile or the pricing page.',
+'faq.q13':'What is the Scheduling Add-On and how does it work?',
+'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. Available on any paid plan (Starter, Growth, or Business).',
+'faq.q14':'Can employees see their schedule when they clock in?',
+'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. The Scheduling Add-On must be active on the account.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'Unlimited everything · up to 3 admins',
@@ -6936,6 +6964,10 @@ fr:{
 'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
+'land.pill1':'Pointage sur terminal tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export QuickBooks','land.pill4':'Planification des employés','land.pillAddon':'Complément',
+'land.howSchedTitle':'Complément Planification des employés',
+'land.howSchedDesc':'Une fois votre équipe configurée, activez le complément Planification pour créer des horaires de quarts hebdomadaires directement dans PunchClock. Assignez des quarts par site, envoyez les horaires par courriel et permettez aux employés de voir leurs prochains quarts sur la page de pointage — tout ça pour 14,95 $/mois en supplément de tout plan payant.',
+'land.howSchedCta':'Voir les tarifs →',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
 'land.heroSub':'Pointage par NIP sur terminal tablette fixe, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
@@ -7162,8 +7194,10 @@ fr:{
 'faq.a11':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
 'faq.q12':'Pourquoi utiliser un terminal tablette plutôt qu\'une appli GPS mobile?',
 'faq.a12':'Un terminal tablette fixe à votre emplacement est plus précis et plus difficile à contourner qu\'une appli GPS. Avec les applis GPS, les employés peuvent pointer depuis leur domicile, leur voiture ou n\'importe où — et le GPS peut être falsifié. Un terminal ancré à votre entrée oblige les employés à être physiquement sur place pour pointer. De plus, aucune appli à installer, aucun appareil personnel requis, et pas d\'excuse de batterie ou de connexion.',
-'faq.q13':'Qu\'est-ce que le complément Planification?',
-'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés, directement dans PunchClock Pro. Assignez des quarts par site, visualisez votre semaine d\'un coup d\'œil et informez votre équipe de ses prochains quarts. Disponible en option sur tout plan payant (Débutant, Croissance ou Entreprise) — à activer depuis votre profil ou la page des tarifs.',
+'faq.q13':'Qu\'est-ce que le complément Planification et comment ça fonctionne?',
+'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Pro. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. Disponible sur tout plan payant (Débutant, Croissance ou Entreprise).',
+'faq.q14':'Les employés peuvent-ils voir leur horaire quand ils pointent?',
+'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Le complément Planification doit être actif sur le compte.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
