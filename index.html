@@ -495,12 +495,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .shift-time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 /* My Shifts panel on punch page */
 .my-shifts-panel{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:4px;}
-.my-shifts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.my-shifts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
 .my-shifts-header h4{font-size:14px;font-weight:600;margin:0;}
 .my-shift-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface2);border-radius:9px;margin-bottom:6px;}
 .my-shift-day{font-size:12px;font-weight:600;color:var(--text);}
 .my-shift-time{font-size:11px;color:var(--accent);font-weight:600;}
 .my-shift-today{background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);}
+.sched-emp-actions{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.btn-sched-email{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid rgba(79,142,247,.35);background:rgba(79,142,247,.1);color:var(--accent);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-sched-email:hover{background:rgba(79,142,247,.22);}
+.btn-sched-add-email{font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.1);color:var(--amber);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-sched-add-email:hover{background:rgba(245,158,11,.22);}
 </style>
 <body>
 <div id="pcToast"></div>
@@ -1104,8 +1109,48 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="my-shifts-panel" id="myShiftsPanel" style="display:none">
       <div class="my-shifts-header">
         <h4>🗓️ <span data-i18n="sched.myShifts">My Upcoming Shifts</span></h4>
+        <button id="myShiftsSendBtn" class="btn-sched-email" onclick="openSendMySchedule()" style="font-size:11px;padding:5px 12px">📧 <span data-i18n="sched.sendToMe">Send to my email</span></button>
       </div>
       <div id="myShiftsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEND MY SCHEDULE MODAL (punch page) -->
+<div class="modal-overlay" id="sendMyScheduleModal" style="z-index:9800">
+  <div class="modal" style="max-width:380px">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:32px;margin-bottom:8px">🗓️</div>
+      <h3 style="margin:0 0 6px" data-i18n="sched.sendToMe">Send to my email</h3>
+      <p style="font-size:13px;color:var(--text2);margin:0" id="sendMySchedSubtitle"></p>
+    </div>
+    <div id="sendMySchedMsg"></div>
+
+    <!-- Step 1: PIN verification -->
+    <div id="sendMySchedStep1">
+      <div class="form-group">
+        <label data-i18n="sched.enterPin">Enter your 4-digit PIN to confirm</label>
+        <input type="password" inputmode="numeric" maxlength="4" id="sendMySchedPin"
+          style="width:100%;padding:14px;text-align:center;font-size:24px;letter-spacing:10px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;outline:none"
+          placeholder="••••" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+          onkeydown="if(event.key==='Enter')verifySchedPin()">
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="verifySchedPin()" data-i18n="sched.confirmPin">Confirm</button>
+      <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="closeModal('sendMyScheduleModal')" data-i18n="modal.cancel">Cancel</button>
+    </div>
+
+    <!-- Step 2: Email (shown if no email on file OR after PIN verified) -->
+    <div id="sendMySchedStep2" style="display:none">
+      <div class="form-group">
+        <label id="sendMySchedEmailLabel" data-i18n="sched.yourEmail">Your email address</label>
+        <input type="email" id="sendMySchedEmail"
+          style="width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none"
+          placeholder="you@example.com"
+          onkeydown="if(event.key==='Enter')sendMyScheduleNow()">
+        <div style="font-size:11px;color:var(--text3);margin-top:6px" data-i18n="sched.emailSaveNote">This email will be saved to your profile so your admin can send you reports too.</div>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="sendMyScheduleNow()" id="sendMySchedBtn" data-i18n="sched.sendNow">📧 Send Schedule</button>
+      <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="closeModal('sendMyScheduleModal')" data-i18n="modal.cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -6034,12 +6079,19 @@ async function renderScheduleGrid() {
   emps.forEach(emp => {
     const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     const site = C.sites.find(s=>s.id===emp.site_id);
+    const empShiftsThisWeek = _schedShifts.filter(sh=>sh.employee_id===emp.id);
+    const hasEmail = !!(emp.email);
+    const emailBtn = hasEmail
+      ? `<button class="btn-sched-email" onclick="sendScheduleEmail('${emp.id}')" title="${emp.email}">📧 ${t('sched.sendEmail')||'Send schedule'}</button>`
+      : `<button class="btn-sched-add-email" onclick="openEmpForEmail('${emp.id}')">${t('sched.addEmail')||'+ Add email'}</button>`;
+
     html += `<tr><td>
       <div class="sched-emp-info">
         <div class="sched-emp-avatar">${initials}</div>
         <div>
           <div class="sched-emp-name">${emp.name}</div>
           ${site ? `<div class="sched-emp-site">📍 ${site.name}</div>` : ''}
+          <div class="sched-emp-actions">${empShiftsThisWeek.length > 0 ? emailBtn : ''}</div>
         </div>
       </div>
     </td>`;
@@ -6226,8 +6278,187 @@ async function loadMyShifts(empId) {
   }
 }
 
-// ═══════════════════════════════════════════════
-// BILINGUAL i18n SYSTEM
+// ── Admin: send schedule by email ──────────────────────────────────────────
+async function sendScheduleEmail(empId) {
+  const emp = C.employees.find(e => e.id === empId);
+  if(!emp || !emp.email) return;
+  const weekStart = schedGetWeekStart(_schedWeek);
+  const weekDays = Array.from({length:7}, (_,i) => { const d=new Date(weekStart); d.setDate(weekStart.getDate()+i); return d; });
+  const empShifts = _schedShifts.filter(sh => sh.employee_id === empId);
+  if(!empShifts.length) { showToast(t('sched.noShiftsToSend')||'No shifts this week to send.','info'); return; }
+  showToast(t('sched.sending')||'Sending...','info');
+  await sendScheduleEmailCore(emp.email, emp.name, weekDays, empShifts);
+}
+
+function openEmpForEmail(empId) {
+  // Navigate to admin → employees tab and open the employee modal for email entry
+  navigate('admin');
+  setTimeout(async () => {
+    const emp = C.employees.find(e => e.id === empId);
+    if(emp) {
+      showToast(t('sched.addEmailHint')||'Add this employee\'s email to send them schedules.','info');
+      openEmpModal(emp);
+    }
+  }, 400);
+}
+
+// ── Punch page: Send My Schedule flow ──────────────────────────────────────
+let _sendMySchedEmpId = null;
+let _sendMySchedShifts = [];
+let _sendMySchedWeekDays = [];
+
+function openSendMySchedule() {
+  const empId = document.getElementById('empSelect')?.value;
+  if(!empId) return;
+  const emp = C.employees.find(e => e.id === empId);
+  if(!emp) return;
+
+  _sendMySchedEmpId = empId;
+
+  // Gather shifts from the already-loaded myShifts data (next 7 days)
+  const today = schedDateStr(new Date());
+  const nextWeek = schedDateStr(new Date(Date.now() + 7*24*60*60*1000));
+  _sendMySchedWeekDays = Array.from({length:7}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate()+i); return d;
+  });
+
+  // Reset modal
+  document.getElementById('sendMySchedMsg').innerHTML = '';
+  document.getElementById('sendMySchedPin').value = '';
+  document.getElementById('sendMySchedStep1').style.display = '';
+  document.getElementById('sendMySchedStep2').style.display = 'none';
+  document.getElementById('sendMySchedSubtitle').textContent = emp.name;
+
+  openModal('sendMyScheduleModal');
+  setTimeout(() => document.getElementById('sendMySchedPin').focus(), 200);
+}
+
+async function verifySchedPin() {
+  const empId = _sendMySchedEmpId;
+  const emp = C.employees.find(e => e.id === empId);
+  if(!emp) return;
+
+  const pin = document.getElementById('sendMySchedPin').value;
+  if(!pin || pin.length !== 4) {
+    showMsg('sendMySchedMsg', t('sched.pinRequired')||'Please enter your 4-digit PIN.', 'error');
+    return;
+  }
+  if(pin !== emp.pin) {
+    showMsg('sendMySchedMsg', t('sched.pinWrong')||'Incorrect PIN. Please try again.', 'error');
+    document.getElementById('sendMySchedPin').value = '';
+    return;
+  }
+
+  // PIN verified — move to step 2
+  document.getElementById('sendMySchedMsg').innerHTML = '';
+  document.getElementById('sendMySchedStep1').style.display = 'none';
+  document.getElementById('sendMySchedStep2').style.display = '';
+
+  if(emp.email) {
+    document.getElementById('sendMySchedEmail').value = emp.email;
+    document.getElementById('sendMySchedEmailLabel').textContent =
+      (t('sched.sendingTo')||'Sending to:') + ' ' + emp.email;
+  } else {
+    document.getElementById('sendMySchedEmail').value = '';
+    document.getElementById('sendMySchedEmailLabel').setAttribute('data-i18n','sched.yourEmail');
+    document.getElementById('sendMySchedEmailLabel').textContent = t('sched.yourEmail')||'Your email address';
+  }
+  setTimeout(() => {
+    const emailEl = document.getElementById('sendMySchedEmail');
+    if(!emp.email) emailEl.focus();
+  }, 100);
+}
+
+async function sendMyScheduleNow() {
+  const empId = _sendMySchedEmpId;
+  const emp = C.employees.find(e => e.id === empId);
+  if(!emp) return;
+
+  const email = document.getElementById('sendMySchedEmail').value.trim().toLowerCase();
+  if(!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+    showMsg('sendMySchedMsg', t('contact.invalidEmail')||'Please enter a valid email address.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('sendMySchedBtn');
+  btn.disabled = true;
+  btn.textContent = t('sched.sending')||'Sending...';
+
+  // Save email to employee profile if new or changed
+  if(email !== emp.email) {
+    try {
+      await DB.update('employees', `id=eq.${emp.id}`, { email, send_report: true });
+      emp.email = email;
+      emp.send_report = true;
+    } catch(e) {
+      console.warn('Failed to save email:', e);
+    }
+  }
+
+  // Fetch shifts for next 7 days
+  const today = schedDateStr(new Date());
+  const nextWeek = schedDateStr(new Date(Date.now() + 7*24*60*60*1000));
+  let shifts = [];
+  try {
+    shifts = await DB.all('shifts',
+      `employee_id=eq.${empId}&shift_date=gte.${today}&shift_date=lte.${nextWeek}&order=shift_date.asc,start_time.asc`
+    ) || [];
+  } catch(e) { shifts = []; }
+
+  const result = await sendScheduleEmailCore(email, emp.name, _sendMySchedWeekDays, shifts);
+  if(result.ok) {
+    showMsg('sendMySchedMsg', `✓ ${t('sched.sentOk')||'Schedule sent to'} ${email}`, 'success');
+    btn.textContent = '✓ Sent!';
+    setTimeout(() => closeModal('sendMyScheduleModal'), 2500);
+  } else {
+    showMsg('sendMySchedMsg', (t('sched.sendFailed')||'Failed to send:')+' '+result.error, 'error');
+    btn.disabled = false;
+    btn.textContent = t('sched.sendNow')||'📧 Send Schedule';
+  }
+}
+
+async function sendScheduleEmailCore(email, empName, weekDays, shifts) {
+  const lang = _appLang || 'en';
+  const fmt = (d) => d.toLocaleDateString(t('sched.locale')||'en-CA', {weekday:'long', month:'short', day:'numeric'});
+  const weekLabel = weekDays.length
+    ? `${weekDays[0].toLocaleDateString(t('sched.locale')||'en-CA',{month:'short',day:'numeric'})} – ${weekDays[6].toLocaleDateString(t('sched.locale')||'en-CA',{month:'short',day:'numeric'})}`
+    : '';
+
+  // Build shift rows with day labels
+  const shiftRows = shifts.map(sh => {
+    const d = new Date(sh.shift_date + 'T12:00:00');
+    return {
+      day: d.toLocaleDateString(t('sched.locale')||'en-CA', {weekday:'long', month:'short', day:'numeric'}),
+      date: sh.shift_date,
+      startTime: sh.start_time.slice(0,5),
+      endTime: sh.end_time.slice(0,5),
+      note: sh.note || '',
+    };
+  });
+
+  try {
+    const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPA_KEY, 'apikey':SUPA_KEY },
+      body: JSON.stringify({
+        type: 'schedule',
+        email,
+        name: empName,
+        weekLabel,
+        shifts: shiftRows,
+        lang,
+      })
+    });
+    const data = await res.json();
+    if(data.success) {
+      showToast(`✓ ${t('sched.sentOk')||'Schedule sent to'} ${email}`, 'success');
+      return { ok: true };
+    }
+    return { ok: false, error: data.error || 'Unknown error' };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
 // ═══════════════════════════════════════════════
 var _appLang='en';
 var _punchLang='en';
@@ -6607,6 +6838,22 @@ en:{
 'sched.addonRequired':'Scheduling Add-On Required',
 'sched.addonRequiredDesc':'Add the Scheduling Add-On to build shift schedules for your team.',
 'sched.myShifts':'My Upcoming Shifts',
+'sched.sendEmail':'📧 Send schedule',
+'sched.addEmail':'+ Add email',
+'sched.addEmailHint':'Add this employee\'s email to send them their schedule.',
+'sched.sendToMe':'Send to my email',
+'sched.pinTitle':'Verify your identity',
+'sched.pinSubtitle':'Enter your 4-digit PIN to confirm',
+'sched.pinRequired':'Please enter your 4-digit PIN.',
+'sched.pinWrong':'Incorrect PIN. Please try again.',
+'sched.yourEmail':'Your email address',
+'sched.sendingTo':'Sending to:',
+'sched.sendNow':'📧 Send Schedule',
+'sched.sending':'Sending...',
+'sched.sentOk':'Schedule sent to',
+'sched.sendFailed':'Failed to send:',
+'sched.noShiftsToSend':'No shifts scheduled this week.',
+'sched.saveEmail':'Save email for future use',
 
 },
 fr:{
@@ -6988,6 +7235,22 @@ fr:{
 'sched.addonRequired':'Complément Planification requis',
 'sched.addonRequiredDesc':'Ajoutez le complément Planification pour créer des horaires de quarts pour votre équipe.',
 'sched.myShifts':'Mes prochains quarts',
+'sched.sendEmail':'📧 Envoyer l\'horaire',
+'sched.addEmail':'+ Ajouter courriel',
+'sched.addEmailHint':'Ajoutez le courriel de cet employé pour lui envoyer son horaire.',
+'sched.sendToMe':'Envoyer à mon courriel',
+'sched.pinTitle':'Vérifiez votre identité',
+'sched.pinSubtitle':'Entrez votre NIP à 4 chiffres pour confirmer',
+'sched.pinRequired':'Veuillez entrer votre NIP à 4 chiffres.',
+'sched.pinWrong':'NIP incorrect. Veuillez réessayer.',
+'sched.yourEmail':'Votre adresse courriel',
+'sched.sendingTo':'Envoi à :',
+'sched.sendNow':'📧 Envoyer l\'horaire',
+'sched.sending':'Envoi en cours...',
+'sched.sentOk':'Horaire envoyé à',
+'sched.sendFailed':'Échec de l\'envoi :',
+'sched.noShiftsToSend':'Aucun quart prévu cette semaine.',
+'sched.saveEmail':'Enregistrer le courriel pour une utilisation future',
 
 }
 };
