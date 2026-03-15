@@ -12,5 +12,12 @@
     <xhtml:link rel="alternate" hreflang="fr" href="https://www.punchclock.ca/?lang=fr"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.punchclock.ca/"/>
   </url>
-
+<url>
+  <loc>https://www.punchclock.ca/?lang=fr</loc>
+  <lastmod>2026-03-15</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.9</priority>
+  <xhtml:link rel="alternate" hreflang="fr-CA" href="https://www.punchclock.ca/?lang=fr"/>
+  <xhtml:link rel="alternate" hreflang="en-CA" href="https://www.punchclock.ca/"/>
+</url>
 </urlset>
