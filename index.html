@@ -5974,9 +5974,8 @@ async function loadSchedulePage() {
   if(!isLoggedIn()){navigate('login');return;}
   const s = Sess.get();
 
-  // Check add-on access — granted if: has scheduling_addon flag, OR is superadmin, OR is on Unlimited plan
-  const plan = s?.plan || 'free';
-  const hasAddon = !!(s?.scheduling_addon) || isSuperAdmin() || plan === 'unlimited';
+  // Check add-on access — scheduling_addon must be explicitly purchased or granted
+  const hasAddon = !!(s?.scheduling_addon) || isSuperAdmin();
   if(!hasAddon) {
     document.getElementById('schedGridContent').innerHTML = `
       <div class="sched-empty">
