@@ -5974,8 +5974,9 @@ async function loadSchedulePage() {
   if(!isLoggedIn()){navigate('login');return;}
   const s = Sess.get();
 
-  // Check add-on access
-  const hasAddon = !!(s?.scheduling_addon) || isSuperAdmin();
+  // Check add-on access — granted if: has scheduling_addon flag, OR is superadmin, OR is on Unlimited plan
+  const plan = s?.plan || 'free';
+  const hasAddon = !!(s?.scheduling_addon) || isSuperAdmin() || plan === 'unlimited';
   if(!hasAddon) {
     document.getElementById('schedGridContent').innerHTML = `
       <div class="sched-empty">
@@ -6291,14 +6292,10 @@ async function sendScheduleEmail(empId) {
 }
 
 function openEmpForEmail(empId) {
-  // Navigate to admin → employees tab and open the employee modal for email entry
   navigate('admin');
-  setTimeout(async () => {
-    const emp = C.employees.find(e => e.id === empId);
-    if(emp) {
-      showToast(t('sched.addEmailHint')||'Add this employee\'s email to send them schedules.','info');
-      openEmpModal(emp);
-    }
+  setTimeout(() => {
+    showToast(t('sched.addEmailHint')||'Add this employee\'s email to send them their schedule.','info');
+    editEmployee(empId);
   }, 400);
 }
 
