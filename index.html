@@ -1,27 +1,133 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>PunchClock Pro — Time & Attendance Software for Shift Workforces</title>
-<meta name="description" content="PunchClock Pro is simple, affordable time and attendance software for shift-based businesses. Clock in/out, manage multiple sites, generate payroll reports. Free plan available.">
-<meta name="keywords" content="time and attendance software, employee time tracking, shift management, punch clock, payroll reports, clock in clock out, workforce management, logiciel de pointage, suivi du temps">
+
+<!-- Primary EN meta -->
+<title id="metaTitle">PunchClock Pro — Logiciel de pointage pour équipes au Québec &amp; Canada</title>
+<meta name="description" id="metaDesc" content="PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts. Essai gratuit.">
+<meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec">
 <meta name="robots" content="index, follow">
 <meta name="author" content="PunchClock Pro">
+<meta name="geo.region" content="CA-QC">
+<meta name="geo.placename" content="Québec, Canada">
+<meta name="language" content="fr, en">
+
+<!-- Canonical + hreflang for bilingual SEO -->
 <link rel="canonical" href="https://www.punchclock.ca/">
+<link rel="alternate" hreflang="fr-CA" href="https://www.punchclock.ca/?lang=fr">
+<link rel="alternate" hreflang="en-CA" href="https://www.punchclock.ca/">
+<link rel="alternate" hreflang="x-default" href="https://www.punchclock.ca/">
+
+<!-- Open Graph — bilingual -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.punchclock.ca/">
-<meta property="og:title" content="PunchClock Pro — Time &amp; Attendance Software">
-<meta property="og:description" content="Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, payroll reports, and a free plan to get started.">
+<meta property="og:title" id="ogTitle" content="PunchClock Pro — Logiciel de pointage pour le Québec et le Canada">
+<meta property="og:description" id="ogDesc" content="Logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.">
 <meta property="og:image" content="https://www.punchclock.ca/og-image.png">
-<meta property="og:locale" content="en_CA">
-<meta property="og:locale:alternate" content="fr_CA">
+<meta property="og:locale" content="fr_CA">
+<meta property="og:locale:alternate" content="en_CA">
 <meta property="og:site_name" content="PunchClock Pro">
+
+<!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="PunchClock Pro — Time &amp; Attendance Software">
-<meta name="twitter:description" content="Simple, affordable time and attendance tracking for shift-based businesses. Free plan available.">
+<meta name="twitter:title" id="twTitle" content="PunchClock Pro — Logiciel de pointage Québec &amp; Canada">
+<meta name="twitter:description" id="twDesc" content="Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, rapports automatisés, planification des quarts. Plan gratuit disponible.">
 <meta name="twitter:image" content="https://www.punchclock.ca/og-image.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"PunchClock Pro","applicationCategory":"BusinessApplication","operatingSystem":"Web","url":"https://www.punchclock.ca","description":"Time and attendance tracking software for shift-based businesses. Supports multiple sites, payroll period reports, and employee management.","offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"CAD"},{"@type":"Offer","name":"Starter","price":"19","priceCurrency":"CAD"},{"@type":"Offer","name":"Growth","price":"39.90","priceCurrency":"CAD"},{"@type":"Offer","name":"Business","price":"79","priceCurrency":"CAD"}],"publisher":{"@type":"Organization","name":"PunchClock Pro","url":"https://www.punchclock.ca"},"inLanguage":["en","fr"],"featureList":["Employee clock in/out with PIN","Multi-site and multi-company support","Payroll period reports PDF and Excel","Automated email reports","Overtime tracking","Admin dashboard","French and English interface"]}</script>
+
+<!-- Structured Data — bilingual SoftwareApplication schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "PunchClock Pro",
+  "alternateName": "PunchClock Pro — Logiciel de pointage",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "url": "https://www.punchclock.ca",
+  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, gestion multi-sites, rapports de paie automatisés, planification des quarts de travail.",
+  "inLanguage": ["fr-CA", "en-CA"],
+  "availableLanguage": [
+    {"@type": "Language", "name": "French", "alternateName": "fr"},
+    {"@type": "Language", "name": "English", "alternateName": "en"}
+  ],
+  "areaServed": [
+    {"@type": "Country", "name": "Canada"},
+    {"@type": "State", "name": "Québec"}
+  ],
+  "offers": [
+    {"@type": "Offer", "name": "Gratuit / Free", "price": "0", "priceCurrency": "CAD"},
+    {"@type": "Offer", "name": "Débutant / Starter", "price": "19.49", "priceCurrency": "CAD"},
+    {"@type": "Offer", "name": "Croissance / Growth", "price": "39.49", "priceCurrency": "CAD"},
+    {"@type": "Offer", "name": "Entreprise / Business", "price": "79.49", "priceCurrency": "CAD"},
+    {"@type": "Offer", "name": "Planification / Scheduling Add-On", "price": "14.95", "priceCurrency": "CAD"}
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "PunchClock Pro",
+    "url": "https://www.punchclock.ca",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "QC",
+      "addressCountry": "CA"
+    }
+  },
+  "featureList": [
+    "Pointage par NIP sur tablette / PIN clock in on tablet",
+    "Gestion multi-sites et multi-compagnies / Multi-site and multi-company management",
+    "Rapports de paie PDF et Excel / Payroll reports PDF and Excel",
+    "Rapports par courriel automatisés / Automated email reports",
+    "Suivi des heures supplémentaires / Overtime tracking",
+    "Planification des quarts de travail / Shift scheduling",
+    "Interface en français et en anglais / French and English interface",
+    "Export QuickBooks",
+    "Conforme Loi 25 Québec / Quebec Law 25 compliant"
+  ]
+}
+</script>
+
+<!-- FAQ Schema for SEO rich results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Les employés ont-ils besoin d'un téléphone ou d'une application pour pointer?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Non. Les employés pointent avec un NIP à 4 chiffres sur n'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "PunchClock Pro est-il disponible en français pour les entreprises québécoises?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Oui. PunchClock Pro est entièrement disponible en français canadien et conçu pour répondre aux besoins des entreprises québécoises. L'interface, les rapports et les communications par courriel sont tous disponibles en français. Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des données personnelles."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do employees need smartphones or apps to clock in?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Scheduling Add-On?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page. Available on any paid plan."
+      }
+    }
+  ]
+}
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -2405,7 +2511,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -6799,6 +6905,8 @@ en:{
 'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. Available on any paid plan (Starter, Growth, or Business).',
 'faq.q14':'Can employees see their schedule when they clock in?',
 'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. The Scheduling Add-On must be active on the account.',
+'faq.q15':'Is PunchClock Pro available in French and suitable for Quebec businesses?',
+'faq.a15':'Yes — fully. PunchClock Pro is entirely bilingual (French and English) and built with Quebec businesses in mind. The entire interface, all reports, and all automated emails can be used in French. Pricing is in Canadian dollars (CAD). The software respects Quebec Law 25 (Loi 25) requirements for personal data protection — data is stored securely, employees are only asked for what\'s necessary, and you can request data deletion at any time. Whether you run a restaurant in Montreal, a retail store in Quebec City, or a warehouse in Laval, PunchClock Pro is built for you.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'Unlimited everything · up to 3 admins',
@@ -7198,6 +7306,8 @@ fr:{
 'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Pro. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. Disponible sur tout plan payant (Débutant, Croissance ou Entreprise).',
 'faq.q14':'Les employés peuvent-ils voir leur horaire quand ils pointent?',
 'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Le complément Planification doit être actif sur le compte.',
+'faq.q15':'PunchClock Pro est-il disponible en français et adapté aux entreprises québécoises?',
+'faq.a15':'Oui — entièrement. PunchClock Pro est complètement bilingue (français et anglais) et conçu en pensant aux entreprises québécoises. L\'interface, les rapports et les communications par courriel sont tous disponibles en français. Les prix sont en dollars canadiens (CAD). Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des renseignements personnels — les données sont stockées de façon sécurisée, on ne demande aux employés que le strict nécessaire, et vous pouvez demander la suppression de vos données en tout temps. Que vous gériez un restaurant à Montréal, un commerce au détail à Québec ou un entrepôt à Laval, PunchClock Pro est fait pour vous.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
@@ -7287,13 +7397,54 @@ fr:{
 
 function getStoredAdminLang(){try{return localStorage.getItem('pc_admin_lang');}catch(e){return null;}}
 function setStoredAdminLang(l){try{localStorage.setItem('pc_admin_lang',l);}catch(e){}}
-function getBrowserLang(){var bl=(navigator.language||'en').toLowerCase();return bl.startsWith('fr')?'fr':'en';}
+function getBrowserLang(){var bl=(navigator.language||navigator.userLanguage||'en').toLowerCase();return bl.startsWith('fr')?'fr':'en';}
+
+function getUrlLang(){
+  try{
+    var p=new URLSearchParams(window.location.search);
+    var l=p.get('lang');
+    if(l==='fr'||l==='en')return l;
+  }catch(e){}
+  return null;
+}
+
+function updateMetaTags(lang){
+  var isFr=lang==='fr';
+  document.getElementById('htmlRoot').lang=lang;
+  if(isFr){
+    document.getElementById('metaTitle').textContent='PunchClock Pro — Logiciel de pointage pour équipes au Québec et au Canada';
+    document.getElementById('metaDesc').content='PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts de travail. Essai gratuit, aucune carte de crédit requise.';
+    document.getElementById('ogTitle').content='PunchClock Pro — Logiciel de pointage Québec et Canada';
+    document.getElementById('ogDesc').content='Logiciel de pointage pour entreprises québécoises. Pointage par NIP sur tablette, gestion multi-sites, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.';
+    document.getElementById('twTitle').content='PunchClock Pro — Logiciel de pointage Québec & Canada';
+    document.getElementById('twDesc').content='Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, rapports automatisés, planification des quarts. Plan gratuit.';
+  } else {
+    document.getElementById('metaTitle').textContent='PunchClock Pro — Time & Attendance Software for Shift Workforces | Canada';
+    document.getElementById('metaDesc').content='PunchClock Pro is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, automated payroll reports, shift scheduling. Free plan available.';
+    document.getElementById('ogTitle').content='PunchClock Pro — Time & Attendance Software for Canada';
+    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, payroll reports, shift scheduling, and a free plan to get started.';
+    document.getElementById('twTitle').content='PunchClock Pro — Time & Attendance Software';
+    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, automated reports, shift scheduling. Free plan available.';
+  }
+}
 
 function initLang(){
+  // Priority: 1) URL param (?lang=fr) 2) stored preference 3) browser language
+  var urlLang=getUrlLang();
   var stored=getStoredAdminLang();
-  _appLang=stored||getBrowserLang();
+  _appLang=urlLang||stored||getBrowserLang();
   _punchLang=_appLang;
+  // If URL param was used, save it and clean URL
+  if(urlLang){
+    setStoredAdminLang(urlLang);
+    try{
+      var url=new URL(window.location.href);
+      url.searchParams.delete('lang');
+      window.history.replaceState({},'',url.toString());
+    }catch(e){}
+  }
   document.documentElement.lang=_appLang;
+  updateMetaTags(_appLang);
 }
 
 function setLang(lang,scope){
@@ -7306,6 +7457,7 @@ function setLang(lang,scope){
     _appLang=lang;_punchLang=lang;
     setStoredAdminLang(lang);
     document.documentElement.lang=lang;
+    updateMetaTags(lang);
     applyAllTranslations();
     // Instantly re-render the current page so all JS-rendered strings update
     var lp=document.getElementById('landingPage');
