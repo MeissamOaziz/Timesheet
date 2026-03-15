@@ -455,7 +455,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <span data-i18n="land.badge">✨ Now with automated payroll period reports</span>
     </div>
     <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
-    <p data-i18n="land.heroSub">PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
+    <p data-i18n="land.heroSub">PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
       <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
@@ -469,9 +469,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="land.featSub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">🔢</div>
-        <h3 data-i18n="land.feat1Title">PIN Clock In/Out</h3>
-        <p data-i18n="land.feat1Desc">Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.</p>
+        <div class="feature-icon">🖥️</div>
+        <h3 data-i18n="land.feat1Title">Tablet Terminal — No GPS Needed</h3>
+        <p data-i18n="land.feat1Desc">Employees clock in with a 4-digit PIN on a shared tablet at the job site. Unlike GPS or mobile apps, the terminal is fixed at your location — no spoofing, no "clocking in from home," no battery issues. Just reliable, tamper-proof attendance at the front door.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📍</div>
@@ -507,6 +507,44 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="feature-icon">📅</div>
         <h3 data-i18n="land.feat8Title">Flexible Payroll Periods</h3>
         <p data-i18n="land.feat8Desc">Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
+      </div>
+      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
+        <div class="feature-icon">🗓️</div>
+        <h3 data-i18n="land.feat9Title">Employee Scheduling <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:6px;white-space:nowrap">ADD-ON</span></h3>
+        <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLET TERMINAL ADVANTAGE -->
+  <div class="land-section" id="landingTabletAdvantage" style="background:linear-gradient(135deg,rgba(79,142,247,.05),rgba(124,92,191,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 24px">
+    <div style="max-width:920px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:48px">
+        <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--accent);text-transform:uppercase;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:4px 14px;margin-bottom:14px" data-i18n="land.tabletBadge">Why a Fixed Terminal Beats GPS Tracking</div>
+        <h2 style="font-size:clamp(26px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:14px" data-i18n-html="land.tabletTitle">Your front desk <em>is</em> the clock.</h2>
+        <p style="color:var(--text2);font-size:16px;max-width:600px;margin:0 auto;line-height:1.75" data-i18n="land.tabletSub">GPS apps sound convenient — until employees clock in from their car, their couch, or three blocks away. PunchClock's PIN terminal is physically at your location. No app. No phone. No doubt.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 22px">
+          <div style="font-size:30px;margin-bottom:12px">📍</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet1Title">Location-Locked Accuracy</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet1Desc">The tablet stays at your site. Employees can only punch in when they're physically there — not from a parking lot, not from bed. GPS can be spoofed. A fixed terminal can't.</p>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 22px">
+          <div style="font-size:30px;margin-bottom:12px">📵</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet2Title">No Smartphones Required</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet2Desc">Not every employee has a smartphone, data plan, or the latest OS. One shared tablet covers your entire team — no installs, no updates, no compatibility issues.</p>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 22px">
+          <div style="font-size:30px;margin-bottom:12px">🔋</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet3Title">No App Headaches</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet3Desc">No app to install, update, or troubleshoot. No "my GPS was off" excuses. Employees enter their PIN and go. Admins get clean, reliable punch data every time.</p>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 22px">
+          <div style="font-size:30px;margin-bottom:12px">🛡️</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet4Title">Buddy Punching Protection</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet4Desc">Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -585,6 +623,28 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">All plans include a 14-day free trial. No credit card required to start.</p>
+
+    <!-- SCHEDULING ADD-ON -->
+    <div style="margin-top:40px;border:1.5px solid rgba(124,92,191,.4);border-radius:20px;padding:28px 32px;background:linear-gradient(135deg,rgba(124,92,191,.07),rgba(79,142,247,.04));max-width:800px;margin-left:auto;margin-right:auto">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent2);text-transform:uppercase;margin-bottom:16px" data-i18n="land.addonLabel">Available Add-Ons (Paid Plans Only)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px">
+        <div style="flex:1;min-width:220px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+            <span style="font-size:28px">🗓️</span>
+            <div>
+              <strong style="font-size:16px" data-i18n="land.addonSchedTitle">Employee Scheduling</strong>
+              <div style="font-size:12px;color:var(--accent2);font-weight:600;margin-top:1px" data-i18n="land.addonSchedSub">Shift builder · weekly view · per-site assignment</div>
+            </div>
+          </div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.addonSchedDesc">Plan your week in advance. Assign shifts to employees at each site, view the schedule in a clean weekly grid, and let your team know exactly when they're working — all inside PunchClock.</p>
+        </div>
+        <div style="text-align:center;flex-shrink:0;min-width:150px">
+          <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px">$14.95<span style="font-size:13px;font-weight:400;color:var(--text2)">/mo CAD</span></div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="land.addonSchedNote">Add to any paid plan</div>
+          <button class="btn-secondary" style="padding:9px 22px;font-size:13px;border-radius:10px;white-space:nowrap" onclick="isLoggedIn()?startSchedulingAddonCheckout():(hideLanding(),navigate('register'))" data-i18n="land.addonSchedBtn">Add Scheduling</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- HOW IT WORKS -->
@@ -1355,6 +1415,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <!-- Usage bars -->
       <div id="profileUsageStats" style="display:flex;flex-direction:column;gap:8px"></div>
+      <!-- Scheduling Add-On status -->
+      <div id="profileSchedulingAddon" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px">🗓️ <span data-i18n="addon.scheduling">Scheduling Add-On</span></div>
+            <div id="profileSchedulingStatus" style="font-size:11px;color:var(--text3)"></div>
+          </div>
+          <button id="profileSchedulingBtn" class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0"></button>
+        </div>
+      </div>
     </div>
 
     <!-- Edit name -->
@@ -2058,7 +2128,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -2152,7 +2222,7 @@ async function refreshCache(opts={}){
     C.primaryAdmin=null;
   } else if(sess&&sess.parent_admin_id){
     // Co-admin: fetch primary admin's full record to inherit their plan/extra_seats
-    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id`);
+    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id,scheduling_addon`);
     C.primaryAdmin=primRows?.[0]||null;
     C.coAdmins=[];
   } else {
@@ -2618,7 +2688,7 @@ async function doLogin(){
       return;
     }
     // Fetch full admin record to get parent_admin_id, extra_seats, stripe info
-    const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id`);
+    const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full = fullRows?.[0] || admin;
     const rememberMe = document.getElementById('rememberMe')?.checked || false;
     Sess.set({
@@ -2652,7 +2722,7 @@ async function doSetInvitePassword(){
     await DB.rpc('set_admin_password',{p_id:pendingInviteAdmin.id,p_pass:pw});
     await DB.update('admins',`id=eq.${pendingInviteAdmin.id}`,{status:'active',verified:true});
     // Log in as the co-admin
-    const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id`);
+    const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full=fullRows?.[0]||pendingInviteAdmin;
     Sess.set({
       id:full.id,name:full.name,email:full.email,
@@ -2980,6 +3050,42 @@ async function startExtraSeatCheckout(){
   }
 }
 
+// Scheduling add-on ($14.95/mo) — replace PRICE_ID below with your real Stripe price ID
+const SCHEDULING_ADDON_PRICE_ID = 'price_SCHEDULING_PLACEHOLDER';
+async function startSchedulingAddonCheckout(){
+  const s=Sess.get();
+  if(!s){navigate('login');return;}
+  if(!s.plan||s.plan==='free'){
+    showToast(t('addon.paidOnly')||'Scheduling is available on paid plans only. Please upgrade first.');
+    return;
+  }
+  if(s.scheduling_addon){
+    showToast(t('addon.alreadyActive')||'Scheduling add-on is already active on your account.');
+    return;
+  }
+  showToast(t('msg.redirectingCheckout')||'Redirecting to checkout...');
+  try{
+    const res=await fetch(`${EDGE_URL}/checkout`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
+      body:JSON.stringify({
+        plan:'scheduling_addon',
+        priceId:SCHEDULING_ADDON_PRICE_ID,
+        adminId:s.id,
+        adminEmail:s.email,
+        successUrl:`https://www.punchclock.ca?checkout=success&plan=scheduling_addon`,
+        cancelUrl:`https://www.punchclock.ca?checkout=cancelled`,
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    if(!data.url)throw new Error('No checkout URL returned. Please try again.');
+    window.location.href=data.url;
+  }catch(e){
+    showToast('Checkout error: '+e.message);
+  }
+}
+
 // ═══════════════════════════════════════════════════
 // ONBOARDING — guided first-time setup flow
 // ═══════════════════════════════════════════════════
@@ -3120,8 +3226,8 @@ async function handleStripeReturn(){
   // Navigate to admin first so overlay appears over the right page
   navigate('admin');
 
-  const isExtraSeat = plan==='extra_seat';
-  const planNames={starter:t('plan.starter')||'Starter',growth:t('plan.growth')||'Growth',business:t('plan.business')||'Business',extra_seat:'Extra Seat'};
+  const isExtraSeat = plan==='extra_seat' || plan==='scheduling_addon';
+  const planNames={starter:t('plan.starter')||'Starter',growth:t('plan.growth')||'Growth',business:t('plan.business')||'Business',extra_seat:'Extra Seat',scheduling_addon:t('addon.scheduling')||'Scheduling Add-On'};
   const planIncludes={
     starter:'1 company · 2 sites · up to 10 employees',
     growth: '2 companies · 5 sites · up to 25 employees',
@@ -3158,7 +3264,7 @@ function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
   const poll=async()=>{
     attempts++;
     try{
-      const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id,status,extra_seats`);
+      const rows=await DB.all('admins',`id=eq.${s.id}&select=plan,stripe_customer_id,stripe_subscription_id,status,extra_seats,scheduling_addon`);
       if(rows?.[0]){
         const updated={...s,...rows[0]};
         Sess.set(updated);
@@ -3166,10 +3272,13 @@ function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
 
         const newExtraSeats=Number(rows[0].extra_seats??0);
         const newPlan=rows[0].plan||'free';
+        const newScheduling=!!(rows[0].scheduling_addon);
 
-        const activated = isExtraSeat
-          ? newExtraSeats > prevExtraSeats   // seat count went up
-          : newPlan === plan && newPlan !== prevPlan; // plan changed to the target
+        const activated = plan==='extra_seat'
+          ? newExtraSeats > prevExtraSeats
+          : plan==='scheduling_addon'
+            ? newScheduling && !s.scheduling_addon
+            : newPlan === plan && newPlan !== prevPlan;
 
         if(activated){
           showActivationSuccess(overlay, isExtraSeat, plan, planNames, planIncludes, updated, false);
@@ -3200,6 +3309,15 @@ function showActivationSuccess(overlay, isExtraSeat, plan, planNames, planInclud
   }
 
   if(isExtraSeat){
+    // Scheduling add-on has its own success message
+    if(plan==='scheduling_addon'){
+      spinner.textContent='🗓️';
+      title.textContent=t('activation.schedulingAdded')||'Scheduling Add-On Activated!';
+      desc.textContent=t('activation.schedulingDesc')||'Your scheduling add-on is now active. You can now build weekly shift schedules for your team.';
+      dismiss.style.display='';
+      dismiss.textContent=t('activation.goToAdmin')||'Go to Admin Panel';
+      return;
+    }
     spinner.textContent='🎉';
     title.textContent=t('activation.seatAdded')||'Extra seat activated!';
     desc.textContent=t('activation.seatDesc')||'Your extra employee seat is now active. Fill in the details below to add your new employee.';
@@ -3300,6 +3418,22 @@ function openProfile(){
     const isTopPlan=plan==='business'||plan==='enterprise'||isSuperAdmin();
     if(upgradeBtn)upgradeBtn.style.display=isTopPlan?'none':'';
     if(manageBtn)manageBtn.style.display=isPaid?'':'none';
+  }
+
+  // Scheduling add-on section — visible for primary paid admins only
+  const schedAddonEl=document.getElementById('profileSchedulingAddon');
+  const schedStatusEl=document.getElementById('profileSchedulingStatus');
+  const schedBtn=document.getElementById('profileSchedulingBtn');
+  if(schedAddonEl){
+    const showSched=!isCoAdmin&&plan!=='free'&&plan!=='unlimited';
+    schedAddonEl.style.display=showSched?'':'none';
+    if(showSched){
+      const hasScheduling=!!(s.scheduling_addon);
+      schedStatusEl.textContent=hasScheduling?(t('addon.active')||'✓ Active — $14.95/mo'):(t('addon.notActive')||'Not active — $14.95/mo');
+      schedStatusEl.style.color=hasScheduling?'var(--green)':'var(--text3)';
+      schedBtn.textContent=hasScheduling?(t('addon.manage')||'⚙ Manage'):(t('addon.addFor')||'➕ Add — $14.95/mo');
+      schedBtn.onclick=hasScheduling?openBillingPortal:startSchedulingAddonCheckout;
+    }
   }
 
   // Usage stats — use effective plan
@@ -5535,7 +5669,7 @@ en:{
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
-'land.heroSub':'PIN-based clock in/out, multi-site support, automated period reports, overtime tracking, and QuickBooks export — built for retail, hospitality, restaurants, manufacturing, and tech companies.',
+'land.heroSub':'PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free tier includes 1 company · 1 site · 5 employees · 1 admin',
 'land.featTitle':'Everything you need to manage shift workers',
@@ -5620,7 +5754,7 @@ en:{
 'tos.h1':'1. Acceptance of Terms','tos.p1':'By accessing or using PunchClock Pro ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.',
 'tos.h2':'2. Description of Service','tos.p2':'PunchClock Pro is a time and attendance tracking software-as-a-service ("SaaS") platform that allows businesses to track employee work hours, manage multiple locations, generate reports, and integrate with payroll software.',
 'tos.h3':'3. Account Registration','tos.p3':'You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.',
-'tos.h4':'4. Subscription Plans and Billing','tos.p4':'PunchClock Pro offers several subscription tiers: Free, Starter ($19/month), Growth ($39.90/month), and Business ($79/month). Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. No refunds are provided for partial months.',
+'tos.h4':'4. Subscription Plans and Billing','tos.p4':'PunchClock Pro offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). An optional Scheduling Add-On is available for $14.95/month on any paid plan. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. No refunds are provided for partial months.',
 'tos.p4b':'Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan\'s included limit.',
 'tos.h5':'5. Employee Data','tos.p5':'You are responsible for obtaining any necessary consent from your employees to collect and store their time and attendance data. You represent that you have the legal authority to use the Service on behalf of your organization and to submit employee data through the platform.',
 'tos.h6':'6. Acceptable Use','tos.p6':'You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) interfere with or disrupt the integrity of the Service; (d) upload or transmit malicious code; (e) resell or sublicense the Service without our written consent.',
@@ -5753,6 +5887,10 @@ en:{
 'faq.a10':'Yes. In the Employees tab of the admin panel, you can check any number of employees and then: send their pay period reports by email, activate or deactivate their accounts, or permanently delete them — all in one click. The bulk action toolbar appears automatically as soon as you select at least one employee.',
 'faq.q11':'How secure is my data?',
 'faq.a11':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
+'faq.q12':'Why use a tablet terminal instead of a GPS mobile app?',
+'faq.a12':'A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There\'s also no app to install, no personal device required, and no battery or connectivity excuses.',
+'faq.q13':'What is the Scheduling Add-On?',
+'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees, directly inside PunchClock Pro. Assign shifts per site, view your week at a glance, and keep your team informed about upcoming schedules. It\'s available as an optional add-on on any paid plan (Starter, Growth, or Business) and can be purchased from your profile or the pricing page.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'Unlimited everything · up to 3 admins',
@@ -5770,6 +5908,42 @@ en:{
 'msg.redirectingCheckout':'Redirecting to checkout...',
 'msg.upgradePlanOption':'Upgrade Your Plan',
 'msg.upgradePlanDesc':'Get more employees, sites, and companies.',
+// Tablet terminal advantage
+'land.tabletBadge':'Why a Fixed Terminal Beats GPS Tracking',
+'land.tabletTitle':'Your front desk <em>is</em> the clock.',
+'land.tabletSub':'GPS apps sound convenient — until employees clock in from their car, their couch, or three blocks away. PunchClock\'s PIN terminal is physically at your location. No app. No phone. No doubt.',
+'land.tablet1Title':'Location-Locked Accuracy',
+'land.tablet1Desc':'The tablet stays at your site. Employees can only punch in when they\'re physically there — not from a parking lot, not from bed. GPS can be spoofed. A fixed terminal can\'t.',
+'land.tablet2Title':'No Smartphones Required',
+'land.tablet2Desc':'Not every employee has a smartphone, data plan, or the latest OS. One shared tablet covers your entire team — no installs, no updates, no compatibility issues.',
+'land.tablet3Title':'No App Headaches',
+'land.tablet3Desc':'No app to install, update, or troubleshoot. No "my GPS was off" excuses. Employees enter their PIN and go. Admins get clean, reliable punch data every time.',
+'land.tablet4Title':'Buddy Punching Protection',
+'land.tablet4Desc':'Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.',
+// Updated feat1
+'land.feat1Title':'Tablet Terminal — No GPS Needed',
+'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
+// Scheduling add-on feature card
+'land.feat9Title':'Employee Scheduling',
+'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.',
+// Scheduling add-on pricing
+'land.addonLabel':'Available Add-Ons (Paid Plans Only)',
+'land.addonSchedTitle':'Employee Scheduling',
+'land.addonSchedSub':'Shift builder · weekly view · per-site assignment',
+'land.addonSchedDesc':'Plan your week in advance. Assign shifts to employees at each site, view the schedule in a clean weekly grid, and let your team know exactly when they\'re working — all inside PunchClock.',
+'land.addonSchedNote':'Add to any paid plan',
+'land.addonSchedBtn':'Add Scheduling',
+// Scheduling add-on profile / in-app
+'addon.scheduling':'Scheduling Add-On',
+'addon.active':'✓ Active — $14.95/mo',
+'addon.notActive':'Not active — $14.95/mo',
+'addon.addFor':'➕ Add — $14.95/mo',
+'addon.manage':'⚙ Manage',
+'addon.paidOnly':'Scheduling is available on paid plans only. Please upgrade your plan first.',
+'addon.alreadyActive':'Scheduling add-on is already active on your account.',
+// Activation overlay
+'activation.schedulingAdded':'Scheduling Add-On Activated! 🗓️',
+'activation.schedulingDesc':'Your scheduling add-on is now active. You can now build weekly shift schedules for your entire team directly inside PunchClock.',
 
 },
 fr:{
@@ -5857,7 +6031,7 @@ fr:{
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
-'land.heroSub':'Pointage par NIP, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
+'land.heroSub':'Pointage par NIP sur terminal tablette fixe, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
 'land.freeNote':'Forfait gratuit : 1 compagnie · 1 site · 5 employés · 1 admin',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
@@ -5942,7 +6116,7 @@ fr:{
 'tos.h1':'1. Acceptation des conditions','tos.p1':'En accédant au service PunchClock Pro (« le Service »), vous acceptez d\'être lié par ces Conditions d\'utilisation. Si vous n\'acceptez pas ces conditions, veuillez ne pas utiliser le Service.',
 'tos.h2':'2. Description du service','tos.p2':'PunchClock Pro est une plateforme logicielle de suivi du temps et des présences (SaaS) permettant aux entreprises de suivre les heures de travail des employés, gérer plusieurs sites, générer des rapports et s\'intégrer à un logiciel de paie.',
 'tos.h3':'3. Inscription au compte','tos.p3':'Vous devez fournir des informations exactes, actuelles et complètes lors de l\'inscription. Vous êtes responsable de la confidentialité de vos identifiants et de toutes les activités effectuées sous votre compte.',
-'tos.h4':'4. Abonnements et facturation','tos.p4':'PunchClock Pro offre plusieurs niveaux : Gratuit, Débutant (19 $/mois), Croissance (39 $/mois) et Entreprise (79 $/mois). Les abonnements payants sont facturés mensuellement à l\'avance. Vous pouvez annuler à tout moment; l\'annulation prend effet à la fin de la période en cours. Aucun remboursement pour mois partiel.',
+'tos.h4':'4. Abonnements et facturation','tos.p4':'PunchClock Pro offre plusieurs niveaux : Gratuit, Débutant (19,49 $/mois), Croissance (39,49 $/mois) et Entreprise (79,49 $/mois). Un complément optionnel de Planification est disponible à 14,95 $/mois sur tout plan payant. Les abonnements payants sont facturés mensuellement à l\'avance. Vous pouvez annuler à tout moment; l\'annulation prend effet à la fin de la période en cours. Aucun remboursement pour mois partiel.',
 'tos.p4b':'Des sièges supplémentaires pour les forfaits Débutant et Croissance sont facturés à 4,90 $/mois par employé au-delà de la limite incluse.',
 'tos.h5':'5. Données des employés','tos.p5':'Vous êtes responsable d\'obtenir le consentement nécessaire de vos employés pour collecter et stocker leurs données de présence. Vous déclarez avoir l\'autorité légale pour utiliser le Service au nom de votre organisation.',
 'tos.h6':'6. Utilisation acceptable','tos.p6':'Vous acceptez de ne pas : (a) utiliser le Service à des fins illégales; (b) tenter d\'accéder sans autorisation à une partie du Service; (c) perturber l\'intégrité du Service; (d) transmettre du code malveillant; (e) revendre ou sous-licencier le Service sans notre consentement écrit.',
@@ -6075,6 +6249,10 @@ fr:{
 'faq.a10':'Oui. Dans l\'onglet Employés, cochez autant d\'employés que souhaité, puis envoyez leurs rapports, activez, désactivez ou supprimez-les en un seul clic. La barre d\'actions groupées apparaît dès qu\'un employé est sélectionné.',
 'faq.q11':'Mes données sont-elles sécurisées?',
 'faq.a11':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
+'faq.q12':'Pourquoi utiliser un terminal tablette plutôt qu\'une appli GPS mobile?',
+'faq.a12':'Un terminal tablette fixe à votre emplacement est plus précis et plus difficile à contourner qu\'une appli GPS. Avec les applis GPS, les employés peuvent pointer depuis leur domicile, leur voiture ou n\'importe où — et le GPS peut être falsifié. Un terminal ancré à votre entrée oblige les employés à être physiquement sur place pour pointer. De plus, aucune appli à installer, aucun appareil personnel requis, et pas d\'excuse de batterie ou de connexion.',
+'faq.q13':'Qu\'est-ce que le complément Planification?',
+'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés, directement dans PunchClock Pro. Assignez des quarts par site, visualisez votre semaine d\'un coup d\'œil et informez votre équipe de ses prochains quarts. Disponible en option sur tout plan payant (Débutant, Croissance ou Entreprise) — à activer depuis votre profil ou la page des tarifs.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
@@ -6096,6 +6274,42 @@ fr:{
 'msg.redirectingCheckout':'Redirection vers le paiement...',
 'msg.upgradePlanOption':'Mettre à niveau votre forfait',
 'msg.upgradePlanDesc':'Obtenez plus d\'employés, de sites et de compagnies.',
+// Terminal tablette vs GPS
+'land.tabletBadge':'Pourquoi un terminal fixe surpasse le suivi GPS',
+'land.tabletTitle':'Votre entrée <em>est</em> la pointeuse.',
+'land.tabletSub':'Les applis GPS semblent pratiques — jusqu\'à ce qu\'un employé pointe depuis sa voiture, son canapé ou à trois rues de là. Le terminal NIP de PunchClock est physiquement à votre emplacement. Aucune appli. Aucun téléphone. Aucun doute.',
+'land.tablet1Title':'Présence garantie sur place',
+'land.tablet1Desc':'La tablette reste sur votre site. Les employés ne peuvent pointer qu\'en étant physiquement présents — pas du stationnement, pas de chez eux. Le GPS peut être falsifié. Un terminal fixe, non.',
+'land.tablet2Title':'Aucun téléphone requis',
+'land.tablet2Desc':'Tous les employés n\'ont pas un téléphone intelligent, un forfait données ou le dernier système d\'exploitation. Une tablette partagée suffit pour toute l\'équipe — sans installation ni mise à jour.',
+'land.tablet3Title':'Pas de tracas d\'application',
+'land.tablet3Desc':'Aucune appli à installer, mettre à jour ou dépanner. Plus d\'excuse "mon GPS était désactivé". L\'employé entre son NIP et c\'est fait. L\'admin obtient des données propres et fiables à chaque fois.',
+'land.tablet4Title':'Protection contre la fraude de pointage',
+'land.tablet4Desc':'Chaque employé a un NIP unique, et pointer pour quelqu\'un d\'autre exige une présence physique au terminal — bien plus difficile à contourner qu\'une appli mobile partagée par texto.',
+// Feat1 mis à jour
+'land.feat1Title':'Terminal tablette — Sans GPS',
+'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
+// Complément planification — carte de fonctionnalité
+'land.feat9Title':'Planification des employés',
+'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts aux employés par site, et permettez à votre équipe de voir ses prochains quarts — directement dans PunchClock. Disponible en complément à 14,95 $/mois sur tout plan payant.',
+// Complément planification — tarification
+'land.addonLabel':'Compléments disponibles (plans payants uniquement)',
+'land.addonSchedTitle':'Planification des employés',
+'land.addonSchedSub':'Créateur de quarts · vue hebdomadaire · assignation par site',
+'land.addonSchedDesc':'Planifiez votre semaine à l\'avance. Assignez des quarts aux employés par site, consultez l\'horaire dans une grille hebdomadaire claire et informez votre équipe de leurs quarts de travail — directement dans PunchClock.',
+'land.addonSchedNote':'À ajouter à tout plan payant',
+'land.addonSchedBtn':'Ajouter la planification',
+// Complément planification — profil / dans l\'appli
+'addon.scheduling':'Complément Planification',
+'addon.active':'✓ Actif — 14,95 $/mois',
+'addon.notActive':'Non actif — 14,95 $/mois',
+'addon.addFor':'➕ Ajouter — 14,95 $/mois',
+'addon.manage':'⚙ Gérer',
+'addon.paidOnly':'La planification est disponible sur les plans payants uniquement. Veuillez d\'abord mettre à niveau votre forfait.',
+'addon.alreadyActive':'Le complément Planification est déjà actif sur votre compte.',
+// Overlay d\'activation
+'activation.schedulingAdded':'Complément Planification activé! 🗓️',
+'activation.schedulingDesc':'Votre complément de planification est maintenant actif. Vous pouvez désormais créer des horaires de quarts hebdomadaires pour toute votre équipe directement dans PunchClock.',
 
 }
 };
