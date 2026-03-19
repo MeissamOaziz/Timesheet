@@ -477,7 +477,14 @@ function clearSession() { try { localStorage.removeItem('pc_emp_sess'); } catch(
 // ══════════════════════════════════════════════════════
 function showScreen(name) {
   ['screenLogin','screenSetPassword','screenApp'].forEach(id => {
-    document.getElementById(id).style.display = id === name ? '' : 'none';
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(id === name) {
+      // screenApp uses flex layout
+      el.style.display = id === 'screenApp' ? 'flex' : '';
+    } else {
+      el.style.display = 'none';
+    }
   });
 }
 function showMsg(id, text, type = 'error') {
@@ -909,7 +916,7 @@ async function removeSpecificDate(id) {
 // ══════════════════════════════════════════════════════
 async function init() {
   // Language
-  try { _empLang = localStorage.getItem('pc_emp_lang') || (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en'; } catch(e) {}
+  try { _empLang = localStorage.getItem('pc_emp_lang') || ((navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en'); } catch(e) {}
   applyTranslations();
 
   // Check invite token in URL first
