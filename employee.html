@@ -288,10 +288,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <!-- Specific dates -->
       <div class="card">
         <div class="card-title">📅 <span id="specificLabel">Specific Dates</span></div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="specificDesc">Add specific dates when you are not available (vacation, appointments, etc.)</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="specificDesc">Add specific dates or date ranges when you are not available (vacation, appointments, etc.)</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px" id="fromDateLabel">From</label>
+            <input type="date" id="specificDateInput" class="form-input">
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px" id="toDateLabel">To (leave blank for single day)</label>
+            <input type="date" id="specificDateTo" class="form-input">
+          </div>
+        </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-          <input type="date" id="specificDateInput" class="form-input" style="width:auto;flex:1;min-width:160px">
-          <input type="text" id="specificNoteInput" class="form-input" style="flex:2;min-width:160px" id="specificNoteInput" placeholder="Reason (optional)">
+          <input type="text" id="specificNoteInput" class="form-input" style="flex:2;min-width:160px" placeholder="Reason (optional)">
           <button class="btn-secondary" onclick="addSpecificDate()" id="addDateBtn" style="white-space:nowrap">+ Add Date</button>
         </div>
         <div id="specificDateList"></div>
@@ -372,6 +381,7 @@ const T = {
     specificLabel: '📅 Specific Dates', specificDesc: 'Add specific dates when you are not available.',
     addDateBtn: '+ Add Date', notePlaceholder: 'Reason (optional)', unavailable: 'Unavailable',
     available: 'Available', savedOk: '✓ Saved', errorSaving: 'Error saving.',
+    fromDate: 'From', toDate: 'To (leave blank for single day)',
     days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
     today: 'Today',
   },
@@ -399,6 +409,7 @@ const T = {
     specificLabel: '📅 Dates spécifiques', specificDesc: 'Ajoutez des dates précises où vous n\'êtes pas disponible.',
     addDateBtn: '+ Ajouter une date', notePlaceholder: 'Raison (optionnel)', unavailable: 'Indisponible',
     available: 'Disponible', savedOk: '✓ Sauvegardé', errorSaving: 'Erreur lors de la sauvegarde.',
+    fromDate: 'Du', toDate: 'Au (laisser vide pour un seul jour)',
     days: ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
     today: "Aujourd'hui",
   }
@@ -439,6 +450,11 @@ function applyTranslations() {
     const el = document.getElementById(id);
     if (el) el.textContent = t(key);
   }
+  // Date range labels
+  const fromLbl = document.getElementById('fromDateLabel');
+  if(fromLbl) fromLbl.textContent = t('fromDate');
+  const toLbl = document.getElementById('toDateLabel');
+  if(toLbl) toLbl.textContent = t('toDate');
   // Table headers
   const ths = {thDate:'thDate', thIn:'thIn', thOut:'thOut', thHours:'thHours'};
   for (const [key, id] of Object.entries(ths)) {
@@ -833,31 +849,41 @@ function renderSpecificDates() {
     list.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:16px">${_empLang === 'fr' ? 'Aucune date spécifique ajoutée.' : 'No specific dates added yet.'}</div>`;
     return;
   }
-  list.innerHTML = specific.map(a => `
+  list.innerHTML = specific.map(a => {
+    const d1 = fmtDate(a.specific_date);
+    const label = a.end_date ? `${d1} → ${fmtDate(a.end_date)}` : d1;
+    return `
     <div class="avail-specific-row">
       <div>
-        <div class="avail-specific-date">${fmtDate(a.specific_date)}</div>
+        <div class="avail-specific-date">${label}</div>
         ${a.note ? `<div class="avail-specific-note">${a.note}</div>` : ''}
       </div>
       <button class="btn-remove-avail" onclick="removeSpecificDate('${a.id}')">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 async function addSpecificDate() {
   const dateVal = document.getElementById('specificDateInput').value;
+  const dateTo  = document.getElementById('specificDateTo').value;
   const note = document.getElementById('specificNoteInput').value.trim();
   if (!dateVal) return;
+  if (dateTo && dateTo < dateVal) {
+    showToast(_empLang==='fr' ? 'La date de fin doit être après la date de début.' : 'End date must be after start date.', 'error');
+    return;
+  }
   try {
     await db('POST', 'availability', '', {
       employee_id: _session.employeeId,
       avail_type: 'specific',
       specific_date: dateVal,
+      end_date: dateTo || null,
       day_of_week: null,
       start_time: null, end_time: null,
       note,
     });
     document.getElementById('specificDateInput').value = '';
+    document.getElementById('specificDateTo').value = '';
     document.getElementById('specificNoteInput').value = '';
     await loadAvailability();
     renderSpecificDates();
