@@ -1,17 +1,4 @@
-# ⏱ PunchClock Pro
-
 A fully functional employee time clock web app — no server, no backend, no database required. Runs entirely in the browser using `localStorage`. Perfect for a tablet mounted at an office entrance connected to WiFi.
-
----
-
-## 🚀 Deploy to GitHub Pages (5 minutes)
-
-1. **Create a new GitHub repository** (e.g. `punchclock`)
-2. Upload `index.html` to the root of the repo
-3. Go to **Settings → Pages** → set source to `Deploy from a branch` → select `main` → `/ (root)` → Save
-4. Your app will be live at: `https://YOUR-USERNAME.github.io/punchclock/`
-
----
 
 ## 📱 Features
 
@@ -79,27 +66,3 @@ Since it's a single HTML file, everything is editable:
 
 ---
 
-## 📦 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Vanilla HTML + CSS + JavaScript |
-| Storage | Browser localStorage |
-| Excel export | [SheetJS (xlsx)](https://sheetjs.com/) |
-| PDF export | [jsPDF](https://github.com/parallax/jsPDF) + autotable |
-| Fonts | Google Fonts (DM Sans + DM Mono) |
-| Hosting | GitHub Pages (free) |
-
----
-
-## 🗺 Upgrade Path
-
-When you're ready to scale up:
-1. Replace `localStorage` with a real database (PostgreSQL, Supabase, Firebase)
-2. Add a backend (Node/Express or Next.js) for real email confirmation
-3. Add PIN-based employee authentication for extra security
-4. Add shift scheduling and overtime alerts
-
----
-
-Made with ❤️ — single file, zero dependencies, works anywhere.
