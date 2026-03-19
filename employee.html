@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en" id="empHtmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PunchClock Pro — Employee Portal</title>
+<meta name="description" content="PunchClock Pro employee portal — view your schedules, hours reports, and manage your availability.">
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,.4);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;}
+.loading-overlay.hidden{display:none;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* LAYOUT */
+.app{display:none;min-height:100vh;flex-direction:column;}
+.app.visible{display:flex;}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+.nav-logo{font-weight:700;font-size:17px;color:var(--accent);display:flex;align-items:center;gap:7px;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-emp-name{font-size:13px;font-weight:600;color:var(--text);}
+.nav-emp-sub{font-size:11px;color:var(--text3);}
+.emp-avatar{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* TABS */
+.tabs-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:2px;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:14px 16px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* MAIN */
+.main{flex:1;padding:28px 22px;max-width:900px;margin:0 auto;width:100%;}
+.page-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+.page-sub{color:var(--text2);font-size:14px;margin-bottom:24px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;}
+.card-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.stat-val{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+
+/* PUNCH TABLE */
+.punch-table{width:100%;border-collapse:collapse;}
+.punch-table th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.punch-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.punch-table tr:last-child td{border-bottom:none;}
+.punch-type-in{color:var(--green);font-weight:600;font-size:11px;background:rgba(34,197,94,.12);padding:2px 8px;border-radius:6px;}
+.punch-type-out{color:var(--red);font-weight:600;font-size:11px;background:rgba(239,68,68,.12);padding:2px 8px;border-radius:6px;}
+.period-selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.period-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.period-btn:hover{border-color:var(--accent);color:var(--accent);}
+.period-btn.active{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
+
+/* SCHEDULE GRID */
+.sched-table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;}
+.sched-table th{background:var(--surface2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.sched-table th.today-col{background:rgba(79,142,247,.12);color:var(--accent);}
+.sched-table td{padding:8px;text-align:center;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:12px;min-height:50px;vertical-align:middle;}
+.sched-table tr:last-child td{border-bottom:none;}
+.shift-pill{background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);border-radius:7px;padding:5px 8px;font-size:11px;font-weight:600;color:var(--accent);display:inline-block;}
+.no-shift{color:var(--text3);font-size:12px;}
+.today-col{background:rgba(79,142,247,.04);}
+
+/* AVAILABILITY */
+.avail-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;}
+.avail-day{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;user-select:none;}
+.avail-day:hover{border-color:var(--accent);}
+.avail-day.unavailable{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);}
+.avail-day.unavailable .day-name{color:var(--red);}
+.avail-day .day-name{font-size:12px;font-weight:700;margin-bottom:4px;}
+.avail-day .day-status{font-size:10px;color:var(--text3);}
+.avail-day.unavailable .day-status{color:var(--red);}
+.avail-specific{margin-top:16px;}
+.avail-specific-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.avail-specific-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:9px;border:1px solid var(--border);}
+.avail-specific-date{font-size:13px;font-weight:600;}
+.avail-specific-note{font-size:11px;color:var(--text3);}
+.btn-remove-avail{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px;transition:background .15s;}
+.btn-remove-avail:hover{background:rgba(239,68,68,.1);}
+
+/* FORMS */
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+.form-input{width:100%;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
+.form-input:focus{border-color:var(--accent);}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;width:100%;}
+.btn-primary:hover{opacity:.88;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.msg{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;}
+.msg.error{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);}
+.msg.success{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25);}
+.msg.info{background:rgba(79,142,247,.1);color:var(--accent);border:1px solid rgba(79,142,247,.2);}
+
+/* AUTH SCREENS */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 32px;width:100%;max-width:420px;box-shadow:var(--shadow);}
+.auth-logo{font-size:22px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:8px;}
+.auth-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px;}
+.auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px;line-height:1.5;}
+.pw-wrap{position:relative;}
+.pw-wrap .form-input{padding-right:44px;}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;}
+.pw-toggle svg{width:18px;height:18px;}
+
+/* LANG SWITCHER */
+.lang-sw{display:flex;gap:3px;background:var(--surface2);border-radius:20px;padding:3px;border:1px solid var(--border);}
+.lang-sw button{padding:3px 11px;border:none;border-radius:20px;background:none;color:var(--text3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
+.lang-sw button.active{background:var(--accent);color:#fff;}
+
+/* TOAST */
+#empToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;}
+#empToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#empToast.toast-success{border-color:var(--green);color:var(--green);}
+#empToast.toast-error{border-color:var(--red);color:var(--red);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-state .icon{font-size:44px;margin-bottom:14px;}
+.empty-state p{font-size:14px;color:var(--text2);}
+
+/* TABLE WRAP */
+.table-wrap{overflow-x:auto;}
+
+@media(max-width:600px){
+  .avail-grid{grid-template-columns:repeat(4,1fr);}
+  .auth-card{padding:24px 20px;}
+  .main{padding:16px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div id="empToast"></div>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingMsg">Loading...</p>
+</div>
+
+<!-- AUTH: Login -->
+<div id="screenLogin" style="display:none">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">⏱ PunchClock Pro</div>
+      <div style="display:flex;justify-content:center;margin-bottom:20px">
+        <div class="lang-sw" id="authLangSw">
+          <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
+          <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
+        </div>
+      </div>
+      <h2 class="auth-title" id="loginTitle">Employee Portal</h2>
+      <p class="auth-sub" id="loginSub">Sign in to view your schedule and hours.</p>
+      <div id="loginMsg"></div>
+      <div class="form-group">
+        <label id="loginEmailLabel">Email Address</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doEmpLogin()">
+      </div>
+      <div class="form-group">
+        <label id="loginPassLabel">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="loginPass" class="form-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doEmpLogin()">
+          <button type="button" class="pw-toggle" onclick="togglePw('loginPass',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="doEmpLogin()" id="loginBtn">Sign In</button>
+      <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3)" id="loginFooter">
+        Don't have access? Ask your admin to send you an invitation.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH: Set Password (first login from invite) -->
+<div id="screenSetPassword" style="display:none">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">⏱ PunchClock Pro</div>
+      <h2 class="auth-title" id="setPassTitle">Welcome! Set your password</h2>
+      <p class="auth-sub" id="setPassSub">You've been invited to the employee portal. Choose a password to activate your account.</p>
+      <div id="setPassMsg"></div>
+      <div class="form-group">
+        <label id="setPassLabel">New Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="setPassNew" class="form-input" placeholder="Min 6 characters">
+          <button type="button" class="pw-toggle" onclick="togglePw('setPassNew',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label id="setPassConfirmLabel">Confirm Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="setPassConfirm" class="form-input" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetEmpPassword()">
+          <button type="button" class="pw-toggle" onclick="togglePw('setPassConfirm',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="doSetEmpPassword()" id="setPassBtn">Activate Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="screenApp">
+  <nav class="nav">
+    <div class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      PunchClock Pro
+    </div>
+    <div class="nav-right">
+      <div class="lang-sw" id="appLangSw">
+        <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
+        <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
+      </div>
+      <div style="text-align:right">
+        <div class="nav-emp-name" id="navEmpName">Employee</div>
+        <div class="nav-emp-sub" id="navEmpSub">Employee Portal</div>
+      </div>
+      <div class="emp-avatar" id="navEmpAvatar">?</div>
+      <button class="btn-logout" onclick="doEmpLogout()" id="logoutBtn">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('schedule')" id="tabSchedule">🗓️ <span id="tabSchedLabel">Schedule</span></button>
+    <button class="tab-btn" onclick="showTab('reports')" id="tabReports">📊 <span id="tabReportsLabel">My Hours</span></button>
+    <button class="tab-btn" onclick="showTab('availability')" id="tabAvail">🚫 <span id="tabAvailLabel">Availability</span></button>
+  </div>
+
+  <div class="main">
+
+    <!-- SCHEDULE TAB -->
+    <div id="tabContentSchedule">
+      <h1 class="page-title" id="schedTitle">My Schedule</h1>
+      <p class="page-sub" id="schedSub">Your upcoming shifts for the next 2 weeks</p>
+      <div id="schedContent"></div>
+    </div>
+
+    <!-- REPORTS TAB -->
+    <div id="tabContentReports" style="display:none">
+      <h1 class="page-title" id="reportsTitle">My Hours</h1>
+      <p class="page-sub" id="reportsSub">View your punch records and hours worked</p>
+      <div class="period-selector" id="periodSelector"></div>
+      <div id="statsRow" class="stats-row"></div>
+      <div class="card">
+        <div class="card-title">📋 <span id="punchLogLabel">Punch Log</span></div>
+        <div class="table-wrap">
+          <table class="punch-table">
+            <thead>
+              <tr>
+                <th id="thDate">Date</th>
+                <th id="thIn">Clock In</th>
+                <th id="thOut">Clock Out</th>
+                <th id="thHours">Hours</th>
+              </tr>
+            </thead>
+            <tbody id="punchBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AVAILABILITY TAB -->
+    <div id="tabContentAvailability" style="display:none">
+      <h1 class="page-title" id="availTitle">My Availability</h1>
+      <p class="page-sub" id="availSub">Set the days and times when you are NOT available to be scheduled</p>
+
+      <!-- Recurring weekly unavailability -->
+      <div class="card">
+        <div class="card-title">🔁 <span id="recurringLabel">Weekly Recurring Unavailability</span></div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="recurringDesc">Click a day to mark yourself as unavailable every week on that day. Admins will see this when scheduling.</p>
+        <div class="avail-grid" id="availWeekGrid"></div>
+        <div id="availRecurringMsg"></div>
+      </div>
+
+      <!-- Specific dates -->
+      <div class="card">
+        <div class="card-title">📅 <span id="specificLabel">Specific Dates</span></div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="specificDesc">Add specific dates when you are not available (vacation, appointments, etc.)</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <input type="date" id="specificDateInput" class="form-input" style="width:auto;flex:1;min-width:160px">
+          <input type="text" id="specificNoteInput" class="form-input" style="flex:2;min-width:160px" id="specificNoteInput" placeholder="Reason (optional)">
+          <button class="btn-secondary" onclick="addSpecificDate()" id="addDateBtn" style="white-space:nowrap">+ Add Date</button>
+        </div>
+        <div id="specificDateList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — same Supabase project as index.html
+// ══════════════════════════════════════════════════════
+const SUPA_URL = 'https://uziwymrwaeojhqaagqcm.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let _empLang = 'en';
+let _session = null; // { portalId, employeeId, empName, companyId, siteId, email }
+let _employee = null;
+let _availability = [];
+let _currentPeriod = 'current';
+let _pendingPortalId = null; // for set-password flow
+
+// ══════════════════════════════════════════════════════
+// DB HELPER
+// ══════════════════════════════════════════════════════
+async function db(method, table, filter = '', body = null) {
+  let url = `${SUPA_URL}/rest/v1/${table}`;
+  const params = [];
+  if (filter) params.push(filter);
+  if (method === 'GET') params.push('select=*');
+  if (params.length) url += '?' + params.join('&');
+  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' };
+  if (method === 'POST') headers['Prefer'] = 'return=representation';
+  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  if (!res.ok) { const t = await res.text(); throw new Error(t); }
+  if (method === 'DELETE' || method === 'PATCH') return true;
+  const text = await res.text(); return text ? JSON.parse(text) : [];
+}
+async function rpc(fn, params) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(params)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text(); return text ? JSON.parse(text) : null;
+}
+
+// ══════════════════════════════════════════════════════
+// I18N
+// ══════════════════════════════════════════════════════
+const T = {
+  en: {
+    loading: 'Loading...', loginTitle: 'Employee Portal', loginSub: 'Sign in to view your schedule and hours.',
+    loginEmailLabel: 'Email Address', loginPassLabel: 'Password', loginBtn: 'Sign In',
+    loginFooter: "Don't have access? Ask your admin to send you an invitation.",
+    invalidCreds: 'Invalid email or password.', setPassTitle: 'Welcome! Set your password',
+    setPassSub: "You've been invited to the employee portal. Choose a password to activate your account.",
+    setPassLabel: 'New Password', setPassConfirmLabel: 'Confirm Password', setPassBtn: 'Activate Account',
+    tokenExpired: 'This invitation link has expired. Please ask your admin to resend it.',
+    passShort: 'Password must be at least 6 characters.', passMismatch: 'Passwords do not match.',
+    logoutBtn: 'Sign Out', navSub: 'Employee Portal',
+    tabSched: '🗓️ Schedule', tabReports: '📊 My Hours', tabAvail: '🚫 Availability',
+    schedTitle: 'My Schedule', schedSub: 'Your upcoming shifts for the next 2 weeks',
+    noShifts: 'No shifts scheduled in the next 2 weeks.',
+    reportsTitle: 'My Hours', reportsSub: 'View your punch records and hours worked',
+    periodCurrent: 'Current Period', periodLast: 'Last Period', periodLast2: '2 Periods Ago',
+    totalHours: 'Total Hours', regularHours: 'Regular', overtimeHours: 'Overtime', totalPunches: 'Punches',
+    punchLogLabel: 'Punch Log', thDate: 'Date', thIn: 'Clock In', thOut: 'Clock Out', thHours: 'Hours',
+    noPunches: 'No punch records for this period.',
+    availTitle: 'My Availability', availSub: 'Set the days and times when you are NOT available to be scheduled.',
+    recurringLabel: '🔁 Weekly Recurring Unavailability',
+    recurringDesc: 'Click a day to mark yourself unavailable every week on that day.',
+    specificLabel: '📅 Specific Dates', specificDesc: 'Add specific dates when you are not available.',
+    addDateBtn: '+ Add Date', notePlaceholder: 'Reason (optional)', unavailable: 'Unavailable',
+    available: 'Available', savedOk: '✓ Saved', errorSaving: 'Error saving.',
+    days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    today: 'Today',
+  },
+  fr: {
+    loading: 'Chargement...', loginTitle: 'Portail employé', loginSub: 'Connectez-vous pour voir votre horaire et vos heures.',
+    loginEmailLabel: 'Adresse courriel', loginPassLabel: 'Mot de passe', loginBtn: 'Se connecter',
+    loginFooter: "Pas d'accès? Demandez à votre admin de vous envoyer une invitation.",
+    invalidCreds: 'Courriel ou mot de passe invalide.', setPassTitle: 'Bienvenue! Définissez votre mot de passe',
+    setPassSub: "Vous avez été invité au portail employé. Choisissez un mot de passe pour activer votre compte.",
+    setPassLabel: 'Nouveau mot de passe', setPassConfirmLabel: 'Confirmer le mot de passe', setPassBtn: 'Activer le compte',
+    tokenExpired: "Ce lien d'invitation a expiré. Demandez à votre admin de le renvoyer.",
+    passShort: 'Le mot de passe doit contenir au moins 6 caractères.', passMismatch: 'Les mots de passe ne correspondent pas.',
+    logoutBtn: 'Déconnexion', navSub: 'Portail employé',
+    tabSched: '🗓️ Horaire', tabReports: '📊 Mes heures', tabAvail: '🚫 Disponibilité',
+    schedTitle: 'Mon horaire', schedSub: 'Vos prochains quarts de travail pour les 2 prochaines semaines',
+    noShifts: 'Aucun quart prévu dans les 2 prochaines semaines.',
+    reportsTitle: 'Mes heures', reportsSub: 'Consultez vos pointages et vos heures travaillées',
+    periodCurrent: 'Période actuelle', periodLast: 'Période précédente', periodLast2: 'Il y a 2 périodes',
+    totalHours: 'Heures totales', regularHours: 'Régulières', overtimeHours: 'Supplémentaires', totalPunches: 'Pointages',
+    punchLogLabel: 'Journal de pointage', thDate: 'Date', thIn: 'Entrée', thOut: 'Sortie', thHours: 'Heures',
+    noPunches: 'Aucun pointage pour cette période.',
+    availTitle: 'Ma disponibilité', availSub: 'Indiquez les jours et heures où vous N\'ÊTES PAS disponible.',
+    recurringLabel: '🔁 Indisponibilité hebdomadaire récurrente',
+    recurringDesc: 'Cliquez sur un jour pour vous marquer indisponible chaque semaine ce jour-là.',
+    specificLabel: '📅 Dates spécifiques', specificDesc: 'Ajoutez des dates précises où vous n\'êtes pas disponible.',
+    addDateBtn: '+ Ajouter une date', notePlaceholder: 'Raison (optionnel)', unavailable: 'Indisponible',
+    available: 'Disponible', savedOk: '✓ Sauvegardé', errorSaving: 'Erreur lors de la sauvegarde.',
+    days: ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+    today: "Aujourd'hui",
+  }
+};
+function t(key) { return (T[_empLang] || T.en)[key] || key; }
+
+function setEmpLang(lang) {
+  _empLang = lang;
+  try { localStorage.setItem('pc_emp_lang', lang); } catch(e) {}
+  applyTranslations();
+  document.getElementById('empHtmlRoot').lang = lang;
+  document.querySelectorAll('.lang-sw button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  // Re-render active tab content
+  if (_session) {
+    const activeTab = document.querySelector('.tab-btn.active')?.id?.replace('tab','').toLowerCase();
+    if (activeTab === 'schedule') renderSchedule();
+    else if (activeTab === 'reports') renderReports();
+    else if (activeTab === 'availability') renderAvailability();
+  }
+}
+
+function applyTranslations() {
+  const ids = {
+    loginTitle:'loginTitle', loginSub:'loginSub', loginEmailLabel:'loginEmailLabel',
+    loginPassLabel:'loginPassLabel', loginBtn:'loginBtn', loginFooter:'loginFooter',
+    setPassTitle:'setPassTitle', setPassSub:'setPassSub', setPassLabel:'setPassLabel',
+    setPassConfirmLabel:'setPassConfirmLabel', setPassBtn:'setPassBtn',
+    logoutBtn:'logoutBtn', navSub:'navEmpSub',
+    tabSched:'tabSchedLabel', tabReports:'tabReportsLabel', tabAvail:'tabAvailLabel',
+    schedTitle:'schedTitle', schedSub:'schedSub',
+    reportsTitle:'reportsTitle', reportsSub:'reportsSub',
+    availTitle:'availTitle', availSub:'availSub',
+    recurringLabel:'recurringLabel', recurringDesc:'recurringDesc',
+    specificLabel:'specificLabel', specificDesc:'specificDesc',
+    addDateBtn:'addDateBtn', loading:'loadingMsg',
+  };
+  for (const [key, id] of Object.entries(ids)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  }
+  // Table headers
+  const ths = {thDate:'thDate', thIn:'thIn', thOut:'thOut', thHours:'thHours'};
+  for (const [key, id] of Object.entries(ths)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  }
+  const noteInput = document.getElementById('specificNoteInput');
+  if (noteInput) noteInput.placeholder = t('notePlaceholder');
+}
+
+// ══════════════════════════════════════════════════════
+// SESSION
+// ══════════════════════════════════════════════════════
+function saveSession(s) { try { localStorage.setItem('pc_emp_sess', JSON.stringify(s)); } catch(e) {} }
+function loadSession() { try { return JSON.parse(localStorage.getItem('pc_emp_sess')); } catch(e) { return null; } }
+function clearSession() { try { localStorage.removeItem('pc_emp_sess'); } catch(e) {} }
+
+// ══════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════
+function showScreen(name) {
+  ['screenLogin','screenSetPassword','screenApp'].forEach(id => {
+    document.getElementById(id).style.display = id === name ? '' : 'none';
+  });
+}
+function showMsg(id, text, type = 'error') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = text ? `<div class="msg ${type}">${text}</div>` : '';
+}
+function showToast(msg, type = '') {
+  const t = document.getElementById('empToast');
+  t.textContent = msg;
+  t.className = 'show' + (type ? ' toast-' + type : '');
+  setTimeout(() => t.className = '', 3000);
+}
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.style.opacity = show ? '0.5' : '1';
+}
+function showTab(name) {
+  ['schedule','reports','availability'].forEach(tab => {
+    document.getElementById('tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = tab === name ? '' : 'none';
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.toggle('active', tab === name);
+  });
+  if (name === 'schedule') renderSchedule();
+  else if (name === 'reports') renderReports();
+  else if (name === 'availability') renderAvailability();
+}
+function dateStr(d) { return d.toISOString().slice(0,10); }
+function fmtDate(str) {
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+// ══════════════════════════════════════════════════════
+// INVITE TOKEN FLOW
+// ══════════════════════════════════════════════════════
+async function checkInviteToken() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (!token) return false;
+
+  // Clean URL
+  window.history.replaceState({}, '', window.location.pathname);
+
+  try {
+    const rows = await db('GET', 'employee_portal', `invite_token=eq.${token}`);
+    if (!rows || !rows.length) { showScreen('screenLogin'); showMsg('loginMsg', t('tokenExpired'), 'error'); return true; }
+    const portal = rows[0];
+    if (portal.token_expires_at && new Date(portal.token_expires_at) < new Date()) {
+      showScreen('screenLogin'); showMsg('loginMsg', t('tokenExpired'), 'error'); return true;
+    }
+    _pendingPortalId = portal.id;
+    document.getElementById('setPassNew').value = '';
+    document.getElementById('setPassConfirm').value = '';
+    showScreen('screenSetPassword');
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+async function doSetEmpPassword() {
+  const pw = document.getElementById('setPassNew').value;
+  const confirm = document.getElementById('setPassConfirm').value;
+  if (pw.length < 6) { showMsg('setPassMsg', t('passShort'), 'error'); return; }
+  if (pw !== confirm) { showMsg('setPassMsg', t('passMismatch'), 'error'); return; }
+  const btn = document.getElementById('setPassBtn');
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    await rpc('set_employee_password', { p_id: _pendingPortalId, p_pass: pw });
+    // Fetch portal record to get employee_id and email
+    const rows = await db('GET', 'employee_portal', `id=eq.${_pendingPortalId}`);
+    if (rows?.[0]) {
+      await loginWithPortal(rows[0]);
+    }
+  } catch(e) {
+    showMsg('setPassMsg', 'Error: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = t('setPassBtn');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════
+async function doEmpLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { showMsg('loginMsg', t('invalidCreds'), 'error'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '...';
+  showMsg('loginMsg', '', '');
+  try {
+    const rows = await rpc('verify_employee_login', { p_email: email, p_pass: pass });
+    if (!rows || !rows.length) {
+      showMsg('loginMsg', t('invalidCreds'), 'error');
+      btn.disabled = false; btn.textContent = t('loginBtn');
+      return;
+    }
+    await loginWithPortal(rows[0]);
+  } catch(e) {
+    showMsg('loginMsg', 'Error: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = t('loginBtn');
+  }
+}
+
+async function loginWithPortal(portal) {
+  // Fetch employee record
+  const emps = await db('GET', 'employees', `id=eq.${portal.employee_id}`);
+  if (!emps?.[0]) throw new Error('Employee record not found.');
+  const emp = emps[0];
+
+  _session = {
+    portalId: portal.id,
+    employeeId: emp.id,
+    empName: emp.name,
+    companyId: emp.company_id,
+    siteId: emp.site_id,
+    email: portal.email,
+  };
+  _employee = emp;
+  saveSession(_session);
+
+  // Update last_login
+  await db('PATCH', 'employee_portal', `id=eq.${portal.id}`, { last_login: new Date().toISOString() });
+
+  showPortal();
+}
+
+async function doEmpLogout() {
+  clearSession();
+  _session = null; _employee = null;
+  showScreen('screenLogin');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value = '';
+  showMsg('loginMsg', '', '');
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = false; btn.textContent = t('loginBtn');
+}
+
+// ══════════════════════════════════════════════════════
+// PORTAL MAIN
+// ══════════════════════════════════════════════════════
+function showPortal() {
+  const initials = (_session.empName || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('navEmpName').textContent = _session.empName;
+  document.getElementById('navEmpSub').textContent = t('navSub');
+  document.getElementById('navEmpAvatar').textContent = initials;
+  showScreen('screenApp');
+  showTab('schedule');
+  loadAvailability();
+}
+
+// ══════════════════════════════════════════════════════
+// SCHEDULE TAB
+// ══════════════════════════════════════════════════════
+async function renderSchedule() {
+  const wrap = document.getElementById('schedContent');
+  wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)">⏳</div>';
+  const today = dateStr(new Date());
+  const twoWeeks = dateStr(new Date(Date.now() + 14*24*60*60*1000));
+  try {
+    const shifts = await db('GET', 'shifts',
+      `employee_id=eq.${_session.employeeId}&shift_date=gte.${today}&shift_date=lte.${twoWeeks}&order=shift_date.asc,start_time.asc`
+    ) || [];
+    if (!shifts.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="icon">🗓️</div><p>${t('noShifts')}</p></div>`;
+      return;
+    }
+    const todayStr = today;
+    let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+    shifts.forEach(sh => {
+      const isToday = sh.shift_date === todayStr;
+      const d = new Date(sh.shift_date + 'T12:00:00');
+      const dayLabel = isToday ? t('today') : d.toLocaleDateString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
+      html += `<div style="background:var(--surface);border:1.5px solid ${isToday ? 'rgba(79,142,247,.4)' : 'var(--border)'};border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;${isToday ? 'background:rgba(79,142,247,.06)' : ''}">
+        <div>
+          <div style="font-weight:700;font-size:14px;${isToday ? 'color:var(--accent)' : ''}">${dayLabel}</div>
+          ${sh.note ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${sh.note}</div>` : ''}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)">${sh.start_time.slice(0,5)} – ${sh.end_time.slice(0,5)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${calcDuration(sh.start_time, sh.end_time)}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">Error: ${e.message}</p></div>`;
+  }
+}
+
+function calcDuration(start, end) {
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  const mins = (eh*60+em) - (sh*60+sm);
+  if (mins <= 0) return '';
+  const h = Math.floor(mins/60), m = mins%60;
+  return h + 'h' + (m ? m + 'min' : '');
+}
+
+// ══════════════════════════════════════════════════════
+// REPORTS TAB
+// ══════════════════════════════════════════════════════
+async function renderReports() {
+  // Build period buttons based on company payroll frequency
+  const companies = await db('GET', 'companies', `id=eq.${_session.companyId}`);
+  const co = companies?.[0];
+  const freq = co?.payroll_freq || 'biweekly'; // weekly | biweekly | monthly
+  const weekStart = co?.week_start || 1; // 0=Sun, 1=Mon
+
+  const periods = buildPeriods(freq, weekStart, 3);
+
+  const selector = document.getElementById('periodSelector');
+  selector.innerHTML = periods.map((p, i) =>
+    `<button class="period-btn${i===0?' active':''}" onclick="selectPeriod(${i}, this)">${i===0?t('periodCurrent'):i===1?t('periodLast'):t('periodLast2')}</button>`
+  ).join('');
+
+  _currentPeriod = 0;
+  await loadPeriodData(periods[0]);
+  window._empPeriods = periods;
+}
+
+async function selectPeriod(idx, btn) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _currentPeriod = idx;
+  await loadPeriodData(window._empPeriods[idx]);
+}
+
+async function loadPeriodData(period) {
+  const statsEl = document.getElementById('statsRow');
+  const bodyEl = document.getElementById('punchBody');
+  statsEl.innerHTML = '<div style="text-align:center;color:var(--text2);grid-column:1/-1;padding:16px">⏳</div>';
+  bodyEl.innerHTML = '';
+
+  try {
+    const punches = await db('GET', 'punches',
+      `emp_id=eq.${_session.employeeId}&punch_date=gte.${period.start}&punch_date=lte.${period.end}&order=punched_at.asc`
+    ) || [];
+
+    // Calculate pairs
+    let totalHours = 0, pairCount = 0;
+    const pairs = [];
+    let i = 0;
+    while (i < punches.length) {
+      const p = punches[i];
+      if (p.type === 'IN') {
+        const out = punches[i+1]?.type === 'OUT' ? punches[i+1] : null;
+        const hrs = out ? (new Date(out.punched_at) - new Date(p.punched_at)) / 3600000 : null;
+        pairs.push({ date: p.punch_date, in: p.punch_time, out: out?.punch_time || '—', hours: hrs });
+        if (hrs) { totalHours += hrs; pairCount++; }
+        i += out ? 2 : 1;
+      } else i++;
+    }
+
+    const otHours = Math.max(0, totalHours - 40); // simplified weekly OT estimate
+    const regHours = totalHours - otHours;
+
+    statsEl.innerHTML = `
+      <div class="stat-card"><div class="stat-val">${totalHours.toFixed(1)}</div><div class="stat-label">${t('totalHours')}</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${regHours.toFixed(1)}</div><div class="stat-label">${t('regularHours')}</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${otHours.toFixed(1)}</div><div class="stat-label">${t('overtimeHours')}</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent2)">${pairCount}</div><div class="stat-label">${t('totalPunches')}</div></div>
+    `;
+
+    if (!pairs.length) {
+      bodyEl.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px">${t('noPunches')}</td></tr>`;
+      return;
+    }
+
+    bodyEl.innerHTML = pairs.map(p => `
+      <tr>
+        <td style="font-weight:500">${fmtDate(p.date)}</td>
+        <td><span class="punch-type-in">${p.in}</span></td>
+        <td>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
+        <td style="font-family:\'DM Mono\',monospace;font-size:12px">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    statsEl.innerHTML = `<p style="color:var(--red);grid-column:1/-1">Error: ${e.message}</p>`;
+  }
+}
+
+function buildPeriods(freq, weekStart, count) {
+  const periods = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (let i = 0; i < count; i++) {
+    let start, end;
+    if (freq === 'weekly') {
+      const day = today.getDay();
+      const diff = (day - weekStart + 7) % 7;
+      const periodStart = new Date(today); periodStart.setDate(today.getDate() - diff - i*7);
+      const periodEnd = new Date(periodStart); periodEnd.setDate(periodStart.getDate() + 6);
+      start = dateStr(periodStart); end = dateStr(periodEnd);
+    } else if (freq === 'monthly') {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      start = dateStr(d);
+      end = dateStr(new Date(d.getFullYear(), d.getMonth()+1, 0));
+    } else { // biweekly
+      const day = today.getDay();
+      const diff = (day - weekStart + 7) % 7;
+      const periodStart = new Date(today); periodStart.setDate(today.getDate() - diff - i*14);
+      const periodEnd = new Date(periodStart); periodEnd.setDate(periodStart.getDate() + 13);
+      start = dateStr(periodStart); end = dateStr(periodEnd);
+    }
+    periods.push({ start, end });
+  }
+  return periods;
+}
+
+// ══════════════════════════════════════════════════════
+// AVAILABILITY TAB
+// ══════════════════════════════════════════════════════
+async function loadAvailability() {
+  try {
+    _availability = await db('GET', 'availability', `employee_id=eq.${_session.employeeId}`) || [];
+  } catch(e) { _availability = []; }
+}
+
+async function renderAvailability() {
+  await loadAvailability();
+
+  // Weekly grid (Mon=0 to Sun=6)
+  const days = t('days');
+  const grid = document.getElementById('availWeekGrid');
+  grid.innerHTML = days.map((day, idx) => {
+    const isUnavail = _availability.some(a => a.avail_type === 'recurring' && a.day_of_week === idx);
+    return `<div class="avail-day${isUnavail ? ' unavailable' : ''}" onclick="toggleDayAvail(${idx}, this)">
+      <div class="day-name">${day}</div>
+      <div class="day-status">${isUnavail ? t('unavailable') : t('available')}</div>
+    </div>`;
+  }).join('');
+
+  // Specific dates
+  renderSpecificDates();
+}
+
+async function toggleDayAvail(dayIdx, el) {
+  const isCurrentlyUnavail = el.classList.contains('unavailable');
+  try {
+    if (isCurrentlyUnavail) {
+      // Remove
+      const existing = _availability.find(a => a.avail_type === 'recurring' && a.day_of_week === dayIdx);
+      if (existing) await db('DELETE', 'availability', `id=eq.${existing.id}`);
+    } else {
+      // Add
+      await db('POST', 'availability', '', {
+        employee_id: _session.employeeId,
+        avail_type: 'recurring',
+        day_of_week: dayIdx,
+        start_time: null, end_time: null, note: '',
+      });
+    }
+    await loadAvailability();
+    renderAvailability();
+    showToast(t('savedOk'), 'success');
+  } catch(e) {
+    showToast(t('errorSaving'), 'error');
+  }
+}
+
+function renderSpecificDates() {
+  const list = document.getElementById('specificDateList');
+  const specific = _availability.filter(a => a.avail_type === 'specific').sort((a,b) => a.specific_date.localeCompare(b.specific_date));
+  if (!specific.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:16px">${_empLang === 'fr' ? 'Aucune date spécifique ajoutée.' : 'No specific dates added yet.'}</div>`;
+    return;
+  }
+  list.innerHTML = specific.map(a => `
+    <div class="avail-specific-row">
+      <div>
+        <div class="avail-specific-date">${fmtDate(a.specific_date)}</div>
+        ${a.note ? `<div class="avail-specific-note">${a.note}</div>` : ''}
+      </div>
+      <button class="btn-remove-avail" onclick="removeSpecificDate('${a.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function addSpecificDate() {
+  const dateVal = document.getElementById('specificDateInput').value;
+  const note = document.getElementById('specificNoteInput').value.trim();
+  if (!dateVal) return;
+  try {
+    await db('POST', 'availability', '', {
+      employee_id: _session.employeeId,
+      avail_type: 'specific',
+      specific_date: dateVal,
+      day_of_week: null,
+      start_time: null, end_time: null,
+      note,
+    });
+    document.getElementById('specificDateInput').value = '';
+    document.getElementById('specificNoteInput').value = '';
+    await loadAvailability();
+    renderSpecificDates();
+    showToast(t('savedOk'), 'success');
+  } catch(e) {
+    showToast(t('errorSaving'), 'error');
+  }
+}
+
+async function removeSpecificDate(id) {
+  try {
+    await db('DELETE', 'availability', `id=eq.${id}`);
+    await loadAvailability();
+    renderSpecificDates();
+    showToast(t('savedOk'), 'success');
+  } catch(e) {
+    showToast(t('errorSaving'), 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+async function init() {
+  // Language
+  try { _empLang = localStorage.getItem('pc_emp_lang') || (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en'; } catch(e) {}
+  applyTranslations();
+
+  // Check invite token in URL first
+  const hadToken = await checkInviteToken();
+  if (hadToken) { document.getElementById('loadingOverlay').classList.add('hidden'); return; }
+
+  // Check existing session
+  const sess = loadSession();
+  if (sess) {
+    try {
+      const rows = await db('GET', 'employee_portal', `id=eq.${sess.portalId}&status=eq.active`);
+      if (rows?.[0]) {
+        const emps = await db('GET', 'employees', `id=eq.${sess.employeeId}`);
+        if (emps?.[0]) {
+          _session = sess;
+          _employee = emps[0];
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          showPortal();
+          return;
+        }
+      }
+    } catch(e) {}
+    clearSession();
+  }
+
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  showScreen('screenLogin');
+}
+
+init();
+</script>
+</body>
+</html>

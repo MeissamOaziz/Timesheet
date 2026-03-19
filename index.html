@@ -1956,6 +1956,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <input type="email" id="empEmail" data-i18n="emp.emailPlaceholder" placeholder="employee@email.com">
         <div style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="emp.emailHint">Report will be sent automatically at the end of each pay period.</div>
       </div>
+      <!-- Employee portal invite -->
+      <div id="empPortalInviteRow" style="display:none;margin-top:12px;padding:12px 14px;background:rgba(124,92,191,.08);border:1px solid rgba(124,92,191,.25);border-radius:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:2px">🔗 <span data-i18n="emp.portalInviteTitle">Employee Portal Access</span></div>
+            <div style="font-size:11px;color:var(--text3)" id="empPortalStatus"></div>
+          </div>
+          <button type="button" id="empPortalInviteBtn" onclick="sendEmpPortalInvite()" style="background:rgba(124,92,191,.2);border:1px solid rgba(124,92,191,.4);border-radius:8px;color:#a78bfa;font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;cursor:pointer;white-space:nowrap;transition:all .15s"></button>
+        </div>
+        <div id="empPortalInviteMsg" style="margin-top:8px"></div>
+      </div>
     </div>
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
@@ -4991,7 +5002,108 @@ function editEmployee(id){
   document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">No PIN set — employee can't clock in/out until one is assigned.</div>`;
   setEmailToggle(!!(e.send_report&&e.email));
   populateSiteDropdown('empSiteSelect',e.company_id||ctx?.co?.id,e.site_id);
+  // Load portal invite status if employee has email
+  loadEmpPortalStatus(e);
   openModal('addEmpModal');
+}
+
+// ═══════════════════════════════════════════════════
+// EMPLOYEE PORTAL INVITE
+// ═══════════════════════════════════════════════════
+async function loadEmpPortalStatus(emp) {
+  const inviteRow = document.getElementById('empPortalInviteRow');
+  const statusEl  = document.getElementById('empPortalStatus');
+  const inviteBtn = document.getElementById('empPortalInviteBtn');
+  const msgEl     = document.getElementById('empPortalInviteMsg');
+  if(!inviteRow) return;
+  if(!emp.email) { inviteRow.style.display='none'; return; }
+  inviteRow.style.display='';
+  if(msgEl) msgEl.innerHTML='';
+  statusEl.textContent = t('emp.portalLoading')||'Checking...';
+  inviteBtn.disabled = true;
+  try {
+    const rows = await DB.all('employee_portal',`employee_id=eq.${emp.id}`);
+    const portal = rows?.[0];
+    if(!portal) {
+      statusEl.textContent = t('emp.portalNotInvited')||'No portal access yet';
+      inviteBtn.textContent = t('emp.portalSendInvite')||'📧 Send Invitation';
+      inviteBtn.disabled = false;
+      inviteBtn.onclick = () => sendEmpPortalInvite(emp.id, emp.email, emp.name);
+    } else if(portal.status === 'invited') {
+      statusEl.textContent = t('emp.portalInviteSent')||'Invitation sent — awaiting activation';
+      inviteBtn.textContent = t('emp.portalResend')||'🔁 Resend Invitation';
+      inviteBtn.disabled = false;
+      inviteBtn.onclick = () => sendEmpPortalInvite(emp.id, emp.email, emp.name);
+    } else {
+      statusEl.textContent = (t('emp.portalActive')||'Active') + (portal.last_login ? ` · ${t('emp.lastLogin')||'Last login'}: ${new Date(portal.last_login).toLocaleDateString()}` : '');
+      inviteBtn.textContent = t('emp.portalRevoke')||'Revoke Access';
+      inviteBtn.style.background = 'rgba(239,68,68,.1)';
+      inviteBtn.style.borderColor = 'rgba(239,68,68,.3)';
+      inviteBtn.style.color = 'var(--red)';
+      inviteBtn.disabled = false;
+      inviteBtn.onclick = () => revokeEmpPortalAccess(emp.id);
+    }
+  } catch(e) {
+    statusEl.textContent = 'Error loading status';
+    inviteBtn.disabled = false;
+  }
+}
+
+async function sendEmpPortalInvite(empId, email, empName) {
+  const btn = document.getElementById('empPortalInviteBtn');
+  const msgEl = document.getElementById('empPortalInviteMsg');
+  btn.disabled = true; btn.textContent = '⏳';
+  if(msgEl) msgEl.innerHTML='';
+  try {
+    // Generate a secure token
+    const token = crypto.randomUUID ? crypto.randomUUID().replace(/-/g,'') : Math.random().toString(36).slice(2)+Date.now().toString(36);
+    const expires = new Date(Date.now() + 48*60*60*1000).toISOString(); // 48h
+
+    // Upsert employee_portal record
+    const existing = await DB.all('employee_portal',`employee_id=eq.${empId}`);
+    if(existing?.[0]) {
+      await DB.update('employee_portal',`id=eq.${existing[0].id}`,{
+        email, invite_token:token, token_expires_at:expires, status:'invited'
+      });
+    } else {
+      await DB.insert('employee_portal',{
+        employee_id:empId, email, invite_token:token, token_expires_at:expires, status:'invited'
+      });
+    }
+
+    // Send invite email
+    const portalUrl = `https://www.punchclock.ca/employee.html?token=${token}`;
+    const lang = _appLang || 'en';
+    await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
+      body:JSON.stringify({
+        type:'employee_invite',
+        email, name:empName,
+        portalUrl, lang,
+      })
+    });
+
+    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--green);margin-top:4px">✓ ${t('emp.inviteSentOk')||'Invitation sent to'} ${email}</div>`;
+    // Reload status
+    const emp = C.employees.find(e=>e.id===empId);
+    if(emp) setTimeout(()=>loadEmpPortalStatus(emp),600);
+  } catch(e) {
+    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">Error: ${e.message}</div>`;
+    btn.disabled=false;
+  }
+}
+
+async function revokeEmpPortalAccess(empId) {
+  if(!confirm(t('emp.portalRevokeConfirm')||'Revoke this employee\'s portal access? They will no longer be able to log in.')) return;
+  try {
+    await DB.del('employee_portal',`employee_id=eq.${empId}`);
+    const emp = C.employees.find(e=>e.id===empId);
+    if(emp) loadEmpPortalStatus(emp);
+    showToast(t('emp.portalRevoked')||'Portal access revoked.','success');
+  } catch(e) {
+    showToast('Error: '+e.message);
+  }
 }
 
 function populateSiteDropdown(selectId,coId,selectedSiteId){
@@ -6172,6 +6284,20 @@ async function renderScheduleGrid() {
     console.warn('Shifts fetch error:', e);
   }
 
+  // Fetch availability for all employees in this view
+  let _availability = {};
+  try {
+    const empIds = C.employees.filter(e => e.company_id === coId && e.active).map(e=>e.id);
+    if(empIds.length) {
+      const avRows = await DB.all('availability',
+        `employee_id=in.(${empIds.join(',')})`) || [];
+      avRows.forEach(a => {
+        if(!_availability[a.employee_id]) _availability[a.employee_id] = [];
+        _availability[a.employee_id].push(a);
+      });
+    }
+  } catch(e) { console.warn('Availability fetch error:', e); }
+
   // Get employees for this company/site
   let emps = C.employees.filter(e => e.company_id === coId && e.active);
   if(siteId && siteId !== 'all') emps = emps.filter(e => e.site_id === siteId);
@@ -6229,20 +6355,38 @@ async function renderScheduleGrid() {
       const isToday = dateStr === todayStr;
       const dayShifts = _schedShifts.filter(sh => sh.employee_id === emp.id && sh.shift_date === dateStr);
 
-      html += `<td class="${isToday?'today-col':''}">
+      // Check availability: Mon=0..Sun=6 (our convention)
+      const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
+      const empAvail = _availability[emp.id] || [];
+      const unavailEntry = empAvail.find(a =>
+        (a.avail_type === 'recurring' && a.day_of_week === dayOfWeek) ||
+        (a.avail_type === 'specific' && a.specific_date === dateStr)
+      );
+      const isUnavail = !!unavailEntry;
+
+      const tdStyle = isUnavail
+        ? `background:rgba(239,68,68,.07);`
+        : (isToday ? '' : '');
+
+      html += `<td class="${isToday&&!isUnavail?'today-col':''}" style="${tdStyle}">
         <div class="sched-cell-inner">`;
+
+      if(isUnavail) {
+        html += `<div title="${unavailEntry.note||t('sched.unavailable')||'Unavailable'}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--red);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:3px 7px;margin-bottom:2px">🚫 ${t('sched.unavailable')||'Unavailable'}${unavailEntry.note?` · ${unavailEntry.note}`:''}</div>`;
+      }
 
       dayShifts.forEach(sh => {
         const startFmt = sh.start_time.slice(0,5);
         const endFmt   = sh.end_time.slice(0,5);
-        html += `<div class="sched-shift" onclick="openEditShiftModal('${sh.id}')">
+        html += `<div class="sched-shift${isUnavail?' sched-shift-warning':''}" onclick="openEditShiftModal('${sh.id}')" ${isUnavail?`style="border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.12)" title="${t('sched.shiftOverAvail')||'Shift overlaps unavailability'}"`:''}> 
+          ${isUnavail?`<div style="font-size:9px;color:var(--amber);margin-bottom:2px">⚠️ ${t('sched.overlapWarning')||'Overlap'}</div>`:''}
           ${sh.note ? `<div style="font-size:11px;font-weight:600">${sh.note}</div>` : ''}
           <div class="shift-time">${startFmt} – ${endFmt}</div>
           <span class="shift-delete" onclick="event.stopPropagation();deleteShiftById('${sh.id}')">✕</span>
         </div>`;
       });
 
-      html += `<button class="sched-add-btn" onclick="openAddShiftModal('${emp.id}','${dateStr}')" title="${t('sched.addShift')||'Add Shift'}">+</button>
+      html += `<button class="sched-add-btn" onclick="openAddShiftModal('${emp.id}','${dateStr}')" title="${isUnavail?(t('sched.unavailableHint')||'Employee unavailable — add shift anyway?'):(t('sched.addShift')||'Add Shift')}" style="${isUnavail?'border-color:rgba(239,68,68,.3);color:var(--red);opacity:.6':''}">+</button>
         </div></td>`;
     });
 
@@ -6972,6 +7116,22 @@ en:{
 'sched.myShifts':'My Upcoming Shifts',
 'sched.sendEmail':'📧 Send schedule',
 'sched.addEmail':'+ Add email',
+'sched.unavailable':'Unavailable',
+'sched.shiftOverAvail':'Shift overlaps unavailability',
+'sched.overlapWarning':'Overlap',
+'sched.unavailableHint':'Employee unavailable — add shift anyway?',
+'emp.portalInviteTitle':'Employee Portal Access',
+'emp.portalLoading':'Checking...',
+'emp.portalNotInvited':'No portal access yet',
+'emp.portalSendInvite':'📧 Send Invitation',
+'emp.portalResend':'🔁 Resend Invitation',
+'emp.portalInviteSent':'Invitation sent — awaiting activation',
+'emp.portalActive':'✓ Active',
+'emp.lastLogin':'Last login',
+'emp.portalRevoke':'Revoke Access',
+'emp.portalRevokeConfirm':'Revoke this employee\'s portal access? They will no longer be able to log in.',
+'emp.portalRevoked':'Portal access revoked.',
+'emp.inviteSentOk':'Invitation sent to',
 'sched.addEmailHint':'Add this employee\'s email to send them their schedule.',
 'sched.sendToMe':'Send to my email',
 'sched.pinTitle':'Verify your identity',
@@ -7377,6 +7537,22 @@ fr:{
 'sched.myShifts':'Mes prochains quarts',
 'sched.sendEmail':'📧 Envoyer l\'horaire',
 'sched.addEmail':'+ Ajouter courriel',
+'sched.unavailable':'Indisponible',
+'sched.shiftOverAvail':'Le quart chevauche une indisponibilité',
+'sched.overlapWarning':'Chevauchement',
+'sched.unavailableHint':'Employé indisponible — ajouter quand même?',
+'emp.portalInviteTitle':'Accès portail employé',
+'emp.portalLoading':'Vérification...',
+'emp.portalNotInvited':'Aucun accès portail',
+'emp.portalSendInvite':'📧 Envoyer l\'invitation',
+'emp.portalResend':'🔁 Renvoyer l\'invitation',
+'emp.portalInviteSent':'Invitation envoyée — en attente d\'activation',
+'emp.portalActive':'✓ Actif',
+'emp.lastLogin':'Dernière connexion',
+'emp.portalRevoke':'Révoquer l\'accès',
+'emp.portalRevokeConfirm':'Révoquer l\'accès de cet employé au portail? Il ne pourra plus se connecter.',
+'emp.portalRevoked':'Accès portail révoqué.',
+'emp.inviteSentOk':'Invitation envoyée à',
 'sched.addEmailHint':'Ajoutez le courriel de cet employé pour lui envoyer son horaire.',
 'sched.sendToMe':'Envoyer à mon courriel',
 'sched.pinTitle':'Vérifiez votre identité',
