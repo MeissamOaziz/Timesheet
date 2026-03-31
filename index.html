@@ -4650,17 +4650,18 @@ async function saveInviteCoAdmin(){
   if(!name||!email){showMsg('inviteCoAdminMsg',t('msg.allRequired'),'error');return;}
   if(!tempPass||tempPass.length<6){showMsg('inviteCoAdminMsg',t('coAdmin.tempPassRequired')||'Please set a temporary password (min 6 characters).','error');return;}
   if(email===sess.email){showMsg('inviteCoAdminMsg',t('msg.ownEmail'),'error');return;}
+  // Always attach to the primary admin — co-admins who invite someone attach to their own primary
+  const primaryAdminId = sess.parent_admin_id || sess.id;
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('inviteCoAdminMsg',t('msg.emailTaken'),'error');return;}
-    // Create account — password is set by admin, status pending_invite forces password change on first login
+    // Create account — parent is always the primary admin's ID
     const r=await DB.insert('admins',{
       name,email,password:'PENDING',verified:false,
       role,plan:sess.plan||'free',status:'pending_invite',
-      parent_admin_id:sess.id,invited_by:sess.email
+      parent_admin_id:primaryAdminId,invited_by:sess.email
     });
     if(r?.[0]) await DB.rpc('set_admin_password',{p_id:r[0].id,p_pass:tempPass});
-    // Send invitation email with login instructions (no temp pass in email for security)
     try{
       await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
         method:'POST',
@@ -4682,9 +4683,12 @@ async function loadCoAdmins(){
   const sess=Sess.get(); if(!sess||isSuperAdmin())return;
   const tbody=document.getElementById('coAdminsTableBody');
   const cards=document.getElementById('coAdminCardsContainer');
+  // Always use primary admin ID for fetching — co-admins use their parent's ID
+  const primaryAdminId = sess.parent_admin_id || sess.id;
+  const isCoAdmin = !!sess.parent_admin_id;
   try{
-    // Load pending join requests targeted at this admin
-    const pendingReqs=await DB.all('join_requests',`target_admin_id=eq.${sess.id}&status=eq.pending&order=created_at.desc`);
+    // Load pending join requests targeted at the primary admin
+    const pendingReqs=await DB.all('join_requests',`target_admin_id=eq.${primaryAdminId}&status=eq.pending&order=created_at.desc`);
     const plan=getAdminPlan();
     const extraSeats=Number(sess.extra_seats??0);
     const maxSlots=(plan.maxCoAdmins===Infinity?Infinity:(plan.maxCoAdmins-1))+extraSeats;
@@ -4726,13 +4730,14 @@ async function loadCoAdmins(){
     }
 
     // Co-admin sees primary admin + any siblings; primary admin sees their co-admins
+    // Both use primaryAdminId — pending_invite included, only suspended excluded
     let coAdmins;
-    if(sess.parent_admin_id){
-      const primary=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,role,status,created_at`);
-      const siblings=await DB.all('admins',`parent_admin_id=eq.${sess.parent_admin_id}&id=neq.${sess.id}&status=neq.suspended&order=created_at.asc`);
+    if(isCoAdmin){
+      const primary=await DB.all('admins',`id=eq.${primaryAdminId}&select=id,name,email,role,status,created_at`);
+      const siblings=await DB.all('admins',`parent_admin_id=eq.${primaryAdminId}&id=neq.${sess.id}&status=neq.suspended&order=created_at.asc`);
       coAdmins=[...(primary||[]).map(a=>({...a,_isPrimary:true})),...(siblings||[])];
     } else {
-      coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&order=created_at.asc`);
+      coAdmins=await DB.all('admins',`parent_admin_id=eq.${primaryAdminId}&status=neq.suspended&order=created_at.asc`);
     }
     if(!coAdmins.length){
       tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">${t('coAdmin.noCoAdmins')}</td></tr>`;
@@ -4741,16 +4746,17 @@ async function loadCoAdmins(){
     }
     const roleLabel=a=>a._isPrimary?('★ '+(t('coAdmin.primaryAdmin')||'Primary Admin')):a.role==='manager'?t('coAdmin.role.manager').split('—')[0].trim():t('coAdmin.role.admin').split('—')[0].trim();
     const statusClass=st=>st==='active'?'in':st==='pending_invite'?'site':'out';
-    const statusLabel=st=>st==='active'?t('admin.active'):st==='pending_invite'?'Pending Invite':'Suspended';
+    const statusLabel=st=>st==='active'?t('admin.active'):st==='pending_invite'?(t('coAdmin.pendingInvite')||'Pending Invite'):t('admin.suspended')||'Suspended';
     const isMe=a=>a.id===sess.id;
     tbody.innerHTML=coAdmins.map(a=>`<tr>
       <td style="font-weight:500">${a.name}${isMe(a)?` <span style="font-size:10px;color:var(--text3)">(${t('common.you')||'you'})</span>`:''}</td>
       <td style="font-size:13px">${a.email}</td>
       <td><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></td>
       <td><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></td>
-      <td>${(a._isPrimary||isMe(a))?'<span style="font-size:11px;color:var(--text3)">—</span>':`<div style="display:flex;gap:5px">
+      <td>${(a._isPrimary||isMe(a))?'<span style="font-size:11px;color:var(--text3)">—</span>':`<div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${a.status==='pending_invite'?`<button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="resendCoAdminInvite('${a.id}','${a.email}','${a.name.replace(/'/g,"\\'")}')">📧 ${t('coAdmin.resendInvite')||'Resend'}</button>`:''}
         <button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
-        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="deleteCoAdmin('${a.id}','${a.name.replace(/'/g,"\'")}')">Delete</button>
+        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="deleteCoAdmin('${a.id}','${a.name.replace(/'/g,"\\'")}')">Delete</button>
       </div>`}</td>
     </tr>`).join('');
     if(cards) cards.innerHTML=coAdmins.map(a=>`
@@ -4800,6 +4806,26 @@ async function deleteCoAdmin(id,name){
     await loadCoAdmins();
     showToast(`✓ ${name} removed.`,'success');
   }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function resendCoAdminInvite(id, email, name) {
+  try {
+    const sess = Sess.get();
+    const loginUrl = `${window.location.origin}${window.location.pathname}`;
+    await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
+      body: JSON.stringify({
+        type: 'co_admin_invite',
+        email, name,
+        adminName: sess?.name || 'Your administrator',
+        loginUrl,
+      })
+    });
+    showToast(`✓ ${t('coAdmin.inviteResent')||'Invitation resent to'} ${email}`, 'success');
+  } catch(e) {
+    showToast('Error: '+e.message, 'error');
+  }
 }
 
 // ─── END CO-ADMIN MANAGEMENT ──────────────────────────────────────────────
@@ -4955,17 +4981,19 @@ async function approveJoinRequest(reqId, adminId){
   try{
     const sess=Sess.get();
     if(!sess)return;
+    // Always use primary admin ID
+    const primaryAdminId = sess.parent_admin_id || sess.id;
     // Check co-admin limit before approving
     const plan=getAdminPlan();
-    const currentCoAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`);
+    const currentCoAdmins=await DB.all('admins',`parent_admin_id=eq.${primaryAdminId}&status=neq.suspended`);
     const extraSeats=Number(sess.extra_seats??0);
-    const maxCoAdmins=(plan.maxCoAdmins===Infinity?Infinity:plan.maxCoAdmins-1)+extraSeats; // -1 because primary admin counts
+    const maxCoAdmins=(plan.maxCoAdmins===Infinity?Infinity:plan.maxCoAdmins-1)+extraSeats;
     if(currentCoAdmins.length>=maxCoAdmins){
       alert((t('coAdmin.limitReached')||'Co-admin limit reached for your plan. Upgrade or add an extra seat.'));
       return;
     }
-    // Approve: set parent_admin_id so co-admin sees the right companies
-    await DB.update('admins',`id=eq.${adminId}`,{status:'active', parent_admin_id:sess.id});
+    // Approve: set parent_admin_id to primary admin so co-admin sees the right companies
+    await DB.update('admins',`id=eq.${adminId}`,{status:'active', parent_admin_id:primaryAdminId});
     await DB.update('join_requests',`id=eq.${reqId}`,{status:'approved'});
     // Send approval email to co-admin
     const req=await DB.all('join_requests',`id=eq.${reqId}`);
@@ -7369,6 +7397,7 @@ en:{
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
 'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email with login instructions.','coAdmin.inviteNote':'An email invitation will be sent.','coAdmin.inviteNoteTemp':'The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.','coAdmin.tempPass':'Temporary Password','coAdmin.tempPassHint':'(share this privately with the invitee)','coAdmin.tempPassRequired':'Please set a temporary password (min 6 characters).','coAdmin.accountActivated':'Account activated! Welcome to PunchClock Pro. 🎉','login.rememberMe':'Stay logged in','coAdmin.fullName':'Full Name','coAdmin.roleLabel':'Role',
+'coAdmin.pendingInvite':'Pending Invite','coAdmin.resendInvite':'Resend Invite','coAdmin.inviteResent':'Invitation resent to',
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
 'companies.empty':'No companies yet. Create your first one!',
 'modal.newCompany':'New Company','modal.editCompany':'Edit Company',
@@ -7820,6 +7849,7 @@ fr:{
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
 'coAdmin.sendInvite':'Envoyer l\'invitation','coAdmin.inviteSent':'Invitation envoyée! Il recevra un courriel pour configurer son compte.',
+'coAdmin.pendingInvite':'Invitation en attente','coAdmin.resendInvite':'Renvoyer','coAdmin.inviteResent':'Invitation renvoyée à',
 'coAdmin.myCoAdmins':'Mes co-admins','coAdmin.noCoAdmins':'Aucun co-admin pour l\'instant. Invitez quelqu\'un pour commencer.',
 'companies.empty':'Aucune compagnie. Créez-en une première!',
 'modal.newCompany':'Nouvelle compagnie','modal.editCompany':'Modifier la compagnie',
