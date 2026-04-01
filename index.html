@@ -1592,6 +1592,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <label>Status</label>
       <select id="editCoAdminStatus">
         <option value="active">Active</option>
+        <option value="pending_invite">Pending Invite</option>
         <option value="suspended">Suspended</option>
       </select>
     </div>
@@ -1610,10 +1611,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="form-group"><label>Name</label><input type="text" id="editAdminName"></div>
     <div class="form-group"><label>Email</label><input type="email" id="editAdminEmail" readonly style="opacity:.6;cursor:default"></div>
     <div class="form-group"><label>Role</label>
-      <select id="editAdminRole">
+      <select id="editAdminRole" onchange="document.getElementById('editAdminParentGroup').style.display=(this.value==='admin'||this.value==='manager')?'block':'none'">
         <option value="admin">Admin</option>
+        <option value="manager">Manager</option>
         <option value="super_admin">Super Admin</option>
       </select>
+    </div>
+    <div class="form-group" id="editAdminParentGroup" style="display:none">
+      <label>Belongs to (Primary Admin)</label>
+      <select id="editAdminParent">
+        <option value="">— None (standalone) —</option>
+      </select>
+      <p style="font-size:11px;color:var(--text3);margin-top:4px">Assign this admin/manager under a primary account owner so they see that company's data.</p>
     </div>
     <div class="form-group"><label>Plan Tier</label>
       <select id="editAdminPlan">
@@ -1627,6 +1636,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="form-group"><label>Status</label>
       <select id="editAdminStatus">
         <option value="active" data-i18n="admin.active">Active</option>
+        <option value="pending_invite">Pending Invite</option>
         <option value="suspended">Suspended</option>
       </select>
     </div>
@@ -4657,7 +4667,7 @@ async function saveInviteCoAdmin(){
     if(ex.length){showMsg('inviteCoAdminMsg',t('msg.emailTaken'),'error');return;}
     // Create account — parent is always the primary admin's ID
     const r=await DB.insert('admins',{
-      name,email,password:'PENDING',verified:false,
+      name,email,password:'PENDING',verified:true,
       role,plan:sess.plan||'free',status:'pending_invite',
       parent_admin_id:primaryAdminId,invited_by:sess.email
     });
@@ -4793,7 +4803,9 @@ async function saveEditCoAdmin(){
   const status=document.getElementById('editCoAdminStatus').value;
   if(!name){showMsg('editCoAdminMsg',t('msg.allRequired'),'error');return;}
   try{
-    await DB.update('admins',`id=eq.${id}`,{name,role,status});
+    const updates={name,role,status};
+    if(status==='active') updates.verified=true;
+    await DB.update('admins',`id=eq.${id}`,updates);
     closeModal('editCoAdminModal');
     await loadCoAdmins();
   }catch(e){showMsg('editCoAdminMsg','Error: '+e.message,'error');}
@@ -5056,7 +5068,7 @@ async function saveCreateAdmin(){
 
 function openEditAdminModal(id){
   // Fetch from cached admin list if possible, else from server
-  DB.all('admins',`id=eq.${id}`).then(rows=>{
+  DB.all('admins',`id=eq.${id}`).then(async rows=>{
     if(!rows.length) return;
     const a = rows[0];
     document.getElementById('editAdminId').value = a.id;
@@ -5068,6 +5080,23 @@ function openEditAdminModal(id){
     document.getElementById('editAdminMsg').innerHTML='';
     // Prevent editing super admin role if it's the main super admin email
     document.getElementById('editAdminRole').disabled = a.email===SUPER_ADMIN_EMAIL;
+
+    // Populate parent admin dropdown (primary admins only — no parent themselves)
+    const parentSel = document.getElementById('editAdminParent');
+    const parentGroup = document.getElementById('editAdminParentGroup');
+    try{
+      const primaries = await DB.all('admins',`parent_admin_id=is.null&role=neq.super_admin&id=neq.${id}&order=name.asc`);
+      parentSel.innerHTML='<option value="">— None (standalone) —</option>';
+      primaries.forEach(p=>{
+        const opt=document.createElement('option');
+        opt.value=p.id; opt.textContent=`${p.name} (${p.email})`;
+        if(p.id===a.parent_admin_id) opt.selected=true;
+        parentSel.appendChild(opt);
+      });
+    }catch(e){parentSel.innerHTML='<option value="">— could not load —</option>';}
+
+    const showParent = (a.role==='admin'||a.role==='manager');
+    parentGroup.style.display = showParent ? 'block' : 'none';
     openModal('editAdminModal');
   }).catch(e=>alert('Error: '+e.message));
 }
@@ -5078,9 +5107,17 @@ async function saveEditAdmin(){
   const role=document.getElementById('editAdminRole').value;
   const plan=document.getElementById('editAdminPlan').value;
   const status=document.getElementById('editAdminStatus').value;
+  const parentVal=document.getElementById('editAdminParent').value;
   if(!name){showMsg('editAdminMsg','Name is required.','error');return;}
   try{
-    await DB.update('admins',`id=eq.${id}`,{name,role,plan,status});
+    const updates={name,role,plan,status};
+    if(role==='admin'||role==='manager'){
+      updates.parent_admin_id = parentVal || null;
+    } else {
+      updates.parent_admin_id = null;
+    }
+    if(status==='active') updates.verified=true;
+    await DB.update('admins',`id=eq.${id}`,updates);
     closeModal('editAdminModal');
     await renderAdmins();
   }catch(e){showMsg('editAdminMsg','Error: '+e.message,'error');}
