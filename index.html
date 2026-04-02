@@ -6957,7 +6957,7 @@ async function init(){
         showLanding();
         return;
       }
-      C.employees = (employees||[]).filter(e=>e.company_id===co.id);
+      C.employees = (employees||[]).filter(e=>e.company_id===co.id && e.site_id===site.id);
       // Set context and go straight to punch — no admin session
       Ctx.set({co,site});
       document.getElementById('loadingOverlay').classList.add('hidden');
