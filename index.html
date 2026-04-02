@@ -132,6 +132,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- PWA support -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PunchClock">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -434,8 +442,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .btn-amber{padding:6px 12px;background:rgba(245,158,11,.15);border:1.5px solid rgba(245,158,11,.4);border-radius:8px;color:var(--amber);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-amber:hover{background:rgba(245,158,11,.25);}
 
-/* MISC */
-.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+/* ── KIOSK SHORTCUT ── */
+.kiosk-url-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);word-break:break-all;margin:12px 0;cursor:pointer;transition:border-color .15s;user-select:all;}
+.kiosk-url-box:hover{border-color:var(--accent);}
+.kiosk-step{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);}
+.kiosk-step:last-child{border-bottom:none;}
+.kiosk-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.kiosk-os-tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--surface2);border-radius:8px;padding:3px;}
+.kiosk-os-tab{flex:1;padding:6px;border:none;border-radius:6px;background:none;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.kiosk-os-tab.active{background:var(--surface);color:var(--text);}
+border-top:1px solid var(--border);margin:18px 0;}
 .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;}
 .avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .company-logo{width:52px;height:52px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
@@ -1592,7 +1608,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <label>Status</label>
       <select id="editCoAdminStatus">
         <option value="active">Active</option>
-        <option value="pending_invite">Pending Invite</option>
         <option value="suspended">Suspended</option>
       </select>
     </div>
@@ -1611,18 +1626,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="form-group"><label>Name</label><input type="text" id="editAdminName"></div>
     <div class="form-group"><label>Email</label><input type="email" id="editAdminEmail" readonly style="opacity:.6;cursor:default"></div>
     <div class="form-group"><label>Role</label>
-      <select id="editAdminRole" onchange="document.getElementById('editAdminParentGroup').style.display=(this.value==='admin'||this.value==='manager')?'block':'none'">
+      <select id="editAdminRole">
         <option value="admin">Admin</option>
-        <option value="manager">Manager</option>
         <option value="super_admin">Super Admin</option>
       </select>
-    </div>
-    <div class="form-group" id="editAdminParentGroup" style="display:none">
-      <label>Belongs to (Primary Admin)</label>
-      <select id="editAdminParent">
-        <option value="">— None (standalone) —</option>
-      </select>
-      <p style="font-size:11px;color:var(--text3);margin-top:4px">Assign this admin/manager under a primary account owner so they see that company's data.</p>
     </div>
     <div class="form-group"><label>Plan Tier</label>
       <select id="editAdminPlan">
@@ -1636,7 +1643,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="form-group"><label>Status</label>
       <select id="editAdminStatus">
         <option value="active" data-i18n="admin.active">Active</option>
-        <option value="pending_invite">Pending Invite</option>
         <option value="suspended">Suspended</option>
       </select>
     </div>
@@ -2321,6 +2327,96 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="savePunchEdit()">Save Changes</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- KIOSK SHORTCUT MODAL -->
+<div class="modal-overlay" id="kioskShortcutModal" style="z-index:9700">
+  <div class="modal" style="max-width:500px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h3 style="margin:0">📲 <span id="kioskShortcutTitle">Save Kiosk Shortcut</span></h3>
+      <button onclick="closeModal('kioskShortcutModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskShortcutSubtitle">Save a shortcut to this site's clock-in page. Employees can open it directly — no admin login needed.</p>
+
+    <!-- Install as App button (shown when PWA install is available) -->
+    <div id="kioskInstallSection" style="display:none;margin-bottom:16px">
+      <button id="kioskInstallBtn" class="btn-primary" style="width:100%;padding:13px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="triggerPWAInstall()">
+        <span style="font-size:18px">💾</span> <span id="kioskInstallBtnLabel">Install PunchClock App on This Device</span>
+      </button>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px" id="kioskInstallNote">Installs a desktop app icon that opens directly to this site's punch page.</p>
+      <div style="display:flex;align-items:center;gap:10px;margin:12px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--text3)">or save manually</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+    </div>
+
+    <!-- Kiosk URL -->
+    <div style="margin-bottom:4px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Kiosk URL</div>
+    <div class="kiosk-url-box" id="kioskUrlDisplay" onclick="copyKioskUrl()" title="Click to copy"></div>
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="copyKioskUrl()" id="kioskCopyBtn">📋 Copy URL</button>
+      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="openKioskQR()">🔲 Show QR Code</button>
+    </div>
+
+    <!-- OS-specific instructions -->
+    <div style="background:var(--surface2);border-radius:12px;padding:14px 16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">📖 How to save as a desktop shortcut:</div>
+      <div class="kiosk-os-tabs">
+        <button class="kiosk-os-tab active" onclick="switchKioskOS('chrome',this)">🖥 Chrome</button>
+        <button class="kiosk-os-tab" onclick="switchKioskOS('edge',this)">🔷 Edge</button>
+        <button class="kiosk-os-tab" onclick="switchKioskOS('safari',this)">🧭 Safari</button>
+        <button class="kiosk-os-tab" onclick="switchKioskOS('iphone',this)">📱 iPhone</button>
+        <button class="kiosk-os-tab" onclick="switchKioskOS('android',this)">🤖 Android</button>
+      </div>
+      <div id="kioskOsChrome">
+        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the copied URL in Chrome on the device employees will use</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Click the <strong>⋮ menu</strong> (top-right) → <strong>Save and share</strong> → <strong>Create shortcut…</strong></span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Check <strong>"Open as window"</strong> and click <strong>Create</strong> — a desktop icon appears</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Employees double-click the icon to open the punch page directly</span></div>
+      </div>
+      <div id="kioskOsEdge" style="display:none">
+        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the copied URL in Edge on the kiosk device</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Click <strong>⋯ menu</strong> → <strong>Apps</strong> → <strong>Install this site as an app</strong></span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Click <strong>Install</strong> — a desktop shortcut is created automatically</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Employees click the icon — it opens fullscreen directly to punch mode</span></div>
+      </div>
+      <div id="kioskOsSafari" style="display:none">
+        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the copied URL in Safari on the Mac used by employees</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Go to <strong>File</strong> menu → <strong>Add to Dock…</strong> (macOS Sonoma+) or bookmark it</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>The punch page icon appears in the Dock for quick access</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Alternatively: right-click the URL bar → <strong>Add Bookmark</strong> to Favourites Bar</span></div>
+      </div>
+      <div id="kioskOsIphone" style="display:none">
+        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the kiosk URL in <strong>Safari</strong> on the iPad/iPhone</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Tap the <strong>Share</strong> button (□ with arrow) at the bottom</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Scroll down and tap <strong>Add to Home Screen</strong></span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Tap <strong>Add</strong> — the PunchClock icon appears on the home screen like a native app</span></div>
+      </div>
+      <div id="kioskOsAndroid" style="display:none">
+        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the kiosk URL in <strong>Chrome</strong> on the Android tablet/phone</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Tap the <strong>⋮ menu</strong> → <strong>Add to Home screen</strong></span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Tap <strong>Add</strong> — an icon appears on the home screen</span></div>
+        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Employees tap it to open the punch page directly, fullscreen</span></div>
+      </div>
+    </div>
+
+    <button class="btn-secondary" style="width:100%;margin-top:14px" onclick="closeModal('kioskShortcutModal')">Done</button>
+  </div>
+</div>
+
+<!-- KIOSK QR CODE MODAL -->
+<div class="modal-overlay" id="kioskQRModal" style="z-index:9800">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="margin:0">🔲 QR Code</h3>
+      <button onclick="closeModal('kioskQRModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskQRSubtitle">Scan with a phone or tablet to open the punch page directly.</p>
+    <div id="kioskQRCode" style="background:#fff;padding:16px;border-radius:12px;display:inline-block;margin-bottom:14px"></div>
+    <p style="font-size:11px;color:var(--text3)" id="kioskQRUrl"></p>
+    <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeModal('kioskQRModal')">Close</button>
   </div>
 </div>
 
@@ -4609,7 +4705,8 @@ function renderSitesAdmin(){
         <div class="site-name">${s.name}</div>
         <div class="site-meta">${co?co.name+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+s.description:''}</div>
       </div>
-      <div style="display:flex;gap:7px">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-primary" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">📲 ${t('site.kioskShortcut')||'Kiosk Shortcut'}</button>
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
         <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
       </div>
@@ -4667,7 +4764,7 @@ async function saveInviteCoAdmin(){
     if(ex.length){showMsg('inviteCoAdminMsg',t('msg.emailTaken'),'error');return;}
     // Create account — parent is always the primary admin's ID
     const r=await DB.insert('admins',{
-      name,email,password:'PENDING',verified:true,
+      name,email,password:'PENDING',verified:false,
       role,plan:sess.plan||'free',status:'pending_invite',
       parent_admin_id:primaryAdminId,invited_by:sess.email
     });
@@ -4803,9 +4900,7 @@ async function saveEditCoAdmin(){
   const status=document.getElementById('editCoAdminStatus').value;
   if(!name){showMsg('editCoAdminMsg',t('msg.allRequired'),'error');return;}
   try{
-    const updates={name,role,status};
-    if(status==='active') updates.verified=true;
-    await DB.update('admins',`id=eq.${id}`,updates);
+    await DB.update('admins',`id=eq.${id}`,{name,role,status});
     closeModal('editCoAdminModal');
     await loadCoAdmins();
   }catch(e){showMsg('editCoAdminMsg','Error: '+e.message,'error');}
@@ -5068,7 +5163,7 @@ async function saveCreateAdmin(){
 
 function openEditAdminModal(id){
   // Fetch from cached admin list if possible, else from server
-  DB.all('admins',`id=eq.${id}`).then(async rows=>{
+  DB.all('admins',`id=eq.${id}`).then(rows=>{
     if(!rows.length) return;
     const a = rows[0];
     document.getElementById('editAdminId').value = a.id;
@@ -5080,23 +5175,6 @@ function openEditAdminModal(id){
     document.getElementById('editAdminMsg').innerHTML='';
     // Prevent editing super admin role if it's the main super admin email
     document.getElementById('editAdminRole').disabled = a.email===SUPER_ADMIN_EMAIL;
-
-    // Populate parent admin dropdown (primary admins only — no parent themselves)
-    const parentSel = document.getElementById('editAdminParent');
-    const parentGroup = document.getElementById('editAdminParentGroup');
-    try{
-      const primaries = await DB.all('admins',`parent_admin_id=is.null&role=neq.super_admin&id=neq.${id}&order=name.asc`);
-      parentSel.innerHTML='<option value="">— None (standalone) —</option>';
-      primaries.forEach(p=>{
-        const opt=document.createElement('option');
-        opt.value=p.id; opt.textContent=`${p.name} (${p.email})`;
-        if(p.id===a.parent_admin_id) opt.selected=true;
-        parentSel.appendChild(opt);
-      });
-    }catch(e){parentSel.innerHTML='<option value="">— could not load —</option>';}
-
-    const showParent = (a.role==='admin'||a.role==='manager');
-    parentGroup.style.display = showParent ? 'block' : 'none';
     openModal('editAdminModal');
   }).catch(e=>alert('Error: '+e.message));
 }
@@ -5107,17 +5185,9 @@ async function saveEditAdmin(){
   const role=document.getElementById('editAdminRole').value;
   const plan=document.getElementById('editAdminPlan').value;
   const status=document.getElementById('editAdminStatus').value;
-  const parentVal=document.getElementById('editAdminParent').value;
   if(!name){showMsg('editAdminMsg','Name is required.','error');return;}
   try{
-    const updates={name,role,plan,status};
-    if(role==='admin'||role==='manager'){
-      updates.parent_admin_id = parentVal || null;
-    } else {
-      updates.parent_admin_id = null;
-    }
-    if(status==='active') updates.verified=true;
-    await DB.update('admins',`id=eq.${id}`,updates);
+    await DB.update('admins',`id=eq.${id}`,{name,role,plan,status});
     closeModal('editAdminModal');
     await renderAdmins();
   }catch(e){showMsg('editAdminMsg','Error: '+e.message,'error');}
@@ -6337,6 +6407,148 @@ async function executeSendReport(){
 
 
 // ═══════════════════════════════════════════════════
+// PWA + KIOSK SHORTCUT
+// ═══════════════════════════════════════════════════
+
+// Store the deferred install prompt globally
+let _pwaInstallPrompt = null;
+let _pwaInstalled = false;
+
+// Listen for the browser's install prompt — capture it for later use
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _pwaInstallPrompt = e;
+  // If kiosk modal is open, show the install button
+  const installSection = document.getElementById('kioskInstallSection');
+  if(installSection) installSection.style.display = '';
+});
+
+window.addEventListener('appinstalled', () => {
+  _pwaInstalled = true;
+  _pwaInstallPrompt = null;
+  showToast('✓ PunchClock app installed successfully!', 'success');
+});
+
+function registerServiceWorker(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').catch(()=>{}); // fail silently — sw.js optional
+  }
+}
+
+async function triggerPWAInstall(){
+  if(!_pwaInstallPrompt){
+    showToast('Installation not available in this browser. Use the manual steps below.', 'info');
+    return;
+  }
+  _pwaInstallPrompt.prompt();
+  const result = await _pwaInstallPrompt.userChoice;
+  if(result.outcome === 'accepted'){
+    showToast('✓ App installed! A shortcut has been added to your desktop.', 'success');
+    closeModal('kioskShortcutModal');
+  }
+  _pwaInstallPrompt = null;
+}
+
+function getKioskUrl(siteId){
+  const base = window.location.origin + window.location.pathname;
+  return `${base}?kiosk=${siteId}`;
+}
+
+function openKioskShortcut(siteId){
+  const site = C.sites.find(s=>s.id===siteId);
+  const co = site ? C.companies.find(c=>c.id===site.company_id) : null;
+  if(!site) return;
+
+  const lang = _appLang||'en';
+  const isFr = lang==='fr';
+
+  // Update modal content
+  document.getElementById('kioskShortcutTitle').textContent =
+    isFr ? `Raccourci kiosque — ${site.name}` : `Kiosk Shortcut — ${site.name}`;
+  document.getElementById('kioskShortcutSubtitle').textContent =
+    isFr
+      ? `Enregistrez un raccourci vers la page de pointage de ${site.name}. Les employés peuvent l'ouvrir directement, sans connexion admin.`
+      : `Save a shortcut to the ${site.name} punch page. Employees open it directly — no admin login needed.`;
+
+  const kioskUrl = getKioskUrl(siteId);
+  document.getElementById('kioskUrlDisplay').textContent = kioskUrl;
+
+  // Show PWA install button if browser supports it
+  const installSection = document.getElementById('kioskInstallSection');
+  const installBtn = document.getElementById('kioskInstallBtn');
+  const installNote = document.getElementById('kioskInstallNote');
+  installSection.style.display = _pwaInstallPrompt ? '' : 'none';
+  if(installBtn) {
+    document.getElementById('kioskInstallBtnLabel').textContent =
+      isFr ? 'Installer l\'app PunchClock sur cet appareil' : 'Install PunchClock App on This Device';
+  }
+  if(installNote) {
+    installNote.textContent = isFr
+      ? `Installe une icône sur le bureau qui ouvre directement la page de pointage de ${site.name}.`
+      : `Installs a desktop icon that opens directly to ${site.name}'s punch page.`;
+  }
+
+  // Store for QR and copy
+  window._currentKioskUrl = kioskUrl;
+  window._currentKioskSite = site.name;
+
+  openModal('kioskShortcutModal');
+}
+
+function copyKioskUrl(){
+  const url = window._currentKioskUrl;
+  if(!url) return;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>{
+      const btn = document.getElementById('kioskCopyBtn');
+      if(btn){ btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent='📋 Copy URL', 2000); }
+      showToast('✓ Kiosk URL copied to clipboard!', 'success');
+    }).catch(()=>fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); showToast('✓ URL copied!', 'success'); }
+  catch(e){ showToast('Could not copy — please copy the URL manually.', 'info'); }
+  document.body.removeChild(ta);
+}
+
+function switchKioskOS(os, btn){
+  const panels = ['chrome','edge','safari','iphone','android'];
+  panels.forEach(p => {
+    const el = document.getElementById('kioskOs'+p.charAt(0).toUpperCase()+p.slice(1));
+    if(el) el.style.display = p===os ? '' : 'none';
+  });
+  document.querySelectorAll('.kiosk-os-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+function openKioskQR(){
+  const url = window._currentKioskUrl;
+  const siteName = window._currentKioskSite || '';
+  if(!url) return;
+
+  document.getElementById('kioskQRSubtitle').textContent =
+    (_appLang==='fr')
+      ? `Scannez avec un téléphone ou une tablette pour ouvrir la page de pointage de ${siteName}.`
+      : `Scan with a phone or tablet to open the ${siteName} punch page directly.`;
+  document.getElementById('kioskQRUrl').textContent = url;
+
+  // Generate QR code using a free API (no library needed)
+  const qrContainer = document.getElementById('kioskQRCode');
+  const encoded = encodeURIComponent(url);
+  const size = 220;
+  qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&color=0f1117&bgcolor=ffffff&margin=2" width="${size}" height="${size}" alt="QR Code" style="display:block;border-radius:6px">`;
+
+  openModal('kioskQRModal');
+}
+
+// ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
 async function init(){
@@ -6349,6 +6561,54 @@ async function init(){
   const today=new Date();
   document.getElementById('actEnd').value=today.toLocaleDateString('en-CA');
   document.getElementById('actStart').value=new Date(today-6*86400000).toLocaleDateString('en-CA');
+
+  // ── KIOSK URL HANDLER (?kiosk=SITE_ID) ──
+  // If a kiosk URL is detected, bypass everything and go straight to punch mode
+  const kioskSiteId = new URLSearchParams(window.location.search).get('kiosk');
+  if(kioskSiteId){
+    // Clean the URL so it doesn't linger
+    window.history.replaceState({},'',window.location.pathname);
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+    try{
+      // Load companies + sites without requiring login
+      const [companies, sites, employees] = await Promise.all([
+        DB.all('companies','order=name.asc'),
+        DB.all('sites',`id=eq.${kioskSiteId}`),
+        DB.all('employees','order=name.asc'),
+      ]);
+      C.companies = companies||[];
+      C.sites = sites||[];
+      const site = sites?.[0];
+      if(!site){
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        updateNav();
+        showLanding();
+        showToast('Kiosk URL not found. Please contact your administrator.','error');
+        return;
+      }
+      const co = (companies||[]).find(c=>c.id===site.company_id);
+      if(!co){
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        updateNav();
+        showLanding();
+        return;
+      }
+      C.employees = (employees||[]).filter(e=>e.company_id===co.id);
+      // Set context and go straight to punch — no admin session
+      Ctx.set({co,site});
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      updateNav();
+      navigate('punch');
+      // Register service worker for PWA if not already done
+      registerServiceWorker();
+      return;
+    }catch(e){
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      updateNav();
+      showLanding();
+      return;
+    }
+  }
 
   // If nobody is logged in, skip DB entirely — show landing page immediately
   if(!isLoggedIn()){
@@ -6379,6 +6639,8 @@ async function init(){
       updateContextPill();
       navigate('punch');
     }
+    // Register PWA service worker
+    registerServiceWorker();
   }catch(e){
     document.getElementById('loadingOverlay').classList.add('hidden');
     updateNav();
@@ -7253,6 +7515,7 @@ en:{
 'site.desc':'Description (optional)','site.descPlaceholder':'Brief description',
 'site.noSites':'No sites yet for this company. Click \"+ Add Site\" to create one.',
 'site.employee':'employee','site.employees':'employees',
+'site.kioskShortcut':'Kiosk Shortcut',
 'emp.photo':'Photo','emp.fullName':'Full Name','emp.fullNamePlaceholder':'John Smith',
 'emp.department':'Department','emp.departmentPlaceholder':'Engineering...',
 'emp.employeeId':'Employee ID','emp.site':'Site',
@@ -7705,6 +7968,7 @@ fr:{
 'site.desc':'Description (optionnel)','site.descPlaceholder':'Brève description',
 'site.noSites':'Aucun site pour cette compagnie. Cliquez sur \"+ Ajouter un site\" pour en créer un.',
 'site.employee':'employé','site.employees':'employés',
+'site.kioskShortcut':'Raccourci kiosque',
 'emp.photo':'Photo','emp.fullName':'Nom complet','emp.fullNamePlaceholder':'Jean Dupont',
 'emp.department':'Département','emp.departmentPlaceholder':'Ingénierie...',
 'emp.employeeId':'ID employé','emp.site':'Site',
