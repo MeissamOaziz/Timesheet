@@ -6518,7 +6518,7 @@ async function savePunchEdit(){
   if(!punch_date||!punch_time){showMsg('editPunchMsg','Date and time are required.','error');return;}
   if(!/^\d{2}:\d{2}(:\d{2})?$/.test(punch_time)){showMsg('editPunchMsg','Time must be HH:MM or HH:MM:SS format.','error');return;}
   const fullTime=punch_time.length===5?punch_time+':00':punch_time;
-  const punched_at=`${punch_date}T${fullTime}`;
+  const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const site=C.sites.find(s=>s.id===site_id);
   try{
     await DB.update('punches',`id=eq.${id}`,{type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true});
@@ -6567,7 +6567,7 @@ async function saveAddPunch(){
   if(!empId||!punch_date||!punch_time){showMsg('addPunchMsg','All fields are required.','error');return;}
   if(!/^\d{2}:\d{2}(:\d{2})?$/.test(punch_time)){showMsg('addPunchMsg','Time must be HH:MM or HH:MM:SS.','error');return;}
   const fullTime=punch_time.length===5?punch_time+':00':punch_time;
-  const punched_at=`${punch_date}T${fullTime}`;
+  const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const emp=C.employees.find(e=>e.id===empId);
   const ctx=Ctx.get();
   const site=ctx?.site||C.sites.find(s=>s.id===emp?.site_id);
