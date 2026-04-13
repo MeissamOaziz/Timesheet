@@ -82,7 +82,10 @@
     "Planification des quarts de travail / Shift scheduling",
     "Interface en français et en anglais / French and English interface",
     "Export QuickBooks",
-    "Conforme Loi 25 Québec / Quebec Law 25 compliant"
+    "Conforme Loi 25 Québec / Quebec Law 25 compliant",
+    "Géofence par site / Per-site geofencing",
+    "Raccourci kiosque PWA / PWA kiosk shortcut",
+    "Jeton d'appareil / Device token security"
   ]
 }
 </script>
@@ -675,6 +678,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="land-logo">⏱ PunchClock Pro</div>
     <div class="land-nav-links">
       <a onclick="document.getElementById('landingFeatures').scrollIntoView({behavior:'smooth'})" data-i18n="land.features">Features</a>
+      <a onclick="document.getElementById('landingGeofencing').scrollIntoView({behavior:'smooth'})" data-i18n="land.geoNav">Geofencing</a>
       <a onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.pricing">Pricing</a>
       <a onclick="document.getElementById('landingHowItWorks').scrollIntoView({behavior:'smooth'})" data-i18n="land.howNav">How It Works</a>
       <a onclick="document.getElementById('landingFAQ').scrollIntoView({behavior:'smooth'})" data-i18n="land.faqNav">FAQ</a>
@@ -758,6 +762,16 @@ border-top:1px solid var(--border);margin:18px 0;}
         <h3 data-i18n="land.feat9Title">Employee Scheduling <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:6px;white-space:nowrap">ADD-ON</span></h3>
         <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.</p>
       </div>
+      <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
+        <div class="feature-icon">📍</div>
+        <h3 data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</h3>
+        <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📲</div>
+        <h3 data-i18n="land.feat11Title">Kiosk Shortcut — One Tap to Punch</h3>
+        <p data-i18n="land.feat11Desc">Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.</p>
+      </div>
     </div>
   </div>
 
@@ -789,6 +803,59 @@ border-top:1px solid var(--border);margin:18px 0;}
           <div style="font-size:30px;margin-bottom:12px">🛡️</div>
           <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet4Title">Buddy Punching Protection</div>
           <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet4Desc">Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GEOFENCING SECTION -->
+  <div class="land-section" id="landingGeofencing" style="background:linear-gradient(135deg,rgba(34,197,94,.04),rgba(79,142,247,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 24px">
+    <div style="max-width:960px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:52px">
+        <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--green);text-transform:uppercase;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:4px 14px;margin-bottom:14px" data-i18n="land.geoBadge">Location Security — Built Right In</div>
+        <h2 style="font-size:clamp(26px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:14px" data-i18n="land.geoTitle">Employees can only punch where they work.</h2>
+        <p style="color:var(--text2);font-size:16px;max-width:640px;margin:0 auto;line-height:1.75" data-i18n="land.geoSub">Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.</p>
+      </div>
+
+      <!-- How geofencing works — 3 column explainer -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-bottom:48px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;text-align:center">
+          <div style="font-size:36px;margin-bottom:14px">⚙️</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow1Title">1. Admin Sets a Boundary</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow1Desc">In the Sites settings, toggle Geofence ON, click "Use my current location" while standing at the site, and drag the radius slider. Default is 25m — ideal for a restaurant or retail store. Warehouses and large sites can go up to 500m. One map preview shows exactly what's covered.</p>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;text-align:center">
+          <div style="font-size:36px;margin-bottom:14px">📍</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow2Title">2. Every Punch is Verified</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow2Desc">When an employee taps IN or OUT, their device's GPS is checked silently in the background. If they're inside the boundary, the punch goes through instantly. If they're outside — whether at home, in a car, or at another location — the punch is blocked with a clear message showing exactly how far away they are.</p>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;text-align:center">
+          <div style="font-size:36px;margin-bottom:14px">📊</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow3Title">3. Every Location is Logged</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow3Desc">Each punch record stores the GPS coordinates, accuracy, and distance from the site boundary. Admins can review exactly where an employee was when they clocked in — a full location audit trail for every punch.</p>
+        </div>
+      </div>
+
+      <!-- GPS strict vs lenient modes -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:40px;max-width:780px;margin-left:auto;margin-right:auto">
+        <div style="background:var(--surface);border:1.5px solid rgba(239,68,68,.3);border-radius:14px;padding:20px 22px">
+          <div style="font-size:20px;margin-bottom:8px">🔒</div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--red)" data-i18n="land.geoStrictTitle">Strict Mode</div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0" data-i18n="land.geoStrictDesc">If GPS is unavailable or denied by the employee's device, the punch is blocked entirely. Best for sites where location accuracy is critical and you want zero exceptions.</p>
+        </div>
+        <div style="background:var(--surface);border:1.5px solid rgba(245,158,11,.3);border-radius:14px;padding:20px 22px">
+          <div style="font-size:20px;margin-bottom:8px">⚠️</div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--amber)" data-i18n="land.geoLenientTitle">Lenient Mode (Default)</div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0" data-i18n="land.geoLenientDesc">If GPS is unavailable, employees see a warning but the punch still goes through. Ideal for sites with poor indoor GPS signal, or businesses that want a softer rollout.</p>
+        </div>
+      </div>
+
+      <!-- Device token add-on callout -->
+      <div style="background:var(--surface);border:1.5px solid rgba(79,142,247,.3);border-radius:16px;padding:26px 30px;max-width:780px;margin:0 auto;display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
+        <div style="font-size:32px;flex-shrink:0">🔑</div>
+        <div style="flex:1;min-width:220px">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px" data-i18n="land.geoDeviceTitle">Optional: Device Token — Double Lock</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoDeviceDesc">Enable the Device Token option per site to add a second layer on top of geofencing. Only devices physically registered by a manager via the Kiosk Shortcut panel can punch — even if someone is standing in the right location on an unregistered phone, they're blocked. Geofencing + Device Token together is the strongest protection available.</p>
         </div>
       </div>
     </div>
@@ -954,6 +1021,16 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div style="font-size:34px;margin-bottom:10px">&#128274;</div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA6Title">Co-Admin Access</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA6Desc">Invite co-admins to share management duties. Each co-admin sees the same companies, sites, and employees.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid rgba(34,197,94,.25);border-radius:14px">
+        <div style="font-size:34px;margin-bottom:10px">📍</div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA7Title">Set Up Geofencing</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA7Desc">In Admin → Sites, edit any site, toggle Geofence ON, tap "Use my current location," set the radius, and save. Punches from outside that boundary are blocked automatically — no extra setup on each device.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid rgba(79,142,247,.25);border-radius:14px">
+        <div style="font-size:34px;margin-bottom:10px">📲</div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA8Title">Create Kiosk Shortcuts</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA8Desc">Click "Kiosk Shortcut" on any site card to get a direct URL, QR code, or install the PunchClock app on that device. Employees tap the icon and land directly on the punch page — no login required. Set up once, works forever.</p>
       </div>
     </div>
 
@@ -2860,7 +2937,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -3293,10 +3370,13 @@ function showHelpModal(){
     {icon:'📍',title:t('help.s2title'),desc:t('help.s2desc')},
     {icon:'👥',title:t('help.s3title'),desc:t('help.s3desc')},
     {icon:'⏱',title:t('help.s4title'),desc:t('help.s4desc')},
-    {icon:'📊',title:t('help.s5title'),desc:t('help.s5desc')},
-    {icon:'📧',title:t('help.s6title'),desc:t('help.s6desc')},
-    {icon:'📋',title:t('help.s7title'),desc:t('help.s7desc')},
-    {icon:'👥',title:t('help.s8title')||'Co-Admins & Team Access',desc:t('help.s8desc')||'Invite team members to help manage your account. Limits depend on your plan.'},
+    {icon:'📲',title:t('help.s5title'),desc:t('help.s5desc')},
+    {icon:'📍',title:t('help.s6title'),desc:t('help.s6desc')},
+    {icon:'🔑',title:t('help.s7title'),desc:t('help.s7desc')},
+    {icon:'📊',title:t('help.s8title'),desc:t('help.s8desc')},
+    {icon:'📧',title:t('help.s9title'),desc:t('help.s9desc')},
+    {icon:'📋',title:t('help.s10title'),desc:t('help.s10desc')},
+    {icon:'👥',title:t('help.s11title'),desc:t('help.s11desc')},
   ];
   document.getElementById('helpStepsList').innerHTML=steps.map((s,i)=>`
     <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-start">
@@ -7950,6 +8030,7 @@ en:{
 'reports.selectEmployees':'SELECT EMPLOYEES',
 'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
+'land.geoNav':'Geofencing',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
 'land.pill1':'Tablet terminal clock-in','land.pill2':'Automated payroll reports','land.pill3':'QuickBooks export','land.pill4':'Employee scheduling','land.pillAddon':'Add-On',
 'land.howSchedTitle':'Employee Scheduling Add-On',
@@ -8116,21 +8197,27 @@ en:{
 'help.title':'How to Use PunchClock Pro',
 'help.close':'Got it',
 'help.s1title':'Create a Company',
-'help.s1desc':'Go to the <strong>Companies</strong> tab and click <em>+ New Company</em>. Enter your business name, industry, payroll frequency, and timezone. You can manage multiple companies from one account.',
+'help.s1desc':'Go to the <strong>Companies</strong> tab and click <em>+ New Company</em>. Enter your business name, industry, payroll frequency, and week start day. You can manage multiple companies from one account.',
 'help.s2title':'Create a Site',
-'help.s2desc':'In <strong>Admin → Sites</strong>, click <em>+ Add Site</em>. Sites are the physical locations (stores, warehouses, offices) where employees clock in. Each company needs at least one site.',
+'help.s2desc':'In <strong>Admin → Sites</strong>, click <em>+ Add Site</em>. Sites are your physical locations (stores, warehouses, offices). Each company needs at least one site before you can add employees or use the clock-in page.',
 'help.s3title':'Add Employees',
 'help.s3desc':'In <strong>Admin → Employees</strong>, click <em>+ Add Employee</em>. Assign them to a site, set a 4-digit PIN they\'ll use to clock in, and optionally add their email for automated reports.',
 'help.s4title':'Set Up the Clock In/Out Page',
-'help.s4desc':'On the device employees will use, log in as admin, select the company and site, then click <strong>&ldquo;Set up for employees&rdquo;</strong> at the top of the clock page. This logs you out while keeping the punch page active — employees can clock in/out without accessing your admin account. Use <strong>&ldquo;Logout &amp; go to PunchClock.ca&rdquo;</strong> to fully exit instead.',
-'help.s5title':'Generate Reports',
-'help.s5desc':'Go to the <strong>Reports</strong> tab (you must be logged in as admin). Filter by company, site, date range, or employee. Export to Excel, CSV, or PDF. QuickBooks IIF export is also available.',
-'help.s6title':'Automated Email Reports',
-'help.s6desc':'At the end of each pay period, employees with a registered email address automatically receive a summary of their hours worked. The period is determined by the payroll frequency set in your company settings.',
-'help.s7title':'Audit Logs & Manual Corrections',
-'help.s7desc':'The <strong>Activity</strong> tab shows a full audit log of all clock-in and clock-out events. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
-'help.s8title':'Co-Admins & Team Access',
-'help.s8desc':'In <strong>Settings → Co-Admins</strong>, invite someone to help manage your account. Free/Starter: 1 admin total; Growth: 2 admins; Business: 3 admins. Extra admin seats are $4.90/mo. Co-admins receive an email invitation and you approve their access before they can log in.',
+'help.s4desc':'Log in as admin, select your company and site, then click <strong>"Set up for employees"</strong> at the top of the clock page. This logs you out while keeping the punch page active — employees punch with their PIN without ever seeing your admin panel. For a permanent setup, use the <strong>📲 Kiosk Shortcut</strong> button (see step 5 below).',
+'help.s5title':'Save a Kiosk Shortcut (Recommended)',
+'help.s5desc':'In <strong>Admin → Sites</strong>, click <strong>📲 Kiosk Shortcut</strong> on any site card. You can: (1) <strong>Install the PunchClock app</strong> as a desktop/home screen icon — employees tap it and land directly on that site\'s punch page; (2) <strong>Copy the kiosk URL</strong> and bookmark it or save it as a desktop shortcut; (3) <strong>Scan the QR code</strong> with a tablet or phone. The shortcut works without any admin login — employees just tap and punch. Set it up once, and you never have to log back in just to restore the punch page.',
+'help.s6title':'Set Up Geofencing (Optional)',
+'help.s6desc':'Geofencing prevents employees from clocking in/out when they are not physically at the site. To enable it: (1) Go to <strong>Admin → Sites</strong> and click <strong>Edit</strong> on a site. (2) Scroll to the <strong>📍 Geofence</strong> section and toggle it ON. (3) Click <strong>"Use my current location"</strong> while standing at the site — this sets the GPS centre point. (4) Adjust the <strong>radius slider</strong> (25m for a small shop; 100–200m for a warehouse). (5) Save. From that moment, every punch attempt checks GPS silently. Employees outside the boundary see a clear error showing how far away they are. Punches inside go through instantly. Each punch record stores the GPS coordinates for your audit trail.',
+'help.s7title':'Device Token — Extra Security Layer (Optional)',
+'help.s7desc':'If you want the strongest protection, enable <strong>"Require registered device token"</strong> in the Geofence settings for a site. Then open the <strong>📲 Kiosk Shortcut</strong> modal for that site on each authorised kiosk device and click <strong>"Register This Device"</strong>. After that, punches only work on devices that have been explicitly registered — even someone standing at the right location on an unregistered phone will be blocked. To remove a device, open the Kiosk Shortcut modal and click <strong>"Revoke"</strong>.',
+'help.s8title':'Generate Reports',
+'help.s8desc':'Go to the <strong>Reports</strong> tab (admin login required). Filter by company, site, date range, or employee. Export to Excel, CSV, or PDF. QuickBooks IIF export is also available on paid plans.',
+'help.s9title':'Automated Email Reports',
+'help.s9desc':'At the end of each pay period, employees with a registered email automatically receive a PDF summary of their hours. The period is determined by the payroll frequency set in your company settings (weekly, bi-weekly, or monthly).',
+'help.s10title':'Audit Logs & Manual Corrections',
+'help.s10desc':'The <strong>Activity</strong> tab shows every clock-in and clock-out event, including GPS status for geofenced sites. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
+'help.s11title':'Co-Admins & Team Access',
+'help.s11desc':'In <strong>Admin → Admins</strong>, invite co-admins to share management. Free/Starter: 1 admin total; Growth: 2; Business: 3. Extra seats are $4.90/mo. Co-admins receive an email invitation and must set their own password on first login.',
 'land.howTitle':'How It Works','land.howSub':'Up and running in under 10 minutes.',
 'land.how1Title':'1. Create a Company','land.how1Desc':'Register your business, set your payroll frequency and week start day.',
 'land.how2Title':'2. Add Sites','land.how2Desc':'Create one or more physical locations — stores, warehouses, offices.',
@@ -8188,6 +8275,12 @@ en:{
 'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. The Scheduling Add-On must be active on the account.',
 'faq.q15':'Is PunchClock Pro available in French and suitable for Quebec businesses?',
 'faq.a15':'Yes — fully. PunchClock Pro is entirely bilingual (French and English) and built with Quebec businesses in mind. The entire interface, all reports, and all automated emails can be used in French. Pricing is in Canadian dollars (CAD). The software respects Quebec Law 25 (Loi 25) requirements for personal data protection — data is stored securely, employees are only asked for what\'s necessary, and you can request data deletion at any time. Whether you run a restaurant in Montreal, a retail store in Quebec City, or a warehouse in Laval, PunchClock Pro is built for you.',
+'faq.q16':'What is Geofencing and how does it prevent employees from punching in remotely?',
+'faq.a16':'Geofencing creates an invisible GPS boundary around each of your sites. When an employee tries to clock in or out, their device\'s GPS position is checked silently. If they\'re inside the allowed radius (e.g. 25m for a restaurant), the punch goes through. If they\'re outside — at home, in a car, or anywhere else — the punch is blocked and they see a message showing exactly how far away they are. You set the radius per site: as tight as 10m for a small store, up to 500m for a large facility. Each punch also records the GPS coordinates and distance in the audit trail so you can review location data at any time.',
+'faq.q17':'What happens if an employee\'s phone has GPS turned off or they deny location access?',
+'faq.a17':'It depends on the mode you choose per site. In <strong>Lenient Mode</strong> (the default), if GPS is unavailable the employee sees a warning but the punch still goes through — good for sites with poor indoor signal. In <strong>Strict Mode</strong>, if GPS is unavailable or denied, the punch is blocked entirely — best when you need zero exceptions. You set this per site in the Geofence settings.',
+'faq.q18':'What is the Kiosk Shortcut and how do I set it up so employees can always find the punch page?',
+'faq.a18':'The Kiosk Shortcut solves a common problem: the punch page disappears when the browser is closed or the tab is lost. Here\'s how it works: (1) Log in as admin and go to <strong>Admin → Sites</strong>. (2) Click the <strong>📲 Kiosk Shortcut</strong> button on the site card. (3) Choose your method: click <strong>"Install PunchClock App"</strong> to install a real desktop/home screen app icon (Chrome/Edge on desktop; Safari on iPhone; Chrome on Android), or copy the kiosk URL to create a browser bookmark or desktop shortcut manually, or use the QR code to set up a tablet. (4) Once set up, employees tap that icon and land directly on the correct punch page — no login, no navigation needed. The shortcut works even if the browser is closed or the device restarts. Step-by-step instructions for Chrome, Edge, Safari, iPhone, and Android are shown in the Kiosk Shortcut panel.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'Unlimited everything · up to 3 admins',
@@ -8220,6 +8313,29 @@ en:{
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
 'land.feat9Title':'Employee Scheduling',
 'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.',
+'land.feat10Title':'Geofencing — Location-Locked Punching',
+'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
+'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
+'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
+'land.geoBadge':'Location Security — Built Right In',
+'land.geoTitle':'Employees can only punch where they work.',
+'land.geoSub':'Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.',
+'land.geoHow1Title':'1. Admin Sets a Boundary',
+'land.geoHow1Desc':'In the Sites settings, toggle Geofence ON, click "Use my current location" while standing at the site, and drag the radius slider. Default is 25m — ideal for a restaurant or retail store. Warehouses and large sites can go up to 500m. A live map preview shows exactly what\'s covered.',
+'land.geoHow2Title':'2. Every Punch is Verified',
+'land.geoHow2Desc':'When an employee taps IN or OUT, their device\'s GPS is checked silently in the background. If they\'re inside the boundary, the punch goes through instantly. If they\'re outside — at home, in a car, or at another location — the punch is blocked with a clear message showing exactly how far away they are.',
+'land.geoHow3Title':'3. Every Location is Logged',
+'land.geoHow3Desc':'Each punch record stores the GPS coordinates, accuracy, and distance from the site boundary. Admins can review exactly where an employee was when they clocked in — a full location audit trail for every punch.',
+'land.geoStrictTitle':'Strict Mode',
+'land.geoStrictDesc':'If GPS is unavailable or denied, the punch is blocked entirely. Best for sites where location accuracy is critical and you want zero exceptions.',
+'land.geoLenientTitle':'Lenient Mode (Default)',
+'land.geoLenientDesc':'If GPS is unavailable, employees see a warning but the punch still goes through. Ideal for sites with poor indoor GPS signal, or businesses that want a softer rollout.',
+'land.geoDeviceTitle':'Optional: Device Token — Double Lock',
+'land.geoDeviceDesc':'Enable the Device Token option per site to add a second layer on top of geofencing. Only devices physically registered by a manager via the Kiosk Shortcut panel can punch — even if someone is standing in the right location on an unregistered phone, they\'re blocked. Geofencing + Device Token together is the strongest protection available.',
+'land.howA7Title':'Set Up Geofencing',
+'land.howA7Desc':'In Admin → Sites, edit any site, toggle Geofence ON, tap "Use my current location," set the radius, and save. Punches from outside that boundary are blocked automatically — no extra setup needed on each device.',
+'land.howA8Title':'Create Kiosk Shortcuts',
+'land.howA8Desc':'Click "Kiosk Shortcut" on any site card to get a direct URL, QR code, or install the PunchClock app on that device. Employees tap the icon and land directly on the punch page — no login required. Set up once, works forever.',
 'land.addonLabel':'Available Add-Ons (Paid Plans Only)',
 'land.addonSchedTitle':'Employee Scheduling',
 'land.addonSchedSub':'Shift builder · weekly view · per-site assignment',
@@ -8424,6 +8540,7 @@ fr:{
 'reports.selectEmployees':'SÉLECTIONNER LES EMPLOYÉS',
 'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
+'land.geoNav':'Géofence',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
 'land.pill1':'Pointage sur terminal tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export QuickBooks','land.pill4':'Planification des employés','land.pillAddon':'Complément',
 'land.howSchedTitle':'Complément Planification des employés',
@@ -8590,21 +8707,27 @@ fr:{
 'help.title':'Comment utiliser PunchClock Pro',
 'help.close':'Compris',
 'help.s1title':'Créer une compagnie',
-'help.s1desc':'Allez dans l\'onglet <strong>Compagnies</strong> et cliquez sur <em>+ Nouvelle compagnie</em>. Entrez le nom de votre entreprise, l\'industrie, la fréquence de paie et le fuseau horaire. Vous pouvez gérer plusieurs compagnies depuis un seul compte.',
+'help.s1desc':'Allez dans l\'onglet <strong>Compagnies</strong> et cliquez sur <em>+ Nouvelle compagnie</em>. Entrez le nom de votre entreprise, l\'industrie, la fréquence de paie et le début de semaine. Vous pouvez gérer plusieurs compagnies depuis un seul compte.',
 'help.s2title':'Créer un site',
-'help.s2desc':'Dans <strong>Admin → Sites</strong>, cliquez sur <em>+ Ajouter un site</em>. Les sites sont les emplacements physiques (magasins, entrepôts, bureaux) où les employés pointent. Chaque compagnie doit avoir au moins un site.',
+'help.s2desc':'Dans <strong>Admin → Sites</strong>, cliquez sur <em>+ Ajouter un site</em>. Les sites sont vos emplacements physiques (magasins, entrepôts, bureaux). Chaque compagnie doit avoir au moins un site avant de pouvoir ajouter des employés ou utiliser la page de pointage.',
 'help.s3title':'Ajouter des employés',
-'help.s3desc':'Dans <strong>Admin → Employés</strong>, cliquez sur <em>+ Ajouter un employé</em>. Assignez-les à un site, définissez un NIP à 4 chiffres pour pointer, et ajoutez optionnellement leur courriel pour les rapports automatiques.',
+'help.s3desc':'Dans <strong>Admin → Employés</strong>, cliquez sur <em>+ Ajouter un employé</em>. Assignez-les à un site, définissez un NIP à 4 chiffres et ajoutez optionnellement leur courriel pour les rapports automatiques.',
 'help.s4title':'Configurer la page de pointage',
-'help.s4desc':'Sur l\'appareil des employés, connectez-vous en admin, sélectionnez la compagnie et le site, puis cliquez sur <strong>&laquo;Configurer pour les employés&raquo;</strong> en haut de la page. Cela vous déconnecte tout en maintenant la page active. Utilisez <strong>&laquo;Se déconnecter et aller sur PunchClock.ca&raquo;</strong> pour revenir au site principal.',
-'help.s5title':'Générer des rapports',
-'help.s5desc':'Allez dans l\'onglet <strong>Rapports</strong> (vous devez être connecté en tant qu\'admin). Filtrez par compagnie, site, période ou employé. Exportez en Excel, CSV ou PDF. L\'export IIF pour QuickBooks est aussi disponible.',
-'help.s6title':'Rapports par courriel automatiques',
-'help.s6desc':'À la fin de chaque période de paie, les employés ayant un courriel enregistré reçoivent automatiquement un résumé de leurs heures travaillées. La période est déterminée par la fréquence de paie définie dans les paramètres de votre compagnie.',
-'help.s7title':'Journaux d\'audit et corrections manuelles',
-'help.s7desc':'L\'onglet <strong>Activité</strong> affiche un journal complet de tous les pointages. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections après coup.',
-'help.s8title':'Co-admins et accès d\'équipe',
-'help.s8desc':'Dans <strong>Paramètres → Co-admins</strong>, invitez quelqu\'un pour gérer votre compte. Gratuit/Débutant: 1 admin total; Croissance: 2 admins; Entreprise: 3 admins. Sièges admin supplémentaires: 4,90$/mois. Les co-admins invités reçoivent un courriel et vous devez approuver leur accès avant qu\'ils puissent se connecter.',
+'help.s4desc':'Connectez-vous en admin, sélectionnez votre compagnie et votre site, puis cliquez sur <strong>«Configurer pour les employés»</strong> en haut de la page de pointage. Cela vous déconnecte tout en maintenant la page active. Pour une configuration permanente, utilisez le bouton <strong>📲 Raccourci kiosque</strong> (voir étape 5 ci-dessous).',
+'help.s5title':'Enregistrer un raccourci kiosque (recommandé)',
+'help.s5desc':'Dans <strong>Admin → Sites</strong>, cliquez sur <strong>📲 Raccourci kiosque</strong> sur la fiche d\'un site. Vous pouvez : (1) <strong>Installer l\'app PunchClock</strong> comme icône sur le bureau/écran d\'accueil ; (2) <strong>Copier l\'URL kiosque</strong> et la sauvegarder en favori ou raccourci bureau ; (3) <strong>Scanner le code QR</strong> avec une tablette ou un téléphone. Le raccourci fonctionne sans connexion admin. Configurez une seule fois, et vous n\'aurez plus jamais besoin de vous reconnecter pour restaurer la page de pointage.',
+'help.s6title':'Configurer le géofence (optionnel)',
+'help.s6desc':'Le géofence empêche les employés de pointer lorsqu\'ils ne sont pas physiquement sur le site. Pour l\'activer : (1) Allez dans <strong>Admin → Sites</strong> et cliquez <strong>Modifier</strong>. (2) Activez la section <strong>📍 Géofence</strong>. (3) Cliquez <strong>«Utiliser ma position actuelle»</strong> en étant sur place. (4) Ajustez le rayon (25m pour un petit commerce ; 100–200m pour un entrepôt). (5) Sauvegardez. Chaque pointage vérifie le GPS silencieusement. Les employés hors zone voient leur distance exacte. Les coordonnées GPS sont enregistrées dans chaque pointage pour l\'audit.',
+'help.s7title':'Jeton d\'appareil — sécurité supplémentaire (optionnel)',
+'help.s7desc':'Activez <strong>«Exiger un jeton d\'appareil»</strong> dans les paramètres du géofence d\'un site. Ouvrez ensuite <strong>📲 Raccourci kiosque</strong> sur chaque appareil autorisé et cliquez <strong>«Enregistrer cet appareil»</strong>. Seuls les appareils enregistrés peuvent pointer — même quelqu\'un au bon endroit sur un téléphone non enregistré est bloqué. Pour supprimer un appareil, cliquez <strong>«Révoquer»</strong> dans le raccourci kiosque.',
+'help.s8title':'Générer des rapports',
+'help.s8desc':'Allez dans l\'onglet <strong>Rapports</strong> (connexion admin requise). Filtrez par compagnie, site, période ou employé. Exportez en Excel, CSV ou PDF. L\'export QuickBooks IIF est disponible sur les plans payants.',
+'help.s9title':'Rapports par courriel automatiques',
+'help.s9desc':'À la fin de chaque période de paie, les employés avec un courriel enregistré reçoivent automatiquement un PDF de leurs heures. La période est déterminée par la fréquence de paie de votre compagnie.',
+'help.s10title':'Journaux d\'audit et corrections manuelles',
+'help.s10desc':'L\'onglet <strong>Activité</strong> affiche tous les pointages, y compris le statut GPS pour les sites géofencés. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections.',
+'help.s11title':'Co-admins et accès d\'équipe',
+'help.s11desc':'Dans <strong>Admin → Admins</strong>, invitez des co-admins pour partager la gestion. Gratuit/Débutant: 1 admin total; Croissance: 2; Entreprise: 3. Sièges supplémentaires: 4,90$/mois. Les co-admins reçoivent une invitation et définissent leur mot de passe à la première connexion.',
 'land.howTitle':'Comment ça marche','land.howSub':'Opérationnel en moins de 10 minutes.',
 'land.how1Title':'1. Créer une compagnie','land.how1Desc':'Enregistrez votre entreprise, définissez la fréquence de paie et le début de semaine.',
 'land.how2Title':'2. Ajouter des sites','land.how2Desc':'Créez un ou plusieurs emplacements physiques — magasins, entrepôts, bureaux.',
@@ -8662,6 +8785,12 @@ fr:{
 'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Le complément Planification doit être actif sur le compte.',
 'faq.q15':'PunchClock Pro est-il disponible en français et adapté aux entreprises québécoises?',
 'faq.a15':'Oui — entièrement. PunchClock Pro est complètement bilingue (français et anglais) et conçu en pensant aux entreprises québécoises. L\'interface, les rapports et les communications par courriel sont tous disponibles en français. Les prix sont en dollars canadiens (CAD). Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des renseignements personnels — les données sont stockées de façon sécurisée, on ne demande aux employés que le strict nécessaire, et vous pouvez demander la suppression de vos données en tout temps. Que vous gériez un restaurant à Montréal, un commerce au détail à Québec ou un entrepôt à Laval, PunchClock Pro est fait pour vous.',
+'faq.q16':'Qu\'est-ce que le géofence et comment empêche-t-il les employés de pointer à distance?',
+'faq.a16':'Le géofence crée une frontière GPS invisible autour de chacun de vos sites. Quand un employé tente de pointer, la position GPS de son appareil est vérifiée silencieusement. S\'il est dans le rayon autorisé (ex. 25m pour un restaurant), le pointage passe. S\'il est hors zone — à la maison, dans la voiture ou ailleurs — le pointage est bloqué et il voit un message indiquant sa distance exacte. Vous définissez le rayon par site : aussi précis que 10m pour un petit commerce, jusqu\'à 500m pour un grand site. Chaque pointage enregistre les coordonnées GPS et la distance dans le journal d\'audit.',
+'faq.q17':'Que se passe-t-il si le GPS d\'un employé est désactivé ou s\'il refuse l\'accès à la localisation?',
+'faq.a17':'Cela dépend du mode configuré par site. En <strong>Mode tolérant</strong> (par défaut), si le GPS est indisponible, l\'employé voit un avertissement mais le pointage passe quand même — adapté aux sites avec un mauvais signal GPS intérieur. En <strong>Mode strict</strong>, si le GPS est indisponible ou refusé, le pointage est bloqué — idéal quand vous exigez zéro exception. Ce paramètre se configure par site dans les réglages du géofence.',
+'faq.q18':'Qu\'est-ce que le raccourci kiosque et comment le configurer pour que les employés trouvent toujours la page de pointage?',
+'faq.a18':'Le raccourci kiosque résout un problème courant : la page de pointage disparaît quand le navigateur est fermé ou l\'onglet perdu. Voici comment ça fonctionne : (1) Connectez-vous en admin et allez dans <strong>Admin → Sites</strong>. (2) Cliquez sur <strong>📲 Raccourci kiosque</strong> sur la fiche du site. (3) Choisissez votre méthode : cliquez <strong>«Installer l\'app PunchClock»</strong> pour installer une vraie icône d\'app sur le bureau/écran d\'accueil, ou copiez l\'URL kiosque pour créer un favori ou raccourci bureau, ou utilisez le code QR pour configurer une tablette. (4) Une fois configuré, les employés appuient sur cette icône et arrivent directement sur la bonne page de pointage — sans connexion ni navigation. Le raccourci fonctionne même si le navigateur est fermé ou l\'appareil redémarre.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
@@ -8698,6 +8827,29 @@ fr:{
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
 'land.feat9Title':'Planification des employés',
 'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts aux employés par site, et permettez à votre équipe de voir ses prochains quarts — directement dans PunchClock. Disponible en complément à 14,95 $/mois sur tout plan payant.',
+'land.feat10Title':'Géofence — Pointage verrouillé par localisation',
+'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
+'land.feat11Title':'Raccourci kiosque — Pointer en un tap',
+'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
+'land.geoBadge':'Sécurité de localisation — Intégrée',
+'land.geoTitle':'Les employés ne peuvent pointer que là où ils travaillent.',
+'land.geoSub':'Le géofence trace une frontière GPS invisible autour de chacun de vos emplacements. Le pointage ne fonctionne qu\'à l\'intérieur de cette frontière — que l\'employé soit sur un terminal partagé ou utilise un lien raccourci depuis son téléphone.',
+'land.geoHow1Title':'1. L\'admin définit une zone',
+'land.geoHow1Desc':'Dans les paramètres des sites, activez le géofence, cliquez sur «Utiliser ma position actuelle» en étant sur place, et ajustez le curseur de rayon. Par défaut : 25m — idéal pour un restaurant ou un commerce. Les grands sites peuvent aller jusqu\'à 500m. Un aperçu cartographique montre exactement la zone couverte.',
+'land.geoHow2Title':'2. Chaque pointage est vérifié',
+'land.geoHow2Desc':'Quand un employé appuie sur ENTRÉE ou SORTIE, le GPS de son appareil est vérifié silencieusement en arrière-plan. Dans la zone : le pointage passe instantanément. Hors zone — à la maison, dans la voiture, ailleurs — le pointage est bloqué avec un message clair indiquant la distance exacte.',
+'land.geoHow3Title':'3. Chaque emplacement est enregistré',
+'land.geoHow3Desc':'Chaque pointage enregistre les coordonnées GPS, la précision et la distance par rapport à la limite du site. Les admins peuvent voir exactement où se trouvait l\'employé lors du pointage — un journal d\'audit de localisation complet.',
+'land.geoStrictTitle':'Mode strict',
+'land.geoStrictDesc':'Si le GPS est indisponible ou refusé, le pointage est bloqué. Idéal pour les sites où la précision de localisation est critique.',
+'land.geoLenientTitle':'Mode tolérant (par défaut)',
+'land.geoLenientDesc':'Si le GPS est indisponible, les employés voient un avertissement mais le pointage passe quand même. Idéal pour les sites avec un mauvais signal GPS intérieur.',
+'land.geoDeviceTitle':'Optionnel : Jeton d\'appareil — Double verrou',
+'land.geoDeviceDesc':'Activez l\'option Jeton d\'appareil par site pour ajouter une couche au-dessus du géofence. Seuls les appareils explicitement enregistrés par le gestionnaire via le raccourci kiosque peuvent pointer — même quelqu\'un au bon endroit sur un téléphone non enregistré est bloqué. Géofence + Jeton d\'appareil = protection maximale.',
+'land.howA7Title':'Configurer le géofence',
+'land.howA7Desc':'Dans Admin → Sites, modifiez un site, activez le géofence, utilisez votre position, réglez le rayon et sauvegardez. Les pointages hors zone sont bloqués automatiquement — sans configuration supplémentaire sur chaque appareil.',
+'land.howA8Title':'Créer des raccourcis kiosque',
+'land.howA8Desc':'Cliquez sur «Raccourci kiosque» sur une fiche de site pour obtenir une URL directe, un code QR ou installer l\'app PunchClock. Les employés appuient sur l\'icône et arrivent directement sur la page de pointage. Configurer une fois, ça marche indéfiniment.',
 'land.addonLabel':'Compléments disponibles (plans payants uniquement)',
 'land.addonSchedTitle':'Planification des employés',
 'land.addonSchedSub':'Créateur de quarts · vue hebdomadaire · assignation par site',
