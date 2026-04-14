@@ -4096,7 +4096,7 @@ function showUpgradePlans(){
 async function openBillingPortal(){
   const s=Sess.get();
   if(!s||!s.stripe_customer_id){
-    showToast('No active subscription found.');return;
+    showToast(t('toast.noSubscription')||'No active Stripe subscription. Please subscribe to a plan to access billing.');return;
   }
   showToast('Opening billing portal...');
   try{
@@ -8105,6 +8105,7 @@ en:{
 'activation.addEmployeeNow':'➕ Add Employee Now','activation.fillFullForm':'Or fill in the full employee form',
 'activation.goToAdmin':'Go to Admin Panel',
 'toast.checkoutCancelled':'Checkout cancelled — no charge was made.',
+'toast.noSubscription':'No active Stripe subscription. Please subscribe to a plan to access billing management.',
 'profile.nameRequired':'Name cannot be empty.','profile.nameTaken':'That name is already taken by another user.',
 'profile.curPwRequired':'Please enter your current password.','profile.newPwRequired':'Please enter a new password.',
 'profile.pwTooShort':'Password must be at least 6 characters.','profile.wrongCurPw':'Current password is incorrect.',
@@ -8615,6 +8616,7 @@ fr:{
 'activation.addEmployeeNow':'➕ Ajouter l\'employé maintenant','activation.fillFullForm':'Ou remplir le formulaire complet',
 'activation.goToAdmin':'Aller au panneau admin',
 'toast.checkoutCancelled':'Paiement annulé — aucun montant débité.',
+'toast.noSubscription':'Aucun abonnement Stripe actif. Veuillez souscrire à un forfait pour accéder à la gestion de facturation.',
 'profile.nameRequired':'Le nom ne peut pas être vide.','profile.nameTaken':'Ce nom est déjà utilisé par un autre utilisateur.',
 'profile.curPwRequired':'Veuillez entrer votre mot de passe actuel.','profile.newPwRequired':'Veuillez entrer un nouveau mot de passe.',
 'profile.pwTooShort':'Le mot de passe doit comporter au moins 6 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
