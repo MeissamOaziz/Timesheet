@@ -1600,7 +1600,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">All Admin Accounts</h3>
         <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()" data-i18n="admin.createAdmin">+ Create Admin</button>
       </div>
-      <div class="table-wrap"><table>
+      <div class="table-wrap" style="overflow-x:auto"><table style="min-width:900px">
         <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th>Trial</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
         <tbody id="adminsTableBody"></tbody>
       </table></div>
@@ -5392,9 +5392,9 @@ async function renderAdmins(){
       return `<tr>
         <td><div class="emp-row" style="cursor:pointer" onclick="toggleAdminDetail('${a.id}')">
           <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${ini}</div>
-          <div><span style="font-weight:500">${a.name}</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}<br><span style="font-size:10px;color:var(--text3)">▸ click to expand</span></div>
+          <div><span style="font-weight:500">${a.name}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">▸</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
         </div></td>
-        <td style="font-size:13px">${a.email}</td>
+        <td style="font-size:13px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.email}">${a.email}</td>
         <td><span class="pill ${isSA?'admin':'site'}">${isSA?'\u2b50 Super Admin':'Admin'}</span></td>
         <td><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
         <td>${trialBadge(a)}</td>
