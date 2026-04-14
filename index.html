@@ -142,7 +142,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PunchClock">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/PunchClockPro-Logo.png">
+<link rel="icon" type="image/png" href="/PunchClockPro-Logo.png">
 <style>
 :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -675,7 +676,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- ═══════ LANDING PAGE ═══════ -->
 <div class="landing" id="landingPage">
   <nav class="land-nav">
-    <div class="land-logo">⏱ PunchClock Pro</div>
+    <div class="land-logo"><img src="/PunchClockPro-Logo.png" alt="PunchClock Pro" style="height:36px;vertical-align:middle;margin-right:8px">PunchClock Pro</div>
     <div class="land-nav-links">
       <a onclick="document.getElementById('landingFeatures').scrollIntoView({behavior:'smooth'})" data-i18n="land.features">Features</a>
       <a onclick="document.getElementById('landingGeofencing').scrollIntoView({behavior:'smooth'})" data-i18n="land.geoNav">Geofencing</a>
@@ -1088,7 +1089,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div style="border-top:1px solid var(--border);padding:36px 32px;">
     <div class="land-footer-inner">
       <div>
-        <div class="land-logo" style="margin-bottom:6px">⏱ PunchClock Pro</div>
+        <div class="land-logo" style="margin-bottom:6px"><img src="/PunchClockPro-Logo.png" alt="PunchClock Pro" style="height:36px;vertical-align:middle;margin-right:8px">PunchClock Pro</div>
         <p data-i18n="land.footerTagline">Time & attendance software for modern shift workforces.</p>
       </div>
       <div class="land-footer-links">
@@ -1600,7 +1601,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()" data-i18n="admin.createAdmin">+ Create Admin</button>
       </div>
       <div class="table-wrap"><table>
-        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th data-i18n="col.actions">Actions</th></tr></thead>
+        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th>Trial</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
         <tbody id="adminsTableBody"></tbody>
       </table></div>
       <div id="adminCardsContainer"></div>
@@ -3615,6 +3616,7 @@ async function doLogin(){
       stripe_customer_id: full.stripe_customer_id||null,
       stripe_subscription_id: full.stripe_subscription_id||null,
     }, rememberMe);
+    DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     updateNav();
     await refreshCache();
     navigate('admin');
@@ -3871,9 +3873,13 @@ async function doVerify(){
       document.getElementById('regStep2').style.display='none';
       document.getElementById('regStep3').style.display='';
       showMsg('registerMsg','','');
+      // Notify super admin of new join request
+      try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'Join Request',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
     } else {
       // New company registration: log in immediately
       Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
+      // Notify super admin of new registration
+      try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'New Company',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
       pendingVerify=null;
       updateNav();
       await refreshCache();
@@ -5326,6 +5332,30 @@ async function resendCoAdminInvite(id, email, name) {
 
 // ─── END CO-ADMIN MANAGEMENT ──────────────────────────────────────────────
 
+function relativeTime(dateStr){
+  const diff=Date.now()-new Date(dateStr).getTime();
+  const mins=Math.floor(diff/60000);
+  if(mins<1)return 'Just now';
+  if(mins<60)return `${mins}m ago`;
+  const hrs=Math.floor(mins/60);
+  if(hrs<24)return `${hrs}h ago`;
+  const days=Math.floor(hrs/24);
+  if(days<30)return `${days}d ago`;
+  return `${Math.floor(days/30)}mo ago`;
+}
+function trialBadge(a){
+  if((a.plan||'free')!=='free')return '';
+  const days=Math.floor((Date.now()-new Date(a.created_at).getTime())/86400000)+1;
+  if(days>7)return '<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(239,68,68,0.15);color:#ef4444">Expired</span>';
+  const color=days<=4?'#22c55e':days<=6?'#f59e0b':'#ef4444';
+  const bg=days<=4?'rgba(34,197,94,0.15)':days<=6?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.15)';
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;background:${bg};color:${color}">Day ${days} / 7</span>`;
+}
+function toggleAdminDetail(id){
+  const row=document.getElementById('adminDetail_'+id);
+  if(!row)return;
+  row.style.display=row.style.display==='none'?'':'none';
+}
 async function renderAdmins(){
   const superAdmin = isSuperAdmin();
   document.getElementById('superAdminPanel').style.display = superAdmin ? '' : 'none';
@@ -5334,42 +5364,58 @@ async function renderAdmins(){
 
   const tbody=document.getElementById('adminsTableBody');
   const planColors = {free:'plan-free',starter:'plan-starter',growth:'plan-growth',business:'plan-business',unlimited:'plan-unlimited'};
-  const roleColors = {super_admin:'admin',admin:'site'};
 
   try{
     const admins=await DB.all('admins','order=created_at.asc');
     const sess = Sess.get();
-    if(!admins.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;return;}
+    if(!admins.length){tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;return;}
     const adminRows = admins.map(a=>{
       const isMe = a.id === sess.id;
       const isSA = a.role==='super_admin' || a.email===SUPER_ADMIN_EMAIL;
       const planKey = a.plan||'free';
       const status = a.status||'active';
       const ini = a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-      return {a, isMe, isSA, planKey, status, ini};
+      const cos=C.companies.filter(c=>c.admin_id===a.id);
+      const coIds=new Set(cos.map(c=>c.id));
+      const siteCount=C.sites.filter(s=>coIds.has(s.company_id)).length;
+      const empCount=C.employees.filter(e=>coIds.has(e.company_id)).length;
+      return {a, isMe, isSA, planKey, status, ini, coCount:cos.length, siteCount, empCount, cos};
     });
 
     // Desktop table rows
-    tbody.innerHTML=adminRows.map(({a,isMe,isSA,planKey,status,ini})=>`<tr>
-        <td><div class="emp-row">
+    tbody.innerHTML=adminRows.map(({a,isMe,isSA,planKey,status,ini,coCount,siteCount,empCount,cos})=>{
+      const coIds=new Set(cos.map(c=>c.id));
+      const detailRows=cos.map(c=>{
+        const cSites=C.sites.filter(s=>s.company_id===c.id);
+        return `<div style="margin-bottom:8px"><strong style="color:var(--text1)">${c.name}</strong><div style="margin-left:16px;color:var(--text2);font-size:12px">${cSites.length?cSites.map(s=>'• '+s.name).join('<br>'):'<em>No sites</em>'}</div></div>`;
+      }).join('');
+      return `<tr>
+        <td><div class="emp-row" style="cursor:pointer" onclick="toggleAdminDetail('${a.id}')">
           <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${ini}</div>
-          <div><span style="font-weight:500">${a.name}</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
+          <div><span style="font-weight:500">${a.name}</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}<br><span style="font-size:10px;color:var(--text3)">▸ click to expand</span></div>
         </div></td>
         <td style="font-size:13px">${a.email}</td>
         <td><span class="pill ${isSA?'admin':'site'}">${isSA?'\u2b50 Super Admin':'Admin'}</span></td>
         <td><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
+        <td>${trialBadge(a)}</td>
         <td><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></td>
         <td style="color:var(--text2);font-size:12px">${new Date(a.created_at).toLocaleDateString()}</td>
+        <td style="color:var(--text2);font-size:12px">${a.last_login?relativeTime(a.last_login):'Never'}</td>
+        <td style="text-align:center;font-size:13px">${coCount}</td>
+        <td style="text-align:center;font-size:13px">${siteCount}</td>
+        <td style="text-align:center;font-size:13px">${empCount}</td>
         <td style="display:flex;gap:6px;align-items:center">${isMe
           ? '<span style="font-size:11px;color:var(--text3)">\u2014</span>'
           : '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">Edit</button>'
           + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">Delete</button>'
         }</td>
-      </tr>`).join('');
+      </tr>
+      <tr id="adminDetail_${a.id}" style="display:none"><td colspan="12" style="background:var(--surface2);padding:12px 20px;font-size:13px">${detailRows||'<em style="color:var(--text3)">No companies</em>'}</td></tr>`;
+    }).join('');
 
     // Mobile cards
     const cards = document.getElementById('adminCardsContainer');
-    if(cards) cards.innerHTML = adminRows.map(({a,isMe,isSA,planKey,status,ini})=>`
+    if(cards) cards.innerHTML = adminRows.map(({a,isMe,isSA,planKey,status,ini,coCount,siteCount,empCount})=>`
       <div class="mobile-card-row">
         <div class="mc-name">
           <div style="display:flex;align-items:center;gap:8px">
@@ -5380,7 +5426,10 @@ async function renderAdmins(){
         </div>
         <div class="mc-row"><span>Email</span><span style="font-size:12px">${a.email}</span></div>
         <div class="mc-row"><span>Plan</span><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></div>
+        <div class="mc-row"><span>Trial</span><span>${trialBadge(a)||'—'}</span></div>
         <div class="mc-row"><span>Status</span><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></div>
+        <div class="mc-row"><span>Last Login</span><span style="font-size:12px">${a.last_login?relativeTime(a.last_login):'Never'}</span></div>
+        <div class="mc-row"><span>Companies / Sites / Emp.</span><span style="font-size:12px">${coCount} / ${siteCount} / ${empCount}</span></div>
         ${!isMe ? '<div class="mc-actions">'
           + '<button class="btn-secondary" style="font-size:12px" onclick="openEditAdminModal(\'' + a.id + '\')">Edit</button>'
           + '<button class="btn-secondary" style="font-size:12px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">Delete</button>'
@@ -5390,7 +5439,7 @@ async function renderAdmins(){
     // Load join requests
     await renderJoinRequests();
 
-  }catch(e){tbody.innerHTML=`<tr><td colspan="7" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
 }
 
 async function deleteAdmin(id, name){
