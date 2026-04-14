@@ -1600,7 +1600,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">All Admin Accounts</h3>
         <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()" data-i18n="admin.createAdmin">+ Create Admin</button>
       </div>
-      <div class="table-wrap" style="overflow-x:auto"><table style="min-width:900px">
+      <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1000px">
         <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th>Trial</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
         <tbody id="adminsTableBody"></tbody>
       </table></div>
@@ -5375,7 +5375,8 @@ async function renderAdmins(){
       const planKey = a.plan||'free';
       const status = a.status||'active';
       const ini = a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-      const cos=C.companies.filter(c=>c.admin_id===a.id);
+      const effectiveAdminId=a.parent_admin_id||a.id;
+      const cos=C.companies.filter(c=>c.admin_id===effectiveAdminId);
       const coIds=new Set(cos.map(c=>c.id));
       const siteCount=C.sites.filter(s=>coIds.has(s.company_id)).length;
       const empCount=C.employees.filter(e=>coIds.has(e.company_id)).length;
@@ -5390,21 +5391,21 @@ async function renderAdmins(){
         return `<div style="margin-bottom:8px"><strong style="color:var(--text1)">${c.name}</strong><div style="margin-left:16px;color:var(--text2);font-size:12px">${cSites.length?cSites.map(s=>'• '+s.name).join('<br>'):'<em>No sites</em>'}</div></div>`;
       }).join('');
       return `<tr>
-        <td><div class="emp-row" style="cursor:pointer" onclick="toggleAdminDetail('${a.id}')">
-          <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${ini}</div>
+        <td style="min-width:120px;max-width:150px"><div class="emp-row" style="cursor:pointer" onclick="toggleAdminDetail('${a.id}')">
+          <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf);width:28px;height:28px;min-width:28px;font-size:10px">${ini}</div>
           <div><span style="font-weight:500">${a.name}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">▸</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
         </div></td>
         <td style="font-size:13px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.email}">${a.email}</td>
-        <td><span class="pill ${isSA?'admin':'site'}">${isSA?'\u2b50 Super Admin':'Admin'}</span></td>
-        <td><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
-        <td>${trialBadge(a)}</td>
-        <td><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></td>
-        <td style="color:var(--text2);font-size:12px">${new Date(a.created_at).toLocaleDateString()}</td>
-        <td style="color:var(--text2);font-size:12px">${a.last_login?relativeTime(a.last_login):'Never'}</td>
+        <td style="white-space:nowrap"><span class="pill ${isSA?'admin':'site'}">${isSA?'\u2b50 Super Admin':'Admin'}</span></td>
+        <td style="white-space:nowrap"><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
+        <td style="text-align:center">${trialBadge(a)}</td>
+        <td style="white-space:nowrap"><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></td>
+        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${new Date(a.created_at).toLocaleDateString()}</td>
+        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${a.last_login?relativeTime(a.last_login):'Never'}</td>
         <td style="text-align:center;font-size:13px">${coCount}</td>
         <td style="text-align:center;font-size:13px">${siteCount}</td>
         <td style="text-align:center;font-size:13px">${empCount}</td>
-        <td style="display:flex;gap:6px;align-items:center">${isMe
+        <td style="white-space:nowrap;min-width:120px;display:flex;gap:6px;align-items:center">${isMe
           ? '<span style="font-size:11px;color:var(--text3)">\u2014</span>'
           : '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">Edit</button>'
           + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">Delete</button>'
