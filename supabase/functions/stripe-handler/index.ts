@@ -139,7 +139,8 @@ async function handleCheckout(body) {
     "metadata[adminId]": adminId,
     "metadata[plan]": plan,
     "subscription_data[metadata][adminId]": adminId,
-    "subscription_data[metadata][plan]": plan
+    "subscription_data[metadata][plan]": plan,
+    "billing_address_collection": "required"
   };
   if (!isAddon) params["allow_promotion_codes"] = "true";
   const session = await stripePost("checkout/sessions", params);
