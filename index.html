@@ -2615,7 +2615,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 // ═══════════════════════════════════════════════════
 const SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
-const STRIPE_PK='pk_test_51T90YNI87MWWhn5dTVwguCNGbL3WTR53ixLMqGWU8uLBadFeFiUblRhS8HWYXkj8guSt3PjTozDIhGhYkmDjN3SA00q3P2T5l1';
+const STRIPE_PK='pk_live_51T90YEIhFqyQNAEWaa6dhdav8LKCMgKb48xgnG00YP8vjy0iP0bRUIxZY0EHjuSJqfnS8CbrVbgrknREXwZCjgeA009y7vglwt';
 const EDGE_URL='https://uziwymrwaeojhqaagqcm.supabase.co/functions/v1/stripe-handler';
 
 async function supaFetch(method,table,opts={}){
@@ -3931,7 +3931,7 @@ async function startCheckout(plan){
 }
 
 // Extra per-seat purchase ($4.90/mo add-on)
-const EXTRA_SEAT_PRICE_ID = 'price_1T92h6I87MWWhn5d4UTWLL4x';
+const EXTRA_SEAT_PRICE_ID = 'price_1TM5NMIhFqyQNAEWRPqJ23ZY';
 async function startExtraSeatCheckout(){
   const s=Sess.get();
   if(!s){navigate('login');return;}
@@ -3964,7 +3964,7 @@ async function startExtraSeatCheckout(){
 }
 
 // Scheduling add-on ($14.95/mo) — replace PRICE_ID below with your real Stripe price ID
-const SCHEDULING_ADDON_PRICE_ID = 'price_1TB4cSI87MWWhn5dU3kGRGtl';
+const SCHEDULING_ADDON_PRICE_ID = 'price_1TM5NMIhFqyQNAEWo4s8iSpb';
 async function startSchedulingAddonCheckout(){
   const s=Sess.get();
   if(!s){navigate('login');return;}
