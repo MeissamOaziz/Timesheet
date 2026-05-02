@@ -3698,6 +3698,7 @@ async function doSetInvitePassword(){
       stripe_customer_id:full.stripe_customer_id||null,
       stripe_subscription_id:full.stripe_subscription_id||null,
     },false); // session only — they can choose remember me next login
+    DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     pendingInviteAdmin=null;
     document.getElementById('setpassNew').value='';
     document.getElementById('setpassConfirm').value='';
@@ -3929,6 +3930,7 @@ async function doVerify(){
     } else {
       // New company registration: log in immediately
       Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
+      DB.update('admins',`id=eq.${newAdmin[0].id}`,{last_login:new Date().toISOString()});
       // Notify super admin of new registration
       try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'New Company',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
       pendingVerify=null;
