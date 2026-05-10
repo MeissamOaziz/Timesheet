@@ -129,6 +129,30 @@ function buildEmployeeInviteHtml(empName, portalUrl, lang) {
     <p style="color:#555e7a;font-size:12px;margin-top:20px;text-align:center">${expiry}</p>
     <p style="color:#555e7a;font-size:12px;margin-top:8px;">${ignore}</p>`);
 }
+function buildJoinDeniedHtml(name, companyName) {
+  const co = companyName || 'the company';
+  return wrapper(`
+    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Your access request</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">Hi ${name},</p>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Your request to join <strong style="color:#e8eaf0;">${co}</strong> on PunchClock Pro was not approved.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      If you believe this is a mistake, please contact the company administrator directly.
+      You can also create your own free account at <a href="https://punchclock.ca" style="color:#4f8ef7;">punchclock.ca</a>.
+    </p>
+    <hr style="border:none;border-top:1px solid #2e3347;margin:0 0 28px;">
+    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Votre demande d'acc&egrave;s</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">Bonjour ${name},</p>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Votre demande pour rejoindre <strong style="color:#e8eaf0;">${co}</strong> sur PunchClock Pro n&rsquo;a pas &eacute;t&eacute; approuv&eacute;e.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0;">
+      Si vous pensez qu&rsquo;il s&rsquo;agit d&rsquo;une erreur, veuillez contacter directement l&rsquo;administrateur de l&rsquo;entreprise.
+      Vous pouvez &eacute;galement cr&eacute;er votre propre compte gratuit sur <a href="https://punchclock.ca" style="color:#4f8ef7;">punchclock.ca</a>.
+    </p>
+  `);
+}
 function buildNewAccountNotificationHtml(userName, userEmail, plan, regType, timestamp) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">🆕 New Account Registration</h1>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
@@ -171,7 +195,7 @@ serve(async (req)=>{
   }
   try {
     const body = await req.json();
-    const { email, name, code, type, requesterName, requesterEmail, adminName } = body;
+    const { email, name, code, type, requesterName, requesterEmail, adminName, companyName } = body;
     if (!email || !name) {
       return new Response(JSON.stringify({
         success: false,
@@ -203,6 +227,9 @@ serve(async (req)=>{
       const { portalUrl, lang } = body;
       subject = lang === 'fr' ? `🔗 Accès à votre portail employé PunchClock Pro` : `🔗 You've been invited to the PunchClock Pro Employee Portal`;
       html = buildEmployeeInviteHtml(name, portalUrl || 'https://www.punchclock.ca/employee.html', lang || 'en');
+    } else if (type === "join_request_denied") {
+      subject = "Your access request — PunchClock Pro | Votre demande d'accès";
+      html = buildJoinDeniedHtml(name, companyName || '');
     } else if (type === "new_account_notification") {
       const { userEmail, plan, regType, timestamp } = body;
       subject = `🆕 New PunchClock Pro registration: ${name}`;

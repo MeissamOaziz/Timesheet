@@ -1248,7 +1248,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div class="nav-links">
     <button class="nav-btn active" onclick="navigate('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
-    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" data-i18n="nav.admin" style="display:none">&#9881; Admin</button>
+    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
     <button class="nav-btn" onclick="navigate('reports')" id="navReports" data-i18n="nav.reports" style="display:none">&#128202; Reports</button>
     <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" data-i18n="nav.companies" style="display:none">&#127970; Companies</button>
     <button class="nav-btn" onclick="navigate('activity')" id="navActivity" data-i18n="nav.activity" style="display:none">&#128203; Activity</button>
@@ -1329,7 +1329,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-nav-btn" onclick="mobileNav('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none">&#9881; Admin</button>
+  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
   <button class="mobile-nav-btn" onclick="mobileNav('companies')" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
@@ -5065,6 +5065,7 @@ function adminTab(tab,btn){
   document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   ['employees','sites','admins'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'':'none');
+  if(tab==='admins') updateJoinRequestBadge(0);
   applyAllTranslations();
 }
 
@@ -5367,6 +5368,7 @@ async function loadCoAdmins(){
   try{
     // Load pending join requests targeted at the primary admin
     const pendingReqs=await DB.all('join_requests',`target_admin_id=eq.${primaryAdminId}&status=eq.pending&order=created_at.desc`);
+    updateJoinRequestBadge(pendingReqs.length);
     const plan=getAdminPlan();
     const extraSeats=Number(sess.extra_seats??0);
     const maxSlots=(plan.maxCoAdmins===Infinity?Infinity:(plan.maxCoAdmins-1))+extraSeats;
@@ -5678,6 +5680,13 @@ async function deleteAdmin(id, name){
   }
 }
 
+function updateJoinRequestBadge(count){
+  const badge=document.getElementById('joinReqBadge');
+  const mob=document.getElementById('joinReqBadgeMobile');
+  const show=count>0;
+  if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
+  if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
+}
 async function renderJoinRequests(){
   try{
     // Superadmin sees all; regular admin query is handled in loadCoAdmins
@@ -5741,8 +5750,30 @@ async function approveJoinRequest(reqId, adminId){
 async function denyJoinRequest(reqId, adminId){
   if(!confirm(t('msg.denyRequest')||'Deny this access request?')) return;
   try{
+    // Fetch request details before denying — needed for denial notification
+    const reqRows=await DB.all('join_requests',`id=eq.${reqId}`);
+    const req=reqRows?.[0];
     await DB.update('admins',`id=eq.${adminId}`,{status:'suspended'});
     await DB.update('join_requests',`id=eq.${reqId}`,{status:'denied'});
+    // Fire-and-forget denial email to requester
+    if(req?.requester_email){
+      (async()=>{
+        let companyName='',adminName='';
+        try{
+          const [cos,admRows]=await Promise.all([
+            DB.all('companies',`admin_id=eq.${req.target_admin_id}&order=created_at.asc`),
+            DB.all('admins',`id=eq.${req.target_admin_id}&select=id,name`)
+          ]);
+          if(cos?.[0]) companyName=cos[0].name;
+          if(admRows?.[0]?.name) adminName=admRows[0].name;
+        }catch(e){}
+        fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+          body:JSON.stringify({email:req.requester_email,name:req.requester_name,type:'join_request_denied',companyName,adminName})
+        }).catch(()=>{});
+      })();
+    }
     if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
     showToast('Access request denied.','info');
   }catch(e){alert('Error: '+e.message);}
