@@ -3071,13 +3071,21 @@ async function refreshCache(opts={}){
   if(!sess&&ctx?.site){C.employees=C.employees.filter(e=>e.site_id===ctx.site.id);}
   // Build punch filter — always load by company (never site-filtered) so getEmpStatus works
   // correctly for employees who may punch in/out across sessions with different site contexts
+  // FIX: non-super-admins with no companies must never fetch any punches
+  if(!superAdmin&&C.companies.length===0){C.punches=[];return;}
   const parts=['order=punched_at.desc'];
-  if(opts.coId)parts.push(`company_id=eq.${opts.coId}`);
+  if(opts.coId){
+    parts.push(`company_id=eq.${opts.coId}`);
+  }else if(!superAdmin){
+    // Scope to this admin's own company IDs at the DB level — prevents cross-tenant data leaks
+    parts.push(`company_id=in.(${[...visibleCoIds].join(',')})`);
+  }
   // NOTE: intentionally NOT filtering by siteId here — we need full punch history per employee
   if(opts.startDate)parts.push(`punch_date=gte.${opts.startDate}`);
   if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
   if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
-  C.punches=await DB.all('punches',parts.join('&'))||[];
+  // Secondary client-side guard — ensures foreign rows never enter C.punches even if DB returns them
+  C.punches=(await DB.all('punches',parts.join('&'))||[]).filter(p=>superAdmin||visibleCoIds.has(p.company_id));
   if(sess&&sess.id&&!sess.parent_admin_id&&!superAdmin){
     C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
     C.primaryAdmin=null;
@@ -6467,8 +6475,15 @@ async function generateReport(){
 
   let punches;
   try{
-    const pf=`punch_date=gte.${start}&punch_date=lte.${end}&order=punched_at.asc`;
-    punches=await DB.all('punches',pf);
+    // Scope to this admin's companies — never fetch cross-tenant punches
+    const _rptCoIds=C.companies.map(c=>c.id);
+    if(!isSuperAdmin()&&!_rptCoIds.length){punches=[];}else{
+      let pf=`punch_date=gte.${start}&punch_date=lte.${end}&order=punched_at.asc`;
+      if(!isSuperAdmin()&&_rptCoIds.length)pf+=`&company_id=in.(${_rptCoIds.join(',')})`;
+      punches=await DB.all('punches',pf);
+      // Client-side guard in case DB returns unexpected rows
+      if(!isSuperAdmin())punches=(punches||[]).filter(p=>_rptCoIds.includes(p.company_id));
+    }
   }catch(e){alert('Error: '+e.message);return;}
 
   // Group employees by site for organised output
@@ -6722,7 +6737,9 @@ async function loadActivityPage(){
   // Populate site filter
   updateActSiteFilter(coId);
 
-  const all=C.punches;
+  // Belt-and-suspenders: strip any punch not belonging to this admin's companies
+  const _actCoIds=new Set(C.companies.map(c=>c.id));
+  const all=isSuperAdmin()?C.punches:C.punches.filter(p=>_actCoIds.has(p.company_id));
   const today=new Date().toLocaleDateString('en-CA');
   const todayN=all.filter(p=>p.punch_date===today).length;
   const scopeEmps=(coId==='all'?C.employees:C.employees.filter(e=>e.company_id===coId)).filter(e=>e.active);
