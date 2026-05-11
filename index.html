@@ -3051,41 +3051,47 @@ async function refreshCache(opts={}){
   const adminId=sess?.parent_admin_id||sess?.id;
   const ctx=Ctx.get();
   if(!sess&&!ctx){C.companies=[];C.sites=[];C.employees=[];C.punches=[];return;}
+  // STEP 1: Fetch companies first — IDs are needed to scope all subsequent queries
   let companiesFilter='order=name.asc';
   if(!sess&&ctx){companiesFilter+=`&id=eq.${ctx.co.id}`;}
   else if(!superAdmin&&adminId){companiesFilter+=`&admin_id=eq.${adminId}`;}
-  const[companies,sites,employees]=await Promise.all([
-    DB.all('companies',companiesFilter),
-    DB.all('sites','order=name.asc'),
-    DB.all('employees','order=name.asc'),
-  ]);
-  C.companies=companies||[];
+  C.companies=await DB.all('companies',companiesFilter)||[];
   const visibleCoIds=new Set(C.companies.map(c=>c.id));
-  C.sites=(sites||[]).filter(s=>visibleCoIds.has(s.company_id));
-  C.employees=(employees||[]).filter(e=>visibleCoIds.has(e.company_id));
+
+  // STEP 2: Non-super-admins with no companies get empty caches — skip all further fetches
+  if(!superAdmin&&visibleCoIds.size===0){C.sites=[];C.employees=[];C.punches=[];return;}
+
+  // STEP 3: Fetch sites, employees, and punches in parallel, all scoped at the DB level.
+  // Super admin gets unfiltered queries (they need full visibility across all tenants).
+  // Regular admins get company_id=in.(...) at the DB level — no cross-tenant rows ever sent.
+  const coIdList=[...visibleCoIds].join(',');
+  const sitesFilter=superAdmin?'order=name.asc':`company_id=in.(${coIdList})&order=name.asc`;
+  const empsFilter=superAdmin?'order=name.asc':`company_id=in.(${coIdList})&order=name.asc`;
+  // Punch filter: always by company, never by site (full punch history needed per employee)
+  const parts=['order=punched_at.desc'];
+  if(opts.coId){
+    parts.push(`company_id=eq.${opts.coId}`);
+  }else if(!superAdmin){
+    parts.push(`company_id=in.(${coIdList})`);
+  }
+  if(opts.startDate)parts.push(`punch_date=gte.${opts.startDate}`);
+  if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
+  if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
+  const[sites,employees,punches]=await Promise.all([
+    DB.all('sites',sitesFilter),
+    DB.all('employees',empsFilter),
+    DB.all('punches',parts.join('&')),
+  ]);
+  // Client-side guards — belt-and-suspenders in case DB returns unexpected rows
+  C.sites=(sites||[]).filter(s=>superAdmin||visibleCoIds.has(s.company_id));
+  C.employees=(employees||[]).filter(e=>superAdmin||visibleCoIds.has(e.company_id));
+  C.punches=(punches||[]).filter(p=>superAdmin||visibleCoIds.has(p.company_id));
   // Superadmin also loads orphaned employees (company deleted when admin was removed)
   if(superAdmin){
     const orphaned=await DB.all('employees',`company_id=is.null&dept=eq.${encodeURIComponent('⚠️ Admin Deleted')}&order=name.asc`);
     if(orphaned?.length) C.employees=[...C.employees,...orphaned];
   }
   if(!sess&&ctx?.site){C.employees=C.employees.filter(e=>e.site_id===ctx.site.id);}
-  // Build punch filter — always load by company (never site-filtered) so getEmpStatus works
-  // correctly for employees who may punch in/out across sessions with different site contexts
-  // FIX: non-super-admins with no companies must never fetch any punches
-  if(!superAdmin&&C.companies.length===0){C.punches=[];return;}
-  const parts=['order=punched_at.desc'];
-  if(opts.coId){
-    parts.push(`company_id=eq.${opts.coId}`);
-  }else if(!superAdmin){
-    // Scope to this admin's own company IDs at the DB level — prevents cross-tenant data leaks
-    parts.push(`company_id=in.(${[...visibleCoIds].join(',')})`);
-  }
-  // NOTE: intentionally NOT filtering by siteId here — we need full punch history per employee
-  if(opts.startDate)parts.push(`punch_date=gte.${opts.startDate}`);
-  if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
-  if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
-  // Secondary client-side guard — ensures foreign rows never enter C.punches even if DB returns them
-  C.punches=(await DB.all('punches',parts.join('&'))||[]).filter(p=>superAdmin||visibleCoIds.has(p.company_id));
   if(sess&&sess.id&&!sess.parent_admin_id&&!superAdmin){
     C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
     C.primaryAdmin=null;
@@ -7338,13 +7344,8 @@ async function init(){
     window.history.replaceState({},'',window.location.pathname);
     document.getElementById('loadingOverlay').classList.remove('hidden');
     try{
-      // Load companies + sites without requiring login
-      const [companies, sites, employees] = await Promise.all([
-        DB.all('companies','order=name.asc'),
-        DB.all('sites',`id=eq.${kioskSiteId}`),
-        DB.all('employees','order=name.asc'),
-      ]);
-      C.companies = companies||[];
+      // Step 1: fetch the site to learn which company owns it
+      const sites = await DB.all('sites',`id=eq.${kioskSiteId}`);
       C.sites = sites||[];
       const site = sites?.[0];
       if(!site){
@@ -7354,6 +7355,12 @@ async function init(){
         showToast('Kiosk URL not found. Please contact your administrator.','error');
         return;
       }
+      // Step 2: fetch only the owning company + only this site's employees at DB level
+      const [companies, employees] = await Promise.all([
+        DB.all('companies',`id=eq.${site.company_id}`),
+        DB.all('employees',`site_id=eq.${kioskSiteId}&active=eq.true&order=name.asc`),
+      ]);
+      C.companies = companies||[];
       const co = (companies||[]).find(c=>c.id===site.company_id);
       if(!co){
         document.getElementById('loadingOverlay').classList.add('hidden');
@@ -7361,7 +7368,7 @@ async function init(){
         showLanding();
         return;
       }
-      C.employees = (employees||[]).filter(e=>e.company_id===co.id && e.site_id===site.id);
+      C.employees = employees||[];
       // Set context and go straight to punch — no admin session
       Ctx.set({co,site});
       document.getElementById('loadingOverlay').classList.add('hidden');
