@@ -4072,6 +4072,21 @@ function needsSiteOnboarding(){
   if(!isLoggedIn()||isSuperAdmin())return false;
   const ctx=Ctx.get();
   if(!ctx)return false;
+
+  // If the admin has ANY company with ANY site, they are fully set up.
+  // Clear stale pc_ctx and return false to skip step 2.
+  const hasAnySetupCompany=C.companies.some(co=>C.sites.some(s=>s.company_id===co.id));
+  if(hasAnySetupCompany){
+    // Re-point ctx to a valid company that has sites, to fix stale ctx
+    const validCo=C.companies.find(co=>C.sites.some(s=>s.company_id===co.id));
+    if(validCo&&ctx.co.id!==validCo.id){
+      // ctx is stale — clear it so company picker shows correctly
+      Ctx.clear();
+    }
+    return false;
+  }
+
+  // No companies have sites yet — show step 2 only for the ctx company
   return C.sites.filter(s=>s.company_id===ctx.co.id).length===0;
 }
 
