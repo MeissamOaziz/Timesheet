@@ -1492,13 +1492,17 @@ border-top:1px solid var(--border);margin:18px 0;}
 
     <!-- STEP 1: Basic info -->
     <div id="regStep1">
-      <div class="form-group"><label data-i18n="reg.fullName">Full Name</label><input type="text" id="regName" placeholder="Jane Smith"></div>
+      <!-- Name row -->
+      <div class="form-row">
+        <div class="form-group"><label data-i18n="reg.firstName">First Name</label><input type="text" id="regFirstName" placeholder="Jane"></div>
+        <div class="form-group"><label data-i18n="reg.lastName">Last Name</label><input type="text" id="regLastName" placeholder="Smith"></div>
+      </div>
       <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
       <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <hr class="divider">
       <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.accountType">Account Type</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-        <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeNewLabel" onclick="setRegType('new')">
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--accent);border-radius:12px;cursor:pointer;background:rgba(79,142,247,.08);transition:all .15s" id="regTypeNewLabel" onclick="setRegType('new')">
           <input type="radio" name="regType" value="new" checked style="margin-top:2px;accent-color:var(--accent)">
           <div>
             <div style="font-size:13px;font-weight:600" data-i18n="reg.newCompany">+ New Company</div>
@@ -1518,7 +1522,75 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="msg info" style="margin-bottom:12px" data-i18n="reg.joinHint">Ask your administrator for their registered email address to request access.</div>
         <div class="form-group"><label data-i18n="reg.adminEmail">Administrator's Registered Email</label><input type="email" id="regAdminEmail" placeholder="administrator@company.com"></div>
       </div>
-      <button class="btn-primary" onclick="doRegister()" data-i18n="reg.continue">Continue →</button>
+      <!-- New company: company information fields -->
+      <div id="regNewSection">
+        <hr class="divider">
+        <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
+        <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
+        <div class="form-row">
+          <div class="form-group"><label data-i18n="reg.companyAddress">Corporate Address <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="text" id="regAddress" placeholder="123 Main St, City"></div>
+          <div class="form-group"><label data-i18n="reg.companyPhone">Company Phone <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="text" id="regPhone" placeholder="+1 (555) 000-0000"></div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="reg.industry">Industry</label>
+          <select id="regIndustry">
+            <option value="" data-i18n="reg.ind.select">— Select industry —</option>
+            <option value="retail" data-i18n="reg.ind.retail">Retail</option>
+            <option value="restaurants" data-i18n="reg.ind.restaurants">Restaurants &amp; Food Service</option>
+            <option value="healthcare" data-i18n="reg.ind.healthcare">Healthcare</option>
+            <option value="construction" data-i18n="reg.ind.construction">Construction</option>
+            <option value="hospitality" data-i18n="reg.ind.hospitality">Hospitality &amp; Hotels</option>
+            <option value="transportation" data-i18n="reg.ind.transportation">Transportation &amp; Logistics</option>
+            <option value="manufacturing" data-i18n="reg.ind.manufacturing">Manufacturing</option>
+            <option value="technology" data-i18n="reg.ind.technology">Technology</option>
+            <option value="education" data-i18n="reg.ind.education">Education</option>
+            <option value="professional" data-i18n="reg.ind.professional">Professional Services</option>
+            <option value="nonprofit" data-i18n="reg.ind.nonprofit">Non-Profit</option>
+            <option value="other" data-i18n="reg.ind.other">Other</option>
+          </select>
+        </div>
+        <hr class="divider" style="margin:14px 0">
+        <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.payrollSettings">Payroll Settings</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-i18n="modal.weekStartsOn">Week Starts On</label>
+            <select id="regWeekStart">
+              <option value="monday" data-i18n="modal.monday">Monday</option>
+              <option value="sunday" data-i18n="modal.sunday">Sunday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="modal.payrollFreq">Payroll Frequency</label>
+            <select id="regPayrollFreq">
+              <option value="weekly" data-i18n="modal.weekly">Weekly</option>
+              <option value="biweekly" data-i18n="modal.biweekly">Bi-Weekly</option>
+              <option value="monthly" data-i18n="modal.monthly">Monthly</option>
+            </select>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:-8px;margin-bottom:16px" data-i18n="reg.payrollNote">Payroll settings apply to all sites</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:16px" onclick="toggleRegOvertime()">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="reg.trackOvertime">⏰ Track Overtime</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="reg.overtimeDesc">Flag daily &gt;8h and weekly &gt;40h in reports</div>
+          </div>
+          <div id="regOvertimeToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+            <div id="regOvertimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+          </div>
+        </div>
+        <hr class="divider" style="margin:14px 0">
+        <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.logoOptional">Company Logo (optional)</p>
+        <div class="upload-area" id="regLogoArea">
+          <input type="file" id="regLogoInput" accept="image/*" onchange="previewRegLogo()">
+          <img id="regLogoPreview" class="upload-preview" style="display:none;border-radius:12px">
+          <div id="regLogoHint">
+            <div style="font-size:22px;margin-bottom:6px">🏢</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.uploadLogo">Upload Company Logo</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px" data-i18n="modal.logoHint">PNG, JPG up to 2MB — shown on clock page and email reports</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" style="margin-top:20px" onclick="doRegister()" data-i18n="reg.continue">Continue →</button>
     </div>
 
     <!-- STEP 2: Email verification -->
@@ -3789,7 +3861,7 @@ async function doPasswordReset(){
 // Registration type selection
 function setRegType(type) {
   document.getElementById('regJoinSection').style.display = type==='join' ? '' : 'none';
-  // Update label styles
+  document.getElementById('regNewSection').style.display = type==='new' ? '' : 'none';
   document.getElementById('regTypeNewLabel').style.borderColor = type==='new' ? 'var(--accent)' : 'var(--border)';
   document.getElementById('regTypeNewLabel').style.background = type==='new' ? 'rgba(79,142,247,.08)' : 'var(--surface2)';
   document.getElementById('regTypeJoinLabel').style.borderColor = type==='join' ? 'var(--accent)' : 'var(--border)';
@@ -3797,16 +3869,32 @@ function setRegType(type) {
 }
 
 async function doRegister(){
-  const name=document.getElementById('regName').value.trim();
+  const firstName=document.getElementById('regFirstName').value.trim();
+  const lastName=document.getElementById('regLastName').value.trim();
+  const name=firstName+' '+lastName;
   const email=document.getElementById('regEmail').value.trim().toLowerCase();
   const pass=document.getElementById('regPass').value;
   const regType=document.querySelector('input[name="regType"]:checked')?.value||'new';
   const adminEmail=document.getElementById('regAdminEmail')?.value.trim().toLowerCase()||'';
 
-  if(!name||!email||!pass){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
+  if(!firstName||!lastName||!email||!pass){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
   if(pass.length<6){showMsg('registerMsg',t('msg.shortPassword'),'error');return;}
   if(regType==='join'&&!adminEmail){showMsg('registerMsg',t('msg.enterAdminEmail'),'error');return;}
   if(regType==='join'&&adminEmail===email){showMsg('registerMsg',t('msg.ownEmail'),'error');return;}
+
+  // New company: read and validate company fields
+  let company='',address='',phone='',industry='',weekStart='monday',payrollFreq='biweekly',trackOvertime=false,logoFile=null;
+  if(regType==='new'){
+    company=document.getElementById('regCompany').value.trim();
+    address=document.getElementById('regAddress').value.trim();
+    phone=document.getElementById('regPhone').value.trim();
+    industry=document.getElementById('regIndustry').value;
+    weekStart=document.getElementById('regWeekStart').value;
+    payrollFreq=document.getElementById('regPayrollFreq').value;
+    trackOvertime=document.getElementById('regOvertimeThumb').style.left==='20px';
+    logoFile=document.getElementById('regLogoInput').files[0]||null;
+    if(!company){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
+  }
 
   showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
 
@@ -3815,19 +3903,17 @@ async function doRegister(){
     if(ex.length){showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');return;}
 
     if(regType==='join'){
-      // Verify admin email exists
       const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(adminEmail)}&verified=eq.true`);
       if(!adminRows.length){showMsg('registerMsg',t('msg.adminNotFound'),'error');return;}
     }
 
-    // Generate code and send via edge function — never display it on screen
     const code=Math.floor(100000+Math.random()*900000).toString();
-    pendingVerify={name,email,pass,code,regType,adminEmail};
+    pendingVerify={firstName,lastName,email,pass,code,regType,adminEmail,company,address,phone,industry,weekStart,payrollFreq,trackOvertime,logoFile};
 
     let sendRes, sendData;
     try{
       const controller = new AbortController();
-      const timeout = setTimeout(()=>controller.abort(), 20000); // 20s timeout for cold starts
+      const timeout = setTimeout(()=>controller.abort(), 20000);
       sendRes = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
@@ -3870,7 +3956,7 @@ async function resendVerificationCode(){
     const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-      body:JSON.stringify({email:pendingVerify.email,name:pendingVerify.name,code:pendingVerify.code})
+      body:JSON.stringify({email:pendingVerify.email,name:pendingVerify.firstName+' '+pendingVerify.lastName,code:pendingVerify.code})
     });
     const data = await res.json();
     if(data.success||data.sent){
@@ -3889,10 +3975,13 @@ async function doVerify(){
   if(entered!==pendingVerify.code){showMsg('registerMsg',t('msg.incorrectCode'),'error');return;}
   try{
     const isJoin = pendingVerify.regType === 'join';
+    const fullName = pendingVerify.firstName+' '+pendingVerify.lastName;
 
-    // Create the admin account (unverified initially for join requests, active for new company)
+    // Create the admin account — store first_name/last_name and computed full name
     const newAdmin = await DB.insert('admins',{
-      name: pendingVerify.name,
+      name: fullName,
+      first_name: pendingVerify.firstName,
+      last_name: pendingVerify.lastName,
       email: pendingVerify.email,
       password: 'pending_hash',
       verified: true,
@@ -3909,18 +3998,16 @@ async function doVerify(){
     }
 
     if(isJoin){
-      // Create a join request record
       const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(pendingVerify.adminEmail)}&verified=eq.true`);
       if(adminRows.length){
         await DB.insert('join_requests',{
           requester_id: newAdmin[0].id,
-          requester_name: pendingVerify.name,
+          requester_name: fullName,
           requester_email: pendingVerify.email,
           target_admin_id: adminRows[0].id,
           target_admin_email: pendingVerify.adminEmail,
           status: 'pending'
         });
-        // Notify target admin by email
         try{
           await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
             method:'POST',
@@ -3929,7 +4016,7 @@ async function doVerify(){
               email: pendingVerify.adminEmail,
               name: adminRows[0].name||pendingVerify.adminEmail,
               type: 'join_request',
-              requesterName: pendingVerify.name,
+              requesterName: fullName,
               requesterEmail: pendingVerify.email
             })
           });
@@ -3939,13 +4026,30 @@ async function doVerify(){
       document.getElementById('regStep2').style.display='none';
       document.getElementById('regStep3').style.display='';
       showMsg('registerMsg','','');
-      // Notify super admin of new join request
       try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'Join Request',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
     } else {
-      // New company registration: log in immediately
+      // Upload logo if provided (file object is safe to hold in memory until here)
+      let logo_url=null;
+      if(pendingVerify.logoFile){
+        try{ logo_url=await uploadImage(pendingVerify.logoFile,'logos',`logo-${pendingVerify.company.replace(/\s+/g,'-').toLowerCase()}`); }
+        catch(e){ console.warn('Logo upload failed:',e); }
+      }
+      // Create company record — all fields collected during registration
+      const newCo=await DB.insert('companies',{
+        name: pendingVerify.company,
+        address: pendingVerify.address||null,
+        phone: pendingVerify.phone||null,
+        industry: pendingVerify.industry||null,
+        week_start: pendingVerify.weekStart||'monday',
+        payroll_frequency: pendingVerify.payrollFreq||'biweekly',
+        track_overtime: !!pendingVerify.trackOvertime,
+        logo_url,
+        admin_id: newAdmin[0].id
+      });
+      // Log in and set company context immediately
       Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
       DB.update('admins',`id=eq.${newAdmin[0].id}`,{last_login:new Date().toISOString()});
-      // Notify super admin of new registration
+      if(newCo?.[0]) Ctx.set({co:newCo[0],site:null});
       try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'New Company',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
       pendingVerify=null;
       updateNav();
@@ -3953,9 +4057,8 @@ async function doVerify(){
       showMsg('registerMsg',t('msg.accountCreated'),'success');
       setTimeout(()=>{
         navigate('admin');
-        // Start guided onboarding flow
-        window._onboardingActive=true;
-        setTimeout(()=>showOnboardStep1(),400);
+        // Company already created — skip step 1, go straight to add first site
+        setTimeout(()=>showOnboardStep2(),400);
       },1000);
     }
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
@@ -6336,6 +6439,23 @@ function setOvertimeToggle(on){
   document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
 }
+function toggleRegOvertime(){
+  const on=document.getElementById('regOvertimeThumb').style.left!=='20px';
+  document.getElementById('regOvertimeToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('regOvertimeThumb').style.left=on?'20px':'2px';
+}
+function previewRegLogo(){
+  const file=document.getElementById('regLogoInput').files[0];
+  if(!file) return;
+  if(file.size>2*1024*1024){alert('File too large. Max 2MB.');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=document.getElementById('regLogoPreview');
+    img.src=e.target.result; img.style.display='block';
+    document.getElementById('regLogoHint').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
 
 async function saveCompany(){
   const name=document.getElementById('companyName').value.trim();
@@ -8265,11 +8385,34 @@ en:{
 'login.signIn':'Sign In','login.noAccount':'No account?','login.register':'Register',
 'login.alreadyReg':'Already registered?',
 'reg.title':'Create Account','reg.subtitle':'Set up your PunchClock Pro admin account.',
+'reg.firstName':'First Name','reg.lastName':'Last Name',
 'reg.fullName':'Full Name','reg.accountType':'Account Type',
 'reg.newCompany':'+ New Company','reg.newCompanyDesc':"I'm starting fresh. Creates a Free plan account with a new company.",
 'reg.joinCompany':'👥 Join Existing Company','reg.joinCompanyDesc':"My company already has an account. I'll request access from my administrator.",
 'reg.joinHint':'Ask your administrator for their registered email address to request access.',
 'reg.adminEmail':"Administrator's Registered Email",
+'reg.companyInfo':'Company Information',
+'reg.companyName':'Company Name',
+'reg.companyAddress':'Corporate Address',
+'reg.companyPhone':'Company Phone',
+'reg.industry':'Industry',
+'reg.ind.select':'— Select industry —',
+'reg.ind.retail':'Retail',
+'reg.ind.restaurants':'Restaurants & Food Service',
+'reg.ind.healthcare':'Healthcare',
+'reg.ind.construction':'Construction',
+'reg.ind.hospitality':'Hospitality & Hotels',
+'reg.ind.transportation':'Transportation & Logistics',
+'reg.ind.manufacturing':'Manufacturing',
+'reg.ind.technology':'Technology',
+'reg.ind.education':'Education',
+'reg.ind.professional':'Professional Services',
+'reg.ind.nonprofit':'Non-Profit',
+'reg.ind.other':'Other',
+'reg.payrollNote':'Payroll settings apply to all sites',
+'reg.trackOvertime':'⏰ Track Overtime',
+'reg.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
+'reg.logoOptional':'Company Logo (optional)',
 'reg.continue':'Continue →',
 'reg.checkEmail':'Check your email','reg.checkEmailDesc':'We sent a 6-digit verification code to',
 'reg.verificationCode':'Verification Code','reg.verifyActivate':'Verify & Activate',
@@ -8789,11 +8932,34 @@ fr:{
 'login.signIn':'Se connecter','login.noAccount':'Pas de compte?','login.register':'S\'inscrire',
 'login.alreadyReg':'Déjà inscrit?',
 'reg.title':'Créer un compte','reg.subtitle':'Configurez votre compte administrateur PunchClock Pro.',
+'reg.firstName':'Prénom','reg.lastName':'Nom de famille',
 'reg.fullName':'Nom complet','reg.accountType':'Type de compte',
 'reg.newCompany':'+ Nouvelle compagnie','reg.newCompanyDesc':'Je commence à zéro. Crée un compte gratuit avec une nouvelle compagnie.',
 'reg.joinCompany':'👥 Rejoindre une compagnie existante','reg.joinCompanyDesc':"Ma compagnie a déjà un compte. Je vais demander l'accès à mon administrateur.",
 'reg.joinHint':"Demandez à votre administrateur son courriel enregistré pour faire une demande d'accès.",
 'reg.adminEmail':"Courriel enregistré de l'administrateur",
+'reg.companyInfo':'Informations sur la compagnie',
+'reg.companyName':'Nom de la compagnie',
+'reg.companyAddress':'Adresse corporative',
+'reg.companyPhone':'Téléphone de la compagnie',
+'reg.industry':"Secteur d'activité",
+'reg.ind.select':'— Choisir un secteur —',
+'reg.ind.retail':'Commerce de détail',
+'reg.ind.restaurants':'Restaurants et restauration',
+'reg.ind.healthcare':'Santé',
+'reg.ind.construction':'Construction',
+'reg.ind.hospitality':'Hôtellerie',
+'reg.ind.transportation':'Transport et logistique',
+'reg.ind.manufacturing':'Fabrication',
+'reg.ind.technology':'Technologie',
+'reg.ind.education':'Éducation',
+'reg.ind.professional':'Services professionnels',
+'reg.ind.nonprofit':'Organisme sans but lucratif',
+'reg.ind.other':'Autre',
+'reg.payrollNote':'Les paramètres de paie s\'appliquent à tous les sites',
+'reg.trackOvertime':'⏰ Suivi des heures supplémentaires',
+'reg.overtimeDesc':'Signaler >8h/jour et >40h/semaine dans les rapports',
+'reg.logoOptional':'Logo de la compagnie (facultatif)',
 'reg.continue':'Continuer →',
 'reg.checkEmail':'Vérifiez votre courriel','reg.checkEmailDesc':'Nous avons envoyé un code de vérification à 6 chiffres à',
 'reg.verificationCode':'Code de vérification','reg.verifyActivate':'Vérifier et activer',
