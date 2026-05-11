@@ -1250,7 +1250,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <button class="nav-btn active" onclick="navigate('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
     <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
     <button class="nav-btn" onclick="navigate('reports')" id="navReports" data-i18n="nav.reports" style="display:none">&#128202; Reports</button>
-    <button class="nav-btn" onclick="navigate('companies')" id="navCompanies" data-i18n="nav.companies" style="display:none">&#127970; Companies</button>
+    <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" data-i18n="nav.sites" style="display:none">🗂 Sites</button>
     <button class="nav-btn" onclick="navigate('activity')" id="navActivity" data-i18n="nav.activity" style="display:none">&#128203; Activity</button>
     <button class="nav-btn" onclick="navigate('schedule')" id="navSchedule" data-i18n="nav.schedule" style="display:none">🗓️ Schedule</button>
   </div>
@@ -1278,6 +1278,14 @@ border-top:1px solid var(--border);margin:18px 0;}
           <div>
             <div id="ddProfileLabel" data-i18n="profile.title">My Profile</div>
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.profileSub">Account settings &amp; password</div>
+          </div>
+        </button>
+        <!-- Company Info -->
+        <button class="user-dd-item" id="ddCompanyInfoBtn" onclick="closeUserMenu();openCompanyInfoModal()" style="display:none">
+          <div class="dd-icon" style="background:rgba(79,142,247,.12)">🏢</div>
+          <div>
+            <div data-i18n="nav.dd.companyInfo">Company Info</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.companyInfoSub">Edit company details &amp; payroll</div>
           </div>
         </button>
         <!-- Subscription -->
@@ -1331,7 +1339,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <button class="mobile-nav-btn" onclick="mobileNav('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('companies')" id="mobileNavCompanies" style="display:none">&#127970; Companies</button>
+  <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none">🗂 Sites</button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none">🗓️ <span data-i18n="nav.schedule">Schedule</span></button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none" data-i18n="nav.help">❓ Help</button>
@@ -1883,6 +1891,17 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <!-- ═══════════════ COMPANIES PAGE ═══════════════ -->
+<!-- ═══════════════ SITES PAGE ═══════════════ -->
+<div class="page" id="page-sites">
+  <div class="page-header">
+    <div><h1 data-i18n="sites.title">Sites</h1><p data-i18n="sites.subtitle">Manage your work locations</p></div>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddSiteModal()" data-i18n="admin.addSite">+ Add Site</button>
+  </div>
+  <div id="sitesMsg" style="display:none;margin-bottom:16px"></div>
+  <div class="company-grid" id="sitesGrid"></div>
+</div>
+
+<!-- page-companies stub (kept for backward compat — navigate('companies') redirects to sites) -->
 <div class="page" id="page-companies">
   <div class="page-header">
     <div><h1 data-i18n="companies.title">Companies</h1><p data-i18n="companies.subtitle">Manage organizations and their payroll settings</p></div>
@@ -2448,6 +2467,10 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="companyModalMsg"></div>
     <div id="companyFormBody">
     <div class="form-group"><label data-i18n="modal.companyName">Company Name</label><input type="text" id="companyName" placeholder="Acme Corp"></div>
+    <div class="form-row">
+      <div class="form-group"><label data-i18n="reg.companyAddress">Corporate Address</label><input type="text" id="companyAddress" placeholder="123 Main St, City"></div>
+      <div class="form-group"><label data-i18n="reg.companyPhone">Company Phone</label><input type="text" id="companyPhone" placeholder="+1 (555) 000-0000"></div>
+    </div>
     <div class="form-row">
       <div class="form-group"><label data-i18n="modal.industry">Industry</label><input type="text" id="companyIndustry" data-i18n="modal.industryPlaceholder" placeholder="Technology, Retail..."></div>
       <div class="form-group"><label data-i18n="modal.description">Description</label><input type="text" id="companyDesc" data-i18n="modal.descPlaceholder" placeholder="Optional"></div>
@@ -3230,8 +3253,8 @@ function showCompanyPicker(){
 
   if(!C.companies.length){
     grid.innerHTML=`<div style="text-align:center;color:var(--text2);grid-column:1/-1;padding:20px">
-      <p>No companies yet.</p>
-      ${logged?'<button class="btn-primary" style="margin-top:10px;width:auto;padding:9px 20px" onclick="closePicker();navigate(\'companies\')">Create Company</button>':'<p style="font-size:12px;margin-top:6px">Ask an admin to set up a company first.</p>'}
+      <p>No company found.</p>
+      ${logged?'<p style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6">Your company was set up during registration.<br>Contact support if you need help.</p><button class="btn-primary" style="margin-top:12px;width:auto;padding:9px 20px" onclick="closePicker();openAddSiteModal()">Add Your First Site &rarr;</button>':'<p style="font-size:12px;margin-top:6px">Ask an admin to set up a company first.</p>'}
     </div>`;
     hints.style.display=logged?'none':'flex';
     return;
@@ -3255,7 +3278,7 @@ function showCompanyPicker(){
   hints.style.display=logged?'none':'flex';
   if(logged){
     hints.style.display='flex';
-    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'companies\')">&#9881; Manage companies</span>'
+    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'sites\')">🗂 Manage sites</span>'
       +'<span class="picker-hint" style="color:var(--red)" onclick="logout()">&#10005; Logout</span>';
   }
 }
@@ -3392,13 +3415,15 @@ function updateContextPill(){
 // NAVIGATE
 // ═══════════════════════════════════════════════════
 function navigate(page){
-  const adminPages=['admin','reports','companies','activity','schedule'];
+  // Redirect legacy 'companies' references to the new sites page
+  if(page==='companies'){navigate('sites');return;}
+  const adminPages=['admin','reports','sites','activity','schedule'];
   if(adminPages.includes(page)&&!isLoggedIn()){navigate('login');return;}
   // ── HARD BLOCK: force site creation before anything else ──
   if(adminPages.includes(page)&&isLoggedIn()&&!isSuperAdmin()){
     if(needsOnboarding()){showOnboardStep1();return;}
-    // Has company but no site → block ALL pages except companies tab (so they can't run away)
-    if(needsSiteOnboarding()&&page!=='companies'){
+    // Has company but no site → block ALL pages except sites tab (so they can't run away)
+    if(needsSiteOnboarding()&&page!=='sites'){
       // Briefly navigate to admin/sites then show step 2
       document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
       const el=document.getElementById('page-admin');
@@ -3414,13 +3439,13 @@ function navigate(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('page-'+page);
   if(el){el.classList.add('active');currentPage=page;}
-  const map={punch:0,admin:1,reports:2,companies:3,activity:4,schedule:5};
+  const map={punch:0,admin:1,reports:2,sites:3,activity:4,schedule:5};
   const btns=document.querySelectorAll('.nav-links .nav-btn');
   if(map[page]!==undefined&&btns[map[page]])btns[map[page]].classList.add('active');
   if(page==='punch')loadPunchPage();
   else if(page==='admin')loadAdminPage();
   else if(page==='reports')loadReportsPage();
-  else if(page==='companies')loadCompaniesPage();
+  else if(page==='sites')loadSitesPage();
   else if(page==='activity')loadActivityPage();
   else if(page==='schedule')loadSchedulePage();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
@@ -3656,6 +3681,9 @@ function updateNav(){
         if(ddUpBtn) ddUpBtn.style.display='none';
         if(ddBillBtn) ddBillBtn.style.display='none';
       }
+      // Company Info — visible to role='admin' only (primary + co-admin), not super admin or managers
+      const ddCoInfo=document.getElementById('ddCompanyInfoBtn');
+      if(ddCoInfo) ddCoInfo.style.display=(a.role==='admin'&&!isSuperAdmin())?'':'none';
       // Scheduling add-on row
       const ddSched=document.getElementById('ddSchedulingAddon');
       const ddSchedSep=document.getElementById('ddAddonSep');
@@ -4647,10 +4675,10 @@ async function loadPunchPage(){
   const ctx=Ctx.get();
   if(!ctx){
     await refreshCache();
-    // If logged in but no companies yet, force them to create one
+    // If logged in but no company yet, redirect to sites page with a toast
     if(isLoggedIn()&&!C.companies.length){
-      navigate('companies');
-      setTimeout(()=>showMsg('companiesMsg',t('msg.noCompanyYet')||'You have no companies yet. Please create a company before accessing the Clock In/Out page.','info'),200);
+      navigate('sites');
+      setTimeout(()=>showToast(t('msg.noCompanyYet')||'No company found. Contact support if you need help.','info'),200);
       return;
     }
     showCompanyPicker();
@@ -6375,6 +6403,59 @@ async function loadCompaniesPage(){
   applyAllTranslations();
 }
 
+async function loadSitesPage(){
+  if(!isLoggedIn()){navigate('login');return;}
+  await refreshCache();
+  const ctx=Ctx.get();
+  const grid=document.getElementById('sitesGrid');
+  if(!grid)return;
+  const superAdmin=isSuperAdmin();
+  const sites=superAdmin?C.sites:(ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites.filter(s=>C.companies.some(c=>c.id===s.company_id)));
+  if(!sites.length){
+    grid.innerHTML=`<div class="empty"><p>${t('sites.noSites')}</p><button class="btn-primary" style="margin-top:14px;width:auto;padding:9px 20px" onclick="openAddSiteModal()">${t('admin.addSite')||'+ Add Site'}</button></div>`;
+    return;
+  }
+  const freqLabel={weekly:t('modal.weekly'),biweekly:t('modal.biweekly'),monthly:t('modal.monthly')};
+  const weekLabel={monday:`${t('common.days.mon')}–${t('common.days.sun')}`,sunday:`${t('common.days.sun')}–${t('common.days.sat')}`};
+  grid.innerHTML=sites.map(s=>{
+    const co=C.companies.find(c=>c.id===s.company_id);
+    const empCnt=C.employees.filter(e=>e.site_id===s.id).length;
+    const activeEmp=C.employees.filter(e=>e.site_id===s.id&&e.active).length;
+    const hasGeo=!!(s.geo_lat&&s.geo_lng);
+    const geoBadge=hasGeo
+      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius">📍 ${s.geo_radius_m||25}m</span>`
+      :`<span class="geo-status-badge geo-none" title="No geofence set">📍 No geofence</span>`;
+    const payrollLine=co?`${freqLabel[co.payroll_frequency]||'—'} · ${weekLabel[co.week_start]||'—'}`:'';
+    const companyLine=superAdmin&&co?`<div class="meta" style="margin-bottom:3px;color:var(--accent)">${co.name}</div>`:'';
+    return`<div class="company-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📍</div>
+        <div style="flex:1;min-width:0">
+          ${companyLine}
+          <h3 style="margin:0;font-size:14px;font-weight:600">${s.name}</h3>
+          <div style="margin-top:4px">${geoBadge}</div>
+        </div>
+      </div>
+      ${payrollLine?`<div class="meta" style="margin-bottom:4px">📅 ${payrollLine}</div>`:''}
+      <div class="meta">👥 ${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+s.description:''}</div>
+      <div class="actions">
+        <button class="btn-primary" style="font-size:11px;padding:5px 11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">📲 ${t('site.kioskShortcut')||'Kiosk'}</button>
+        <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
+      </div>
+    </div>`;
+  }).join('');
+  applyAllTranslations();
+}
+
+function openCompanyInfoModal(){
+  const sess=Sess.get(); if(!sess) return;
+  const primaryId=sess.parent_admin_id||sess.id;
+  const co=C.companies.find(c=>c.admin_id===primaryId)||C.companies[0];
+  if(!co){showToast(t('msg.noCompanyYet')||'No company found.','error');return;}
+  editCompany(co.id);
+}
+
 function selectCtxFromCompany(coId){
   const co=C.companies.find(c=>c.id===coId);if(!co)return;
   const sites=C.sites.filter(s=>s.company_id===coId);
@@ -6401,7 +6482,7 @@ function openAddCompanyModal(){
   }
   if(form) form.style.display='';
   if(saveBtn) saveBtn.style.display='';
-  ['companyName','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
+  ['companyName','companyAddress','companyPhone','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('companyWeekStart').value='monday';
   document.getElementById('companyPayrollFreq').value='biweekly';
   document.getElementById('companyModalMsg').innerHTML='';
@@ -6419,6 +6500,8 @@ function editCompany(id){
   if(saveBtn){ saveBtn.style.display=''; saveBtn.textContent=t('modal.saveChanges'); }
   document.getElementById('companyModalTitle').textContent=t('modal.editCompany');
   document.getElementById('companyName').value=co.name;
+  document.getElementById('companyAddress').value=co.address||'';
+  document.getElementById('companyPhone').value=co.phone||'';
   document.getElementById('companyIndustry').value=co.industry||'';
   document.getElementById('companyDesc').value=co.description||'';
   document.getElementById('companyWeekStart').value=co.week_start||'monday';
@@ -6459,6 +6542,8 @@ function previewRegLogo(){
 
 async function saveCompany(){
   const name=document.getElementById('companyName').value.trim();
+  const address=document.getElementById('companyAddress').value.trim();
+  const phone=document.getElementById('companyPhone').value.trim();
   const industry=document.getElementById('companyIndustry').value.trim();
   const description=document.getElementById('companyDesc').value.trim();
   const week_start=document.getElementById('companyWeekStart').value;
@@ -6480,13 +6565,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,week_start,payroll_frequency,track_overtime,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,track_overtime,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,industry,description,week_start,payroll_frequency,track_overtime,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -6499,7 +6584,7 @@ async function saveCompany(){
       showOnboardStep2();
       return;
     }
-    closeModal('addCompanyModal');loadCompaniesPage();
+    closeModal('addCompanyModal');loadSitesPage();
   }catch(e){showMsg('companyModalMsg','Error: '+e.message,'error');}
 }
 
@@ -7050,7 +7135,7 @@ function confirmDelete(type,id,name){
         C.sites=C.sites.filter(s=>s.company_id!==id);
         C.companies=C.companies.filter(co=>co.id!==id);
         const ctx=Ctx.get();if(ctx?.co?.id===id){Ctx.clear();updateContextPill();}
-        loadCompaniesPage();
+        loadSitesPage();
       }
       closeModal('deleteModal');
     }catch(e){alert('Delete failed: '+e.message);}
@@ -8378,7 +8463,7 @@ var _punchLang='en';
 var TRANSLATIONS={
 en:{
 'nav.clockInOut':'⏱ Clock In/Out','nav.admin':'⚙ Admin','nav.reports':'📊 Reports',
-'nav.companies':'🏢 Companies','nav.activity':'📋 Activity','nav.schedule':'🗓️ Schedule',
+'nav.companies':'🏢 Companies','nav.sites':'🗂 Sites','nav.activity':'📋 Activity','nav.schedule':'🗓️ Schedule',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
 'login.email':'Email','login.password':'Password','login.forgot':'Forgot password?',
@@ -8501,6 +8586,7 @@ en:{
 'activity.type':'TYPE','activity.date':'DATE','activity.time':'TIME','activity.actions':'ACTIONS',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
+'sites.title':'Sites','sites.subtitle':'Manage your work locations','sites.noSites':'No sites yet. Add your first site.',
 'common.filter':'Filter','common.company':'Company','common.allCompanies':'All Companies',
 'col.name':'Name','col.email':'Email','col.role':'Role','col.plan':'Plan',
 'col.status':'Status','col.registered':'Registered','col.actions':'Actions',
@@ -8577,6 +8663,7 @@ en:{
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
 'profile.title':'My Profile','profile.plan':'Subscription Plan','profile.upgrade':'⬆ Upgrade',
 'nav.dd.profileSub':'Account settings & password',
+'nav.dd.companyInfo':'Company Info','nav.dd.companyInfoSub':'Edit company details & payroll',
 'nav.dd.upgrade':'Upgrade Plan','nav.dd.upgradeSub':'Change your subscription',
 'nav.dd.billing':'Manage Billing','nav.dd.billingSub':'Invoices & payment method',
 'nav.dd.addonDesc':'shift builder & weekly schedule',
@@ -8925,7 +9012,7 @@ en:{
 },
 fr:{
 'nav.clockInOut':'⏱ Entrée/Sortie','nav.admin':'⚙ Admin','nav.reports':'📊 Rapports',
-'nav.companies':'🏢 Compagnies','nav.activity':'📋 Activité','nav.schedule':'🗓️ Horaires',
+'nav.companies':'🏢 Compagnies','nav.sites':'🗂 Sites','nav.activity':'📋 Activité','nav.schedule':'🗓️ Horaires',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
 'login.email':'Courriel','login.password':'Mot de passe','login.forgot':'Mot de passe oublié?',
@@ -9048,6 +9135,7 @@ fr:{
 'activity.type':'TYPE','activity.date':'DATE','activity.time':'HEURE','activity.actions':'ACTIONS',
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
+'sites.title':'Sites','sites.subtitle':'Gérer vos emplacements','sites.noSites':'Aucun site. Ajoutez votre premier site.',
 'common.filter':'Filtrer','common.company':'Compagnie','common.allCompanies':'Toutes les compagnies',
 'col.name':'Nom','col.email':'Courriel','col.role':'Rôle','col.plan':'Plan',
 'col.status':'Statut','col.registered':'Inscrit','col.actions':'Actions',
@@ -9124,6 +9212,7 @@ fr:{
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
 'profile.title':'Mon profil','profile.plan':'Abonnement','profile.upgrade':'⬆ Mettre à niveau',
 'nav.dd.profileSub':'Paramètres du compte et mot de passe',
+'nav.dd.companyInfo':'Info compagnie','nav.dd.companyInfoSub':'Modifier les détails et paramètres de paie',
 'nav.dd.upgrade':'Mettre à niveau','nav.dd.upgradeSub':'Changer votre abonnement',
 'nav.dd.billing':'Gérer la facturation','nav.dd.billingSub':'Factures et mode de paiement',
 'nav.dd.addonDesc':'créateur de quarts et horaire hebdomadaire',
@@ -9568,6 +9657,7 @@ function setLang(lang,scope){
       if(currentPage==='punch')loadPunchPage();
       else if(currentPage==='admin')loadAdminPage();
       else if(currentPage==='reports')loadReportsPage();
+      else if(currentPage==='sites')loadSitesPage();
       else if(currentPage==='companies')loadCompaniesPage();
       else if(currentPage==='activity')loadActivityPage();
     }
