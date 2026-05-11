@@ -1492,6 +1492,33 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </div>
 
+<!-- ═══════════════ ACCEPT INVITE ═══════════════ -->
+<div class="page" id="page-accept-invite" style="display:none">
+  <div class="form-card" style="margin-top:50px;max-width:440px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:22px;font-weight:700;color:var(--accent)">⏱ PunchClock Pro</div>
+    </div>
+    <h2 id="acceptInviteTitle" style="font-size:20px;font-weight:700;margin:0 0 8px">You've been invited</h2>
+    <p id="acceptInviteSubtitle" style="font-size:14px;color:var(--text2);margin:0 0 22px"></p>
+    <div id="acceptInviteMsg" style="margin-bottom:10px"></div>
+    <div class="form-group"><label>First Name</label><input type="text" id="acceptFirstName" placeholder="Jane"></div>
+    <div class="form-group"><label>Last Name</label><input type="text" id="acceptLastName" placeholder="Smith"></div>
+    <div class="form-group"><label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="acceptPass" placeholder="Min 6 characters">
+        <button type="button" class="pw-toggle" onclick="togglePw('acceptPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <div class="form-group"><label>Confirm Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="acceptPassConfirm" placeholder="Repeat password">
+        <button type="button" class="pw-toggle" onclick="togglePw('acceptPassConfirm',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="doAcceptInvite()" style="margin-top:8px">Create Account</button>
+  </div>
+</div>
+
 <!-- ═══════════════ REGISTER ═══════════════ -->
 <div class="page" id="page-register">
   <div class="form-card" style="margin-top:50px;max-width:520px">
@@ -1703,7 +1730,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <h3 style="font-size:14px;font-weight:600" data-i18n="coAdmin.myCoAdmins">My Co-Admins</h3>
           <p style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="coAdmin.desc">Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.</p>
         </div>
-        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openInviteCoAdminModal()" data-i18n="coAdmin.inviteBtn">+ Invite Co-Admin</button>
+        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openInviteModal()">+ Invite Team Member</button>
       </div>
       <div id="coAdminMsg" style="margin-bottom:8px"></div>
       <div class="table-wrap"><table>
@@ -1773,6 +1800,47 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('inviteCoAdminModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveInviteCoAdmin()" data-i18n="coAdmin.sendInvite">Send Invitation</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVITE TEAM MEMBER MODAL -->
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal">
+    <h3>Invite Team Member</h3>
+    <div id="inviteMsg"></div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="inviteEmail" placeholder="colleague@company.com">
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--accent);border-radius:10px;cursor:pointer;background:rgba(79,142,247,.08);transition:all .15s" id="inviteRoleCoAdminLabel" onclick="setInviteRole('co_admin')">
+          <input type="radio" name="inviteRole" value="co_admin" checked style="margin-top:2px;accent-color:var(--accent)">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Co-Admin</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Full access (except billing)</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:var(--surface2);transition:all .15s" id="inviteRoleManagerLabel" onclick="setInviteRole('manager')">
+          <input type="radio" name="inviteRole" value="manager" style="margin-top:2px;accent-color:var(--accent)">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Manager</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Can manage assigned site(s) and employees</div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div id="inviteSitesSection" style="display:none">
+      <div class="form-group">
+        <label>Assign Sites <span style="color:var(--text3);font-size:11px;font-weight:400">(select at least one)</span></label>
+        <div id="inviteSiteCheckboxes" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('inviteModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveInvite()">Send Invitation</button>
     </div>
   </div>
 </div>
@@ -3566,6 +3634,9 @@ function isSuperAdmin() {
   const s = Sess.get();
   return s && (s.role === 'super_admin' || s.email === SUPER_ADMIN_EMAIL);
 }
+function isManager(){
+  return Sess.get()?.role==='manager';
+}
 
 function currentAdminPlan() {
   const s = Sess.get();
@@ -3684,6 +3755,11 @@ function updateNav(){
       // Company Info — visible to role='admin' only (primary + co-admin), not super admin or managers
       const ddCoInfo=document.getElementById('ddCompanyInfoBtn');
       if(ddCoInfo) ddCoInfo.style.display=(a.role==='admin'&&!isSuperAdmin())?'':'none';
+      // Managers: hide all nav except Admin (employees only)
+      if(isManager()){
+        ['navReports','navCompanies','navActivity','navSchedule'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+        ['mobileNavReports','mobileNavCompanies','mobileNavActivity','mobileNavSchedule'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+      }
       // Scheduling add-on row
       const ddSched=document.getElementById('ddSchedulingAddon');
       const ddSchedSep=document.getElementById('ddAddonSep');
@@ -3824,10 +3900,86 @@ async function doSetInvitePassword(){
 }
 
 // ═══════════════════════════════════════════════════
+// ACCEPT INVITE (token-based)
+// ═══════════════════════════════════════════════════
+function showAcceptInvitePage(inv, co){
+  pendingInvitation=inv;
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.getElementById('page-accept-invite').style.display='';
+  const roleLabelEn=inv.role==='manager'?'Manager':'Co-Admin';
+  document.getElementById('acceptInviteTitle').textContent=`Join ${co?.name||'your company'} on PunchClock Pro`;
+  document.getElementById('acceptInviteSubtitle').textContent=`You've been invited as a ${roleLabelEn}. Set up your account below.`;
+  document.getElementById('acceptInviteMsg').innerHTML='';
+  ['acceptFirstName','acceptLastName','acceptPass','acceptPassConfirm'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  updateNav();
+}
+async function doAcceptInvite(){
+  if(!pendingInvitation){showToast('Session expired. Please use the original invitation link.','error');return;}
+  const inv=pendingInvitation;
+  const firstName=document.getElementById('acceptFirstName').value.trim();
+  const lastName=document.getElementById('acceptLastName').value.trim();
+  const pass=document.getElementById('acceptPass').value;
+  const passConfirm=document.getElementById('acceptPassConfirm').value;
+  if(!firstName||!lastName){showMsg('acceptInviteMsg','Please enter your first and last name.','error');return;}
+  if(pass.length<6){showMsg('acceptInviteMsg','Password must be at least 6 characters.','error');return;}
+  if(pass!==passConfirm){showMsg('acceptInviteMsg','Passwords do not match.','error');return;}
+  try{
+    const invCheck=await DB.all('invitations',`id=eq.${inv.id}&status=eq.pending`);
+    if(!invCheck?.length){showMsg('acceptInviteMsg','This invitation has already been used or has expired.','error');return;}
+    const existing=await DB.all('admins',`email=eq.${inv.email}`);
+    if(existing?.length){showMsg('acceptInviteMsg','An account with this email already exists. Please log in instead.','error');return;}
+    const fullName=firstName+' '+lastName;
+    const isMgr=inv.role==='manager';
+    let parentAdminId=inv.inviter_admin_id;
+    if(isMgr){
+      const inviterRows=await DB.all('admins',`id=eq.${inv.inviter_admin_id}&select=id,parent_admin_id`);
+      const inviter=inviterRows?.[0];
+      parentAdminId=inviter?.parent_admin_id||inviter?.id;
+    }
+    const newAdmin=await DB.insert('admins',{
+      name:fullName,first_name:firstName,last_name:lastName,
+      email:inv.email,password:'pending_hash',verified:true,
+      role:isMgr?'manager':'admin',plan:'free',status:'active',
+      parent_admin_id:parentAdminId,invited_by:inv.inviter_admin_id
+    });
+    if(!newAdmin?.[0]?.id)throw new Error('Failed to create account.');
+    try{
+      await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pass});
+    }catch(hashErr){
+      await DB.del('admins',`id=eq.${newAdmin[0].id}`);
+      throw new Error('Account setup failed. Please try again. ('+hashErr.message+')');
+    }
+    if(isMgr){
+      const siteIds=Array.isArray(inv.site_ids)?inv.site_ids:JSON.parse(inv.site_ids||'[]');
+      for(const siteId of siteIds){
+        try{await DB.insert('manager_sites',{manager_id:newAdmin[0].id,site_id:siteId});}catch(e){}
+      }
+    }
+    await DB.update('invitations',`id=eq.${inv.id}`,{status:'accepted'});
+    const fullRows=await DB.all('admins',`id=eq.${newAdmin[0].id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
+    const full=fullRows?.[0]||newAdmin[0];
+    Sess.set({
+      id:full.id,name:full.name,email:full.email,role:full.role,plan:full.plan||'free',
+      status:full.status,parent_admin_id:full.parent_admin_id||null,
+      extra_seats:full.extra_seats||0,stripe_customer_id:full.stripe_customer_id||null,
+      stripe_subscription_id:full.stripe_subscription_id||null,scheduling_addon:!!full.scheduling_addon
+    });
+    DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
+    pendingInvitation=null;
+    await refreshCache();
+    updateNav();
+    navigate('admin');
+    showToast(`Welcome to PunchClock Pro, ${firstName}! 🎉`,'success');
+  }catch(e){showMsg('acceptInviteMsg','Error: '+e.message,'error');}
+}
+
+// ═══════════════════════════════════════════════════
 // FORGOT PASSWORD
 // ═══════════════════════════════════════════════════
 let pendingReset = null;
 let pendingInviteAdmin = null;
+let pendingInvitation = null;
+let managerSiteIds = null;
 
 async function sendResetCode(resend=false){
   const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
@@ -5211,9 +5363,22 @@ async function loadAdminPage(){
     showOnboardStep2();
     return;
   }
+  const sess=Sess.get();
   const co=ctx?.co;
   document.getElementById('adminTitle').textContent=co?`${co.name} — ${t('admin.title')||'Admin'}`:t('admin.title')||'Admin Panel';
   document.getElementById('adminSub').textContent=co?`${t('admin.managing')||'Managing employees and sites for'} ${co.name}`:t('admin.subtitle')||'Manage employees and sites';
+  // Manager: load assigned site IDs, hide Sites/Admins tabs
+  if(isManager()){
+    const mgRows=await DB.all('manager_sites',`manager_id=eq.${sess.id}`);
+    managerSiteIds=(mgRows||[]).map(r=>r.site_id);
+    const tabBtns=document.querySelectorAll('#page-admin .tabs .tab');
+    tabBtns.forEach((btn,i)=>btn.style.display=i===0?'':'none');
+    ['employees','sites','admins'].forEach(t=>document.getElementById('tab-'+t).style.display=t==='employees'?'':'none');
+    tabBtns[0].classList.add('active');
+  }else{
+    managerSiteIds=null;
+    document.querySelectorAll('#page-admin .tabs .tab').forEach(btn=>btn.style.display='');
+  }
   populateEmpSiteFilter();
   renderEmployees();
   renderSitesAdmin();
@@ -5231,7 +5396,8 @@ function adminTab(tab,btn){
 
 function populateEmpSiteFilter(){
   const ctx=Ctx.get();
-  const sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
+  let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
+  if(managerSiteIds!==null) sites=sites.filter(s=>managerSiteIds.includes(s.id));
   const sf=document.getElementById('empSiteFilter');
   sf.innerHTML=`<option value="">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
 }
@@ -5340,6 +5506,7 @@ function renderEmployees(){
   const deptF=document.getElementById('empDeptFilter')?.value||'';
 
   let emps=ctx?C.employees.filter(e=>e.company_id===ctx.co.id):C.employees;
+  if(managerSiteIds!==null) emps=emps.filter(e=>managerSiteIds.includes(e.site_id));
 
   const depts=[...new Set(emps.map(e=>e.dept).filter(Boolean))].sort();
   const df=document.getElementById('empDeptFilter');
@@ -5466,6 +5633,63 @@ function showUpgradePlanForCoAdmin(){
   showUpgradePlans();
   // Show a hint toast
   setTimeout(()=>showToast((t('coAdmin.upgradeToApprove')||'Upgrade your plan to approve co-admin requests.'),'info'),300);
+}
+
+function openInviteModal(){
+  const sess=Sess.get();if(!sess)return;
+  document.getElementById('inviteMsg').innerHTML='';
+  document.getElementById('inviteEmail').value='';
+  document.querySelector('input[name="inviteRole"][value="co_admin"]').checked=true;
+  setInviteRole('co_admin');
+  const primaryAdminId=sess.parent_admin_id||sess.id;
+  const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
+  const mySites=myCo?C.sites.filter(s=>s.company_id===myCo.id):[];
+  const container=document.getElementById('inviteSiteCheckboxes');
+  container.innerHTML=mySites.length===0
+    ?`<p style="font-size:12px;color:var(--text3)">No sites found. Add a site first.</p>`
+    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+  openModal('inviteModal');
+}
+function setInviteRole(role){
+  document.querySelector('input[name="inviteRole"][value="'+role+'"]').checked=true;
+  document.getElementById('inviteRoleCoAdminLabel').style.borderColor=role==='co_admin'?'var(--accent)':'var(--border)';
+  document.getElementById('inviteRoleCoAdminLabel').style.background=role==='co_admin'?'rgba(79,142,247,.08)':'var(--surface2)';
+  document.getElementById('inviteRoleManagerLabel').style.borderColor=role==='manager'?'var(--accent)':'var(--border)';
+  document.getElementById('inviteRoleManagerLabel').style.background=role==='manager'?'rgba(79,142,247,.08)':'var(--surface2)';
+  document.getElementById('inviteSitesSection').style.display=role==='manager'?'':'none';
+}
+async function saveInvite(){
+  const sess=Sess.get();if(!sess)return;
+  const email=document.getElementById('inviteEmail').value.trim().toLowerCase();
+  const role=document.querySelector('input[name="inviteRole"]:checked')?.value||'co_admin';
+  if(!email){showMsg('inviteMsg','Email is required.','error');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('inviteMsg','Please enter a valid email address.','error');return;}
+  if(email===sess.email){showMsg('inviteMsg',t('msg.ownEmail'),'error');return;}
+  let siteIds=[];
+  if(role==='manager'){
+    siteIds=[...document.querySelectorAll('#inviteSiteCheckboxes input[type=checkbox]:checked')].map(cb=>cb.value);
+    if(!siteIds.length){showMsg('inviteMsg','Please assign at least one site for the manager.','error');return;}
+  }
+  try{
+    const existing=await DB.all('admins',`email=eq.${email}&status=neq.suspended`);
+    if(existing?.length){showMsg('inviteMsg',t('msg.emailTaken'),'error');return;}
+    const existingInv=await DB.all('invitations',`email=eq.${email}&status=eq.pending`);
+    if(existingInv?.length){showMsg('inviteMsg','An invitation has already been sent to this email.','error');return;}
+    const primaryAdminId=sess.parent_admin_id||sess.id;
+    const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
+    if(!myCo){showMsg('inviteMsg','No company found. Please contact support.','error');return;}
+    const token=crypto.randomUUID();
+    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role,site_ids:JSON.stringify(siteIds)});
+    try{
+      await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+        body:JSON.stringify({email,name:email,type:'invitation',inviterName:sess.name||sess.email,companyName:myCo.name,role,token})
+      });
+    }catch(emailErr){console.warn('Invite email failed:',emailErr);}
+    showMsg('inviteMsg',`✓ Invitation sent to ${email}`,'success');
+    setTimeout(()=>closeModal('inviteModal'),2200);
+  }catch(e){showMsg('inviteMsg','Error: '+e.message,'error');}
 }
 
 function openInviteCoAdminModal(){
@@ -7588,6 +7812,31 @@ async function init(){
       showLanding();
       return;
     }
+  }
+
+  // ── INVITE URL HANDLER (?invite=TOKEN) ──
+  const inviteToken=new URLSearchParams(window.location.search).get('invite');
+  if(inviteToken){
+    window.history.replaceState({},'',window.location.pathname);
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+    try{
+      const invRows=await DB.all('invitations',`token=eq.${inviteToken}&status=eq.pending`);
+      const inv=invRows?.[0];
+      if(!inv||new Date(inv.expires_at)<new Date()){
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        updateNav();showLanding();
+        showToast('This invitation link is invalid or has expired. Please ask your administrator to send a new one.','error');
+        return;
+      }
+      const coRows=await DB.all('companies',`id=eq.${inv.company_id}`);
+      const co=coRows?.[0];
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      showAcceptInvitePage(inv,co);
+    }catch(e){
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      updateNav();showLanding();
+    }
+    return;
   }
 
   // If nobody is logged in, skip DB entirely — show landing page immediately

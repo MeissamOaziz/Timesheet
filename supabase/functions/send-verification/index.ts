@@ -153,6 +153,38 @@ function buildJoinDeniedHtml(name, companyName) {
     </p>
   `);
 }
+function buildInvitationHtml(inviterName, companyName, role, token) {
+  const acceptUrl = `https://www.punchclock.ca?invite=${token}`;
+  const roleEn = role === 'manager' ? 'Manager' : 'Co-Admin';
+  const roleFr = role === 'manager' ? 'Gestionnaire' : 'Co-administrateur';
+  return wrapper(`
+    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">You've been invited to join PunchClock Pro</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      <strong style="color:#e8eaf0;">${inviterName}</strong> has invited you to join <strong style="color:#e8eaf0;">${companyName}</strong> on PunchClock Pro as a <strong style="color:#4f8ef7;">${roleEn}</strong>.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Click the button below to create your account. You'll set your name and password on the next page.
+    </p>
+    <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
+      Accept Invitation →
+    </a>
+    <p style="color:#555e7a;font-size:12px;margin-top:16px;text-align:center;">This invitation expires in 7 days. If you weren't expecting this, you can safely ignore this email.</p>
+
+    <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
+
+    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Vous avez été invité à rejoindre PunchClock Pro</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      <strong style="color:#e8eaf0;">${inviterName}</strong> vous a invité à rejoindre <strong style="color:#e8eaf0;">${companyName}</strong> sur PunchClock Pro en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Cliquez sur le bouton ci-dessous pour créer votre compte. Vous définirez votre nom et mot de passe à l'étape suivante.
+    </p>
+    <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
+      Accepter l'invitation →
+    </a>
+    <p style="color:#555e7a;font-size:12px;margin-top:16px;text-align:center;">Cette invitation expire dans 7 jours. Si vous ne vous attendiez pas à cette invitation, vous pouvez ignorer ce message.</p>
+  `);
+}
 function buildNewAccountNotificationHtml(userName, userEmail, plan, regType, timestamp) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">🆕 New Account Registration</h1>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
@@ -230,6 +262,10 @@ serve(async (req)=>{
     } else if (type === "join_request_denied") {
       subject = "Your access request — PunchClock Pro | Votre demande d'accès";
       html = buildJoinDeniedHtml(name, companyName || '');
+    } else if (type === "invitation") {
+      const { inviterName, companyName, role, token } = body;
+      subject = `You've been invited to join ${companyName || 'a company'} on PunchClock Pro | Invitation PunchClock Pro`;
+      html = buildInvitationHtml(inviterName || 'Your administrator', companyName || 'your company', role || 'co_admin', token || '');
     } else if (type === "new_account_notification") {
       const { userEmail, plan, regType, timestamp } = body;
       subject = `🆕 New PunchClock Pro registration: ${name}`;
