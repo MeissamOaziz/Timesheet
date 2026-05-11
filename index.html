@@ -1535,31 +1535,6 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
       <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <hr class="divider">
-      <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.accountType">Account Type</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-        <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--accent);border-radius:12px;cursor:pointer;background:rgba(79,142,247,.08);transition:all .15s" id="regTypeNewLabel" onclick="setRegType('new')">
-          <input type="radio" name="regType" value="new" checked style="margin-top:2px;accent-color:var(--accent)">
-          <div>
-            <div style="font-size:13px;font-weight:600" data-i18n="reg.newCompany">+ New Company</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="reg.newCompanyDesc">I'm starting fresh. Creates a Free plan account with a new company.</div>
-          </div>
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:10px;padding:14px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;background:var(--surface2);transition:all .15s" id="regTypeJoinLabel" onclick="setRegType('join')">
-          <input type="radio" name="regType" value="join" style="margin-top:2px;accent-color:var(--accent)">
-          <div>
-            <div style="font-size:13px;font-weight:600" data-i18n="reg.joinCompany">👥 Join Existing Company</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="reg.joinCompanyDesc">My company already has an account. I'll request access from my administrator.</div>
-          </div>
-        </label>
-      </div>
-      <!-- Join existing: admin email input -->
-      <div id="regJoinSection" style="display:none">
-        <div class="msg info" style="margin-bottom:12px" data-i18n="reg.joinHint">Ask your administrator for their registered email address to request access.</div>
-        <div class="form-group"><label data-i18n="reg.adminEmail">Administrator's Registered Email</label><input type="email" id="regAdminEmail" placeholder="administrator@company.com"></div>
-      </div>
-      <!-- New company: company information fields -->
-      <div id="regNewSection">
-        <hr class="divider">
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
         <div class="form-row">
@@ -1624,7 +1599,6 @@ border-top:1px solid var(--border);margin:18px 0;}
             <div style="font-size:11px;color:var(--text3);margin-top:3px" data-i18n="modal.logoHint">PNG, JPG up to 2MB — shown on clock page and email reports</div>
           </div>
         </div>
-      </div>
       <button class="btn-primary" style="margin-top:20px" onclick="doRegister()" data-i18n="reg.continue">Continue →</button>
     </div>
 
@@ -1638,16 +1612,6 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="form-group"><label data-i18n="reg.verificationCode">Verification Code</label><input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px"></div>
       <button class="btn-primary" onclick="doVerify()" data-i18n="reg.verifyActivate">Verify &amp; Activate</button>
       <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:14px"><span data-i18n="reg.noCode">Didn't receive it?</span> <button class="link-btn" style="font-size:12px" onclick="resendVerificationCode()" data-i18n="reg.resend">Resend code</button></p>
-    </div>
-
-    <!-- STEP 3: Join request sent -->
-    <div id="regStep3" style="display:none">
-      <div style="text-align:center;padding:20px 0">
-        <div style="font-size:48px;margin-bottom:16px">✅</div>
-        <h3 style="font-size:17px;font-weight:600" data-i18n="reg.requestSent">Access Request Sent!</h3>
-        <p style="color:var(--text2);font-size:13px;margin-top:8px;line-height:1.6" data-i18n="reg.requestSentDesc">Your account has been created and a request has been sent to the administrator. You'll be able to log in once they approve your access.</p>
-        <button class="btn-primary" style="margin-top:20px" onclick="navigate('login')" data-i18n="reg.goToLogin">Go to Login</button>
-      </div>
     </div>
 
     <hr class="divider">
@@ -4039,42 +4003,25 @@ async function doPasswordReset(){
 }
 
 // Registration type selection
-function setRegType(type) {
-  document.getElementById('regJoinSection').style.display = type==='join' ? '' : 'none';
-  document.getElementById('regNewSection').style.display = type==='new' ? '' : 'none';
-  document.getElementById('regTypeNewLabel').style.borderColor = type==='new' ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('regTypeNewLabel').style.background = type==='new' ? 'rgba(79,142,247,.08)' : 'var(--surface2)';
-  document.getElementById('regTypeJoinLabel').style.borderColor = type==='join' ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('regTypeJoinLabel').style.background = type==='join' ? 'rgba(79,142,247,.08)' : 'var(--surface2)';
-}
-
 async function doRegister(){
   const firstName=document.getElementById('regFirstName').value.trim();
   const lastName=document.getElementById('regLastName').value.trim();
   const name=firstName+' '+lastName;
   const email=document.getElementById('regEmail').value.trim().toLowerCase();
   const pass=document.getElementById('regPass').value;
-  const regType=document.querySelector('input[name="regType"]:checked')?.value||'new';
-  const adminEmail=document.getElementById('regAdminEmail')?.value.trim().toLowerCase()||'';
 
   if(!firstName||!lastName||!email||!pass){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
   if(pass.length<6){showMsg('registerMsg',t('msg.shortPassword'),'error');return;}
-  if(regType==='join'&&!adminEmail){showMsg('registerMsg',t('msg.enterAdminEmail'),'error');return;}
-  if(regType==='join'&&adminEmail===email){showMsg('registerMsg',t('msg.ownEmail'),'error');return;}
 
-  // New company: read and validate company fields
-  let company='',address='',phone='',industry='',weekStart='monday',payrollFreq='biweekly',trackOvertime=false,logoFile=null;
-  if(regType==='new'){
-    company=document.getElementById('regCompany').value.trim();
-    address=document.getElementById('regAddress').value.trim();
-    phone=document.getElementById('regPhone').value.trim();
-    industry=document.getElementById('regIndustry').value;
-    weekStart=document.getElementById('regWeekStart').value;
-    payrollFreq=document.getElementById('regPayrollFreq').value;
-    trackOvertime=document.getElementById('regOvertimeThumb').style.left==='20px';
-    logoFile=document.getElementById('regLogoInput').files[0]||null;
-    if(!company){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
-  }
+  const company=document.getElementById('regCompany').value.trim();
+  const address=document.getElementById('regAddress').value.trim();
+  const phone=document.getElementById('regPhone').value.trim();
+  const industry=document.getElementById('regIndustry').value;
+  const weekStart=document.getElementById('regWeekStart').value;
+  const payrollFreq=document.getElementById('regPayrollFreq').value;
+  const trackOvertime=document.getElementById('regOvertimeThumb').style.left==='20px';
+  const logoFile=document.getElementById('regLogoInput').files[0]||null;
+  if(!company){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
 
   showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
 
@@ -4082,13 +4029,8 @@ async function doRegister(){
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');return;}
 
-    if(regType==='join'){
-      const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(adminEmail)}&verified=eq.true`);
-      if(!adminRows.length){showMsg('registerMsg',t('msg.adminNotFound'),'error');return;}
-    }
-
     const code=Math.floor(100000+Math.random()*900000).toString();
-    pendingVerify={firstName,lastName,email,pass,code,regType,adminEmail,company,address,phone,industry,weekStart,payrollFreq,trackOvertime,logoFile};
+    pendingVerify={firstName,lastName,email,pass,code,company,address,phone,industry,weekStart,payrollFreq,trackOvertime,logoFile};
 
     let sendRes, sendData;
     try{
@@ -4154,10 +4096,7 @@ async function doVerify(){
   if(!pendingVerify){showMsg('registerMsg',t('msg.sessionExpired'),'error');return;}
   if(entered!==pendingVerify.code){showMsg('registerMsg',t('msg.incorrectCode'),'error');return;}
   try{
-    const isJoin = pendingVerify.regType === 'join';
     const fullName = pendingVerify.firstName+' '+pendingVerify.lastName;
-
-    // Create the admin account — store first_name/last_name and computed full name
     const newAdmin = await DB.insert('admins',{
       name: fullName,
       first_name: pendingVerify.firstName,
@@ -4167,80 +4106,42 @@ async function doVerify(){
       verified: true,
       role: 'admin',
       plan: 'free',
-      status: isJoin ? 'pending_approval' : 'active'
+      status: 'active'
     });
-    // Hash the password — if this fails, delete the broken record so user can try again
     try{
       await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pendingVerify.pass});
     }catch(hashErr){
       await DB.del('admins',`id=eq.${newAdmin[0].id}`);
       throw new Error('Account setup failed. Please try again. ('+hashErr.message+')');
     }
-
-    if(isJoin){
-      const adminRows = await DB.all('admins',`email=eq.${encodeURIComponent(pendingVerify.adminEmail)}&verified=eq.true`);
-      if(adminRows.length){
-        await DB.insert('join_requests',{
-          requester_id: newAdmin[0].id,
-          requester_name: fullName,
-          requester_email: pendingVerify.email,
-          target_admin_id: adminRows[0].id,
-          target_admin_email: pendingVerify.adminEmail,
-          status: 'pending'
-        });
-        try{
-          await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
-            method:'POST',
-            headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-            body:JSON.stringify({
-              email: pendingVerify.adminEmail,
-              name: adminRows[0].name||pendingVerify.adminEmail,
-              type: 'join_request',
-              requesterName: fullName,
-              requesterEmail: pendingVerify.email
-            })
-          });
-        }catch(e){console.warn('Join request notification failed:',e);}
-      }
-      pendingVerify=null;
-      document.getElementById('regStep2').style.display='none';
-      document.getElementById('regStep3').style.display='';
-      showMsg('registerMsg','','');
-      try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'Join Request',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
-    } else {
-      // Upload logo if provided (file object is safe to hold in memory until here)
-      let logo_url=null;
-      if(pendingVerify.logoFile){
-        try{ logo_url=await uploadImage(pendingVerify.logoFile,'logos',`logo-${pendingVerify.company.replace(/\s+/g,'-').toLowerCase()}`); }
-        catch(e){ console.warn('Logo upload failed:',e); }
-      }
-      // Create company record — all fields collected during registration
-      const newCo=await DB.insert('companies',{
-        name: pendingVerify.company,
-        address: pendingVerify.address||null,
-        phone: pendingVerify.phone||null,
-        industry: pendingVerify.industry||null,
-        week_start: pendingVerify.weekStart||'monday',
-        payroll_frequency: pendingVerify.payrollFreq||'biweekly',
-        track_overtime: !!pendingVerify.trackOvertime,
-        logo_url,
-        admin_id: newAdmin[0].id
-      });
-      // Log in and set company context immediately
-      Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
-      DB.update('admins',`id=eq.${newAdmin[0].id}`,{last_login:new Date().toISOString()});
-      if(newCo?.[0]) Ctx.set({co:newCo[0],site:null});
-      try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'New Company',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
-      pendingVerify=null;
-      updateNav();
-      await refreshCache();
-      showMsg('registerMsg',t('msg.accountCreated'),'success');
-      setTimeout(()=>{
-        navigate('admin');
-        // Company already created — skip step 1, go straight to add first site
-        setTimeout(()=>showOnboardStep2(),400);
-      },1000);
+    let logo_url=null;
+    if(pendingVerify.logoFile){
+      try{ logo_url=await uploadImage(pendingVerify.logoFile,'logos',`logo-${pendingVerify.company.replace(/\s+/g,'-').toLowerCase()}`); }
+      catch(e){ console.warn('Logo upload failed:',e); }
     }
+    const newCo=await DB.insert('companies',{
+      name: pendingVerify.company,
+      address: pendingVerify.address||null,
+      phone: pendingVerify.phone||null,
+      industry: pendingVerify.industry||null,
+      week_start: pendingVerify.weekStart||'monday',
+      payroll_frequency: pendingVerify.payrollFreq||'biweekly',
+      track_overtime: !!pendingVerify.trackOvertime,
+      logo_url,
+      admin_id: newAdmin[0].id
+    });
+    Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
+    DB.update('admins',`id=eq.${newAdmin[0].id}`,{last_login:new Date().toISOString()});
+    if(newCo?.[0]) Ctx.set({co:newCo[0],site:null});
+    try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'New Company',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
+    pendingVerify=null;
+    updateNav();
+    await refreshCache();
+    showMsg('registerMsg',t('msg.accountCreated'),'success');
+    setTimeout(()=>{
+      navigate('admin');
+      setTimeout(()=>showOnboardStep2(),400);
+    },1000);
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
@@ -5390,7 +5291,6 @@ function adminTab(tab,btn){
   document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   ['employees','sites','admins'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'':'none');
-  if(tab==='admins') updateJoinRequestBadge(0);
   applyAllTranslations();
 }
 
@@ -5750,49 +5650,6 @@ async function loadCoAdmins(){
   const primaryAdminId = sess.parent_admin_id || sess.id;
   const isCoAdmin = !!sess.parent_admin_id;
   try{
-    // Load pending join requests targeted at the primary admin
-    const pendingReqs=await DB.all('join_requests',`target_admin_id=eq.${primaryAdminId}&status=eq.pending&order=created_at.desc`);
-    updateJoinRequestBadge(pendingReqs.length);
-    const plan=getAdminPlan();
-    const extraSeats=Number(sess.extra_seats??0);
-    const maxSlots=(plan.maxCoAdmins===Infinity?Infinity:(plan.maxCoAdmins-1))+extraSeats;
-    const canApprove=maxSlots>0||maxSlots===Infinity;
-
-    // Render pending requests section
-    let reqSection=document.getElementById('regularAdminJoinRequests');
-    if(!reqSection){
-      reqSection=document.createElement('div');
-      reqSection.id='regularAdminJoinRequests';
-      reqSection.style.cssText='margin-bottom:20px';
-      // Insert before the co-admins table
-      const coAdminSection=tbody?.closest('div')||tbody?.closest('table')?.parentNode;
-      const settingsContent=document.getElementById('regularAdminPanel');
-      if(settingsContent) settingsContent.insertBefore(reqSection, settingsContent.firstChild);
-    }
-    if(pendingReqs.length){
-      reqSection.innerHTML=`
-        <div style="background:rgba(245,158,11,.08);border:1.5px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-weight:600;font-size:13px;margin-bottom:10px">🔔 ${t('coAdmin.pendingRequests')||'Pending Access Requests'}</div>
-          ${pendingReqs.map(r=>`
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div>
-                <div style="font-weight:500;font-size:13px">${r.requester_name}</div>
-                <div style="font-size:12px;color:var(--text2)">${r.requester_email}</div>
-              </div>
-              <div style="display:flex;gap:6px;flex-shrink:0">
-                ${canApprove
-                  ? `<button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${r.requester_id}')">${t('coAdmin.approveBtn')||'Approve'}</button>`
-                  : `<button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px;opacity:.6" onclick="showUpgradePlanForCoAdmin()">${t('coAdmin.approveBtn')||'Approve'}</button>`
-                }
-                <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${r.requester_id}')">${t('coAdmin.denyBtn')||'Deny'}</button>
-              </div>
-            </div>`).join('')}
-          ${!canApprove?`<p style="font-size:12px;color:var(--amber);margin-top:10px">⚠ ${t('coAdmin.upgradeToApprove')||'Your plan does not include co-admins. Upgrade or add an extra admin seat to approve.'} <button class="link-btn" onclick="showUpgradePlanForCoAdmin()" style="color:var(--accent)">Upgrade →</button></p>`:''}
-        </div>`;
-    } else {
-      reqSection.innerHTML='';
-    }
-
     // Co-admin sees primary admin + any siblings; primary admin sees their co-admins
     // Both use primaryAdminId — pending_invite included, only suspended excluded
     let coAdmins;
