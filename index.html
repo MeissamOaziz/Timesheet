@@ -756,8 +756,8 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="feature-card">
         <div class="feature-icon">🏢</div>
-        <h3 data-i18n="land.feat7Title">Multi-Company</h3>
-        <p data-i18n="land.feat7Desc">Manage multiple businesses from a single admin account. Perfect for owners with more than one operation.</p>
+        <h3 data-i18n="land.feat7Title">Team Access</h3>
+        <p data-i18n="land.feat7Desc">Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📅</div>
@@ -976,8 +976,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:14px">
         <div style="font-size:34px;margin-bottom:10px">&#127970;</div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how1Title">1. Create a Company</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register your business, set your payroll frequency and week start day.</p>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how1Title">1. Create Your Account</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register with your name, email, and company details — payroll settings included. Verify your email and add your first site.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:14px">
         <div style="font-size:34px;margin-bottom:10px">&#128205;</div>
@@ -3116,7 +3116,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -8727,7 +8727,7 @@ en:{
 'land.feat4Title':'Manual Punch Editing','land.feat4Desc':'Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.',
 'land.feat5Title':'Overtime Tracking','land.feat5Desc':'Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.',
 'land.feat6Title':'QuickBooks Export','land.feat6Desc':'Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.',
-'land.feat7Title':'Multi-Company','land.feat7Desc':'Manage multiple businesses from a single admin account. Perfect for owners with more than one operation.',
+'land.feat7Title':'Team Access','land.feat7Desc':'Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.',
 'land.feat8Title':'Flexible Payroll Periods','land.feat8Desc':'Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.',
 'land.priceTitle':'Simple, transparent pricing','land.priceSub':'Start free. Upgrade as you grow. No hidden fees.',
 'land.freeSub':'Perfect for trying it out','land.getStartedFree':'Get started free',
@@ -8877,8 +8877,8 @@ en:{
 'nav.help':'❓ Help',
 'help.title':'How to Use PunchClock Pro',
 'help.close':'Got it',
-'help.s1title':'Create a Company',
-'help.s1desc':'Go to the <strong>Companies</strong> tab and click <em>+ New Company</em>. Enter your business name, industry, payroll frequency, and week start day. You can manage multiple companies from one account.',
+'help.s1title':'Set Up Your Account',
+'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
 'help.s2desc':'In <strong>Admin → Sites</strong>, click <em>+ Add Site</em>. Sites are your physical locations (stores, warehouses, offices). Each company needs at least one site before you can add employees or use the clock-in page.',
 'help.s3title':'Add Employees',
@@ -8898,9 +8898,9 @@ en:{
 'help.s10title':'Audit Logs & Manual Corrections',
 'help.s10desc':'The <strong>Activity</strong> tab shows every clock-in and clock-out event, including GPS status for geofenced sites. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
 'help.s11title':'Co-Admins & Team Access',
-'help.s11desc':'In <strong>Admin → Admins</strong>, invite co-admins to share management. Free/Starter: 1 admin total; Growth: 2; Business: 3. Extra seats are $4.90/mo. Co-admins receive an email invitation and must set their own password on first login.',
+'help.s11desc':'In <strong>Admin → Admins</strong>, invite co-admins or managers to help manage your account. Co-admins have full access; managers are limited to their assigned sites. Extra seats are $4.90/mo.',
 'land.howTitle':'How It Works','land.howSub':'Up and running in under 10 minutes.',
-'land.how1Title':'1. Create a Company','land.how1Desc':'Register your business, set your payroll frequency and week start day.',
+'land.how1Title':'1. Create Your Account','land.how1Desc':'Register with your name, email, and company details — payroll settings included. Verify your email and add your first site.',
 'land.how2Title':'2. Add Sites','land.how2Desc':'Create one or more physical locations — stores, warehouses, offices.',
 'land.how3Title':'3. Add Employees','land.how3Desc':'Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.',
 'land.how4Title':'4. Start Tracking','land.how4Desc':'Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.',
@@ -8928,8 +8928,8 @@ en:{
 'land.faqTitle':'Frequently Asked Questions','land.faqSub':'Everything you need to know before signing up.',
 'faq.q1':'Do employees need smartphones or apps to clock in?',
 'faq.a1':'No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required.',
-'faq.q2':'Can I manage multiple locations and share access with another admin?',
-'faq.a2':'Yes. Manage multiple companies under one account (Starter: 1, Growth: 2, Business: unlimited). You can also invite co-admins — Free/Starter include 1 admin total; Growth includes 2; Business includes 3. Additional admin seats are $4.90/mo each.',
+'faq.q2':'Can I manage multiple locations?',
+'faq.a2':'Yes. You can add as many sites (locations) as your plan allows under your single company account. Each site has its own employees, access code, and optional geofencing. Starter: 1 site, Growth: 3 sites, Business: unlimited.',
 'faq.q3':'How do automated email reports work?',
 'faq.a3':'At the end of each pay period (weekly, bi-weekly, or monthly — set per company), every employee with a registered email and reports enabled automatically receives a PDF summary of their hours. Admins can also send a report manually at any time for any individual employee, or select multiple employees and send reports in bulk.',
 'faq.q4':'Can I edit or correct time punches after the fact?',
@@ -8941,7 +8941,7 @@ en:{
 'faq.q7':'What is overtime tracking?',
 'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view, in exported reports, and in QuickBooks IIF exports — so your payroll process is always accurate.',
 'faq.q8':'Is there a free plan?',
-'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 5 active employees — no credit card required. Paid plans start at $19.49/month CAD and unlock more companies, sites, employees, and automated email reports.',
+'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 5 active employees — no credit card required. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports.',
 'faq.q9':'Can I add more employees or admins beyond my plan limit?',
 'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Free: 1 admin max. Starter: 1 admin included. Growth: 2 admins included. Business: 3 admins included. Extra admins beyond those limits are $4.90/mo each.',
 'faq.q10':'Can I take bulk actions on multiple employees at once?',
@@ -8962,6 +8962,10 @@ en:{
 'faq.a17':'It depends on the mode you choose per site. In <strong>Lenient Mode</strong> (the default), if GPS is unavailable the employee sees a warning but the punch still goes through — good for sites with poor indoor signal. In <strong>Strict Mode</strong>, if GPS is unavailable or denied, the punch is blocked entirely — best when you need zero exceptions. You set this per site in the Geofence settings.',
 'faq.q18':'What is the Kiosk Shortcut and how do I set it up so employees can always find the punch page?',
 'faq.a18':'The Kiosk Shortcut solves a common problem: the punch page disappears when the browser is closed or the tab is lost. Here\'s how it works: (1) Log in as admin and go to <strong>Admin → Sites</strong>. (2) Click the <strong>📲 Kiosk Shortcut</strong> button on the site card. (3) Choose your method: click <strong>"Install PunchClock App"</strong> to install a real desktop/home screen app icon (Chrome/Edge on desktop; Safari on iPhone; Chrome on Android), or copy the kiosk URL to create a browser bookmark or desktop shortcut manually, or use the QR code to set up a tablet. (4) Once set up, employees tap that icon and land directly on the correct punch page — no login, no navigation needed. The shortcut works even if the browser is closed or the device restarts. Step-by-step instructions for Chrome, Edge, Safari, iPhone, and Android are shown in the Kiosk Shortcut panel.',
+'faq.q19':'Can I have multiple companies under one account?',
+'faq.a19':'No — each PunchClock Pro account is linked to one company. If you manage a second business, simply register a new account with a different email address. Each account has its own billing, sites, and employees.',
+'faq.q20':'How do I invite team members?',
+'faq.a20':'From the Admin panel, go to the Admins tab and click <strong>\'Invite Team Member\'</strong>. Choose Co-Admin for full access (except billing) or Manager for site-specific access. The person receives an email with a secure link to create their account — no join requests needed.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'2 companies · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'Unlimited everything · up to 3 admins',
@@ -9276,7 +9280,7 @@ fr:{
 'land.feat4Title':'Modification manuelle','land.feat4Desc':'Les admins peuvent corriger les oublis de pointage, modifier les heures ou ajouter des entrées manquantes depuis le journal.',
 'land.feat5Title':'Suivi des heures supp.','land.feat5Desc':'Signale automatiquement les heures supplémentaires quotidiennes (>8h) et hebdomadaires (>40h). Activable par compagnie.',
 'land.feat6Title':'Export QuickBooks','land.feat6Desc':'Exportez des fichiers IIF prêts pour la paie qui s\'importent directement dans QuickBooks. Un seul clic.',
-'land.feat7Title':'Multi-compagnies','land.feat7Desc':'Gérez plusieurs entreprises depuis un seul compte admin. Parfait pour les propriétaires de plusieurs établissements.',
+'land.feat7Title':'Accès équipe','land.feat7Desc':'Invitez des co-administrateurs avec accès complet ou des gestionnaires avec accès limité à leurs sites. Chaque invitation est envoyée par courriel.',
 'land.feat8Title':'Périodes de paie flexibles','land.feat8Desc':'Paie hebdomadaire, aux deux semaines ou mensuelle. Début de semaine dimanche ou lundi. Préréglages automatiques par compagnie.',
 'land.priceTitle':'Tarifs simples et transparents','land.priceSub':'Commencez gratuitement. Évoluez selon vos besoins. Aucun frais caché.',
 'land.freeSub':'Parfait pour essayer','land.getStartedFree':'Commencer gratuitement',
@@ -9426,8 +9430,8 @@ fr:{
 'nav.help':'❓ Aide',
 'help.title':'Comment utiliser PunchClock Pro',
 'help.close':'Compris',
-'help.s1title':'Créer une compagnie',
-'help.s1desc':'Allez dans l\'onglet <strong>Compagnies</strong> et cliquez sur <em>+ Nouvelle compagnie</em>. Entrez le nom de votre entreprise, l\'industrie, la fréquence de paie et le début de semaine. Vous pouvez gérer plusieurs compagnies depuis un seul compte.',
+'help.s1title':'Configurez votre compte',
+'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',
 'help.s2desc':'Dans <strong>Admin → Sites</strong>, cliquez sur <em>+ Ajouter un site</em>. Les sites sont vos emplacements physiques (magasins, entrepôts, bureaux). Chaque compagnie doit avoir au moins un site avant de pouvoir ajouter des employés ou utiliser la page de pointage.',
 'help.s3title':'Ajouter des employés',
@@ -9447,9 +9451,9 @@ fr:{
 'help.s10title':'Journaux d\'audit et corrections manuelles',
 'help.s10desc':'L\'onglet <strong>Activité</strong> affiche tous les pointages, y compris le statut GPS pour les sites géofencés. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections.',
 'help.s11title':'Co-admins et accès d\'équipe',
-'help.s11desc':'Dans <strong>Admin → Admins</strong>, invitez des co-admins pour partager la gestion. Gratuit/Débutant: 1 admin total; Croissance: 2; Entreprise: 3. Sièges supplémentaires: 4,90$/mois. Les co-admins reçoivent une invitation et définissent leur mot de passe à la première connexion.',
+'help.s11desc':'Dans <strong>Admin → Admins</strong>, invitez des co-administrateurs ou des gestionnaires pour vous aider. Les co-admins ont un accès complet; les gestionnaires sont limités à leurs sites assignés. Sièges supplémentaires: 4,90$/mois.',
 'land.howTitle':'Comment ça marche','land.howSub':'Opérationnel en moins de 10 minutes.',
-'land.how1Title':'1. Créer une compagnie','land.how1Desc':'Enregistrez votre entreprise, définissez la fréquence de paie et le début de semaine.',
+'land.how1Title':'1. Créez votre compte','land.how1Desc':'Inscrivez-vous avec vos informations personnelles et celles de votre entreprise — paramètres de paie inclus. Vérifiez votre courriel et ajoutez votre premier site.',
 'land.how2Title':'2. Ajouter des sites','land.how2Desc':'Créez un ou plusieurs emplacements physiques — magasins, entrepôts, bureaux.',
 'land.how3Title':'3. Ajouter des employés','land.how3Desc':'Enregistrez le personnel avec un nom, un site et un NIP à 4 chiffres. Ajoutez optionnellement les courriels pour les rapports automatiques.',
 'land.how4Title':'4. Commencer le suivi','land.how4Desc':'Pointez n\'importe quelle tablette ou PC vers la page de pointage, déconnectez-vous de l\'admin, et les employés pointent avec leur NIP.',
@@ -9477,8 +9481,8 @@ fr:{
 'land.faqTitle':'Questions fréquentes','land.faqSub':'Tout ce que vous devez savoir avant de vous inscrire.',
 'faq.q1':'Les employés ont-ils besoin d\'un téléphone ou d\'une application?',
 'faq.a1':'Non. Les employés pointent avec un NIP à 4 chiffres sur n\'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis.',
-'faq.q2':'Puis-je gérer plusieurs emplacements et partager l\'accès avec un autre admin?',
-'faq.a2':'Oui. Gérez plusieurs compagnies sous un compte (Débutant: 1, Croissance: 2, Entreprise: illimité). Invitez aussi des co-admins — Gratuit/Débutant: 1 admin total; Croissance: 2 inclus; Entreprise: 3 inclus. Admins supplémentaires: 4,90$/mois chacun.',
+'faq.q2':'Puis-je gérer plusieurs emplacements?',
+'faq.a2':'Oui. Vous pouvez ajouter autant de sites (emplacements) que votre forfait le permet sous votre compte d\'entreprise. Chaque site a ses propres employés, code d\'accès et géolocalisation optionnelle. Débutant : 1 site, Croissance : 3 sites, Entreprise : illimité.',
 'faq.q3':'Comment fonctionnent les rapports par courriel automatiques?',
 'faq.a3':'À la fin de chaque période de paie (hebdomadaire, bimensuelle ou mensuelle — défini par compagnie), chaque employé avec un courriel et les rapports activés reçoit automatiquement un PDF de ses heures. L\'admin peut aussi envoyer un rapport manuellement à tout moment, ou sélectionner plusieurs employés et les envoyer en lot.',
 'faq.q4':'Puis-je corriger des pointages après coup?',
@@ -9490,7 +9494,7 @@ fr:{
 'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
 'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 h/jour et les semaines dépassant 40 h. Les heures supplémentaires sont mises en évidence dans la vue Activité, les rapports exportés et les exports QuickBooks IIF — pour un traitement de paie toujours précis.',
 'faq.q8':'Y a-t-il un plan gratuit?',
-'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 5 employés actifs — sans carte de crédit requise. Les plans payants commencent à 19,49$/mois CAD.',
+'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 5 employés actifs — sans carte de crédit requise. Les plans payants commencent à 19,49$/mois CAD et débloquent plus de sites, d\'employés et d\'admins, ainsi que les rapports automatiques.',
 'faq.q9':'Puis-je ajouter plus d\'employés ou d\'administrateurs au-delà de la limite?',
 'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Gratuit: 1 admin max. Débutant: 1 admin inclus. Croissance: 2 admins inclus. Entreprise: 3 admins inclus.',
 'faq.q10':'Puis-je effectuer des actions groupées sur plusieurs employés?',
@@ -9511,6 +9515,10 @@ fr:{
 'faq.a17':'Cela dépend du mode configuré par site. En <strong>Mode tolérant</strong> (par défaut), si le GPS est indisponible, l\'employé voit un avertissement mais le pointage passe quand même — adapté aux sites avec un mauvais signal GPS intérieur. En <strong>Mode strict</strong>, si le GPS est indisponible ou refusé, le pointage est bloqué — idéal quand vous exigez zéro exception. Ce paramètre se configure par site dans les réglages du géofence.',
 'faq.q18':'Qu\'est-ce que le raccourci kiosque et comment le configurer pour que les employés trouvent toujours la page de pointage?',
 'faq.a18':'Le raccourci kiosque résout un problème courant : la page de pointage disparaît quand le navigateur est fermé ou l\'onglet perdu. Voici comment ça fonctionne : (1) Connectez-vous en admin et allez dans <strong>Admin → Sites</strong>. (2) Cliquez sur <strong>📲 Raccourci kiosque</strong> sur la fiche du site. (3) Choisissez votre méthode : cliquez <strong>«Installer l\'app PunchClock»</strong> pour installer une vraie icône d\'app sur le bureau/écran d\'accueil, ou copiez l\'URL kiosque pour créer un favori ou raccourci bureau, ou utilisez le code QR pour configurer une tablette. (4) Une fois configuré, les employés appuient sur cette icône et arrivent directement sur la bonne page de pointage — sans connexion ni navigation. Le raccourci fonctionne même si le navigateur est fermé ou l\'appareil redémarre.',
+'faq.q19':'Puis-je avoir plusieurs entreprises sous un même compte?',
+'faq.a19':'Non — chaque compte PunchClock Pro est lié à une seule entreprise. Si vous gérez une deuxième entreprise, créez simplement un nouveau compte avec une adresse courriel différente. Chaque compte a sa propre facturation, ses sites et ses employés.',
+'faq.q20':'Comment inviter des membres de l\'équipe?',
+'faq.a20':'Depuis le panneau Admin, allez dans l\'onglet Admins et cliquez sur <strong>\'Inviter un membre\'</strong>. Choisissez Co-Admin pour un accès complet (sauf facturation) ou Gestionnaire pour un accès limité à des sites spécifiques. La personne reçoit un courriel avec un lien sécurisé pour créer son compte.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
