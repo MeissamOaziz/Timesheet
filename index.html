@@ -3427,6 +3427,7 @@ function closePicker(){
 
 function handleContextClick(){
   if(!isLoggedIn())return;
+  if(C.companies.length===1){onCompanyPicked(C.companies[0].id);return;}
   showCompanyPicker();
 }
 
@@ -4733,6 +4734,7 @@ async function loadPunchPage(){
       setTimeout(()=>showToast(t('msg.noCompanyYet')||'No company found. Contact support if you need help.','info'),200);
       return;
     }
+    if(C.companies.length===1){onCompanyPicked(C.companies[0].id);return;}
     showCompanyPicker();
     return;
   }
