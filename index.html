@@ -319,6 +319,14 @@ th{background:var(--surface2);padding:11px 15px;text-align:left;font-size:11px;f
 td{padding:12px 15px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(255,255,255,.02);}
+#empTableBody tr:nth-child(even) td{background:rgba(255,255,255,.018);}
+th.sort-th{cursor:pointer;user-select:none;white-space:nowrap;}
+th.sort-th:hover{color:var(--text);}
+.sort-arrow{margin-left:3px;opacity:.3;font-size:9px;vertical-align:middle;}
+.sort-arrow.on{opacity:1;color:var(--accent);}
+.icon-btn{padding:5px 7px;font-size:14px;background:none;border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:all .15s;line-height:1;}
+.icon-btn:hover{border-color:var(--accent);background:rgba(79,142,247,.08);}
+.icon-btn.danger:hover{border-color:var(--red);background:rgba(239,68,68,.08);}
 
 /* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px;}
@@ -1570,14 +1578,21 @@ border-top:1px solid var(--border);margin:18px 0;}
           </div>
           <div class="form-group">
             <label data-i18n="modal.payrollFreq">Payroll Frequency</label>
-            <select id="regPayrollFreq">
+            <select id="regPayrollFreq" onchange="toggleRegAnchorDate()">
               <option value="weekly" data-i18n="modal.weekly">Weekly</option>
               <option value="biweekly" data-i18n="modal.biweekly">Bi-Weekly</option>
               <option value="monthly" data-i18n="modal.monthly">Monthly</option>
             </select>
           </div>
         </div>
-        <p style="font-size:12px;color:var(--text3);margin-top:-8px;margin-bottom:16px" data-i18n="reg.payrollNote">Payroll settings apply to all sites</p>
+        <div id="regAnchorDateRow" style="display:none;margin-top:10px">
+          <div class="form-group">
+            <label data-i18n="reg.anchorDate">Payroll Cycle Start Date</label>
+            <input type="date" id="regAnchorDate">
+            <p style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="reg.anchorDateHint">Enter the first day of your first payroll period. Used to align bi-weekly pay boundaries.</p>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:16px" data-i18n="reg.payrollNote">Payroll settings apply to all sites</p>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:16px" onclick="toggleRegOvertime()">
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="reg.trackOvertime">⏰ Track Overtime</div>
@@ -1640,9 +1655,16 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
-    <div class="filter-bar" style="grid-template-columns:1fr 1fr auto;margin-bottom:14px;padding:12px 15px">
+    <div class="filter-bar" style="grid-template-columns:1fr 1fr auto auto auto;margin-bottom:14px;padding:12px 15px">
       <div><label data-i18n="admin.search">Search</label><input type="text" id="empSearch" data-i18n="admin.searchPlaceholder" placeholder="Name, department..." oninput="renderEmployees()"></div>
       <div><label data-i18n="admin.site">Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allSites">All Sites</option></select></div>
+      <div><label data-i18n="admin.col.status">Status</label>
+        <select id="empStatusFilter" onchange="renderEmployees()" style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:100%">
+          <option value="" data-i18n="admin.allStatuses">All</option>
+          <option value="active" data-i18n="admin.active">Active</option>
+          <option value="inactive" data-i18n="admin.inactive">Inactive</option>
+        </select>
+      </div>
       <div style="display:flex;align-items:flex-end">
         <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allDepts">All Depts</option></select>
       </div>
@@ -1660,7 +1682,14 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="table-wrap"><table>
       <thead><tr>
         <th style="width:36px"><input type="checkbox" id="empSelectAll" onchange="toggleAllEmp(this.checked)" title="Select all" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></th>
-        <th data-i18n="admin.col.employee">Employee</th><th data-i18n="admin.col.site">Site</th><th data-i18n="admin.col.dept">Department</th><th data-i18n="admin.col.status">Status</th><th data-i18n="admin.col.pin">PIN</th><th data-i18n="admin.col.email">Email Report</th><th data-i18n="admin.col.actions">Actions</th>
+        <th class="sort-th" style="width:25%" onclick="sortEmps('name')"><span data-i18n="admin.col.employee">Employee</span><span class="sort-arrow on" id="sa-name">▲</span></th>
+        <th class="sort-th" style="width:16%" onclick="sortEmps('site')"><span data-i18n="admin.col.site">Site</span><span class="sort-arrow" id="sa-site">▲</span></th>
+        <th class="sort-th" style="width:12%" onclick="sortEmps('dept')"><span data-i18n="admin.col.dept">Department</span><span class="sort-arrow" id="sa-dept">▲</span></th>
+        <th style="width:8%" data-i18n="admin.col.code">Code</th>
+        <th style="width:7%" data-i18n="admin.col.pin">PIN</th>
+        <th style="width:14%" data-i18n="admin.col.email">Email Report</th>
+        <th class="sort-th" style="width:9%" onclick="sortEmps('status')"><span data-i18n="admin.col.status">Status</span><span class="sort-arrow" id="sa-status">▲</span></th>
+        <th style="width:9%" data-i18n="admin.col.actions">Actions</th>
       </tr></thead>
       <tbody id="empTableBody"></tbody>
     </table></div>
@@ -1813,6 +1842,45 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('inviteModal')">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveInvite()">Send Invitation</button>
+    </div>
+  </div>
+</div>
+
+<!-- SITE MANAGERS MODAL -->
+<div class="modal-overlay" id="siteManagersModal">
+  <div class="modal" style="max-width:420px">
+    <h3 id="siteManagersTitle">Managers for Site</h3>
+    <div id="siteManagersMsg"></div>
+    <div id="siteManagersCheckboxes" style="display:flex;flex-direction:column;gap:6px;margin:14px 0"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('siteManagersModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSiteManagers()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROMOTE TO MANAGER MODAL -->
+<div class="modal-overlay" id="promoteToManagerModal">
+  <div class="modal" style="max-width:440px">
+    <h3>⬆ <span data-i18n="emp.promoteTitle">Promote to Manager</span></h3>
+    <div id="promoteToManagerMsg"></div>
+    <div style="background:rgba(124,92,191,.08);border:1px solid rgba(124,92,191,.25);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+      <p style="font-size:13px;color:var(--text);line-height:1.6;margin:0 0 8px" id="promoteToManagerDesc"></p>
+      <p style="font-size:12px;color:var(--text2);margin:0;line-height:1.5"><strong>Note:</strong> <span data-i18n="emp.promoteNote">This does not remove them as an employee — they keep all punch records and time tracking.</span></p>
+    </div>
+    <div class="form-group">
+      <label data-i18n="emp.promoteEmail">Email Address</label>
+      <input type="email" id="promoteEmail" placeholder="employee@company.com">
+    </div>
+    <div id="promoteSitesSection">
+      <div class="form-group">
+        <label>Assign Sites <span style="color:var(--text3);font-size:11px;font-weight:400" data-i18n="emp.promoteSiteHint">(select at least one)</span></label>
+        <div id="promoteSiteCheckboxes" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('promoteToManagerModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="sendPromotionInvite()" data-i18n="emp.promoteSendInvite">Send Invitation</button>
     </div>
   </div>
 </div>
@@ -2381,6 +2449,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addEmpModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" id="promoteToManagerBtn" onclick="openPromoteToManagerModal()" style="display:none;border-color:rgba(124,92,191,.4);color:#a78bfa" data-i18n="emp.promoteBtn">⬆ Promote to Manager</button>
       <button class="btn-secondary" id="manageAvailBtn" onclick="openAdminAvailModal()" style="display:none" data-i18n="sched.manageAvailBtn">🚫 Availability</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEmployee()" data-i18n="modal.save">Save</button>
     </div>
@@ -3972,6 +4041,8 @@ let pendingInviteAdmin = null;
 let pendingInvitation = null;
 let managerSiteIds = null;
 let _missedPunchRequests = [];
+let _empSort = {col:'name', dir:'asc'};
+let _smSiteId = null;
 
 async function sendResetCode(resend=false){
   const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
@@ -4047,6 +4118,7 @@ async function doRegister(){
   const industry=document.getElementById('regIndustry').value;
   const weekStart=document.getElementById('regWeekStart').value;
   const payrollFreq=document.getElementById('regPayrollFreq').value;
+  const anchorDate=document.getElementById('regAnchorDate').value||null;
   const trackOvertime=document.getElementById('regOvertimeThumb').style.left==='20px';
   const logoFile=document.getElementById('regLogoInput').files[0]||null;
   if(!company){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
@@ -4058,7 +4130,7 @@ async function doRegister(){
     if(ex.length){showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');return;}
 
     const code=Math.floor(100000+Math.random()*900000).toString();
-    pendingVerify={firstName,lastName,email,pass,code,company,address,phone,industry,weekStart,payrollFreq,trackOvertime,logoFile};
+    pendingVerify={firstName,lastName,email,pass,code,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile};
 
     let sendRes, sendData;
     try{
@@ -4154,6 +4226,7 @@ async function doVerify(){
       industry: pendingVerify.industry||null,
       week_start: pendingVerify.weekStart||'monday',
       payroll_frequency: pendingVerify.payrollFreq||'biweekly',
+      payroll_anchor_date: pendingVerify.anchorDate||null,
       track_overtime: !!pendingVerify.trackOvertime,
       logo_url,
       admin_id: newAdmin[0].id
@@ -5456,6 +5529,7 @@ function renderEmployees(){
   const search=(document.getElementById('empSearch')?.value||'').toLowerCase();
   const siteF=document.getElementById('empSiteFilter')?.value||'';
   const deptF=document.getElementById('empDeptFilter')?.value||'';
+  const statusF=document.getElementById('empStatusFilter')?.value||'';
 
   let emps=ctx?C.employees.filter(e=>e.company_id===ctx.co.id):C.employees;
   if(managerSiteIds!==null) emps=emps.filter(e=>managerSiteIds.includes(e.site_id));
@@ -5469,45 +5543,63 @@ function renderEmployees(){
   if(search)emps=emps.filter(e=>(e.name+(e.dept||'')+(e.emp_code||'')).toLowerCase().includes(search));
   if(siteF)emps=emps.filter(e=>e.site_id===siteF);
   if(deptF)emps=emps.filter(e=>e.dept===deptF);
+  if(statusF==='active')emps=emps.filter(e=>e.active);
+  else if(statusF==='inactive')emps=emps.filter(e=>!e.active);
+
+  // Sort
+  const {col,dir}=_empSort;
+  const mul=dir==='asc'?1:-1;
+  emps=[...emps].sort((a,b)=>{
+    let va,vb;
+    if(col==='name'){va=a.name.toLowerCase();vb=b.name.toLowerCase();}
+    else if(col==='site'){va=(C.sites.find(s=>s.id===a.site_id)?.name||'').toLowerCase();vb=(C.sites.find(s=>s.id===b.site_id)?.name||'').toLowerCase();}
+    else if(col==='dept'){va=(a.dept||'').toLowerCase();vb=(b.dept||'').toLowerCase();}
+    else if(col==='status'){va=a.active?0:1;vb=b.active?0:1;}
+    else{va=a.name.toLowerCase();vb=b.name.toLowerCase();}
+    return va<vb?-mul:va>vb?mul:0;
+  });
+  // Update sort arrow indicators
+  ['name','site','dept','status'].forEach(c=>{
+    const el=document.getElementById('sa-'+c);
+    if(el){el.className='sort-arrow'+(col===c?' on':'');el.textContent=col===c&&dir==='desc'?'▼':'▲';}
+  });
 
   const tbody=document.getElementById('empTableBody');
-  if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:28px">${ctx?`${t('admin.noEmployeesFor')||'No employees for'} ${ctx.co.name}.`:t('admin.noEmployees')||'No employees found.'}</td></tr>`;return;}
+  if(!emps.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px">${ctx?`${t('admin.noEmployeesFor')||'No employees for'} ${ctx.co.name}.`:t('admin.noEmployees')||'No employees found.'}</td></tr>`;return;}
 
-  const rows = emps.map(e=>{
+  const rows=emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
     const ini=e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const pin=e.pin?`<span class="pill in">&#128273; Set</span>`:`<span class="pill out">&#9888; None</span>`;
+    const pin=e.pin?`<span class="pill in">&#128273; ${t('admin.pinSet')||'Set'}</span>`:`<span class="pill out">&#9888; None</span>`;
     const emailStatus=e.send_report&&e.email
-      ?`<span class="pill" style="background:rgba(245,158,11,.15);color:var(--amber)">&#128231; ${e.email}</span>`
+      ?`<span style="font-size:11px;color:var(--amber)">&#128231; ${e.email}</span>`
       :`<span style="color:var(--text3);font-size:12px">—</span>`;
     const avatarHtml=e.photo_url
       ?`<div class="avatar"><img src="${e.photo_url}" alt="${ini}" onerror="this.parentElement.innerHTML='${ini}'"></div>`
       :`<div class="avatar">${ini}</div>`;
-    return {e, site, ini, pin, emailStatus, avatarHtml};
+    return {e,site,ini,pin,emailStatus,avatarHtml};
   });
 
   // Desktop table
   tbody.innerHTML=rows.map(({e,site,avatarHtml,pin,emailStatus})=>{
-    const isOrphaned = e.dept==='⚠️ Admin Deleted';
-    const orphanBadge = isOrphaned ? `<span style="display:inline-block;margin-left:6px;font-size:10px;padding:1px 6px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:4px">⚠️ Admin Deleted</span>` : '';
-    const isSelected = _selectedEmps.has(e.id);
-    const rowStyle = isOrphaned ? ` style="opacity:0.7;background:rgba(239,68,68,0.04)"` : (isSelected ? ' style="background:rgba(79,142,247,.06)"' : '');
-    return `<tr${rowStyle}>
+    const isOrphaned=e.dept==='⚠️ Admin Deleted';
+    const orphanBadge=isOrphaned?`<span style="display:inline-block;margin-left:6px;font-size:10px;padding:1px 6px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:4px">⚠️</span>`:'';
+    const isSelected=_selectedEmps.has(e.id);
+    const rowBase=isOrphaned?'opacity:0.75;background:rgba(239,68,68,0.04)':isSelected?'background:rgba(79,142,247,.06)':'';
+    return `<tr${rowBase?` style="${rowBase}"`:''}>
       <td style="width:36px;text-align:center"><input type="checkbox" class="emp-cb" data-id="${e.id}" ${isSelected?'checked':''} onchange="toggleEmpSelect('${e.id}',this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></td>
-      <td><div class="emp-row">${avatarHtml}<div>
-        <div style="font-weight:500">${e.name}${orphanBadge}</div>
-        <div style="font-size:11px;color:var(--text2)">${e.emp_code||'—'}</div>
-      </div></div></td>
-      <td>${site?`<span class="pill site">&#128205; ${site.name}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
-      <td>${isOrphaned?'<span style="color:#ef4444;font-size:12px">⚠️ Admin Deleted</span>':e.dept||'—'}</td>
-      <td><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span></td>
+      <td><div class="emp-row">${avatarHtml}<div><div style="font-weight:500">${e.name}${orphanBadge}</div></div></div></td>
+      <td>${site?`<span class="pill site" style="font-size:11px">&#128205; ${site.name}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="font-size:12px;color:var(--text2)">${isOrphaned?'<span style="color:#ef4444;font-size:11px">⚠️ Deleted</span>':e.dept||'—'}</td>
+      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${e.emp_code||'—'}</td>
       <td>${pin}</td>
-      <td>${emailStatus}</td>
-      <td><div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editEmployee('${e.id}')">Edit</button>
-        <button class="btn-secondary" style="padding:5px 11px;font-size:11px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?t('admin.deactivate'):t('admin.activate')}</button>
-        <button class="btn-amber" style="padding:5px 11px;font-size:11px" onclick="openSendReportModal('${e.id}')">${t('admin.sendReport')}</button>
-        <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
+      <td style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${emailStatus}</td>
+      <td><span class="pill ${e.active?'in':'out'}" style="font-size:10px">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span></td>
+      <td><div style="display:flex;gap:4px;flex-wrap:nowrap">
+        <button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="editEmployee('${e.id}')">✏️</button>
+        <button class="icon-btn" title="${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}" onclick="toggleEmp('${e.id}')" style="${e.active?'color:var(--amber)':'color:var(--green)'}">${e.active?'⏸':'▶'}</button>
+        <button class="icon-btn" title="${t('admin.sendReport')||'Send Report'}" onclick="openSendReportModal('${e.id}')" style="color:var(--amber)">📧</button>
+        <button class="icon-btn danger" title="${t('common.delete')||'Delete'}" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')">🗑️</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -5515,54 +5607,174 @@ function renderEmployees(){
   // Mobile cards
   const cards=document.getElementById('empCardsContainer');
   if(cards) cards.innerHTML=rows.map(({e,site,avatarHtml,pin,emailStatus})=>{
-    const isOrphaned = e.dept==='⚠️ Admin Deleted';
-    const orphanBadge = isOrphaned ? `<span style="font-size:10px;padding:1px 6px;background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:4px">⚠️ Admin Deleted</span>` : '';
-    const isSelected2 = _selectedEmps.has(e.id);
-    return `
-    <div class="mobile-card-row"${isOrphaned?' style="border-color:rgba(239,68,68,0.3);opacity:0.75"':(isSelected2?' style="border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.04)"':'')}>
-      <div class="mc-name" style="cursor:pointer" onclick="toggleEmpSelect('${e.id}',!document.querySelector('.emp-cb[data-id=\'${e.id}\']')?.checked);document.querySelector('.emp-cb[data-id=\'${e.id}\']')&&(document.querySelector('.emp-cb[data-id=\'${e.id}\']').checked=_selectedEmps.has('${e.id}'))">
+    const isOrphaned=e.dept==='⚠️ Admin Deleted';
+    const isSelected2=_selectedEmps.has(e.id);
+    const cardBorder=isOrphaned?'border-color:rgba(239,68,68,0.3);opacity:0.75':isSelected2?'border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.04)':'';
+    return `<div class="mobile-card-row"${cardBorder?` style="${cardBorder}"`:''}>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <input type="checkbox" class="emp-cb" data-id="${e.id}" ${isSelected2?'checked':''} onchange="toggleEmpSelect('${e.id}',this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0" onclick="event.stopPropagation()">
-        ${avatarHtml}<span>${e.name}</span><span class="pill ${e.active?'in':'out'}">${e.active?'Active':'Inactive'}</span>${orphanBadge}
+        ${avatarHtml}
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">${site?'📍 '+site.name:''}${e.dept?' · '+e.dept:''}</div>
+        </div>
+        <span class="pill ${e.active?'in':'out'}" style="font-size:10px;flex-shrink:0">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span>
       </div>
-      ${site?`<div class="mc-row"><span>Site</span><span>&#128205; ${site.name}</span></div>`:''}
-      <div class="mc-row"><span>Dept</span><span>${isOrphaned?'<span style="color:#ef4444">⚠️ Admin Deleted</span>':e.dept||'—'}</span></div>
-      <div class="mc-row"><span>PIN</span>${pin}</div>
-      <div class="mc-row"><span>Email Report</span>${emailStatus}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:var(--surface2);border-radius:7px;padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">PIN</div><div style="margin-top:3px">${pin}</div></div>
+        <div style="background:var(--surface2);border-radius:7px;padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Code</div><div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px">${e.emp_code||'—'}</div></div>
+      </div>
+      ${e.send_report&&e.email?`<div style="font-size:11px;color:var(--amber);margin-bottom:10px">📧 ${e.email}</div>`:''}
       <div class="mc-actions">
-        <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')">Edit</button>
-        <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--red)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'Deactivate':'Activate'}</button>
-        <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')">&#128231; Report</button>
-        <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name}')">Delete</button>
+        <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')">✏️ ${t('common.edit')||'Edit'}</button>
+        <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--amber)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'⏸ '+(t('admin.deactivate')||'Deactivate'):'▶ '+(t('admin.activate')||'Activate')}</button>
+        <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')">📧</button>
+        <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')">🗑️</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function renderSitesAdmin(){
+async function renderSitesAdmin(){
   const ctx=Ctx.get();
   const sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
   const list=document.getElementById('siteListAdmin');
-  if(!sites.length){list.innerHTML=`<div class="empty"><p>${t('site.noSites')||'No sites yet for this company. Click \"+ Add Site\" to create one.'}</p></div>`;return;}
+  if(!sites.length){list.innerHTML=`<div class="empty"><p>${t('site.noSites')||'No sites yet for this company. Click "+ Add Site" to create one.'}</p></div>`;return;}
+
+  // Fetch all manager_sites for these sites in one query
+  let allMgrSites=[];
+  if(sites.length){
+    try{allMgrSites=await DB.all('manager_sites',`site_id=in.(${sites.map(s=>s.id).join(',')})`)||[];}catch(_){}
+  }
+  const managers=(C.coAdmins||[]).filter(a=>a.role==='manager');
+
   list.innerHTML=sites.map(s=>{
     const empCnt=C.employees.filter(e=>e.site_id===s.id).length;
     const co=C.companies.find(c=>c.id===s.company_id);
-    const hasGeo = !!(s.geo_lat && s.geo_lng);
-    const geoBadge = hasGeo
-      ? `<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius">📍 ${s.geo_radius_m||25}m</span>`
-      : `<span class="geo-status-badge geo-none" title="No geofence set">📍 No geofence</span>`;
-    return`<div class="site-item">
+    const hasGeo=!!(s.geo_lat&&s.geo_lng);
+    const geoBadge=hasGeo
+      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius">📍 ${s.geo_radius_m||25}m</span>`
+      :`<span class="geo-status-badge geo-none" title="No geofence set">📍 No geofence</span>`;
+    const mgrIds=allMgrSites.filter(r=>r.site_id===s.id).map(r=>r.manager_id);
+    const siteMgrs=managers.filter(a=>mgrIds.includes(a.id));
+    const mgrPills=siteMgrs.length
+      ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:20px;font-size:11px;padding:2px 9px;color:#a78bfa">👤 ${a.name}</span>`).join('')
+      :`<span style="font-size:12px;color:var(--text3)">${t('site.noManagers')||'No managers assigned'}</span>`;
+    return`<div class="site-item" style="flex-wrap:wrap">
       <div style="width:34px;height:34px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">&#128205;</div>
-      <div style="flex:1">
+      <div style="flex:1;min-width:200px">
         <div class="site-name">${s.name} ${geoBadge}</div>
         <div class="site-meta">${co?co.name+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+s.description:''}</div>
+        <div id="siteMgrPills_${s.id}" style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+          ${mgrPills}
+          <button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${s.id}')">${t('site.editManagers')||'Edit Managers'}</button>
+        </div>
       </div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
         <button class="btn-primary" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">📲 ${t('site.kioskShortcut')||'Kiosk Shortcut'}</button>
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
-        <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
+        <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name.replace(/'/g,"\\'")}')"> ${t('common.delete')}</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function sortEmps(col){
+  if(_empSort.col===col){_empSort.dir=_empSort.dir==='asc'?'desc':'asc';}
+  else{_empSort={col,dir:'asc'};}
+  renderEmployees();
+}
+
+function openSiteManagersModal(siteId){
+  _smSiteId=siteId;
+  const site=C.sites.find(s=>s.id===siteId);
+  document.getElementById('siteManagersTitle').textContent=(t('site.managersFor')||'Managers for')+' '+(site?.name||'Site');
+  document.getElementById('siteManagersMsg').innerHTML='';
+  const managers=(C.coAdmins||[]).filter(a=>a.role==='manager');
+  const container=document.getElementById('siteManagersCheckboxes');
+  if(!managers.length){
+    container.innerHTML=`<p style="font-size:13px;color:var(--text3);text-align:center;padding:16px 0">${t('site.noManagersYet')||'No managers yet. Invite a team member as Manager first.'}</p>`;
+    openModal('siteManagersModal');return;
+  }
+  DB.all('manager_sites',`site_id=eq.${siteId}`).then(rows=>{
+    const assigned=new Set((rows||[]).map(r=>r.manager_id));
+    container.innerHTML=managers.map(a=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
+      <input type="checkbox" value="${a.id}"${assigned.has(a.id)?' checked':''} style="accent-color:var(--accent)">
+      <span style="font-size:13px;color:var(--text)">${a.name}</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">${a.email}</span>
+    </label>`).join('');
+    openModal('siteManagersModal');
+  }).catch(e=>alert('Error: '+e.message));
+}
+
+async function saveSiteManagers(){
+  const siteId=_smSiteId;if(!siteId)return;
+  const checked=[...document.querySelectorAll('#siteManagersCheckboxes input:checked')].map(cb=>cb.value);
+  try{
+    showMsg('siteManagersMsg','⏳ Saving...','info');
+    await DB.del('manager_sites',`site_id=eq.${siteId}`);
+    for(const mid of checked){try{await DB.insert('manager_sites',{manager_id:mid,site_id:siteId});}catch(_){}}
+    closeModal('siteManagersModal');
+    showToast(t('site.managersUpdated')||'Manager assignments updated','success');
+    await renderSiteManagerPills(siteId);
+  }catch(e){showMsg('siteManagersMsg','Error: '+e.message,'error');}
+}
+
+async function renderSiteManagerPills(siteId){
+  const container=document.getElementById('siteMgrPills_'+siteId);if(!container)return;
+  const managers=(C.coAdmins||[]).filter(a=>a.role==='manager');
+  const rows=await DB.all('manager_sites',`site_id=eq.${siteId}`)||[];
+  const assigned=rows.map(r=>r.manager_id);
+  const siteMgrs=managers.filter(a=>assigned.includes(a.id));
+  const mgrPills=siteMgrs.length
+    ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:20px;font-size:11px;padding:2px 9px;color:#a78bfa">👤 ${a.name}</span>`).join('')
+    :`<span style="font-size:12px;color:var(--text3)">${t('site.noManagers')||'No managers assigned'}</span>`;
+  container.innerHTML=mgrPills+`<button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${siteId}')">${t('site.editManagers')||'Edit Managers'}</button>`;
+}
+
+function openPromoteToManagerModal(){
+  const empId=document.getElementById('editEmpUid').value;
+  const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
+  document.getElementById('promoteToManagerMsg').innerHTML='';
+  document.getElementById('promoteToManagerDesc').textContent=`${t('emp.promoteDescPrefix')||'Promote'} ${emp.name} ${t('emp.promoteDescSuffix')||'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.'}`;
+  document.getElementById('promoteEmail').value=emp.email||'';
+  const sess=Sess.get();
+  const primaryAdminId=sess.parent_admin_id||sess.id;
+  const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
+  const mySites=myCo?C.sites.filter(s=>s.company_id===myCo.id):[];
+  document.getElementById('promoteSiteCheckboxes').innerHTML=mySites.length===0
+    ?`<p style="font-size:12px;color:var(--text3)">${t('msg.noSiteFirst')||'No sites found. Add a site first.'}</p>`
+    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+  openModal('promoteToManagerModal');
+}
+
+async function sendPromotionInvite(){
+  const sess=Sess.get();if(!sess)return;
+  const email=document.getElementById('promoteEmail').value.trim().toLowerCase();
+  const siteIds=[...document.querySelectorAll('#promoteSiteCheckboxes input:checked')].map(cb=>cb.value);
+  if(!email){showMsg('promoteToManagerMsg','Email is required.','error');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('promoteToManagerMsg','Please enter a valid email address.','error');return;}
+  if(!siteIds.length){showMsg('promoteToManagerMsg','Please assign at least one site.','error');return;}
+  try{
+    const existing=await DB.all('admins',`email=eq.${email}&status=neq.suspended`);
+    if(existing?.length){showMsg('promoteToManagerMsg','This email already has an admin account.','error');return;}
+    const existingInv=await DB.all('invitations',`email=eq.${email}&status=eq.pending`);
+    if(existingInv?.length){showMsg('promoteToManagerMsg','An invitation has already been sent to this email.','error');return;}
+    const primaryAdminId=sess.parent_admin_id||sess.id;
+    const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
+    if(!myCo){showMsg('promoteToManagerMsg','No company found.','error');return;}
+    const token=crypto.randomUUID();
+    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role:'manager',site_ids:JSON.stringify(siteIds)});
+    try{
+      await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+        body:JSON.stringify({email,name:email,type:'invitation',inviterName:sess.name||sess.email,companyName:myCo.name,role:'manager',token})
+      });
+    }catch(emailErr){console.warn('Invite email failed:',emailErr);}
+    closeModal('promoteToManagerModal');
+    showToast(`✓ ${t('emp.promoteInviteSent')||'Invitation sent to'} ${email}. ${t('emp.promoteInviteNote')||"They'll appear as a manager once they accept."}`, 'success');
+  }catch(e){showMsg('promoteToManagerMsg','Error: '+e.message,'error');}
 }
 
 // ─── CO-ADMIN MANAGEMENT (for regular admins) ─────────────────────────────
@@ -6393,9 +6605,11 @@ function openAddEmpModal(){
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
   setEmailToggle(false);
-  // Hide availability button in add mode
+  // Hide availability + promote buttons in add mode
   const manageAvailBtnAdd = document.getElementById('manageAvailBtn');
   if(manageAvailBtnAdd) manageAvailBtnAdd.style.display='none';
+  const promoteBtnAdd = document.getElementById('promoteToManagerBtn');
+  if(promoteBtnAdd) promoteBtnAdd.style.display='none';
   const emailRow = document.getElementById('emailReportToggleRow');
   if(emailRow) emailRow.closest('div[style*="margin-top:10px"], div').parentElement;
   // Hide entire email section for free plan
@@ -6432,6 +6646,9 @@ function editEmployee(id){
   // Show manage availability button only in edit mode
   const manageAvailBtn = document.getElementById('manageAvailBtn');
   if(manageAvailBtn) manageAvailBtn.style.display = '';
+  // Promote to Manager button — visible to primary admin and co-admins only
+  const promoteBtn = document.getElementById('promoteToManagerBtn');
+  if(promoteBtn){ const sess=Sess.get(); promoteBtn.style.display=(sess&&sess.role!=='manager')?'':'none'; }
   // Load portal invite status if employee has email
   loadEmpPortalStatus(e);
   openModal('addEmpModal');
@@ -6860,6 +7077,10 @@ function toggleOvertimeOpt(){
 function setOvertimeToggle(on){
   document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
+}
+function toggleRegAnchorDate(){
+  const freq=document.getElementById('regPayrollFreq').value;
+  document.getElementById('regAnchorDateRow').style.display=freq==='biweekly'?'':'none';
 }
 function toggleRegOvertime(){
   const on=document.getElementById('regOvertimeThumb').style.left!=='20px';
@@ -8902,6 +9123,7 @@ en:{
 'reg.ind.nonprofit':'Non-Profit',
 'reg.ind.other':'Other',
 'reg.payrollNote':'Payroll settings apply to all sites',
+'reg.anchorDate':'Payroll Cycle Start Date','reg.anchorDateHint':'Enter the first day of your first payroll period. Used to align bi-weekly pay boundaries.',
 'reg.trackOvertime':'⏰ Track Overtime',
 'reg.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
 'reg.logoOptional':'Company Logo (optional)',
@@ -8975,9 +9197,17 @@ en:{
 'admin.search':'Search','admin.searchPlaceholder':'Name, department...',
 'admin.site':'Site','admin.allSites':'All Sites','admin.allDepts':'All Depts',
 'admin.col.employee':'Employee','admin.col.site':'Site','admin.col.dept':'Department',
-'admin.col.status':'Status','admin.col.pin':'PIN','admin.col.email':'Email Report',
-'admin.col.actions':'Actions','admin.active':'Active','admin.inactive':'Inactive',
+'admin.col.code':'Code','admin.col.status':'Status','admin.col.pin':'PIN','admin.col.email':'Email Report',
+'admin.col.actions':'Actions','admin.active':'Active','admin.inactive':'Inactive','admin.allStatuses':'All',
 'admin.deactivate':'Deactivate','admin.activate':'Activate','emp.noSiteAssigned':'No Site Assigned','admin.sendReport':'📧 Send Report',
+'site.noManagers':'No managers assigned','site.editManagers':'Edit Managers',
+'site.managersFor':'Managers for','site.noManagersYet':'No managers yet. Invite a team member as Manager first.',
+'site.managersUpdated':'Manager assignments updated',
+'emp.promoteBtn':'⬆ Promote to Manager','emp.promoteTitle':'Promote to Manager',
+'emp.promoteNote':'This does not remove them as an employee — they keep all punch records and time tracking.',
+'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
+'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
+'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
 'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another',
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
@@ -9459,6 +9689,7 @@ fr:{
 'reg.ind.nonprofit':'Organisme sans but lucratif',
 'reg.ind.other':'Autre',
 'reg.payrollNote':'Les paramètres de paie s\'appliquent à tous les sites',
+'reg.anchorDate':'Date de début du cycle de paie','reg.anchorDateHint':'Entrez le premier jour de votre première période de paie.',
 'reg.trackOvertime':'⏰ Suivi des heures supplémentaires',
 'reg.overtimeDesc':'Signaler >8h/jour et >40h/semaine dans les rapports',
 'reg.logoOptional':'Logo de la compagnie (facultatif)',
@@ -9532,9 +9763,17 @@ fr:{
 'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...',
 'admin.site':'Site','admin.allSites':'Tous les sites','admin.allDepts':'Tous les depts',
 'admin.col.employee':'Employé','admin.col.site':'Site','admin.col.dept':'Département',
-'admin.col.status':'Statut','admin.col.pin':'NIP','admin.col.email':'Rapport courriel',
-'admin.col.actions':'Actions','admin.active':'Actif','admin.inactive':'Inactif',
+'admin.col.code':'Code','admin.col.status':'Statut','admin.col.pin':'NIP','admin.col.email':'Rapport courriel',
+'admin.col.actions':'Actions','admin.active':'Actif','admin.inactive':'Inactif','admin.allStatuses':'Tous',
 'admin.deactivate':'Désactiver','admin.activate':'Activer','emp.noSiteAssigned':'Aucun site attribué','admin.sendReport':'📧 Envoyer rapport',
+'site.noManagers':'Aucun gestionnaire attribué','site.editManagers':'Modifier les gestionnaires',
+'site.managersFor':'Gestionnaires pour','site.noManagersYet':'Aucun gestionnaire. Invitez un membre de l\'équipe comme gestionnaire d\'abord.',
+'site.managersUpdated':'Affectations des gestionnaires mises à jour',
+'emp.promoteBtn':'⬆ Promouvoir en gestionnaire','emp.promoteTitle':'Promouvoir en gestionnaire',
+'emp.promoteNote':'Ceci ne le retire pas en tant qu\'employé — ils conservent tous leurs pointages et leur suivi du temps.',
+'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
+'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
+'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
 'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre',
 "admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Définir',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
