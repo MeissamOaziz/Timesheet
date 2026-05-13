@@ -1247,7 +1247,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div class="nav-links">
     <button class="nav-btn active" onclick="navigate('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
-    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
+    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span><span id="missedPunchBadge" style="display:none;position:absolute;top:8px;right:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
     <button class="nav-btn" onclick="navigate('reports')" id="navReports" data-i18n="nav.reports" style="display:none">&#128202; Reports</button>
     <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" data-i18n="nav.sites" style="display:none">🗂 Sites</button>
     <button class="nav-btn" onclick="navigate('activity')" id="navActivity" data-i18n="nav.activity" style="display:none">&#128203; Activity</button>
@@ -1336,7 +1336,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-nav-btn" onclick="mobileNav('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
   <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none">🗂 Sites</button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
@@ -1624,6 +1624,15 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><h1 id="adminTitle" data-i18n="admin.title">Admin Panel</h1><p id="adminSub" data-i18n="admin.subtitle">Manage employees and sites</p></div>
     <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()" data-i18n="admin.addEmployee">+ Add Employee</button>
   </div>
+  <!-- MISSED PUNCH REQUESTS -->
+  <div id="missedPunchRequestsSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px">&#9203; Missed Punch Requests</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+      <tbody id="missedPunchRequestsBody"></tbody>
+    </table></div>
+    <div id="missedPunchCardsContainer"></div>
+  </div>
   <div class="tabs">
     <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
     <button class="tab" onclick="adminTab('sites',this)" data-i18n="admin.tabs.sites">Sites</button>
@@ -1818,10 +1827,15 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="form-group"><label>Email</label><input type="email" id="editCoAdminEmailDisp" readonly style="opacity:.6;cursor:default"></div>
     <div class="form-group">
       <label>Role</label>
-      <select id="editCoAdminRole">
+      <select id="editCoAdminRole" onchange="toggleEditCoAdminSites()">
         <option value="admin">Full Admin</option>
         <option value="manager">Manager</option>
       </select>
+    </div>
+    <div id="editManagerSitesSection" style="display:none;margin-bottom:12px">
+      <label style="font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:6px">Assigned Sites</label>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Select the sites this manager can access.</p>
+      <div id="editManagerSiteCheckboxes" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding-right:4px"></div>
     </div>
     <div class="form-group">
       <label>Status</label>
@@ -1889,7 +1903,9 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><label data-i18n="admin.site">Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
     <div><label data-i18n="reports.period">Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
-        <option value="week" selected data-i18n="reports.thisWeek">This Week</option>
+        <option value="last_period" selected data-i18n="reports.lastPeriod">Last Payroll Period</option>
+        <option value="current_period" data-i18n="reports.currentPeriod">Current Period</option>
+        <option value="week" data-i18n="reports.thisWeek">This Week</option>
         <option value="biweek" data-i18n="reports.biweekly">Bi-Weekly</option>
         <option value="month" data-i18n="reports.thisMonth">This Month</option>
         <option value="quarter" data-i18n="reports.thisQuarter">This Quarter</option>
@@ -1903,6 +1919,10 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div style="display:flex;align-items:flex-end">
       <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
     </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="setReportPeriod('last_period')" data-i18n="reports.btnLastPeriod">← Last Period</button>
+    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="setReportPeriod('current_period')" data-i18n="reports.btnCurrentPeriod">Current Period →</button>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:18px">
     <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px" data-i18n="reports.selectEmployees">Select Employees</p>
@@ -2518,11 +2538,18 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="form-group">
         <label data-i18n="modal.payrollFreq">Payroll Frequency</label>
-        <select id="companyPayrollFreq">
+        <select id="companyPayrollFreq" onchange="toggleAnchorDateRow()">
           <option value="weekly" data-i18n="modal.weekly">Weekly</option>
           <option value="biweekly" data-i18n="modal.biweekly">Bi-Weekly</option>
           <option value="monthly" data-i18n="modal.monthly">Monthly</option>
         </select>
+      </div>
+    </div>
+    <div id="anchorDateRow" style="margin-top:10px;display:none">
+      <div class="form-group">
+        <label data-i18n="modal.anchorDate">Bi-Weekly Anchor Date</label>
+        <input type="date" id="companyAnchorDate">
+        <p style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="modal.anchorDateHint">A known period-start date — pins exact bi-weekly pay boundaries</p>
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
@@ -3944,6 +3971,7 @@ let pendingReset = null;
 let pendingInviteAdmin = null;
 let pendingInvitation = null;
 let managerSiteIds = null;
+let _missedPunchRequests = [];
 
 async function sendResetCode(resend=false){
   const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
@@ -5198,7 +5226,6 @@ async function submitMissedPunch(){
     return;
   }
   const fullTime = (time.length===5 ? time+':00' : time);
-  const punched_at = new Date(`${punch_date}T${fullTime}`).toISOString();
   const emp = C.employees.find(e=>e.id===empId); if(!emp) return;
   const ctx = Ctx.get();
   const site = ctx?.site || C.sites.find(s=>s.id===emp.site_id);
@@ -5207,23 +5234,46 @@ async function submitMissedPunch(){
   const origLabel = btn.textContent;
   btn.disabled = true; btn.textContent = '⏳';
   try{
-    const payload = {emp_id:empId,emp_name:emp.name,company_id:emp.company_id,type,punch_date,punch_time:fullTime,punched_at,is_manual:true};
-    if(site){ payload.site_id = site.id; payload.site_name = site.name; }
-    const r = await DB.insert('punches', payload);
-    if(r?.[0]) C.punches.unshift(r[0]);
+    const payload = {
+      emp_id:empId,emp_name:emp.name,company_id:emp.company_id,
+      type,requested_date:punch_date,requested_time:fullTime,
+      reason:notes||null,status:'pending'
+    };
+    if(site) payload.site_id = site.id;
+    await DB.insert('missed_punch_requests', payload);
 
     // Best-effort admin notification (don't block on failure)
     try{
-      const subject = `[Missed Punch] ${emp.name} — ${type==='IN'?'Missed Clock In':'Missed Clock Out'}`;
-      const message = `A missed punch was reported on the clock-in page.\n\n`+
+      // Build recipient list: primary admin + co-admins + site managers
+      const recipientEmails=new Set();
+      if(co?.admin_id){
+        const [primaryAdmins,coAdmins]=await Promise.all([
+          DB.all('admins',`id=eq.${co.admin_id}&select=email`),
+          DB.all('admins',`parent_admin_id=eq.${co.admin_id}&role=eq.admin&status=eq.active&select=email`)
+        ]);
+        (primaryAdmins||[]).forEach(a=>a.email&&recipientEmails.add(a.email));
+        (coAdmins||[]).forEach(a=>a.email&&recipientEmails.add(a.email));
+        if(site?.id){
+          const mgSites=await DB.all('manager_sites',`site_id=eq.${site.id}&select=manager_id`);
+          if(mgSites?.length){
+            const mgIds=mgSites.map(m=>m.manager_id);
+            const mgAdmins=await DB.all('admins',`id=in.(${mgIds.join(',')})&status=eq.active&select=email`);
+            (mgAdmins||[]).forEach(a=>a.email&&recipientEmails.add(a.email));
+          }
+        }
+      }
+      const recipients=[...recipientEmails].filter(Boolean);
+
+      const subject = `[Missed Punch Request] ${emp.name} — ${type==='IN'?'Missed Clock In':'Missed Clock Out'}`;
+      const message = `A missed punch request has been submitted and needs your review.\n\n`+
         `Employee: ${emp.name}${emp.emp_code?' ('+emp.emp_code+')':''}\n`+
         `Company: ${co?.name||'—'}\n`+
         `Site: ${site?.name||'—'}\n`+
         `Type: ${type==='IN'?'Missed Clock In':'Missed Clock Out'}\n`+
         `Date: ${punch_date}\n`+
         `Time: ${fullTime}\n`+
-        (notes?`Notes: ${notes}\n`:'')+
-        `\nPunch was recorded as a manual entry (is_manual=true).`;
+        (notes?`Reason: ${notes}\n`:'')+
+        `\nThis punch has NOT been recorded yet — your review is required in the Admin panel.`;
       await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -5232,14 +5282,14 @@ async function submitMissedPunch(){
           name: emp.name,
           email: emp.email||'noreply@punchclock.ca',
           subject, message,
-          companyId: co?.id, companyName: co?.name
+          companyId: co?.id, companyName: co?.name,
+          recipients: recipients.length?recipients:undefined
         })
       });
     }catch(_){ /* notification is best-effort */ }
 
     closeModal('missedPunchModal');
-    showPunchMsg(`✓ ${t('missed.success')||'Missed punch reported. Admin has been notified.'}`,'success');
-    if(typeof refreshClockedIn==='function') refreshClockedIn();
+    showPunchMsg(`✓ ${t('missed.success')||'Your request has been submitted and is pending approval.'}`,'success');
   }catch(e){
     showMsg('missedPunchMsg', (t('msg.errorSaving')||'Error: ')+e.message, 'error');
   }finally{
@@ -5285,6 +5335,7 @@ async function loadAdminPage(){
   renderEmployees();
   renderSitesAdmin();
   renderAdmins();
+  renderMissedPunchRequests();
   applyAllTranslations();
 }
 
@@ -5694,8 +5745,15 @@ async function loadCoAdmins(){
   }catch(e){tbody.innerHTML=`<tr><td colspan="5" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
 }
 
-function openEditCoAdminModal(id){
-  DB.all('admins',`id=eq.${id}`).then(rows=>{
+function toggleEditCoAdminSites(){
+  const role=document.getElementById('editCoAdminRole').value;
+  const section=document.getElementById('editManagerSitesSection');
+  if(section)section.style.display=role==='manager'?'':'none';
+}
+
+async function openEditCoAdminModal(id){
+  try{
+    const rows=await DB.all('admins',`id=eq.${id}`);
     if(!rows.length)return;
     const a=rows[0];
     document.getElementById('editCoAdminId').value=a.id;
@@ -5704,8 +5762,25 @@ function openEditCoAdminModal(id){
     document.getElementById('editCoAdminRole').value=a.role||'admin';
     document.getElementById('editCoAdminStatus').value=a.status||'active';
     document.getElementById('editCoAdminMsg').innerHTML='';
+
+    // Populate site checkboxes scoped to the primary admin's company
+    const sess=Sess.get();
+    const primaryAdminId=sess.parent_admin_id||sess.id;
+    const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
+    const mySites=myCo?C.sites.filter(s=>s.company_id===myCo.id):[];
+    let assignedIds=new Set();
+    if(a.role==='manager'){
+      const mgRows=await DB.all('manager_sites',`manager_id=eq.${a.id}`);
+      assignedIds=new Set((mgRows||[]).map(r=>r.site_id));
+    }
+    const container=document.getElementById('editManagerSiteCheckboxes');
+    container.innerHTML=mySites.length===0
+      ?`<p style="font-size:12px;color:var(--text3)">No sites found. Add a site first.</p>`
+      :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}"${assignedIds.has(s.id)?' checked':''} style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+
+    toggleEditCoAdminSites();
     openModal('editCoAdminModal');
-  }).catch(e=>alert('Error: '+e.message));
+  }catch(e){alert('Error: '+e.message);}
 }
 
 async function saveEditCoAdmin(){
@@ -5714,8 +5789,20 @@ async function saveEditCoAdmin(){
   const role=document.getElementById('editCoAdminRole').value;
   const status=document.getElementById('editCoAdminStatus').value;
   if(!name){showMsg('editCoAdminMsg',t('msg.allRequired'),'error');return;}
+  if(role==='manager'){
+    const checked=[...document.querySelectorAll('#editManagerSiteCheckboxes input:checked')];
+    if(!checked.length){showMsg('editCoAdminMsg','Assign at least one site for the manager.','error');return;}
+  }
   try{
     await DB.update('admins',`id=eq.${id}`,{name,role,status});
+    // Sync manager_sites: always clear, then re-insert if manager
+    await DB.del('manager_sites',`manager_id=eq.${id}`);
+    if(role==='manager'){
+      const siteIds=[...document.querySelectorAll('#editManagerSiteCheckboxes input:checked')].map(cb=>cb.value);
+      for(const siteId of siteIds){
+        try{await DB.insert('manager_sites',{manager_id:id,site_id:siteId});}catch(_){}
+      }
+    }
     closeModal('editCoAdminModal');
     await loadCoAdmins();
   }catch(e){showMsg('editCoAdminMsg','Error: '+e.message,'error');}
@@ -5949,6 +6036,168 @@ async function renderJoinRequests(){
     </tr>`).join('');
   }catch(e){console.error('Join requests error:',e);}
 }
+
+// ─── MISSED PUNCH REQUESTS ───────────────────────────────────────────────────
+
+function updateMissedPunchBadge(count){
+  const badge=document.getElementById('missedPunchBadge');
+  const mob=document.getElementById('missedPunchBadgeMobile');
+  const show=count>0;
+  if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
+  if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
+}
+
+async function renderMissedPunchRequests(){
+  const ctx=Ctx.get();
+  if(!ctx){updateMissedPunchBadge(0);return;}
+  try{
+    const all=await DB.all('missed_punch_requests',`status=eq.pending&company_id=eq.${ctx.co.id}&order=created_at.asc`);
+    let visible=all||[];
+    if(managerSiteIds!==null) visible=visible.filter(r=>managerSiteIds.includes(r.site_id));
+    _missedPunchRequests=visible;
+    updateMissedPunchBadge(visible.length);
+    const section=document.getElementById('missedPunchRequestsSection');
+    if(!visible.length){section.style.display='none';return;}
+    section.style.display='';
+
+    document.getElementById('missedPunchRequestsBody').innerHTML=visible.map(r=>{
+      const typePill=r.type==='IN'
+        ?'<span class="pill in" style="font-size:10px">IN</span>'
+        :'<span class="pill out" style="font-size:10px">OUT</span>';
+      const reason=(r.reason||'').replace(/[<>]/g,'');
+      const timeStr=(r.requested_time||'').slice(0,5);
+      return `<tr>
+        <td style="font-weight:500">${r.emp_name}</td>
+        <td>${typePill}</td>
+        <td style="white-space:nowrap">${r.requested_date}</td>
+        <td style="white-space:nowrap">${timeStr}</td>
+        <td style="font-size:12px;color:var(--text2);max-width:160px">${reason||'<span style="color:var(--text3)">—</span>'}</td>
+        <td>
+          <div id="mpr-actions-${r.id}" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+            <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunch('${r.id}')">&#10003; Approve</button>
+            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}')">&#9998; Edit+Approve</button>
+            <button class="btn-danger" style="padding:4px 11px;font-size:11px" onclick="denyMissedPunch('${r.id}')">&#10007; Deny</button>
+          </div>
+          <div id="mpr-edit-${r.id}" style="display:none;margin-top:6px">
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+              <input type="date" id="mpr-date-${r.id}" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              <input type="time" id="mpr-time-${r.id}" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited('${r.id}')">&#10003; Confirm</button>
+              <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px" onclick="toggleEditMissedPunch('${r.id}')">Cancel</button>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('missedPunchCardsContainer').innerHTML=visible.map(r=>{
+      const typePill=r.type==='IN'
+        ?'<span class="pill in" style="font-size:10px">IN</span>'
+        :'<span class="pill out" style="font-size:10px">OUT</span>';
+      const reason=(r.reason||'').replace(/[<>]/g,'');
+      const timeStr=(r.requested_time||'').slice(0,5);
+      return `<div class="mobile-card-row">
+        <div class="mc-name"><span style="font-weight:500">${r.emp_name}</span>${typePill}</div>
+        <div class="mc-row"><span>Date</span><span>${r.requested_date}</span></div>
+        <div class="mc-row"><span>Time</span><span>${timeStr}</span></div>
+        ${reason?`<div class="mc-row"><span>Reason</span><span style="font-size:12px">${reason}</span></div>`:''}
+        <div id="mprc-normal-${r.id}" class="mc-actions">
+          <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunch('${r.id}')">&#10003; Approve</button>
+          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}',true)">&#9998; Edit</button>
+          <button class="btn-danger" style="font-size:12px" onclick="denyMissedPunch('${r.id}')">&#10007; Deny</button>
+        </div>
+        <div id="mprc-editmode-${r.id}" style="display:none;padding:4px 0">
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">
+            <input type="date" id="mprc-date-${r.id}" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+            <input type="time" id="mprc-time-${r.id}" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited('${r.id}',true)">&#10003; Confirm</button>
+            <button class="btn-secondary" style="font-size:12px" onclick="toggleEditMissedPunch('${r.id}',true)">Cancel</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    console.error('renderMissedPunchRequests:',e);
+    updateMissedPunchBadge(0);
+  }
+}
+
+function toggleEditMissedPunch(id, isMobile){
+  if(isMobile){
+    const normal=document.getElementById('mprc-normal-'+id);
+    const editMode=document.getElementById('mprc-editmode-'+id);
+    const isEditing=editMode&&editMode.style.display!=='none';
+    if(normal)normal.style.display=isEditing?'flex':'none';
+    if(editMode)editMode.style.display=isEditing?'none':'';
+  }else{
+    const actionsDiv=document.getElementById('mpr-actions-'+id);
+    const editDiv=document.getElementById('mpr-edit-'+id);
+    const isEditing=editDiv&&editDiv.style.display!=='none';
+    if(actionsDiv)actionsDiv.style.display=isEditing?'flex':'none';
+    if(editDiv)editDiv.style.display=isEditing?'none':'';
+  }
+}
+
+async function approveMissedPunch(id){
+  const req=_missedPunchRequests.find(r=>r.id===id);
+  if(!req)return;
+  await _doApproveMissedPunch(req,req.requested_date,req.requested_time);
+}
+
+async function approveMissedPunchEdited(id,isMobile){
+  const dateEl=document.getElementById((isMobile?'mprc-':'mpr-')+'date-'+id);
+  const timeEl=document.getElementById((isMobile?'mprc-':'mpr-')+'time-'+id);
+  if(!dateEl?.value||!timeEl?.value){showToast('Please enter a date and time.','error');return;}
+  const req=_missedPunchRequests.find(r=>r.id===id);
+  if(!req)return;
+  await _doApproveMissedPunch(req,dateEl.value,timeEl.value);
+}
+
+async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
+  const sess=Sess.get();
+  const punch_time=(punch_time_raw||'').slice(0,5);
+  const fullTime=punch_time+':00';
+  const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
+  const site=C.sites.find(s=>s.id===req.site_id);
+  try{
+    const punchPayload={
+      emp_id:req.emp_id,emp_name:req.emp_name,company_id:req.company_id,
+      type:req.type,punch_date,punch_time:fullTime,punched_at,is_manual:true
+    };
+    if(req.site_id){punchPayload.site_id=req.site_id;punchPayload.site_name=site?.name||null;}
+    const punchRes=await DB.insert('punches',punchPayload);
+    const punchId=punchRes?.[0]?.id||null;
+    if(punchRes?.[0])C.punches.unshift(punchRes[0]);
+    await DB.update('missed_punch_requests',`id=eq.${req.id}`,{
+      status:'approved',
+      reviewed_by:sess?.id||null,
+      reviewed_at:new Date().toISOString(),
+      punch_id:punchId
+    });
+    showToast(`✓ Punch approved for ${req.emp_name}`,'success');
+    await renderMissedPunchRequests();
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+async function denyMissedPunch(id){
+  const req=_missedPunchRequests.find(r=>r.id===id);
+  if(!req)return;
+  if(!confirm(`Deny missed punch request for ${req.emp_name}?`))return;
+  const sess=Sess.get();
+  try{
+    await DB.update('missed_punch_requests',`id=eq.${id}`,{
+      status:'denied',
+      reviewed_by:sess?.id||null,
+      reviewed_at:new Date().toISOString()
+    });
+    showToast(`Request denied for ${req.emp_name}`,'info');
+    await renderMissedPunchRequests();
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+// ─── END MISSED PUNCH REQUESTS ────────────────────────────────────────────────
 
 async function approveJoinRequest(reqId, adminId){
   try{
@@ -6567,6 +6816,8 @@ function openAddCompanyModal(){
   ['companyName','companyAddress','companyPhone','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('companyWeekStart').value='monday';
   document.getElementById('companyPayrollFreq').value='biweekly';
+  document.getElementById('companyAnchorDate').value='';
+  toggleAnchorDateRow();
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
   resetLogoUpload(null);
@@ -6588,6 +6839,8 @@ function editCompany(id){
   document.getElementById('companyDesc').value=co.description||'';
   document.getElementById('companyWeekStart').value=co.week_start||'monday';
   document.getElementById('companyPayrollFreq').value=co.payroll_frequency||'biweekly';
+  document.getElementById('companyAnchorDate').value=co.payroll_anchor_date||'';
+  toggleAnchorDateRow();
   document.getElementById('editCompanyUid').value=co.id;
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(!!co.track_overtime);
@@ -6595,6 +6848,10 @@ function editCompany(id){
   openModal('addCompanyModal');
 }
 
+function toggleAnchorDateRow(){
+  const freq=document.getElementById('companyPayrollFreq').value;
+  document.getElementById('anchorDateRow').style.display=freq==='biweekly'?'':'none';
+}
 function toggleOvertimeOpt(){
   const on=document.getElementById('overtimeThumb').style.left!=='20px';
   document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
@@ -6630,6 +6887,7 @@ async function saveCompany(){
   const description=document.getElementById('companyDesc').value.trim();
   const week_start=document.getElementById('companyWeekStart').value;
   const payroll_frequency=document.getElementById('companyPayrollFreq').value;
+  const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
@@ -6647,13 +6905,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,track_overtime,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,track_overtime,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,track_overtime,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -6680,11 +6938,11 @@ async function loadReportsPage(){
   const rco=document.getElementById('reportCompany');
   rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+C.companies.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
   onReportCompanyChange();
-  updateDateRange();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
   applyAllTranslations();
   // Re-translate period dropdown options (browser ignores data-i18n on <option> in some cases)
   var pOpts=[
+    ['last_period','reports.lastPeriod'],['current_period','reports.currentPeriod'],
     ['week','reports.thisWeek'],['biweek','reports.biweekly'],['month','reports.thisMonth'],
     ['quarter','reports.thisQuarter'],['6months','reports.last6'],['year','reports.thisYear'],['custom','reports.custom']
   ];
@@ -6726,20 +6984,63 @@ function loadReportEmps(){
 
 function selAll(v){document.querySelectorAll('.emp-check').forEach(c=>c.checked=v);}
 
+function getPayrollPeriods(co){
+  const today=new Date();today.setHours(0,0,0,0);
+  const freq=co?.payroll_frequency||'biweekly';
+  const ms=86400000;
+  if(freq==='monthly'){
+    const y=today.getFullYear(),m=today.getMonth();
+    return{lastStart:new Date(y,m-1,1),lastEnd:new Date(y,m,0),curStart:new Date(y,m,1),curEnd:new Date(today)};
+  }
+  if(freq==='weekly'){
+    const sd=co?.week_start==='sunday'?0:1;
+    const daysBack=(today.getDay()-sd+7)%7;
+    const curStart=new Date(today.getTime()-daysBack*ms);
+    return{lastStart:new Date(curStart.getTime()-7*ms),lastEnd:new Date(curStart.getTime()-ms),curStart,curEnd:new Date(today)};
+  }
+  // biweekly — use anchor date when available
+  if(freq==='biweekly'&&co?.payroll_anchor_date){
+    const anchor=new Date(co.payroll_anchor_date+'T00:00:00');
+    const daysFromAnchor=Math.floor((today-anchor)/ms);
+    const periodsElapsed=Math.floor(daysFromAnchor/14);
+    const curStart=new Date(anchor.getTime()+periodsElapsed*14*ms);
+    return{lastStart:new Date(curStart.getTime()-14*ms),lastEnd:new Date(curStart.getTime()-ms),curStart,curEnd:new Date(today)};
+  }
+  // biweekly fallback — no anchor, use week boundary × 2
+  const sd2=co?.week_start==='sunday'?0:1;
+  const daysBack2=(today.getDay()-sd2+7)%7;
+  const curStart2=new Date(today.getTime()-daysBack2*ms);
+  return{lastStart:new Date(curStart2.getTime()-14*ms),lastEnd:new Date(curStart2.getTime()-ms),curStart:curStart2,curEnd:new Date(today)};
+}
+
+function setReportPeriod(val){
+  document.getElementById('reportPeriod').value=val;
+  updateDateRange();
+}
+
 function updateDateRange(co){
   const p=document.getElementById('reportPeriod').value;
   if(p==='custom')return;
+  // Auto-infer co from the company dropdown when not passed
+  if(!co){
+    const coId=document.getElementById('reportCompany').value;
+    if(coId&&coId!=='all')co=C.companies.find(c=>c.id===coId);
+  }
+  if(p==='last_period'||p==='current_period'){
+    const periods=getPayrollPeriods(co);
+    const d=p==='last_period'?{s:periods.lastStart,e:periods.lastEnd}:{s:periods.curStart,e:periods.curEnd};
+    document.getElementById('reportStart').value=d.s.toLocaleDateString('en-CA');
+    document.getElementById('reportEnd').value=d.e.toLocaleDateString('en-CA');
+    return;
+  }
   const now=new Date();
   const y=now.getFullYear(),m=now.getMonth();
-  // Determine week start from company setting (or default monday)
   const weekStart=co?.week_start||'monday';
-  const startDay=weekStart==='sunday'?0:1;// 0=Sun,1=Mon
+  const startDay=weekStart==='sunday'?0:1;
   const end=now.toLocaleDateString('en-CA');
   let start;
-
   if(p==='week'||p==='biweek'){
-    // Find the most recent week boundary
-    const today=now.getDay();// 0=Sun
+    const today=now.getDay();
     let daysBack=(today-startDay+7)%7;
     if(p==='biweek')daysBack+=7;
     start=new Date(now-(daysBack)*86400000).toLocaleDateString('en-CA');
@@ -6752,7 +7053,6 @@ function updateDateRange(co){
   }else if(p==='year'){
     start=new Date(y,0,1).toLocaleDateString('en-CA');
   }else return;
-
   document.getElementById('reportStart').value=start;
   document.getElementById('reportEnd').value=end;
 }
@@ -8682,7 +8982,9 @@ en:{
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All',
-'reports.period':'Period','reports.thisWeek':'This Week','reports.biweekly':'Bi-Weekly',
+'reports.period':'Period','reports.lastPeriod':'Last Payroll Period','reports.currentPeriod':'Current Period',
+'reports.btnLastPeriod':'← Last Period','reports.btnCurrentPeriod':'Current Period →',
+'reports.thisWeek':'This Week','reports.biweekly':'Bi-Weekly',
 'reports.thisMonth':'This Month','reports.thisQuarter':'This Quarter',
 'reports.last6':'Last 6 Months','reports.thisYear':'This Year','reports.custom':'Custom Range',
 'activity.title':'Activity Log','activity.subtitle':'Punch records with manual edit capability',
@@ -8855,6 +9157,7 @@ en:{
 'modal.industryPlaceholder':'Technology, Retail...','modal.descPlaceholder':'Optional',
 'modal.payrollSettings':'Payroll Settings','modal.weekStartsOn':'Week Starts On',
 'modal.payrollFreq':'Payroll Frequency',
+'modal.anchorDate':'Bi-Weekly Anchor Date','modal.anchorDateHint':'A known period-start date — pins exact bi-weekly pay boundaries',
 'modal.monday':'Monday','modal.sunday':'Sunday',
 'modal.companyLogo':'Company Logo','modal.uploadLogo':'Upload Company Logo',
 'modal.logoHint':'PNG, JPG up to 2MB — shown on clock page and email reports',
@@ -9236,7 +9539,9 @@ fr:{
 "admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Définir',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner',
-'reports.period':'Période','reports.thisWeek':'Cette semaine','reports.biweekly':'Aux deux semaines',
+'reports.period':'Période','reports.lastPeriod':'Dernière période de paie','reports.currentPeriod':'Période en cours',
+'reports.btnLastPeriod':'← Dernière période','reports.btnCurrentPeriod':'Période en cours →',
+'reports.thisWeek':'Cette semaine','reports.biweekly':'Aux deux semaines',
 'reports.thisMonth':'Ce mois','reports.thisQuarter':'Ce trimestre',
 'reports.last6':'6 derniers mois','reports.thisYear':'Cette année','reports.custom':'Plage personnalisée',
 "activity.title":"Journal d'activité",'activity.subtitle':'Registre des pointages avec modification manuelle',
@@ -9409,6 +9714,7 @@ fr:{
 'modal.industryPlaceholder':'Technologie, Commerce...','modal.descPlaceholder':'Optionnel',
 'modal.payrollSettings':'Paramètres de paie','modal.weekStartsOn':'Début de semaine',
 'modal.payrollFreq':'Fréquence de paie',
+'modal.anchorDate':'Date d\'ancrage bimensuel','modal.anchorDateHint':'Une date de début de période connue — fixe les bornes bimensuelles exactes',
 'modal.monday':'Lundi','modal.sunday':'Dimanche',
 'modal.companyLogo':'Logo de la compagnie','modal.uploadLogo':'Télécharger le logo',
 'modal.logoHint':'PNG, JPG jusqu\'à 2 Mo — affiché sur la page de pointage et les rapports',

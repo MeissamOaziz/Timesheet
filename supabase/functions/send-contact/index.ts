@@ -104,7 +104,10 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
     const body = await req.json();
-    const { type, name, email, subject, message, adminId } = body;
+    const { type, name, email, subject, message, adminId, recipients } = body;
+    const toList: string[] = Array.isArray(recipients) && recipients.length > 0
+      ? recipients
+      : [DEST_EMAIL];
 
     if (!name || !email || !subject || !message) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -155,7 +158,7 @@ Deno.serve(async (req) => {
       headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: FROM_EMAIL,
-        to: [DEST_EMAIL],
+        to: toList,
         reply_to: email,
         subject: emailSubject,
         html
