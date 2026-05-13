@@ -3697,6 +3697,13 @@ function isSuperAdmin() {
 function isManager(){
   return Sess.get()?.role==='manager';
 }
+async function ensureManagerSiteIds(){
+  if(!isManager()){managerSiteIds=null;return;}
+  if(Array.isArray(managerSiteIds))return;
+  const sess=Sess.get();
+  const rows=await DB.all('manager_sites',`manager_id=eq.${sess.id}`);
+  managerSiteIds=(rows||[]).map(r=>r.site_id);
+}
 
 function currentAdminPlan() {
   const s = Sess.get();
@@ -3817,8 +3824,8 @@ function updateNav(){
       if(ddCoInfo) ddCoInfo.style.display=(a.role==='admin'&&!isSuperAdmin())?'':'none';
       // Managers: hide all nav except Admin (employees only)
       if(isManager()){
-        ['navReports','navCompanies','navActivity','navSchedule'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-        ['mobileNavReports','mobileNavCompanies','mobileNavActivity','mobileNavSchedule'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+        const el=document.getElementById('navCompanies');if(el)el.style.display='none';
+        const mel=document.getElementById('mobileNavCompanies');if(mel)mel.style.display='none';
       }
       // Scheduling add-on row
       const ddSched=document.getElementById('ddSchedulingAddon');
@@ -7155,9 +7162,12 @@ async function saveCompany(){
 async function loadReportsPage(){
   if(!isLoggedIn()){navigate('login');return;}
   await refreshCache();
+  await ensureManagerSiteIds();
   const ctx=Ctx.get();
   const rco=document.getElementById('reportCompany');
-  rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+C.companies.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
+  let _repCos=C.companies;
+  if(managerSiteIds!==null)_repCos=_repCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
+  rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_repCos.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
   onReportCompanyChange();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
   applyAllTranslations();
@@ -7173,7 +7183,8 @@ async function loadReportsPage(){
 
 function onReportCompanyChange(){
   const coId=document.getElementById('reportCompany').value;
-  const sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
+  let sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
+  if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
   const rs=document.getElementById('reportSite');
   rs.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   loadReportEmps();
@@ -7192,6 +7203,7 @@ function loadReportEmps(){
   let emps=C.employees.filter(e=>e.active);
   if(coId!=='all')emps=emps.filter(e=>e.company_id===coId);
   if(siteId!=='all')emps=emps.filter(e=>e.site_id===siteId);
+  if(managerSiteIds!==null)emps=emps.filter(e=>managerSiteIds.includes(e.site_id));
   document.getElementById('empCheckList').innerHTML=emps.map(e=>{
     const co=C.companies.find(c=>c.id===e.company_id);
     const site=C.sites.find(s=>s.id===e.site_id);
@@ -7531,6 +7543,7 @@ function exportReport(fmt){
 // ═══════════════════════════════════════════════════
 async function loadActivityPage(){
   if(!isLoggedIn()){navigate('login');return;}
+  await ensureManagerSiteIds();
   const coId=document.getElementById('actCoFilter').value;
   const siteId=document.getElementById('actSiteFilter').value;
   const startDate=document.getElementById('actStart').value;
@@ -7539,7 +7552,9 @@ async function loadActivityPage(){
   // Populate company filter on first load
   const acf=document.getElementById('actCoFilter');
   if(acf.options.length<=1){
-    acf.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    let _actCos=C.companies;
+    if(managerSiteIds!==null)_actCos=_actCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
+    acf.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_actCos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   }
   const opts={};
   if(coId!=='all')opts.coId=coId;
@@ -7553,7 +7568,8 @@ async function loadActivityPage(){
 
   // Belt-and-suspenders: strip any punch not belonging to this admin's companies
   const _actCoIds=new Set(C.companies.map(c=>c.id));
-  const all=isSuperAdmin()?C.punches:C.punches.filter(p=>_actCoIds.has(p.company_id));
+  let all=isSuperAdmin()?C.punches:C.punches.filter(p=>_actCoIds.has(p.company_id));
+  if(managerSiteIds!==null)all=all.filter(p=>managerSiteIds.includes(p.site_id));
   const today=new Date().toLocaleDateString('en-CA');
   const todayN=all.filter(p=>p.punch_date===today).length;
   const scopeEmps=(coId==='all'?C.employees:C.employees.filter(e=>e.company_id===coId)).filter(e=>e.active);
@@ -7583,10 +7599,10 @@ async function loadActivityPage(){
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${p.punch_time}</td>
       <td><div style="display:flex;gap:5px">
-        ${isPaidCompany(p.company_id)?`
+        ${isPaidCompany(p.company_id)&&(!isManager()||managerSiteIds.includes(p.site_id))?`
         <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">${t('common.edit')}</button>
         <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">${t('common.delete')}</button>`
-        :'<span style="font-size:11px;color:var(--text3)">— Paid plan only</span>'}
+        :isPaidCompany(p.company_id)?'':`<span style="font-size:11px;color:var(--text3)">— Paid plan only</span>`}
       </div></td>
     </tr>`;
   }).join('');
@@ -7595,7 +7611,8 @@ async function loadActivityPage(){
 function updateActSiteFilter(coId){
   const asf=document.getElementById('actSiteFilter');
   const prev=asf.value;
-  const sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
+  let sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
+  if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
   asf.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
 }
 
@@ -8535,10 +8552,12 @@ function schedGoToday() {
 
 async function loadSchedulePage() {
   if(!isLoggedIn()){navigate('login');return;}
+  await ensureManagerSiteIds();
+  if(isManager()&&!C.primaryAdmin)await refreshCache();
   const s = Sess.get();
 
   // Check add-on access — scheduling_addon must be explicitly purchased or granted
-  const hasAddon = !!(s?.scheduling_addon) || isSuperAdmin();
+  const hasAddon = !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin();
   if(!hasAddon) {
     document.getElementById('schedGridContent').innerHTML = `
       <div class="sched-empty">
@@ -8555,7 +8574,9 @@ async function loadSchedulePage() {
   // Populate company filter
   const coSel = document.getElementById('schedCoFilter');
   if(coSel.options.length === 0) {
-    coSel.innerHTML = C.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    let _schedCos=C.companies;
+    if(managerSiteIds!==null)_schedCos=_schedCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
+    coSel.innerHTML = _schedCos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   }
   onSchedCoChange();
   // Check if holidays need to be set for this year
@@ -8567,7 +8588,8 @@ async function loadSchedulePage() {
 function onSchedCoChange() {
   const coId = document.getElementById('schedCoFilter').value;
   const siteSel = document.getElementById('schedSiteFilter');
-  const sites = C.sites.filter(s => s.company_id === coId);
+  let sites = C.sites.filter(s => s.company_id === coId);
+  if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
   siteSel.innerHTML = `<option value="all">${t('admin.allSites')||'All Sites'}</option>` +
     sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   renderScheduleGrid();
