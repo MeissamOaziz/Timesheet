@@ -134,6 +134,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- PWA support -->
 <link rel="manifest" href="/manifest.json">
@@ -476,6 +478,20 @@ th.sort-th:hover{color:var(--text);}
 .mini-toggle.on{background:var(--accent);}
 .mini-toggle-thumb{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
 .mini-toggle.on .mini-toggle-thumb{left:18px;}
+/* ── GEO UI ── */
+.geo-collapse-btn{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s;}
+.geo-collapse-btn:hover{border-color:var(--accent);}
+.geo-search-results{position:relative;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;max-height:180px;overflow-y:auto;}
+.geo-search-result{padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);line-height:1.4;}
+.geo-search-result:last-child{border-bottom:none;}
+.geo-search-result:hover{background:var(--surface3,#22263a);color:var(--accent);}
+.geo-mode-card{padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;}
+.geo-mode-card:hover{border-color:var(--accent);}
+.geo-mode-card.active{border-color:var(--accent);background:rgba(79,142,247,.08);}
+.geo-mode-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.geo-mode-card.active .geo-mode-title{color:var(--accent);}
+.geo-mode-desc{font-size:11px;color:var(--text3);line-height:1.4;}
+#geoMapContainer .leaflet-container{background:#0f1117;}
 /* ── KIOSK SHORTCUT ── */
 .kiosk-url-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);word-break:break-all;margin:12px 0;cursor:pointer;transition:border-color .15s;user-select:all;}
 .kiosk-url-box:hover{border-color:var(--accent);}
@@ -2513,68 +2529,66 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="form-group"><label data-i18n="site.desc">Description (optional)</label><input type="text" id="siteDesc" data-i18n="site.descPlaceholder" placeholder="Brief description"></div>
 
     <!-- GEOFENCE SECTION -->
-    <div id="siteGeoSection" style="display:none">
-      <hr class="divider" style="margin:16px 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">📍 <span data-i18n="site.geofence">Geofence</span></div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="site.geofenceDesc">Restrict clock-in/out to employees physically at this location</div>
-        </div>
-        <div id="siteGeoToggleEl" class="mini-toggle" onclick="toggleSiteGeo()" style="cursor:pointer">
-          <div class="mini-toggle-thumb"></div>
-        </div>
-      </div>
+    <div id="siteGeoSection">
+      <hr class="divider" style="margin:16px 0 12px">
+      <button type="button" id="geoToggleBtn" class="geo-collapse-btn" onclick="toggleGeoSection()">
+        📍 <span data-i18n="geo.setGeofence">Set Geofence</span>
+        <span id="geoCollapseArrow" style="margin-left:auto;font-size:11px;display:inline-block;transition:transform .2s">▼</span>
+      </button>
 
-      <div id="siteGeoFields" style="display:none">
+      <div id="geoExpandedSection" style="display:none;margin-top:12px">
+        <!-- Address search -->
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="geoSearchInput" placeholder="Search address..."
+                 style="flex:1;padding:8px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;min-width:0"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();searchGeoAddress();}">
+          <button type="button" class="btn-secondary" onclick="searchGeoAddress()" style="padding:8px 14px;font-size:13px;white-space:nowrap" data-i18n="geo.search">Search</button>
+        </div>
+        <div id="geoSearchResults" class="geo-search-results" style="display:none"></div>
+
+        <button type="button" class="btn-secondary" onclick="useMyGeoLocation()" id="geoLocBtn"
+                style="width:100%;margin-bottom:12px;font-size:13px;padding:9px 12px" data-i18n="geo.useLocation">
+          📍 Use My Current Location
+        </button>
+
+        <!-- Leaflet map -->
+        <div id="geoMapContainer" style="height:300px;border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-bottom:14px"></div>
+
         <!-- Radius slider -->
-        <div class="form-group" style="margin-bottom:10px">
-          <label data-i18n="site.geoRadius">Allowed Radius</label>
-          <div class="geo-slider-wrap">
-            <input type="range" id="siteGeoRadius" class="geo-slider" min="10" max="500" step="5" value="25" oninput="document.getElementById('siteGeoRadiusVal').textContent=this.value+'m'">
-            <span class="geo-slider-val" id="siteGeoRadiusVal">25m</span>
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="geo.radius">Radius</label>
+            <span id="geoRadiusLabel" style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--accent)">100m</span>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:3px"><span>10m</span><span data-i18n="site.geoRadiusHint">25m recommended for most businesses</span><span>500m</span></div>
+          <input type="range" id="geoRadiusSlider" class="geo-slider" min="25" max="500" step="25" value="100"
+                 oninput="onGeoRadiusChange(this.value)">
         </div>
 
-        <!-- Coordinates -->
-        <div class="form-group">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <label style="margin:0" data-i18n="site.geoCoords">Site Coordinates</label>
-            <button type="button" class="btn-secondary" style="padding:4px 11px;font-size:11px" onclick="detectSiteLocation()" id="siteGeoDetectBtn">📍 <span data-i18n="site.geoUseMyLocation">Use my current location</span></button>
+        <!-- Mode cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <div class="geo-mode-card active" id="geoModeLenient" onclick="selectGeoMode('lenient')">
+            <div class="geo-mode-title" data-i18n="geo.lenient">Lenient</div>
+            <div class="geo-mode-desc" data-i18n="geo.lenientDesc">Punch goes through with a warning if GPS is unavailable</div>
           </div>
-          <div class="geo-coords">
-            <div><label style="font-size:11px;color:var(--text3)">Latitude</label><input type="number" id="siteGeoLat" step="0.000001" placeholder="45.508888" style="width:100%;padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none" oninput="updateGeoMapPreview()"></div>
-            <div><label style="font-size:11px;color:var(--text3)">Longitude</label><input type="number" id="siteGeoLng" step="0.000001" placeholder="-73.554992" style="width:100%;padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none" oninput="updateGeoMapPreview()"></div>
-          </div>
-          <!-- Map preview -->
-          <div class="geo-map-preview" id="siteGeoMapWrap">
-            <span data-i18n="site.geoMapHint">📍 Enter coordinates or use your location to preview</span>
+          <div class="geo-mode-card" id="geoModeStrict" onclick="selectGeoMode('strict')">
+            <div class="geo-mode-title" data-i18n="geo.strict">Strict</div>
+            <div class="geo-mode-desc" data-i18n="geo.strictDesc">Punch is blocked if outside radius or GPS unavailable</div>
           </div>
         </div>
 
-        <!-- Strict mode toggle -->
-        <div class="geo-toggle-row" onclick="toggleMiniToggle('siteGeoStrictToggle')" style="margin-bottom:8px">
-          <div>
-            <div class="gt-label" data-i18n="site.geoStrict">🔒 Block punch if GPS unavailable</div>
-            <div class="gt-sub" data-i18n="site.geoStrictDesc">If OFF, employees without GPS are warned but can still punch</div>
-          </div>
-          <div id="siteGeoStrictToggle" class="mini-toggle"><div class="mini-toggle-thumb"></div></div>
-        </div>
-
-        <!-- Device token toggle -->
-        <div class="geo-toggle-row" onclick="toggleMiniToggle('siteGeoDeviceToggle')">
-          <div>
-            <div class="gt-label" data-i18n="site.geoDevice">🔑 Also require registered device token</div>
-            <div class="gt-sub" data-i18n="site.geoDeviceDesc">Punch only works on devices registered via the Kiosk Shortcut button</div>
-          </div>
-          <div id="siteGeoDeviceToggle" class="mini-toggle"><div class="mini-toggle-thumb"></div></div>
-        </div>
+        <!-- Clear geofence -->
+        <button type="button" class="btn-danger" onclick="clearGeoFence()" style="font-size:12px;padding:6px 14px" data-i18n="geo.clearGeo">
+          Remove Geofence
+        </button>
       </div>
     </div>
 
+    <input type="hidden" id="siteGeoLat">
+    <input type="hidden" id="siteGeoLng">
+
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="destroyGeoMap();needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()" data-i18n="modal.save">Save</button>
     </div>
   </div>
@@ -5072,81 +5086,170 @@ function revokeDeviceToken(siteId){
 }
 
 // ─── Site modal geo UI helpers ─────────────────────────────────────────────
+let _geoMap = null, _geoMarker = null, _geoCircle = null, _selectedGeoMode = 'lenient';
+let _geoSearchTimer = null;
 
-function resetSiteGeoFields(site){
-  const geoSection = document.getElementById('siteGeoSection');
-  const geoToggle = document.getElementById('siteGeoToggleEl');
-  const geoFields = document.getElementById('siteGeoFields');
-  if(!geoSection) return;
+function resetSiteGeoFields(site) {
+  destroyGeoMap();
+  _selectedGeoMode = site?.geo_mode || 'lenient';
 
-  // Always show geo section in edit mode
-  geoSection.style.display = '';
+  const section = document.getElementById('geoExpandedSection');
+  const arrow   = document.getElementById('geoCollapseArrow');
+  const si      = document.getElementById('geoSearchInput');
+  const sr      = document.getElementById('geoSearchResults');
+  if (section) section.style.display = 'none';
+  if (arrow)   arrow.style.transform = '';
+  if (si)      si.value = '';
+  if (sr)      sr.style.display = 'none';
 
-  const hasGeo = site && site.geo_lat && site.geo_lng;
-  setMiniToggle('siteGeoToggleEl', hasGeo);
-  geoFields.style.display = hasGeo ? '' : 'none';
+  document.getElementById('siteGeoLat').value = site?.geo_lat  || '';
+  document.getElementById('siteGeoLng').value = site?.geo_lng  || '';
 
-  document.getElementById('siteGeoLat').value = site?.geo_lat || '';
-  document.getElementById('siteGeoLng').value = site?.geo_lng || '';
-  const radius = site?.geo_radius_m || 25;
-  document.getElementById('siteGeoRadius').value = radius;
-  document.getElementById('siteGeoRadiusVal').textContent = radius + 'm';
-  setMiniToggle('siteGeoStrictToggle', !!(site?.geo_strict));
-  setMiniToggle('siteGeoDeviceToggle', !!(site?.require_device_token));
-  updateGeoMapPreview();
-}
+  const radius = site?.geo_radius_m || 100;
+  const slider = document.getElementById('geoRadiusSlider');
+  const label  = document.getElementById('geoRadiusLabel');
+  if (slider) slider.value = radius;
+  if (label)  label.textContent = radius + 'm';
 
-function toggleSiteGeo(){
-  const toggle = document.getElementById('siteGeoToggleEl');
-  const fields = document.getElementById('siteGeoFields');
-  const isOn = toggle.classList.toggle('on');
-  toggle.querySelector('.mini-toggle-thumb').style.left = isOn ? '18px' : '2px';
-  toggle.style.background = isOn ? 'var(--accent)' : 'var(--border)';
-  fields.style.display = isOn ? '' : 'none';
-}
+  selectGeoMode(_selectedGeoMode);
 
-function setMiniToggle(id, on){
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.classList.toggle('on', on);
-  el.querySelector('.mini-toggle-thumb').style.left = on ? '18px' : '2px';
-  el.style.background = on ? 'var(--accent)' : 'var(--border)';
-}
-
-function toggleMiniToggle(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  setMiniToggle(id, !el.classList.contains('on'));
-}
-
-function updateGeoMapPreview(){
-  const lat = parseFloat(document.getElementById('siteGeoLat')?.value);
-  const lng = parseFloat(document.getElementById('siteGeoLng')?.value);
-  const radius = document.getElementById('siteGeoRadius')?.value || 25;
-  const wrap = document.getElementById('siteGeoMapWrap');
-  if(!wrap) return;
-  if(!lat || !lng || isNaN(lat) || isNaN(lng)){
-    wrap.innerHTML = `<span data-i18n="site.geoMapHint">📍 Enter coordinates or use your location to preview</span>`;
-    return;
+  if (site?.geo_lat && site?.geo_lng) {
+    if (section) section.style.display = '';
+    if (arrow)   arrow.style.transform = 'rotate(180deg)';
+    setTimeout(() => initGeoMap(), 120);
   }
-  // OpenStreetMap embed — no API key needed
-  const zoom = radius < 30 ? 18 : radius < 100 ? 17 : radius < 300 ? 16 : 15;
-  wrap.innerHTML = `<iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-.005},${lat-.005},${lng+.005},${lat+.005}&layer=mapnik&marker=${lat},${lng}" style="width:100%;height:100%;border:none" loading="lazy"></iframe>`;
 }
 
-async function detectSiteLocation(){
-  const btn = document.getElementById('siteGeoDetectBtn');
-  if(btn){ btn.innerHTML = '⏳ Detecting...'; btn.disabled = true; }
-  try{
+function toggleGeoSection() {
+  const section = document.getElementById('geoExpandedSection');
+  const arrow   = document.getElementById('geoCollapseArrow');
+  const open    = section.style.display !== 'none';
+  if (open) {
+    section.style.display = 'none';
+    arrow.style.transform = '';
+  } else {
+    section.style.display = '';
+    arrow.style.transform = 'rotate(180deg)';
+    if (!_geoMap) setTimeout(() => initGeoMap(), 50);
+    else          _geoMap.invalidateSize();
+  }
+}
+
+function initGeoMap() {
+  if (_geoMap) { _geoMap.invalidateSize(); return; }
+  const latVal = document.getElementById('siteGeoLat').value;
+  const lngVal = document.getElementById('siteGeoLng').value;
+  const lat  = parseFloat(latVal) || 45.5017;
+  const lng  = parseFloat(lngVal) || -73.5673;
+  const zoom = latVal ? 16 : 12;
+  _geoMap = L.map('geoMapContainer').setView([lat, lng], zoom);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 20
+  }).addTo(_geoMap);
+  if (latVal) setGeoPin(lat, lng, false);
+}
+
+function setGeoPin(lat, lng, center = true) {
+  document.getElementById('siteGeoLat').value = parseFloat(lat).toFixed(6);
+  document.getElementById('siteGeoLng').value = parseFloat(lng).toFixed(6);
+  if (!_geoMap) return;
+  const radius = parseInt(document.getElementById('geoRadiusSlider').value) || 100;
+  if (_geoMarker) {
+    _geoMarker.setLatLng([lat, lng]);
+  } else {
+    _geoMarker = L.marker([lat, lng], { draggable: true }).addTo(_geoMap);
+    _geoMarker.on('dragend', e => {
+      const p = e.target.getLatLng();
+      document.getElementById('siteGeoLat').value = p.lat.toFixed(6);
+      document.getElementById('siteGeoLng').value = p.lng.toFixed(6);
+      if (_geoCircle) _geoCircle.setLatLng(p);
+    });
+  }
+  if (_geoCircle) {
+    _geoCircle.setLatLng([lat, lng]).setRadius(radius);
+  } else {
+    _geoCircle = L.circle([lat, lng], {
+      radius, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.15, weight: 2
+    }).addTo(_geoMap);
+  }
+  if (center) _geoMap.setView([lat, lng], 16);
+}
+
+function onGeoRadiusChange(value) {
+  document.getElementById('geoRadiusLabel').textContent = value + 'm';
+  if (_geoCircle) _geoCircle.setRadius(parseInt(value));
+}
+
+function selectGeoMode(mode) {
+  _selectedGeoMode = mode;
+  const lEl = document.getElementById('geoModeLenient');
+  const sEl = document.getElementById('geoModeStrict');
+  if (lEl) lEl.classList.toggle('active', mode === 'lenient');
+  if (sEl) sEl.classList.toggle('active', mode === 'strict');
+}
+
+function clearGeoFence() {
+  document.getElementById('siteGeoLat').value = '';
+  document.getElementById('siteGeoLng').value = '';
+  if (_geoMap) {
+    if (_geoMarker) { _geoMap.removeLayer(_geoMarker); _geoMarker = null; }
+    if (_geoCircle) { _geoMap.removeLayer(_geoCircle); _geoCircle = null; }
+    _geoMap.setView([45.5017, -73.5673], 12);
+  }
+}
+
+function destroyGeoMap() {
+  if (_geoMap) { _geoMap.remove(); _geoMap = null; }
+  _geoMarker = null;
+  _geoCircle = null;
+}
+
+async function searchGeoAddress() {
+  const q   = document.getElementById('geoSearchInput').value.trim();
+  const res = document.getElementById('geoSearchResults');
+  if (!q) { res.style.display = 'none'; return; }
+  res.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:13px">Searching...</div>';
+  res.style.display = '';
+  clearTimeout(_geoSearchTimer);
+  _geoSearchTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+        { headers: { 'User-Agent': 'PunchClock Pro (support@punchclock.ca)' } }
+      );
+      const data = await r.json();
+      if (!data.length) {
+        res.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:13px">No results found</div>';
+        return;
+      }
+      res.innerHTML = data.map(item =>
+        `<div class="geo-search-result" onclick="placeGeoResult(${item.lat},${item.lon})">${item.display_name}</div>`
+      ).join('');
+    } catch {
+      res.innerHTML = '<div style="padding:8px 12px;color:var(--red);font-size:13px">Search failed. Try again.</div>';
+    }
+  }, 300);
+}
+
+function placeGeoResult(lat, lng) {
+  document.getElementById('geoSearchResults').style.display = 'none';
+  document.getElementById('geoSearchInput').value = '';
+  if (!_geoMap) initGeoMap();
+  setGeoPin(parseFloat(lat), parseFloat(lng));
+}
+
+async function useMyGeoLocation() {
+  const btn = document.getElementById('geoLocBtn');
+  if (btn) { btn.textContent = t('geo.locating') || 'Getting your location...'; btn.disabled = true; }
+  try {
     const pos = await getCurrentPosition();
-    document.getElementById('siteGeoLat').value = pos.coords.latitude.toFixed(6);
-    document.getElementById('siteGeoLng').value = pos.coords.longitude.toFixed(6);
-    updateGeoMapPreview();
-    showToast(`✓ Location detected (±${Math.round(pos.coords.accuracy)}m accuracy)`,'success');
-  }catch(e){
-    showToast(t('geo.locationDenied')||'Could not get location. Please allow location access or enter coordinates manually.','error');
-  }finally{
-    if(btn){ btn.innerHTML = '📍 <span data-i18n="site.geoUseMyLocation">Use my current location</span>'; btn.disabled = false; }
+    if (!_geoMap) initGeoMap();
+    setGeoPin(pos.coords.latitude, pos.coords.longitude);
+    showToast(`✓ Location detected (±${Math.round(pos.coords.accuracy)}m)`, 'success');
+  } catch {
+    showToast(t('geo.locationError') || 'Could not get location. Please search for an address.', 'error');
+  } finally {
+    if (btn) { btn.textContent = '📍 ' + (t('geo.useLocation') || 'Use My Current Location'); btn.disabled = false; }
   }
 }
 
@@ -6875,29 +6978,25 @@ async function saveSite(){
   if(!name){showMsg('siteModalMsg','Site name is required.','error');return;}
 
   // Collect geo fields
-  const geoOn = document.getElementById('siteGeoToggleEl')?.classList.contains('on');
-  const geo_lat = geoOn ? (parseFloat(document.getElementById('siteGeoLat').value)||null) : null;
-  const geo_lng = geoOn ? (parseFloat(document.getElementById('siteGeoLng').value)||null) : null;
-  const geo_radius_m = geoOn ? parseInt(document.getElementById('siteGeoRadius').value)||25 : 25;
-  const geo_strict = geoOn ? document.getElementById('siteGeoStrictToggle')?.classList.contains('on') : false;
-  const require_device_token = geoOn ? document.getElementById('siteGeoDeviceToggle')?.classList.contains('on') : false;
-
-  if(geoOn && (!geo_lat || !geo_lng)){
-    showMsg('siteModalMsg',t('site.geoCoordsRequired')||'Please set coordinates for the geofence (use "Use my current location").','error');
-    return;
-  }
+  const _latRaw = document.getElementById('siteGeoLat').value;
+  const _lngRaw = document.getElementById('siteGeoLng').value;
+  const geo_lat     = _latRaw ? parseFloat(_latRaw) : null;
+  const geo_lng     = _lngRaw ? parseFloat(_lngRaw) : null;
+  const geo_radius_m = geo_lat ? (parseInt(document.getElementById('geoRadiusSlider').value) || 100) : null;
+  const geo_mode    = geo_lat ? (_selectedGeoMode || 'lenient') : null;
 
   try{
-    const payload={name,description,geo_lat,geo_lng,geo_radius_m,geo_strict,require_device_token};
+    const payload={name,description,geo_lat,geo_lng,geo_radius_m,geo_mode};
     if(editId){
       await DB.update('sites',`id=eq.${editId}`,payload);
       const s=C.sites.find(s=>s.id===editId);
-      if(s)Object.assign(s,{name,description,geo_lat,geo_lng,geo_radius_m,geo_strict,require_device_token});
+      if(s)Object.assign(s,{name,description,geo_lat,geo_lng,geo_radius_m,geo_mode});
     }else{
       if(!ctx){showMsg('siteModalMsg','No active company.','error');return;}
       const r=await DB.insert('sites',{company_id:ctx.co.id,...payload});
       if(r?.[0])C.sites.push(r[0]);
     }
+    destroyGeoMap();
     closeModal('addSiteModal');
     window._onboardingSiteShown=false;
     const ctx2=Ctx.get();
@@ -9210,6 +9309,17 @@ en:{
 'geo.locationDenied':'Could not get location. Please allow location access or enter coordinates manually.',
 'geo.deviceNotRegistered':'This device is not registered for',
 'geo.askAdmin':'Ask your manager to register this device using the Kiosk Shortcut button.',
+'geo.setGeofence':'📍 Set Geofence',
+'geo.search':'Search',
+'geo.useLocation':'📍 Use My Current Location',
+'geo.radius':'Radius',
+'geo.lenient':'Lenient',
+'geo.lenientDesc':'Punch goes through with a warning if GPS is unavailable',
+'geo.strict':'Strict',
+'geo.strictDesc':'Punch is blocked if outside radius or GPS unavailable',
+'geo.clearGeo':'Remove Geofence',
+'geo.locating':'Getting your location...',
+'geo.locationError':'Could not get location. Please search for an address.',
 'emp.photo':'Photo','emp.fullName':'Full Name','emp.fullNamePlaceholder':'John Smith',
 'emp.department':'Department','emp.departmentPlaceholder':'Engineering...',
 'emp.employeeId':'Employee ID','emp.site':'Site',
@@ -9776,6 +9886,17 @@ fr:{
 'geo.locationDenied':'Impossible d\'obtenir la position. Veuillez autoriser l\'accès à la localisation ou entrer les coordonnées manuellement.',
 'geo.deviceNotRegistered':'Cet appareil n\'est pas enregistré pour',
 'geo.askAdmin':'Demandez à votre gestionnaire d\'enregistrer cet appareil via le bouton Raccourci kiosque.',
+'geo.setGeofence':'📍 Définir le géofence',
+'geo.search':'Rechercher',
+'geo.useLocation':'📍 Utiliser ma position actuelle',
+'geo.radius':'Rayon',
+'geo.lenient':'Tolérant',
+'geo.lenientDesc':'Le pointage passe avec avertissement si le GPS est indisponible',
+'geo.strict':'Strict',
+'geo.strictDesc':'Le pointage est bloqué si hors rayon ou GPS indisponible',
+'geo.clearGeo':'Supprimer le géofence',
+'geo.locating':'Localisation en cours...',
+'geo.locationError':'Impossible d\'obtenir la position. Veuillez rechercher une adresse.',
 'emp.photo':'Photo','emp.fullName':'Nom complet','emp.fullNamePlaceholder':'Jean Dupont',
 'emp.department':'Département','emp.departmentPlaceholder':'Ingénierie...',
 'emp.employeeId':'ID employé','emp.site':'Site',
