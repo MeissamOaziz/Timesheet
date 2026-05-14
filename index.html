@@ -3929,6 +3929,7 @@ async function doLogin(){
       extra_seats: Number(full.extra_seats||0),
       stripe_customer_id: full.stripe_customer_id||null,
       stripe_subscription_id: full.stripe_subscription_id||null,
+      scheduling_addon: !!full.scheduling_addon,
     }, rememberMe);
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     updateNav();
@@ -3960,6 +3961,7 @@ async function doSetInvitePassword(){
       extra_seats:Number(full.extra_seats||0),
       stripe_customer_id:full.stripe_customer_id||null,
       stripe_subscription_id:full.stripe_subscription_id||null,
+      scheduling_addon:!!full.scheduling_addon,
     },false); // session only — they can choose remember me next login
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     pendingInviteAdmin=null;

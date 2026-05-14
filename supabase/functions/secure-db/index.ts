@@ -152,12 +152,19 @@ Deno.serve(async (req: Request) => {
     });
 
     const text = await upstream.text();
-    let data: unknown = null;
-    if (text) {
-      try { data = JSON.parse(text); } catch { data = text; }
+
+    // 204 No Content — must not have a body (HTTP spec)
+    if (upstream.status === 204 || !text) {
+      return new Response(null, {
+        status: upstream.status,
+        headers: CORS,
+      });
     }
 
-    // Strip sensitive fields from all admins GET responses
+    let data: unknown;
+    try { data = JSON.parse(text); } catch { data = text; }
+
+    // Strip sensitive fields from admins GET responses
     if (method === 'GET' && table === 'admins' && Array.isArray(data)) {
       data = stripAdminRows(data, sessionId, filter);
     }
