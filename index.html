@@ -2893,21 +2893,27 @@ const STRIPE_PK='pk_live_51T90YEIhFqyQNAEWaa6dhdav8LKCMgKb48xgnG00YP8vjy0iP0bRUI
 const EDGE_URL='https://uziwymrwaeojhqaagqcm.supabase.co/functions/v1/stripe-handler';
 
 async function supaFetch(method,table,opts={}){
-  let url=`${SUPA_URL}/rest/v1/${table}`;
-  const qp=[];
-  if(opts.filter)qp.push(opts.filter);
-  if(method==='GET')qp.push('select=*');
-  if(qp.length)url+='?'+qp.join('&');
-  const h={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
-  if(method==='POST')h['Prefer']='return=representation';
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),8000);
+  const timer=setTimeout(()=>controller.abort(),10000);
   try{
-    const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined,signal:controller.signal});
+    const sess=Sess.get();
+    const ctx=Ctx.get();
+    const res=await fetch(`${SUPA_URL}/functions/v1/secure-db`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      body:JSON.stringify({
+        table,method,
+        filter:opts.filter||'',
+        body:opts.body||null,
+        sessionId:sess?.id||null,
+        kioskSiteId:(!sess&&ctx?.site?.id)?ctx.site.id:null
+      }),
+      signal:controller.signal
+    });
     clearTimeout(timer);
-    if(!r.ok){let t=await r.text();try{t=JSON.parse(t).message||t;}catch{}throw new Error(t);}
-    if(method==='DELETE'||method==='PATCH')return true;
-    const t=await r.text();return t?JSON.parse(t):[];
+    if(!res.ok){const text=await res.text();throw new Error(text||res.statusText);}
+    const text=await res.text();
+    return text?JSON.parse(text):null;
   }catch(e){
     clearTimeout(timer);
     if(e.name==='AbortError')throw new Error('Connection timed out. Check your internet connection.');
