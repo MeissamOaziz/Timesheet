@@ -52,9 +52,15 @@ async function verifySite(siteId: string): Promise<boolean> {
 // Covers login (email=eq.), invite acceptance (token=eq.), and
 // specific-id lookups (id=eq.) needed before a session exists.
 function isPreAuthAllowed(table: string, filter: string): boolean {
-  if (!filter || filter.includes('&') || !filter.includes('=eq.')) return false;
-  if (table === 'admins')      return filter.startsWith('email=eq.') || filter.startsWith('id=eq.');
-  if (table === 'invitations') return filter.startsWith('token=eq.');
+  if (!filter || !filter.includes('=eq.')) return false;
+  // Strip select= projections and verified=eq.true before checking for compound conditions
+  const parts = filter.split('&').filter(p =>
+    !p.startsWith('select=') && p !== 'verified=eq.true'
+  );
+  if (parts.length !== 1) return false;
+  const condition = parts[0];
+  if (table === 'admins')      return condition.startsWith('email=eq.') || condition.startsWith('id=eq.');
+  if (table === 'invitations') return condition.startsWith('token=eq.');
   return false;
 }
 
