@@ -5091,7 +5091,7 @@ let _geoSearchTimer = null;
 
 function resetSiteGeoFields(site) {
   destroyGeoMap();
-  _selectedGeoMode = site?.geo_mode || 'lenient';
+  _selectedGeoMode = site?.geo_strict ? 'strict' : 'lenient';
 
   const section = document.getElementById('geoExpandedSection');
   const arrow   = document.getElementById('geoCollapseArrow');
@@ -6983,14 +6983,14 @@ async function saveSite(){
   const geo_lat     = _latRaw ? parseFloat(_latRaw) : null;
   const geo_lng     = _lngRaw ? parseFloat(_lngRaw) : null;
   const geo_radius_m = geo_lat ? (parseInt(document.getElementById('geoRadiusSlider').value) || 100) : null;
-  const geo_mode    = geo_lat ? (_selectedGeoMode || 'lenient') : null;
+  const geo_strict  = geo_lat ? (_selectedGeoMode === 'strict') : false;
 
   try{
-    const payload={name,description,geo_lat,geo_lng,geo_radius_m,geo_mode};
+    const payload={name,description,geo_lat,geo_lng,geo_radius_m,geo_strict};
     if(editId){
       await DB.update('sites',`id=eq.${editId}`,payload);
       const s=C.sites.find(s=>s.id===editId);
-      if(s)Object.assign(s,{name,description,geo_lat,geo_lng,geo_radius_m,geo_mode});
+      if(s)Object.assign(s,{name,description,geo_lat,geo_lng,geo_radius_m,geo_strict});
     }else{
       if(!ctx){showMsg('siteModalMsg','No active company.','error');return;}
       const r=await DB.insert('sites',{company_id:ctx.co.id,...payload});
