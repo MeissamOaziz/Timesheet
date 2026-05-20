@@ -62,6 +62,84 @@ function buildCoAdminInviteHtml(inviteeName, adminName, loginUrl) {
     </a>
     <p style="color:#555e7a;font-size:12px;margin-top:20px;">If you weren't expecting this invitation, you can safely ignore this email.</p>`);
 }
+function buildCoAdminInviteV2Html(
+  inviteeName: string,
+  inviterName: string,
+  inviterEmail: string,
+  companies: string[],
+  role: string,
+  acceptUrl: string,
+  expiresInDays: number
+): string {
+  const companyList = companies.length ? companies.join(", ") : "an account";
+  const roleLabel = role === "manager" ? "Manager" : "Co-Administrator";
+  const roleLabelFr = role === "manager" ? "Gestionnaire" : "Co-administrateur";
+
+  return wrapper(
+    `<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">You've been invited to PunchClock Pro</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Hi <strong style="color:#e8eaf0;">${inviteeName}</strong>,
+    </p>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      <strong style="color:#e8eaf0;">${inviterName}</strong> (${inviterEmail}) has invited you to join <strong style="color:#e8eaf0;">${companyList}</strong> on PunchClock Pro as a <strong style="color:#e8eaf0;">${roleLabel}</strong>.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Click the button below to accept the invitation and set your password. This link expires in <strong style="color:#e8eaf0;">${expiresInDays} days</strong>.
+    </p>
+    <div style="text-align:center;margin:0 0 28px;">
+      <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
+        Accept Invitation →
+      </a>
+    </div>
+    <p style="color:#555e7a;font-size:12px;line-height:1.6;margin:0 0 8px;">If the button doesn't work, copy and paste this link into your browser:</p>
+    <p style="color:#4f8ef7;font-size:11px;line-height:1.4;margin:0 0 28px;word-break:break-all;">${acceptUrl}</p>
+
+    <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
+
+    <h2 style="font-size:18px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">Vous avez été invité(e) sur PunchClock Pro</h2>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Bonjour <strong style="color:#e8eaf0;">${inviteeName}</strong>,
+    </p>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      <strong style="color:#e8eaf0;">${inviterName}</strong> (${inviterEmail}) vous a invité(e) à rejoindre <strong style="color:#e8eaf0;">${companyList}</strong> sur PunchClock Pro en tant que <strong style="color:#e8eaf0;">${roleLabelFr}</strong>.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Cliquez sur le bouton ci-dessus pour accepter l'invitation et définir votre mot de passe. Ce lien expire dans <strong style="color:#e8eaf0;">${expiresInDays} jours</strong>.
+    </p>
+    <p style="color:#555e7a;font-size:12px;margin:0;">Si vous n'attendiez pas cette invitation, vous pouvez ignorer ce courriel en toute sécurité.</p>`
+  );
+}
+
+function buildInviteAcceptedHtml(
+  inviterName: string,
+  acceptedByName: string,
+  acceptedByEmail: string,
+  role: string
+): string {
+  const roleLabel = role === "manager" ? "Manager" : "Co-Administrator";
+  const roleLabelFr = role === "manager" ? "Gestionnaire" : "Co-administrateur";
+
+  return wrapper(
+    `<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">✅ Invitation accepted</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Hi <strong style="color:#e8eaf0;">${inviterName}</strong>, <strong style="color:#e8eaf0;">${acceptedByName}</strong> (${acceptedByEmail}) has accepted your invitation and is now an active <strong style="color:#e8eaf0;">${roleLabel}</strong> on your PunchClock Pro account.
+    </p>
+    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      You can view and manage your team from your admin panel.
+    </p>
+    <a href="https://www.punchclock.ca" style="display:inline-block;background:#22c55e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">
+      Open Admin Panel →
+    </a>
+
+    <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
+
+    <h2 style="font-size:18px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">✅ Invitation acceptée</h2>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Bonjour <strong style="color:#e8eaf0;">${inviterName}</strong>, <strong style="color:#e8eaf0;">${acceptedByName}</strong> (${acceptedByEmail}) a accepté votre invitation et est maintenant <strong style="color:#e8eaf0;">${roleLabelFr}</strong> actif sur votre compte PunchClock Pro.
+    </p>`
+  );
+}
+
 function buildJoinApprovedHtml(coAdminName, primaryAdminName) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">✅ Your access has been approved!</h1>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
@@ -248,6 +326,23 @@ serve(async (req)=>{
     } else if (type === "co_admin_invite") {
       subject = `You've been invited to co-manage a PunchClock Pro account`;
       html = buildCoAdminInviteHtml(name, body.adminName || "An administrator", body.loginUrl || "https://www.punchclock.ca");
+    } else if (type === "co_admin_invite_v2") {
+      // New token-based co-admin invitation
+      const acceptUrl = body.acceptUrl || "https://www.punchclock.ca";
+      const inviterName = body.inviterName || "An administrator";
+      const inviterEmail = body.inviterEmail || "";
+      const companies = Array.isArray(body.companies) ? body.companies : [];
+      const role = body.role || "admin";
+      const expiresInDays = body.expiresInDays || 3;
+      subject = `${inviterName} invited you to PunchClock Pro / vous a invité(e)`;
+      html = buildCoAdminInviteV2Html(name, inviterName, inviterEmail, companies, role, acceptUrl, expiresInDays);
+    } else if (type === "co_admin_invite_accepted") {
+      // Notify the inviting admin that the invitee just activated
+      const acceptedByName = body.acceptedByName || "Your invitee";
+      const acceptedByEmail = body.acceptedByEmail || "";
+      const role = body.role || "admin";
+      subject = `${acceptedByName} accepted your invitation / a accepté votre invitation`;
+      html = buildInviteAcceptedHtml(name, acceptedByName, acceptedByEmail, role);
     } else if (type === "join_approved") {
       subject = "Your PunchClock Pro access has been approved!";
       html = buildJoinApprovedHtml(name, adminName || "your administrator");
