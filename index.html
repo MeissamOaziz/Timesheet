@@ -1793,33 +1793,6 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </div>
 
-<!-- INVITE CO-ADMIN MODAL -->
-<div class="modal-overlay" id="inviteCoAdminModal">
-  <div class="modal">
-    <h3 data-i18n="coAdmin.title">Invite Co-Admin</h3>
-    <div id="inviteCoAdminMsg"></div>
-    <div class="form-group"><label data-i18n="coAdmin.fullName">Full Name</label><input type="text" id="coAdminName" placeholder="Jane Smith"></div>
-    <div class="form-group"><label>Email</label><input type="email" id="coAdminEmail" placeholder="colleague@company.com"></div>
-    <div class="form-group">
-      <label data-i18n="coAdmin.roleLabel">Role</label>
-      <select id="coAdminRole">
-        <option value="admin" data-i18n="coAdmin.role.admin">Full Admin — same access as you (your companies only)</option>
-        <option value="manager" data-i18n="coAdmin.role.manager">Manager — can manage employees &amp; view reports, cannot delete companies</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label data-i18n="coAdmin.tempPass">Temporary Password <span style="color:var(--text3);font-weight:400;font-size:11px" data-i18n="coAdmin.tempPassHint">(share this privately with the invitee)</span></label>
-      <div class="pw-wrap"><input type="password" id="coAdminTempPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('coAdminTempPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
-    </div>
-    <div style="background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.25);border-radius:8px;padding:12px;margin-bottom:16px">
-      <p style="font-size:12px;color:var(--text2);line-height:1.6">📧 <span data-i18n="coAdmin.inviteNote">An email invitation will be sent.</span> <span data-i18n="coAdmin.inviteNoteTemp">The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.</span></p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('inviteCoAdminModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveInviteCoAdmin()" data-i18n="coAdmin.sendInvite">Send Invitation</button>
-    </div>
-  </div>
-</div>
 
 <!-- INVITE TEAM MEMBER MODAL -->
 <div class="modal-overlay" id="inviteModal">
@@ -5974,66 +5947,14 @@ async function saveInvite(){
   }catch(e){showMsg('inviteMsg','Error: '+e.message,'error');}
 }
 
-function openInviteCoAdminModal(){
-  const check=canAddCoAdmin();
-  if(!check.ok){
-    showToast((t('coAdmin.limitReached')||'Co-admin limit reached.')+' '+(t('coAdmin.limitHint')||'Upgrade your plan or add an extra admin seat ($4.90/mo).'),'error');
-    return;
-  }
-  ['coAdminName','coAdminEmail','coAdminTempPass'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('coAdminRole').value='admin';
-  document.getElementById('inviteCoAdminMsg').innerHTML='';
-  openModal('inviteCoAdminModal');
-}
-
-async function saveInviteCoAdmin(){
-  const sess=Sess.get(); if(!sess)return;
-  const name=document.getElementById('coAdminName').value.trim();
-  const email=document.getElementById('coAdminEmail').value.trim().toLowerCase();
-  const role=document.getElementById('coAdminRole').value;
-  const tempPass=document.getElementById('coAdminTempPass').value;
-  if(!name||!email){showMsg('inviteCoAdminMsg',t('msg.allRequired'),'error');return;}
-  if(!tempPass||tempPass.length<6){showMsg('inviteCoAdminMsg',t('coAdmin.tempPassRequired')||'Please set a temporary password (min 6 characters).','error');return;}
-  if(email===sess.email){showMsg('inviteCoAdminMsg',t('msg.ownEmail'),'error');return;}
-  // Always attach to the primary admin — co-admins who invite someone attach to their own primary
-  const primaryAdminId = sess.parent_admin_id || sess.id;
-  try{
-    const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(ex.length){showMsg('inviteCoAdminMsg',t('msg.emailTaken'),'error');return;}
-    // Create account — parent is always the primary admin's ID
-    const r=await DB.insert('admins',{
-      name,email,password:'PENDING',verified:false,
-      role,plan:sess.plan||'free',status:'pending_invite',
-      parent_admin_id:primaryAdminId,invited_by:sess.email
-    });
-    if(r?.[0]) await DB.rpc('set_admin_password',{p_id:r[0].id,p_pass:tempPass});
-    try{
-      await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-        body:JSON.stringify({
-          email,name,type:'co_admin_invite',
-          adminName:sess.name||sess.email,
-          loginUrl:'https://www.punchclock.ca'
-        })
-      });
-    }catch(emailErr){console.warn('Invite email failed:',emailErr);}
-    showMsg('inviteCoAdminMsg',t('coAdmin.inviteSent'),'success');
-    await loadCoAdmins();
-    setTimeout(()=>closeModal('inviteCoAdminModal'),2200);
-  }catch(e){showMsg('inviteCoAdminMsg','Error: '+e.message,'error');}
-}
 
 async function loadCoAdmins(){
   const sess=Sess.get(); if(!sess||isSuperAdmin())return;
   const tbody=document.getElementById('coAdminsTableBody');
   const cards=document.getElementById('coAdminCardsContainer');
-  // Always use primary admin ID for fetching — co-admins use their parent's ID
   const primaryAdminId = sess.parent_admin_id || sess.id;
   const isCoAdmin = !!sess.parent_admin_id;
   try{
-    // Co-admin sees primary admin + any siblings; primary admin sees their co-admins
-    // Both use primaryAdminId — pending_invite included, only suspended excluded
     let coAdmins;
     if(isCoAdmin){
       const primary=await DB.all('admins',`id=eq.${primaryAdminId}&select=id,name,email,role,status,created_at`);
@@ -6042,7 +5963,21 @@ async function loadCoAdmins(){
     } else {
       coAdmins=await DB.all('admins',`parent_admin_id=eq.${primaryAdminId}&status=neq.suspended&order=created_at.asc`);
     }
-    if(!coAdmins.length){
+    // Also fetch pending invitations — the new token-based flow doesn't create
+    // an admins row until accept, so pending invites only live in invitations.
+    const pendingInvs = await DB.all('invitations', `inviter_admin_id=eq.${primaryAdminId}&status=eq.pending&order=created_at.desc`) || [];
+    const virtualPending = pendingInvs.map(inv => ({
+      id: '_inv_' + inv.id,
+      name: t('coAdmin.pendingInviteeName') || '(Pending — name set on accept)',
+      email: inv.email,
+      role: inv.role === 'manager' ? 'manager' : 'admin',
+      status: 'pending_invite',
+      _invitationId: inv.id,
+      _isInvitation: true,
+      created_at: inv.created_at,
+    }));
+    const allRows = [...coAdmins, ...virtualPending];
+    if(!allRows.length){
       tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">${t('coAdmin.noCoAdmins')}</td></tr>`;
       if(cards) cards.innerHTML='';
       return;
@@ -6051,26 +5986,46 @@ async function loadCoAdmins(){
     const statusClass=st=>st==='active'?'in':st==='pending_invite'?'site':'out';
     const statusLabel=st=>st==='active'?t('admin.active'):st==='pending_invite'?(t('coAdmin.pendingInvite')||'Pending Invite'):t('admin.suspended')||'Suspended';
     const isMe=a=>a.id===sess.id;
-    tbody.innerHTML=coAdmins.map(a=>`<tr>
-      <td style="font-weight:500">${a.name}${isMe(a)?` <span style="font-size:10px;color:var(--text3)">(${t('common.you')||'you'})</span>`:''}</td>
+    const escAttr=s=>String(s||'').replace(/'/g,"\\'");
+    const actionsCell = a => {
+      if(a._isPrimary||isMe(a)) return '<span style="font-size:11px;color:var(--text3)">—</span>';
+      if(a._isInvitation){
+        return `<div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="resendCoAdminInvite('${a.id}','${escAttr(a.email)}','')">📧 ${t('coAdmin.resendInvite')||'Resend'}</button>
+          <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="cancelInvitation('${a._invitationId}','${escAttr(a.email)}')">${t('coAdmin.cancelInvite')||'Cancel'}</button>
+        </div>`;
+      }
+      return `<div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="deleteCoAdmin('${a.id}','${escAttr(a.name)}')">${t('common.delete')||'Delete'}</button>
+      </div>`;
+    };
+    const actionsCellMobile = a => {
+      if(a._isPrimary||isMe(a)) return '';
+      if(a._isInvitation){
+        return `<div class="mc-actions">
+          <button class="btn-secondary" style="font-size:12px" onclick="resendCoAdminInvite('${a.id}','${escAttr(a.email)}','')">📧 ${t('coAdmin.resendInvite')||'Resend'}</button>
+          <button class="btn-danger" style="font-size:12px" onclick="cancelInvitation('${a._invitationId}','${escAttr(a.email)}')">${t('coAdmin.cancelInvite')||'Cancel'}</button>
+        </div>`;
+      }
+      return `<div class="mc-actions">
+        <button class="btn-secondary" style="font-size:12px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
+        <button class="btn-danger" style="font-size:12px" onclick="deleteCoAdmin('${a.id}','${escAttr(a.name)}')">${t('common.delete')||'Delete'}</button>
+      </div>`;
+    };
+    tbody.innerHTML=allRows.map(a=>`<tr>
+      <td style="font-weight:500${a._isInvitation?';color:var(--text2);font-style:italic':''}">${a.name}${isMe(a)?` <span style="font-size:10px;color:var(--text3)">(${t('common.you')||'you'})</span>`:''}</td>
       <td style="font-size:13px">${a.email}</td>
       <td><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></td>
       <td><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></td>
-      <td>${(a._isPrimary||isMe(a))?'<span style="font-size:11px;color:var(--text3)">—</span>':`<div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${a.status==='pending_invite'?`<button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="resendCoAdminInvite('${a.id}','${a.email}','${a.name.replace(/'/g,"\\'")}')">📧 ${t('coAdmin.resendInvite')||'Resend'}</button>`:''}
-        <button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
-        <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="deleteCoAdmin('${a.id}','${a.name.replace(/'/g,"\\'")}')">Delete</button>
-      </div>`}</td>
+      <td>${actionsCell(a)}</td>
     </tr>`).join('');
-    if(cards) cards.innerHTML=coAdmins.map(a=>`
+    if(cards) cards.innerHTML=allRows.map(a=>`
       <div class="mobile-card-row">
-        <div class="mc-name"><span>${a.name}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
+        <div class="mc-name"><span${a._isInvitation?' style="color:var(--text2);font-style:italic"':''}>${a.name}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
         <div class="mc-row"><span>Email</span><span style="font-size:12px">${a.email}</span></div>
         <div class="mc-row"><span>Role</span><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></div>
-        ${(!a._isPrimary&&!isMe(a))?`<div class="mc-actions">
-          <button class="btn-secondary" style="font-size:12px" onclick="openEditCoAdminModal('${a.id}')">${t('common.edit')}</button>
-          <button class="btn-danger" style="font-size:12px" onclick="deleteCoAdmin('${a.id}','${a.name.replace(/'/g,"\'")}')">Delete</button>
-        </div>`:''}
+        ${actionsCellMobile(a)}
       </div>`).join('');
   }catch(e){tbody.innerHTML=`<tr><td colspan="5" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
 }
@@ -6150,21 +6105,48 @@ async function deleteCoAdmin(id,name){
 async function resendCoAdminInvite(id, email, name) {
   try {
     const sess = Sess.get();
-    const loginUrl = `${window.location.origin}${window.location.pathname}`;
+    if(!id || !id.startsWith('_inv_')){
+      showToast('This invitation has already been accepted or is no longer pending.','error');
+      return;
+    }
+    const invId = id.slice(5);
+    const rows = await DB.all('invitations', `id=eq.${invId}&select=token,role,company_id,status,expires_at`);
+    const inv = rows?.[0];
+    if(!inv || inv.status !== 'pending'){
+      showToast('Invitation not found or no longer pending.','error');
+      await loadCoAdmins();
+      return;
+    }
+    if(new Date(inv.expires_at) < new Date()){
+      showToast('This invitation has expired. Cancel it and send a new one.','error');
+      return;
+    }
+    const coRows = await DB.all('companies', `id=eq.${inv.company_id}&select=name`);
+    const coName = coRows?.[0]?.name || '';
     await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body: JSON.stringify({
-        type: 'co_admin_invite',
-        email, name,
-        adminName: sess?.name || 'Your administrator',
-        loginUrl,
+        email, name: email, type:'invitation',
+        inviterName: sess?.name || sess?.email || 'Your administrator',
+        companyName: coName, role: inv.role, token: inv.token,
       })
     });
     showToast(`✓ ${t('coAdmin.inviteResent')||'Invitation resent to'} ${email}`, 'success');
   } catch(e) {
     showToast('Error: '+e.message, 'error');
   }
+}
+
+async function cancelInvitation(invId, email){
+  if(!invId) return;
+  const msg = (t('coAdmin.cancelConfirm')||'Cancel the invitation sent to')+' '+email+'?';
+  if(!confirm(msg)) return;
+  try{
+    await DB.del('invitations', `id=eq.${invId}`);
+    await loadCoAdmins();
+    showToast(`✓ ${t('coAdmin.cancelled')||'Invitation cancelled.'} (${email})`,'success');
+  }catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
 // ─── END CO-ADMIN MANAGEMENT ──────────────────────────────────────────────
@@ -9519,6 +9501,7 @@ en:{
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
 'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email with login instructions.','coAdmin.inviteNote':'An email invitation will be sent.','coAdmin.inviteNoteTemp':'The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.','coAdmin.tempPass':'Temporary Password','coAdmin.tempPassHint':'(share this privately with the invitee)','coAdmin.tempPassRequired':'Please set a temporary password (min 6 characters).','coAdmin.accountActivated':'Account activated! Welcome to PunchClock Pro. 🎉','login.rememberMe':'Stay logged in','coAdmin.fullName':'Full Name','coAdmin.roleLabel':'Role',
 'coAdmin.pendingInvite':'Pending Invite','coAdmin.resendInvite':'Resend Invite','coAdmin.inviteResent':'Invitation resent to',
+'coAdmin.cancelInvite':'Cancel','coAdmin.cancelConfirm':'Cancel the invitation sent to','coAdmin.cancelled':'Invitation cancelled.','coAdmin.pendingInviteeName':'(Pending — name set on accept)',
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
 'companies.empty':'No companies yet. Create your first one!',
 'modal.newCompany':'New Company','modal.editCompany':'Edit Company',
@@ -10096,6 +10079,7 @@ fr:{
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
 'coAdmin.sendInvite':'Envoyer l\'invitation','coAdmin.inviteSent':'Invitation envoyée! Il recevra un courriel pour configurer son compte.',
 'coAdmin.pendingInvite':'Invitation en attente','coAdmin.resendInvite':'Renvoyer','coAdmin.inviteResent':'Invitation renvoyée à',
+'coAdmin.cancelInvite':'Annuler','coAdmin.cancelConfirm':"Annuler l'invitation envoyée à",'coAdmin.cancelled':'Invitation annulée.','coAdmin.pendingInviteeName':"(En attente — le nom sera défini à l'acceptation)",
 'coAdmin.myCoAdmins':'Mes co-admins','coAdmin.noCoAdmins':'Aucun co-admin pour l\'instant. Invitez quelqu\'un pour commencer.',
 'companies.empty':'Aucune compagnie. Créez-en une première!',
 'modal.newCompany':'Nouvelle compagnie','modal.editCompany':'Modifier la compagnie',
