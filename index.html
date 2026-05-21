@@ -2725,19 +2725,6 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskShortcutSubtitle">Save a shortcut to this site's clock-in page. Employees can open it directly — no admin login needed.</p>
 
-    <!-- Install as App button (shown when PWA install is available) -->
-    <div id="kioskInstallSection" style="display:none;margin-bottom:16px">
-      <button id="kioskInstallBtn" class="btn-primary" style="width:100%;padding:13px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="triggerPWAInstall()">
-        <span style="font-size:18px">💾</span> <span id="kioskInstallBtnLabel">Install PunchClock App on This Device</span>
-      </button>
-      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px" id="kioskInstallNote">Installs a desktop app icon that opens directly to this site's punch page.</p>
-      <div style="display:flex;align-items:center;gap:10px;margin:12px 0">
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:11px;color:var(--text3)">or save manually</span>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-      </div>
-    </div>
-
     <!-- Kiosk URL -->
     <div style="margin-bottom:4px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Kiosk URL</div>
     <div class="kiosk-url-box" id="kioskUrlDisplay" onclick="copyKioskUrl()" title="Click to copy"></div>
@@ -3541,6 +3528,8 @@ function updateContextPill(){
 // NAVIGATE
 // ═══════════════════════════════════════════════════
 function navigate(page){
+  // Kiosk sessions are locked to the punch page; allow login/landing so logout still works
+  if(window._kioskUrlMode && !['punch','login','landing'].includes(page)) return;
   // Redirect legacy 'companies' references to the new sites page
   if(page==='companies'){navigate('sites');return;}
   const adminPages=['admin','reports','sites','activity','schedule'];
@@ -5264,7 +5253,10 @@ async function executePunch(empId,type){
 
     // ── Geofence check ─────────────────────────────────────────────────────
     let geoResult = {ok:true, status:'skipped', distance:null, lat:null, lng:null, accuracy:null};
-    if(site?.geo_lat && site?.geo_lng){
+    if(window._kioskUrlMode){
+      // Kiosk URL sessions bypass geofence — the device is a fixed terminal at the site
+      geoResult.status = 'kiosk';
+    } else if(site?.geo_lat && site?.geo_lng){
       // Show "checking location" feedback while GPS resolves
       showPunchMsg(`📍 ${t('geo.checking')||'Checking your location...'}`, 'success');
       geoResult = await checkGeofence(site);
@@ -8149,18 +8141,6 @@ function openKioskShortcut(siteId){
   const kioskUrl = getKioskUrl(siteId);
   document.getElementById('kioskUrlDisplay').textContent = kioskUrl;
 
-  // PWA install button
-  const installSection = document.getElementById('kioskInstallSection');
-  installSection.style.display = _pwaInstallPrompt ? '' : 'none';
-  if(_pwaInstallPrompt){
-    document.getElementById('kioskInstallBtnLabel').textContent =
-      isFr ? 'Installer l\'app PunchClock sur cet appareil' : 'Install PunchClock App on This Device';
-    document.getElementById('kioskInstallNote').textContent =
-      isFr
-        ? `Installe une icône sur le bureau qui ouvre directement la page de pointage de ${site.name}.`
-        : `Installs a desktop icon that opens directly to ${site.name}'s punch page.`;
-  }
-
   // Device token section — show only if site requires it
   const deviceSection = document.getElementById('kioskDeviceSection');
   const deviceStatus = document.getElementById('kioskDeviceStatus');
@@ -8282,8 +8262,9 @@ async function init(){
   // If a kiosk URL is detected, bypass everything and go straight to punch mode
   const kioskSiteId = new URLSearchParams(window.location.search).get('kiosk');
   if(kioskSiteId){
-    // Clean the URL so it doesn't linger
-    window.history.replaceState({},'',window.location.pathname);
+    // Keep ?kiosk= in the URL so "Add to Home Screen" saves the kiosk URL.
+    // The site ID is a UUID — acceptable as a semi-secret kiosk credential.
+    window._kioskUrlMode = true;
     document.getElementById('loadingOverlay').classList.remove('hidden');
     try{
       // Step 1: fetch the site to learn which company owns it
