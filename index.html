@@ -341,6 +341,10 @@ th.sort-th:hover{color:var(--text);}
 .tabs{display:flex;gap:3px;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:22px;width:fit-content;}
 .tab{padding:7px 16px;border:none;border-radius:7px;background:none;color:var(--text2);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
 .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+/* Tabs hidden until role is resolved — prevents flash for managers */
+.tab[data-admin-only]{display:none;}
+body.role-resolved.role-admin .tab[data-admin-only]{display:inline-flex;}
+body.role-resolved.role-admin [data-admin-only]{display:block;}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
@@ -1667,7 +1671,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="tabs">
     <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
     <button class="tab" onclick="adminTab('sites',this)" data-i18n="admin.tabs.sites">Sites</button>
-    <button class="tab" onclick="adminTab('admins',this)" data-i18n="admin.tabs.admins">Admins</button>
+    <button class="tab" data-admin-only onclick="adminTab('admins',this)" data-i18n="admin.tabs.admins">Admins</button>
   </div>
   <!-- EMPLOYEES TAB -->
   <div id="tab-employees">
@@ -1714,12 +1718,12 @@ border-top:1px solid var(--border);margin:18px 0;}
   <!-- SITES TAB -->
   <div id="tab-sites" style="display:none">
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddSiteModal()" data-i18n="admin.addSite">+ Add Site</button>
+      <button class="btn-primary" data-admin-only style="width:auto;padding:9px 18px" onclick="openAddSiteModal()" data-i18n="admin.addSite">+ Add Site</button>
     </div>
     <div class="site-list" id="siteListAdmin"></div>
   </div>
   <!-- ADMINS TAB (Super Admin only) -->
-  <div id="tab-admins" style="display:none">
+  <div id="tab-admins" data-admin-only style="display:none">
     <div id="superAdminPanel">
       <div id="joinRequestsSection" style="display:none;margin-bottom:24px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -3728,6 +3732,12 @@ function getCompanyPlanForCurrentAdmin(co) {
 // AUTH — updateNav, login, register, verify, logout
 // ═══════════════════════════════════════════════════
 function updateNav(){
+  // Mark resolved role on body so role-gated UI can show/hide cleanly
+  const sess = Sess.get();
+  document.body.classList.add('role-resolved');
+  document.body.classList.toggle('role-admin', !!sess && !isManager());
+  document.body.classList.toggle('role-manager', !!sess && isManager());
+
   const ok=isLoggedIn();
   const isKiosk=!!Ctx.get();
   const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
@@ -4249,7 +4259,7 @@ async function doVerify(){
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
-function logout(){Sess.clear();Ctx.clear();updateNav();showLanding();}
+function logout(){Sess.clear();Ctx.clear();document.body.classList.remove('role-admin','role-manager');updateNav();showLanding();}
 
 function kioskMode(){
   // Log out admin but keep Ctx (company+site) so punch page stays active
@@ -5494,13 +5504,19 @@ async function loadAdminPage(){
   if(isManager()){
     const mgRows=await DB.all('manager_sites',`manager_id=eq.${sess.id}`);
     managerSiteIds=(mgRows||[]).map(r=>r.site_id);
+    // Admins tab + panel handled by CSS via [data-admin-only]; no inline display work needed.
+    // Default to Employees tab on entry so it doesn't matter where they last were.
     const tabBtns=document.querySelectorAll('#page-admin .tabs .tab');
-    tabBtns.forEach((btn,i)=>btn.style.display=i===0?'':'none');
-    ['employees','sites','admins'].forEach(t=>document.getElementById('tab-'+t).style.display=t==='employees'?'':'none');
+    tabBtns.forEach(b=>b.classList.remove('active'));
     tabBtns[0].classList.add('active');
+    ['employees','sites','admins'].forEach(t=>{
+      const el=document.getElementById('tab-'+t);
+      if(el) el.style.display = (t==='employees') ? '' : 'none';
+    });
   }else{
     managerSiteIds=null;
-    document.querySelectorAll('#page-admin .tabs .tab').forEach(btn=>btn.style.display='');
+    // Inline display reset (CSS class handles admin-only tabs separately)
+    document.querySelectorAll('#page-admin .tabs .tab').forEach(btn=>btn.style.removeProperty('display'));
   }
   populateEmpSiteFilter();
   renderEmployees();
@@ -5735,7 +5751,12 @@ function renderEmployees(){
 
 async function renderSitesAdmin(){
   const ctx=Ctx.get();
-  const sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
+  let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
+  // Manager: scope to assigned sites only
+  if(managerSiteIds!==null){
+    sites = sites.filter(s => managerSiteIds.includes(s.id));
+  }
+  const _isMgr = isManager();
   const list=document.getElementById('siteListAdmin');
   if(!sites.length){list.innerHTML=`<div class="empty"><p>${t('site.noSites')||'No sites yet for this company. Click "+ Add Site" to create one.'}</p></div>`;return;}
 
@@ -5765,13 +5786,13 @@ async function renderSitesAdmin(){
         <div class="site-meta">${co?co.name+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+s.description:''}</div>
         <div id="siteMgrPills_${s.id}" style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
           ${mgrPills}
-          <button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${s.id}')">${t('site.editManagers')||'Edit Managers'}</button>
+          ${_isMgr?'':`<button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${s.id}')">${t('site.editManagers')||'Edit Managers'}</button>`}
         </div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
         <button class="btn-primary" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">📲 ${t('site.kioskShortcut')||'Kiosk Shortcut'}</button>
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
-        <button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name.replace(/'/g,"\\'")}')"> ${t('common.delete')}</button>
+        ${_isMgr?'':`<button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name.replace(/'/g,"\\'")}')"> ${t('common.delete')}</button>`}
       </div>
     </div>`;
   }).join('');
