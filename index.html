@@ -1516,7 +1516,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <!-- ═══════════════ ACCEPT INVITE ═══════════════ -->
-<div class="page" id="page-accept-invite" style="display:none">
+<div class="page" id="page-accept-invite">
   <div class="form-card" style="margin-top:50px;max-width:440px">
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:22px;font-weight:700;color:var(--accent)">⏱ PunchClock Pro</div>
@@ -3966,8 +3966,8 @@ async function doSetInvitePassword(){
 // ═══════════════════════════════════════════════════
 function showAcceptInvitePage(inv, co){
   pendingInvitation=inv;
-  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
-  document.getElementById('page-accept-invite').style.display='';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-accept-invite').classList.add('active');
   const roleLabelEn=inv.role==='manager'?'Manager':'Co-Admin';
   document.getElementById('acceptInviteTitle').textContent=`Join ${co?.name||'your company'} on PunchClock Pro`;
   document.getElementById('acceptInviteSubtitle').textContent=`You've been invited as a ${roleLabelEn}. Set up your account below.`;
