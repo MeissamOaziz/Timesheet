@@ -2743,6 +2743,13 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
 
+    <!-- Clear saved kiosk binding on THIS device -->
+    <div id="kioskClearSection" style="display:none;margin-bottom:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:14px 16px">
+      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px">⚙️ <span id="kioskClearTitle">This device is set up as a kiosk</span></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5" id="kioskClearDesc">Opening punchclock.ca on this device will go directly to the punch page. Click below to remove this setup.</p>
+      <button class="btn-danger" style="width:100%;padding:8px;font-size:12px" onclick="clearKioskDevice()" id="kioskClearBtn">✕ Remove kiosk setup from this device</button>
+    </div>
+
     <!-- OS-specific instructions -->
     <div style="background:var(--surface2);border-radius:12px;padding:14px 16px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">📖 How to save as a desktop shortcut:</div>
@@ -8133,10 +8140,10 @@ function openKioskShortcut(siteId){
 
   document.getElementById('kioskShortcutTitle').textContent =
     isFr ? `Raccourci kiosque — ${site.name}` : `Kiosk Shortcut — ${site.name}`;
-  document.getElementById('kioskShortcutSubtitle').textContent =
+  document.getElementById('kioskShortcutSubtitle').innerHTML =
     isFr
-      ? `Enregistrez un raccourci vers la page de pointage de ${site.name}. Les employés peuvent l'ouvrir directement, sans connexion admin.`
-      : `Save a shortcut to the ${site.name} punch page. Employees open it directly — no admin login needed.`;
+      ? `<strong>Une seule fois :</strong> Sur l'appareil du kiosque, ouvrez l'URL ci-dessous. L'appareil se souviendra de ${site.name} pour toutes les visites futures — même un favori vers punchclock.ca ouvrira directement la page de pointage.`
+      : `<strong>One time only:</strong> On the kiosk device, open the URL below. The device will remember ${site.name} for all future visits — even a bookmark to plain punchclock.ca will open the punch page directly.`;
 
   const kioskUrl = getKioskUrl(siteId);
   document.getElementById('kioskUrlDisplay').textContent = kioskUrl;
@@ -8169,6 +8176,30 @@ function openKioskShortcut(siteId){
   window._currentKioskSite = site.name;
   window._currentKioskSiteId = siteId;
 
+  // Show "remove kiosk setup" section if this device is currently bound to any site
+  try {
+    const boundSiteId = localStorage.getItem('pc_kiosk_device');
+    const clearSection = document.getElementById('kioskClearSection');
+    if(clearSection){
+      if(boundSiteId){
+        clearSection.style.display = '';
+        const boundSite = C.sites.find(s => s.id === boundSiteId);
+        const boundName = boundSite ? boundSite.name : boundSiteId;
+        document.getElementById('kioskClearTitle').textContent =
+          isFr ? `Cet appareil est configuré comme kiosque pour : ${boundName}` :
+                 `This device is set up as a kiosk for: ${boundName}`;
+        document.getElementById('kioskClearDesc').textContent =
+          isFr ? `Ouvrir punchclock.ca sur cet appareil ira directement à la page de pointage de ${boundName}. Cliquez ci-dessous pour retirer ce réglage.` :
+                 `Opening punchclock.ca on this device will go directly to ${boundName}'s punch page. Click below to remove this setup.`;
+        document.getElementById('kioskClearBtn').textContent =
+          isFr ? '✕ Retirer le réglage kiosque de cet appareil' :
+                 '✕ Remove kiosk setup from this device';
+      } else {
+        clearSection.style.display = 'none';
+      }
+    }
+  } catch(_){}
+
   openModal('kioskShortcutModal');
 }
 
@@ -8188,6 +8219,22 @@ function revokeThisDevice(){
   revokeDeviceToken(siteId);
   showToast('Device registration removed.','info');
   openKioskShortcut(siteId);
+}
+
+function clearKioskDevice(){
+  try {
+    localStorage.removeItem('pc_kiosk_device');
+    showToast(
+      (_appLang==='fr')
+        ? '✓ Réglage kiosque retiré. Cet appareil ne sera plus dirigé automatiquement vers la page de pointage.'
+        : '✓ Kiosk setup removed. This device will no longer go directly to the punch page.',
+      'success'
+    );
+    const siteId = window._currentKioskSiteId;
+    if(siteId) openKioskShortcut(siteId);
+  } catch(e){
+    showToast('Error: '+e.message, 'error');
+  }
 }
 
 function copyKioskUrl(){
@@ -8258,13 +8305,23 @@ async function init(){
   document.getElementById('actEnd').value=today.toLocaleDateString('en-CA');
   document.getElementById('actStart').value=new Date(today-6*86400000).toLocaleDateString('en-CA');
 
-  // ── KIOSK URL HANDLER (?kiosk=SITE_ID) ──
-  // If a kiosk URL is detected, bypass everything and go straight to punch mode
-  const kioskSiteId = new URLSearchParams(window.location.search).get('kiosk');
+  // ── KIOSK URL HANDLER (?kiosk=SITE_ID or saved device binding) ──
+  // URL param takes priority so visiting a new kiosk URL re-binds the device.
+  // If no URL param, fall back to the site saved in localStorage by a prior visit.
+  let kioskSiteId = new URLSearchParams(window.location.search).get('kiosk');
+  let kioskFromStorage = false;
+  if(!kioskSiteId){
+    try { kioskSiteId = localStorage.getItem('pc_kiosk_device') || null; } catch(_){}
+    if(kioskSiteId) kioskFromStorage = true;
+  }
   if(kioskSiteId){
-    // Keep ?kiosk= in the URL so "Add to Home Screen" saves the kiosk URL.
+    // Keep ?kiosk= in the URL so "Add to Home Screen" saves the correct kiosk URL.
     // The site ID is a UUID — acceptable as a semi-secret kiosk credential.
     window._kioskUrlMode = true;
+    // Persist so opening bare punchclock.ca on this device returns here in future sessions.
+    if(!kioskFromStorage){
+      try { localStorage.setItem('pc_kiosk_device', kioskSiteId); } catch(_){}
+    }
     document.getElementById('loadingOverlay').classList.remove('hidden');
     try{
       // Step 1: fetch the site to learn which company owns it
