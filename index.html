@@ -2036,6 +2036,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="filter-bar" style="margin-bottom:16px">
     <div><label data-i18n="common.company">Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
     <div><label data-i18n="admin.site">Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
+    <div><label data-i18n="activity.employeeFilter">Employee</label><select id="actEmpFilter" onchange="loadActivityPage()"><option value="all" data-i18n="common.allEmployees">All Employees</option></select></div>
     <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="actStart"></div>
     <div><label data-i18n="common.endDate">End Date</label><input type="date" id="actEnd"></div>
     <div style="display:flex;align-items:flex-end">
@@ -2043,8 +2044,19 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
   </div>
   <div class="stats-grid" id="activityStats"></div>
+  <div id="actBulkBar" style="display:none;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.3);border-radius:10px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-weight:600;font-size:13px" id="actBulkCount">0 selected</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-secondary" style="padding:6px 14px;font-size:12px" onclick="openBulkReassignSite()" data-i18n="activity.bulkReassign">Reassign Site…</button>
+      <button class="btn-danger" style="padding:6px 14px;font-size:12px" onclick="bulkDeletePunches()" data-i18n="activity.bulkDelete">Delete Selected</button>
+      <button class="btn-secondary" style="padding:6px 14px;font-size:12px" onclick="clearActivitySelection()" data-i18n="activity.bulkClear">Clear</button>
+    </div>
+  </div>
   <div class="table-wrap"><table>
-    <thead><tr><th data-i18n="activity.employee">Employee</th><th data-i18n="activity.companySite">Company / Site</th><th data-i18n="activity.type">Type</th><th data-i18n="activity.date">Date</th><th data-i18n="activity.time">Time</th><th data-i18n="activity.actions">Actions</th></tr></thead>
+    <thead><tr>
+      <th style="width:36px"><input type="checkbox" id="actSelectAll" onclick="toggleSelectAllActivity(this)" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer" title="Select all visible"></th>
+      <th data-i18n="activity.employee">Employee</th><th data-i18n="activity.companySite">Company / Site</th><th data-i18n="activity.type">Type</th><th data-i18n="activity.date">Date</th><th data-i18n="activity.time">Time</th><th data-i18n="activity.actions">Actions</th>
+    </tr></thead>
     <tbody id="activityBody"></tbody>
   </table></div>
 </div>
@@ -2716,6 +2728,26 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </div>
 
+<!-- BULK REASSIGN SITE MODAL -->
+<div class="modal-overlay" id="bulkReassignSiteModal">
+  <div class="modal">
+    <h3 data-i18n="activity.bulkReassignTitle">Reassign Site</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+      <span data-i18n="activity.bulkReassignDesc">Move the selected punches to a different site.</span>
+      <strong> <span id="bulkReassignCount">0</span> </strong>
+      <span data-i18n="activity.bulkReassignDescTail">punches will be updated.</span>
+    </p>
+    <div class="form-group">
+      <label data-i18n="admin.site">Site</label>
+      <select id="bulkReassignSiteSelect"></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('bulkReassignSiteModal')" data-i18n="common.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="confirmBulkReassignSite()" data-i18n="activity.bulkReassignConfirm">Reassign</button>
+    </div>
+  </div>
+</div>
+
 <!-- KIOSK SHORTCUT MODAL -->
 <div class="modal-overlay" id="kioskShortcutModal" style="z-index:9700">
   <div class="modal" style="max-width:500px">
@@ -3327,6 +3359,7 @@ let reportData=[];
 let pendingVerify=null;
 let pinState={empId:null,punchType:null,entered:''};
 const _punchInFlight = new Set();
+const _actSelectedIds = new Set();
 
 // ═══════════════════════════════════════════════════
 // CLOCK
@@ -7662,6 +7695,7 @@ async function loadActivityPage(){
   await ensureManagerSiteIds();
   const coId=document.getElementById('actCoFilter').value;
   const siteId=document.getElementById('actSiteFilter').value;
+  const empId=document.getElementById('actEmpFilter').value;
   const startDate=document.getElementById('actStart').value;
   const endDate=document.getElementById('actEnd').value;
 
@@ -7672,6 +7706,17 @@ async function loadActivityPage(){
     if(managerSiteIds!==null)_actCos=_actCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
     acf.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_actCos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   }
+
+  // Rebuild employee dropdown scoped to current company + manager site scope
+  const aef=document.getElementById('actEmpFilter');
+  const prevEmp=aef.value;
+  let _actEmps=C.employees;
+  if(coId!=='all')_actEmps=_actEmps.filter(e=>e.company_id===coId);
+  if(managerSiteIds!==null)_actEmps=_actEmps.filter(e=>managerSiteIds.includes(e.site_id));
+  _actEmps=_actEmps.filter(e=>e.active).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  aef.innerHTML=`<option value="all">${t('common.allEmployees')||'All Employees'}</option>`+
+    _actEmps.map(e=>`<option value="${e.id}"${e.id===prevEmp?' selected':''}>${e.name}</option>`).join('');
+
   const opts={};
   if(coId!=='all')opts.coId=coId;
   if(siteId!=='all')opts.siteId=siteId;
@@ -7686,6 +7731,7 @@ async function loadActivityPage(){
   const _actCoIds=new Set(C.companies.map(c=>c.id));
   let all=isSuperAdmin()?C.punches:C.punches.filter(p=>_actCoIds.has(p.company_id));
   if(managerSiteIds!==null)all=all.filter(p=>managerSiteIds.includes(p.site_id));
+  if(empId!=='all')all=all.filter(p=>p.emp_id===empId);
   const today=new Date().toLocaleDateString('en-CA');
   const todayN=all.filter(p=>p.punch_date===today).length;
   const scopeEmps=(coId==='all'?C.employees:C.employees.filter(e=>e.company_id===coId)).filter(e=>e.active);
@@ -7702,13 +7748,20 @@ async function loadActivityPage(){
 
   const tbody=document.getElementById('activityBody');
   const show=[...all].sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
-  if(!show.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:36px">No punch records found for the selected filters.</td></tr>`;return;}
+  // Reset bulk selection on each reload — selections from a previous filter state are stale
+  _actSelectedIds.clear();
+  const _actSelectAllCb=document.getElementById('actSelectAll');
+  if(_actSelectAllCb)_actSelectAllCb.checked=false;
+  updateActBulkBar();
+
+  if(!show.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:36px">No punch records found for the selected filters.</td></tr>`;return;}
   tbody.innerHTML=show.map(p=>{
     const pco=C.companies.find(c=>c.id===p.company_id);
     const emp=C.employees.find(e=>e.id===p.emp_id);
     const site=C.sites.find(s=>s.id===p.site_id);
     const coSite=[pco?.name,site?.name].filter(Boolean).join(' · ');
     return`<tr class="${p.is_manual?'edited-row':''}">
+      <td><input type="checkbox" class="act-row-check" data-punch-id="${p.id}" onclick="onActivityRowCheckChange()" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer"></td>
       <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}</td>
       <td style="font-size:12px">${coSite||'—'}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type==="IN"?t("punch.in").replace("✓ ",""):t("punch.out").replace("✕ ","")}</span></td>
@@ -7724,6 +7777,130 @@ async function loadActivityPage(){
   }).join('');
 }
 
+// ── Activity bulk selection ────────────────────────────────────────────────
+
+function toggleSelectAllActivity(masterCb){
+  const checks=document.querySelectorAll('.act-row-check');
+  checks.forEach(c=>{
+    c.checked=masterCb.checked;
+    const id=c.dataset.punchId;
+    if(masterCb.checked)_actSelectedIds.add(id); else _actSelectedIds.delete(id);
+  });
+  updateActBulkBar();
+}
+
+function onActivityRowCheckChange(){
+  const checks=document.querySelectorAll('.act-row-check');
+  _actSelectedIds.clear();
+  checks.forEach(c=>{if(c.checked)_actSelectedIds.add(c.dataset.punchId);});
+  const master=document.getElementById('actSelectAll');
+  if(master)master.checked=checks.length>0&&_actSelectedIds.size===checks.length;
+  updateActBulkBar();
+}
+
+function updateActBulkBar(){
+  const bar=document.getElementById('actBulkBar');
+  const countEl=document.getElementById('actBulkCount');
+  if(!bar||!countEl)return;
+  if(_actSelectedIds.size===0){
+    bar.style.display='none';
+  } else {
+    bar.style.display='flex';
+    const isFr=(_appLang==='fr');
+    countEl.textContent=_actSelectedIds.size+(isFr
+      ?` pointage${_actSelectedIds.size>1?'s':''} sélectionné${_actSelectedIds.size>1?'s':''}`
+      :` punch${_actSelectedIds.size>1?'es':''} selected`);
+  }
+}
+
+function clearActivitySelection(){
+  _actSelectedIds.clear();
+  document.querySelectorAll('.act-row-check').forEach(c=>c.checked=false);
+  const master=document.getElementById('actSelectAll');
+  if(master)master.checked=false;
+  updateActBulkBar();
+}
+
+async function bulkDeletePunches(){
+  const isFr=(_appLang==='fr');
+  const ids=[..._actSelectedIds];
+  if(ids.length===0)return;
+  // Manager scope guard — filter to only punches at assigned sites
+  if(managerSiteIds!==null){
+    const allowed=new Set(C.punches.filter(p=>managerSiteIds.includes(p.site_id)).map(p=>p.id));
+    const filtered=ids.filter(i=>allowed.has(i));
+    if(filtered.length!==ids.length){
+      showToast('Some selected punches are outside your assigned sites and were skipped.','error');
+    }
+    if(filtered.length===0)return;
+    ids.length=0;filtered.forEach(i=>ids.push(i));
+  }
+  const msg=isFr
+    ?`Supprimer ${ids.length} pointage${ids.length>1?'s':''} ? Cette action est irréversible.`
+    :`Delete ${ids.length} punch${ids.length>1?'es':''}? This cannot be undone.`;
+  if(!confirm(msg))return;
+  try {
+    await DB.del('punches',`id=in.(${ids.join(',')})`) ;
+    _actSelectedIds.clear();
+    showToast(
+      isFr?`✓ ${ids.length} pointage${ids.length>1?'s':''} supprimé${ids.length>1?'s':''}.`
+          :`✓ ${ids.length} punch${ids.length>1?'es':''} deleted.`,
+      'success'
+    );
+    await loadActivityPage();
+  } catch(e){
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+function openBulkReassignSite(){
+  if(_actSelectedIds.size===0)return;
+  const selPunches=C.punches.filter(p=>_actSelectedIds.has(p.id));
+  const _coIds=new Set(selPunches.map(p=>p.company_id).filter(Boolean));
+  let sites=C.sites.filter(s=>_coIds.size===0||_coIds.has(s.company_id));
+  if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
+  if(sites.length===0){showToast('No sites available for reassignment.','error');return;}
+  const sel=document.getElementById('bulkReassignSiteSelect');
+  sel.innerHTML=sites.map(s=>{
+    const co=C.companies.find(c=>c.id===s.company_id);
+    return`<option value="${s.id}">${s.name}${co?' — '+co.name:''}</option>`;
+  }).join('');
+  document.getElementById('bulkReassignCount').textContent=_actSelectedIds.size;
+  openModal('bulkReassignSiteModal');
+}
+
+async function confirmBulkReassignSite(){
+  const newSiteId=document.getElementById('bulkReassignSiteSelect').value;
+  if(!newSiteId)return;
+  const site=C.sites.find(s=>s.id===newSiteId);
+  if(!site)return;
+  const ids=[..._actSelectedIds];
+  // Manager scope guard
+  if(managerSiteIds!==null){
+    const allowed=new Set(C.punches.filter(p=>managerSiteIds.includes(p.site_id)).map(p=>p.id));
+    const filtered=ids.filter(i=>allowed.has(i));
+    if(filtered.length!==ids.length){
+      showToast('Some selected punches are outside your assigned sites and were skipped.','error');
+    }
+    if(filtered.length===0)return;
+    ids.length=0;filtered.forEach(i=>ids.push(i));
+  }
+  try {
+    await DB.update('punches',`id=in.(${ids.join(',')})`,{site_id:site.id,site_name:site.name});
+    closeModal('bulkReassignSiteModal');
+    _actSelectedIds.clear();
+    const isFr=(_appLang==='fr');
+    showToast(
+      isFr?`✓ ${ids.length} pointage${ids.length>1?'s':''} réassigné${ids.length>1?'s':''} à ${site.name}.`
+          :`✓ ${ids.length} punch${ids.length>1?'es':''} reassigned to ${site.name}.`,
+      'success'
+    );
+    await loadActivityPage();
+  } catch(e){
+    showToast('Error: '+e.message,'error');
+  }
+}
+
 function updateActSiteFilter(coId){
   const asf=document.getElementById('actSiteFilter');
   const prev=asf.value;
@@ -7734,12 +7911,31 @@ function updateActSiteFilter(coId){
 
 function onActCoChange(){
   updateActSiteFilter(document.getElementById('actCoFilter').value);
+  // Reset employee filter — different company means different employee list
+  const aef=document.getElementById('actEmpFilter');
+  if(aef)aef.value='all';
   loadActivityPage();
 }
 
 // ---- Edit punch ----
-function openEditPunch(id){
-  const p=C.punches.find(p=>p.id===id);if(!p)return;
+async function openEditPunch(id){
+  let p=C.punches.find(p=>p.id===id);
+  if(!p){
+    // Stale cache — try to refetch this one punch directly
+    try {
+      const rows=await DB.all('punches',`id=eq.${id}&limit=1`);
+      if(rows&&rows.length) p=rows[0];
+    } catch(e){ /* network/auth error — show toast below */ }
+  }
+  if(!p){
+    showToast(
+      (_appLang==='fr')
+        ? "Impossible de charger ce pointage. Votre session est peut-être expirée — actualisez la page ou reconnectez-vous."
+        : "Couldn't load this punch. Your session may have expired — refresh the page or sign in again.",
+      'error'
+    );
+    return;
+  }
   document.getElementById('editPunchTitle').textContent='Edit Punch — '+p.emp_name;
   document.getElementById('editPunchEmpName').value=p.emp_name;
   document.getElementById('editPunchType').value=p.type;
@@ -9411,6 +9607,9 @@ en:{
 'activity.currentlyIn':'Currently In','activity.manualEntries':'Manual Entries',
 'activity.employee':'EMPLOYEE','activity.companySite':'COMPANY / SITE',
 'activity.type':'TYPE','activity.date':'DATE','activity.time':'TIME','activity.actions':'ACTIONS',
+'activity.employeeFilter':'Employee','common.allEmployees':'All Employees',
+'activity.bulkReassign':'Reassign Site…','activity.bulkDelete':'Delete Selected','activity.bulkClear':'Clear',
+'activity.bulkReassignTitle':'Reassign Site','activity.bulkReassignDesc':'Move the selected punches to a different site.','activity.bulkReassignDescTail':'punches will be updated.','activity.bulkReassignConfirm':'Reassign',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
 'sites.title':'Sites','sites.subtitle':'Manage your work locations','sites.noSites':'No sites yet. Add your first site.',
@@ -9989,6 +10188,9 @@ fr:{
 'activity.currentlyIn':'Actuellement pointés','activity.manualEntries':'Entrées manuelles',
 'activity.employee':'EMPLOYÉ','activity.companySite':'COMPAGNIE / SITE',
 'activity.type':'TYPE','activity.date':'DATE','activity.time':'HEURE','activity.actions':'ACTIONS',
+'activity.employeeFilter':'Employé','common.allEmployees':'Tous les employés',
+'activity.bulkReassign':"Réassigner le site…",'activity.bulkDelete':'Supprimer la sélection','activity.bulkClear':'Effacer',
+'activity.bulkReassignTitle':'Réassigner le site','activity.bulkReassignDesc':"Déplacer les pointages sélectionnés vers un autre site.",'activity.bulkReassignDescTail':"pointages seront mis à jour.",'activity.bulkReassignConfirm':"Réassigner",
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
 'sites.title':'Sites','sites.subtitle':'Gérer vos emplacements','sites.noSites':'Aucun site. Ajoutez votre premier site.',
