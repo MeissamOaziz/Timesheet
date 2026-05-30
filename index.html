@@ -148,6 +148,18 @@
 <link rel="icon" type="image/png" href="/PunchClockPro-Logo.png">
 <style>
 :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.4);}
+:root{
+  /* ── spacing scale (4px base) ── */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;
+  /* ── type scale ── */
+  --t-xs:11px;--t-sm:12px;--t-base:13px;--t-md:14px;--t-lg:16px;--t-xl:20px;--t-2xl:26px;--t-3xl:34px;
+  /* ── radius scale (existing --radius:14px kept as-is) ── */
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-pill:999px;
+  /* ── control heights (inputs & buttons snap to one of three) ── */
+  --h-sm:32px;--h-md:38px;--h-lg:44px;
+  /* ── derived helpers used by later blocks ── */
+  --surface3:#2a2e40;--border2:#3a4060;--accent-soft:rgba(79,142,247,.12);--shadow-lg:0 18px 50px rgba(0,0,0,.55);
+}
 [data-theme="light"]{--bg:#f5f7fa;--surface:#ffffff;--surface2:#f0f2f7;--border:#d1d5e0;--text:#1a1d2e;--text2:#4a5568;--text3:#718096;--shadow:0 4px 16px rgba(15,23,42,0.08);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
