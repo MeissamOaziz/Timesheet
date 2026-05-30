@@ -713,11 +713,16 @@ border-top:1px solid var(--border);margin:18px 0;}
 .holiday-list-date{font-size:12px;font-weight:700;color:var(--amber);}
 .holiday-list-name{font-size:13px;font-weight:600;color:var(--text);}
 .holiday-list-sub{font-size:11px;color:var(--text3);}
-.theme-toggle-btn{padding:3px 9px;border:none;border-radius:20px;background:none;color:var(--text3);font-family:inherit;font-size:14px;cursor:pointer;transition:all .15s;line-height:1;display:inline-flex;align-items:center;justify-content:center}
-.theme-toggle-btn:hover{color:var(--text);background:var(--surface2)}
+.theme-toggle-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+.theme-toggle-btn:hover{color:var(--accent);border-color:var(--accent)}
+.tt-icon{width:17px;height:17px}
 </style>
 <script>(function(){try{var t=localStorage.getItem('pc_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
+</defs></svg>
 <div id="pcToast"></div>
 
 <!-- ═══════ LANDING PAGE ═══════ -->
@@ -746,8 +751,8 @@ border-top:1px solid var(--border);margin:18px 0;}
       <a onclick="document.getElementById('landingContact').scrollIntoView({behavior:'smooth'})" data-i18n="land.contactNav">Contact</a>
       <a onclick="showLegal('tos')" data-i18n="land.terms">Terms</a>
       <a onclick="showLegal('privacy')" data-i18n="land.privacy">Privacy</a>
-      <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme" style="margin-left:4px">☀️</button>
-      <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')"><span class="lang-flag">🇨🇦</span>EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span>FR</button></div>
+      <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme" style="margin-left:4px"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
+      <div class="lang-switcher" style="margin-left:4px"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div>
       <a onclick="hideLanding();navigate('login')" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-left:4px" data-i18n="nav.login">Login</a>
       <a onclick="hideLanding();navigate('register')" style="background:var(--accent);color:#fff;border-radius:8px;margin-left:2px" data-i18n="land.getStarted">Get Started Free</a>
     </div>
@@ -1383,8 +1388,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <button class="btn-secondary" id="supportNavBtn" onclick="showSupportModal()" data-i18n="nav.support" style="font-size:12px;padding:6px 13px;display:none">🎧 Support</button>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
-    <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme">☀️</button>
-    <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇨🇦 EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">🇫🇷 FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+    <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
+    <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
@@ -10666,9 +10671,8 @@ function applyTheme(theme){
   // theme: 'light' or 'dark' (default)
   if(theme==='light'){ document.documentElement.setAttribute('data-theme','light'); }
   else { document.documentElement.removeAttribute('data-theme'); }
-  // Show 🌙 in light mode (click → switch to dark), ☀️ in dark mode (click → switch to light)
-  var icon = theme==='light' ? '🌙' : '☀️';
-  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){ b.textContent = icon; });
+  var ref = theme==='light' ? '#i-moon' : '#i-sun';
+  document.querySelectorAll('[data-theme-toggle] .tt-icon use').forEach(function(u){ u.setAttribute('href',ref); });
 }
 function toggleTheme(){
   var cur = document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark';
