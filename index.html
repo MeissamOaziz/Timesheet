@@ -370,8 +370,10 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 /* FILTER BAR */
 .filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end;}
 .filter-bar label{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
-.filter-bar input,.filter-bar select{width:100%;padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;}
+.filter-bar input,.filter-bar select{width:100%;height:var(--h-md);padding:0 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none;}
 .filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent);}
+.filter-bar .filter-action{display:flex;align-items:flex-end;}
+.filter-bar .filter-action .btn-primary{width:100%;height:var(--h-md);margin-top:0;}
 .emp-list-check{max-height:200px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:7px;}
 .emp-check-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:13px;}
 .emp-check-item:hover{background:rgba(255,255,255,.04);}
@@ -1690,15 +1692,13 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div><label data-i18n="admin.search">Search</label><input type="text" id="empSearch" data-i18n="admin.searchPlaceholder" placeholder="Name, department..." oninput="renderEmployees()"></div>
       <div><label data-i18n="admin.site">Site</label><select id="empSiteFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allSites">All Sites</option></select></div>
       <div><label data-i18n="admin.col.status">Status</label>
-        <select id="empStatusFilter" onchange="renderEmployees()" style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:100%">
+        <select id="empStatusFilter" onchange="renderEmployees()">
           <option value="" data-i18n="admin.allStatuses">All</option>
           <option value="active" data-i18n="admin.active">Active</option>
           <option value="inactive" data-i18n="admin.inactive">Inactive</option>
         </select>
       </div>
-      <div style="display:flex;align-items:flex-end">
-        <select style="padding:8px 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none" id="empDeptFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allDepts">All Depts</option></select>
-      </div>
+      <div><label data-i18n="admin.dept">Department</label><select id="empDeptFilter" onchange="renderEmployees()"><option value="" data-i18n="admin.allDepts">All Depts</option></select></div>
     </div>
     <!-- Bulk action toolbar -->
     <div id="empBulkBar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(79,142,247,.08);border:1.5px solid rgba(79,142,247,.3);border-radius:10px;padding:10px 14px;margin-bottom:10px">
@@ -1988,8 +1988,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="reportStart"></div>
     <div><label data-i18n="common.endDate">End Date</label><input type="date" id="reportEnd"></div>
-    <div style="display:flex;align-items:flex-end">
-      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
+    <div class="filter-action">
+      <button class="btn-primary" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
     </div>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -2050,8 +2050,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><label data-i18n="activity.employeeFilter">Employee</label><select id="actEmpFilter" onchange="loadActivityPage()"><option value="all" data-i18n="common.allEmployees">All Employees</option></select></div>
     <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="actStart"></div>
     <div><label data-i18n="common.endDate">End Date</label><input type="date" id="actEnd"></div>
-    <div style="display:flex;align-items:flex-end">
-      <button class="btn-primary" style="width:auto;padding:9px 18px;margin-top:0" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
+    <div class="filter-action">
+      <button class="btn-primary" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
     </div>
   </div>
   <div class="stats-grid" id="activityStats"></div>
@@ -9590,7 +9590,7 @@ en:{
 'emp.paidPlansHint':'Automated email reports available on paid plans.',
 'admin.addEmployee':'+ Add Employee','admin.tabs.employees':'Employees',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
-'admin.search':'Search','admin.searchPlaceholder':'Name, department...',
+'admin.search':'Search','admin.searchPlaceholder':'Name, department...','admin.dept':'Department',
 'admin.site':'Site','admin.allSites':'All Sites','admin.allDepts':'All Depts',
 'admin.col.employee':'Employee','admin.col.site':'Site','admin.col.dept':'Department',
 'admin.col.code':'Code','admin.col.status':'Status','admin.col.pin':'PIN','admin.col.email':'Email Report',
@@ -10171,7 +10171,7 @@ fr:{
 'emp.paidPlansHint':'Les rapports par courriel sont disponibles sur les plans payants.',
 'admin.addEmployee':'+ Ajouter un employé','admin.tabs.employees':'Employés',
 'admin.tabs.sites':'Sites','admin.tabs.admins':'Admins',
-'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...',
+'admin.search':'Recherche','admin.searchPlaceholder':'Nom, département...','admin.dept':'Département',
 'admin.site':'Site','admin.allSites':'Tous les sites','admin.allDepts':'Tous les depts',
 'admin.col.employee':'Employé','admin.col.site':'Site','admin.col.dept':'Département',
 'admin.col.code':'Code','admin.col.status':'Statut','admin.col.pin':'NIP','admin.col.email':'Rapport courriel',
