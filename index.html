@@ -426,7 +426,8 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
 .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px;transition:all .2s;}
 .feature-card:hover{border-color:var(--accent);transform:translateY(-3px);}
-.feature-icon{font-size:28px;margin-bottom:14px;}
+.feature-icon{margin-bottom:14px;line-height:0;}
+.feature-icon svg{width:30px;height:30px;color:var(--accent);}
 .feature-card h3{font-size:16px;font-weight:600;margin-bottom:7px;}
 .feature-card p{font-size:13px;color:var(--text2);line-height:1.6;}
 .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:stretch;}
@@ -721,6 +722,19 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ═══════ LANDING PAGE ═══════ -->
 <div class="landing" id="landingPage">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-tablet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="10"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="20" y1="20" x2="20" y2="8"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></symbol>
+<symbol id="i-file-export" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l3 3 3-3"/><line x1="12" y1="11" x2="12" y2="18"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+<symbol id="i-calendar-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="18" cy="17" r="4"/><path d="M18 15.5v1.5l1 1"/></symbol>
+<symbol id="i-shield-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><circle cx="12" cy="9" r="2"/></symbol>
+<symbol id="i-smartphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
+</defs></svg>
   <nav class="land-nav">
     <div class="land-logo"><img src="/PunchClockPro-Logo.png" alt="PunchClock Pro" style="height:36px;vertical-align:middle;margin-right:8px">PunchClock Pro</div>
     <div class="land-nav-links">
@@ -766,57 +780,57 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="land.featSub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">🖥️</div>
+        <div class="feature-icon"><svg><use href="#i-tablet"/></svg></div>
         <h3 data-i18n="land.feat1Title">Tablet Terminal — No GPS Needed</h3>
         <p data-i18n="land.feat1Desc">Employees clock in with a 4-digit PIN on a shared tablet at the job site. Unlike GPS or mobile apps, the terminal is fixed at your location — no spoofing, no "clocking in from home," no battery issues. Just reliable, tamper-proof attendance at the front door.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📍</div>
+        <div class="feature-icon"><svg><use href="#i-map-pin"/></svg></div>
         <h3 data-i18n="land.feat2Title">Multi-Site Support</h3>
         <p data-i18n="land.feat2Desc">Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon"><svg><use href="#i-bar-chart"/></svg></div>
         <h3 data-i18n="land.feat3Title">Automated Reports</h3>
         <p data-i18n="land.feat3Desc">Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">✏️</div>
+        <div class="feature-icon"><svg><use href="#i-edit"/></svg></div>
         <h3 data-i18n="land.feat4Title">Manual Punch Editing</h3>
         <p data-i18n="land.feat4Desc">Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">⏰</div>
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
         <h3 data-i18n="land.feat5Title">Overtime Tracking</h3>
         <p data-i18n="land.feat5Desc">Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📦</div>
+        <div class="feature-icon"><svg><use href="#i-file-export"/></svg></div>
         <h3 data-i18n="land.feat6Title">QuickBooks Export</h3>
         <p data-i18n="land.feat6Desc">Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🏢</div>
+        <div class="feature-icon"><svg><use href="#i-users"/></svg></div>
         <h3 data-i18n="land.feat7Title">Team Access</h3>
         <p data-i18n="land.feat7Desc">Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📅</div>
+        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
         <h3 data-i18n="land.feat8Title">Flexible Payroll Periods</h3>
         <p data-i18n="land.feat8Desc">Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
       </div>
       <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
-        <div class="feature-icon">🗓️</div>
+        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-calendar-clock"/></svg></div>
         <h3 data-i18n="land.feat9Title">Employee Scheduling <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:6px;white-space:nowrap">ADD-ON</span></h3>
         <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.</p>
       </div>
       <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
-        <div class="feature-icon">📍</div>
+        <div class="feature-icon"><svg style="color:#22c55e"><use href="#i-shield-pin"/></svg></div>
         <h3 data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</h3>
         <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📲</div>
+        <div class="feature-icon"><svg><use href="#i-smartphone"/></svg></div>
         <h3 data-i18n="land.feat11Title">Kiosk Shortcut — One Tap to Punch</h3>
         <p data-i18n="land.feat11Desc">Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.</p>
       </div>
