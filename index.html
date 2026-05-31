@@ -561,8 +561,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 .hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s;}
 .mobile-menu{display:none;position:fixed;inset:0;top:60px;background:var(--surface);z-index:99;flex-direction:column;padding:16px;gap:4px;border-top:1px solid var(--border);}
 .mobile-menu.open{display:flex;}
-.mobile-nav-btn{background:none;border:none;color:var(--text2);padding:14px 16px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;text-align:left;transition:all .15s;width:100%;}
+.mobile-nav-btn{background:none;border:none;color:var(--text2);padding:14px 16px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;text-align:left;transition:all .15s;width:100%;display:flex;align-items:center;gap:10px;}
 .mobile-nav-btn:hover,.mobile-nav-btn.active{background:rgba(79,142,247,.12);color:var(--accent);}
+.mobile-nav-btn svg{width:18px;height:18px;flex-shrink:0;}
 .mobile-nav-divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
 
 /* ═══ MOBILE CARD TABLES ═══ */
@@ -737,6 +738,8 @@ border-top:1px solid var(--border);margin:18px 0;}
 <symbol id="i-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></symbol>
 <symbol id="i-nav-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
 <symbol id="i-nav-headset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-3a9 9 0 0 1 18 0v3"/><path d="M21 16a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2zM3 16a2 2 0 0 0 2 2h1v-5H5a2 2 0 0 0-2 2z"/></symbol>
+<symbol id="i-nav-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
+<symbol id="i-nav-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
 </defs></svg>
 <div id="pcToast"></div>
 
@@ -1409,8 +1412,6 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <!-- Legacy hidden span kept for JS compatibility -->
     <span id="adminBadge" style="display:none"></span>
-    <button class="btn-secondary" id="helpNavBtn" onclick="showHelpModal()" data-i18n="nav.help" style="font-size:12px;padding:6px 13px;display:none">❓ Help</button>
-    <button class="btn-secondary" id="supportNavBtn" onclick="showSupportModal()" data-i18n="nav.support" style="font-size:12px;padding:6px 13px;display:none">🎧 Support</button>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
     <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
@@ -1420,18 +1421,18 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-nav-btn" onclick="mobileNav('punch')" data-i18n="nav.clockInOut">⏱ Clock In/Out</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><span data-i18n="nav.admin">&#9881; Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none">&#128202; Reports</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none">🗂 Sites</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none">&#128203; Activity</button>
-  <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none">🗓️ <span data-i18n="nav.schedule">Schedule</span></button>
-  <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none" data-i18n="nav.help">❓ Help</button>
-  <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none" data-i18n="nav.support">🎧 Support</button>
-  <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa">🗓️ <span id="mobileSchedulingLabel"></span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
+  <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
+  <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
+  <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa"><svg><use href="#i-nav-schedule"/></svg> <span id="mobileSchedulingLabel"></span></button>
   <hr class="mobile-nav-divider">
-  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')">&#128274; Admin Login</button>
-  <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)">&#10005; Logout</button>
+  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> Admin Login</button>
+  <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)"><svg><use href="#i-nav-logout"/></svg> Logout</button>
 </div>
 
 <!-- ═══════════════ PUNCH PAGE ═══════════════ -->
@@ -3828,8 +3829,6 @@ function updateNav(){
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
-  document.getElementById('helpNavBtn').style.display='none';
-  document.getElementById('supportNavBtn').style.display='none';
   ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
     document.getElementById(id).style.display=ok?'':'none');
   // Schedule nav — only show if logged in (access check happens in loadSchedulePage)
