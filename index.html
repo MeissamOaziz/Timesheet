@@ -769,6 +769,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
 <symbol id="i-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
 <symbol id="i-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
 </defs></svg>
 <div id="pcToast"></div>
 
@@ -1572,7 +1573,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- ═══════════════ SET PASSWORD (invited co-admins) ═══════════════ -->
 <div class="page" id="page-setpassword">
   <div class="form-card" style="margin-top:50px">
-    <h2>Welcome to PunchClock Pro! 👋</h2>
+    <h2>Welcome to PunchClock Pro!</h2>
     <p>You've been invited as a co-admin. Please set your password to activate your account.</p>
     <div id="setpassMsg"></div>
     <div class="form-group"><label>New Password</label><div class="pw-wrap"><input type="password" id="setpassNew" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('setpassNew',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
@@ -1610,7 +1611,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="page" id="page-accept-invite">
   <div class="form-card" style="margin-top:50px;max-width:440px">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:22px;font-weight:700;color:var(--accent)">⏱ PunchClock Pro</div>
+      <div style="font-size:22px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px"><svg style="width:22px;height:22px"><use href="#i-nav-clock"/></svg>PunchClock Pro</div>
     </div>
     <h2 id="acceptInviteTitle" style="font-size:20px;font-weight:700;margin:0 0 8px">You've been invited</h2>
     <p id="acceptInviteSubtitle" style="font-size:14px;color:var(--text2);margin:0 0 22px"></p>
@@ -1702,7 +1703,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <p style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:16px" data-i18n="reg.payrollNote">Payroll settings apply to all sites</p>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:16px" onclick="toggleRegOvertime()">
           <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="reg.trackOvertime">⏰ Track Overtime</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-alarm"/></svg><span data-i18n="reg.trackOvertime">Track Overtime</span></div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="reg.overtimeDesc">Flag daily &gt;8h and weekly &gt;40h in reports</div>
           </div>
           <div id="regOvertimeToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
@@ -1715,7 +1716,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <input type="file" id="regLogoInput" accept="image/*" onchange="previewRegLogo()">
           <img id="regLogoPreview" class="upload-preview" style="display:none;border-radius:12px">
           <div id="regLogoHint">
-            <div style="font-size:22px;margin-bottom:6px">🏢</div>
+            <div style="margin-bottom:6px;color:var(--accent)"><svg style="width:24px;height:24px"><use href="#i-nav-building"/></svg></div>
             <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.uploadLogo">Upload Company Logo</div>
             <div style="font-size:11px;color:var(--text3);margin-top:3px" data-i18n="modal.logoHint">PNG, JPG up to 2MB — shown on clock page and email reports</div>
           </div>
@@ -1726,7 +1727,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <!-- STEP 2: Email verification -->
     <div id="regStep2" style="display:none">
       <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:40px;margin-bottom:10px">📧</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg style="width:40px;height:40px"><use href="#i-mail"/></svg></div>
         <h3 style="font-size:17px;font-weight:600" data-i18n="reg.checkEmail">Check your email</h3>
         <p style="color:var(--text2);font-size:13px;margin-top:6px"><span data-i18n="reg.checkEmailDesc">We sent a 6-digit verification code to</span> <strong id="regEmailSent" style="color:var(--text)"></strong></p>
       </div>
@@ -1748,7 +1749,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <!-- MISSED PUNCH REQUESTS -->
   <div id="missedPunchRequestsSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
-    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px">&#9203; Missed Punch Requests</h3>
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
     <div class="table-wrap"><table>
       <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
       <tbody id="missedPunchRequestsBody"></tbody>
@@ -1812,7 +1813,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="superAdminPanel">
       <div id="joinRequestsSection" style="display:none;margin-bottom:24px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <h3 style="font-size:14px;font-weight:600;color:var(--amber)">⏳ Pending Access Requests</h3>
+          <h3 style="font-size:14px;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Pending Access Requests</h3>
         </div>
         <div class="table-wrap"><table>
           <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.requestedAdmin">Requested Admin</th><th data-i18n="col.date">Date</th><th data-i18n="col.actions">Actions</th></tr></thead>
@@ -1940,7 +1941,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- PROMOTE TO MANAGER MODAL -->
 <div class="modal-overlay" id="promoteToManagerModal">
   <div class="modal" style="max-width:440px">
-    <h3>⬆ <span data-i18n="emp.promoteTitle">Promote to Manager</span></h3>
+    <h3 style="display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-upload"/></svg><span data-i18n="emp.promoteTitle">Promote to Manager</span></h3>
     <div id="promoteToManagerMsg"></div>
     <div style="background:rgba(124,92,191,.08);border:1px solid rgba(124,92,191,.25);border-radius:10px;padding:14px 16px;margin-bottom:16px">
       <p style="font-size:13px;color:var(--text);line-height:1.6;margin:0 0 8px" id="promoteToManagerDesc"></p>
@@ -2356,8 +2357,8 @@ border-top:1px solid var(--border);margin:18px 0;}
           <div id="profilePlanName" style="font-weight:700;font-size:17px"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-          <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()" data-i18n="profile.upgrade">⬆ Upgrade</button>
-          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()">⚙ Manage Billing</button>
+          <button id="profileUpgradeBtn" class="btn-primary" style="width:auto;padding:7px 14px;font-size:12px" onclick="closeModal('profileModal');showUpgradePlans()"><svg class="ic" style="margin-right:5px"><use href="#i-upload"/></svg><span data-i18n="profile.upgrade">Upgrade</span></button>
+          <button id="profileManageBtn" class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12px;display:none" onclick="openBillingPortal()"><svg class="ic" style="margin-right:5px"><use href="#i-nav-admin"/></svg>Manage Billing</button>
         </div>
       </div>
       <!-- Usage bars -->
@@ -2366,7 +2367,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div id="profileSchedulingAddon" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:3px">🗓️ <span data-i18n="addon.scheduling">Scheduling Add-On</span></div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:5px"><svg style="width:14px;height:14px"><use href="#i-nav-schedule"/></svg><span data-i18n="addon.scheduling">Scheduling Add-On</span></div>
             <div id="profileSchedulingStatus" style="font-size:11px;color:var(--text3)"></div>
           </div>
           <button id="profileSchedulingBtn" class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0"></button>
@@ -2382,7 +2383,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 
     <!-- Change password -->
     <div style="margin-top:4px;margin-bottom:4px">
-      <button class="link-btn" style="font-size:13px" onclick="document.getElementById('profilePwSection').classList.toggle('hidden')" data-i18n="profile.changePw">🔑 Change password</button>
+      <button class="link-btn" style="font-size:13px" onclick="document.getElementById('profilePwSection').classList.toggle('hidden')"><svg class="ic" style="margin-right:5px"><use href="#i-key"/></svg><span data-i18n="profile.changePw">Change password</span></button>
     </div>
     <div id="profilePwSection" class="hidden" style="margin-bottom:4px">
       <div class="form-group" style="margin-top:10px">
@@ -2454,14 +2455,14 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="onboardingModal" style="z-index:9800" data-no-dismiss>
   <div class="modal" style="max-width:480px;text-align:center">
     <div id="onboardStep1">
-      <div style="font-size:40px;margin-bottom:12px">🏢</div>
+      <div style="margin-bottom:12px;color:var(--accent)"><svg style="width:40px;height:40px"><use href="#i-nav-building"/></svg></div>
       <h3 id="ob1Title" style="margin-bottom:8px"></h3>
       <p id="ob1Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:6px"></p>
       <p style="font-size:12px;color:var(--text3);margin-bottom:24px" id="ob1Note"></p>
       <button class="btn-primary" style="width:100%;padding:12px;font-size:15px" id="ob1Btn" onclick="onboardCreateCompany()"></button>
     </div>
     <div id="onboardStep2" style="display:none">
-      <div style="font-size:40px;margin-bottom:12px">🎉</div>
+      <div style="margin-bottom:12px;color:var(--green)"><svg style="width:40px;height:40px"><use href="#i-check"/></svg></div>
       <h3 id="ob2Title" style="margin-bottom:8px"></h3>
       <p id="ob2Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:6px"></p>
       <p style="font-size:12px;color:var(--text3);margin-bottom:24px" id="ob2Note"></p>
@@ -2481,7 +2482,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="upload-area" style="padding:10px;width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0" id="empPhotoArea">
           <input type="file" id="empPhotoInput" accept="image/*" onchange="previewUpload('empPhotoInput','empPhotoPreview','empPhotoArea',true)">
           <img id="empPhotoPreview" style="display:none;width:76px;height:76px;border-radius:50%;object-fit:cover">
-          <div id="empPhotoHint" style="font-size:18px">👤</div>
+          <div id="empPhotoHint" style="color:var(--text3)"><svg style="width:20px;height:20px"><use href="#i-user"/></svg></div>
         </div>
         <input type="hidden" id="existingPhotoUrl">
       </div>
@@ -2498,7 +2499,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <label><span data-i18n="emp.pin">4-Digit PIN</span> <span style="color:var(--text3);font-weight:400" data-i18n="emp.pinRequired">(required)</span></label>
       <div style="display:flex;gap:8px;align-items:center">
         <input type="password" id="empPin" placeholder="&bull;&bull;&bull;&bull;" maxlength="4" style="letter-spacing:6px;font-family:'DM Mono',monospace;font-size:17px;width:100px">
-        <button type="button" onclick="generatePin()" style="padding:8px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap" data-i18n="emp.random">&#127922; Random</button>
+        <button type="button" onclick="generatePin()" style="padding:8px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap"><svg class="ic" style="margin-right:5px"><use href="#i-dice"/></svg><span data-i18n="emp.random">Random</span></button>
         <span id="pinPreview" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);display:none"></span>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="emp.pinHint">Exactly 4 digits. Share only with the employee.</div>
@@ -2507,7 +2508,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <!-- EMAIL REPORT TOGGLE -->
     <div id="emailReportToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(245,158,11,.08);border:2px solid var(--amber);border-radius:10px;cursor:pointer;transition:background .25s,border-color .25s" onclick="toggleEmailReport()">
       <div>
-        <div style="font-size:13px;font-weight:700;color:var(--text)" data-i18n="emp.emailToggleTitle">&#128231; Enable email (for automated reports)</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-mail"/></svg><span data-i18n="emp.emailToggleTitle">Enable email (for automated reports)</span></div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="emp.emailToggleDesc">Automatically email this employee their punch summary at end of each pay period</div>
       </div>
       <div id="emailReportToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
@@ -2515,7 +2516,6 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
     <div id="emailReportOffHint" style="margin-top:6px;padding:9px 12px;font-size:11.5px;color:var(--amber);font-weight:600;display:flex;align-items:center;gap:8px;background:rgba(245,158,11,.06);border-radius:8px">
-      <span style="font-size:14px;flex-shrink:0">&#128072;</span>
       <span data-i18n="emp.emailToggleOffHint">Toggle ON to add employee email for automated timesheet reports</span>
     </div>
     <div id="emailReportSection" style="display:none;margin-top:10px">
@@ -2528,7 +2528,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div id="empPortalInviteRow" style="display:none;margin-top:12px;padding:12px 14px;background:rgba(124,92,191,.08);border:1px solid rgba(124,92,191,.25);border-radius:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
           <div>
-            <div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:2px">🔗 <span data-i18n="emp.portalInviteTitle">Employee Portal Access</span></div>
+            <div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:2px;display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-link"/></svg><span data-i18n="emp.portalInviteTitle">Employee Portal Access</span></div>
             <div style="font-size:11px;color:var(--text3)" id="empPortalStatus"></div>
           </div>
           <button type="button" id="empPortalInviteBtn" onclick="sendEmpPortalInvite()" style="background:rgba(124,92,191,.2);border:1px solid rgba(124,92,191,.4);border-radius:8px;color:#a78bfa;font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;cursor:pointer;white-space:nowrap;transition:all .15s"></button>
@@ -2539,8 +2539,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addEmpModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-secondary" id="promoteToManagerBtn" onclick="openPromoteToManagerModal()" style="display:none;border-color:rgba(124,92,191,.4);color:#a78bfa" data-i18n="emp.promoteBtn">⬆ Promote to Manager</button>
-      <button class="btn-secondary" id="manageAvailBtn" onclick="openAdminAvailModal()" style="display:none" data-i18n="sched.manageAvailBtn">🚫 Availability</button>
+      <button class="btn-secondary" id="promoteToManagerBtn" onclick="openPromoteToManagerModal()" style="display:none;border-color:rgba(124,92,191,.4);color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-upload"/></svg><span data-i18n="emp.promoteBtn">Promote to Manager</span></button>
+      <button class="btn-secondary" id="manageAvailBtn" onclick="openAdminAvailModal()" style="display:none"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg><span data-i18n="sched.manageAvailBtn">Availability</span></button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEmployee()" data-i18n="modal.save">Save</button>
     </div>
   </div>
@@ -2715,7 +2715,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <input type="file" id="logoFileInput" accept="image/*" onchange="previewUpload('logoFileInput','logoPreviewImg','logoUploadArea')">
       <img id="logoPreviewImg" class="upload-preview" style="display:none;border-radius:12px">
       <div id="logoUploadHint">
-        <div style="font-size:22px;margin-bottom:6px">🏢</div>
+        <div style="margin-bottom:6px;color:var(--accent)"><svg style="width:24px;height:24px"><use href="#i-nav-building"/></svg></div>
         <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.uploadLogo">Upload Company Logo</div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px" data-i18n="modal.logoHint">PNG, JPG up to 2MB — shown on clock page and email reports</div>
       </div>
@@ -2725,7 +2725,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.overtimeSettings">Overtime Settings</p>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer" onclick="toggleOvertimeOpt()">
       <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.trackOvertime">⏰ Track Overtime</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-alarm"/></svg><span data-i18n="modal.trackOvertime">Track Overtime</span></div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.overtimeDesc">Flag daily >8h and weekly >40h in reports</div>
       </div>
       <div id="overtimeToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
@@ -2917,7 +2917,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="kioskQRModal" style="z-index:9800">
   <div class="modal" style="max-width:340px;text-align:center">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h3 style="margin:0">🔲 QR Code</h3>
+      <h3 style="margin:0;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-qr"/></svg>QR Code</h3>
       <button onclick="closeModal('kioskQRModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
     </div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskQRSubtitle">Scan with a phone or tablet to open the punch page directly.</p>
@@ -9581,7 +9581,7 @@ en:{
 'reg.ind.other':'Other',
 'reg.payrollNote':'Payroll settings apply to all sites',
 'reg.anchorDate':'Payroll Cycle Start Date','reg.anchorDateHint':'Enter the first day of your first payroll period. Used to align bi-weekly pay boundaries.',
-'reg.trackOvertime':'⏰ Track Overtime',
+'reg.trackOvertime':'Track Overtime',
 'reg.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
 'reg.logoOptional':'Company Logo (optional)',
 'reg.continue':'Continue →',
@@ -9651,9 +9651,9 @@ en:{
 'emp.photo':'Photo','emp.fullName':'Full Name','emp.fullNamePlaceholder':'John Smith',
 'emp.department':'Department','emp.departmentPlaceholder':'Engineering...',
 'emp.employeeId':'Employee ID','emp.site':'Site',
-'emp.pin':'4-Digit PIN','emp.pinRequired':'(required)','emp.random':'🎲 Random',
+'emp.pin':'4-Digit PIN','emp.pinRequired':'(required)','emp.random':'Random',
 'emp.pinHint':'Exactly 4 digits. Share only with the employee.',
-'emp.emailToggleTitle':'📧 Enable email (for automated reports)',
+'emp.emailToggleTitle':'Enable email (for automated reports)',
 'emp.emailToggleDesc':'Automatically email this employee their punch summary at end of each pay period',
 'emp.emailToggleOffHint':'Toggle ON to add employee email for automated timesheet reports',
 'emp.emailLabel':'Employee Email Address','emp.emailPlaceholder':'employee@email.com',
@@ -9671,7 +9671,7 @@ en:{
 'site.noManagers':'No managers assigned','site.editManagers':'Edit Managers',
 'site.managersFor':'Managers for','site.noManagersYet':'No managers yet. Invite a team member as Manager first.',
 'site.managersUpdated':'Manager assignments updated',
-'emp.promoteBtn':'⬆ Promote to Manager','emp.promoteTitle':'Promote to Manager',
+'emp.promoteBtn':'Promote to Manager','emp.promoteTitle':'Promote to Manager',
 'emp.promoteNote':'This does not remove them as an employee — they keep all punch records and time tracking.',
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
@@ -9771,14 +9771,14 @@ en:{
 'msg.selectDates':'Please select a start and end date.',
 'msg.chooseSite':'Choose your work site',
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
-'profile.title':'My Profile','profile.plan':'Subscription Plan','profile.upgrade':'⬆ Upgrade',
+'profile.title':'My Profile','profile.plan':'Subscription Plan','profile.upgrade':'Upgrade',
 'nav.dd.profileSub':'Account settings & password',
 'nav.dd.companyInfo':'Company Info','nav.dd.companyInfoSub':'Edit company details & payroll',
 'nav.dd.upgrade':'Upgrade Plan','nav.dd.upgradeSub':'Change your subscription',
 'nav.dd.billing':'Manage Billing','nav.dd.billingSub':'Invoices & payment method',
 'nav.dd.addonDesc':'shift builder & weekly schedule',
 'nav.dd.addonAdd':'+ Add',
-'profile.name':'Display Name','profile.changePw':'🔑 Change password','profile.currentPw':'Current Password',
+'profile.name':'Display Name','profile.changePw':'Change password','profile.currentPw':'Current Password',
 'profile.newPw':'New Password','profile.confirmPw':'Confirm New Password',
 'profile.save':'Save Changes','profile.cancel':'Cancel',
 'profile.employees':'Employees','profile.sites':'Sites','profile.companies':'Companies',
@@ -9863,7 +9863,7 @@ en:{
 'modal.monday':'Monday','modal.sunday':'Sunday',
 'modal.companyLogo':'Company Logo','modal.uploadLogo':'Upload Company Logo',
 'modal.logoHint':'PNG, JPG up to 2MB — shown on clock page and email reports',
-'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'⏰ Track Overtime',
+'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'Track Overtime',
 'modal.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
 'modal.confirmDelete':'Confirm Delete','modal.delete':'Delete',
@@ -10078,7 +10078,7 @@ en:{
 'sched.holidayReminderDesc':'Scheduling reminders and pay-rate flags depend on holidays being up to date.',
 'sched.addHolidays':'Add Holidays',
 'sched.manageAvail':'Manage Availability',
-'sched.manageAvailBtn':'🚫 Availability',
+'sched.manageAvailBtn':'Availability',
 'sched.addUnavail':'Add Unavailability',
 'sched.recurring':'Recurring (weekly)',
 'sched.specificDate':'Specific date / range',
@@ -10162,7 +10162,7 @@ fr:{
 'reg.ind.other':'Autre',
 'reg.payrollNote':'Les paramètres de paie s\'appliquent à tous les sites',
 'reg.anchorDate':'Date de début du cycle de paie','reg.anchorDateHint':'Entrez le premier jour de votre première période de paie.',
-'reg.trackOvertime':'⏰ Suivi des heures supplémentaires',
+'reg.trackOvertime':'Suivi des heures supplémentaires',
 'reg.overtimeDesc':'Signaler >8h/jour et >40h/semaine dans les rapports',
 'reg.logoOptional':'Logo de la compagnie (facultatif)',
 'reg.continue':'Continuer →',
@@ -10232,9 +10232,9 @@ fr:{
 'emp.photo':'Photo','emp.fullName':'Nom complet','emp.fullNamePlaceholder':'Jean Dupont',
 'emp.department':'Département','emp.departmentPlaceholder':'Ingénierie...',
 'emp.employeeId':'ID employé','emp.site':'Site',
-'emp.pin':'NIP à 4 chiffres','emp.pinRequired':'(requis)','emp.random':'🎲 Aléatoire',
+'emp.pin':'NIP à 4 chiffres','emp.pinRequired':'(requis)','emp.random':'Aléatoire',
 'emp.pinHint':'Exactement 4 chiffres. Partagez uniquement avec l\'employé.',
-'emp.emailToggleTitle':'📧 Activer le courriel (pour les rapports automatisés)',
+'emp.emailToggleTitle':'Activer le courriel (pour les rapports automatisés)',
 'emp.emailToggleDesc':'Envoi automatique du résumé de pointage à la fin de chaque période de paie',
 'emp.emailToggleOffHint':'Activez pour ajouter le courriel de l\'employé et envoyer automatiquement les rapports',
 'emp.emailLabel':'Adresse courriel de l\'employé','emp.emailPlaceholder':'employe@courriel.com',
@@ -10252,7 +10252,7 @@ fr:{
 'site.noManagers':'Aucun gestionnaire attribué','site.editManagers':'Modifier les gestionnaires',
 'site.managersFor':'Gestionnaires pour','site.noManagersYet':'Aucun gestionnaire. Invitez un membre de l\'équipe comme gestionnaire d\'abord.',
 'site.managersUpdated':'Affectations des gestionnaires mises à jour',
-'emp.promoteBtn':'⬆ Promouvoir en gestionnaire','emp.promoteTitle':'Promouvoir en gestionnaire',
+'emp.promoteBtn':'Promouvoir en gestionnaire','emp.promoteTitle':'Promouvoir en gestionnaire',
 'emp.promoteNote':'Ceci ne le retire pas en tant qu\'employé — ils conservent tous leurs pointages et leur suivi du temps.',
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
@@ -10352,14 +10352,14 @@ fr:{
 'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
 'msg.chooseSite':'Choisissez votre site de travail',
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
-'profile.title':'Mon profil','profile.plan':'Abonnement','profile.upgrade':'⬆ Mettre à niveau',
+'profile.title':'Mon profil','profile.plan':'Abonnement','profile.upgrade':'Mettre à niveau',
 'nav.dd.profileSub':'Paramètres du compte et mot de passe',
 'nav.dd.companyInfo':'Info compagnie','nav.dd.companyInfoSub':'Modifier les détails et paramètres de paie',
 'nav.dd.upgrade':'Mettre à niveau','nav.dd.upgradeSub':'Changer votre abonnement',
 'nav.dd.billing':'Gérer la facturation','nav.dd.billingSub':'Factures et mode de paiement',
 'nav.dd.addonDesc':'créateur de quarts et horaire hebdomadaire',
 'nav.dd.addonAdd':'+ Ajouter',
-'profile.name':'Nom affiché','profile.changePw':'🔑 Changer le mot de passe','profile.currentPw':'Mot de passe actuel',
+'profile.name':'Nom affiché','profile.changePw':'Changer le mot de passe','profile.currentPw':'Mot de passe actuel',
 'profile.newPw':'Nouveau mot de passe','profile.confirmPw':'Confirmer le nouveau mot de passe',
 'profile.save':'Sauvegarder','profile.cancel':'Annuler',
 'profile.employees':'Employés','profile.sites':'Sites','profile.companies':'Compagnies',
@@ -10444,7 +10444,7 @@ fr:{
 'modal.monday':'Lundi','modal.sunday':'Dimanche',
 'modal.companyLogo':'Logo de la compagnie','modal.uploadLogo':'Télécharger le logo',
 'modal.logoHint':'PNG, JPG jusqu\'à 2 Mo — affiché sur la page de pointage et les rapports',
-'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'⏰ Suivi des heures supp.',
+'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'Suivi des heures supp.',
 'modal.overtimeDesc':'Signaler les journées >8h et les semaines >40h dans les rapports',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
 'modal.confirmDelete':'Confirmer la suppression','modal.delete':'Supprimer',
@@ -10663,7 +10663,7 @@ fr:{
 'sched.holidayReminderDesc':'Les rappels d\'horaire et les indicateurs de taux de paie dépendent de jours fériés à jour.',
 'sched.addHolidays':'Ajouter des jours fériés',
 'sched.manageAvail':'Gérer la disponibilité',
-'sched.manageAvailBtn':'🚫 Disponibilité',
+'sched.manageAvailBtn':'Disponibilité',
 'sched.addUnavail':'Ajouter une indisponibilité',
 'sched.recurring':'Récurrent (hebdomadaire)',
 'sched.specificDate':'Date ou plage spécifique',
