@@ -1381,7 +1381,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         </div>
         <!-- Profile -->
         <button class="user-dd-item" onclick="closeUserMenu();openProfile()">
-          <div class="dd-icon" style="background:rgba(79,142,247,.12)">👤</div>
+          <div class="dd-icon" style="background:rgba(79,142,247,.12)"><svg style="width:16px;height:16px;color:var(--accent)"><use href="#i-user"/></svg></div>
           <div>
             <div id="ddProfileLabel" data-i18n="profile.title">My Profile</div>
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.profileSub">Account settings &amp; password</div>
@@ -1389,7 +1389,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         </button>
         <!-- Company Info -->
         <button class="user-dd-item" id="ddCompanyInfoBtn" onclick="closeUserMenu();openCompanyInfoModal()" style="display:none">
-          <div class="dd-icon" style="background:rgba(79,142,247,.12)">🏢</div>
+          <div class="dd-icon" style="background:rgba(79,142,247,.12)"><svg style="width:16px;height:16px;color:var(--accent)"><use href="#i-nav-building"/></svg></div>
           <div>
             <div data-i18n="nav.dd.companyInfo">Company Info</div>
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.companyInfoSub">Edit company details &amp; payroll</div>
@@ -1397,14 +1397,14 @@ border-top:1px solid var(--border);margin:18px 0;}
         </button>
         <!-- Subscription -->
         <button class="user-dd-item" id="ddSubscriptionBtn" onclick="closeUserMenu();closeUserMenu();showUpgradePlans()" style="display:none">
-          <div class="dd-icon" style="background:rgba(34,197,94,.12)">⬆️</div>
+          <div class="dd-icon" style="background:rgba(34,197,94,.12)"><svg style="width:16px;height:16px;color:var(--green)"><use href="#i-upload"/></svg></div>
           <div>
             <div data-i18n="nav.dd.upgrade">Upgrade Plan</div>
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.upgradeSub">Change your subscription</div>
           </div>
         </button>
         <button class="user-dd-item" id="ddManageBillingBtn" onclick="closeUserMenu();openBillingPortal()" style="display:none">
-          <div class="dd-icon" style="background:rgba(245,158,11,.12)">💳</div>
+          <div class="dd-icon" style="background:rgba(245,158,11,.12)"><svg style="width:16px;height:16px;color:var(--amber)"><use href="#i-card"/></svg></div>
           <div>
             <div data-i18n="nav.dd.billing">Manage Billing</div>
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.billingSub">Invoices &amp; payment method</div>
@@ -1414,7 +1414,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <!-- Scheduling Add-On -->
         <div class="user-dd-addon" id="ddSchedulingAddon" style="display:none" onclick="closeUserMenu();handleSchedulingAddonClick()">
           <div class="user-dd-addon-left">
-            <div class="dd-icon" style="background:rgba(124,92,191,.12)">🗓️</div>
+            <div class="dd-icon" style="background:rgba(124,92,191,.12)"><svg style="width:16px;height:16px;color:#a78bfa"><use href="#i-nav-schedule"/></svg></div>
             <div>
               <div class="user-dd-addon-label" data-i18n="addon.scheduling">Scheduling Add-On</div>
               <div class="user-dd-addon-sub">$14.95/mo · <span data-i18n="nav.dd.addonDesc">shift builder &amp; weekly schedule</span></div>
@@ -1434,7 +1434,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <hr class="user-dd-sep">
         <!-- Logout -->
         <button class="user-dd-item danger" onclick="closeUserMenu();logout()">
-          <div class="dd-icon" style="background:rgba(239,68,68,.1)">✕</div>
+          <div class="dd-icon" style="background:rgba(239,68,68,.1)"><svg style="width:16px;height:16px;color:var(--red)"><use href="#i-x"/></svg></div>
           <div data-i18n="nav.logout">Logout</div>
         </button>
       </div>
@@ -2226,7 +2226,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="holidaysModal" style="z-index:9620">
   <div class="modal" style="max-width:560px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h3 style="margin:0">⭐ <span data-i18n="sched.manageHolidays">Holidays</span></h3>
+      <h3 style="margin:0;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px;color:var(--amber)"><use href="#i-star"/></svg><span data-i18n="sched.manageHolidays">Holidays</span></h3>
       <button onclick="closeModal('holidaysModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
     </div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:20px" data-i18n="sched.holidayDesc">Mark dates as holidays to flag them in the schedule and in payroll reports. Holidays are not closures — shifts can still be assigned, but managers will see the holiday flag as a reminder that different pay rates may apply.</p>
@@ -2258,7 +2258,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <label data-i18n="sched.holidayNote">Note (optional)</label>
         <input type="text" id="holidayNote" class="form-input" style="padding:9px 12px;font-size:13px" placeholder="e.g. 1.5x pay rate">
       </div>
-      <button class="btn-primary" style="width:auto;padding:8px 20px" onclick="saveHoliday()">⭐ <span data-i18n="sched.addHoliday">Add Holiday</span></button>
+      <button class="btn-primary" style="width:auto;padding:8px 20px" onclick="saveHoliday()"><svg class="ic" style="margin-right:5px"><use href="#i-star"/></svg><span data-i18n="sched.addHoliday">Add Holiday</span></button>
     </div>
     <!-- Holiday list -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -2274,7 +2274,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="adminAvailModal" style="z-index:9620">
   <div class="modal" style="max-width:500px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <h3 style="margin:0">🚫 <span data-i18n="sched.manageAvail">Manage Availability</span></h3>
+      <h3 style="margin:0;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px;color:var(--text2)"><use href="#i-x"/></svg><span data-i18n="sched.manageAvail">Manage Availability</span></h3>
       <button onclick="closeModal('adminAvailModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
     </div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:18px" id="adminAvailEmpName"></p>
@@ -2325,7 +2325,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <label data-i18n="sched.availReason">Reason (optional)</label>
         <input type="text" id="adminAvailNote" class="form-input" style="padding:9px 12px;font-size:13px" placeholder="Vacation, medical leave...">
       </div>
-      <button class="btn-primary" style="width:auto;padding:8px 20px" onclick="saveAdminAvail()">🚫 <span data-i18n="sched.addUnavail">Add Unavailability</span></button>
+      <button class="btn-primary" style="width:auto;padding:8px 20px" onclick="saveAdminAvail()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg><span data-i18n="sched.addUnavail">Add Unavailability</span></button>
     </div>
     <!-- Current availability list -->
     <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px" data-i18n="sched.currentUnavail">Current Unavailability</div>
@@ -2410,7 +2410,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="supportModal" style="z-index:9900">
   <div class="modal" style="max-width:500px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h3 id="supportModalTitle" style="margin:0;font-size:18px">🎧 Contact Support</h3>
+      <h3 id="supportModalTitle" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-nav-headset"/></svg>Contact Support</h3>
       <button onclick="closeModal('supportModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
     </div>
     <div id="supportMsg"></div>
@@ -2440,7 +2440,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="helpModal" style="z-index:9900">
   <div class="modal" style="max-width:560px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h3 id="helpModalTitle" style="margin:0;font-size:18px">❓ How to Use PunchClock Pro</h3>
+      <h3 id="helpModalTitle" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-nav-help"/></svg>How to Use PunchClock Pro</h3>
       <button onclick="closeModal('helpModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
     </div>
     <div id="helpStepsList"></div>
@@ -2549,7 +2549,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- SEND REPORT MODAL -->
 <div class="modal-overlay" id="sendReportModal">
   <div class="modal" style="max-width:420px">
-    <h3>&#128231; Send Report to Employee</h3>
+    <h3 style="display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-mail"/></svg>Send Report to Employee</h3>
     <div id="sendReportMsg"></div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:18px">
       <div style="font-size:13px;font-weight:600;color:var(--text)" id="sendReportEmpName"></div>
@@ -2789,7 +2789,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="modal">
     <h3 id="editPunchTitle">Edit Punch Record</h3>
     <div id="editPunchMsg"></div>
-    <div class="msg info" style="margin-bottom:14px">&#9888; Admin override — changes are permanent and reflected in all reports.</div>
+    <div class="msg info" style="margin-bottom:14px"><svg class="ic" style="margin-right:5px"><use href="#i-warn"/></svg>Admin override — changes are permanent and reflected in all reports.</div>
     <div class="form-group"><label>Employee</label><input type="text" id="editPunchEmpName" readonly style="opacity:.7;cursor:default"></div>
     <div class="form-row">
       <div class="form-group"><label>Type</label>
@@ -2837,7 +2837,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="kioskShortcutModal" style="z-index:9700">
   <div class="modal" style="max-width:500px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <h3 style="margin:0">📲 <span id="kioskShortcutTitle">Save Kiosk Shortcut</span></h3>
+      <h3 style="margin:0;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-smartphone"/></svg><span id="kioskShortcutTitle">Save Kiosk Shortcut</span></h3>
       <button onclick="closeModal('kioskShortcutModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
     </div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskShortcutSubtitle">Save a shortcut to this site's clock-in page. Employees can open it directly — no admin login needed.</p>
@@ -2846,25 +2846,25 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div style="margin-bottom:4px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Kiosk URL</div>
     <div class="kiosk-url-box" id="kioskUrlDisplay" onclick="copyKioskUrl()" title="Click to copy"></div>
     <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="copyKioskUrl()" id="kioskCopyBtn">📋 Copy URL</button>
-      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="openKioskQR()">🔲 Show QR Code</button>
+      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="copyKioskUrl()" id="kioskCopyBtn"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg>Copy URL</button>
+      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="openKioskQR()"><svg class="ic" style="margin-right:5px"><use href="#i-qr"/></svg>Show QR Code</button>
     </div>
 
     <!-- Device token registration -->
     <div id="kioskDeviceSection" style="display:none;margin-bottom:16px;background:var(--surface2);border-radius:12px;padding:14px 16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">🔑 <span data-i18n="site.geoDevice">Device Token</span></div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-key"/></svg><span data-i18n="site.geoDevice">Device Token</span></div>
       <div id="kioskDeviceStatus" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
       <div style="display:flex;gap:8px">
-        <button id="kioskRegisterBtn" class="btn-primary" style="flex:1;padding:8px;font-size:12px" onclick="registerThisDevice()">🔑 Register This Device</button>
-        <button id="kioskRevokeBtn" class="btn-danger" style="flex:1;padding:8px;font-size:12px;display:none" onclick="revokeThisDevice()">✕ Revoke</button>
+        <button id="kioskRegisterBtn" class="btn-primary" style="flex:1;padding:8px;font-size:12px" onclick="registerThisDevice()"><svg class="ic" style="margin-right:5px"><use href="#i-key"/></svg>Register This Device</button>
+        <button id="kioskRevokeBtn" class="btn-danger" style="flex:1;padding:8px;font-size:12px;display:none" onclick="revokeThisDevice()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Revoke</button>
       </div>
     </div>
 
     <!-- Clear saved kiosk binding on THIS device -->
     <div id="kioskClearSection" style="display:none;margin-bottom:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:14px 16px">
-      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px">⚙️ <span id="kioskClearTitle">This device is set up as a kiosk</span></div>
+      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-nav-admin"/></svg><span id="kioskClearTitle">This device is set up as a kiosk</span></div>
       <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5" id="kioskClearDesc">Opening punchclock.ca on this device will go directly to the punch page. Click below to remove this setup.</p>
-      <button class="btn-danger" style="width:100%;padding:8px;font-size:12px" onclick="clearKioskDevice()" id="kioskClearBtn">✕ Remove kiosk setup from this device</button>
+      <button class="btn-danger" style="width:100%;padding:8px;font-size:12px" onclick="clearKioskDevice()" id="kioskClearBtn"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Remove kiosk setup from this device</button>
     </div>
 
     <!-- OS-specific instructions -->
