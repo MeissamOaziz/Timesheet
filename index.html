@@ -5887,15 +5887,15 @@ async function renderSitesAdmin(){
     const co=C.companies.find(c=>c.id===s.company_id);
     const hasGeo=!!(s.geo_lat&&s.geo_lng);
     const geoBadge=hasGeo
-      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius">📍 ${s.geo_radius_m||25}m</span>`
-      :`<span class="geo-status-badge geo-none" title="No geofence set">📍 No geofence</span>`;
+      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius"><svg class="ic"><use href="#i-pin"/></svg>${s.geo_radius_m||25}m</span>`
+      :`<span class="geo-status-badge geo-none" title="No geofence set"><svg class="ic"><use href="#i-pin"/></svg>No geofence</span>`;
     const mgrIds=allMgrSites.filter(r=>r.site_id===s.id).map(r=>r.manager_id);
     const siteMgrs=managers.filter(a=>mgrIds.includes(a.id));
     const mgrPills=siteMgrs.length
-      ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:20px;font-size:11px;padding:2px 9px;color:#a78bfa">👤 ${a.name}</span>`).join('')
+      ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:20px;font-size:11px;padding:2px 9px;color:#a78bfa"><svg class="ic"><use href="#i-user"/></svg>${a.name}</span>`).join('')
       :`<span style="font-size:12px;color:var(--text3)">${t('site.noManagers')||'No managers assigned'}</span>`;
     return`<div class="site-item" style="flex-wrap:wrap">
-      <div style="width:34px;height:34px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">&#128205;</div>
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)"><svg style="width:18px;height:18px"><use href="#i-pin"/></svg></div>
       <div style="flex:1;min-width:200px">
         <div class="site-name">${s.name} ${geoBadge}</div>
         <div class="site-meta">${co?co.name+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+s.description:''}</div>
@@ -5905,7 +5905,7 @@ async function renderSitesAdmin(){
         </div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
-        <button class="btn-primary" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">📲 ${t('site.kioskShortcut')||'Kiosk Shortcut'}</button>
+        <button class="btn-primary" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-smartphone"/></svg>${t('site.kioskShortcut')||'Kiosk Shortcut'}</button>
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
         ${_isMgr?'':`<button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name.replace(/'/g,"\\'")}')"> ${t('common.delete')}</button>`}
       </div>
