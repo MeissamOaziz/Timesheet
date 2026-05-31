@@ -1778,11 +1778,11 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="empBulkBar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(79,142,247,.08);border:1.5px solid rgba(79,142,247,.3);border-radius:10px;padding:10px 14px;margin-bottom:10px">
       <span id="empBulkCount" style="font-size:13px;font-weight:600;color:var(--accent)">0 selected</span>
       <div style="flex:1"></div>
-      <button class="btn-amber" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkSendReport()">&#128231; Send Report</button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="bulkToggleActive(false)">&#9646; Deactivate</button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="bulkToggleActive(true)">&#9654; Activate</button>
-      <button class="btn-danger" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkDelete()">&#128465; Delete</button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="clearEmpSelection()">&#10005; Clear</button>
+      <button class="btn-amber" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkSendReport()"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Send Report</button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="bulkToggleActive(false)"><svg class="ic" style="margin-right:5px"><use href="#i-pause"/></svg>Deactivate</button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="bulkToggleActive(true)"><svg class="ic" style="margin-right:5px"><use href="#i-play"/></svg>Activate</button>
+      <button class="btn-danger" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkDelete()"><svg class="ic" style="margin-right:5px"><use href="#i-trash"/></svg>Delete</button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="clearEmpSelection()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Clear</button>
     </div>
     <div class="table-wrap"><table>
       <thead><tr>
@@ -2038,10 +2038,10 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="page-header">
     <div><h1 data-i18n="reports.title">Reports</h1><p data-i18n="reports.subtitle">Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
-      <button class="btn-export" onclick="guardedExport('excel')">&#128229; Excel</button>
-      <button class="btn-export" onclick="guardedExport('csv')">&#128196; CSV</button>
-      <button class="btn-export" onclick="exportReport('pdf')">&#128203; PDF</button>
-      <button class="btn-export" onclick="guardedExport('qb')" style="border-color:rgba(34,197,94,.4);color:var(--green)">&#128230; QuickBooks IIF</button>
+      <button class="btn-export" onclick="guardedExport('excel')"><svg class="ic" style="margin-right:5px"><use href="#i-download"/></svg>Excel</button>
+      <button class="btn-export" onclick="guardedExport('csv')"><svg class="ic" style="margin-right:5px"><use href="#i-file"/></svg>CSV</button>
+      <button class="btn-export" onclick="exportReport('pdf')"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg>PDF</button>
+      <button class="btn-export" onclick="guardedExport('qb')" style="border-color:rgba(34,197,94,.4);color:var(--green)"><svg class="ic" style="margin-right:5px"><use href="#i-package"/></svg>QuickBooks IIF</button>
     </div>
   </div>
   <div class="filter-bar">
@@ -7658,11 +7658,11 @@ async function generateReport(){
   document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if(r.isSiteHeader)return`<tr style="background:rgba(79,142,247,.1)">
       <td colspan="7" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
-        &#128205; ${r.siteName}
+        <svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}
       </td>
     </tr>`;
     if(r.isSiteTotal)return`<tr style="background:rgba(79,142,247,.04);border-top:2px solid rgba(79,142,247,.3)">
-      <td colspan="4" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px">&#128202; ${r.siteName} — Site Total</td>
+      <td colspan="4" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px"><svg class="ic" style="margin-right:5px"><use href="#i-nav-reports"/></svg>${r.siteName} — Site Total</td>
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--accent)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.otHours>0?r.otHours.toFixed(2):''}</td>
@@ -7678,7 +7678,7 @@ async function generateReport(){
       :`<span style="color:var(--text3)">—</span>`;
     return`<tr ${r.trackOT&&r.otHours>0?'style="background:rgba(245,158,11,.04)"':''}>
       <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${r.empCode}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}</td>
-      <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px">&#128205; ${r.siteName}</span>`:''}</td>
+      <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}</span>`:''}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${r.punchIn}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">${r.punchOut!=='—'?r.punchOut:'<span style="color:var(--text3)">—</span>'}</td>
