@@ -3515,8 +3515,8 @@ function showCompanyPicker(){
   hints.style.display=logged?'none':'flex';
   if(logged){
     hints.style.display='flex';
-    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'sites\')">🗂 Manage sites</span>'
-      +'<span class="picker-hint" style="color:var(--red)" onclick="logout()">&#10005; Logout</span>';
+    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'sites\')"><svg class="ic" style="margin-right:5px"><use href="#i-nav-sites"/></svg>Manage sites</span>'
+      +'<span class="picker-hint" style="color:var(--red)" onclick="logout()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Logout</span>';
   }
 }
 
@@ -3556,7 +3556,7 @@ function showSitePicker(co,sites){
     const empCnt=C.employees.filter(e=>e.site_id===s.id&&e.active).length;
     const col=colors[i%colors.length];
     return `<div class="pick-card" onclick="onSitePicked('${co.id}','${s.id}')" style="border-color:${col}33">
-      <div class="pick-icon">${icons[i%icons.length]}</div>
+      <div class="pick-icon" style="color:var(--accent)"><svg style="width:26px;height:26px"><use href="#i-pin"/></svg></div>
       <h3 style="color:${col}">${s.name}</h3>
       <p>${s.description||''}</p>
       <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} employee${empCnt!==1?'s':''}</p>
@@ -5041,7 +5041,7 @@ function refreshClockedIn(){
       :`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">${ini}</div>`;
     const dur=elapsed(last.punched_at);
     const over=last.punch_date!==today;
-    const warn=over?`<span style="color:var(--red);font-size:10px;font-weight:600;margin-left:4px">&#9888; since ${last.punch_date}</span>`:'';
+    const warn=over?`<span style="color:var(--red);font-size:10px;font-weight:600;margin-left:4px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>since ${last.punch_date}</span>`:'';
     return `<div class="ci-row" style="${over?'border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.05)':''}">
       ${ciAvatar}
       <div style="flex:1;min-width:0"><div class="ci-name">${emp.name}${warn}</div>
@@ -7172,11 +7172,11 @@ async function loadCompaniesPage(){
       </div>
       <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
-        <span>&#128101; ${total} ${t('common.total')} · ${active} ${t('common.active')}</span>
-        <span>&#128205; ${siteCnt} ${t('common.sites')}</span>
+        <span><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg>${total} ${t('common.total')} · ${active} ${t('common.active')}</span>
+        <span><svg class="ic" style="margin-right:5px"><use href="#i-pin"/></svg>${siteCnt} ${t('common.sites')}</span>
       </div>
       <div class="meta" style="margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;color:var(--text2)">
-        <span>&#128197; ${freqLabel[co.payroll_frequency]||'—'}</span>
+        <span><svg class="ic" style="margin-right:5px"><use href="#i-nav-schedule"/></svg>${freqLabel[co.payroll_frequency]||'—'}</span>
         <span>&#8634; ${t('common.weekStarts')}: ${weekLabel[co.week_start]||'—'}</span>
         ${co.track_overtime?`<span style="color:var(--amber)">${t('common.overtimeOn')}</span>`:''}
       </div>
@@ -8241,9 +8241,9 @@ function openSendReportModal(empId){
   // Show email status
   const emailEl = document.getElementById('sendReportEmpEmail');
   if(emp.email){
-    emailEl.innerHTML = `&#128231; Will be sent to <strong style="color:var(--text)">${emp.email}</strong>`;
+    emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Will be sent to <strong style="color:var(--text)">${emp.email}</strong>`;
   } else {
-    emailEl.innerHTML = `<span style="color:var(--red)">&#9888; No email address on file — please edit this employee and add one first.</span>`;
+    emailEl.innerHTML = `<span style="color:var(--red)"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>No email address on file — please edit this employee and add one first.</span>`;
   }
 
   // Populate period labels
@@ -8767,9 +8767,9 @@ async function renderHolidayList() {
         <div>
           <div class="holiday-list-date">${dateLabel}</div>
           <div class="holiday-list-name">${name}</div>
-          <div class="holiday-list-sub">${site ? `📍 ${site.name}` : (t('sched.holidayAllSites')||'All sites')}${h.note ? ` · ${h.note}` : ''}</div>
+          <div class="holiday-list-sub">${site ? `<svg class="ic" style="margin-right:3px"><use href="#i-pin"/></svg>${site.name}` : (t('sched.holidayAllSites')||'All sites')}${h.note ? ` · ${h.note}` : ''}</div>
         </div>
-        <button class="btn-avail-remove" onclick="deleteHoliday('${h.id}')" title="${t('common.delete')||'Delete'}">✕</button>
+        <button class="btn-avail-remove" onclick="deleteHoliday('${h.id}')" title="${t('common.delete')||'Delete'}"><svg style="width:13px;height:13px"><use href="#i-x"/></svg></button>
       </div>`;
     }).join('');
   } catch(e) {
@@ -8939,7 +8939,7 @@ async function renderAdminAvailList() {
           <div class="avail-admin-label">${label}</div>
           <div class="avail-admin-sub">${sub}${a.note ? ` · ${a.note}` : ''}</div>
         </div>
-        <button class="btn-avail-remove" onclick="deleteAdminAvail('${a.id}')" title="${t('common.delete')||'Delete'}">✕</button>
+        <button class="btn-avail-remove" onclick="deleteAdminAvail('${a.id}')" title="${t('common.delete')||'Delete'}"><svg style="width:13px;height:13px"><use href="#i-x"/></svg></button>
       </div>`;
     }).join('');
   } catch(e) {
@@ -9194,10 +9194,10 @@ async function renderScheduleGrid() {
         const startFmt = sh.start_time.slice(0,5);
         const endFmt   = sh.end_time.slice(0,5);
         html += `<div class="sched-shift${isUnavail?' sched-shift-warning':''}" onclick="openEditShiftModal('${sh.id}')" ${isUnavail?`style="border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.12)" title="${t('sched.shiftOverAvail')||'Shift overlaps unavailability'}"`:''}> 
-          ${isUnavail?`<div style="font-size:9px;color:var(--amber);margin-bottom:2px">⚠️ ${t('sched.overlapWarning')||'Overlap'}</div>`:''}
+          ${isUnavail?`<div style="font-size:9px;color:var(--amber);margin-bottom:2px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>${t('sched.overlapWarning')||'Overlap'}</div>`:''}
           ${sh.note ? `<div style="font-size:11px;font-weight:600">${sh.note}</div>` : ''}
           <div class="shift-time">${startFmt} – ${endFmt}</div>
-          <span class="shift-delete" onclick="event.stopPropagation();deleteShiftById('${sh.id}')">✕</span>
+          <span class="shift-delete" onclick="event.stopPropagation();deleteShiftById('${sh.id}')"><svg style="width:11px;height:11px"><use href="#i-x"/></svg></span>
         </div>`;
       });
 
