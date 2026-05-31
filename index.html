@@ -6529,15 +6529,15 @@ async function renderMissedPunchRequests(){
         <td style="font-size:12px;color:var(--text2);max-width:160px">${reason||'<span style="color:var(--text3)">—</span>'}</td>
         <td>
           <div id="mpr-actions-${r.id}" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-            <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunch('${r.id}')">&#10003; Approve</button>
-            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}')">&#9998; Edit+Approve</button>
-            <button class="btn-danger" style="padding:4px 11px;font-size:11px" onclick="denyMissedPunch('${r.id}')">&#10007; Deny</button>
+            <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Approve</button>
+            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit+Approve</button>
+            <button class="btn-danger" style="padding:4px 11px;font-size:11px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>Deny</button>
           </div>
           <div id="mpr-edit-${r.id}" style="display:none;margin-top:6px">
             <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
               <input type="date" id="mpr-date-${r.id}" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
               <input type="time" id="mpr-time-${r.id}" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
-              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited('${r.id}')">&#10003; Confirm</button>
+              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
               <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px" onclick="toggleEditMissedPunch('${r.id}')">Cancel</button>
             </div>
           </div>
@@ -6557,9 +6557,9 @@ async function renderMissedPunchRequests(){
         <div class="mc-row"><span>Time</span><span>${timeStr}</span></div>
         ${reason?`<div class="mc-row"><span>Reason</span><span style="font-size:12px">${reason}</span></div>`:''}
         <div id="mprc-normal-${r.id}" class="mc-actions">
-          <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunch('${r.id}')">&#10003; Approve</button>
-          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}',true)">&#9998; Edit</button>
-          <button class="btn-danger" style="font-size:12px" onclick="denyMissedPunch('${r.id}')">&#10007; Deny</button>
+          <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Approve</button>
+          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}',true)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit</button>
+          <button class="btn-danger" style="font-size:12px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>Deny</button>
         </div>
         <div id="mprc-editmode-${r.id}" style="display:none;padding:4px 0">
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">
@@ -6567,7 +6567,7 @@ async function renderMissedPunchRequests(){
             <input type="time" id="mprc-time-${r.id}" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited('${r.id}',true)">&#10003; Confirm</button>
+            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited('${r.id}',true)"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
             <button class="btn-secondary" style="font-size:12px" onclick="toggleEditMissedPunch('${r.id}',true)">Cancel</button>
           </div>
         </div>
