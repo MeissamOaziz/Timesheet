@@ -5799,9 +5799,9 @@ function renderEmployees(){
   const rows=emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
     const ini=e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const pin=e.pin?`<span class="pill in">&#128273; ${t('admin.pinSet')||'Set'}</span>`:`<span class="pill out">&#9888; None</span>`;
+    const pin=e.pin?`<span class="pill in"><svg class="ic" style="margin-right:4px"><use href="#i-key"/></svg>${t('admin.pinSet')||'Set'}</span>`:`<span class="pill out"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>None</span>`;
     const emailStatus=e.send_report&&e.email
-      ?`<span style="font-size:11px;color:var(--amber)">&#128231; ${e.email}</span>`
+      ?`<span style="font-size:11px;color:var(--amber)"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${e.email}</span>`
       :`<span style="color:var(--text3);font-size:12px">—</span>`;
     const avatarHtml=e.photo_url
       ?`<div class="avatar"><img src="${e.photo_url}" alt="${ini}" onerror="this.parentElement.innerHTML='${ini}'"></div>`
@@ -5818,17 +5818,17 @@ function renderEmployees(){
     return `<tr${rowBase?` style="${rowBase}"`:''}>
       <td style="width:36px;text-align:center"><input type="checkbox" class="emp-cb" data-id="${e.id}" ${isSelected?'checked':''} onchange="toggleEmpSelect('${e.id}',this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></td>
       <td><div class="emp-row">${avatarHtml}<div><div style="font-weight:500">${e.name}${orphanBadge}</div></div></div></td>
-      <td>${site?`<span class="pill site" style="font-size:11px">&#128205; ${site.name}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
-      <td style="font-size:12px;color:var(--text2)">${isOrphaned?'<span style="color:#ef4444;font-size:11px">⚠️ Deleted</span>':e.dept||'—'}</td>
+      <td>${site?`<span class="pill site" style="font-size:11px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${site.name}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="font-size:12px;color:var(--text2)">${isOrphaned?'<span style="color:#ef4444;font-size:11px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>Deleted</span>':e.dept||'—'}</td>
       <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${e.emp_code||'—'}</td>
       <td>${pin}</td>
       <td style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${emailStatus}</td>
       <td><span class="pill ${e.active?'in':'out'}" style="font-size:10px">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span></td>
       <td><div style="display:flex;gap:4px;flex-wrap:nowrap">
-        <button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="editEmployee('${e.id}')">✏️</button>
-        <button class="icon-btn" title="${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}" onclick="toggleEmp('${e.id}')" style="${e.active?'color:var(--amber)':'color:var(--green)'}">${e.active?'⏸':'▶'}</button>
-        <button class="icon-btn" title="${t('admin.sendReport')||'Send Report'}" onclick="openSendReportModal('${e.id}')" style="color:var(--amber)">📧</button>
-        <button class="icon-btn danger" title="${t('common.delete')||'Delete'}" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')">🗑️</button>
+        <button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="editEmployee('${e.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
+        <button class="icon-btn" title="${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}" onclick="toggleEmp('${e.id}')" style="${e.active?'color:var(--amber)':'color:var(--green)'}"><svg class="ic"><use href="#${e.active?'i-pause':'i-play'}"/></svg></button>
+        <button class="icon-btn" title="${t('admin.sendReport')||'Send Report'}" onclick="openSendReportModal('${e.id}')" style="color:var(--amber)"><svg class="ic"><use href="#i-mail"/></svg></button>
+        <button class="icon-btn danger" title="${t('common.delete')||'Delete'}" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#i-trash"/></svg></button>
       </div></td>
     </tr>`;
   }).join('');
@@ -5845,7 +5845,7 @@ function renderEmployees(){
         ${avatarHtml}
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:1px">${site?'📍 '+site.name:''}${e.dept?' · '+e.dept:''}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">${site?'<svg class="ic" style="margin-right:3px"><use href="#i-pin"/></svg>'+site.name:''}${e.dept?' · '+e.dept:''}</div>
         </div>
         <span class="pill ${e.active?'in':'out'}" style="font-size:10px;flex-shrink:0">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span>
       </div>
@@ -5853,12 +5853,12 @@ function renderEmployees(){
         <div style="background:var(--surface2);border-radius:7px;padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">PIN</div><div style="margin-top:3px">${pin}</div></div>
         <div style="background:var(--surface2);border-radius:7px;padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Code</div><div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px">${e.emp_code||'—'}</div></div>
       </div>
-      ${e.send_report&&e.email?`<div style="font-size:11px;color:var(--amber);margin-bottom:10px">📧 ${e.email}</div>`:''}
+      ${e.send_report&&e.email?`<div style="font-size:11px;color:var(--amber);margin-bottom:10px"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${e.email}</div>`:''}
       <div class="mc-actions">
-        <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')">✏️ ${t('common.edit')||'Edit'}</button>
-        <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--amber)':'var(--green)'}" onclick="toggleEmp('${e.id}')">${e.active?'⏸ '+(t('admin.deactivate')||'Deactivate'):'▶ '+(t('admin.activate')||'Activate')}</button>
-        <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')">📧</button>
-        <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')">🗑️</button>
+        <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-edit"/></svg>${t('common.edit')||'Edit'}</button>
+        <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--amber)':'var(--green)'}" onclick="toggleEmp('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#${e.active?'i-pause':'i-play'}"/></svg>${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}</button>
+        <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')"><svg class="ic"><use href="#i-mail"/></svg></button>
+        <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#i-trash"/></svg></button>
       </div>
     </div>`;
   }).join('');
