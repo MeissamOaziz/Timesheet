@@ -1473,7 +1473,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <div class="context-banner" id="punchBanner">Loading...</div>
     <div id="kioskSetupBar" style="display:none;justify-content:center;gap:10px;flex-wrap:wrap;padding:8px 16px;background:rgba(79,142,247,.06);border-bottom:1px solid var(--border)">
-      <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="kioskMode()" data-i18n="punch.kioskMode">🖥 Set up for employees (stay on this page)</button>
+      <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="kioskMode()"><svg class="ic" style="margin-right:5px"><use href="#i-monitor"/></svg><span data-i18n="punch.kioskMode">Set up for employees (stay on this page)</span></button>
       <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="logout()" data-i18n="punch.logoutHome">↩ Logout &amp; go to PunchClock.ca</button>
     </div>
     <div class="punch-card">
@@ -1485,7 +1485,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <button class="punch-btn btn-out" onclick="requestPunch('OUT')">&#10005; OUT</button>
       </div>
       <div style="display:flex;justify-content:center;margin-top:10px">
-        <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openMissedPunchModal()" data-i18n="missed.button">📋 Report a Missed Punch</button>
+        <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openMissedPunchModal()"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg><span data-i18n="missed.button">Report a Missed Punch</span></button>
       </div>
       <div class="punch-feedback" id="punchFeedback"></div>
     </div>
@@ -1499,8 +1499,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <!-- My Shifts panel — shown after employee selects themselves -->
     <div class="my-shifts-panel" id="myShiftsPanel" style="display:none">
       <div class="my-shifts-header">
-        <h4>🗓️ <span data-i18n="sched.myShifts">My Upcoming Shifts</span></h4>
-        <button id="myShiftsSendBtn" class="btn-sched-email" onclick="openSendMySchedule()" style="font-size:11px;padding:5px 12px">📧 <span data-i18n="sched.sendToMe">Send to my email</span></button>
+        <h4 style="display:flex;align-items:center;gap:7px"><svg style="width:17px;height:17px"><use href="#i-nav-schedule"/></svg><span data-i18n="sched.myShifts">My Upcoming Shifts</span></h4>
+        <button id="myShiftsSendBtn" class="btn-sched-email" onclick="openSendMySchedule()" style="font-size:11px;padding:5px 12px"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg><span data-i18n="sched.sendToMe">Send to my email</span></button>
       </div>
       <div id="myShiftsList"></div>
     </div>
@@ -1511,7 +1511,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="modal-overlay" id="sendMyScheduleModal" style="z-index:9800">
   <div class="modal" style="max-width:380px">
     <div style="text-align:center;margin-bottom:18px">
-      <div style="font-size:32px;margin-bottom:8px">🗓️</div>
+      <div style="margin-bottom:8px;color:var(--accent)"><svg style="width:34px;height:34px"><use href="#i-nav-schedule"/></svg></div>
       <h3 style="margin:0 0 6px" data-i18n="sched.sendToMe">Send to my email</h3>
       <p style="font-size:13px;color:var(--text2);margin:0" id="sendMySchedSubtitle"></p>
     </div>
@@ -1540,7 +1540,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           onkeydown="if(event.key==='Enter')sendMyScheduleNow()">
         <div style="font-size:11px;color:var(--text3);margin-top:6px" data-i18n="sched.emailSaveNote">This email will be saved to your profile so your admin can send you reports too.</div>
       </div>
-      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="sendMyScheduleNow()" id="sendMySchedBtn" data-i18n="sched.sendNow">📧 Send Schedule</button>
+      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="sendMyScheduleNow()" id="sendMySchedBtn"><svg class="ic" style="margin-right:6px"><use href="#i-mail"/></svg><span data-i18n="sched.sendNow">Send Schedule</span></button>
       <button class="btn-secondary" style="width:100%;margin-top:8px" onclick="closeModal('sendMyScheduleModal')" data-i18n="modal.cancel">Cancel</button>
     </div>
   </div>
@@ -2154,15 +2154,15 @@ border-top:1px solid var(--border);margin:18px 0;}
       <p data-i18n="sched.subtitle">Build weekly shift schedules for your team</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="openHolidaysModal()" id="holidaysBtn" data-i18n="sched.manageHolidays">🗓 Holidays</button>
+      <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="openHolidaysModal()" id="holidaysBtn"><svg class="ic" style="margin-right:5px"><use href="#i-star"/></svg><span data-i18n="sched.manageHolidays">Holidays</span></button>
       <button class="btn-primary" style="width:auto;padding:8px 18px;margin-top:0" onclick="openAddShiftModal()" id="addShiftBtn" data-i18n="sched.addShift">+ Add Shift</button>
     </div>
   </div>
   <!-- Holiday reminder banner (shown when entering a new year with no holidays set) -->
   <div id="holidayReminderBanner" style="display:none" class="holiday-reminder">
-    <p>⭐ <strong data-i18n="sched.holidayReminderTitle">Don't forget to set up holidays for this year!</strong> <span data-i18n="sched.holidayReminderDesc">Scheduling reminders and pay-rate flags depend on holidays being up to date.</span></p>
+    <p><svg class="ic" style="margin-right:5px;color:var(--amber)"><use href="#i-star"/></svg><strong data-i18n="sched.holidayReminderTitle">Don't forget to set up holidays for this year!</strong> <span data-i18n="sched.holidayReminderDesc">Scheduling reminders and pay-rate flags depend on holidays being up to date.</span></p>
     <div style="display:flex;gap:8px;flex-shrink:0">
-      <button class="btn-secondary" style="font-size:12px;padding:5px 12px" onclick="openHolidaysModal()">⭐ <span data-i18n="sched.addHolidays">Add Holidays</span></button>
+      <button class="btn-secondary" style="font-size:12px;padding:5px 12px" onclick="openHolidaysModal()"><svg class="ic" style="margin-right:4px"><use href="#i-star"/></svg><span data-i18n="sched.addHolidays">Add Holidays</span></button>
       <button class="btn-secondary" style="font-size:12px;padding:5px 12px;color:var(--text3)" onclick="dismissHolidayReminder()" data-i18n="common.dismiss">Dismiss</button>
     </div>
   </div>
@@ -2174,9 +2174,9 @@ border-top:1px solid var(--border);margin:18px 0;}
       <select id="schedSiteFilter" onchange="renderScheduleGrid()" style="min-width:140px"></select>
     </div>
     <div class="sched-week-nav">
-      <button class="sched-week-btn" onclick="schedWeekOffset(-1)">&#8249;</button>
+      <button class="sched-week-btn" onclick="schedWeekOffset(-1)"><svg style="width:16px;height:16px"><use href="#i-chev-left"/></svg></button>
       <div class="sched-week-label" id="schedWeekLabel"></div>
-      <button class="sched-week-btn" onclick="schedWeekOffset(1)">&#8250;</button>
+      <button class="sched-week-btn" onclick="schedWeekOffset(1)"><svg style="width:16px;height:16px"><use href="#i-chev-right"/></svg></button>
       <button class="btn-secondary" style="font-size:12px;padding:5px 12px;margin-left:4px" onclick="schedGoToday()" data-i18n="sched.today">Today</button>
     </div>
   </div>
@@ -9594,9 +9594,9 @@ en:{
 'punch.selectName':'Select Your Name','punch.chooseEmployee':'-- Choose employee --',
 'punch.in':'✓ IN','punch.out':'✕ OUT',
 'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
-'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.','punch.kioskMode':'🖥 Set up for employees (stay on this page)','punch.logoutHome':'↩ Logout & go to PunchClock.ca','punch.kioskActive':'Kiosk mode active. Employees can now clock in and out.',
+'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.','punch.kioskMode':'Set up for employees (stay on this page)','punch.logoutHome':'↩ Logout & go to PunchClock.ca','punch.kioskActive':'Kiosk mode active. Employees can now clock in and out.',
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
-'missed.button':'📋 Report a Missed Punch','missed.title':'📋 Report a Missed Punch',
+'missed.button':'Report a Missed Punch','missed.title':'📋 Report a Missed Punch',
 'missed.intro':'Use this if you forgot to clock in or out. The admin will be notified.',
 'missed.employee':'Employee','missed.type':'Type','missed.typeIn':'Missed Clock In','missed.typeOut':'Missed Clock Out',
 'missed.date':'Date','missed.time':'Time','missed.notes':'Notes (optional)',
@@ -10119,7 +10119,7 @@ en:{
 'sched.pinWrong':'Incorrect PIN. Please try again.',
 'sched.yourEmail':'Your email address',
 'sched.sendingTo':'Sending to:',
-'sched.sendNow':'📧 Send Schedule',
+'sched.sendNow':'Send Schedule',
 'sched.sending':'Sending...',
 'sched.sentOk':'Schedule sent to',
 'sched.sendFailed':'Failed to send:',
@@ -10175,9 +10175,9 @@ fr:{
 'punch.selectName':'Sélectionnez votre nom','punch.chooseEmployee':'-- Choisir un employé --',
 'punch.in':'✓ ENTRÉE','punch.out':'✕ SORTIE',
 'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
-'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",'punch.kioskMode':'🖥 Configurer pour les employés (rester sur cette page)','punch.logoutHome':'↩ Se déconnecter et aller sur PunchClock.ca','punch.kioskActive':'Mode kiosque actif. Les employés peuvent maintenant pointer.',
+'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",'punch.kioskMode':'Configurer pour les employés (rester sur cette page)','punch.logoutHome':'↩ Se déconnecter et aller sur PunchClock.ca','punch.kioskActive':'Mode kiosque actif. Les employés peuvent maintenant pointer.',
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
-'missed.button':'📋 Signaler un pointage manqué','missed.title':'📋 Signaler un pointage manqué',
+'missed.button':'Signaler un pointage manqué','missed.title':'📋 Signaler un pointage manqué',
 'missed.intro':"Utilisez ceci si vous avez oublié de pointer. L'administrateur sera notifié.",
 'missed.employee':'Employé','missed.type':'Type','missed.typeIn':'Entrée manquée','missed.typeOut':'Sortie manquée',
 'missed.date':'Date','missed.time':'Heure','missed.notes':'Notes (optionnel)',
@@ -10704,7 +10704,7 @@ fr:{
 'sched.pinWrong':'NIP incorrect. Veuillez réessayer.',
 'sched.yourEmail':'Votre adresse courriel',
 'sched.sendingTo':'Envoi à :',
-'sched.sendNow':'📧 Envoyer l\'horaire',
+'sched.sendNow':'Envoyer l\'horaire',
 'sched.sending':'Envoi en cours...',
 'sched.sentOk':'Horaire envoyé à',
 'sched.sendFailed':'Échec de l\'envoi :',
