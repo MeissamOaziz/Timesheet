@@ -6418,41 +6418,21 @@ async function deleteAdmin(id, name){
       // 2. For each company: mark employees as orphaned (deactivate + flag dept), then delete sites + company
       for(const coId of coIds){
         // Mark all employees of this company as orphaned
-        await fetch(`${SUPA_URL}/rest/v1/employees?company_id=eq.${coId}`,{
-          method:'PATCH',
-          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-          body:JSON.stringify({active:false, dept:'⚠️ Admin Deleted', site_id:null, company_id:null})
-        });
+        await DB.update('employees',`company_id=eq.${coId}`,{active:false, dept:'⚠️ Admin Deleted', site_id:null, company_id:null});
         // Delete all sites for this company
-        await fetch(`${SUPA_URL}/rest/v1/sites?company_id=eq.${coId}`,{
-          method:'DELETE',
-          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
-        });
+        await DB.del('sites',`company_id=eq.${coId}`);
         // Delete all punches for this company
-        await fetch(`${SUPA_URL}/rest/v1/punches?company_id=eq.${coId}`,{
-          method:'DELETE',
-          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
-        });
+        await DB.del('punches',`company_id=eq.${coId}`);
         // Delete the company
-        await fetch(`${SUPA_URL}/rest/v1/companies?id=eq.${coId}`,{
-          method:'DELETE',
-          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
-        });
+        await DB.del('companies',`id=eq.${coId}`);
       }
     }
 
     // 3. Delete join requests involving this admin
-    await fetch(`${SUPA_URL}/rest/v1/join_requests?or=(requester_id.eq.${id},target_admin_id.eq.${id})`,{
-      method:'DELETE',
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
-    });
+    await DB.del('join_requests',`or=(requester_id.eq.${id},target_admin_id.eq.${id})`);
 
     // 4. Delete any co-admins under this admin (set parent to null or delete)
-    await fetch(`${SUPA_URL}/rest/v1/admins?parent_admin_id=eq.${id}`,{
-      method:'PATCH',
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({parent_admin_id:null})
-    });
+    await DB.update('admins',`parent_admin_id=eq.${id}`,{parent_admin_id:null});
 
     // 5. Delete the admin account
     await DB.del('admins',`id=eq.${id}`);
