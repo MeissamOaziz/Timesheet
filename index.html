@@ -4190,11 +4190,20 @@ async function sendResetCode(resend=false){
   }
 }
 
-function verifyResetCode(){
+async function verifyResetCode(){
   const entered=(document.getElementById('forgotCode').value||'').trim();
   if(!/^\d{6}$/.test(entered)){ showMsg('forgotMsg',t('msg.enterCode')||'Enter the 6-digit code.','error'); return; }
-  // Server verifies the code together with the new password (doPasswordReset).
-  pendingReset = pendingReset || {};
+  if(!pendingReset||!pendingReset.email){ showMsg('forgotMsg',t('msg.resetExpired')||'Session expired. Please restart the reset.','error'); return; }
+  try{
+    showMsg('forgotMsg', t('msg.verifying')||'Verifying...', 'info');
+    const r=await DB.rpc('check_email_code',{p_email:pendingReset.email,p_code:entered,p_purpose:'password_reset'});
+    if(!r||!r.ok){
+      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',no_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.'};
+      showMsg('forgotMsg', map[r&&r.error] || (t('msg.badCode')||'Incorrect or expired code.'), 'error');
+      return;
+    }
+  }catch(e){ showMsg('forgotMsg', t('msg.badCode')||'Incorrect or expired code.','error'); return; }
+  // Code is valid — advance to the password step. Final reset re-verifies atomically.
   pendingReset.code = entered;
   document.getElementById('forgotStep2').style.display = 'none';
   document.getElementById('forgotStep3').style.display = '';
@@ -9751,7 +9760,7 @@ en:{
 'msg.codeVerified':'Code verified! Now set your new password.',
 'msg.passwordMismatch':'Passwords do not match.',
 'msg.passwordUpdated':'✓ Password updated successfully! Redirecting to login...',
-'msg.invalidEmail':'Please enter a valid email address.','msg.sending':'Sending...','msg.enterCode':'Enter the 6-digit code.','msg.enterNewPass':'Enter your new password.','msg.saving':'Saving...','msg.badCode':'Incorrect or expired code.','msg.codeExpired':'Code expired. Please request a new one.','msg.tooManyAttempts':'Too many attempts. Request a new code.','msg.resetExpired':'Session expired. Please restart the reset.','msg.resetFailed':'Could not reset password. Please try again.','msg.resetDone':'Password reset! You can now log in.',
+'msg.invalidEmail':'Please enter a valid email address.','msg.sending':'Sending...','msg.verifying':'Verifying...','msg.enterCode':'Enter the 6-digit code.','msg.enterNewPass':'Enter your new password.','msg.saving':'Saving...','msg.badCode':'Incorrect or expired code.','msg.codeExpired':'Code expired. Please request a new one.','msg.tooManyAttempts':'Too many attempts. Request a new code.','msg.resetExpired':'Session expired. Please restart the reset.','msg.resetFailed':'Could not reset password. Please try again.','msg.resetDone':'Password reset! You can now log in.',
 'msg.selectDates':'Please select a start and end date.',
 'msg.chooseSite':'Choose your work site',
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
@@ -10333,7 +10342,7 @@ fr:{
 'msg.codeVerified':'Code vérifié! Définissez votre nouveau mot de passe.',
 'msg.passwordMismatch':'Les mots de passe ne correspondent pas.',
 'msg.passwordUpdated':'✓ Mot de passe mis à jour! Redirection vers la connexion...',
-'msg.invalidEmail':'Veuillez entrer une adresse courriel valide.','msg.sending':'Envoi en cours...','msg.enterCode':'Entrez le code à 6 chiffres.','msg.enterNewPass':'Entrez votre nouveau mot de passe.','msg.saving':'Enregistrement...','msg.badCode':'Code incorrect ou expiré.','msg.codeExpired':'Code expiré. Veuillez en demander un nouveau.','msg.tooManyAttempts':'Trop de tentatives. Demandez un nouveau code.','msg.resetExpired':'Session expirée. Veuillez recommencer la réinitialisation.','msg.resetFailed':'Impossible de réinitialiser le mot de passe. Veuillez réessayer.','msg.resetDone':'Mot de passe réinitialisé ! Vous pouvez maintenant vous connecter.',
+'msg.invalidEmail':'Veuillez entrer une adresse courriel valide.','msg.sending':'Envoi en cours...','msg.verifying':'Vérification...','msg.enterCode':'Entrez le code à 6 chiffres.','msg.enterNewPass':'Entrez votre nouveau mot de passe.','msg.saving':'Enregistrement...','msg.badCode':'Code incorrect ou expiré.','msg.codeExpired':'Code expiré. Veuillez en demander un nouveau.','msg.tooManyAttempts':'Trop de tentatives. Demandez un nouveau code.','msg.resetExpired':'Session expirée. Veuillez recommencer la réinitialisation.','msg.resetFailed':'Impossible de réinitialiser le mot de passe. Veuillez réessayer.','msg.resetDone':'Mot de passe réinitialisé ! Vous pouvez maintenant vous connecter.',
 'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
 'msg.chooseSite':'Choisissez votre site de travail',
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
