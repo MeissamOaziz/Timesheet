@@ -3007,6 +3007,7 @@ async function supaFetch(method,table,opts={}){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
       body:JSON.stringify({
         table,method,
+        action:opts.action||null,
         filter:opts.filter||'',
         body:opts.body||null,
         sessionId:sess?.id||null,
@@ -3039,6 +3040,7 @@ const DB={
     const text=await res.text();
     return text?JSON.parse(text):null;
   },
+  requestResetCode:(email)=>supaFetch('POST','email_codes',{action:'request_reset_code',body:{email}}),
 };
 
 
@@ -4172,60 +4174,52 @@ let _empSort = {col:'name', dir:'asc'};
 let _smSiteId = null;
 
 async function sendResetCode(resend=false){
-  const email = (resend ? pendingReset?.email : document.getElementById('forgotEmail').value.trim().toLowerCase()) || '';
-  if(!email){ showMsg('forgotMsg',t('msg.enterEmail'),'error'); return; }
-  showMsg('forgotMsg','<span style="color:var(--text2)">&#8987; Sending reset code...</span>','info');
+  const email=((resend ? pendingReset?.email : document.getElementById('forgotEmail').value)||'').trim().toLowerCase();
+  if(!email||!email.includes('@')){ showMsg('forgotMsg',t('msg.invalidEmail')||'Please enter a valid email.','error'); return; }
+  if(!resend) pendingReset = { email };
   try{
-    const rows = await DB.all('admins', `email=eq.${encodeURIComponent(email)}&verified=eq.true`);
-    if(!rows.length){ showMsg('forgotMsg',t('msg.noAccount'),'error'); return; }
-    const code = Math.floor(100000+Math.random()*900000).toString();
-    pendingReset = { email, code, adminId: rows[0].id };
-    const controller = new AbortController();
-    const timeout = setTimeout(()=>controller.abort(), 20000);
-    const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-      body: JSON.stringify({ email, name: rows[0].name, code, subject: 'Reset your PunchClock Pro password', purpose: 'password_reset' }),
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    const data = await res.json();
-    if(!res.ok && !data.success && !data.sent){
-      showMsg('forgotMsg',t('msg.sendFailed'),'error'); return;
-    }
+    showMsg('forgotMsg', t('msg.sending')||'Sending...', 'info');
+    await DB.requestResetCode(email);
+  }catch(e){ /* swallow — still show neutral message to avoid enumeration */ }
+  // Neutral message regardless of whether the account exists
+  showMsg('forgotMsg', t('msg.resetCodeSent')||'If an account exists for that email, a 6-digit code has been sent. Check your inbox.', 'success');
+  if(!resend){
     document.getElementById('forgotEmailSent').textContent = email;
     document.getElementById('forgotStep1').style.display = 'none';
     document.getElementById('forgotStep2').style.display = '';
-    showMsg('forgotMsg', resend ? t('msg.newCodeSent') : t('msg.resetCodeSent'),'success');
-  }catch(e){
-    if(e.name==='AbortError') showMsg('forgotMsg','Request timed out. Please try again.','error');
-    else showMsg('forgotMsg','Error: '+e.message,'error');
   }
 }
 
 function verifyResetCode(){
-  const entered = document.getElementById('forgotCode').value.trim();
-  if(!entered || entered.length !== 6){ showMsg('forgotMsg',t('msg.enter6Digit'),'error'); return; }
-  if(!pendingReset){ showMsg('forgotMsg',t('msg.sessionExpired'),'error'); navigate('forgot'); return; }
-  if(entered !== pendingReset.code){ showMsg('forgotMsg',t('msg.incorrectCode'),'error'); return; }
+  const entered=(document.getElementById('forgotCode').value||'').trim();
+  if(!/^\d{6}$/.test(entered)){ showMsg('forgotMsg',t('msg.enterCode')||'Enter the 6-digit code.','error'); return; }
+  // Server verifies the code together with the new password (doPasswordReset).
+  pendingReset = pendingReset || {};
+  pendingReset.code = entered;
   document.getElementById('forgotStep2').style.display = 'none';
   document.getElementById('forgotStep3').style.display = '';
-  document.getElementById('forgotEmailFinal').textContent = pendingReset.email;
-  showMsg('forgotMsg',t('msg.codeVerified'),'success');
+  document.getElementById('forgotEmailFinal').textContent = pendingReset.email || '';
+  showMsg('forgotMsg', t('msg.enterNewPass')||'Enter your new password.', 'success');
 }
 
 async function doPasswordReset(){
-  const newPass = document.getElementById('forgotNewPass').value;
-  const confirmPass = document.getElementById('forgotConfirmPass').value;
-  if(!newPass || newPass.length < 6){ showMsg('forgotMsg',t('msg.shortPassword'),'error'); return; }
-  if(newPass !== confirmPass){ showMsg('forgotMsg',t('msg.passwordMismatch'),'error'); return; }
-  if(!pendingReset){ showMsg('forgotMsg','Session expired. Please start over.','error'); navigate('forgot'); return; }
+  const newPass=document.getElementById('forgotNewPass')?.value||'';
+  const conf=document.getElementById('forgotConfirmPass')?.value||'';
+  if(!pendingReset||!pendingReset.email||!pendingReset.code){ showMsg('forgotMsg',t('msg.resetExpired')||'Session expired. Please restart the reset.','error'); return; }
+  if(!newPass||newPass.length<6){ showMsg('forgotMsg',t('msg.shortPassword'),'error'); return; }
+  if(newPass!==conf){ showMsg('forgotMsg',t('msg.passwordMismatch'),'error'); return; }
   try{
-    await DB.rpc('set_admin_password',{p_id:pendingReset.adminId,p_pass:newPass});
-    pendingReset = null;
-    showMsg('forgotMsg',t('msg.passwordUpdated'),'success');
-    setTimeout(()=>navigate('login'), 2000);
-  }catch(e){ showMsg('forgotMsg','Error updating password: '+e.message,'error'); }
+    showMsg('forgotMsg',t('msg.saving')||'Saving...','info');
+    const r=await DB.rpc('verify_code_and_reset',{p_email:pendingReset.email,p_code:pendingReset.code,p_newpass:newPass});
+    if(!r||!r.ok){
+      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',no_code:t('msg.badCode')||'Incorrect or expired code.',weak_password:t('msg.shortPassword')};
+      showMsg('forgotMsg', map[r&&r.error] || (t('msg.resetFailed')||'Could not reset password. Please try again.'), 'error');
+      return;
+    }
+    pendingReset=null;
+    showMsg('forgotMsg',t('msg.resetDone')||'Password reset! You can now log in with your new password.','success');
+    setTimeout(()=>navigate('login'), 1800);
+  }catch(e){ showMsg('forgotMsg',t('msg.resetFailed')||'Could not reset password. Please try again.','error'); }
 }
 
 // Registration type selection
@@ -9757,6 +9751,7 @@ en:{
 'msg.codeVerified':'Code verified! Now set your new password.',
 'msg.passwordMismatch':'Passwords do not match.',
 'msg.passwordUpdated':'✓ Password updated successfully! Redirecting to login...',
+'msg.invalidEmail':'Please enter a valid email address.','msg.sending':'Sending...','msg.enterCode':'Enter the 6-digit code.','msg.enterNewPass':'Enter your new password.','msg.saving':'Saving...','msg.badCode':'Incorrect or expired code.','msg.codeExpired':'Code expired. Please request a new one.','msg.tooManyAttempts':'Too many attempts. Request a new code.','msg.resetExpired':'Session expired. Please restart the reset.','msg.resetFailed':'Could not reset password. Please try again.','msg.resetDone':'Password reset! You can now log in.',
 'msg.selectDates':'Please select a start and end date.',
 'msg.chooseSite':'Choose your work site',
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
@@ -10338,6 +10333,7 @@ fr:{
 'msg.codeVerified':'Code vérifié! Définissez votre nouveau mot de passe.',
 'msg.passwordMismatch':'Les mots de passe ne correspondent pas.',
 'msg.passwordUpdated':'✓ Mot de passe mis à jour! Redirection vers la connexion...',
+'msg.invalidEmail':'Veuillez entrer une adresse courriel valide.','msg.sending':'Envoi en cours...','msg.enterCode':'Entrez le code à 6 chiffres.','msg.enterNewPass':'Entrez votre nouveau mot de passe.','msg.saving':'Enregistrement...','msg.badCode':'Code incorrect ou expiré.','msg.codeExpired':'Code expiré. Veuillez en demander un nouveau.','msg.tooManyAttempts':'Trop de tentatives. Demandez un nouveau code.','msg.resetExpired':'Session expirée. Veuillez recommencer la réinitialisation.','msg.resetFailed':'Impossible de réinitialiser le mot de passe. Veuillez réessayer.','msg.resetDone':'Mot de passe réinitialisé ! Vous pouvez maintenant vous connecter.',
 'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
 'msg.chooseSite':'Choisissez votre site de travail',
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
