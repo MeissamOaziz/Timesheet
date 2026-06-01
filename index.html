@@ -4064,8 +4064,12 @@ async function doSetInvitePassword(){
   if(pw!==pw2){showMsg('setpassMsg',t('msg.passMismatch')||'Passwords do not match.','error');return;}
   try{
     showMsg('setpassMsg','Saving...','info');
-    await DB.rpc('set_admin_password',{p_id:pendingInviteAdmin.id,p_pass:pw});
-    await DB.update('admins',`id=eq.${pendingInviteAdmin.id}`,{status:'active',verified:true});
+    const act=await DB.rpc('activate_invited_admin',{p_id:pendingInviteAdmin.id,p_newpass:pw});
+    if(!act||!act.ok){
+      const map={weak_password:t('msg.passShort')||'Password must be at least 6 characters.',not_pending:'This invitation is no longer valid. Please log in.',not_found:'Account not found.'};
+      showMsg('setpassMsg', map[act&&act.error] || 'Could not set password. Please try again.','error');
+      return;
+    }
     // Log in as the co-admin
     const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full=fullRows?.[0]||pendingInviteAdmin;
@@ -4114,38 +4118,13 @@ async function doAcceptInvite(){
   if(pass.length<6){showMsg('acceptInviteMsg','Password must be at least 6 characters.','error');return;}
   if(pass!==passConfirm){showMsg('acceptInviteMsg','Passwords do not match.','error');return;}
   try{
-    const invCheck=await DB.all('invitations',`id=eq.${inv.id}&status=eq.pending`);
-    if(!invCheck?.length){showMsg('acceptInviteMsg','This invitation has already been used or has expired.','error');return;}
-    const existing=await DB.all('admins',`email=eq.${inv.email}`);
-    if(existing?.length){showMsg('acceptInviteMsg','An account with this email already exists. Please log in instead.','error');return;}
-    const fullName=firstName+' '+lastName;
-    const isMgr=inv.role==='manager';
-    let parentAdminId=inv.inviter_admin_id;
-    if(isMgr){
-      const inviterRows=await DB.all('admins',`id=eq.${inv.inviter_admin_id}&select=id,parent_admin_id`);
-      const inviter=inviterRows?.[0];
-      parentAdminId=inviter?.parent_admin_id||inviter?.id;
+    const acc=await DB.rpc('accept_invitation',{p_token:inv.token,p_first_name:firstName,p_last_name:lastName,p_pass:pass});
+    if(!acc||!acc.ok){
+      const map={weak_password:'Password must be at least 6 characters.',missing_name:'Please enter your first and last name.',invalid_invite:'This invitation has already been used or has expired.',expired_invite:'This invitation has expired.',email_taken:'An account with this email already exists. Please log in instead.'};
+      showMsg('acceptInviteMsg', map[acc&&acc.error] || 'Could not accept invitation. Please try again.','error');
+      return;
     }
-    const newAdmin=await DB.insert('admins',{
-      name:fullName,first_name:firstName,last_name:lastName,
-      email:inv.email,password:'pending_hash',verified:true,
-      role:isMgr?'manager':'admin',plan:'free',status:'active',
-      parent_admin_id:parentAdminId,invited_by:inv.inviter_admin_id
-    });
-    if(!newAdmin?.[0]?.id)throw new Error('Failed to create account.');
-    try{
-      await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pass});
-    }catch(hashErr){
-      await DB.del('admins',`id=eq.${newAdmin[0].id}`);
-      throw new Error('Account setup failed. Please try again. ('+hashErr.message+')');
-    }
-    if(isMgr){
-      const siteIds=Array.isArray(inv.site_ids)?inv.site_ids:JSON.parse(inv.site_ids||'[]');
-      for(const siteId of siteIds){
-        try{await DB.insert('manager_sites',{manager_id:newAdmin[0].id,site_id:siteId});}catch(e){}
-      }
-    }
-    await DB.update('invitations',`id=eq.${inv.id}`,{status:'accepted'});
+    const newAdmin=[{id:acc.id,name:acc.name,email:acc.email,role:acc.role}];
     const fullRows=await DB.all('admins',`id=eq.${newAdmin[0].id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full=fullRows?.[0]||newAdmin[0];
     Sess.set({
@@ -4879,11 +4858,6 @@ async function saveProfile(){
     if(!newPw){msg(t('profile.newPwRequired')||'Please enter a new password.','error');return;}
     if(newPw!==confirmPw){msg(t('msg.passwordMismatch'),'error');return;}
     if(newPw.length<6){msg(t('profile.pwTooShort')||'Password must be at least 6 characters.','error');return;}
-    // Verify current password
-    try{
-      const verified=await DB.rpc('verify_admin_login',{p_email:s.email,p_pass:curPw});
-      if(!verified||!verified.length){msg(t('profile.wrongCurPw')||'Current password is incorrect.','error');return;}
-    }catch(e){msg('Error verifying password: '+e.message,'error');return;}
   }
 
   try{
@@ -4891,7 +4865,12 @@ async function saveProfile(){
     await DB.update('admins',`id=eq.${s.id}`,{name:newName});
     // Update password if requested
     if(changingPw){
-      await DB.rpc('set_admin_password',{p_id:s.id,p_pass:newPw});
+      const cp=await DB.rpc('change_own_password',{p_session_id:s.id,p_curpass:curPw,p_newpass:newPw});
+      if(!cp||!cp.ok){
+        const map={wrong_current:t('profile.wrongCurPw')||'Current password is incorrect.',weak_password:t('profile.pwTooShort')||'Password must be at least 6 characters.',no_session:t('msg.sessionExpired')||'Session expired. Please log in again.'};
+        msg(map[cp&&cp.error] || 'Could not change password. Please try again.','error');
+        return;
+      }
     }
     // Update session
     const updated={...s,name:newName};
@@ -6699,11 +6678,13 @@ async function saveCreateAdmin(){
   if(!name||!email||!pass){showMsg('createAdminMsg','All fields required.','error');return;}
   if(pass.length<6){showMsg('createAdminMsg','Password must be at least 6 characters.','error');return;}
   try{
-    const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(ex.length){showMsg('createAdminMsg','Email already registered.','error');return;}
-    await DB.insert('admins',{name,email,password:'pending_hash',verified:true,role,plan,status:'active',expires_at});
-    const created=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(created.length)await DB.rpc('set_admin_password',{p_id:created[0].id,p_pass:pass});
+    const s=Sess.get();
+    const cr=await DB.rpc('superadmin_create_admin',{p_session_id:s?.id,p_name:name,p_email:email,p_pass:pass,p_plan:plan,p_role:role,p_expires:expires_at});
+    if(!cr||!cr.ok){
+      const map={not_authorized:'Not authorized.',email_taken:'Email already registered.',weak_password:'Password must be at least 6 characters.',missing_fields:'All fields required.'};
+      showMsg('createAdminMsg', map[cr&&cr.error] || 'Could not create admin. Please try again.','error');
+      return;
+    }
     closeModal('createAdminModal');
     await renderAdmins();
     showMsg('adminSub','','');
