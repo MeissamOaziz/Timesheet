@@ -3041,6 +3041,7 @@ const DB={
     return text?JSON.parse(text):null;
   },
   requestResetCode:(email)=>supaFetch('POST','email_codes',{action:'request_reset_code',body:{email}}),
+  requestRegistrationCode:(email,name)=>supaFetch('POST','email_codes',{action:'request_registration_code',body:{email,name}}),
 };
 
 
@@ -4259,40 +4260,17 @@ async function doRegister(){
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
     if(ex.length){showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');return;}
 
-    const code=Math.floor(100000+Math.random()*900000).toString();
-    pendingVerify={firstName,lastName,email,pass,code,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile};
-
-    let sendRes, sendData;
+    pendingVerify={firstName,lastName,email,pass,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile};
     try{
-      const controller = new AbortController();
-      const timeout = setTimeout(()=>controller.abort(), 20000);
-      sendRes = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-        body:JSON.stringify({email, name, code}),
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-      sendData = await sendRes.json();
-    }catch(e){
-      if(e.name==='AbortError'){
-        showMsg('registerMsg','The email service took too long to respond. Please try again.','error');
-      } else {
-        const isHttps = location.protocol === 'https:';
-        const msg = !isHttps
-          ? 'This page must be loaded over HTTPS to send emails. Please visit <strong>https://www.punchclock.ca</strong> and try again.'
-          : 'Network error sending verification email. Please check your connection and try again.';
-        showMsg('registerMsg', msg, 'error');
+      const rr = await DB.requestRegistrationCode(email, name);
+      if(rr && rr.ok===false && rr.error==='email_taken'){
+        showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');
+        return;
       }
+    }catch(e){
+      showMsg('registerMsg','Network error sending verification email. Please try again.','error');
       return;
     }
-
-    if(!sendRes.ok || (!sendData.success && !sendData.sent)){
-      const errMsg = sendData?.error || 'Unknown error';
-      showMsg('registerMsg','Failed to send verification email: ' + errMsg + '. Please try again or contact support.','error');
-      return;
-    }
-
     document.getElementById('regEmailSent').textContent = email;
     document.getElementById('regStep1').style.display = 'none';
     document.getElementById('regStep2').style.display = '';
@@ -4302,48 +4280,35 @@ async function doRegister(){
 }
 
 async function resendVerificationCode(){
-  if(!pendingVerify) return;
-  showMsg('registerMsg','⏳ Resending...','info');
+  if(!pendingVerify||!pendingVerify.email) return;
+  showMsg('registerMsg', t('msg.sending')||'Sending...','info');
   try{
-    const res = await fetch(`${SUPA_URL}/functions/v1/send-verification`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-      body:JSON.stringify({email:pendingVerify.email,name:pendingVerify.firstName+' '+pendingVerify.lastName,code:pendingVerify.code})
-    });
-    const data = await res.json();
-    if(data.success||data.sent){
-      showMsg('registerMsg','✓ New code sent to your email.','success');
-    } else {
-      showMsg('registerMsg','Could not resend the code: '+(data.error||'Unknown error')+'. Please try again.','error');
-    }
-  }catch(e){
-    showMsg('registerMsg','Network error while resending. Please check your connection and try again.','error');
-  }
+    const name=(pendingVerify.firstName||'')+' '+(pendingVerify.lastName||'');
+    await DB.requestRegistrationCode(pendingVerify.email, name.trim());
+    showMsg('registerMsg', t('msg.newCodeSent')||'✓ New code sent to your email.','success');
+  }catch(e){ showMsg('registerMsg','Could not resend the code. Please try again.','error'); }
 }
 
 async function doVerify(){
   const entered=document.getElementById('codeInput').value.trim();
   if(!pendingVerify){showMsg('registerMsg',t('msg.sessionExpired'),'error');return;}
-  if(entered!==pendingVerify.code){showMsg('registerMsg',t('msg.incorrectCode'),'error');return;}
+  if(!/^\d{6}$/.test(entered)){showMsg('registerMsg',t('msg.enterCode')||'Enter the 6-digit code.','error');return;}
   try{
-    const fullName = pendingVerify.firstName+' '+pendingVerify.lastName;
-    const newAdmin = await DB.insert('admins',{
-      name: fullName,
-      first_name: pendingVerify.firstName,
-      last_name: pendingVerify.lastName,
-      email: pendingVerify.email,
-      password: 'pending_hash',
-      verified: true,
-      role: 'admin',
-      plan: 'free',
-      status: 'active'
+    showMsg('registerMsg', t('msg.verifying')||'Verifying...','info');
+    const reg = await DB.rpc('verify_code_and_register',{
+      p_email: pendingVerify.email,
+      p_code: entered,
+      p_newpass: pendingVerify.pass,
+      p_first_name: pendingVerify.firstName,
+      p_last_name: pendingVerify.lastName
     });
-    try{
-      await DB.rpc('set_admin_password',{p_id:newAdmin[0].id,p_pass:pendingVerify.pass});
-    }catch(hashErr){
-      await DB.del('admins',`id=eq.${newAdmin[0].id}`);
-      throw new Error('Account setup failed. Please try again. ('+hashErr.message+')');
+    if(!reg || !reg.ok){
+      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',no_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',weak_password:t('msg.shortPassword'),email_taken:t('msg.emailTaken')||'That email is already registered.',missing_name:t('msg.allRequired')};
+      showMsg('registerMsg', map[reg&&reg.error] || (t('msg.resetFailed')||'Could not create account. Please try again.'),'error');
+      return;
     }
+    // Build a newAdmin-shaped object from the server result so the rest of the flow is unchanged.
+    const newAdmin = [{ id: reg.id, name: reg.name, email: reg.email }];
     let logo_url=null;
     if(pendingVerify.logoFile){
       try{ logo_url=await uploadImage(pendingVerify.logoFile,'logos',`logo-${pendingVerify.company.replace(/\s+/g,'-').toLowerCase()}`); }
