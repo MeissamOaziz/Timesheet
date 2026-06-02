@@ -1359,9 +1359,9 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="nav-sep"></div>
     <button class="nav-btn active" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
     <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span><span id="missedPunchBadge" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
-    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
+    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none;position:relative"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span><span id="missedPunchBadgeReports" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
     <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
+    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none;position:relative"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span><span id="missedPunchBadgeActivity" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
     <button class="nav-btn" onclick="navigate('schedule')" id="navSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   </div>
   <div class="nav-right">
@@ -1455,9 +1455,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span><span id="missedPunchBadgeReportsMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span><span id="missedPunchBadgeActivityMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
@@ -3695,9 +3695,9 @@ function navigate(page){
   if(map[page]!==undefined&&btns[map[page]])btns[map[page]].classList.add('active');
   if(page==='punch')loadPunchPage();
   else if(page==='admin'){window._scrollToMissedPunch=true;loadAdminPage();}
-  else if(page==='reports')loadReportsPage();
+  else if(page==='reports'){loadReportsPage();renderMissedPunchRequests();}
   else if(page==='sites')loadSitesPage();
-  else if(page==='activity')loadActivityPage();
+  else if(page==='activity'){loadActivityPage();renderMissedPunchRequests();}
   else if(page==='schedule')loadSchedulePage();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
 }
@@ -6408,11 +6408,17 @@ async function renderJoinRequests(){
 // ─── MISSED PUNCH REQUESTS ───────────────────────────────────────────────────
 
 function updateMissedPunchBadge(count){
-  const badge=document.getElementById('missedPunchBadge');
-  const mob=document.getElementById('missedPunchBadgeMobile');
   const show=count>0;
-  if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
-  if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
+  // Desktop absolute-positioned badges (Admin, Reports, Activity)
+  ['missedPunchBadge','missedPunchBadgeReports','missedPunchBadgeActivity'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=count;el.style.display=show?'':'none';}
+  });
+  // Mobile inline badges (Admin, Reports, Activity)
+  ['missedPunchBadgeMobile','missedPunchBadgeReportsMobile','missedPunchBadgeActivityMobile'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=count;el.style.display=show?'inline-block':'none';}
+  });
 }
 
 async function renderMissedPunchRequests(){
