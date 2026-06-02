@@ -5491,53 +5491,23 @@ async function submitMissedPunch(){
       reason:notes||null,status:'pending'
     };
     if(site) payload.site_id = site.id;
-    await DB.insert('missed_punch_requests', payload);
+    const inserted = await DB.insert('missed_punch_requests', payload);
+    const reqId = Array.isArray(inserted) ? inserted[0]?.id : inserted?.id;
 
-    // Best-effort admin notification (don't block on failure)
-    try{
-      // Build recipient list: primary admin + co-admins + site managers
-      const recipientEmails=new Set();
-      if(co?.admin_id){
-        const [primaryAdmins,coAdmins]=await Promise.all([
-          DB.all('admins',`id=eq.${co.admin_id}&select=email`),
-          DB.all('admins',`parent_admin_id=eq.${co.admin_id}&role=eq.admin&status=eq.active&select=email`)
-        ]);
-        (primaryAdmins||[]).forEach(a=>a.email&&recipientEmails.add(a.email));
-        (coAdmins||[]).forEach(a=>a.email&&recipientEmails.add(a.email));
-        if(site?.id){
-          const mgSites=await DB.all('manager_sites',`site_id=eq.${site.id}&select=manager_id`);
-          if(mgSites?.length){
-            const mgIds=mgSites.map(m=>m.manager_id);
-            const mgAdmins=await DB.all('admins',`id=in.(${mgIds.join(',')})&status=eq.active&select=email`);
-            (mgAdmins||[]).forEach(a=>a.email&&recipientEmails.add(a.email));
-          }
-        }
-      }
-      const recipients=[...recipientEmails].filter(Boolean);
-
-      const subject = `[Missed Punch Request] ${emp.name} — ${type==='IN'?'Missed Clock In':'Missed Clock Out'}`;
-      const message = `A missed punch request has been submitted and needs your review.\n\n`+
-        `Employee: ${emp.name}${emp.emp_code?' ('+emp.emp_code+')':''}\n`+
-        `Company: ${co?.name||'—'}\n`+
-        `Site: ${site?.name||'—'}\n`+
-        `Type: ${type==='IN'?'Missed Clock In':'Missed Clock Out'}\n`+
-        `Date: ${punch_date}\n`+
-        `Time: ${fullTime}\n`+
-        (notes?`Reason: ${notes}\n`:'')+
-        `\nThis punch has NOT been recorded yet — your review is required in the Admin panel.`;
-      await fetch(`${SUPA_URL}/functions/v1/send-contact`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          type:'missed_punch',
-          name: emp.name,
-          email: emp.email||'noreply@punchclock.ca',
-          subject, message,
-          companyId: co?.id, companyName: co?.name,
-          recipients: recipients.length?recipients:undefined
-        })
-      });
-    }catch(_){ /* notification is best-effort */ }
+    // Notification is handled SERVER-SIDE (notify-missed-punch resolves recipients
+    // and sends approver + employee emails). Best-effort, but failures are logged.
+    if(reqId){
+      try{
+        const nr = await fetch(`${SUPA_URL}/functions/v1/notify-missed-punch`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+          body:JSON.stringify({ requestId: reqId })
+        });
+        if(!nr.ok){ console.error('notify-missed-punch failed', nr.status, await nr.text().catch(()=>'')); }
+      }catch(e){ console.error('notify-missed-punch error', e); }
+    } else {
+      console.error('missed-punch insert returned no id; notification skipped');
+    }
 
     closeModal('missedPunchModal');
     showPunchMsg(`✓ ${t('missed.success')||'Your request has been submitted and is pending approval.'}`,'success');
