@@ -3074,19 +3074,25 @@ function previewUpload(inputId, previewId, areaId, isRound=false) {
 
 async function uploadImage(file, bucket, pathPrefix) {
   if(!file) return null;
-  const ext = file.name.split('.').pop().toLowerCase();
-  const fileName = `${pathPrefix}-${Date.now()}.${ext}`;
-  const res = await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${fileName}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${SUPA_KEY}`,
-      'Content-Type': file.type,
-      'x-upsert': 'true',
-    },
-    body: file,
+  const ext = (file.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const safePrefix = String(pathPrefix).replace(/[^A-Za-z0-9._-]/g,'-');
+  const fileName = `${safePrefix}-${Date.now()}.${ext}`;
+  // read file as base64 (strip data: prefix)
+  const dataB64 = await new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>{ const s=String(r.result); resolve(s.slice(s.indexOf(',')+1)); };
+    r.onerror=()=>reject(new Error('Could not read file'));
+    r.readAsDataURL(file);
   });
-  if(!res.ok) { const e=await res.text(); throw new Error('Upload failed: '+e); }
-  return `${SUPA_URL}/storage/v1/object/public/${bucket}/${fileName}`;
+  const res = await fetch(`${SUPA_URL}/functions/v1/storage-upload`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+    body: JSON.stringify({ bucket, fileName, contentType: file.type, data: dataB64 }),
+  });
+  if(!res.ok){ const e=await res.text(); throw new Error('Upload failed: '+e); }
+  const j = await res.json();
+  if(!j || !j.ok || !j.url) throw new Error('Upload failed');
+  return j.url;
 }
 
 function resetLogoUpload(existingUrl) {
