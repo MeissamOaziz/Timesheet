@@ -1554,13 +1554,13 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="form-card" style="margin-top:50px">
     <h2 data-i18n="login.title">Admin Login</h2><p data-i18n="login.subtitle">Sign in to access the admin dashboard.</p>
     <div id="loginMsg"></div>
-    <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="loginEmail" placeholder="admin@company.com"></div>
+    <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="loginEmail" name="email" autocomplete="username" placeholder="admin@company.com"></div>
     <div class="form-group">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
         <label style="font-size:12px;font-weight:500;color:var(--text2)" data-i18n="login.password">Password</label>
         <button class="link-btn" style="font-size:12px" onclick="navigate('forgot')" data-i18n="login.forgot">Forgot password?</button>
       </div>
-      <div class="pw-wrap"><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-toggle" onclick="togglePw('loginPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="pw-wrap"><input type="password" id="loginPass" name="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-toggle" onclick="togglePw('loginPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <input type="checkbox" id="rememberMe" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
@@ -4326,7 +4326,15 @@ async function doVerify(){
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
-function logout(){Sess.clear();Ctx.clear();document.body.classList.remove('role-admin','role-manager');updateNav();showLanding();}
+function logout(){
+  Sess.clear();
+  Ctx.clear();
+  const le=document.getElementById('loginEmail'); if(le) le.value='';
+  const lp=document.getElementById('loginPass'); if(lp) lp.value='';
+  document.body.classList.remove('role-admin','role-manager');
+  updateNav();
+  showLanding();
+}
 
 function kioskMode(){
   // Log out admin but keep Ctx (company+site) so punch page stays active
