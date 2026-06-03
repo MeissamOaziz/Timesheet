@@ -2560,7 +2560,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('addEmpModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-secondary" id="promoteToManagerBtn" onclick="openPromoteToManagerModal()" style="display:none;border-color:rgba(124,92,191,.4);color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-upload"/></svg><span data-i18n="emp.promoteBtn">Promote to Manager</span></button>
+      <button class="btn-secondary" id="promoteToManagerBtn" onclick="handlePromoteButtonClick()" style="display:none;border-color:rgba(124,92,191,.4);color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-upload"/></svg><span data-i18n="emp.promoteBtn">Promote</span></button>
       <button class="btn-secondary" id="manageAvailBtn" onclick="openAdminAvailModal()" style="display:none"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg><span data-i18n="sched.manageAvailBtn">Availability</span></button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEmployee()" data-i18n="modal.save">Save</button>
     </div>
@@ -5942,11 +5942,26 @@ async function sendPromotionInvite(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('promoteToManagerMsg','Please enter a valid email address.','error');return;}
   if(!siteIds.length){showMsg('promoteToManagerMsg','Please assign at least one site.','error');return;}
   try{
+    const primaryAdminId=sess.parent_admin_id||sess.id;
+    // Check if this is a suspended ex-manager → reactivate instead of inviting
+    const suspended = await DB.all('admins',`email=eq.${encodeURIComponent(email)}&role=eq.manager&status=eq.suspended&parent_admin_id=eq.${primaryAdminId}`);
+    if(suspended && suspended.length){
+      const suspMgr = suspended[0];
+      const r = await DB.rpc('reactivate_manager', {p_caller_id: sess.id, p_manager_id: suspMgr.id});
+      if(!r || !r.ok){ showMsg('promoteToManagerMsg','Error: '+((r&&r.error)||'reactivate failed'),'error'); return; }
+      // Re-insert chosen manager_sites
+      await DB.del('manager_sites',`manager_id=eq.${suspMgr.id}`);
+      for(const siteId of siteIds){ try{ await DB.insert('manager_sites',{manager_id:suspMgr.id,site_id:siteId}); }catch(_){} }
+      await loadCoAdmins();
+      closeModal('promoteToManagerModal');
+      closeModal('addEmpModal');
+      showToast(`✓ ${_appLang==='fr'?'Réactivé en tant que gestionnaire':'Reactivated as manager'}: ${email}`, 'success');
+      return;
+    }
     const existing=await DB.all('admins',`email=eq.${email}&status=neq.suspended`);
     if(existing?.length){showMsg('promoteToManagerMsg','This email already has an admin account.','error');return;}
     const existingInv=await DB.all('invitations',`email=eq.${email}&status=eq.pending`);
     if(existingInv?.length){showMsg('promoteToManagerMsg','An invitation has already been sent to this email.','error');return;}
-    const primaryAdminId=sess.parent_admin_id||sess.id;
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
     if(!myCo){showMsg('promoteToManagerMsg','No company found.','error');return;}
     const token=crypto.randomUUID();
@@ -6819,6 +6834,54 @@ function openAddEmpModal(){
   openModal('addEmpModal');
 }
 
+async function getEmployeeRoleState(e){
+  if(!e || !e.email) return {state:'employee'};
+  const email = (e.email||'').toLowerCase();
+  const sess = Sess.get();
+  const primaryId = sess ? (sess.parent_admin_id || sess.id) : null;
+  // Active manager? (C.coAdmins is already this account's co-admins/managers, status<>suspended)
+  const activeMgr = (C.coAdmins||[]).find(a => a.role==='manager' && (a.email||'').toLowerCase()===email);
+  if(activeMgr) return {state:'active_manager', mgr:activeMgr};
+  // Suspended ex-manager? (not in C.coAdmins because suspended)
+  try{
+    const suspended = await DB.all('admins',`email=eq.${encodeURIComponent(email)}&role=eq.manager&status=eq.suspended&parent_admin_id=eq.${primaryId}`);
+    if(suspended && suspended.length) return {state:'suspended_manager', mgr:suspended[0]};
+  }catch(err){}
+  // Pending invite?
+  try{
+    const inv = await DB.all('invitations',`email=eq.${encodeURIComponent(email)}&role=eq.manager&status=eq.pending`);
+    if(inv && inv.length) return {state:'pending_invite', inv:inv[0]};
+  }catch(err){}
+  return {state:'employee'};
+}
+
+async function handlePromoteButtonClick(){
+  const btn = document.getElementById('promoteToManagerBtn');
+  const state = btn ? btn.dataset.roleState : 'employee';
+  const sess = Sess.get(); if(!sess) return;
+  if(state==='active_manager'){
+    const mgrId = btn.dataset.mgrId;
+    const empName = (document.getElementById('empName')?.value)||'this manager';
+    if(!confirm(_appLang==='fr'
+      ? `Rétrograder ${empName} en employé? Cette personne perdra l'accès gestionnaire et ses sites assignés, mais conservera ses pointages. Réversible.`
+      : `Demote ${empName} to employee? They'll lose manager access and site assignments but keep their punch records. This can be reversed.`)) return;
+    try{
+      const r = await DB.rpc('demote_manager_to_employee', {p_caller_id: sess.id, p_manager_id: mgrId});
+      if(r && r.ok){
+        showToast(_appLang==='fr'?'✓ Rétrogradé en employé':'✓ Demoted to employee','success');
+        await loadCoAdmins();
+        closeModal('addEmpModal');
+      } else {
+        showToast('Error: '+((r&&r.error)||'demote failed'),'error');
+      }
+    }catch(e){ showToast('Error: '+e.message,'error'); }
+  } else if(state==='pending_invite'){
+    cancelInvitation(btn.dataset.invId, btn.dataset.invEmail||'');
+  } else {
+    openPromoteToManagerModal();
+  }
+}
+
 function editEmployee(id){
   const e=C.employees.find(e=>e.id===id);if(!e)return;
   const ctx=Ctx.get();
@@ -6839,7 +6902,34 @@ function editEmployee(id){
   if(manageAvailBtn) manageAvailBtn.style.display = '';
   // Promote to Manager button — visible to primary admin and co-admins only
   const promoteBtn = document.getElementById('promoteToManagerBtn');
-  if(promoteBtn){ const sess=Sess.get(); promoteBtn.style.display=(sess&&sess.role!=='manager')?'':'none'; }
+  if(promoteBtn){
+    const sess=Sess.get();
+    const canManage = (sess && sess.role!=='manager');
+    promoteBtn.style.display = canManage ? '' : 'none';
+    if(canManage){
+      promoteBtn.disabled = true;
+      // Reset to default style while resolving
+      promoteBtn.style.borderColor='rgba(124,92,191,.4)'; promoteBtn.style.color='#a78bfa';
+      getEmployeeRoleState(e).then(rs=>{
+        promoteBtn.disabled = false;
+        promoteBtn.dataset.roleState = rs.state;
+        promoteBtn.dataset.mgrId = (rs.mgr && rs.mgr.id) ? rs.mgr.id : '';
+        promoteBtn.dataset.invId = (rs.inv && rs.inv.id) ? rs.inv.id : '';
+        promoteBtn.dataset.invEmail = (rs.inv && rs.inv.email) ? rs.inv.email : '';
+        const labelSpan = promoteBtn.querySelector('span');
+        if(rs.state==='active_manager'){
+          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Rétrograder en employé':'Demote to Employee');
+          promoteBtn.style.borderColor='rgba(245,158,11,.5)'; promoteBtn.style.color='#f59e0b';
+        } else if(rs.state==='pending_invite'){
+          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?"Annuler l'invitation":'Cancel Invitation');
+          promoteBtn.style.borderColor='rgba(239,68,68,.4)'; promoteBtn.style.color='#ef4444';
+        } else {
+          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Promouvoir':'Promote');
+          promoteBtn.style.borderColor='rgba(124,92,191,.4)'; promoteBtn.style.color='#a78bfa';
+        }
+      });
+    }
+  }
   // Load portal invite status if employee has email
   loadEmpPortalStatus(e);
   openModal('addEmpModal');
@@ -9619,7 +9709,7 @@ en:{
 'site.noManagers':'No managers assigned','site.editManagers':'Edit Managers',
 'site.managersFor':'Managers for','site.noManagersYet':'No managers yet. Invite a team member as Manager first.',
 'site.managersUpdated':'Manager assignments updated',
-'emp.promoteBtn':'Promote to Manager','emp.promoteTitle':'Promote to Manager',
+'emp.promoteBtn':'Promote','emp.promoteTitle':'Promote to Manager',
 'emp.promoteNote':'This does not remove them as an employee — they keep all punch records and time tracking.',
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
@@ -10201,7 +10291,7 @@ fr:{
 'site.noManagers':'Aucun gestionnaire attribué','site.editManagers':'Modifier les gestionnaires',
 'site.managersFor':'Gestionnaires pour','site.noManagersYet':'Aucun gestionnaire. Invitez un membre de l\'équipe comme gestionnaire d\'abord.',
 'site.managersUpdated':'Affectations des gestionnaires mises à jour',
-'emp.promoteBtn':'Promouvoir en gestionnaire','emp.promoteTitle':'Promouvoir en gestionnaire',
+'emp.promoteBtn':'Promouvoir','emp.promoteTitle':'Promouvoir en gestionnaire',
 'emp.promoteNote':'Ceci ne le retire pas en tant qu\'employé — ils conservent tous leurs pointages et leur suivi du temps.',
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
