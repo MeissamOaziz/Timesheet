@@ -325,7 +325,8 @@ let _session = null; // { portalId, employeeId, empName, companyId, siteId, emai
 let _employee = null;
 let _availability = [];
 let _currentPeriod = 'current';
-let _pendingPortalId = null; // for set-password flow
+let _pendingPortalId = null;    // for set-password flow
+let _pendingInviteToken = null; // token preserved for activate_employee_portal
 
 // ══════════════════════════════════════════════════════
 // DB HELPER
@@ -531,13 +532,12 @@ async function checkInviteToken() {
   window.history.replaceState({}, '', window.location.pathname);
 
   try {
-    const rows = await db('GET', 'employee_portal', `invite_token=eq.${token}`);
+    // Use server-side token validation — no direct anon table read
+    const rows = await rpc('get_portal_invite', { p_token: token });
     if (!rows || !rows.length) { showScreen('screenLogin'); showMsg('loginMsg', t('tokenExpired'), 'error'); return true; }
-    const portal = rows[0];
-    if (portal.token_expires_at && new Date(portal.token_expires_at) < new Date()) {
-      showScreen('screenLogin'); showMsg('loginMsg', t('tokenExpired'), 'error'); return true;
-    }
-    _pendingPortalId = portal.id;
+    const inv = rows[0];
+    _pendingPortalId = inv.portal_id;
+    _pendingInviteToken = token; // preserved for activate_employee_portal
     document.getElementById('setPassNew').value = '';
     document.getElementById('setPassConfirm').value = '';
     showScreen('screenSetPassword');
@@ -555,12 +555,18 @@ async function doSetEmpPassword() {
   const btn = document.getElementById('setPassBtn');
   btn.disabled = true; btn.textContent = '...';
   try {
-    await rpc('set_employee_password', { p_id: _pendingPortalId, p_pass: pw });
-    // Fetch portal record to get employee_id and email
-    const rows = await db('GET', 'employee_portal', `id=eq.${_pendingPortalId}`);
-    if (rows?.[0]) {
-      await loginWithPortal(rows[0]);
+    // activate_employee_portal: validates token, sets bcrypt password, marks active
+    const rows = await rpc('activate_employee_portal', { p_token: _pendingInviteToken, p_pass: pw });
+    if (!rows || !rows.length) {
+      // Token expired or already used
+      showMsg('setPassMsg', t('tokenExpired'), 'error');
+      btn.disabled = false; btn.textContent = t('setPassBtn');
+      return;
     }
+    const acct = rows[0];
+    // Build portal object from RPC result for loginWithPortal
+    // NOTE: loginWithPortal does direct anon reads on employees + employee_portal — Stage 2 will fix those
+    await loginWithPortal({ id: acct.portal_id, employee_id: acct.employee_id, email: acct.email });
   } catch(e) {
     showMsg('setPassMsg', 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('setPassBtn');
