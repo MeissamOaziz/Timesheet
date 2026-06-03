@@ -1359,9 +1359,9 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="nav-sep"></div>
     <button class="nav-btn active" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
     <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span><span id="missedPunchBadge" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
-    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none;position:relative"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span><span id="missedPunchBadgeReports" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
+    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
     <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none;position:relative"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span><span id="missedPunchBadgeActivity" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
+    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
     <button class="nav-btn" onclick="navigate('schedule')" id="navSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   </div>
   <div class="nav-right">
@@ -1455,9 +1455,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span><span id="missedPunchBadgeReportsMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span><span id="missedPunchBadgeActivityMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
@@ -1750,13 +1750,13 @@ border-top:1px solid var(--border);margin:18px 0;}
     <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()" data-i18n="admin.addEmployee">+ Add Employee</button>
   </div>
   <!-- MISSED PUNCH REQUESTS -->
-  <div id="missedPunchRequestsSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
+  <div id="missedPunchRequestsSection" class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
     <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
     <div class="table-wrap"><table>
       <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
-      <tbody id="missedPunchRequestsBody"></tbody>
+      <tbody class="missedPunchRequestsBody"></tbody>
     </table></div>
-    <div id="missedPunchCardsContainer"></div>
+    <div class="missedPunchCardsContainer"></div>
   </div>
   <div class="tabs">
     <button class="tab active" onclick="adminTab('employees',this)" data-i18n="admin.tabs.employees">Employees</button>
@@ -2038,6 +2038,14 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ═══════════════ REPORTS PAGE ═══════════════ -->
 <div class="page" id="page-reports">
+  <div class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+      <tbody class="missedPunchRequestsBody"></tbody>
+    </table></div>
+    <div class="missedPunchCardsContainer"></div>
+  </div>
   <div class="page-header">
     <div><h1 data-i18n="reports.title">Reports</h1><p data-i18n="reports.subtitle">Generate time &amp; attendance reports</p></div>
     <div class="export-btns">
@@ -2113,6 +2121,14 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
 <div class="page" id="page-activity">
+  <div class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+      <tbody class="missedPunchRequestsBody"></tbody>
+    </table></div>
+    <div class="missedPunchCardsContainer"></div>
+  </div>
   <div class="page-header">
     <div><h1 data-i18n="activity.title">Activity Log</h1><p id="activitySub" data-i18n="activity.subtitle">Punch records with manual edit capability</p></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -6409,16 +6425,10 @@ async function renderJoinRequests(){
 
 function updateMissedPunchBadge(count){
   const show=count>0;
-  // Desktop absolute-positioned badges (Admin, Reports, Activity)
-  ['missedPunchBadge','missedPunchBadgeReports','missedPunchBadgeActivity'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){el.textContent=count;el.style.display=show?'':'none';}
-  });
-  // Mobile inline badges (Admin, Reports, Activity)
-  ['missedPunchBadgeMobile','missedPunchBadgeReportsMobile','missedPunchBadgeActivityMobile'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){el.textContent=count;el.style.display=show?'inline-block':'none';}
-  });
+  const badge=document.getElementById('missedPunchBadge');
+  const mob=document.getElementById('missedPunchBadgeMobile');
+  if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
+  if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
 }
 
 async function renderMissedPunchRequests(){
@@ -6430,18 +6440,14 @@ async function renderMissedPunchRequests(){
     if(managerSiteIds!==null) visible=visible.filter(r=>managerSiteIds.includes(r.site_id));
     _missedPunchRequests=visible;
     updateMissedPunchBadge(visible.length);
-    const section=document.getElementById('missedPunchRequestsSection');
-    if(!visible.length){section.style.display='none';window._scrollToMissedPunch=false;return;}
-    section.style.display='';
-    if(window._scrollToMissedPunch){
+    const sections=document.querySelectorAll('.missedPunchSection');
+    if(!visible.length){
+      sections.forEach(s=>s.style.display='none');
       window._scrollToMissedPunch=false;
-      setTimeout(()=>{
-        section.scrollIntoView({behavior:'smooth',block:'start'});
-        section.classList.remove('flash-highlight'); void section.offsetWidth; section.classList.add('flash-highlight');
-      },120);
+      return;
     }
-
-    document.getElementById('missedPunchRequestsBody').innerHTML=visible.map(r=>{
+    sections.forEach(s=>s.style.display='');
+    const rowsHtml=visible.map(r=>{
       const typePill=r.type==='IN'
         ?'<span class="pill in" style="font-size:10px">IN</span>'
         :'<span class="pill out" style="font-size:10px">OUT</span>';
@@ -6470,8 +6476,7 @@ async function renderMissedPunchRequests(){
         </td>
       </tr>`;
     }).join('');
-
-    document.getElementById('missedPunchCardsContainer').innerHTML=visible.map(r=>{
+    const cardsHtml=visible.map(r=>{
       const typePill=r.type==='IN'
         ?'<span class="pill in" style="font-size:10px">IN</span>'
         :'<span class="pill out" style="font-size:10px">OUT</span>';
@@ -6499,6 +6504,18 @@ async function renderMissedPunchRequests(){
         </div>
       </div>`;
     }).join('');
+    document.querySelectorAll('.missedPunchRequestsBody').forEach(b=>b.innerHTML=rowsHtml);
+    document.querySelectorAll('.missedPunchCardsContainer').forEach(c=>c.innerHTML=cardsHtml);
+    if(window._scrollToMissedPunch){
+      window._scrollToMissedPunch=false;
+      const adminSection=document.getElementById('missedPunchRequestsSection');
+      if(adminSection){
+        setTimeout(()=>{
+          adminSection.scrollIntoView({behavior:'smooth',block:'start'});
+          adminSection.classList.remove('flash-highlight'); void adminSection.offsetWidth; adminSection.classList.add('flash-highlight');
+        },120);
+      }
+    }
   }catch(e){
     console.error('renderMissedPunchRequests:',e);
     updateMissedPunchBadge(0);
