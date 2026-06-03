@@ -655,9 +655,7 @@ async function renderSchedule() {
   const today = dateStr(new Date());
   const twoWeeks = dateStr(new Date(Date.now() + 14*24*60*60*1000));
   try {
-    const shifts = await db('GET', 'shifts',
-      `employee_id=eq.${_session.employeeId}&shift_date=gte.${today}&shift_date=lte.${twoWeeks}&order=shift_date.asc,start_time.asc`
-    ) || [];
+    const shifts = await rpc('portal_get_shifts', { p_session: _session.token, p_from: today, p_to: twoWeeks }) || [];
     if (!shifts.length) {
       wrap.innerHTML = `<div class="empty-state"><div class="icon">🗓️</div><p>${t('noShifts')}</p></div>`;
       return;
@@ -700,10 +698,11 @@ function calcDuration(start, end) {
 // ══════════════════════════════════════════════════════
 async function renderReports() {
   // Build period buttons based on company payroll frequency
-  const companies = await db('GET', 'companies', `id=eq.${_session.companyId}`);
-  const co = companies?.[0];
-  const freq = co?.payroll_freq || 'biweekly'; // weekly | biweekly | monthly
-  const weekStart = co?.week_start || 1; // 0=Sun, 1=Mon
+  const payrollRows = await rpc('portal_get_company_payroll', { p_session: _session.token });
+  const co = payrollRows && payrollRows[0] ? payrollRows[0] : null;
+  const freq = (co && co.payroll_frequency) || 'biweekly'; // weekly | biweekly | monthly
+  // week_start stored as text ('monday'/'sunday') → convert to integer (0=Sun, 1=Mon)
+  const weekStart = (co && co.week_start === 'sunday') ? 0 : 1;
 
   const periods = buildPeriods(freq, weekStart, 3);
 
@@ -731,9 +730,7 @@ async function loadPeriodData(period) {
   bodyEl.innerHTML = '';
 
   try {
-    const punches = await db('GET', 'punches',
-      `emp_id=eq.${_session.employeeId}&punch_date=gte.${period.start}&punch_date=lte.${period.end}&order=punched_at.asc`
-    ) || [];
+    const punches = await rpc('portal_get_punches', { p_session: _session.token, p_from: period.start, p_to: period.end }) || [];
 
     // Calculate pairs
     let totalHours = 0, pairCount = 0;
@@ -811,7 +808,7 @@ function buildPeriods(freq, weekStart, count) {
 // ══════════════════════════════════════════════════════
 async function loadAvailability() {
   try {
-    _availability = await db('GET', 'availability', `employee_id=eq.${_session.employeeId}`) || [];
+    _availability = await rpc('portal_get_availability', { p_session: _session.token }) || [];
   } catch(e) { _availability = []; }
 }
 
@@ -839,15 +836,10 @@ async function toggleDayAvail(dayIdx, el) {
     if (isCurrentlyUnavail) {
       // Remove
       const existing = _availability.find(a => a.avail_type === 'recurring' && a.day_of_week === dayIdx);
-      if (existing) await db('DELETE', 'availability', `id=eq.${existing.id}`);
+      if (existing) await rpc('portal_delete_availability', { p_session: _session.token, p_id: existing.id });
     } else {
       // Add
-      await db('POST', 'availability', '', {
-        employee_id: _session.employeeId,
-        avail_type: 'recurring',
-        day_of_week: dayIdx,
-        start_time: null, end_time: null, note: '',
-      });
+      await rpc('portal_add_availability', { p_session: _session.token, p_avail_type: 'recurring', p_day_of_week: dayIdx, p_specific_date: null, p_end_date: null, p_note: '' });
     }
     await loadAvailability();
     renderAvailability();
@@ -888,15 +880,7 @@ async function addSpecificDate() {
     return;
   }
   try {
-    await db('POST', 'availability', '', {
-      employee_id: _session.employeeId,
-      avail_type: 'specific',
-      specific_date: dateVal,
-      end_date: dateTo || null,
-      day_of_week: null,
-      start_time: null, end_time: null,
-      note,
-    });
+    await rpc('portal_add_availability', { p_session: _session.token, p_avail_type: 'specific', p_day_of_week: null, p_specific_date: dateVal, p_end_date: dateTo || null, p_note: note });
     document.getElementById('specificDateInput').value = '';
     document.getElementById('specificDateTo').value = '';
     document.getElementById('specificNoteInput').value = '';
@@ -910,7 +894,7 @@ async function addSpecificDate() {
 
 async function removeSpecificDate(id) {
   try {
-    await db('DELETE', 'availability', `id=eq.${id}`);
+    await rpc('portal_delete_availability', { p_session: _session.token, p_id: id });
     await loadAvailability();
     renderSpecificDates();
     showToast(t('savedOk'), 'success');
