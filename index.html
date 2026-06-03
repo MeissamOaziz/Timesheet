@@ -527,8 +527,8 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .kiosk-os-tab{flex:1;padding:6px;border:none;border-radius:6px;background:none;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .kiosk-os-tab.active{background:var(--surface);color:var(--text);}
 border-top:1px solid var(--border);margin:18px 0;}
-.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;}
-.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.avatar{width:32px;height:32px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:6px;}
 .company-logo{width:52px;height:52px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
 .company-logo img{width:100%;height:100%;object-fit:cover;border-radius:14px;}
 .upload-area{border:2px dashed var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
@@ -2497,9 +2497,9 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:14px">
       <div>
         <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px" data-i18n="emp.photo">Photo</div>
-        <div class="upload-area" style="padding:10px;width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0" id="empPhotoArea">
+        <div class="upload-area" style="padding:10px;width:80px;height:80px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0" id="empPhotoArea">
           <input type="file" id="empPhotoInput" accept="image/*" onchange="previewUpload('empPhotoInput','empPhotoPreview','empPhotoArea',true)">
-          <img id="empPhotoPreview" style="display:none;width:76px;height:76px;border-radius:50%;object-fit:cover">
+          <img id="empPhotoPreview" style="display:none;width:76px;height:76px;border-radius:6px;object-fit:cover">
           <div id="empPhotoHint" style="color:var(--text3)"><svg style="width:20px;height:20px"><use href="#i-user"/></svg></div>
         </div>
         <input type="hidden" id="existingPhotoUrl">
