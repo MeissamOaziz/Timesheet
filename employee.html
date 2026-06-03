@@ -321,7 +321,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 // STATE
 // ══════════════════════════════════════════════════════
 let _empLang = 'en';
-let _session = null; // { portalId, employeeId, empName, companyId, siteId, email }
+let _session = null; // { token, portalId, employeeId, empName, companyId, siteId, email }
 let _employee = null;
 let _availability = [];
 let _currentPeriod = 'current';
@@ -564,9 +564,8 @@ async function doSetEmpPassword() {
       return;
     }
     const acct = rows[0];
-    // Build portal object from RPC result for loginWithPortal
-    // NOTE: loginWithPortal does direct anon reads on employees + employee_portal — Stage 2 will fix those
-    await loginWithPortal({ id: acct.portal_id, employee_id: acct.employee_id, email: acct.email });
+    // Pass session_token so loginWithPortal can call portal_get_me (no direct anon reads)
+    await loginWithPortal({ portal_id: acct.portal_id, employee_id: acct.employee_id, email: acct.email, session_token: acct.session_token });
   } catch(e) {
     showMsg('setPassMsg', 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('setPassBtn');
@@ -584,13 +583,13 @@ async function doEmpLogin() {
   btn.disabled = true; btn.textContent = '...';
   showMsg('loginMsg', '', '');
   try {
-    const rows = await rpc('verify_employee_login', { p_email: email, p_pass: pass });
+    const rows = await rpc('portal_login', { p_email: email, p_pass: pass });
     if (!rows || !rows.length) {
       showMsg('loginMsg', t('invalidCreds'), 'error');
       btn.disabled = false; btn.textContent = t('loginBtn');
       return;
     }
-    await loginWithPortal(rows[0]);
+    await loginWithPortal(rows[0]); // rows[0] = {portal_id, employee_id, email, session_token}
   } catch(e) {
     showMsg('loginMsg', 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('loginBtn');
@@ -598,29 +597,32 @@ async function doEmpLogin() {
 }
 
 async function loginWithPortal(portal) {
-  // Fetch employee record
-  const emps = await db('GET', 'employees', `id=eq.${portal.employee_id}`);
-  if (!emps?.[0]) throw new Error('Employee record not found.');
-  const emp = emps[0];
+  // Validate session + fetch employee via server-issued token (no direct anon table reads)
+  const token = portal.session_token;
+  if (!token) throw new Error('No session token returned from server.');
+  const me = await rpc('portal_get_me', { p_session: token });
+  if (!me || !me.length) throw new Error('Session invalid after login.');
+  const emp = me[0]; // {employee_id, name, email, company_id, site_id, photo_url}
 
   _session = {
-    portalId: portal.id,
-    employeeId: emp.id,
+    token,
+    portalId: portal.portal_id,
+    employeeId: emp.employee_id,
     empName: emp.name,
     companyId: emp.company_id,
     siteId: emp.site_id,
-    email: portal.email,
+    email: emp.email,
   };
-  _employee = emp;
+  // Alias .id so existing _employee.id references still resolve
+  _employee = { ...emp, id: emp.employee_id };
   saveSession(_session);
 
-  // Update last_login
-  await db('PATCH', 'employee_portal', `id=eq.${portal.id}`, { last_login: new Date().toISOString() });
-
+  // last_login is updated server-side by portal_login / activate_employee_portal
   showPortal();
 }
 
 async function doEmpLogout() {
+  try{ if(_session?.token) await rpc('portal_logout', { p_session: _session.token }); }catch(e){}
   clearSession();
   _session = null; _employee = null;
   showScreen('screenLogin');
@@ -929,23 +931,22 @@ async function init() {
   const hadToken = await checkInviteToken();
   if (hadToken) { document.getElementById('loadingOverlay').classList.add('hidden'); return; }
 
-  // Check existing session
+  // Check existing session via server-issued token (no direct anon table reads)
   const sess = loadSession();
-  if (sess) {
+  if (sess && sess.token) {
     try {
-      const rows = await db('GET', 'employee_portal', `id=eq.${sess.portalId}&status=eq.active`);
-      if (rows?.[0]) {
-        const emps = await db('GET', 'employees', `id=eq.${sess.employeeId}`);
-        if (emps?.[0]) {
-          _session = sess;
-          _employee = emps[0];
-          document.getElementById('loadingOverlay').classList.add('hidden');
-          showPortal();
-          return;
-        }
+      const me = await rpc('portal_get_me', { p_session: sess.token });
+      if (me && me.length) {
+        _session = sess;
+        _employee = { ...me[0], id: me[0].employee_id };
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        showPortal();
+        return;
       }
     } catch(e) {}
     clearSession();
+  } else if (sess) {
+    clearSession(); // old session format without token — force re-login
   }
 
   document.getElementById('loadingOverlay').classList.add('hidden');
