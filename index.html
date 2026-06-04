@@ -5960,21 +5960,7 @@ async function sendPromotionInvite(){
   if(!siteIds.length){showMsg('promoteToManagerMsg','Please assign at least one site.','error');return;}
   try{
     const primaryAdminId=sess.parent_admin_id||sess.id;
-    // Check if this is a suspended ex-manager → reactivate instead of inviting
-    const suspended = await DB.all('admins',`email=eq.${encodeURIComponent(email)}&role=eq.manager&status=eq.suspended&parent_admin_id=eq.${primaryAdminId}`);
-    if(suspended && suspended.length){
-      const suspMgr = suspended[0];
-      const r = await DB.rpc('reactivate_manager', {p_caller_id: sess.id, p_manager_id: suspMgr.id});
-      if(!r || !r.ok){ showMsg('promoteToManagerMsg','Error: '+((r&&r.error)||'reactivate failed'),'error'); return; }
-      // Re-insert chosen manager_sites
-      await DB.del('manager_sites',`manager_id=eq.${suspMgr.id}`);
-      for(const siteId of siteIds){ try{ await DB.insert('manager_sites',{manager_id:suspMgr.id,site_id:siteId}); }catch(_){} }
-      await loadCoAdmins();
-      closeModal('promoteToManagerModal');
-      closeModal('addEmpModal');
-      showToast(`✓ ${_appLang==='fr'?'Réactivé en tant que gestionnaire':'Reactivated as manager'}: ${email}`, 'success');
-      return;
-    }
+    // Suspended ex-managers go through the full invite flow (accept_invitation handles reactivation server-side)
     const existing=await DB.all('admins',`email=eq.${email}&status=neq.suspended`);
     if(existing?.length){showMsg('promoteToManagerMsg','This email already has an admin account.','error');return;}
     const existingInv=await DB.all('invitations',`email=eq.${email}&status=eq.pending`);
@@ -6935,7 +6921,7 @@ function editEmployee(id){
         promoteBtn.dataset.invEmail = (rs.inv && rs.inv.email) ? rs.inv.email : '';
         const labelSpan = promoteBtn.querySelector('span');
         if(rs.state==='active_manager'){
-          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Rétrograder en employé':'Demote to Employee');
+          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Rétrograder':'Demote');
           promoteBtn.style.borderColor='rgba(245,158,11,.5)'; promoteBtn.style.color='#f59e0b';
         } else if(rs.state==='pending_invite'){
           if(labelSpan) labelSpan.textContent = (_appLang==='fr'?"Annuler l'invitation":'Cancel Invitation');
