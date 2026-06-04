@@ -2767,6 +2767,12 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="modal">
     <h3 data-i18n="modal.confirmDelete">Confirm Delete</h3>
     <p id="deleteMsg" style="color:var(--text2);margin-top:7px;font-size:14px;line-height:1.6"></p>
+    <div id="deleteMgrWarnRow" style="display:none;margin-top:10px;padding:10px 12px;border:1px solid rgba(245,158,11,.4);border-radius:8px;background:rgba(245,158,11,.08)">
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--text)">
+        <input type="checkbox" id="deleteMgrWarnChk" style="margin-top:2px;accent-color:#f59e0b">
+        <span id="deleteMgrWarnText"></span>
+      </label>
+    </div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('deleteModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-danger" id="confirmDeleteBtn" data-i18n="modal.delete">Delete</button>
@@ -5691,8 +5697,14 @@ async function bulkToggleActive(activate){
 async function bulkDelete(){
   if(isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   if(!_selectedEmps.size) return;
-  if(!confirm(`Permanently delete ${_selectedEmps.size} employee(s)? This cannot be undone.`)) return;
+  // Pre-scan: find any selected employees who have a linked active manager account
   const ids = [..._selectedEmps];
+  const selectedEmps = ids.map(id=>C.employees.find(e=>e.id===id)).filter(Boolean);
+  const linkedMgrCount = selectedEmps.filter(e=>{
+    const email=(e.email||'').toLowerCase();
+    return email&&(C.coAdmins||[]).some(a=>a.role==='manager'&&(a.email||'').toLowerCase()===email&&a.status!=='suspended');
+  }).length;
+  if(!confirm(`Permanently delete ${ids.length} employee(s)? This cannot be undone.`)) return;
   try{
     for(const id of ids){
       await DB.del('employees',`id=eq.${id}`);
@@ -5701,6 +5713,13 @@ async function bulkDelete(){
     clearEmpSelection();
     renderEmployees();
     showToast(`${ids.length} employee(s) deleted.`,'success');
+    if(linkedMgrCount>0){
+      setTimeout(()=>showToast(
+        _appLang==='fr'
+          ?`Note : ${linkedMgrCount} employé(s) supprimé(s) avai(en)t un compte gestionnaire actif. Gérez-les dans l'onglet Admins.`
+          :`Note: ${linkedMgrCount} deleted employee(s) had an active Manager account. Manage those under the Admins tab.`
+        ,'info'),600);
+    }
   }catch(e){showToast('Error: '+e.message,'error');}
 }
 
@@ -8165,6 +8184,31 @@ async function saveAddPunch(){
 // ═══════════════════════════════════════════════════
 function confirmDelete(type,id,name){
   if(type==='emp'&&isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
+  // Detect linked active manager account (captured in closure for onclick)
+  let linkedMgr = null;
+  const warnRow = document.getElementById('deleteMgrWarnRow');
+  const warnChk = document.getElementById('deleteMgrWarnChk');
+  const warnText = document.getElementById('deleteMgrWarnText');
+  if(type==='emp'){
+    const emp = C.employees.find(e=>e.id===id);
+    const email = (emp&&emp.email||'').toLowerCase();
+    linkedMgr = email ? (C.coAdmins||[]).find(a=>a.role==='manager'&&(a.email||'').toLowerCase()===email&&a.status!=='suspended') : null;
+    if(warnRow&&warnChk&&warnText){
+      if(linkedMgr){
+        warnChk.checked=false;
+        warnText.textContent=_appLang==='fr'
+          ?'⚠ Cette personne a aussi un compte gestionnaire actif. Retirer aussi son accès gestionnaire (suspend sa connexion)?'
+          :'⚠ This person also has an active Manager account. Also remove their manager access (suspends their login)?';
+        warnRow.style.display='';
+      } else {
+        warnRow.style.display='none';
+        if(warnChk)warnChk.checked=false;
+      }
+    }
+  } else {
+    if(warnRow){warnRow.style.display='none';}
+    if(warnChk){warnChk.checked=false;}
+  }
   document.getElementById('deleteMsg').textContent=`${t('msg.deleteConfirm1')} "${name}"? ${t('msg.deleteConfirm2')}`;
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{
@@ -8175,6 +8219,19 @@ function confirmDelete(type,id,name){
         C.punches=C.punches.filter(p=>p.emp_id!==id);
         C.employees=C.employees.filter(e=>e.id!==id);
         renderEmployees();
+        // Optionally suspend the linked manager account (admin's choice)
+        const doMgrRemoval = warnChk && warnChk.checked && linkedMgr;
+        if(doMgrRemoval){
+          try{
+            const sess=Sess.get();
+            const r=await DB.rpc('demote_manager_to_employee',{p_caller_id:sess.id,p_manager_id:linkedMgr.id});
+            if(r&&r.ok){ await loadCoAdmins(); }
+            showToast(_appLang==='fr'?'✓ Compte gestionnaire suspendu.':'✓ Manager account suspended.','success');
+          }catch(err){ showToast('Manager removal error: '+err.message,'error'); }
+        }
+        // Reset warn row after delete
+        if(warnRow){warnRow.style.display='none';}
+        if(warnChk){warnChk.checked=false;}
       } else if(type==='site'){
         // Delete punches → employees → site (cascade manually)
         const siteEmps=C.employees.filter(e=>e.site_id===id).map(e=>e.id);
