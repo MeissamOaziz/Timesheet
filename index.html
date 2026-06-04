@@ -5982,7 +5982,7 @@ async function sendPromotionInvite(){
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
     if(!myCo){showMsg('promoteToManagerMsg','No company found.','error');return;}
     const token=crypto.randomUUID();
-    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role:'manager',site_ids:JSON.stringify(siteIds),expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
+    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role:'manager',site_ids:siteIds,expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     try{
       await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
         method:'POST',
@@ -6061,7 +6061,7 @@ async function saveInvite(){
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
     if(!myCo){showMsg('inviteMsg','No company found. Please contact support.','error');return;}
     const token=crypto.randomUUID();
-    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role,site_ids:JSON.stringify(siteIds),expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
+    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role,site_ids:siteIds,expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     try{
       await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
         method:'POST',
@@ -8706,7 +8706,7 @@ async function init(){
     window.history.replaceState({},'',window.location.pathname);
     document.getElementById('loadingOverlay').classList.remove('hidden');
     try{
-      const invRows=await DB.all('invitations',`token=eq.${inviteToken}&status=eq.pending`);
+      const invRows=await DB.rpc('get_invitation',{p_token:inviteToken});
       const inv=invRows?.[0];
       if(!inv||(inv.expires_at&&new Date(inv.expires_at)<new Date())){
         document.getElementById('loadingOverlay').classList.add('hidden');
@@ -8714,10 +8714,9 @@ async function init(){
         showToast('This invitation link is invalid or has expired. Please ask your administrator to send a new one.','error');
         return;
       }
-      const coRows=await DB.all('companies',`id=eq.${inv.company_id}`);
-      const co=coRows?.[0];
+      const co={id:inv.company_id,name:inv.company_name};
       document.getElementById('loadingOverlay').classList.add('hidden');
-      showAcceptInvitePage(inv,co);
+      await showAcceptInvitePage(inv,co);
     }catch(e){
       document.getElementById('loadingOverlay').classList.add('hidden');
       updateNav();showLanding();
