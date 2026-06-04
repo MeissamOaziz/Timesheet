@@ -4121,7 +4121,7 @@ async function doSetInvitePassword(){
 // ═══════════════════════════════════════════════════
 // ACCEPT INVITE (token-based)
 // ═══════════════════════════════════════════════════
-function showAcceptInvitePage(inv, co){
+async function showAcceptInvitePage(inv, co){
   pendingInvitation=inv;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-accept-invite').classList.add('active');
@@ -4130,6 +4130,22 @@ function showAcceptInvitePage(inv, co){
   document.getElementById('acceptInviteSubtitle').textContent=`You've been invited as a ${roleLabelEn}. Set up your account below.`;
   document.getElementById('acceptInviteMsg').innerHTML='';
   ['acceptFirstName','acceptLastName','acceptPass','acceptPassConfirm'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Prefill name from employee record (if email matches an employee — editable, not locked)
+  if(inv.email){
+    try{
+      const empRows=await DB.all('employees',`email=eq.${encodeURIComponent(inv.email)}`);
+      const emp=empRows&&empRows[0];
+      if(emp&&emp.name){
+        const parts=emp.name.trim().split(/\s+/);
+        const fn=parts.shift()||'';
+        const ln=parts.join(' ');
+        const fnEl=document.getElementById('acceptFirstName');
+        const lnEl=document.getElementById('acceptLastName');
+        if(fnEl)fnEl.value=fn;
+        if(lnEl)lnEl.value=ln;
+      }
+    }catch(_){}
+  }
   updateNav();
 }
 async function doAcceptInvite(){
@@ -5931,6 +5947,7 @@ function openPromoteToManagerModal(){
   document.getElementById('promoteSiteCheckboxes').innerHTML=mySites.length===0
     ?`<p style="font-size:12px;color:var(--text3)">${t('msg.noSiteFirst')||'No sites found. Add a site first.'}</p>`
     :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+  closeModal('addEmpModal');
   openModal('promoteToManagerModal');
 }
 
@@ -5965,7 +5982,7 @@ async function sendPromotionInvite(){
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
     if(!myCo){showMsg('promoteToManagerMsg','No company found.','error');return;}
     const token=crypto.randomUUID();
-    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role:'manager',site_ids:JSON.stringify(siteIds)});
+    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role:'manager',site_ids:JSON.stringify(siteIds),expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     try{
       await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
         method:'POST',
@@ -6044,7 +6061,7 @@ async function saveInvite(){
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
     if(!myCo){showMsg('inviteMsg','No company found. Please contact support.','error');return;}
     const token=crypto.randomUUID();
-    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role,site_ids:JSON.stringify(siteIds)});
+    await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role,site_ids:JSON.stringify(siteIds),expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     try{
       await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
         method:'POST',
@@ -8691,7 +8708,7 @@ async function init(){
     try{
       const invRows=await DB.all('invitations',`token=eq.${inviteToken}&status=eq.pending`);
       const inv=invRows?.[0];
-      if(!inv||new Date(inv.expires_at)<new Date()){
+      if(!inv||(inv.expires_at&&new Date(inv.expires_at)<new Date())){
         document.getElementById('loadingOverlay').classList.add('hidden');
         updateNav();showLanding();
         showToast('This invitation link is invalid or has expired. Please ask your administrator to send a new one.','error');

@@ -233,32 +233,42 @@ function buildJoinDeniedHtml(name, companyName) {
 }
 function buildInvitationHtml(inviterName, companyName, role, token) {
   const acceptUrl = `https://www.punchclock.ca?invite=${token}`;
-  const roleEn = role === 'manager' ? 'Manager' : 'Co-Admin';
-  const roleFr = role === 'manager' ? 'Gestionnaire' : 'Co-administrateur';
+  const isManager = role === 'manager';
+  const roleEn = isManager ? 'Manager' : 'Co-Admin';
+  const roleFr = isManager ? 'Gestionnaire' : 'Co-administrateur';
+  // Role-aware H1 and intro — promotion gets different wording than a generic co-admin invite
+  const h1En = isManager
+    ? `You've been promoted to Manager 🎉`
+    : `You've been invited to join PunchClock Pro`;
+  const h1Fr = isManager
+    ? `Vous avez été promu(e) gestionnaire 🎉`
+    : `Vous avez été invité à rejoindre PunchClock Pro`;
+  const introEn = isManager
+    ? `<strong style="color:#e8eaf0;">${inviterName}</strong> has promoted you to <strong style="color:#4f8ef7;">Manager</strong> at <strong style="color:#e8eaf0;">${companyName}</strong> on PunchClock Pro.`
+    : `<strong style="color:#e8eaf0;">${inviterName}</strong> has invited you to join <strong style="color:#e8eaf0;">${companyName}</strong> on PunchClock Pro as a <strong style="color:#4f8ef7;">${roleEn}</strong>.`;
+  const introFr = isManager
+    ? `<strong style="color:#e8eaf0;">${inviterName}</strong> vous a promu(e) <strong style="color:#4f8ef7;">Gestionnaire</strong> chez <strong style="color:#e8eaf0;">${companyName}</strong> sur PunchClock Pro.`
+    : `<strong style="color:#e8eaf0;">${inviterName}</strong> vous a invité à rejoindre <strong style="color:#e8eaf0;">${companyName}</strong> sur PunchClock Pro en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.`;
   return wrapper(`
-    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">You've been invited to join PunchClock Pro</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      <strong style="color:#e8eaf0;">${inviterName}</strong> has invited you to join <strong style="color:#e8eaf0;">${companyName}</strong> on PunchClock Pro as a <strong style="color:#4f8ef7;">${roleEn}</strong>.
-    </p>
+    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">${h1En}</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">${introEn}</p>
     <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Click the button below to create your account. You'll set your name and password on the next page.
     </p>
     <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
-      Accept Invitation →
+      ${isManager ? 'Accept & Set Up Account →' : 'Accept Invitation →'}
     </a>
     <p style="color:#555e7a;font-size:12px;margin-top:16px;text-align:center;">This invitation expires in 7 days. If you weren't expecting this, you can safely ignore this email.</p>
 
     <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
 
-    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Vous avez été invité à rejoindre PunchClock Pro</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      <strong style="color:#e8eaf0;">${inviterName}</strong> vous a invité à rejoindre <strong style="color:#e8eaf0;">${companyName}</strong> sur PunchClock Pro en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.
-    </p>
+    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">${h1Fr}</h1>
+    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">${introFr}</p>
     <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Cliquez sur le bouton ci-dessous pour créer votre compte. Vous définirez votre nom et mot de passe à l'étape suivante.
     </p>
     <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
-      Accepter l'invitation →
+      ${isManager ? 'Accepter et configurer le compte →' : 'Accepter l\'invitation →'}
     </a>
     <p style="color:#555e7a;font-size:12px;margin-top:16px;text-align:center;">Cette invitation expire dans 7 jours. Si vous ne vous attendiez pas à cette invitation, vous pouvez ignorer ce message.</p>
   `);
@@ -359,7 +369,9 @@ serve(async (req)=>{
       html = buildJoinDeniedHtml(name, companyName || '');
     } else if (type === "invitation") {
       const { inviterName, companyName, role, token } = body;
-      subject = `You've been invited to join ${companyName || 'a company'} on PunchClock Pro | Invitation PunchClock Pro`;
+      subject = role === 'manager'
+        ? `🎉 You've been promoted to Manager at ${companyName || 'your company'} — PunchClock Pro`
+        : `You've been invited to join ${companyName || 'a company'} on PunchClock Pro | Invitation PunchClock Pro`;
       html = buildInvitationHtml(inviterName || 'Your administrator', companyName || 'your company', role || 'co_admin', token || '');
     } else if (type === "new_account_notification") {
       const { userEmail, plan, regType, timestamp } = body;
