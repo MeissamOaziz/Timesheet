@@ -5634,6 +5634,9 @@ function updateBulkBar(){
   if(_selectedEmps.size > 0){
     bar.style.display = 'flex';
     cnt.textContent = _selectedEmps.size + ' selected';
+    // Hide bulk-delete for managers; keep activate/deactivate
+    const bulkDelBtn = bar.querySelector('[onclick="bulkDelete()"]');
+    if(bulkDelBtn) bulkDelBtn.style.display = isManager() ? 'none' : '';
   } else {
     bar.style.display = 'none';
   }
@@ -5686,6 +5689,7 @@ async function bulkToggleActive(activate){
 }
 
 async function bulkDelete(){
+  if(isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   if(!_selectedEmps.size) return;
   if(!confirm(`Permanently delete ${_selectedEmps.size} employee(s)? This cannot be undone.`)) return;
   const ids = [..._selectedEmps];
@@ -5723,6 +5727,7 @@ let _bulkReportQueue = [];
 
 function renderEmployees(){
   const ctx=Ctx.get();
+  const _isMgr=isManager();
   const search=(document.getElementById('empSearch')?.value||'').toLowerCase();
   const siteF=document.getElementById('empSiteFilter')?.value||'';
   const deptF=document.getElementById('empDeptFilter')?.value||'';
@@ -5796,7 +5801,7 @@ function renderEmployees(){
         <button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="editEmployee('${e.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
         <button class="icon-btn" title="${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}" onclick="toggleEmp('${e.id}')" style="${e.active?'color:var(--amber)':'color:var(--green)'}"><svg class="ic"><use href="#${e.active?'i-pause':'i-play'}"/></svg></button>
         <button class="icon-btn" title="${t('admin.sendReport')||'Send Report'}" onclick="openSendReportModal('${e.id}')" style="color:var(--amber)"><svg class="ic"><use href="#i-mail"/></svg></button>
-        <button class="icon-btn danger" title="${t('common.delete')||'Delete'}" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#i-trash"/></svg></button>
+        ${_isMgr?'':'<button class="icon-btn danger" title="'+( t('common.delete')||'Delete')+'" onclick="confirmDelete(\'emp\',\''+e.id+'\',\''+e.name.replace(/'/g,"\\'")+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'}
       </div></td>
     </tr>`;
   }).join('');
@@ -5826,7 +5831,7 @@ function renderEmployees(){
         <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-edit"/></svg>${t('common.edit')||'Edit'}</button>
         <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--amber)':'var(--green)'}" onclick="toggleEmp('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#${e.active?'i-pause':'i-play'}"/></svg>${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}</button>
         <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')"><svg class="ic"><use href="#i-mail"/></svg></button>
-        <button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#i-trash"/></svg></button>
+        ${_isMgr?'':`<button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#i-trash"/></svg></button>`}
       </div>
     </div>`;
   }).join('');
@@ -7103,6 +7108,7 @@ async function toggleEmp(id){
 
 // ---- Site modal ----
 function openAddSiteModal(){
+  if(isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   const ctx=Ctx.get();if(!ctx){if(needsOnboarding()){showOnboardStep1();return;}else{showCompanyPicker();}return;}
   const {ok,current,max,plan}=canAddSite(ctx.co);
   if(!ok){
@@ -7137,6 +7143,7 @@ function editSite(id){
 }
 
 async function saveSite(){
+  if(isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   const ctx=Ctx.get();
   const name=document.getElementById('siteName').value.trim();
   const description=document.getElementById('siteDesc').value.trim();
@@ -7234,13 +7241,18 @@ async function loadCompaniesPage(){
 async function loadSitesPage(){
   if(!isLoggedIn()){navigate('login');return;}
   await refreshCache();
+  const _isMgr=isManager();
+  // Managers: ensure their assigned site IDs are loaded before filtering
+  if(_isMgr) await ensureManagerSiteIds();
   const ctx=Ctx.get();
   const grid=document.getElementById('sitesGrid');
   if(!grid)return;
   const superAdmin=isSuperAdmin();
-  const sites=superAdmin?C.sites:(ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites.filter(s=>C.companies.some(c=>c.id===s.company_id)));
+  let sites=superAdmin?C.sites:(ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites.filter(s=>C.companies.some(c=>c.id===s.company_id)));
+  // Managers see only their assigned sites (read-only)
+  if(_isMgr&&Array.isArray(managerSiteIds)) sites=sites.filter(s=>managerSiteIds.includes(s.id));
   if(!sites.length){
-    grid.innerHTML=`<div class="empty"><p>${t('sites.noSites')}</p><button class="btn-primary" style="margin-top:14px;width:auto;padding:9px 20px" onclick="openAddSiteModal()">${t('admin.addSite')||'+ Add Site'}</button></div>`;
+    grid.innerHTML=`<div class="empty"><p>${t('sites.noSites')}</p>${_isMgr?'':`<button class="btn-primary" style="margin-top:14px;width:auto;padding:9px 20px" onclick="openAddSiteModal()">${t('admin.addSite')||'+ Add Site'}</button>`}</div>`;
     return;
   }
   const freqLabel={weekly:t('modal.weekly'),biweekly:t('modal.biweekly'),monthly:t('modal.monthly')};
@@ -7266,11 +7278,11 @@ async function loadSitesPage(){
       </div>
       ${payrollLine?`<div class="meta" style="margin-bottom:4px">📅 ${payrollLine}</div>`:''}
       <div class="meta">👥 ${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+s.description:''}</div>
-      <div class="actions">
+      ${_isMgr?'':`<div class="actions">
         <button class="btn-primary" style="font-size:11px;padding:5px 11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">📲 ${t('site.kioskShortcut')||'Kiosk'}</button>
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
         <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
-      </div>
+      </div>`}
     </div>`;
   }).join('');
   applyAllTranslations();
@@ -8152,6 +8164,7 @@ async function saveAddPunch(){
 // DELETE
 // ═══════════════════════════════════════════════════
 function confirmDelete(type,id,name){
+  if(type==='emp'&&isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   document.getElementById('deleteMsg').textContent=`${t('msg.deleteConfirm1')} "${name}"? ${t('msg.deleteConfirm2')}`;
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{
@@ -9808,7 +9821,7 @@ en:{
 'msg.codeVerified':'Code verified! Now set your new password.',
 'msg.passwordMismatch':'Passwords do not match.',
 'msg.passwordUpdated':'✓ Password updated successfully! Redirecting to login...',
-'msg.invalidEmail':'Please enter a valid email address.','msg.sending':'Sending...','msg.verifying':'Verifying...','msg.enterCode':'Enter the 6-digit code.','msg.enterNewPass':'Enter your new password.','msg.saving':'Saving...','msg.badCode':'Incorrect or expired code.','msg.codeExpired':'Code expired. Please request a new one.','msg.tooManyAttempts':'Too many attempts. Request a new code.','msg.resetExpired':'Session expired. Please restart the reset.','msg.resetFailed':'Could not reset password. Please try again.','msg.resetDone':'Password reset! You can now log in.',
+'msg.noPermission':'You do not have permission to do that.','msg.invalidEmail':'Please enter a valid email address.','msg.sending':'Sending...','msg.verifying':'Verifying...','msg.enterCode':'Enter the 6-digit code.','msg.enterNewPass':'Enter your new password.','msg.saving':'Saving...','msg.badCode':'Incorrect or expired code.','msg.codeExpired':'Code expired. Please request a new one.','msg.tooManyAttempts':'Too many attempts. Request a new code.','msg.resetExpired':'Session expired. Please restart the reset.','msg.resetFailed':'Could not reset password. Please try again.','msg.resetDone':'Password reset! You can now log in.',
 'msg.selectDates':'Please select a start and end date.',
 'msg.chooseSite':'Choose your work site',
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
@@ -10390,7 +10403,7 @@ fr:{
 'msg.codeVerified':'Code vérifié! Définissez votre nouveau mot de passe.',
 'msg.passwordMismatch':'Les mots de passe ne correspondent pas.',
 'msg.passwordUpdated':'✓ Mot de passe mis à jour! Redirection vers la connexion...',
-'msg.invalidEmail':'Veuillez entrer une adresse courriel valide.','msg.sending':'Envoi en cours...','msg.verifying':'Vérification...','msg.enterCode':'Entrez le code à 6 chiffres.','msg.enterNewPass':'Entrez votre nouveau mot de passe.','msg.saving':'Enregistrement...','msg.badCode':'Code incorrect ou expiré.','msg.codeExpired':'Code expiré. Veuillez en demander un nouveau.','msg.tooManyAttempts':'Trop de tentatives. Demandez un nouveau code.','msg.resetExpired':'Session expirée. Veuillez recommencer la réinitialisation.','msg.resetFailed':'Impossible de réinitialiser le mot de passe. Veuillez réessayer.','msg.resetDone':'Mot de passe réinitialisé ! Vous pouvez maintenant vous connecter.',
+'msg.noPermission':"Vous n'avez pas la permission d'effectuer cette action.",'msg.invalidEmail':'Veuillez entrer une adresse courriel valide.','msg.sending':'Envoi en cours...','msg.verifying':'Vérification...','msg.enterCode':'Entrez le code à 6 chiffres.','msg.enterNewPass':'Entrez votre nouveau mot de passe.','msg.saving':'Enregistrement...','msg.badCode':'Code incorrect ou expiré.','msg.codeExpired':'Code expiré. Veuillez en demander un nouveau.','msg.tooManyAttempts':'Trop de tentatives. Demandez un nouveau code.','msg.resetExpired':'Session expirée. Veuillez recommencer la réinitialisation.','msg.resetFailed':'Impossible de réinitialiser le mot de passe. Veuillez réessayer.','msg.resetDone':'Mot de passe réinitialisé ! Vous pouvez maintenant vous connecter.',
 'msg.selectDates':'Veuillez sélectionner une date de début et de fin.',
 'msg.chooseSite':'Choisissez votre site de travail',
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
