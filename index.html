@@ -5958,9 +5958,11 @@ async function renderSiteManagerPills(siteId){
   container.innerHTML=mgrPills+`<button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${siteId}')">${t('site.editManagers')||'Edit Managers'}</button>`;
 }
 
+let _promoteEmpId = null;
 function openPromoteToManagerModal(){
   const empId=document.getElementById('editEmpUid').value;
   const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
+  _promoteEmpId = empId;
   document.getElementById('promoteToManagerMsg').innerHTML='';
   document.getElementById('promoteToManagerDesc').textContent=`${t('emp.promoteDescPrefix')||'Promote'} ${emp.name} ${t('emp.promoteDescSuffix')||'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.'}`;
   document.getElementById('promoteEmail').value=emp.email||'';
@@ -6002,6 +6004,7 @@ async function sendPromotionInvite(){
     }catch(emailErr){console.warn('Invite email failed:',emailErr);}
     closeModal('promoteToManagerModal');
     showToast(`✓ ${t('emp.promoteInviteSent')||'Invitation sent to'} ${email}. ${t('emp.promoteInviteNote')||"They'll appear as a manager once they accept."}`, 'success');
+    if(_promoteEmpId){ editEmployee(_promoteEmpId); _promoteEmpId=null; }
   }catch(e){showMsg('promoteToManagerMsg','Error: '+e.message,'error');}
 }
 
@@ -6276,14 +6279,15 @@ async function resendCoAdminInvite(id, email, name) {
 }
 
 async function cancelInvitation(invId, email){
-  if(!invId) return;
+  if(!invId) return false;
   const msg = (t('coAdmin.cancelConfirm')||'Cancel the invitation sent to')+' '+email+'?';
-  if(!confirm(msg)) return;
+  if(!confirm(msg)) return false;
   try{
     await DB.del('invitations', `id=eq.${invId}`);
     await loadCoAdmins();
     showToast(`✓ ${t('coAdmin.cancelled')||'Invitation cancelled.'} (${email})`,'success');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+    return true;
+  }catch(e){ showToast('Error: '+e.message,'error'); return false; }
 }
 
 // ─── END CO-ADMIN MANAGEMENT ──────────────────────────────────────────────
@@ -6882,6 +6886,32 @@ async function getEmployeeRoleState(e){
   return {state:'employee'};
 }
 
+async function refreshRoleButton(empId){
+  const e = C.employees.find(x => x.id === empId);
+  if(!e) return;
+  const promoteBtn = document.getElementById('promoteToManagerBtn');
+  if(!promoteBtn || promoteBtn.style.display==='none') return;
+  promoteBtn.disabled = true;
+  promoteBtn.style.borderColor='rgba(124,92,191,.4)'; promoteBtn.style.color='#a78bfa';
+  const rs = await getEmployeeRoleState(e);
+  promoteBtn.disabled = false;
+  promoteBtn.dataset.roleState = rs.state;
+  promoteBtn.dataset.mgrId = (rs.mgr && rs.mgr.id) ? rs.mgr.id : '';
+  promoteBtn.dataset.invId = (rs.inv && rs.inv.id) ? rs.inv.id : '';
+  promoteBtn.dataset.invEmail = (rs.inv && rs.inv.email) ? rs.inv.email : '';
+  const labelSpan = promoteBtn.querySelector('span');
+  if(rs.state==='active_manager'){
+    if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Rétrograder':'Demote');
+    promoteBtn.style.borderColor='rgba(245,158,11,.5)'; promoteBtn.style.color='#f59e0b';
+  } else if(rs.state==='pending_invite'){
+    if(labelSpan) labelSpan.textContent = (_appLang==='fr'?"Annuler l'invitation":'Cancel Invitation');
+    promoteBtn.style.borderColor='rgba(239,68,68,.4)'; promoteBtn.style.color='#ef4444';
+  } else {
+    if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Promouvoir':'Promote');
+    promoteBtn.style.borderColor='rgba(124,92,191,.4)'; promoteBtn.style.color='#a78bfa';
+  }
+}
+
 async function handlePromoteButtonClick(){
   const btn = document.getElementById('promoteToManagerBtn');
   const state = btn ? btn.dataset.roleState : 'employee';
@@ -6897,13 +6927,15 @@ async function handlePromoteButtonClick(){
       if(r && r.ok){
         showToast(_appLang==='fr'?'✓ Rétrogradé en employé':'✓ Demoted to employee','success');
         await loadCoAdmins();
-        closeModal('addEmpModal');
+        C.coAdmins = (C.coAdmins||[]).filter(a => a.id !== mgrId);
+        await refreshRoleButton(document.getElementById('editEmpUid').value);
       } else {
         showToast('Error: '+((r&&r.error)||'demote failed'),'error');
       }
     }catch(e){ showToast('Error: '+e.message,'error'); }
   } else if(state==='pending_invite'){
-    cancelInvitation(btn.dataset.invId, btn.dataset.invEmail||'');
+    const ok = await cancelInvitation(btn.dataset.invId, btn.dataset.invEmail||'');
+    if(ok) await refreshRoleButton(document.getElementById('editEmpUid').value);
   } else {
     openPromoteToManagerModal();
   }
@@ -6933,29 +6965,7 @@ function editEmployee(id){
     const sess=Sess.get();
     const canManage = (sess && sess.role!=='manager');
     promoteBtn.style.display = canManage ? '' : 'none';
-    if(canManage){
-      promoteBtn.disabled = true;
-      // Reset to default style while resolving
-      promoteBtn.style.borderColor='rgba(124,92,191,.4)'; promoteBtn.style.color='#a78bfa';
-      getEmployeeRoleState(e).then(rs=>{
-        promoteBtn.disabled = false;
-        promoteBtn.dataset.roleState = rs.state;
-        promoteBtn.dataset.mgrId = (rs.mgr && rs.mgr.id) ? rs.mgr.id : '';
-        promoteBtn.dataset.invId = (rs.inv && rs.inv.id) ? rs.inv.id : '';
-        promoteBtn.dataset.invEmail = (rs.inv && rs.inv.email) ? rs.inv.email : '';
-        const labelSpan = promoteBtn.querySelector('span');
-        if(rs.state==='active_manager'){
-          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Rétrograder':'Demote');
-          promoteBtn.style.borderColor='rgba(245,158,11,.5)'; promoteBtn.style.color='#f59e0b';
-        } else if(rs.state==='pending_invite'){
-          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?"Annuler l'invitation":'Cancel Invitation');
-          promoteBtn.style.borderColor='rgba(239,68,68,.4)'; promoteBtn.style.color='#ef4444';
-        } else {
-          if(labelSpan) labelSpan.textContent = (_appLang==='fr'?'Promouvoir':'Promote');
-          promoteBtn.style.borderColor='rgba(124,92,191,.4)'; promoteBtn.style.color='#a78bfa';
-        }
-      });
-    }
+    if(canManage) refreshRoleButton(e.id);
   }
   // Load portal invite status if employee has email
   loadEmpPortalStatus(e);
