@@ -1621,8 +1621,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h2 id="acceptInviteTitle" style="font-size:20px;font-weight:700;margin:0 0 8px">You've been invited</h2>
     <p id="acceptInviteSubtitle" style="font-size:14px;color:var(--text2);margin:0 0 22px"></p>
     <div id="acceptInviteMsg" style="margin-bottom:10px"></div>
-    <div class="form-group"><label>First Name</label><input type="text" id="acceptFirstName" placeholder="Jane"></div>
-    <div class="form-group"><label>Last Name</label><input type="text" id="acceptLastName" placeholder="Smith"></div>
+    <div class="form-group"><label>First Name</label><input type="text" id="acceptFirstName" placeholder="Jane" autocomplete="off"></div>
+    <div class="form-group"><label>Last Name</label><input type="text" id="acceptLastName" placeholder="Smith" autocomplete="off"></div>
     <div class="form-group"><label>Password</label>
       <div class="pw-wrap">
         <input type="password" id="acceptPass" placeholder="Min 6 characters">
@@ -1965,6 +1965,22 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('promoteToManagerModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="sendPromotionInvite()" data-i18n="emp.promoteSendInvite">Send Invitation</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGER WELCOME MODAL (shown once, right after a manager accepts an invitation) -->
+<div class="modal-overlay" id="managerWelcomeModal">
+  <div class="modal" style="max-width:440px">
+    <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">🎉</span><span id="managerWelcomeTitle">Welcome to the Manager portal!</span></h3>
+    <p style="font-size:14px;color:var(--text2);line-height:1.6;margin:6px 0 16px" id="managerWelcomeIntro">You're all set. Here's what you can do from here:</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex:0 0 auto">👥</span><span style="font-size:13px;color:var(--text);line-height:1.5"><strong>Manage employees</strong> for your assigned sites from the Admin panel.</span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex:0 0 auto">📊</span><span style="font-size:13px;color:var(--text);line-height:1.5"><strong>See reports</strong> and review activity logs.</span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex:0 0 auto">🗓️</span><span style="font-size:13px;color:var(--text);line-height:1.5"><strong>Manage scheduling</strong> for your team.</span></div>
+    </div>
+    <div class="modal-footer" style="margin-top:18px">
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="closeModal('managerWelcomeModal')" id="managerWelcomeBtn">Get started</button>
     </div>
   </div>
 </div>
@@ -4136,21 +4152,17 @@ async function showAcceptInvitePage(inv, co){
   document.getElementById('acceptInviteSubtitle').textContent=`You've been invited as a ${roleLabelEn}. Set up your account below.`;
   document.getElementById('acceptInviteMsg').innerHTML='';
   ['acceptFirstName','acceptLastName','acceptPass','acceptPassConfirm'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  // Prefill name from employee record (if email matches an employee — editable, not locked)
-  if(inv.email){
-    try{
-      const empRows=await DB.all('employees',`email=eq.${encodeURIComponent(inv.email)}`);
-      const emp=empRows&&empRows[0];
-      if(emp&&emp.name){
-        const parts=emp.name.trim().split(/\s+/);
-        const fn=parts.shift()||'';
-        const ln=parts.join(' ');
-        const fnEl=document.getElementById('acceptFirstName');
-        const lnEl=document.getElementById('acceptLastName');
-        if(fnEl)fnEl.value=fn;
-        if(lnEl)lnEl.value=ln;
-      }
-    }catch(_){}
+  // Prefill name from the invitation's matching employee (company-scoped, supplied server-side
+  // by get_invitation — editable, not locked). Setting the values also blocks browser autofill
+  // from injecting an unrelated remembered name into the empty fields.
+  if(inv.emp_name){
+    const parts=inv.emp_name.trim().split(/\s+/);
+    const fn=parts.shift()||'';
+    const ln=parts.join(' ');
+    const fnEl=document.getElementById('acceptFirstName');
+    const lnEl=document.getElementById('acceptLastName');
+    if(fnEl)fnEl.value=fn;
+    if(lnEl)lnEl.value=ln;
   }
   updateNav();
 }
@@ -4186,6 +4198,12 @@ async function doAcceptInvite(){
     updateNav();
     navigate('admin');
     showToast(`Welcome to PunchClock Pro, ${firstName}! 🎉`,'success');
+    // Managers get a short orientation modal on first landing
+    if(inv.role==='manager'){
+      const titleEl=document.getElementById('managerWelcomeTitle');
+      if(titleEl)titleEl.textContent=`Welcome to the Manager portal, ${firstName}!`;
+      openModal('managerWelcomeModal');
+    }
   }catch(e){showMsg('acceptInviteMsg','Error: '+e.message,'error');}
 }
 
@@ -5972,7 +5990,7 @@ function openPromoteToManagerModal(){
   const mySites=myCo?C.sites.filter(s=>s.company_id===myCo.id):[];
   document.getElementById('promoteSiteCheckboxes').innerHTML=mySites.length===0
     ?`<p style="font-size:12px;color:var(--text3)">${t('msg.noSiteFirst')||'No sites found. Add a site first.'}</p>`
-    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
   closeModal('addEmpModal');
   openModal('promoteToManagerModal');
 }
@@ -6042,7 +6060,7 @@ function openInviteModal(){
   const container=document.getElementById('inviteSiteCheckboxes');
   container.innerHTML=mySites.length===0
     ?`<p style="font-size:12px;color:var(--text3)">No sites found. Add a site first.</p>`
-    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
   openModal('inviteModal');
 }
 function setInviteRole(role){
@@ -6201,7 +6219,7 @@ async function openEditCoAdminModal(id){
     const container=document.getElementById('editManagerSiteCheckboxes');
     container.innerHTML=mySites.length===0
       ?`<p style="font-size:12px;color:var(--text3)">No sites found. Add a site first.</p>`
-      :mySites.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}"${assignedIds.has(s.id)?' checked':''} style="accent-color:var(--accent)"><span style="font-size:13px;color:var(--text)">${s.name}</span></label>`).join('');
+      :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}"${assignedIds.has(s.id)?' checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
 
     toggleEditCoAdminSites();
     openModal('editCoAdminModal');
