@@ -1,0 +1,8 @@
+# Supabase CLI scratch / local state (not source)
+supabase/.temp/
+supabase/.branches/
+supabase/supabase/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
