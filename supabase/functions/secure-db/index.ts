@@ -91,7 +91,7 @@ Deno.serve(async (req: Request) => {
   // Parse request body
   let filter: string;
   let table: string, method: string, body: unknown,
-      sessionId: string | null, kioskSiteId: string | null;
+      sessionId: string | null, kioskSiteId: string | null, action: string | null;
   try {
     const p = await req.json();
     table       = p.table;
@@ -100,10 +100,92 @@ Deno.serve(async (req: Request) => {
     body        = p.body   || null;
     sessionId   = p.sessionId   || null;
     kioskSiteId = p.kioskSiteId || null;
+    action      = p.action || null;
   } catch {
     return errResp('Invalid request body', 400);
   }
-  if (!table || !method) return errResp('Missing table or method', 400);
+  // action requests don't need table/method
+  if (!action && (!table || !method)) return errResp('Missing table or method', 400);
+
+  // ── Server-side actions (non-CRUD) ──────────────────────────────────────
+  if (action === 'request_reset_code') {
+    const email = (typeof (body as any)?.email === 'string') ? (body as any).email.trim() : '';
+    if (!email) return errResp('Missing email', 400);
+    try {
+      // 1. Issue code server-side (service role). Plaintext code stays on the server.
+      const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/issue_email_code`, {
+        method: 'POST',
+        headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: email, p_purpose: 'password_reset' }),
+      });
+      const issued = await rpcRes.json().catch(() => null);
+      // Always respond ok:true to avoid revealing whether the account exists.
+      if (issued && issued.ok && issued.exists && issued.code) {
+        // 2. Email the code via send-verification (fire and don't leak failures to client).
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: issued.email,
+              name: issued.name || '',
+              code: issued.code,
+              subject: 'Reset your PunchClock Pro password',
+              purpose: 'password_reset',
+            }),
+          });
+        } catch (_e) { /* swallow — still return ok to avoid enumeration/timing leaks */ }
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    } catch {
+      // Even on internal error, return ok:true (don't reveal anything to caller).
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
+  if (action === 'request_registration_code') {
+    const email = (typeof (body as any)?.email === 'string') ? (body as any).email.trim().toLowerCase() : '';
+    const name  = (typeof (body as any)?.name === 'string') ? (body as any).name : '';
+    if (!email) return errResp('Missing email', 400);
+    try {
+      const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/issue_email_code`, {
+        method: 'POST',
+        headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: email, p_purpose: 'registration' }),
+      });
+      const issued = await rpcRes.json().catch(() => null);
+
+      // Registration legitimately reveals email-taken so the user can go log in.
+      if (issued && issued.ok === false && issued.error === 'email_taken') {
+        return new Response(JSON.stringify({ ok: false, error: 'email_taken' }), {
+          status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (issued && issued.ok && issued.exists && issued.code) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: issued.email,
+              name: name || '',
+              code: issued.code,
+            }),
+          });
+        } catch (_e) { /* swallow */ }
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    } catch {
+      return errResp('Internal server error');
+    }
+  }
 
   // ── Auth gate: GET on protected tables requires one of three valid paths ──
   if (method === 'GET' && PROTECTED_TABLES.has(table)) {
