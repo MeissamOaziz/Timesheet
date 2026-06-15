@@ -242,11 +242,11 @@ Deno.serve(async (req: Request) => {
     if (authedAdminId) {
       // Path 1 — authenticated admin (token or, during transition, legacy admin id)
 
-    } else if (kioskSiteId && table === 'employees') {
-      // Path 2 — kiosk: verify site exists, then force site_id filter
+    } else if (kioskSiteId && (table === 'employees' || table === 'punches')) {
+      // Path 2 — kiosk: verify site exists, then force site_id filter so the kiosk can only
+      // read its own site's employees and punches (the latter drives the clocked-in board).
       const validSite = await verifySite(kioskSiteId);
       if (!validSite) return errResp('Unauthorized', 401);
-      // Override filter — kiosk can only read its own site's employees
       filter = `site_id=eq.${kioskSiteId}`;
 
     } else if (isPreAuthAllowed(table, filter)) {

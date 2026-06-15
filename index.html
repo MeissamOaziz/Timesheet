@@ -3452,6 +3452,20 @@ async function refreshCache(opts={}){
   const adminId=sess?.parent_admin_id||sess?.id;
   const ctx=Ctx.get();
   if(!sess&&!ctx){C.companies=[];C.sites=[];C.employees=[];C.punches=[];return;}
+  // Kiosk (no admin session): company/site come from Ctx (set at bootstrap). Read only this
+  // site's employees + punches — both permitted by the kiosk auth path — and never the
+  // protected companies/sites tables (which a kiosk cannot read → would 401 every refresh).
+  if(!sess&&ctx){
+    C.companies = ctx.co ? [ctx.co] : [];
+    C.sites = ctx.site ? [ctx.site] : [];
+    const [emps,punches]=await Promise.all([
+      DB.all('employees','order=name.asc').catch(()=>C.employees||[]),
+      DB.all('punches','order=punched_at.desc&limit=2000').catch(()=>C.punches||[]),
+    ]);
+    C.employees=(emps||[]).filter(e=>(e.active!==false)&&(!ctx.site||e.site_id===ctx.site.id));
+    C.punches=punches||[];
+    return;
+  }
   // STEP 1: Fetch companies first — IDs are needed to scope all subsequent queries
   let companiesFilter='order=name.asc';
   if(!sess&&ctx){companiesFilter+=`&id=eq.${ctx.co.id}`;}
@@ -8773,10 +8787,11 @@ async function init(){
     }
     document.getElementById('loadingOverlay').classList.remove('hidden');
     try{
-      // Step 1: fetch the site to learn which company owns it
-      const sites = await DB.all('sites',`id=eq.${kioskSiteId}`);
-      C.sites = sites||[];
-      const site = sites?.[0];
+      // One anon RPC returns the site, its owning company, and its active employees (the site
+      // id is the kiosk credential). Replaces anonymous reads of the protected sites/companies
+      // tables, which the read gate (correctly) blocks.
+      const boot = await DB.rpc('get_kiosk_bootstrap',{p_site_id:kioskSiteId});
+      const site = (boot&&boot.ok) ? boot.site : null;
       if(!site){
         document.getElementById('loadingOverlay').classList.add('hidden');
         updateNav();
@@ -8784,20 +8799,16 @@ async function init(){
         showToast('Kiosk URL not found. Please contact your administrator.','error');
         return;
       }
-      // Step 2: fetch only the owning company + only this site's employees at DB level
-      const [companies, employees] = await Promise.all([
-        DB.all('companies',`id=eq.${site.company_id}`),
-        DB.all('employees',`site_id=eq.${kioskSiteId}&active=eq.true&order=name.asc`),
-      ]);
-      C.companies = companies||[];
-      const co = (companies||[]).find(c=>c.id===site.company_id);
+      const co = boot.company;
       if(!co){
         document.getElementById('loadingOverlay').classList.add('hidden');
         updateNav();
         showLanding();
         return;
       }
-      C.employees = employees||[];
+      C.sites = [site];
+      C.companies = [co];
+      C.employees = boot.employees||[];
       // Set context and go straight to punch — no admin session
       Ctx.set({co,site});
       document.getElementById('loadingOverlay').classList.add('hidden');
