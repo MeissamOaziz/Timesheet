@@ -3058,7 +3058,16 @@ async function supaFetch(method,table,opts={}){
       signal:controller.signal
     });
     clearTimeout(timer);
-    if(!res.ok){const text=await res.text();throw new Error(text||res.statusText);}
+    if(!res.ok){
+      const text=await res.text();
+      // A 401 while a session exists means the token expired/was revoked → force clean re-login.
+      if(res.status===401 && Sess.get()){
+        Sess.clear();
+        try{ document.body.classList.remove('role-admin','role-manager'); updateNav(); showLanding(); }catch(_){}
+        showToast(t('msg.sessionExpired')||'Your session has expired. Please log in again.','error');
+      }
+      throw new Error(text||res.statusText);
+    }
     const text=await res.text();
     return text?JSON.parse(text):null;
   }catch(e){

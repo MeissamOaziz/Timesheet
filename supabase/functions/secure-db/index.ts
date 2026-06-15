@@ -48,27 +48,21 @@ async function verifySite(siteId: string): Promise<boolean> {
   return Array.isArray(rows) && rows.length > 0;
 }
 
-// Resolve the caller's admin id. Preferred: an opaque session token (admin_sessions) that is
-// unexpired and whose admin is active/pending_invite. During the dual-mode transition we also
-// accept the legacy sessionId (= admin.id). Remove the legacy branch to fully enforce tokens.
-async function resolveAdminId(sessionToken: string | null, sessionId: string | null): Promise<string | null> {
-  if (sessionToken) {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/admin_sessions?token=eq.${sessionToken}&select=admin_id,expires_at&limit=1`,
-      { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
-    );
-    if (res.ok) {
-      const rows = await res.json();
-      const row = Array.isArray(rows) ? rows[0] : null;
-      if (row && new Date(row.expires_at) > new Date() && await verifySession(row.admin_id)) {
-        return row.admin_id as string;
-      }
+// Resolve the caller's admin id from an opaque session token (admin_sessions) that is
+// unexpired and whose admin is active/pending_invite. Token-only — the legacy "sessionId =
+// admin.id" credential is no longer accepted (sessionId is ignored).
+async function resolveAdminId(sessionToken: string | null): Promise<string | null> {
+  if (!sessionToken) return null;
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/admin_sessions?token=eq.${sessionToken}&select=admin_id,expires_at&limit=1`,
+    { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+  );
+  if (res.ok) {
+    const rows = await res.json();
+    const row = Array.isArray(rows) ? rows[0] : null;
+    if (row && new Date(row.expires_at) > new Date() && await verifySession(row.admin_id)) {
+      return row.admin_id as string;
     }
-    // token present but invalid/expired → fall through to legacy during dual-mode
-  }
-  if (sessionId) {
-    // LEGACY (remove after client migration): sessionId IS the admin id.
-    return (await verifySession(sessionId)) ? sessionId : null;
   }
   return null;
 }
@@ -116,7 +110,7 @@ Deno.serve(async (req: Request) => {
   // Parse request body
   let filter: string;
   let table: string, method: string, body: unknown,
-      sessionId: string | null, sessionToken: string | null,
+      sessionToken: string | null,
       kioskSiteId: string | null, action: string | null;
   try {
     const p = await req.json();
@@ -124,7 +118,6 @@ Deno.serve(async (req: Request) => {
     method       = p.method;
     filter       = p.filter || '';
     body         = p.body   || null;
-    sessionId    = p.sessionId    || null;
     sessionToken = p.sessionToken || null;
     kioskSiteId  = p.kioskSiteId  || null;
     action       = p.action || null;
@@ -218,8 +211,8 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // Resolve the authenticated admin once (token preferred; legacy admin-id during transition).
-  const authedAdminId = await resolveAdminId(sessionToken, sessionId);
+  // Resolve the authenticated admin once, from the opaque session token.
+  const authedAdminId = await resolveAdminId(sessionToken);
 
   // ── Auth gate: writes (POST/PATCH/DELETE) — deny by default ──
   // Without this, any holder of the public anon key could insert/update/delete arbitrary
