@@ -121,20 +121,22 @@ Deno.serve(async (req: Request) => {
       const issued = await rpcRes.json().catch(() => null);
       // Always respond ok:true to avoid revealing whether the account exists.
       if (issued && issued.ok && issued.exists && issued.code) {
-        // 2. Email the code via send-verification (fire and don't leak failures to client).
-        try {
-          await fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: issued.email,
-              name: issued.name || '',
-              code: issued.code,
-              subject: 'Reset your PunchClock Pro password',
-              purpose: 'password_reset',
-            }),
-          });
-        } catch (_e) { /* swallow — still return ok to avoid enumeration/timing leaks */ }
+        // 2. Email the code in the background (EdgeRuntime.waitUntil) so the response
+        // returns at the same time whether or not the account exists — this closes the
+        // reset timing side-channel. Failures are swallowed and never surfaced.
+        const emailJob = fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: issued.email,
+            name: issued.name || '',
+            code: issued.code,
+            subject: 'Reset your PunchClock Pro password',
+            purpose: 'password_reset',
+          }),
+        }).then(() => {}).catch(() => {});
+        // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+        if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(emailJob);
       }
       return new Response(JSON.stringify({ ok: true }), {
         status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
@@ -167,17 +169,19 @@ Deno.serve(async (req: Request) => {
       }
 
       if (issued && issued.ok && issued.exists && issued.code) {
-        try {
-          await fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: issued.email,
-              name: name || '',
-              code: issued.code,
-            }),
-          });
-        } catch (_e) { /* swallow */ }
+        // Email in the background (see request_reset_code) — keeps the response snappy
+        // and timing uniform. Failures are swallowed.
+        const emailJob = fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: issued.email,
+            name: name || '',
+            code: issued.code,
+          }),
+        }).then(() => {}).catch(() => {});
+        // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+        if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(emailJob);
       }
       return new Response(JSON.stringify({ ok: true }), {
         status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
