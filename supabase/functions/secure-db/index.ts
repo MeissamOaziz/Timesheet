@@ -48,6 +48,31 @@ async function verifySite(siteId: string): Promise<boolean> {
   return Array.isArray(rows) && rows.length > 0;
 }
 
+// Resolve the caller's admin id. Preferred: an opaque session token (admin_sessions) that is
+// unexpired and whose admin is active/pending_invite. During the dual-mode transition we also
+// accept the legacy sessionId (= admin.id). Remove the legacy branch to fully enforce tokens.
+async function resolveAdminId(sessionToken: string | null, sessionId: string | null): Promise<string | null> {
+  if (sessionToken) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/admin_sessions?token=eq.${sessionToken}&select=admin_id,expires_at&limit=1`,
+      { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+    );
+    if (res.ok) {
+      const rows = await res.json();
+      const row = Array.isArray(rows) ? rows[0] : null;
+      if (row && new Date(row.expires_at) > new Date() && await verifySession(row.admin_id)) {
+        return row.admin_id as string;
+      }
+    }
+    // token present but invalid/expired → fall through to legacy during dual-mode
+  }
+  if (sessionId) {
+    // LEGACY (remove after client migration): sessionId IS the admin id.
+    return (await verifySession(sessionId)) ? sessionId : null;
+  }
+  return null;
+}
+
 // Pre-auth: single equality lookup with no compound conditions.
 // Covers login (email=eq.), invite acceptance (token=eq.), and
 // specific-id lookups (id=eq.) needed before a session exists.
@@ -91,16 +116,18 @@ Deno.serve(async (req: Request) => {
   // Parse request body
   let filter: string;
   let table: string, method: string, body: unknown,
-      sessionId: string | null, kioskSiteId: string | null, action: string | null;
+      sessionId: string | null, sessionToken: string | null,
+      kioskSiteId: string | null, action: string | null;
   try {
     const p = await req.json();
-    table       = p.table;
-    method      = p.method;
-    filter      = p.filter || '';
-    body        = p.body   || null;
-    sessionId   = p.sessionId   || null;
-    kioskSiteId = p.kioskSiteId || null;
-    action      = p.action || null;
+    table        = p.table;
+    method       = p.method;
+    filter       = p.filter || '';
+    body         = p.body   || null;
+    sessionId    = p.sessionId    || null;
+    sessionToken = p.sessionToken || null;
+    kioskSiteId  = p.kioskSiteId  || null;
+    action       = p.action || null;
   } catch {
     return errResp('Invalid request body', 400);
   }
@@ -191,15 +218,16 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // Resolve the authenticated admin once (token preferred; legacy admin-id during transition).
+  const authedAdminId = await resolveAdminId(sessionToken, sessionId);
+
   // ── Auth gate: writes (POST/PATCH/DELETE) — deny by default ──
   // Without this, any holder of the public anon key could insert/update/delete arbitrary
-  // rows via the service-role forward below. Allow only an authenticated admin session, or a
+  // rows via the service-role forward below. Allow only an authenticated admin, or a
   // narrowly-scoped kiosk insert. (Action requests are handled earlier and never reach here.)
   if (method === 'POST' || method === 'PATCH' || method === 'DELETE') {
-    if (sessionId) {
-      // Authenticated admin session. Per-tenant/role write scoping is a separate, deeper layer.
-      if (!(await verifySession(sessionId))) return errResp('Unauthorized', 401);
-
+    if (authedAdminId) {
+      // Authenticated admin — allowed. (Per-tenant/role write scoping is a deeper layer.)
     } else if (
       kioskSiteId &&
       method === 'POST' &&
@@ -218,10 +246,8 @@ Deno.serve(async (req: Request) => {
   // ── Auth gate: GET on protected tables requires one of three valid paths ──
   if (method === 'GET' && PROTECTED_TABLES.has(table)) {
 
-    if (sessionId) {
-      // Path 1 — authenticated admin session
-      const valid = await verifySession(sessionId);
-      if (!valid) return errResp('Unauthorized', 401);
+    if (authedAdminId) {
+      // Path 1 — authenticated admin (token or, during transition, legacy admin id)
 
     } else if (kioskSiteId && table === 'employees') {
       // Path 2 — kiosk: verify site exists, then force site_id filter
@@ -276,7 +302,7 @@ Deno.serve(async (req: Request) => {
 
     // Strip sensitive fields from admins GET responses
     if (method === 'GET' && table === 'admins' && Array.isArray(data)) {
-      data = stripAdminRows(data, sessionId, filter);
+      data = stripAdminRows(data, authedAdminId, filter);
     }
 
     return new Response(JSON.stringify(data), {

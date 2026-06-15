@@ -3052,6 +3052,7 @@ async function supaFetch(method,table,opts={}){
         filter:opts.filter||'',
         body:opts.body||null,
         sessionId:sess?.id||null,
+        sessionToken:sess?.token||null,
         kioskSiteId:(!sess&&ctx?.site?.id)?ctx.site.id:null
       }),
       signal:controller.signal
@@ -3413,6 +3414,15 @@ const Ctx={
   set:v=>localStorage.setItem('pc_ctx',JSON.stringify(v)),
   clear:()=>localStorage.removeItem('pc_ctx'),
 };
+// Mint an opaque admin session token after a successful auth (login / register / invite
+// accept / set-password). The password is re-verified server-side. Best-effort: a null
+// token still works during the dual-mode transition (secure-db falls back to the admin id).
+async function _mintSessionToken(email,pass){
+  try{
+    const m=await DB.rpc('mint_admin_session',{p_email:(email||'').toLowerCase(),p_pass:pass});
+    return (m&&m.ok&&m.session_token)?m.session_token:null;
+  }catch(_){return null;}
+}
 
 // ═══════════════════════════════════════════════════
 // CACHE
@@ -4081,6 +4091,7 @@ async function doLogin(){
     const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full = fullRows?.[0] || admin;
     const rememberMe = document.getElementById('rememberMe')?.checked || false;
+    const _tok = await _mintSessionToken(email, pass);
     Sess.set({
       id: full.id,
       name: full.name,
@@ -4092,6 +4103,7 @@ async function doLogin(){
       stripe_customer_id: full.stripe_customer_id||null,
       stripe_subscription_id: full.stripe_subscription_id||null,
       scheduling_addon: !!full.scheduling_addon,
+      token: _tok,
     }, rememberMe);
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     updateNav();
@@ -4120,6 +4132,7 @@ async function doSetInvitePassword(){
     // Log in as the co-admin
     const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full=fullRows?.[0]||pendingInviteAdmin;
+    const _tok=await _mintSessionToken(full.email, pw);
     Sess.set({
       id:full.id,name:full.name,email:full.email,
       role:full.role||'admin',plan:full.plan||'free',
@@ -4128,6 +4141,7 @@ async function doSetInvitePassword(){
       stripe_customer_id:full.stripe_customer_id||null,
       stripe_subscription_id:full.stripe_subscription_id||null,
       scheduling_addon:!!full.scheduling_addon,
+      token:_tok,
     },false); // session only — they can choose remember me next login
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     pendingInviteAdmin=null;
@@ -4186,11 +4200,13 @@ async function doAcceptInvite(){
     const newAdmin=[{id:acc.id,name:acc.name,email:acc.email,role:acc.role}];
     const fullRows=await DB.all('admins',`id=eq.${newAdmin[0].id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
     const full=fullRows?.[0]||newAdmin[0];
+    const _tok=await _mintSessionToken(full.email, pass);
     Sess.set({
       id:full.id,name:full.name,email:full.email,role:full.role,plan:full.plan||'free',
       status:full.status,parent_admin_id:full.parent_admin_id||null,
       extra_seats:full.extra_seats||0,stripe_customer_id:full.stripe_customer_id||null,
-      stripe_subscription_id:full.stripe_subscription_id||null,scheduling_addon:!!full.scheduling_addon
+      stripe_subscription_id:full.stripe_subscription_id||null,scheduling_addon:!!full.scheduling_addon,
+      token:_tok
     });
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     pendingInvitation=null;
@@ -4372,7 +4388,8 @@ async function doVerify(){
     const newAdmin = [{ id: reg.id, name: reg.name, email: reg.email }];
     // Company was created atomically by the RPC and returned to us.
     const newCo = reg.company ? [reg.company] : null;
-    Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
+    const _tok=await _mintSessionToken(newAdmin[0].email, pendingVerify.pass);
+    Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free',token:_tok});
     DB.update('admins',`id=eq.${newAdmin[0].id}`,{last_login:new Date().toISOString()});
     if(newCo?.[0]) Ctx.set({co:newCo[0],site:null});
     try{fetch(`${SUPA_URL}/functions/v1/send-verification`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},body:JSON.stringify({email:'meissam.h.p@gmail.com',name:newAdmin[0].name,type:'new_account_notification',userEmail:newAdmin[0].email,plan:'Free',regType:'New Company',timestamp:new Date().toLocaleString()})});}catch(e){console.warn('New account notification failed:',e);}
@@ -4388,6 +4405,7 @@ async function doVerify(){
 }
 
 function logout(){
+  const _t=Sess.get()?.token; if(_t){try{DB.rpc('admin_logout',{p_token:_t});}catch(_){}}
   Sess.clear();
   Ctx.clear();
   const le=document.getElementById('loginEmail'); if(le) le.value='';
@@ -4401,6 +4419,7 @@ function kioskMode(){
   // Log out admin but keep Ctx (company+site) so punch page stays active
   const ctx=Ctx.get();
   if(!ctx){return;}
+  const _t=Sess.get()?.token; if(_t){try{DB.rpc('admin_logout',{p_token:_t});}catch(_){}}
   Sess.clear();
   updateNav();
   navigate('punch');
