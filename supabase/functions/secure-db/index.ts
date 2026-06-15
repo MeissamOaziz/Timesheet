@@ -191,6 +191,30 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // ── Auth gate: writes (POST/PATCH/DELETE) — deny by default ──
+  // Without this, any holder of the public anon key could insert/update/delete arbitrary
+  // rows via the service-role forward below. Allow only an authenticated admin session, or a
+  // narrowly-scoped kiosk insert. (Action requests are handled earlier and never reach here.)
+  if (method === 'POST' || method === 'PATCH' || method === 'DELETE') {
+    if (sessionId) {
+      // Authenticated admin session. Per-tenant/role write scoping is a separate, deeper layer.
+      if (!(await verifySession(sessionId))) return errResp('Unauthorized', 401);
+
+    } else if (
+      kioskSiteId &&
+      method === 'POST' &&
+      (table === 'punches' || table === 'missed_punch_requests') &&
+      !!body && typeof body === 'object' &&
+      (body as Record<string, unknown>).site_id === kioskSiteId
+    ) {
+      // Kiosk clock-punch / missed-punch insert, scoped to the kiosk's own site.
+      if (!(await verifySite(kioskSiteId))) return errResp('Unauthorized', 401);
+
+    } else {
+      return errResp('Unauthorized', 401);
+    }
+  }
+
   // ── Auth gate: GET on protected tables requires one of three valid paths ──
   if (method === 'GET' && PROTECTED_TABLES.has(table)) {
 

@@ -4339,12 +4339,29 @@ async function doVerify(){
   if(!/^\d{6}$/.test(entered)){showMsg('registerMsg',t('msg.enterCode')||'Enter the 6-digit code.','error');return;}
   try{
     showMsg('registerMsg', t('msg.verifying')||'Verifying...','info');
+    // Upload the logo (if any) before the register RPC so its URL is stored atomically with
+    // the company. Best-effort — a failed upload doesn't block registration.
+    let logo_url=null;
+    if(pendingVerify.logoFile){
+      try{ logo_url=await uploadImage(pendingVerify.logoFile,'logos',`logo-${pendingVerify.company.replace(/\s+/g,'-').toLowerCase()}`); }
+      catch(e){ console.warn('Logo upload failed:',e); }
+    }
+    // Admin + company are created atomically server-side — no anonymous client-side write.
     const reg = await DB.rpc('verify_code_and_register',{
       p_email: pendingVerify.email,
       p_code: entered,
       p_newpass: pendingVerify.pass,
       p_first_name: pendingVerify.firstName,
-      p_last_name: pendingVerify.lastName
+      p_last_name: pendingVerify.lastName,
+      p_company_name: pendingVerify.company,
+      p_address: pendingVerify.address||null,
+      p_phone: pendingVerify.phone||null,
+      p_industry: pendingVerify.industry||null,
+      p_week_start: pendingVerify.weekStart||'monday',
+      p_payroll_frequency: pendingVerify.payrollFreq||'biweekly',
+      p_payroll_anchor_date: pendingVerify.anchorDate||null,
+      p_track_overtime: !!pendingVerify.trackOvertime,
+      p_logo_url: logo_url
     });
     if(!reg || !reg.ok){
       const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',no_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',weak_password:t('msg.shortPassword'),email_taken:t('msg.emailTaken')||'That email is already registered.',missing_name:t('msg.allRequired')};
@@ -4353,23 +4370,8 @@ async function doVerify(){
     }
     // Build a newAdmin-shaped object from the server result so the rest of the flow is unchanged.
     const newAdmin = [{ id: reg.id, name: reg.name, email: reg.email }];
-    let logo_url=null;
-    if(pendingVerify.logoFile){
-      try{ logo_url=await uploadImage(pendingVerify.logoFile,'logos',`logo-${pendingVerify.company.replace(/\s+/g,'-').toLowerCase()}`); }
-      catch(e){ console.warn('Logo upload failed:',e); }
-    }
-    const newCo=await DB.insert('companies',{
-      name: pendingVerify.company,
-      address: pendingVerify.address||null,
-      phone: pendingVerify.phone||null,
-      industry: pendingVerify.industry||null,
-      week_start: pendingVerify.weekStart||'monday',
-      payroll_frequency: pendingVerify.payrollFreq||'biweekly',
-      payroll_anchor_date: pendingVerify.anchorDate||null,
-      track_overtime: !!pendingVerify.trackOvertime,
-      logo_url,
-      admin_id: newAdmin[0].id
-    });
+    // Company was created atomically by the RPC and returned to us.
+    const newCo = reg.company ? [reg.company] : null;
     Sess.set({id:newAdmin[0].id,name:newAdmin[0].name,email:newAdmin[0].email,role:'admin',plan:'free'});
     DB.update('admins',`id=eq.${newAdmin[0].id}`,{last_login:new Date().toISOString()});
     if(newCo?.[0]) Ctx.set({co:newCo[0],site:null});
