@@ -26,6 +26,26 @@ function errResp(msg: string, status = 500): Response {
   });
 }
 
+// Append a row to the audit_log without blocking the response (EdgeRuntime.waitUntil).
+// Never logs the request body — bodies can contain secrets (e.g. password hashes).
+function logAudit(adminId: string | null, event: string, tableName?: string, method?: string, filter?: string): void {
+  try {
+    const job = fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+      method: 'POST',
+      headers: {
+        'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        admin_id: adminId, event,
+        table_name: tableName ?? null, method: method ?? null, filter: filter ?? null,
+      }),
+    }).then(() => {}).catch(() => {});
+    // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+    if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(job);
+  } catch (_e) { /* auditing must never break the request */ }
+}
+
 // Verify admin session exists and is active/pending_invite
 async function verifySession(sessionId: string): Promise<boolean> {
   const res = await fetch(
@@ -234,6 +254,8 @@ Deno.serve(async (req: Request) => {
     } else {
       return errResp('Unauthorized', 401);
     }
+    // Audit the authorized admin write (kiosk inserts are intentionally not logged here).
+    if (authedAdminId) logAudit(authedAdminId, 'write', table, method, filter);
   }
 
   // ── Auth gate: GET on protected tables requires one of three valid paths ──
