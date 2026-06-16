@@ -68,23 +68,58 @@ async function verifySite(siteId: string): Promise<boolean> {
   return Array.isArray(rows) && rows.length > 0;
 }
 
-// Resolve the caller's admin id from an opaque session token (admin_sessions) that is
-// unexpired and whose admin is active/pending_invite. Token-only — the legacy "sessionId =
-// admin.id" credential is no longer accepted (sessionId is ignored).
-async function resolveAdminId(sessionToken: string | null): Promise<string | null> {
+// Resolve the caller from an opaque session token (admin_sessions): returns their admin id,
+// primary admin id (the parent for co-admins/managers — the tenant owner), and role, or null
+// if the token is missing/expired or the admin isn't active/pending_invite. Token-only.
+interface Caller { adminId: string; primaryAdminId: string; role: string; }
+async function resolveCaller(sessionToken: string | null): Promise<Caller | null> {
   if (!sessionToken) return null;
-  const res = await fetch(
+  const sres = await fetch(
     `${SUPABASE_URL}/rest/v1/admin_sessions?token=eq.${sessionToken}&select=admin_id,expires_at&limit=1`,
     { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
   );
-  if (res.ok) {
-    const rows = await res.json();
-    const row = Array.isArray(rows) ? rows[0] : null;
-    if (row && new Date(row.expires_at) > new Date() && await verifySession(row.admin_id)) {
-      return row.admin_id as string;
-    }
+  if (!sres.ok) return null;
+  const srows = await sres.json();
+  const srow = Array.isArray(srows) ? srows[0] : null;
+  if (!srow || new Date(srow.expires_at) <= new Date()) return null;
+  const ares = await fetch(
+    `${SUPABASE_URL}/rest/v1/admins?id=eq.${srow.admin_id}&select=id,parent_admin_id,role,status&limit=1`,
+    { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!ares.ok) return null;
+  const arows = await ares.json();
+  const a = Array.isArray(arows) ? arows[0] : null;
+  if (!a || !(a.status === 'active' || a.status === 'pending_invite')) return null;
+  return {
+    adminId: a.id as string,
+    primaryAdminId: (a.parent_admin_id as string) || (a.id as string),
+    role: a.role as string,
+  };
+}
+
+// Company ids owned by a tenant (the primary admin's companies).
+async function ownedCompanyIds(primaryAdminId: string): Promise<string[]> {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/companies?admin_id=eq.${primaryAdminId}&select=id`,
+    { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!res.ok) return [];
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows.map((r: { id: string }) => r.id) : [];
+}
+
+// Tables scoped to a tenant by their company_id column.
+const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts']);
+
+// Ownership constraint to AND onto a read/update/delete filter for `table`. '' = not scoped here.
+function tenantScopeFilter(table: string, caller: Caller, owned: string[]): string {
+  if (COMPANY_SCOPED.has(table)) {
+    // Empty owned → a sentinel uuid that matches no row (deny), keeping in.() syntactically valid.
+    return `company_id=in.(${owned.length ? owned.join(',') : '00000000-0000-0000-0000-000000000000'})`;
   }
-  return null;
+  if (table === 'companies') return `admin_id=eq.${caller.primaryAdminId}`;
+  if (table === 'admins')    return `or=(id.eq.${caller.adminId},parent_admin_id.eq.${caller.primaryAdminId})`;
+  return '';
 }
 
 // Pre-auth: single equality lookup with no compound conditions.
@@ -231,8 +266,9 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // Resolve the authenticated admin once, from the opaque session token.
-  const authedAdminId = await resolveAdminId(sessionToken);
+  // Resolve the authenticated caller once, from the opaque session token.
+  const caller = await resolveCaller(sessionToken);
+  const authedAdminId = caller?.adminId ?? null;
 
   // ── Auth gate: writes (POST/PATCH/DELETE) — deny by default ──
   // Without this, any holder of the public anon key could insert/update/delete arbitrary
@@ -278,6 +314,21 @@ Deno.serve(async (req: Request) => {
     } else {
       return errResp('Unauthorized', 401);
     }
+  }
+
+  // ── Per-tenant scoping (reads + updates + deletes) ───────────────────────
+  // Narrow GET/PATCH/DELETE to the caller's own tenant rows so a logged-in admin cannot read
+  // or modify another tenant's data. Narrowing is safe-by-design: a legitimate op still matches
+  // the caller's rows; only cross-tenant rows fall out (0 rows). Super admins are unscoped.
+  // Inserts are not yet tenant-validated here (lowest-damage vector; tracked as follow-up).
+  // Pre-auth lookups and kiosk paths have no caller and are unaffected.
+  if (caller && caller.role !== 'super_admin' &&
+      (method === 'GET' || method === 'PATCH' || method === 'DELETE') &&
+      (COMPANY_SCOPED.has(table) || table === 'companies' || table === 'admins')) {
+    const owned = (COMPANY_SCOPED.has(table) || table === 'companies')
+      ? await ownedCompanyIds(caller.primaryAdminId) : [];
+    const scope = tenantScopeFilter(table, caller, owned);
+    if (scope) filter = filter ? `${filter}&${scope}` : scope;
   }
 
   // ── Build and forward upstream request ───────────────────────────────────
