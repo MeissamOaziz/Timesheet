@@ -1510,6 +1510,10 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div id="myShiftsList"></div>
     </div>
+    <!-- Discreet kiosk-reset escape (shown only on a device bound as a kiosk) -->
+    <div id="kioskResetFooter" style="display:none;text-align:center;margin-top:20px">
+      <button onclick="resetKioskDevice()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;text-decoration:underline;opacity:.65">⚙ Cet appareil n'est pas un kiosque? Réinitialiser · Not a kiosk? Reset this device</button>
+    </div>
   </div>
 </div>
 
@@ -3011,6 +3015,11 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
 
+    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-top:14px;font-size:12px;color:var(--text2);line-height:1.55">
+      <strong>📌 Appareil bloqué sur la page de pointage? / Device stuck on the punch page?</strong><br>
+      Touchez le lien « <em>Réinitialiser cet appareil</em> » au bas de la page de pointage, ou ouvrez <code>punchclock.ca/?nokiosk=1</code>.<br>
+      Tap the “<em>Reset this device</em>” link at the bottom of the punch page, or open <code>punchclock.ca/?nokiosk=1</code>.
+    </div>
     <button class="btn-secondary" style="width:100%;margin-top:14px" onclick="closeModal('kioskShortcutModal')">Done</button>
   </div>
 </div>
@@ -8854,6 +8863,14 @@ function revokeThisDevice(){
   openKioskShortcut(siteId);
 }
 
+// Discreet on-screen reset for a kiosk-bound device (confirm-gated so employees can't exit by
+// accident). Clears the binding and reloads to the bare URL → normal landing/login.
+function resetKioskDevice(){
+  if(!confirm("Réinitialiser cet appareil et quitter le mode kiosque?\nReset this device and exit kiosk mode?")) return;
+  try { localStorage.removeItem('pc_kiosk_device'); } catch(_){}
+  window.location.href = window.location.origin + window.location.pathname;
+}
+
 function clearKioskDevice(){
   try {
     localStorage.removeItem('pc_kiosk_device');
@@ -8941,9 +8958,19 @@ async function init(){
   // ── KIOSK URL HANDLER (?kiosk=SITE_ID or saved device binding) ──
   // URL param takes priority so visiting a new kiosk URL re-binds the device.
   // If no URL param, fall back to the site saved in localStorage by a prior visit.
-  let kioskSiteId = new URLSearchParams(window.location.search).get('kiosk');
+  const _kqp = new URLSearchParams(window.location.search);
+  let kioskSiteId = _kqp.get('kiosk');
   let kioskFromStorage = false;
-  if(!kioskSiteId){
+  if(_kqp.has('nokiosk') || _kqp.has('exitkiosk')){
+    // Reset link (e.g. punchclock.ca/?nokiosk=1): un-bind this device from kiosk mode and
+    // continue to the normal landing/login flow. Instructable recovery for a stuck device.
+    try { localStorage.removeItem('pc_kiosk_device'); } catch(_){}
+    window.history.replaceState({},'',window.location.pathname);
+    kioskSiteId = null;
+    showToast("Cet appareil n'est plus configuré comme kiosque. / This device is no longer set up as a kiosk.",'success');
+  } else if(!kioskSiteId && !_kqp.has('survey') && !_kqp.has('invite')){
+    // Only auto-return to a saved kiosk when the URL has NO explicit deep-link — a ?survey= or
+    // ?invite= link must take priority over the passive saved-kiosk redirect.
     try { kioskSiteId = localStorage.getItem('pc_kiosk_device') || null; } catch(_){}
     if(kioskSiteId) kioskFromStorage = true;
   }
@@ -8984,6 +9011,8 @@ async function init(){
       document.getElementById('loadingOverlay').classList.add('hidden');
       updateNav();
       navigate('punch');
+      // Surface the discreet "reset this device" escape on kiosk-bound devices.
+      const _krf=document.getElementById('kioskResetFooter'); if(_krf) _krf.style.display='';
       // Register service worker for PWA if not already done
       registerServiceWorker();
       return;
