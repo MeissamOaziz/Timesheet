@@ -7,60 +7,60 @@ const corsHeaders = {
 };
 function wrapper(body) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0f1117;font-family:Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
 <div style="max-width:520px;margin:0 auto;padding:40px 20px;">
   <div style="text-align:center;margin-bottom:32px;">
     <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
   </div>
-  <div style="background:#1a1d27;border:1px solid #2e3347;border-radius:16px;padding:36px 32px;">
+  <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;">
     ${body}
   </div>
   <div style="text-align:center;margin-top:28px;">
-    <p style="color:#555e7a;font-size:12px;">PunchClock Pro &mdash; Time &amp; Attendance Software<br>This is an automated message, please do not reply.</p>
+    <p style="color:#94a3b8;font-size:12px;">PunchClock Pro &mdash; Time &amp; Attendance Software<br>This is an automated message, please do not reply.</p>
   </div>
 </div></body></html>`;
 }
 function buildVerificationHtml(name, code) {
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">Verify your email address</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 28px;">
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">Verify your email address</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 28px;">
       Hi ${name}, use the code below to complete your PunchClock Pro registration.
-      This code expires in <strong style="color:#e8eaf0;">10 minutes</strong>.
+      This code expires in <strong style="color:#1e293b;">10 minutes</strong>.
     </p>
-    <div style="background:#0f1117;border:2px solid #4f8ef7;border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
-      <div style="font-size:11px;font-weight:600;color:#8b92a8;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Your verification code</div>
+    <div style="background:#f1f5f9;border:2px solid #4f8ef7;border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
+      <div style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Your verification code</div>
       <div style="font-family:monospace;font-size:42px;font-weight:700;color:#4f8ef7;letter-spacing:12px;">${code}</div>
     </div>
-    <p style="color:#555e7a;font-size:13px;line-height:1.6;margin:0;">If you did not request this code, you can safely ignore this email.</p>`);
+    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;">If you did not request this code, you can safely ignore this email.</p>`);
 }
 function buildJoinRequestHtml(adminName, requesterName, requesterEmail) {
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">New co-admin access request</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">New co-admin access request</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
       Hi ${adminName}, someone has requested access to join your PunchClock Pro account as a co-admin.
     </p>
-    <div style="background:#0f1117;border:1px solid #2e3347;border-radius:12px;padding:20px;margin-bottom:24px;">
-      <div style="font-size:12px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Request from</div>
-      <div style="font-size:17px;font-weight:600;color:#e8eaf0;">${requesterName}</div>
-      <div style="font-size:14px;color:#8b92a8;margin-top:4px;">${requesterEmail}</div>
+    <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+      <div style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Request from</div>
+      <div style="font-size:17px;font-weight:600;color:#1e293b;">${requesterName}</div>
+      <div style="font-size:14px;color:#475569;margin-top:4px;">${requesterEmail}</div>
     </div>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
-      Log in to your PunchClock Pro admin panel and go to <strong style="color:#e8eaf0;">Settings → Co-Admins</strong> to approve or deny this request.
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Log in to your PunchClock Pro admin panel and go to <strong style="color:#1e293b;">Settings → Co-Admins</strong> to approve or deny this request.
     </p>
     <a href="https://www.punchclock.ca" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">
       Go to Admin Panel →
     </a>`);
 }
 function buildCoAdminInviteHtml(inviteeName, adminName, loginUrl) {
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">You've been invited to co-manage an account</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Hi ${inviteeName}, <strong style="color:#e8eaf0;">${adminName}</strong> has invited you to be a co-admin on their PunchClock Pro account.
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">You've been invited to co-manage an account</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Hi ${inviteeName}, <strong style="color:#1e293b;">${adminName}</strong> has invited you to be a co-admin on their PunchClock Pro account.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Click below to log in and set up your password. You'll have access to all companies and sites associated with this account.
     </p>
     <a href="${loginUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">
       Accept Invitation &amp; Log In →
     </a>
-    <p style="color:#555e7a;font-size:12px;margin-top:20px;">If you weren't expecting this invitation, you can safely ignore this email.</p>`);
+    <p style="color:#94a3b8;font-size:12px;margin-top:20px;">If you weren't expecting this invitation, you can safely ignore this email.</p>`);
 }
 function buildCoAdminInviteV2Html(
   inviteeName: string,
@@ -76,37 +76,37 @@ function buildCoAdminInviteV2Html(
   const roleLabelFr = role === "manager" ? "Gestionnaire" : "Co-administrateur";
 
   return wrapper(
-    `<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">You've been invited to PunchClock Pro</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      Hi <strong style="color:#e8eaf0;">${inviteeName}</strong>,
+    `<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">You've been invited to PunchClock Pro</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Hi <strong style="color:#1e293b;">${inviteeName}</strong>,
     </p>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      <strong style="color:#e8eaf0;">${inviterName}</strong> (${inviterEmail}) has invited you to join <strong style="color:#e8eaf0;">${companyList}</strong> on PunchClock Pro as a <strong style="color:#e8eaf0;">${roleLabel}</strong>.
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      <strong style="color:#1e293b;">${inviterName}</strong> (${inviterEmail}) has invited you to join <strong style="color:#1e293b;">${companyList}</strong> on PunchClock Pro as a <strong style="color:#1e293b;">${roleLabel}</strong>.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
-      Click the button below to accept the invitation and set your password. This link expires in <strong style="color:#e8eaf0;">${expiresInDays} days</strong>.
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Click the button below to accept the invitation and set your password. This link expires in <strong style="color:#1e293b;">${expiresInDays} days</strong>.
     </p>
     <div style="text-align:center;margin:0 0 28px;">
       <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
         Accept Invitation →
       </a>
     </div>
-    <p style="color:#555e7a;font-size:12px;line-height:1.6;margin:0 0 8px;">If the button doesn't work, copy and paste this link into your browser:</p>
+    <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:0 0 8px;">If the button doesn't work, copy and paste this link into your browser:</p>
     <p style="color:#4f8ef7;font-size:11px;line-height:1.4;margin:0 0 28px;word-break:break-all;">${acceptUrl}</p>
 
-    <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0;">
 
-    <h2 style="font-size:18px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">Vous avez été invité(e) sur PunchClock Pro</h2>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      Bonjour <strong style="color:#e8eaf0;">${inviteeName}</strong>,
+    <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px;">Vous avez été invité(e) sur PunchClock Pro</h2>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Bonjour <strong style="color:#1e293b;">${inviteeName}</strong>,
     </p>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      <strong style="color:#e8eaf0;">${inviterName}</strong> (${inviterEmail}) vous a invité(e) à rejoindre <strong style="color:#e8eaf0;">${companyList}</strong> sur PunchClock Pro en tant que <strong style="color:#e8eaf0;">${roleLabelFr}</strong>.
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      <strong style="color:#1e293b;">${inviterName}</strong> (${inviterEmail}) vous a invité(e) à rejoindre <strong style="color:#1e293b;">${companyList}</strong> sur PunchClock Pro en tant que <strong style="color:#1e293b;">${roleLabelFr}</strong>.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
-      Cliquez sur le bouton ci-dessus pour accepter l'invitation et définir votre mot de passe. Ce lien expire dans <strong style="color:#e8eaf0;">${expiresInDays} jours</strong>.
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
+      Cliquez sur le bouton ci-dessus pour accepter l'invitation et définir votre mot de passe. Ce lien expire dans <strong style="color:#1e293b;">${expiresInDays} jours</strong>.
     </p>
-    <p style="color:#555e7a;font-size:12px;margin:0;">Si vous n'attendiez pas cette invitation, vous pouvez ignorer ce courriel en toute sécurité.</p>`
+    <p style="color:#94a3b8;font-size:12px;margin:0;">Si vous n'attendiez pas cette invitation, vous pouvez ignorer ce courriel en toute sécurité.</p>`
   );
 }
 
@@ -120,32 +120,32 @@ function buildInviteAcceptedHtml(
   const roleLabelFr = role === "manager" ? "Gestionnaire" : "Co-administrateur";
 
   return wrapper(
-    `<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">✅ Invitation accepted</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Hi <strong style="color:#e8eaf0;">${inviterName}</strong>, <strong style="color:#e8eaf0;">${acceptedByName}</strong> (${acceptedByEmail}) has accepted your invitation and is now an active <strong style="color:#e8eaf0;">${roleLabel}</strong> on your PunchClock Pro account.
+    `<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">✅ Invitation accepted</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Hi <strong style="color:#1e293b;">${inviterName}</strong>, <strong style="color:#1e293b;">${acceptedByName}</strong> (${acceptedByEmail}) has accepted your invitation and is now an active <strong style="color:#1e293b;">${roleLabel}</strong> on your PunchClock Pro account.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       You can view and manage your team from your admin panel.
     </p>
     <a href="https://www.punchclock.ca" style="display:inline-block;background:#22c55e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">
       Open Admin Panel →
     </a>
 
-    <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0;">
 
-    <h2 style="font-size:18px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">✅ Invitation acceptée</h2>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Bonjour <strong style="color:#e8eaf0;">${inviterName}</strong>, <strong style="color:#e8eaf0;">${acceptedByName}</strong> (${acceptedByEmail}) a accepté votre invitation et est maintenant <strong style="color:#e8eaf0;">${roleLabelFr}</strong> actif sur votre compte PunchClock Pro.
+    <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px;">✅ Invitation acceptée</h2>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Bonjour <strong style="color:#1e293b;">${inviterName}</strong>, <strong style="color:#1e293b;">${acceptedByName}</strong> (${acceptedByEmail}) a accepté votre invitation et est maintenant <strong style="color:#1e293b;">${roleLabelFr}</strong> actif sur votre compte PunchClock Pro.
     </p>`
   );
 }
 
 function buildJoinApprovedHtml(coAdminName, primaryAdminName) {
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">✅ Your access has been approved!</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Hi ${coAdminName}, <strong style="color:#e8eaf0;">${primaryAdminName}</strong> has approved your request to join their PunchClock Pro account.
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">✅ Your access has been approved!</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Hi ${coAdminName}, <strong style="color:#1e293b;">${primaryAdminName}</strong> has approved your request to join their PunchClock Pro account.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       You can now log in to access all companies and sites associated with this account.
     </p>
     <a href="https://www.punchclock.ca" style="display:inline-block;background:#22c55e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">
@@ -156,34 +156,34 @@ function buildScheduleHtml(empName, weekLabel, shifts, lang) {
   const isFr = lang === 'fr';
   const title = isFr ? `Votre horaire — ${weekLabel}` : `Your Schedule — ${weekLabel}`;
   const greeting = isFr ? `Bonjour ${empName},` : `Hi ${empName},`;
-  const intro = isFr ? `Voici votre horaire de travail pour la semaine du <strong style="color:#e8eaf0">${weekLabel}</strong>.` : `Here is your work schedule for the week of <strong style="color:#e8eaf0">${weekLabel}</strong>.`;
+  const intro = isFr ? `Voici votre horaire de travail pour la semaine du <strong style="color:#1e293b">${weekLabel}</strong>.` : `Here is your work schedule for the week of <strong style="color:#1e293b">${weekLabel}</strong>.`;
   const noShifts = isFr ? 'Aucun quart prévu cette semaine.' : 'No shifts scheduled this week.';
   const footer = isFr ? 'Pour toute question, contactez votre administrateur.' : 'For any questions, contact your administrator.';
-  const shiftRows = shifts.length === 0 ? `<tr><td colspan="3" style="padding:16px;text-align:center;color:#555e7a;font-style:italic">${noShifts}</td></tr>` : shifts.map((s)=>`
+  const shiftRows = shifts.length === 0 ? `<tr><td colspan="3" style="padding:16px;text-align:center;color:#94a3b8;font-style:italic">${noShifts}</td></tr>` : shifts.map((s)=>`
       <tr>
-        <td style="padding:12px 14px;border-bottom:1px solid #2e3347;font-weight:600;color:#e8eaf0;white-space:nowrap">${s.day}</td>
-        <td style="padding:12px 14px;border-bottom:1px solid #2e3347;color:#4f8ef7;font-weight:600;white-space:nowrap">${s.startTime} – ${s.endTime}</td>
-        <td style="padding:12px 14px;border-bottom:1px solid #2e3347;color:#8b92a8;font-size:13px">${s.note || '—'}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#1e293b;white-space:nowrap">${s.day}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;color:#4f8ef7;font-weight:600;white-space:nowrap">${s.startTime} – ${s.endTime}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">${s.note || '—'}</td>
       </tr>`).join('');
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 6px;">🗓️ ${title}</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 24px;">${greeting}<br>${intro}</p>
-    <table style="width:100%;border-collapse:collapse;background:#0f1117;border-radius:10px;overflow:hidden;border:1px solid #2e3347">
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 6px;">🗓️ ${title}</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px;">${greeting}<br>${intro}</p>
+    <table style="width:100%;border-collapse:collapse;background:#f1f5f9;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0">
       <thead>
-        <tr style="background:#222535">
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#555e7a;text-transform:uppercase;letter-spacing:.6px">${isFr ? 'Jour' : 'Day'}</th>
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#555e7a;text-transform:uppercase;letter-spacing:.6px">${isFr ? 'Heures' : 'Hours'}</th>
-          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#555e7a;text-transform:uppercase;letter-spacing:.6px">${isFr ? 'Note' : 'Note'}</th>
+        <tr style="background:#f8fafc">
+          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">${isFr ? 'Jour' : 'Day'}</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">${isFr ? 'Heures' : 'Hours'}</th>
+          <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px">${isFr ? 'Note' : 'Note'}</th>
         </tr>
       </thead>
       <tbody>${shiftRows}</tbody>
     </table>
-    <p style="color:#555e7a;font-size:13px;line-height:1.6;margin:20px 0 0">${footer}</p>`);
+    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:20px 0 0">${footer}</p>`);
 }
 function buildEmployeeInviteHtml(empName, portalUrl, lang) {
   const isFr = lang === 'fr';
   const title = isFr ? `Vous avez accès au portail employé` : `You've been invited to the Employee Portal`;
   const greeting = isFr ? `Bonjour ${empName},` : `Hi ${empName},`;
-  const intro = isFr ? `Votre employeur vous a donné accès au <strong style="color:#e8eaf0">portail employé PunchClock Pro</strong>. Depuis ce portail, vous pouvez :` : `Your employer has given you access to the <strong style="color:#e8eaf0">PunchClock Pro Employee Portal</strong>. From the portal, you can:`;
+  const intro = isFr ? `Votre employeur vous a donné accès au <strong style="color:#1e293b">portail employé PunchClock Pro</strong>. Depuis ce portail, vous pouvez :` : `Your employer has given you access to the <strong style="color:#1e293b">PunchClock Pro Employee Portal</strong>. From the portal, you can:`;
   const features = isFr ? [
     `🗓️ Consulter votre horaire de quarts à venir`,
     `📊 Voir vos rapports d'heures et pointages`,
@@ -196,36 +196,36 @@ function buildEmployeeInviteHtml(empName, portalUrl, lang) {
   const cta = isFr ? `Activer mon compte →` : `Activate my account →`;
   const expiry = isFr ? `Ce lien expire dans 48 heures.` : `This link expires in 48 hours.`;
   const ignore = isFr ? `Si vous n'attendiez pas cette invitation, vous pouvez ignorer ce message.` : `If you weren't expecting this invitation, you can safely ignore this email.`;
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">🔗 ${title}</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">${greeting}<br><br>${intro}</p>
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">🔗 ${title}</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">${greeting}<br><br>${intro}</p>
     <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:8px;">
-      ${features.map((f)=>`<li style="color:#8b92a8;font-size:14px;padding:8px 14px;background:#0f1117;border-radius:8px;border:1px solid #2e3347">${f}</li>`).join('')}
+      ${features.map((f)=>`<li style="color:#475569;font-size:14px;padding:8px 14px;background:#f1f5f9;border-radius:8px;border:1px solid #e2e8f0">${f}</li>`).join('')}
     </ul>
     <a href="${portalUrl}" style="display:inline-block;background:#7c5cbf;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
       ${cta}
     </a>
-    <p style="color:#555e7a;font-size:12px;margin-top:20px;text-align:center">${expiry}</p>
-    <p style="color:#555e7a;font-size:12px;margin-top:8px;">${ignore}</p>`);
+    <p style="color:#94a3b8;font-size:12px;margin-top:20px;text-align:center">${expiry}</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:8px;">${ignore}</p>`);
 }
 function buildJoinDeniedHtml(name, companyName) {
   const co = companyName || 'the company';
   return wrapper(`
-    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Your access request</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">Hi ${name},</p>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Your request to join <strong style="color:#e8eaf0;">${co}</strong> on PunchClock Pro was not approved.
+    <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">Your access request</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">Hi ${name},</p>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Your request to join <strong style="color:#1e293b;">${co}</strong> on PunchClock Pro was not approved.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       If you believe this is a mistake, please contact the company administrator directly.
       You can also create your own free account at <a href="https://punchclock.ca" style="color:#4f8ef7;">punchclock.ca</a>.
     </p>
-    <hr style="border:none;border-top:1px solid #2e3347;margin:0 0 28px;">
-    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Votre demande d'acc&egrave;s</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">Bonjour ${name},</p>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Votre demande pour rejoindre <strong style="color:#e8eaf0;">${co}</strong> sur PunchClock Pro n&rsquo;a pas &eacute;t&eacute; approuv&eacute;e.
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 28px;">
+    <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">Votre demande d'acc&egrave;s</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">Bonjour ${name},</p>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
+      Votre demande pour rejoindre <strong style="color:#1e293b;">${co}</strong> sur PunchClock Pro n&rsquo;a pas &eacute;t&eacute; approuv&eacute;e.
     </p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0;">
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0;">
       Si vous pensez qu&rsquo;il s&rsquo;agit d&rsquo;une erreur, veuillez contacter directement l&rsquo;administrateur de l&rsquo;entreprise.
       Vous pouvez &eacute;galement cr&eacute;er votre propre compte gratuit sur <a href="https://punchclock.ca" style="color:#4f8ef7;">punchclock.ca</a>.
     </p>
@@ -244,62 +244,62 @@ function buildInvitationHtml(inviterName, companyName, role, token) {
     ? `Vous avez été promu(e) gestionnaire 🎉`
     : `Vous avez été invité à rejoindre PunchClock Pro`;
   const introEn = isManager
-    ? `<strong style="color:#e8eaf0;">${inviterName}</strong> has promoted you to <strong style="color:#4f8ef7;">Manager</strong> at <strong style="color:#e8eaf0;">${companyName}</strong> on PunchClock Pro.`
-    : `<strong style="color:#e8eaf0;">${inviterName}</strong> has invited you to join <strong style="color:#e8eaf0;">${companyName}</strong> on PunchClock Pro as a <strong style="color:#4f8ef7;">${roleEn}</strong>.`;
+    ? `<strong style="color:#1e293b;">${inviterName}</strong> has promoted you to <strong style="color:#4f8ef7;">Manager</strong> at <strong style="color:#1e293b;">${companyName}</strong> on PunchClock Pro.`
+    : `<strong style="color:#1e293b;">${inviterName}</strong> has invited you to join <strong style="color:#1e293b;">${companyName}</strong> on PunchClock Pro as a <strong style="color:#4f8ef7;">${roleEn}</strong>.`;
   const introFr = isManager
-    ? `<strong style="color:#e8eaf0;">${inviterName}</strong> vous a promu(e) <strong style="color:#4f8ef7;">Gestionnaire</strong> chez <strong style="color:#e8eaf0;">${companyName}</strong> sur PunchClock Pro.`
-    : `<strong style="color:#e8eaf0;">${inviterName}</strong> vous a invité à rejoindre <strong style="color:#e8eaf0;">${companyName}</strong> sur PunchClock Pro en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.`;
+    ? `<strong style="color:#1e293b;">${inviterName}</strong> vous a promu(e) <strong style="color:#4f8ef7;">Gestionnaire</strong> chez <strong style="color:#1e293b;">${companyName}</strong> sur PunchClock Pro.`
+    : `<strong style="color:#1e293b;">${inviterName}</strong> vous a invité à rejoindre <strong style="color:#1e293b;">${companyName}</strong> sur PunchClock Pro en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.`;
   return wrapper(`
-    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">${h1En}</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">${introEn}</p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+    <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">${h1En}</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">${introEn}</p>
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Click the button below to create your account. You'll set your name and password on the next page.
     </p>
     <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
       ${isManager ? 'Accept & Set Up Account →' : 'Accept Invitation →'}
     </a>
-    <p style="color:#555e7a;font-size:12px;margin-top:16px;text-align:center;">This invitation expires in 7 days. If you weren't expecting this, you can safely ignore this email.</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:16px;text-align:center;">This invitation expires in 7 days. If you weren't expecting this, you can safely ignore this email.</p>
 
-    <hr style="border:none;border-top:1px solid #2e3347;margin:32px 0;">
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0;">
 
-    <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">${h1Fr}</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">${introFr}</p>
-    <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 24px;">
+    <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">${h1Fr}</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">${introFr}</p>
+    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       Cliquez sur le bouton ci-dessous pour créer votre compte. Vous définirez votre nom et mot de passe à l'étape suivante.
     </p>
     <a href="${acceptUrl}" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
       ${isManager ? 'Accepter et configurer le compte →' : 'Accepter l\'invitation →'}
     </a>
-    <p style="color:#555e7a;font-size:12px;margin-top:16px;text-align:center;">Cette invitation expire dans 7 jours. Si vous ne vous attendiez pas à cette invitation, vous pouvez ignorer ce message.</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:16px;text-align:center;">Cette invitation expire dans 7 jours. Si vous ne vous attendiez pas à cette invitation, vous pouvez ignorer ce message.</p>
   `);
 }
 function buildNewAccountNotificationHtml(userName, userEmail, plan, regType, timestamp) {
-  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 8px;">🆕 New Account Registration</h1>
-    <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 20px;">
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">🆕 New Account Registration</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
       A new admin account has been created on PunchClock Pro.
     </p>
-    <div style="background:#0f1117;border:1px solid #2e3347;border-radius:12px;padding:20px;margin-bottom:24px;">
+    <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
       <div style="margin-bottom:14px">
-        <div style="font-size:11px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Name</div>
-        <div style="font-size:16px;font-weight:600;color:#e8eaf0">${userName}</div>
+        <div style="font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Name</div>
+        <div style="font-size:16px;font-weight:600;color:#1e293b">${userName}</div>
       </div>
       <div style="margin-bottom:14px">
-        <div style="font-size:11px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Email</div>
+        <div style="font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Email</div>
         <div style="font-size:14px;color:#4f8ef7">${userEmail}</div>
       </div>
       <div style="display:flex;gap:24px">
         <div>
-          <div style="font-size:11px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Plan</div>
-          <div style="font-size:14px;font-weight:600;color:#e8eaf0">${plan}</div>
+          <div style="font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Plan</div>
+          <div style="font-size:14px;font-weight:600;color:#1e293b">${plan}</div>
         </div>
         <div>
-          <div style="font-size:11px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Type</div>
-          <div style="font-size:14px;color:#e8eaf0">${regType}</div>
+          <div style="font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Type</div>
+          <div style="font-size:14px;color:#1e293b">${regType}</div>
         </div>
       </div>
       <div style="margin-top:14px">
-        <div style="font-size:11px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Registered At</div>
-        <div style="font-size:13px;color:#8b92a8">${timestamp}</div>
+        <div style="font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Registered At</div>
+        <div style="font-size:13px;color:#475569">${timestamp}</div>
       </div>
     </div>
     <a href="https://www.punchclock.ca" style="display:inline-block;background:#4f8ef7;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">

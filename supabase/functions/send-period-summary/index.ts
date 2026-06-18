@@ -137,15 +137,15 @@ function buildEmailHtml(params) {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
   <tr>
-    <td style="background:linear-gradient(135deg,#1e293b,#334155);padding:28px 32px">
+    <td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:24px 32px">
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td>
             <div style="font-size:20px;font-weight:700;color:#4f8ef7;letter-spacing:-0.5px">⏱ PunchClock Pro</div>
-            <div style="font-size:13px;color:#94a3b8;margin-top:2px">${contextLine}</div>
+            <div style="font-size:13px;color:#64748b;margin-top:2px">${contextLine}</div>
           </td>
           <td align="right">
-            <div style="background:rgba(79,142,247,0.2);border:1px solid rgba(79,142,247,0.4);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;color:#93c5fd;white-space:nowrap">
+            <div style="background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;color:#2563eb;white-space:nowrap">
               ${freqLabel[frequency] || 'Period'} Summary
             </div>
           </td>
@@ -200,8 +200,8 @@ function buildEmailHtml(params) {
           ${dayRowsHtml}
         </tbody>
         <tfoot>
-          <tr style="background:#1e293b">
-            <td colspan="3" style="padding:12px 16px;font-weight:700;font-size:14px;color:#e2e8f0">Grand Total</td>
+          <tr style="background:#f1f5f9">
+            <td colspan="3" style="padding:12px 16px;font-weight:700;font-size:14px;color:#1e293b">Grand Total</td>
             <td style="padding:12px 16px;font-weight:700;font-size:16px;color:${grandTotalHours > 0 ? '#22c55e' : '#94a3b8'};font-family:monospace">${grandTotalHours > 0 ? formatHours(grandTotalHours) : '—'}</td>
           </tr>
         </tfoot>

@@ -34,15 +34,15 @@ function escapeHtml(s: string): string {
 // ── Email wrapper (matches existing dark theme) ─────────────────────────────
 function wrapper(body: string, headerLine: string): string {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0f1117;font-family:Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
 <div style="max-width:640px;margin:0 auto;padding:32px 18px;">
   <div style="text-align:center;margin-bottom:28px;">
     <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
-    <div style="color:#8b92a8;font-size:13px;margin-top:6px">${headerLine}</div>
+    <div style="color:#475569;font-size:13px;margin-top:6px">${headerLine}</div>
   </div>
   ${body}
   <div style="text-align:center;margin-top:24px;">
-    <p style="color:#555e7a;font-size:11px;line-height:1.6">
+    <p style="color:#94a3b8;font-size:11px;line-height:1.6">
       <em>Note: Last login tracking started April 14, 2026.<br>Null values for earlier accounts are expected.</em><br><br>
       PunchClock Pro &mdash; Weekly Digest<br>
       Automated message; do not reply.
@@ -52,15 +52,15 @@ function wrapper(body: string, headerLine: string): string {
 }
 
 function statBox(label: string, value: string, color: string): string {
-  return `<div style="flex:1;min-width:130px;background:#1a1d27;border:1px solid #2e3347;border-left:3px solid ${color};border-radius:10px;padding:12px 14px">
-    <div style="font-size:11px;color:#8b92a8;text-transform:uppercase;letter-spacing:.5px;font-weight:600">${label}</div>
-    <div style="font-size:22px;font-weight:700;color:#e8eaf0;margin-top:4px;line-height:1.1">${value}</div>
+  return `<div style="flex:1;min-width:130px;background:#ffffff;border:1px solid #e2e8f0;border-left:3px solid ${color};border-radius:10px;padding:12px 14px">
+    <div style="font-size:11px;color:#475569;text-transform:uppercase;letter-spacing:.5px;font-weight:600">${label}</div>
+    <div style="font-size:22px;font-weight:700;color:#1e293b;margin-top:4px;line-height:1.1">${value}</div>
   </div>`;
 }
 
 function sectionCard(title: string, color: string, inner: string): string {
-  return `<div style="background:#1a1d27;border:1px solid #2e3347;border-left:4px solid ${color};border-radius:12px;padding:18px 20px;margin-bottom:16px">
-    <h2 style="margin:0 0 12px;color:#e8eaf0;font-size:15px;font-weight:700;letter-spacing:.3px">${title}</h2>
+  return `<div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:12px;padding:18px 20px;margin-bottom:16px">
+    <h2 style="margin:0 0 12px;color:#1e293b;font-size:15px;font-weight:700;letter-spacing:.3px">${title}</h2>
     ${inner}
   </div>`;
 }
@@ -75,19 +75,19 @@ function userRow(a: AdminRow): string {
   const days = daysSince(a.created_at);
   const lastLogin = a.last_login
     ? `last login ${daysSince(a.last_login)}d ago`
-    : `<span style="color:#8b92a8">no recorded login</span>`;
-  return `<div style="padding:8px 0;border-bottom:1px solid #2e3347;font-size:13px;line-height:1.5">
-    <div style="color:#e8eaf0;font-weight:600">${escapeHtml(a.name || "(no name)")}
-      <span style="color:#8b92a8;font-weight:400"> &middot; ${escapeHtml(a.email)}</span>
+    : `<span style="color:#475569">no recorded login</span>`;
+  return `<div style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:13px;line-height:1.5">
+    <div style="color:#1e293b;font-weight:600">${escapeHtml(a.name || "(no name)")}
+      <span style="color:#475569;font-weight:400"> &middot; ${escapeHtml(a.email)}</span>
     </div>
-    <div style="color:#8b92a8;font-size:11px;margin-top:2px">
+    <div style="color:#475569;font-size:11px;margin-top:2px">
       registered ${days}d ago &middot; ${lastLogin}
     </div>
   </div>`;
 }
 
 function emptyHint(text: string): string {
-  return `<div style="color:#555e7a;font-size:13px;font-style:italic">${text}</div>`;
+  return `<div style="color:#94a3b8;font-size:13px;font-style:italic">${text}</div>`;
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
@@ -218,10 +218,10 @@ Deno.serve(async (req) => {
     const paidSection = sectionCard(
       `💳 Paid Subscribers (${totalPaid}) &middot; MRR ${fmtMoney(mrr)}`,
       "#22c55e",
-      `<table style="width:100%;border-collapse:collapse;font-size:13px;color:#e8eaf0">
-        <tr><td style="padding:6px 0;border-bottom:1px solid #2e3347">Starter ($19.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #2e3347;font-weight:700">${starterCount ?? 0}</td></tr>
-        <tr><td style="padding:6px 0;border-bottom:1px solid #2e3347">Growth ($39.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #2e3347;font-weight:700">${growthCount ?? 0}</td></tr>
-        <tr><td style="padding:6px 0;border-bottom:1px solid #2e3347">Business ($79.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #2e3347;font-weight:700">${businessCount ?? 0}</td></tr>
+      `<table style="width:100%;border-collapse:collapse;font-size:13px;color:#1e293b">
+        <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0">Starter ($19.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:700">${starterCount ?? 0}</td></tr>
+        <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0">Growth ($39.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:700">${growthCount ?? 0}</td></tr>
+        <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0">Business ($79.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:700">${businessCount ?? 0}</td></tr>
         <tr><td style="padding:6px 0">Scheduling add-on</td><td style="text-align:right;padding:6px 0;font-weight:700;color:#7c5cbf">${schedAddonCount ?? 0}</td></tr>
       </table>`
     );

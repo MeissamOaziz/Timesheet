@@ -407,6 +407,7 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .landing{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:7000;display:none;}
 .landing.show{display:block;}
 .land-nav{position:sticky;top:0;background:rgba(15,17,23,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
+[data-theme="light"] .land-nav{background:rgba(255,255,255,.92);}
 .land-logo{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
 .land-nav-links{display:flex;gap:6px;align-items:center;}
 .land-nav-links a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;transition:all .15s;cursor:pointer;display:inline-block;}
@@ -730,7 +731,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 .ic{width:1em;height:1em;vertical-align:-0.15em;flex-shrink:0;}
 .ic-lg{width:1.15em;height:1.15em;vertical-align:-0.2em;flex-shrink:0;}
 </style>
-<script>(function(){try{var t=localStorage.getItem('pc_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('pc_theme');if(t!=='dark')document.documentElement.setAttribute('data-theme','light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></symbol>
@@ -3449,7 +3450,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -8945,7 +8946,7 @@ function openKioskQR(){
 // ═══════════════════════════════════════════════════
 async function init(){
   // Init theme + language first (theme already applied by inline head script — this just syncs toggle icon)
-  applyTheme(getStoredTheme()==='light' ? 'light' : 'dark');
+  applyTheme(getStoredTheme()==='dark' ? 'dark' : 'light');
   if(typeof initLang==='function')initLang();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
   // Start clock after lang is ready
@@ -10373,6 +10374,8 @@ en:{
 'faq.a19':'No — each PunchClock Pro account is linked to one company. If you manage a second business, simply register a new account with a different email address. Each account has its own billing, sites, and employees.',
 'faq.q20':'How do I invite team members?',
 'faq.a20':'From the Admin panel, go to the Admins tab and click <strong>\'Invite Team Member\'</strong>. Choose Co-Admin for full access (except billing) or Manager for site-specific access. The person receives an email with a secure link to create their account — no join requests needed.',
+'faq.q21':'A device keeps opening the clock-in page instead of the website. How do I reset it?',
+'faq.a21':'That device was set up as a kiosk, so it remembers the site. To reset it: on that device, tap the <strong>\'Not a kiosk? Reset this device\'</strong> link at the bottom of the clock-in page, or open <strong>punchclock.ca/?nokiosk=1</strong> in the browser — the device returns to the normal login page. You can re-create a kiosk shortcut anytime from <strong>Admin → Sites → Kiosk Shortcut</strong>.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'1 company · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'1 company · Unlimited sites & employees · 3 admins',
@@ -10955,6 +10958,8 @@ fr:{
 'faq.a19':'Non — chaque compte PunchClock Pro est lié à une seule entreprise. Si vous gérez une deuxième entreprise, créez simplement un nouveau compte avec une adresse courriel différente. Chaque compte a sa propre facturation, ses sites et ses employés.',
 'faq.q20':'Comment inviter des membres de l\'équipe?',
 'faq.a20':'Depuis le panneau Admin, allez dans l\'onglet Admins et cliquez sur <strong>\'Inviter un membre\'</strong>. Choisissez Co-Admin pour un accès complet (sauf facturation) ou Gestionnaire pour un accès limité à des sites spécifiques. La personne reçoit un courriel avec un lien sécurisé pour créer son compte.',
+'faq.q21':'Un appareil ouvre toujours la page de pointage au lieu du site. Comment le réinitialiser?',
+'faq.a21':'Cet appareil a été configuré comme kiosque, il se souvient donc du site. Pour le réinitialiser : sur cet appareil, touchez le lien <strong>\'Réinitialiser cet appareil\'</strong> au bas de la page de pointage, ou ouvrez <strong>punchclock.ca/?nokiosk=1</strong> dans le navigateur — l\'appareil revient à la page de connexion normale. Vous pouvez recréer un raccourci kiosque à tout moment depuis <strong>Admin → Sites → Raccourci kiosque</strong>.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',

@@ -49,7 +49,7 @@ function surveyEmailHtml(name: string, url: string): string {
   return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-  <tr><td style="background:linear-gradient(135deg,#1e293b,#334155);padding:24px 32px">
+  <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:22px 32px">
     <div style="font-size:20px;font-weight:700;color:#4f8ef7">⏱ PunchClock Pro</div></td></tr>
   <tr><td style="padding:28px 32px">
     <!-- Français -->
@@ -78,7 +78,7 @@ function feedbackEmailHtml(d: Record<string, unknown>): string {
   return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 16px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-  <tr><td style="background:#1e293b;padding:18px 28px"><div style="font-size:16px;font-weight:700;color:#4f8ef7">📨 Nouveau commentaire / New survey feedback</div></td></tr>
+  <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:18px 28px"><div style="font-size:16px;font-weight:700;color:#4f8ef7">📨 Nouveau commentaire / New survey feedback</div></td></tr>
   <tr><td style="padding:22px 28px">
     <table width="100%" cellpadding="0" cellspacing="0">
       ${row('De / From', d.email)}
