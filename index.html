@@ -1639,6 +1639,54 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </div>
 
+<!-- ═══════════════ CHURN FEEDBACK SURVEY ═══════════════ -->
+<div class="page" id="page-survey">
+  <div class="form-card" style="margin-top:40px;max-width:560px">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:22px;font-weight:700;color:var(--accent);display:flex;align-items:center;justify-content:center;gap:8px"><svg style="width:22px;height:22px"><use href="#i-nav-clock"/></svg>PunchClock Pro</div>
+    </div>
+    <div id="surveyForm">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Help us improve — takes 1 minute</h2>
+      <p style="font-size:14px;color:var(--text2);margin:0 0 20px;line-height:1.55">You gave PunchClock Pro a try, and we'd genuinely love to know what worked and what didn't. Your answers go straight to our team and directly shape what we build next.</p>
+      <div id="surveyMsg" style="margin-bottom:12px"></div>
+      <div class="form-group">
+        <label>What's the main reason you stopped using PunchClock Pro?</label>
+        <select id="surveyReason">
+          <option value="">Select one…</option>
+          <option>The design / interface</option>
+          <option>Missing features I needed</option>
+          <option>Something didn't work / bugs</option>
+          <option>Too complicated to set up</option>
+          <option>Found a better alternative</option>
+          <option>No longer needed it</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>What did you like about it?</label><textarea id="surveyLiked" rows="2" placeholder="Anything that worked well for you…"></textarea></div>
+      <div class="form-group"><label>What did you NOT like, or what was missing?</label><textarea id="surveyDisliked" rows="2" placeholder="Be candid — this is the most useful part for us…"></textarea></div>
+      <div class="form-group"><label>What one feature would make you come back?</label><textarea id="surveyWanted" rows="2" placeholder="The thing you wished it had…"></textarea></div>
+      <div class="form-group">
+        <label>Overall, how would you rate your experience?</label>
+        <div id="surveyRatingRow" style="display:flex;gap:6px;margin-top:6px">
+          <button type="button" class="survey-star" data-r="1" onclick="setSurveyRating(1)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
+          <button type="button" class="survey-star" data-r="2" onclick="setSurveyRating(2)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
+          <button type="button" class="survey-star" data-r="3" onclick="setSurveyRating(3)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
+          <button type="button" class="survey-star" data-r="4" onclick="setSurveyRating(4)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
+          <button type="button" class="survey-star" data-r="5" onclick="setSurveyRating(5)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="submitSurvey()" style="margin-top:8px">Send feedback</button>
+      <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5">We read every response. If we build something you asked for, we'll email you to come try it — on us.</p>
+    </div>
+    <div id="surveyThanks" style="display:none;text-align:center;padding:20px 4px">
+      <div style="font-size:44px;margin-bottom:12px">🙏</div>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Thank you!</h2>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin:0 0 20px">Your feedback means a lot. We read every word — and if we build what you asked for, we'll reach out so you can try it free.</p>
+      <a href="/" class="btn-secondary" style="display:inline-block;width:auto;padding:10px 22px;text-decoration:none">← Back to PunchClock Pro</a>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ REGISTER ═══════════════ -->
 <div class="page" id="page-register">
   <div class="form-card" style="margin-top:50px;max-width:520px">
@@ -1834,6 +1882,15 @@ border-top:1px solid var(--border);margin:18px 0;}
         <tbody id="adminsTableBody"></tbody>
       </table></div>
       <div id="adminCardsContainer"></div>
+
+      <!-- Survey Feedback (churned-trial feedback) -->
+      <div id="surveyFeedbackSection" style="margin-top:30px;border-top:1px solid var(--border);padding-top:22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h3 style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-mail"/></svg>Survey Feedback <span id="surveyFeedbackCount" style="font-size:11px;color:var(--text3);font-weight:400"></span></h3>
+          <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="loadSurveyFeedback()">↻ Refresh</button>
+        </div>
+        <div id="surveyFeedbackList"><div class="empty" style="padding:20px;color:var(--text3);font-size:13px">Click Refresh to load feedback.</div></div>
+      </div>
     </div>
     <div id="regularAdminPanel" style="display:none">
       <!-- Co-admin management for regular admins -->
@@ -4247,6 +4304,116 @@ async function doAcceptInvite(){
 }
 
 // ═══════════════════════════════════════════════════
+// CHURN FEEDBACK SURVEY
+// ═══════════════════════════════════════════════════
+let _surveyToken = null;
+let _surveyRating = 0;
+function setSurveyRating(n){
+  _surveyRating = n;
+  document.querySelectorAll('#surveyRatingRow .survey-star').forEach(b=>{
+    const r = Number(b.dataset.r);
+    b.textContent = r<=n ? '★' : '☆';
+    b.style.color = r<=n ? 'var(--accent)' : 'var(--text3)';
+    b.style.borderColor = r<=n ? 'var(--accent)' : 'var(--border)';
+  });
+}
+async function showSurveyPage(token){
+  _surveyToken = token; _surveyRating = 0;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-survey').classList.add('active');
+  document.getElementById('surveyForm').style.display='';
+  document.getElementById('surveyThanks').style.display='none';
+  document.getElementById('surveyMsg').innerHTML='';
+  ['surveyReason','surveyLiked','surveyDisliked','surveyWanted'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  setSurveyRating(0);
+  updateNav();
+}
+async function submitSurvey(){
+  if(!_surveyToken){showToast('This survey link is no longer valid.','error');return;}
+  const reason=document.getElementById('surveyReason').value;
+  const liked=document.getElementById('surveyLiked').value.trim();
+  const disliked=document.getElementById('surveyDisliked').value.trim();
+  const wanted=document.getElementById('surveyWanted').value.trim();
+  if(!reason && !liked && !disliked && !wanted && !_surveyRating){
+    showMsg('surveyMsg','Please answer at least one question before sending.','error');return;
+  }
+  const btn=document.querySelector('#surveyForm .btn-primary');
+  const orig=btn?btn.textContent:''; if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    const r=await DB.rpc('submit_survey_response',{p_token:_surveyToken,p_reason:reason||null,p_liked:liked||null,p_disliked:disliked||null,p_wanted:wanted||null,p_rating:_surveyRating||null});
+    if(!r||!r.ok){
+      showMsg('surveyMsg', (r&&r.error==='invalid_or_used') ? 'This survey has already been submitted — thank you!' : 'Could not send your feedback. Please try again.','error');
+      if(btn){btn.disabled=false;btn.textContent=orig;}
+      return;
+    }
+    // Email a copy to the team (best-effort — the response is already safely saved).
+    try{
+      await fetch(`${SUPA_URL}/functions/v1/churn-survey`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+        body:JSON.stringify({action:'notify',email:r.email,company:r.company_name,reason,liked,disliked,wanted,rating:_surveyRating})
+      });
+    }catch(_){}
+    _surveyToken=null;
+    document.getElementById('surveyForm').style.display='none';
+    document.getElementById('surveyThanks').style.display='';
+  }catch(e){
+    showMsg('surveyMsg','Error: '+e.message,'error');
+    if(btn){btn.disabled=false;btn.textContent=orig;}
+  }
+}
+
+// ── Super-admin: survey feedback panel ──
+async function loadSurveyFeedback(){
+  const wrap=document.getElementById('surveyFeedbackList');
+  const cntEl=document.getElementById('surveyFeedbackCount');
+  if(!wrap)return;
+  const tok=Sess.get()?.token;
+  wrap.innerHTML='<div class="empty" style="padding:18px;color:var(--text3);font-size:13px">Loading…</div>';
+  try{
+    const r=await DB.rpc('admin_list_surveys',{p_token:tok});
+    if(!r||!r.ok){wrap.innerHTML='<div class="empty" style="padding:18px;color:var(--text3);font-size:13px">Could not load feedback.</div>';return;}
+    const rows=r.rows||[];
+    if(cntEl)cntEl.textContent=rows.length?`(${rows.length})`:'';
+    wrap.innerHTML=rows.length?rows.map(renderSurveyCard).join(''):'<div class="empty" style="padding:18px;color:var(--text3);font-size:13px">No feedback submitted yet.</div>';
+  }catch(e){wrap.innerHTML='<div class="empty" style="padding:18px;color:var(--text3);font-size:13px">Error loading feedback.</div>';}
+}
+function renderSurveyCard(s){
+  const esc=v=>String(v??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const statusColors={new:'#4f8ef7',planned:'#22c55e',dismissed:'#94a3b8'};
+  const sc=statusColors[s.review_status]||'#4f8ef7';
+  const stars=s.rating?('★'.repeat(s.rating)+'☆'.repeat(5-s.rating)):'';
+  const field=(label,val)=>val?`<div style="margin-top:6px"><span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px">${label}</span><div style="font-size:13px;color:var(--text);line-height:1.5;white-space:pre-wrap">${esc(val)}</div></div>`:'';
+  const date=s.created_at?new Date(s.created_at).toLocaleDateString():'';
+  return `<div style="border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:var(--surface)">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div><div style="font-weight:600;font-size:13px">${esc(s.email||'—')} ${s.company_name?`<span style="color:var(--text3);font-weight:400">· ${esc(s.company_name)}</span>`:''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${date}${stars?` · <span style="color:var(--amber)">${stars}</span>`:''}</div></div>
+      <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:${sc};border:1px solid ${sc};border-radius:20px;padding:2px 10px">${esc(s.review_status)}</span>
+    </div>
+    ${field('Main reason',s.reason)}
+    ${field('Liked',s.liked)}
+    ${field('Disliked / missing',s.disliked)}
+    ${field('Feature they want',s.wanted_feature)}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn-secondary" style="padding:4px 11px;font-size:11px;color:#22c55e" onclick="setSurveyStatus('${s.id}','planned')">📌 Plan it</button>
+      <button class="btn-secondary" style="padding:4px 11px;font-size:11px" onclick="setSurveyStatus('${s.id}','dismissed')">Dismiss</button>
+      <button class="btn-secondary" style="padding:4px 11px;font-size:11px" onclick="setSurveyStatus('${s.id}','new')">Mark new</button>
+      ${s.email?`<a class="btn-secondary" style="padding:4px 11px;font-size:11px;text-decoration:none" href="mailto:${esc(s.email)}">Reply</a>`:''}
+      <button class="btn-danger" style="padding:4px 11px;font-size:11px;margin-left:auto" onclick="deleteSurveyResponse('${s.id}')">Delete</button>
+    </div>
+  </div>`;
+}
+async function setSurveyStatus(id,status){
+  const tok=Sess.get()?.token;
+  try{const r=await DB.rpc('admin_set_survey_status',{p_token:tok,p_id:id,p_status:status});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not update.','error');}}catch(e){showToast('Error: '+e.message,'error');}
+}
+async function deleteSurveyResponse(id){
+  if(!confirm('Delete this feedback permanently?'))return;
+  const tok=Sess.get()?.token;
+  try{const r=await DB.rpc('admin_delete_survey',{p_token:tok,p_id:id});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not delete.','error');}}catch(e){showToast('Error: '+e.message,'error');}
+}
+
+// ═══════════════════════════════════════════════════
 // FORGOT PASSWORD
 // ═══════════════════════════════════════════════════
 let pendingReset = null;
@@ -6383,6 +6550,7 @@ async function renderAdmins(){
   document.getElementById('superAdminPanel').style.display = superAdmin ? '' : 'none';
   document.getElementById('regularAdminPanel').style.display = superAdmin ? 'none' : '';
   if(!superAdmin){ await loadCoAdmins(); return; }
+  loadSurveyFeedback();
 
   const tbody=document.getElementById('adminsTableBody');
   const planColors = {free:'plan-free',starter:'plan-starter',growth:'plan-growth',business:'plan-business',unlimited:'plan-unlimited'};
@@ -8823,6 +8991,27 @@ async function init(){
       showLanding();
       return;
     }
+  }
+
+  // ── SURVEY URL HANDLER (?survey=TOKEN) ──
+  const surveyToken=new URLSearchParams(window.location.search).get('survey');
+  if(surveyToken){
+    window.history.replaceState({},'',window.location.pathname);
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+    try{
+      const sv=await DB.rpc('get_survey_invite',{p_token:surveyToken});
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      if(!sv||!sv.ok){
+        updateNav();showLanding();
+        showToast(sv&&sv.error==='already_responded'?"You've already submitted this survey — thank you!":'This survey link is invalid or has expired.','info');
+        return;
+      }
+      await showSurveyPage(surveyToken);
+    }catch(e){
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      updateNav();showLanding();
+    }
+    return;
   }
 
   // ── INVITE URL HANDLER (?invite=TOKEN) ──
