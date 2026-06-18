@@ -42,23 +42,32 @@ function token(): string {
 }
 
 function surveyEmailHtml(name: string, url: string): string {
-  const hi = name ? `Hi ${esc(name)},` : 'Hi there,';
+  const hiFr = name ? `Bonjour ${esc(name)},` : 'Bonjour,';
+  const hiEn = name ? `Hi ${esc(name)},` : 'Hi there,';
+  const cta = (label: string) => `<table cellpadding="0" cellspacing="0" style="margin:0 auto"><tr><td style="border-radius:10px;background:#4f8ef7">
+      <a href="${esc(url)}" style="display:inline-block;padding:13px 30px;font-size:15px;font-weight:600;color:#fff;text-decoration:none">${label}</a></td></tr></table>`;
   return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
   <tr><td style="background:linear-gradient(135deg,#1e293b,#334155);padding:24px 32px">
     <div style="font-size:20px;font-weight:700;color:#4f8ef7">⏱ PunchClock Pro</div></td></tr>
   <tr><td style="padding:28px 32px">
-    <h1 style="margin:0 0 12px;font-size:21px;color:#1e293b">${hi}</h1>
+    <!-- Français -->
+    <h1 style="margin:0 0 12px;font-size:21px;color:#1e293b">${hiFr}</h1>
+    <p style="margin:0 0 14px;font-size:15px;color:#475569;line-height:1.6">Vous avez récemment essayé PunchClock Pro — puis le silence. Nous aimerions vraiment savoir <strong>ce qui a fonctionné et ce qui n'a pas fonctionné</strong>. Ça prend une minute, et vos réponses vont directement à notre équipe et façonnent ce que nous construisons ensuite.</p>
+    <p style="margin:0 0 22px;font-size:15px;color:#475569;line-height:1.6">Que ce soit le design, une fonctionnalité manquante ou quelque chose qui ne convenait pas — dites-le-nous. <strong>Si nous développons ce que vous demandez, nous vous écrirons pour l'essayer, gratuitement.</strong></p>
+    ${cta('Partager mes commentaires →')}
+    <p style="margin:22px 0 0;font-size:13px;color:#94a3b8;line-height:1.6;text-align:center">Vous préférez répondre directement? Répondez simplement à ce courriel — ça nous parvient directement.</p>
+    <div style="border-top:1px solid #e2e8f0;margin:26px 0"></div>
+    <!-- English -->
+    <h1 style="margin:0 0 12px;font-size:21px;color:#1e293b">${hiEn}</h1>
     <p style="margin:0 0 14px;font-size:15px;color:#475569;line-height:1.6">You recently gave PunchClock Pro a try — and then things went quiet. We'd genuinely love to know <strong>what worked and what didn't</strong>. It takes about a minute, and your answers go straight to our team and shape what we build next.</p>
     <p style="margin:0 0 22px;font-size:15px;color:#475569;line-height:1.6">Whether it was the design, a missing feature, or something that just didn't fit — tell us. <strong>If we build what you ask for, we'll email you to come try it, free.</strong></p>
-    <table cellpadding="0" cellspacing="0" style="margin:0 auto"><tr><td style="border-radius:10px;background:#4f8ef7">
-      <a href="${esc(url)}" style="display:inline-block;padding:13px 30px;font-size:15px;font-weight:600;color:#fff;text-decoration:none">Share your feedback →</a>
-    </td></tr></table>
+    ${cta('Share your feedback →')}
     <p style="margin:22px 0 0;font-size:13px;color:#94a3b8;line-height:1.6;text-align:center">Prefer to just reply? Hit reply to this email and tell us anything — it comes straight to us.</p>
   </td></tr>
   <tr><td style="padding:18px 32px 28px;border-top:1px solid #e2e8f0">
-    <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;text-align:center">We're a small team that genuinely wants to serve our customers well. Thank you. — The PunchClock Pro team</p>
+    <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;text-align:center">Nous sommes une petite équipe qui veut bien servir ses clients. Merci.<br>We're a small team that genuinely wants to serve our customers well. Thank you. — L'équipe PunchClock Pro</p>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -69,18 +78,18 @@ function feedbackEmailHtml(d: Record<string, unknown>): string {
   return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 16px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-  <tr><td style="background:#1e293b;padding:18px 28px"><div style="font-size:16px;font-weight:700;color:#4f8ef7">📨 New survey feedback</div></td></tr>
+  <tr><td style="background:#1e293b;padding:18px 28px"><div style="font-size:16px;font-weight:700;color:#4f8ef7">📨 Nouveau commentaire / New survey feedback</div></td></tr>
   <tr><td style="padding:22px 28px">
     <table width="100%" cellpadding="0" cellspacing="0">
-      ${row('From', d.email)}
-      ${row('Company', d.company)}
-      ${row('Rating', d.rating ? `${d.rating} / 5` : '')}
-      ${row('Main reason', d.reason)}
-      ${row('Liked', d.liked)}
-      ${row('Disliked / missing', d.disliked)}
-      ${row('Feature they want', d.wanted)}
+      ${row('De / From', d.email)}
+      ${row('Entreprise / Company', d.company)}
+      ${row('Note / Rating', d.rating ? `${d.rating} / 5` : '')}
+      ${row('Raison principale / Main reason', d.reason)}
+      ${row('Aimé / Liked', d.liked)}
+      ${row('Pas aimé / Disliked / missing', d.disliked)}
+      ${row('Fonction souhaitée / Feature wanted', d.wanted)}
     </table>
-    <p style="margin:18px 0 0;font-size:12px;color:#94a3b8">Reply to this email to respond directly to the customer. Also visible in the Super Admin → Survey Feedback panel.</p>
+    <p style="margin:18px 0 0;font-size:12px;color:#94a3b8">Répondez à ce courriel pour contacter le client directement. Aussi visible dans Super Admin → Survey Feedback.<br>Reply to this email to respond directly to the customer. Also visible in the Super Admin → Survey Feedback panel.</p>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -94,7 +103,7 @@ Deno.serve(async (req) => {
     try {
       await sendEmail({
         to: TEAM_INBOX,
-        subject: `New PunchClock feedback${body.email ? ` from ${body.email}` : ''}`,
+        subject: `Nouveau commentaire / New feedback${body.email ? ` — ${body.email}` : ''}`,
         html: feedbackEmailHtml(body),
         replyTo: typeof body.email === 'string' ? body.email : undefined,
       });
@@ -113,7 +122,7 @@ Deno.serve(async (req) => {
       });
       await sendEmail({
         to: TEAM_INBOX,
-        subject: 'How was your PunchClock Pro trial? (1-minute survey)',
+        subject: 'Votre avis sur PunchClock Pro? / Your feedback on PunchClock Pro? (1 min)',
         html: surveyEmailHtml('', `${APP_URL}/?survey=${tok}`),
         replyTo: TEAM_INBOX,
       });
@@ -155,7 +164,7 @@ Deno.serve(async (req) => {
       try {
         await sendEmail({
           to: a.email as string,
-          subject: 'How was your PunchClock Pro trial? (1-minute survey)',
+          subject: 'Votre avis sur PunchClock Pro? / Your feedback on PunchClock Pro? (1 min)',
           html: surveyEmailHtml((a.name as string) || '', `${APP_URL}/?survey=${tok}`),
           replyTo: TEAM_INBOX,
         });

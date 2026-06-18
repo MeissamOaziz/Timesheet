@@ -1646,27 +1646,29 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div style="font-size:22px;font-weight:700;color:var(--accent);display:flex;align-items:center;justify-content:center;gap:8px"><svg style="width:22px;height:22px"><use href="#i-nav-clock"/></svg>PunchClock Pro</div>
     </div>
     <div id="surveyForm">
-      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Help us improve — takes 1 minute</h2>
-      <p style="font-size:14px;color:var(--text2);margin:0 0 20px;line-height:1.55">You gave PunchClock Pro a try, and we'd genuinely love to know what worked and what didn't. Your answers go straight to our team and directly shape what we build next.</p>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Aidez-nous à nous améliorer — 1 minute</h2>
+      <div style="font-size:14px;font-weight:500;color:var(--text3);margin:0 0 12px">Help us improve — takes 1 minute</div>
+      <p style="font-size:14px;color:var(--text2);margin:0 0 6px;line-height:1.55">Vous avez essayé PunchClock Pro, et nous aimerions vraiment savoir ce qui a fonctionné et ce qui n'a pas fonctionné. Vos réponses vont directement à notre équipe et façonnent ce que nous construisons ensuite.</p>
+      <p style="font-size:13px;color:var(--text3);margin:0 0 20px;line-height:1.5">You gave PunchClock Pro a try, and we'd love to know what worked and what didn't. Your answers go straight to our team and shape what we build next.</p>
       <div id="surveyMsg" style="margin-bottom:12px"></div>
       <div class="form-group">
-        <label>What's the main reason you stopped using PunchClock Pro?</label>
+        <label>Quelle est la principale raison pour laquelle vous avez cessé? <span style="font-weight:400;color:var(--text3)">· Main reason you stopped?</span></label>
         <select id="surveyReason">
-          <option value="">Select one…</option>
-          <option>The design / interface</option>
-          <option>Missing features I needed</option>
-          <option>Something didn't work / bugs</option>
-          <option>Too complicated to set up</option>
-          <option>Found a better alternative</option>
-          <option>No longer needed it</option>
-          <option>Other</option>
+          <option value="">Sélectionnez une réponse… / Select one…</option>
+          <option>Le design / l'interface · The design / interface</option>
+          <option>Des fonctionnalités manquantes · Missing features I needed</option>
+          <option>Quelque chose ne fonctionnait pas / bogues · Something didn't work / bugs</option>
+          <option>Trop compliqué à configurer · Too complicated to set up</option>
+          <option>J'ai trouvé une meilleure option · Found a better alternative</option>
+          <option>Je n'en avais plus besoin · No longer needed it</option>
+          <option>Autre · Other</option>
         </select>
       </div>
-      <div class="form-group"><label>What did you like about it?</label><textarea id="surveyLiked" rows="2" placeholder="Anything that worked well for you…"></textarea></div>
-      <div class="form-group"><label>What did you NOT like, or what was missing?</label><textarea id="surveyDisliked" rows="2" placeholder="Be candid — this is the most useful part for us…"></textarea></div>
-      <div class="form-group"><label>What one feature would make you come back?</label><textarea id="surveyWanted" rows="2" placeholder="The thing you wished it had…"></textarea></div>
+      <div class="form-group"><label>Qu'avez-vous aimé? <span style="font-weight:400;color:var(--text3)">· What did you like?</span></label><textarea id="surveyLiked" rows="2" placeholder="Ce qui a bien fonctionné pour vous… / Anything that worked well…"></textarea></div>
+      <div class="form-group"><label>Qu'est-ce qui vous a déplu ou manquait? <span style="font-weight:400;color:var(--text3)">· What did you NOT like, or what was missing?</span></label><textarea id="surveyDisliked" rows="2" placeholder="Soyez franc — c'est la partie la plus utile pour nous… / Be candid — the most useful part…"></textarea></div>
+      <div class="form-group"><label>Quelle fonctionnalité vous ferait revenir? <span style="font-weight:400;color:var(--text3)">· What one feature would make you come back?</span></label><textarea id="surveyWanted" rows="2" placeholder="Ce que vous auriez aimé y trouver… / The thing you wished it had…"></textarea></div>
       <div class="form-group">
-        <label>Overall, how would you rate your experience?</label>
+        <label>Comment évaluez-vous votre expérience? <span style="font-weight:400;color:var(--text3)">· How would you rate your experience?</span></label>
         <div id="surveyRatingRow" style="display:flex;gap:6px;margin-top:6px">
           <button type="button" class="survey-star" data-r="1" onclick="setSurveyRating(1)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
           <button type="button" class="survey-star" data-r="2" onclick="setSurveyRating(2)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
@@ -1675,14 +1677,14 @@ border-top:1px solid var(--border);margin:18px 0;}
           <button type="button" class="survey-star" data-r="5" onclick="setSurveyRating(5)" style="flex:1;padding:9px;font-size:18px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3)">☆</button>
         </div>
       </div>
-      <button class="btn-primary" onclick="submitSurvey()" style="margin-top:8px">Send feedback</button>
-      <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5">We read every response. If we build something you asked for, we'll email you to come try it — on us.</p>
+      <button class="btn-primary" onclick="submitSurvey()" style="margin-top:8px">Envoyer mes commentaires / Send feedback</button>
+      <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5">Nous lisons chaque réponse. Si nous développons ce que vous demandez, nous vous écrirons pour l'essayer — gratuitement.<br>We read every response. If we build what you asked for, we'll email you to come try it — on us.</p>
     </div>
     <div id="surveyThanks" style="display:none;text-align:center;padding:20px 4px">
       <div style="font-size:44px;margin-bottom:12px">🙏</div>
-      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Thank you!</h2>
-      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin:0 0 20px">Your feedback means a lot. We read every word — and if we build what you asked for, we'll reach out so you can try it free.</p>
-      <a href="/" class="btn-secondary" style="display:inline-block;width:auto;padding:10px 22px;text-decoration:none">← Back to PunchClock Pro</a>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Merci! / Thank you!</h2>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin:0 0 20px">Vos commentaires comptent beaucoup. Nous lisons chaque mot — et si nous développons ce que vous avez demandé, nous vous contacterons pour l'essayer gratuitement.<br><br>Your feedback means a lot. We read every word — and if we build what you asked for, we'll reach out so you can try it free.</p>
+      <a href="/" class="btn-secondary" style="display:inline-block;width:auto;padding:10px 22px;text-decoration:none">← PunchClock Pro</a>
     </div>
   </div>
 </div>
@@ -4329,20 +4331,20 @@ async function showSurveyPage(token){
   updateNav();
 }
 async function submitSurvey(){
-  if(!_surveyToken){showToast('This survey link is no longer valid.','error');return;}
+  if(!_surveyToken){showToast('Ce lien de sondage n\'est plus valide. / This survey link is no longer valid.','error');return;}
   const reason=document.getElementById('surveyReason').value;
   const liked=document.getElementById('surveyLiked').value.trim();
   const disliked=document.getElementById('surveyDisliked').value.trim();
   const wanted=document.getElementById('surveyWanted').value.trim();
   if(!reason && !liked && !disliked && !wanted && !_surveyRating){
-    showMsg('surveyMsg','Please answer at least one question before sending.','error');return;
+    showMsg('surveyMsg','Veuillez répondre à au moins une question. / Please answer at least one question.','error');return;
   }
   const btn=document.querySelector('#surveyForm .btn-primary');
-  const orig=btn?btn.textContent:''; if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  const orig=btn?btn.textContent:''; if(btn){btn.disabled=true;btn.textContent='Envoi… / Sending…';}
   try{
     const r=await DB.rpc('submit_survey_response',{p_token:_surveyToken,p_reason:reason||null,p_liked:liked||null,p_disliked:disliked||null,p_wanted:wanted||null,p_rating:_surveyRating||null});
     if(!r||!r.ok){
-      showMsg('surveyMsg', (r&&r.error==='invalid_or_used') ? 'This survey has already been submitted — thank you!' : 'Could not send your feedback. Please try again.','error');
+      showMsg('surveyMsg', (r&&r.error==='invalid_or_used') ? 'Ce sondage a déjà été soumis — merci! / This survey has already been submitted — thank you!' : 'Impossible d\'envoyer vos commentaires. Veuillez réessayer. / Could not send your feedback. Please try again.','error');
       if(btn){btn.disabled=false;btn.textContent=orig;}
       return;
     }
@@ -9003,7 +9005,7 @@ async function init(){
       document.getElementById('loadingOverlay').classList.add('hidden');
       if(!sv||!sv.ok){
         updateNav();showLanding();
-        showToast(sv&&sv.error==='already_responded'?"You've already submitted this survey — thank you!":'This survey link is invalid or has expired.','info');
+        showToast(sv&&sv.error==='already_responded'?"Vous avez déjà répondu à ce sondage — merci! / You've already submitted this survey — thank you!":'Ce lien de sondage est invalide ou a expiré. / This survey link is invalid or has expired.','info');
         return;
       }
       await showSurveyPage(surveyToken);
