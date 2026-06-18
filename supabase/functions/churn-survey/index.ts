@@ -102,6 +102,29 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
   }
 
+  // ── action=test: send ONE survey email to the team inbox only (safe — ignores any other
+  // address, so it can't be used to spam). Lets you verify the whole flow before going live. ──
+  if (body.action === 'test') {
+    try {
+      const tok = token();
+      await rest('survey_invites', {
+        method: 'POST', headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ email: TEAM_INBOX, company_name: '(test)', token: tok }),
+      });
+      await sendEmail({
+        to: TEAM_INBOX,
+        subject: 'How was your PunchClock Pro trial? (1-minute survey)',
+        html: surveyEmailHtml('', `${APP_URL}/?survey=${tok}`),
+        replyTo: TEAM_INBOX,
+      });
+      return new Response(JSON.stringify({ ok: true, url: `${APP_URL}/?survey=${tok}` }),
+        { headers: { ...CORS, 'Content-Type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ ok: false, error: (e as Error).message }),
+        { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
+  }
+
   // ── default: daily send to churned trial users ──
   try {
     const cutoff = new Date(Date.now() - 7 * 864e5).toISOString();
