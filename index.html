@@ -2844,6 +2844,19 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div id="overtimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
       </div>
     </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.punchRounding">Punch Rounding</p>
+    <div class="form-group">
+      <label data-i18n="modal.punchRoundingLabel">Round punch times to</label>
+      <select id="companyPunchRounding">
+        <option value="0" data-i18n="modal.roundOff">Off (exact times)</option>
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+      </select>
+      <p style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="modal.punchRoundingHint">Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.</p>
+    </div>
     </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
@@ -3857,6 +3870,15 @@ function navigate(page){
   if(typeof applyAllTranslations==='function')applyAllTranslations();
 }
 
+// Round a punch time (ISO) to the nearest `mins` minutes (0 = exact). Returns ms.
+// Applied only in hour totals/payroll — raw punch times are always preserved.
+function _roundPunchMs(iso, mins){
+  const ms=new Date(iso).getTime();
+  if(!mins) return ms;
+  const step=mins*60000;
+  return Math.round(ms/step)*step;
+}
+
 // ═══════════════════════════════════════════════════
 // DASHBOARD (stats landing) — computed from the local cache
 // ═══════════════════════════════════════════════════
@@ -3885,6 +3907,7 @@ function renderDashboard(){
   const panel=(title,inner)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px"><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px">${title}</div>${inner}</div>`;
 
   function sectionFor(site){
+    const roundMin=((C.companies||[]).find(c=>c.id===site.company_id)||{}).punch_rounding||0;
     const emps=allEmps.filter(e=>e.site_id===site.id);
     const empIds=new Set(emps.map(e=>e.id));
     const punches=allPunches.filter(p=>empIds.has(p.emp_id)); // desc order preserved
@@ -3898,7 +3921,7 @@ function renderDashboard(){
       const eps=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
       let i=0;
       while(i<eps.length){ const p=eps[i];
-        if(p.type==='IN'){ const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null; const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:0; if(out)i+=2;else i++;
+        if(p.type==='IN'){ const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null; const hrs=out?(_roundPunchMs(out.punched_at,roundMin)-_roundPunchMs(p.punched_at,roundMin))/3600000:0; if(out)i+=2;else i++;
           if(hrs>0){ if(p.punch_date===todayStr)hToday+=hrs; if(p.punch_date>=weekStartStr)hWeek+=hrs; } } else i++; }
     }
     const co=(C.companies||[]).find(c=>c.id===site.company_id);
@@ -7704,6 +7727,7 @@ function editCompany(id){
   document.getElementById('companyDesc').value=co.description||'';
   document.getElementById('companyWeekStart').value=co.week_start||'monday';
   document.getElementById('companyPayrollFreq').value=co.payroll_frequency||'biweekly';
+  document.getElementById('companyPunchRounding').value=String(co.punch_rounding||0);
   document.getElementById('companyAnchorDate').value=co.payroll_anchor_date||'';
   toggleAnchorDateRow();
   document.getElementById('editCompanyUid').value=co.id;
@@ -7756,6 +7780,7 @@ async function saveCompany(){
   const description=document.getElementById('companyDesc').value.trim();
   const week_start=document.getElementById('companyWeekStart').value;
   const payroll_frequency=document.getElementById('companyPayrollFreq').value;
+  const punch_rounding=parseInt(document.getElementById('companyPunchRounding').value,10)||0;
   const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
@@ -7774,13 +7799,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,payroll_anchor_date,track_overtime,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url});
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,payroll_anchor_date,track_overtime,logo_url});
       const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -8021,7 +8046,7 @@ async function generateReport(){
         const p=eps[i];
         if(p.type==='IN'){
           const out=eps[i+1]?.type==='OUT'?eps[i+1]:null;
-          const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:null;
+          const hrs=out?(_roundPunchMs(out.punched_at,co?.punch_rounding||0)-_roundPunchMs(p.punched_at,co?.punch_rounding||0))/3600000:null;
           if(out)i+=2;else i++;
           rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT});
         }else i++;
@@ -10352,6 +10377,7 @@ en:{
 'modal.logoHint':'PNG, JPG up to 2MB — shown on clock page and email reports',
 'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'Track Overtime',
 'modal.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
+'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
 'modal.confirmDelete':'Confirm Delete','modal.delete':'Delete',
 'modal.planLimit':'🔒 Plan Limit Reached','modal.upgradePlan':'⬆ Upgrade Plan',
@@ -10937,6 +10963,7 @@ fr:{
 'modal.logoHint':'PNG, JPG jusqu\'à 2 Mo — affiché sur la page de pointage et les rapports',
 'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'Suivi des heures supp.',
 'modal.overtimeDesc':'Signaler les journées >8h et les semaines >40h dans les rapports',
+'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
 'modal.confirmDelete':'Confirmer la suppression','modal.delete':'Supprimer',
 'modal.planLimit':'🔒 Limite du forfait atteinte','modal.upgradePlan':'⬆ Mettre à niveau',

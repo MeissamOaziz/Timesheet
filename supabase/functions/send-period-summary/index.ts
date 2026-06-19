@@ -49,7 +49,8 @@ function formatHours(h) {
   return `${hrs}h ${mins}m`;
 }
 function buildEmailHtml(params) {
-  const { empName, companyName, siteName, periodStart, periodEnd, frequency, punches } = params;
+  const { empName, companyName, siteName, periodStart, periodEnd, frequency, punches, punchRounding } = params;
+  const _rMs = (iso) => { const ms = new Date(iso).getTime(); if (!punchRounding) return ms; const step = punchRounding * 60000; return Math.round(ms / step) * step; };
   const sorted = [
     ...punches
   ].sort((a, b)=>new Date(a.punched_at).getTime() - new Date(b.punched_at).getTime());
@@ -81,7 +82,7 @@ function buildEmailHtml(params) {
       const p = dayPunches[i];
       if (p.type === 'IN') {
         const next = dayPunches[i + 1]?.type === 'OUT' ? dayPunches[i + 1] : null;
-        const hours = next ? (new Date(next.punched_at).getTime() - new Date(p.punched_at).getTime()) / 3600000 : null;
+        const hours = next ? (_rMs(next.punched_at) - _rMs(p.punched_at)) / 3600000 : null;
         sessions.push({
           inTime: p.punch_time,
           outTime: next?.punch_time || null,
@@ -243,7 +244,7 @@ async function sendEmail(to, subject, html) {
     throw new Error(`Resend error for ${to}: ${err}`);
   }
 }
-async function sendToEmployee(emp, startStr, endStr, frequency, companyName) {
+async function sendToEmployee(emp, startStr, endStr, frequency, companyName, roundMin) {
   const { data: punches, error: pErr } = await supabase.from('punches').select('type,punch_date,punch_time,punched_at,site_name').eq('emp_id', emp.id).gte('punch_date', startStr).lte('punch_date', endStr).order('punched_at', {
     ascending: true
   });
@@ -266,7 +267,8 @@ async function sendToEmployee(emp, startStr, endStr, frequency, companyName) {
     periodStart: startStr,
     periodEnd: endStr,
     frequency,
-    punches: punches || []
+    punches: punches || [],
+    punchRounding: roundMin || 0
   });
   await sendEmail(emp.email, subject, html);
 }
@@ -291,7 +293,7 @@ Deno.serve(async (req)=>{
         if (empErr || !emp) throw new Error('Employee not found');
         if (!emp.email) throw new Error('Employee has no email address');
         const { data: co } = await supabase.from('companies').select('*').eq('id', emp.company_id).single();
-        await sendToEmployee(emp, body.start_date, body.end_date, co?.payroll_frequency || 'biweekly', co?.name || 'Your Company');
+        await sendToEmployee(emp, body.start_date, body.end_date, co?.payroll_frequency || 'biweekly', co?.name || 'Your Company', co?.punch_rounding || 0);
         return new Response(JSON.stringify({
           success: true,
           manual_sent: true,
@@ -331,7 +333,7 @@ Deno.serve(async (req)=>{
           continue;
         }
         try {
-          await sendToEmployee(emp, startStr, endStr, company.payroll_frequency || 'biweekly', company.name);
+          await sendToEmployee(emp, startStr, endStr, company.payroll_frequency || 'biweekly', company.name, company.punch_rounding || 0);
           companyResult.sent++;
         } catch (e) {
           companyResult.errors.push(`${emp.name}: ${e.message}`);
