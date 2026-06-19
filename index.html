@@ -737,6 +737,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
 <symbol id="i-nav-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></symbol>
+<symbol id="i-nav-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></symbol>
 <symbol id="i-nav-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
 <symbol id="i-nav-reports" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="10"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="20" y1="20" x2="20" y2="8"/></symbol>
 <symbol id="i-nav-sites" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
@@ -1362,6 +1363,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="nav-links">
     <div class="nav-sep"></div>
     <button class="nav-btn active" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
+    <button class="nav-btn" onclick="navigate('dashboard')" id="navDashboard" style="display:none"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
     <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span><span id="missedPunchBadge" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
     <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
     <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
@@ -1458,6 +1460,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('dashboard')" id="mobileNavDashboard" style="display:none"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
@@ -1802,6 +1805,14 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <!-- ═══════════════ ADMIN PAGE ═══════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="page-header">
+    <div><h1 data-i18n="dash.title">Dashboard</h1><p data-i18n="dash.subtitle">Your team at a glance</p></div>
+    <button class="btn-secondary" style="width:auto;padding:9px 16px;font-size:13px" onclick="renderDashboard()"><span data-i18n="dash.refresh">↻ Refresh</span></button>
+  </div>
+  <div id="dashboardContent"></div>
+</div>
+
 <div class="page" id="page-admin">
   <div class="page-header">
     <div><h1 id="adminTitle" data-i18n="admin.title">Admin Panel</h1><p id="adminSub" data-i18n="admin.subtitle">Manage employees and sites</p></div>
@@ -3811,7 +3822,7 @@ function navigate(page){
   if(window._kioskUrlMode && !['punch','login','landing'].includes(page)) return;
   // Redirect legacy 'companies' references to the new sites page
   if(page==='companies'){navigate('sites');return;}
-  const adminPages=['admin','reports','sites','activity','schedule'];
+  const adminPages=['dashboard','admin','reports','sites','activity','schedule'];
   if(adminPages.includes(page)&&!isLoggedIn()){navigate('login');return;}
   // ── HARD BLOCK: force site creation before anything else ──
   if(adminPages.includes(page)&&isLoggedIn()&&!isSuperAdmin()){
@@ -3833,16 +3844,81 @@ function navigate(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('page-'+page);
   if(el){el.classList.add('active');currentPage=page;}
-  const map={punch:0,admin:1,reports:2,sites:3,activity:4,schedule:5};
+  const map={punch:0,dashboard:1,admin:2,reports:3,sites:4,activity:5,schedule:6};
   const btns=document.querySelectorAll('.nav-links .nav-btn');
   if(map[page]!==undefined&&btns[map[page]])btns[map[page]].classList.add('active');
   if(page==='punch')loadPunchPage();
+  else if(page==='dashboard')renderDashboard();
   else if(page==='admin'){window._scrollToMissedPunch=true;loadAdminPage();}
   else if(page==='reports'){loadReportsPage();renderMissedPunchRequests();}
   else if(page==='sites')loadSitesPage();
   else if(page==='activity'){loadActivityPage();renderMissedPunchRequests();}
   else if(page==='schedule')loadSchedulePage();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD (stats landing) — computed from the local cache
+// ═══════════════════════════════════════════════════
+function renderDashboard(){
+  const host=document.getElementById('dashboardContent');
+  if(!host) return;
+  const emps=(C.employees||[]).filter(e=>e.active!==false);
+  const punches=(C.punches||[]); // ordered punched_at desc
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const fmtH=h=>{const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh+'h '+(mm<10?'0':'')+mm+'m';};
+  const fmtTime=iso=>{try{return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}catch(_){return '';}};
+  // Latest punch per employee (first match in desc order) → who's clocked in now
+  const latest={};
+  for(const p of punches){ if(!latest[p.emp_id]) latest[p.emp_id]=p; }
+  const clockedIn=emps.filter(e=>latest[e.id]&&latest[e.id].type==='IN')
+    .map(e=>({e,since:latest[e.id]}))
+    .sort((a,b)=>new Date(b.since.punched_at)-new Date(a.since.punched_at));
+  // Date windows
+  const todayStr=new Date().toLocaleDateString('en-CA');
+  const co=(C.companies&&C.companies[0])||null;
+  const weekStartsSunday=!!(co&&co.week_start==='sunday');
+  const wkBase=new Date(); wkBase.setHours(0,0,0,0);
+  const dow=wkBase.getDay();
+  const back=weekStartsSunday?dow:((dow+6)%7);
+  const weekStart=new Date(wkBase); weekStart.setDate(wkBase.getDate()-back);
+  const weekStartStr=weekStart.toLocaleDateString('en-CA');
+  // Hours: pair each IN with the next OUT (same logic as the reports page)
+  const byEmp={};
+  for(const p of punches){ (byEmp[p.emp_id]||(byEmp[p.emp_id]=[])).push(p); }
+  let hoursToday=0, hoursWeek=0;
+  for(const e of emps){
+    const eps=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+    let i=0;
+    while(i<eps.length){
+      const p=eps[i];
+      if(p.type==='IN'){
+        const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null;
+        const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:0;
+        if(out)i+=2; else i++;
+        if(hrs>0){
+          if(p.punch_date===todayStr) hoursToday+=hrs;
+          if(p.punch_date>=weekStartStr) hoursWeek+=hrs;
+        }
+      } else i++;
+    }
+  }
+  const card=(label,val,color)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px"><div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600">${label}</div><div style="font-size:26px;font-weight:700;margin-top:6px;color:${color||'var(--text)'}">${val}</div></div>`;
+  const cards=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+    ${card(t('dash.clockedIn')||'Clocked in now', clockedIn.length, clockedIn.length?'var(--green)':'var(--text)')}
+    ${card(t('dash.hoursToday')||'Hours today', fmtH(hoursToday))}
+    ${card(t('dash.hoursWeek')||'Hours this week', fmtH(hoursWeek))}
+    ${card(t('dash.activeEmps')||'Active employees', emps.length)}
+  </div>`;
+  const inList=clockedIn.length
+    ? clockedIn.map(({e,since})=>{const st=(C.sites||[]).find(s=>s.id===e.site_id);return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span><span style="font-weight:600">${esc(e.name)}</span> <span style="color:var(--text3);font-size:13px">${esc(st?st.name:'')}</span></span><span style="font-size:13px;color:var(--text2)">${t('dash.since')||'since'} ${fmtTime(since.punched_at)}</span></div>`;}).join('')
+    : `<div style="color:var(--text3);font-size:13px;padding:14px 0">${t('dash.noneIn')||'Nobody is clocked in right now.'}</div>`;
+  const recent=punches.slice(0,8);
+  const recentList=recent.length
+    ? recent.map(p=>{const isIn=p.type==='IN';return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(p.emp_name||'')}</span><span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${isIn?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'};color:${isIn?'var(--green)':'var(--red)'}">${isIn?'IN':'OUT'}</span><span style="font-size:13px;color:var(--text2);min-width:120px;text-align:right">${esc(p.punch_date)} ${fmtTime(p.punched_at)}</span></span></div>`;}).join('')
+    : `<div style="color:var(--text3);font-size:13px;padding:14px 0">${t('dash.noActivity')||'No recent activity.'}</div>`;
+  const panel=(title,inner)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px"><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px">${title}</div>${inner}</div>`;
+  host.innerHTML=cards+`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">${panel((t('dash.currentlyIn')||'Currently clocked in')+(clockedIn.length?` (${clockedIn.length})`:''), inList)}${panel(t('dash.recentActivity')||'Recent activity', recentList)}</div>`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -4012,8 +4088,8 @@ function updateNav(){
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
-  ['navAdmin','navReports','navCompanies','navActivity'].forEach(id=>
-    document.getElementById(id).style.display=ok?'':'none');
+  ['navDashboard','navAdmin','navReports','navCompanies','navActivity'].forEach(id=>{
+    const _el=document.getElementById(id); if(_el)_el.style.display=ok?'':'none';});
   // Schedule nav — only show if logged in (access check happens in loadSchedulePage)
   const navSched=document.getElementById('navSchedule');
   if(navSched) navSched.style.display=ok?'':'none';
@@ -4044,7 +4120,7 @@ function updateNav(){
   } else if(mobileSchedBtn){
     mobileSchedBtn.style.display='none';
   }
-  ['mobileNavAdmin','mobileNavReports','mobileNavCompanies','mobileNavActivity'].forEach(id=>{
+  ['mobileNavDashboard','mobileNavAdmin','mobileNavReports','mobileNavCompanies','mobileNavActivity'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display=ok?'':'none';
   });
   if(ok){
@@ -4200,7 +4276,7 @@ async function doLogin(){
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     updateNav();
     await refreshCache();
-    navigate('admin');
+    navigate('dashboard');
   }catch(e){showMsg('loginMsg',t('msg.connError')+': '+e.message,'error');}
 }
 
@@ -9947,7 +10023,8 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
-'nav.clockInOut':'Clock In/Out','nav.admin':'Admin','nav.reports':'Reports',
+'nav.clockInOut':'Clock In/Out','nav.dashboard':'Dashboard','nav.admin':'Admin','nav.reports':'Reports',
+'dash.title':'Dashboard','dash.subtitle':'Your team at a glance','dash.refresh':'↻ Refresh','dash.clockedIn':'Clocked in now','dash.hoursToday':'Hours today','dash.hoursWeek':'Hours this week','dash.activeEmps':'Active employees','dash.currentlyIn':'Currently clocked in','dash.recentActivity':'Recent activity','dash.since':'since','dash.noneIn':'Nobody is clocked in right now.','dash.noActivity':'No recent activity.',
 'nav.companies':'🏢 Companies','nav.sites':'Sites','nav.activity':'Activity','nav.schedule':'Schedule','nav.dd.help':'Help','nav.dd.support':'Support',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
@@ -10531,7 +10608,8 @@ en:{
 
 },
 fr:{
-'nav.clockInOut':'Entrée/Sortie','nav.admin':'Admin','nav.reports':'Rapports',
+'nav.clockInOut':'Entrée/Sortie','nav.dashboard':'Tableau de bord','nav.admin':'Admin','nav.reports':'Rapports',
+'dash.title':'Tableau de bord','dash.subtitle':'Votre équipe en un coup d\'œil','dash.refresh':'↻ Actualiser','dash.clockedIn':'Pointés en ce moment','dash.hoursToday':'Heures aujourd\'hui','dash.hoursWeek':'Heures cette semaine','dash.activeEmps':'Employés actifs','dash.currentlyIn':'Actuellement pointés','dash.recentActivity':'Activité récente','dash.since':'depuis','dash.noneIn':'Personne n\'est pointé en ce moment.','dash.noActivity':'Aucune activité récente.',
 'nav.companies':'🏢 Compagnies','nav.sites':'Sites','nav.activity':'Activité','nav.schedule':'Horaires','nav.dd.help':'Aide','nav.dd.support':'Soutien',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
