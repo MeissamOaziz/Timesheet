@@ -3863,62 +3863,71 @@ function navigate(page){
 function renderDashboard(){
   const host=document.getElementById('dashboardContent');
   if(!host) return;
-  const emps=(C.employees||[]).filter(e=>e.active!==false);
-  const punches=(C.punches||[]); // ordered punched_at desc
   const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const fmtH=h=>{const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh+'h '+(mm<10?'0':'')+mm+'m';};
   const fmtTime=iso=>{try{return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}catch(_){return '';}};
-  // Latest punch per employee (first match in desc order) → who's clocked in now
-  const latest={};
-  for(const p of punches){ if(!latest[p.emp_id]) latest[p.emp_id]=p; }
-  const clockedIn=emps.filter(e=>latest[e.id]&&latest[e.id].type==='IN')
-    .map(e=>({e,since:latest[e.id]}))
-    .sort((a,b)=>new Date(b.since.punched_at)-new Date(a.since.punched_at));
-  // Date windows
+  const allEmps=(C.employees||[]).filter(e=>e.active!==false);
+  const allPunches=(C.punches||[]); // ordered punched_at desc
+  // Date windows (week start honours the company setting)
   const todayStr=new Date().toLocaleDateString('en-CA');
-  const co=(C.companies&&C.companies[0])||null;
-  const weekStartsSunday=!!(co&&co.week_start==='sunday');
+  const co0=(C.companies&&C.companies[0])||null;
+  const weekStartsSunday=!!(co0&&co0.week_start==='sunday');
   const wkBase=new Date(); wkBase.setHours(0,0,0,0);
-  const dow=wkBase.getDay();
-  const back=weekStartsSunday?dow:((dow+6)%7);
+  const dow=wkBase.getDay(); const back=weekStartsSunday?dow:((dow+6)%7);
   const weekStart=new Date(wkBase); weekStart.setDate(wkBase.getDate()-back);
   const weekStartStr=weekStart.toLocaleDateString('en-CA');
-  // Hours: pair each IN with the next OUT (same logic as the reports page)
-  const byEmp={};
-  for(const p of punches){ (byEmp[p.emp_id]||(byEmp[p.emp_id]=[])).push(p); }
-  let hoursToday=0, hoursWeek=0;
-  for(const e of emps){
-    const eps=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
-    let i=0;
-    while(i<eps.length){
-      const p=eps[i];
-      if(p.type==='IN'){
-        const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null;
-        const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:0;
-        if(out)i+=2; else i++;
-        if(hrs>0){
-          if(p.punch_date===todayStr) hoursToday+=hrs;
-          if(p.punch_date>=weekStartStr) hoursWeek+=hrs;
-        }
-      } else i++;
+  // Sites the user can access (managers are scoped to their assigned sites)
+  let sites=(C.sites||[]).slice();
+  if(typeof managerSiteIds!=='undefined' && managerSiteIds!==null) sites=sites.filter(s=>managerSiteIds.includes(s.id));
+  sites.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+
+  const card=(label,val,color)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600">${label}</div><div style="font-size:24px;font-weight:700;margin-top:5px;color:${color||'var(--text)'}">${val}</div></div>`;
+  const panel=(title,inner)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px"><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px">${title}</div>${inner}</div>`;
+
+  function sectionFor(site){
+    const emps=allEmps.filter(e=>e.site_id===site.id);
+    const empIds=new Set(emps.map(e=>e.id));
+    const punches=allPunches.filter(p=>empIds.has(p.emp_id)); // desc order preserved
+    const latest={}; for(const p of punches){ if(!latest[p.emp_id]) latest[p.emp_id]=p; }
+    const clockedIn=emps.filter(e=>latest[e.id]&&latest[e.id].type==='IN')
+      .map(e=>({e,since:latest[e.id]}))
+      .sort((a,b)=>new Date(b.since.punched_at)-new Date(a.since.punched_at));
+    const byEmp={}; for(const p of punches){ (byEmp[p.emp_id]||(byEmp[p.emp_id]=[])).push(p); }
+    let hToday=0,hWeek=0;
+    for(const e of emps){
+      const eps=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+      let i=0;
+      while(i<eps.length){ const p=eps[i];
+        if(p.type==='IN'){ const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null; const hrs=out?(new Date(out.punched_at)-new Date(p.punched_at))/3600000:0; if(out)i+=2;else i++;
+          if(hrs>0){ if(p.punch_date===todayStr)hToday+=hrs; if(p.punch_date>=weekStartStr)hWeek+=hrs; } } else i++; }
     }
+    const co=(C.companies||[]).find(c=>c.id===site.company_id);
+    const cards=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+      ${card(t('dash.clockedIn')||'Clocked in now', clockedIn.length, clockedIn.length?'var(--green)':'var(--text)')}
+      ${card(t('dash.hoursToday')||'Hours today', fmtH(hToday))}
+      ${card(t('dash.hoursWeek')||'Hours this week', fmtH(hWeek))}
+      ${card(t('dash.activeEmps')||'Active employees', emps.length)}
+    </div>`;
+    const inList=clockedIn.length
+      ? clockedIn.map(({e,since})=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(e.name)}</span><span style="font-size:13px;color:var(--text2)">${t('dash.since')||'since'} ${fmtTime(since.punched_at)}</span></div>`).join('')
+      : `<div style="color:var(--text3);font-size:13px;padding:12px 0">${t('dash.noneIn')||'Nobody is clocked in right now.'}</div>`;
+    const recent=punches.slice(0,6);
+    const recentList=recent.length
+      ? recent.map(p=>{const isIn=p.type==='IN';return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(p.emp_name||'')}</span><span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${isIn?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'};color:${isIn?'var(--green)':'var(--red)'}">${isIn?'IN':'OUT'}</span><span style="font-size:12px;color:var(--text2);min-width:115px;text-align:right">${esc(p.punch_date)} ${fmtTime(p.punched_at)}</span></span></div>`;}).join('')
+      : `<div style="color:var(--text3);font-size:13px;padding:12px 0">${t('dash.noActivity')||'No recent activity.'}</div>`;
+    return `<section style="margin-bottom:26px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+        <div style="width:32px;height:32px;border-radius:9px;background:rgba(79,142,247,.14);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0"><svg style="width:17px;height:17px"><use href="#i-nav-sites"/></svg></div>
+        <div><div style="font-size:15px;font-weight:700">${esc(site.name)}</div><div style="font-size:12px;color:var(--text3)">${esc(co?co.name:'')}${emps.length?(' · '+emps.length+' '+(emps.length===1?(t('site.employee')||'employee'):(t('site.employees')||'employees'))):''}</div></div>
+      </div>
+      ${cards}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">${panel((t('dash.currentlyIn')||'Currently clocked in')+(clockedIn.length?` (${clockedIn.length})`:''), inList)}${panel(t('dash.recentActivity')||'Recent activity', recentList)}</div>
+    </section>`;
   }
-  const card=(label,val,color)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px"><div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600">${label}</div><div style="font-size:26px;font-weight:700;margin-top:6px;color:${color||'var(--text)'}">${val}</div></div>`;
-  const cards=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-    ${card(t('dash.clockedIn')||'Clocked in now', clockedIn.length, clockedIn.length?'var(--green)':'var(--text)')}
-    ${card(t('dash.hoursToday')||'Hours today', fmtH(hoursToday))}
-    ${card(t('dash.hoursWeek')||'Hours this week', fmtH(hoursWeek))}
-    ${card(t('dash.activeEmps')||'Active employees', emps.length)}
-  </div>`;
-  const inList=clockedIn.length
-    ? clockedIn.map(({e,since})=>{const st=(C.sites||[]).find(s=>s.id===e.site_id);return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span><span style="font-weight:600">${esc(e.name)}</span> <span style="color:var(--text3);font-size:13px">${esc(st?st.name:'')}</span></span><span style="font-size:13px;color:var(--text2)">${t('dash.since')||'since'} ${fmtTime(since.punched_at)}</span></div>`;}).join('')
-    : `<div style="color:var(--text3);font-size:13px;padding:14px 0">${t('dash.noneIn')||'Nobody is clocked in right now.'}</div>`;
-  const recent=punches.slice(0,8);
-  const recentList=recent.length
-    ? recent.map(p=>{const isIn=p.type==='IN';return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(p.emp_name||'')}</span><span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${isIn?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'};color:${isIn?'var(--green)':'var(--red)'}">${isIn?'IN':'OUT'}</span><span style="font-size:13px;color:var(--text2);min-width:120px;text-align:right">${esc(p.punch_date)} ${fmtTime(p.punched_at)}</span></span></div>`;}).join('')
-    : `<div style="color:var(--text3);font-size:13px;padding:14px 0">${t('dash.noActivity')||'No recent activity.'}</div>`;
-  const panel=(title,inner)=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px"><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px">${title}</div>${inner}</div>`;
-  host.innerHTML=cards+`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">${panel((t('dash.currentlyIn')||'Currently clocked in')+(clockedIn.length?` (${clockedIn.length})`:''), inList)}${panel(t('dash.recentActivity')||'Recent activity', recentList)}</div>`;
+
+  host.innerHTML = sites.length
+    ? sites.map(sectionFor).join('')
+    : `<div style="color:var(--text3);font-size:14px;padding:30px;text-align:center">${t('dash.noSites')||'No sites to show yet. Add a site to see your dashboard.'}</div>`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -10024,7 +10033,7 @@ var _punchLang='en';
 var TRANSLATIONS={
 en:{
 'nav.clockInOut':'Clock In/Out','nav.dashboard':'Dashboard','nav.admin':'Admin','nav.reports':'Reports',
-'dash.title':'Dashboard','dash.subtitle':'Your team at a glance','dash.refresh':'↻ Refresh','dash.clockedIn':'Clocked in now','dash.hoursToday':'Hours today','dash.hoursWeek':'Hours this week','dash.activeEmps':'Active employees','dash.currentlyIn':'Currently clocked in','dash.recentActivity':'Recent activity','dash.since':'since','dash.noneIn':'Nobody is clocked in right now.','dash.noActivity':'No recent activity.',
+'dash.title':'Dashboard','dash.subtitle':'Your team at a glance','dash.refresh':'↻ Refresh','dash.clockedIn':'Clocked in now','dash.hoursToday':'Hours today','dash.hoursWeek':'Hours this week','dash.activeEmps':'Active employees','dash.currentlyIn':'Currently clocked in','dash.recentActivity':'Recent activity','dash.since':'since','dash.noneIn':'Nobody is clocked in right now.','dash.noActivity':'No recent activity.','dash.noSites':'No sites to show yet. Add a site to see your dashboard.',
 'nav.companies':'🏢 Companies','nav.sites':'Sites','nav.activity':'Activity','nav.schedule':'Schedule','nav.dd.help':'Help','nav.dd.support':'Support',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
@@ -10609,7 +10618,7 @@ en:{
 },
 fr:{
 'nav.clockInOut':'Entrée/Sortie','nav.dashboard':'Tableau de bord','nav.admin':'Admin','nav.reports':'Rapports',
-'dash.title':'Tableau de bord','dash.subtitle':'Votre équipe en un coup d\'œil','dash.refresh':'↻ Actualiser','dash.clockedIn':'Pointés en ce moment','dash.hoursToday':'Heures aujourd\'hui','dash.hoursWeek':'Heures cette semaine','dash.activeEmps':'Employés actifs','dash.currentlyIn':'Actuellement pointés','dash.recentActivity':'Activité récente','dash.since':'depuis','dash.noneIn':'Personne n\'est pointé en ce moment.','dash.noActivity':'Aucune activité récente.',
+'dash.title':'Tableau de bord','dash.subtitle':'Votre équipe en un coup d\'œil','dash.refresh':'↻ Actualiser','dash.clockedIn':'Pointés en ce moment','dash.hoursToday':'Heures aujourd\'hui','dash.hoursWeek':'Heures cette semaine','dash.activeEmps':'Employés actifs','dash.currentlyIn':'Actuellement pointés','dash.recentActivity':'Activité récente','dash.since':'depuis','dash.noneIn':'Personne n\'est pointé en ce moment.','dash.noActivity':'Aucune activité récente.','dash.noSites':'Aucun site à afficher. Ajoutez un site pour voir votre tableau de bord.',
 'nav.companies':'🏢 Compagnies','nav.sites':'Sites','nav.activity':'Activité','nav.schedule':'Horaires','nav.dd.help':'Aide','nav.dd.support':'Soutien',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
