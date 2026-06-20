@@ -2857,6 +2857,27 @@ border-top:1px solid var(--border);margin:18px 0;}
       </select>
       <p style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="modal.punchRoundingHint">Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.</p>
     </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px" data-i18n="modal.alertSettings">Manager Alerts</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="modal.alertSettingsHint">Email the account owner when something needs attention. Turn any of these off anytime.</p>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:8px">
+      <input type="checkbox" id="companyAlertsEnabled" style="width:16px;height:16px;accent-color:var(--accent);flex-shrink:0" onchange="var s=document.getElementById('alertSubSettings');s.style.opacity=this.checked?'1':'.45';s.style.pointerEvents=this.checked?'':'none'">
+      <span style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.alertsEnabled">Receive manager alerts by email</span>
+    </label>
+    <div id="alertSubSettings">
+      <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer">
+        <input type="checkbox" id="companyAlertForgotOut" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0">
+        <span style="font-size:13px;color:var(--text)" data-i18n="modal.alertForgotOut">Forgot to clock out</span>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;padding:0 12px 8px 34px">
+        <span style="font-size:12px;color:var(--text3)" data-i18n="modal.alertAfter">Alert after</span>
+        <select id="companyForgotOutHours" style="width:auto;padding:5px 8px;font-size:12px"><option value="8">8 h</option><option value="10">10 h</option><option value="12">12 h</option><option value="14">14 h</option><option value="16">16 h</option><option value="24">24 h</option></select>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer">
+        <input type="checkbox" id="companyAlertOvertime" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0">
+        <span style="font-size:13px;color:var(--text)" data-i18n="modal.alertOvertime">Daily overtime reached</span>
+      </label>
+    </div>
     </div>
     <input type="hidden" id="editCompanyUid">
     <div class="modal-footer">
@@ -3474,7 +3495,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -7704,7 +7725,13 @@ function openAddCompanyModal(){
   ['companyName','companyAddress','companyPhone','companyIndustry','companyDesc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('companyWeekStart').value='monday';
   document.getElementById('companyPayrollFreq').value='biweekly';
+  document.getElementById('companyPunchRounding').value='0';
   document.getElementById('companyAnchorDate').value='';
+  document.getElementById('companyAlertsEnabled').checked=true;
+  document.getElementById('companyAlertForgotOut').checked=true;
+  document.getElementById('companyAlertOvertime').checked=true;
+  document.getElementById('companyForgotOutHours').value='14';
+  {const _s=document.getElementById('alertSubSettings');if(_s){_s.style.opacity='1';_s.style.pointerEvents='';}}
   toggleAnchorDateRow();
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
@@ -7728,6 +7755,11 @@ function editCompany(id){
   document.getElementById('companyWeekStart').value=co.week_start||'monday';
   document.getElementById('companyPayrollFreq').value=co.payroll_frequency||'biweekly';
   document.getElementById('companyPunchRounding').value=String(co.punch_rounding||0);
+  document.getElementById('companyAlertsEnabled').checked=(co.alerts_enabled!==false);
+  document.getElementById('companyAlertForgotOut').checked=(co.alert_forgot_out!==false);
+  document.getElementById('companyAlertOvertime').checked=(co.alert_overtime!==false);
+  document.getElementById('companyForgotOutHours').value=String(co.forgot_out_hours||14);
+  {const _s=document.getElementById('alertSubSettings');const _on=(co.alerts_enabled!==false);if(_s){_s.style.opacity=_on?'1':'.45';_s.style.pointerEvents=_on?'':'none';}}
   document.getElementById('companyAnchorDate').value=co.payroll_anchor_date||'';
   toggleAnchorDateRow();
   document.getElementById('editCompanyUid').value=co.id;
@@ -7781,6 +7813,10 @@ async function saveCompany(){
   const week_start=document.getElementById('companyWeekStart').value;
   const payroll_frequency=document.getElementById('companyPayrollFreq').value;
   const punch_rounding=parseInt(document.getElementById('companyPunchRounding').value,10)||0;
+  const alerts_enabled=document.getElementById('companyAlertsEnabled').checked;
+  const alert_forgot_out=document.getElementById('companyAlertForgotOut').checked;
+  const alert_overtime=document.getElementById('companyAlertOvertime').checked;
+  const forgot_out_hours=parseInt(document.getElementById('companyForgotOutHours').value,10)||14;
   const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
@@ -7799,13 +7835,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,payroll_anchor_date,track_overtime,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,payroll_anchor_date,track_overtime,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,payroll_anchor_date,track_overtime,logo_url});
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,payroll_anchor_date,track_overtime,logo_url});
       const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -10378,6 +10414,7 @@ en:{
 'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'Track Overtime',
 'modal.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
+'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
 'modal.confirmDelete':'Confirm Delete','modal.delete':'Delete',
 'modal.planLimit':'🔒 Plan Limit Reached','modal.upgradePlan':'⬆ Upgrade Plan',
@@ -10488,6 +10525,8 @@ en:{
 'faq.a20':'From the Admin panel, go to the Admins tab and click <strong>\'Invite Team Member\'</strong>. Choose Co-Admin for full access (except billing) or Manager for site-specific access. The person receives an email with a secure link to create their account — no join requests needed.',
 'faq.q21':'A device keeps opening the clock-in page instead of the website. How do I reset it?',
 'faq.a21':'That device was set up as a kiosk, so it remembers the site. To reset it: on that device, tap the <strong>\'Not a kiosk? Reset this device\'</strong> link at the bottom of the clock-in page, or open <strong>punchclock.ca/?nokiosk=1</strong> in the browser — the device returns to the normal login page. You can re-create a kiosk shortcut anytime from <strong>Admin → Sites → Kiosk Shortcut</strong>.',
+'faq.q22':'I\'m getting alert emails about clock-outs or overtime. Can I turn them off or change how often?',
+'faq.a22':'Yes — manager alerts are fully optional and set per company. Go to <strong>Sites → your company → Edit → Manager Alerts</strong>. Uncheck <strong>"Receive manager alerts by email"</strong> to stop all of them, or keep just the ones you want (forgot-to-clock-out, daily overtime) and adjust the <strong>"Alert after"</strong> hours. Overtime alerts also require overtime tracking to be on. Reports and timesheet emails have their own frequency under <strong>payroll frequency</strong> (weekly / bi-weekly / monthly). Changes take effect right away.',
 'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
 'upgrade.desc.growth':'1 company · 5 sites · 25 employees · 2 admins',
 'upgrade.desc.business':'1 company · Unlimited sites & employees · 3 admins',
@@ -10964,6 +11003,7 @@ fr:{
 'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'Suivi des heures supp.',
 'modal.overtimeDesc':'Signaler les journées >8h et les semaines >40h dans les rapports',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
+'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
 'modal.confirmDelete':'Confirmer la suppression','modal.delete':'Supprimer',
 'modal.planLimit':'🔒 Limite du forfait atteinte','modal.upgradePlan':'⬆ Mettre à niveau',
@@ -11074,6 +11114,8 @@ fr:{
 'faq.a20':'Depuis le panneau Admin, allez dans l\'onglet Admins et cliquez sur <strong>\'Inviter un membre\'</strong>. Choisissez Co-Admin pour un accès complet (sauf facturation) ou Gestionnaire pour un accès limité à des sites spécifiques. La personne reçoit un courriel avec un lien sécurisé pour créer son compte.',
 'faq.q21':'Un appareil ouvre toujours la page de pointage au lieu du site. Comment le réinitialiser?',
 'faq.a21':'Cet appareil a été configuré comme kiosque, il se souvient donc du site. Pour le réinitialiser : sur cet appareil, touchez le lien <strong>\'Réinitialiser cet appareil\'</strong> au bas de la page de pointage, ou ouvrez <strong>punchclock.ca/?nokiosk=1</strong> dans le navigateur — l\'appareil revient à la page de connexion normale. Vous pouvez recréer un raccourci kiosque à tout moment depuis <strong>Admin → Sites → Raccourci kiosque</strong>.',
+'faq.q22':'Je reçois des courriels d\'alerte sur les pointages ou les heures supplémentaires. Puis-je les désactiver ou en changer la fréquence?',
+'faq.a22':'Oui — les alertes gestionnaire sont facultatives et se gèrent par compagnie. Allez dans <strong>Sites → votre compagnie → Modifier → Alertes gestionnaire</strong>. Décochez <strong>« Recevoir les alertes par courriel »</strong> pour toutes les arrêter, ou gardez seulement celles voulues (oubli de sortie, heures supplémentaires) et ajustez le seuil <strong>« Alerter après »</strong>. Les alertes d\'heures supplémentaires exigent aussi le suivi des heures supp. activé. Les rapports et feuilles de temps ont leur propre fréquence sous <strong>fréquence de paie</strong> (hebdo / aux deux semaines / mensuel). Les changements prennent effet immédiatement.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
 'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'Accès co-admin (avec mise à niveau)',
