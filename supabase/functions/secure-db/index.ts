@@ -118,7 +118,10 @@ function tenantScopeFilter(table: string, caller: Caller, owned: string[]): stri
     return `company_id=in.(${owned.length ? owned.join(',') : '00000000-0000-0000-0000-000000000000'})`;
   }
   if (table === 'companies') return `admin_id=eq.${caller.primaryAdminId}`;
-  if (table === 'admins')    return `or=(id.eq.${caller.adminId},parent_admin_id.eq.${caller.primaryAdminId})`;
+  // admins tenant view: the caller's own row, the primary (parent) admin's row, and everyone
+  // under the same primary. Including the primary's own row is essential — co-admins/managers
+  // read their parent admin for plan/permissions (C.primaryAdmin).
+  if (table === 'admins')    return `or=(id.eq.${caller.adminId},id.eq.${caller.primaryAdminId},parent_admin_id.eq.${caller.primaryAdminId})`;
   return '';
 }
 
