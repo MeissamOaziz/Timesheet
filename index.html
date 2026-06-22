@@ -3175,7 +3175,10 @@ async function supaFetch(method,table,opts={}){
     if(!res.ok){
       const text=await res.text();
       // A 401 while a session exists means the token expired/was revoked → force clean re-login.
+      // Also nudge a service-worker update check: if this client is stale (predates the current
+      // login mechanism) and a newer one is available, it self-heals via controllerchange reload.
       if(res.status===401 && Sess.get()){
+        _healStaleClient();
         Sess.clear();
         try{ document.body.classList.remove('role-admin','role-manager'); updateNav(); showLanding(); }catch(_){}
         showToast(t('msg.sessionExpired')||'Your session has expired. Please log in again.','error');
@@ -8894,10 +8897,27 @@ window.addEventListener('appinstalled', () => {
   showToast('✓ PunchClock app installed successfully!', 'success');
 });
 
+let _swHealing=false, _swHealArmed=false;
 function registerServiceWorker(){
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/sw.js').catch(()=>{}); // fail silently — sw.js optional
-  }
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('/sw.js').then(reg=>{ try{ reg.update(); }catch(_){} }).catch(()=>{});
+}
+// Auto-heal a stale client after an auth failure: arm a one-time reload for when an updated
+// service worker takes control, then force an update check. If a newer client is available it
+// installs → activates → controllerchange → reload (swapping to the fresh build). If there's no
+// update (a genuinely expired token), nothing reloads and normal re-login handling applies.
+// Surgical on purpose — routine deploys don't force a reload, only an actual auth failure does.
+function _healStaleClient(){
+  if(_swHealing || !('serviceWorker' in navigator)) return;
+  try{
+    if(!_swHealArmed){
+      _swHealArmed=true;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(_swHealing) return; _swHealing=true; try{location.reload();}catch(_){}
+      });
+    }
+    navigator.serviceWorker.getRegistration().then(r=>{ if(r){ try{r.update();}catch(_){} } }).catch(()=>{});
+  }catch(_){}
 }
 
 async function triggerPWAInstall(){
@@ -9091,6 +9111,9 @@ function openKioskQR(){
 // INIT
 // ═══════════════════════════════════════════════════
 async function init(){
+  // Register the service worker first so the auto-heal (update check + controllerchange reload)
+  // is armed on every load, regardless of auth state.
+  registerServiceWorker();
   // Init theme + language first (theme already applied by inline head script — this just syncs toggle icon)
   applyTheme(getStoredTheme()==='dark' ? 'dark' : 'light');
   if(typeof initLang==='function')initLang();
