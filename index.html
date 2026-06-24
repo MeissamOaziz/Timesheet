@@ -3284,16 +3284,15 @@ function resetPhotoUpload(existingUrl) {
 // FREE PLAN GUARDS
 // ═══════════════════════════════════════════════════
 function isPaidCompany(companyId) {
+  // Plan is per-account — a missing company lookup must NOT read as "not paid".
   const co = C.companies.find(c=>c.id===companyId);
-  if(!co) return false;
-  const plan = getCompanyPlan(co);
-  return plan.name !== 'Free';
+  return getCompanyPlan(co).name !== 'Free';
 }
 
 function isCurrentCompanyPaid() {
-  const ctx = Ctx.get();
-  if(!ctx) return false;
-  return isPaidCompany(ctx.co.id);
+  // Exports/email reports are an account-plan feature — gate on the admin's effective plan,
+  // independent of which company is selected (or whether a context is set).
+  return getAdminPlan().name !== 'Free';
 }
 
 function guardedExport(fmt) {
@@ -3345,12 +3344,12 @@ const PLANS = {
 const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
 
 function getCompanyPlan(co) {
-  if(!co) return PLANS.free;
-  if(GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
+  if(co && GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
   if(isSuperAdmin()) return PLANS.unlimited;
-  // Use the logged-in admin's plan tier
-  const s = Sess.get();
-  return PLANS[s?.plan] || PLANS.free;
+  // The subscription is per-account, not per-company — use the logged-in admin's EFFECTIVE plan
+  // (getAdminPlan handles co-admins inheriting the primary admin's plan). Don't depend on a
+  // specific company being loaded, so a missing/unselected company never reads as "Free".
+  return getAdminPlan();
 }
 
 function getPlanBadgeHtml(co) {
