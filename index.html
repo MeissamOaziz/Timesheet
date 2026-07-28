@@ -7232,7 +7232,7 @@ function openAddEmpModal(){
       <div style="font-size:22px;margin-bottom:8px">🏗️</div>
       <h3 style="color:var(--amber)">${t('msg.noSiteTitle')||'Create a Site First'}</h3>
       <p style="margin:8px 0 16px">${msg}</p>
-      <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="closeModal('addEmpModal');adminTab('sites',document.querySelector('[onclick*=adminTab]~[onclick*=sites]')||document.querySelectorAll('.tab')[1])">${btnLabel}</button>
+      <button class="btn-primary" style="width:auto;padding:8px 20px;font-size:13px" onclick="closeModal('addEmpModal');navigate('sites');setTimeout(openAddSiteModal,150)">${btnLabel}</button>
     </div>`;
     return;
   }
