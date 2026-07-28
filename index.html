@@ -829,6 +829,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
+      <button class="land-btn-secondary" onclick="startDemo()" data-i18n="land.ctaDemo">▶ See a live demo — no signup</button>
       <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
     </div>
     <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free tier includes 1 company · 1 site · 5 employees · 1 admin</p>
@@ -3154,6 +3155,8 @@ const STRIPE_PK='pk_live_51T90YEIhFqyQNAEWaa6dhdav8LKCMgKb48xgnG00YP8vjy0iP0bRUI
 const EDGE_URL='https://uziwymrwaeojhqaagqcm.supabase.co/functions/v1/stripe-handler';
 
 async function supaFetch(method,table,opts={}){
+  // Demo mode is fully sandboxed — no request ever leaves the browser.
+  if(window._demoMode) return _demoFetch(method,table,opts);
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),10000);
   try{
@@ -3565,6 +3568,7 @@ async function getEffectiveAdminId(){
 }
 
 async function refreshCache(opts={}){
+  if(window._demoMode) return;   // demo cache is pre-seeded; never overwrite it
   const sess=Sess.get();
   const superAdmin=isSuperAdmin();
   const adminId=sess?.parent_admin_id||sess?.id;
@@ -3861,7 +3865,7 @@ function navigate(page){
   // Redirect legacy 'companies' references to the new sites page
   if(page==='companies'){navigate('sites');return;}
   const adminPages=['dashboard','admin','reports','sites','activity','schedule'];
-  if(adminPages.includes(page)&&!isLoggedIn()){navigate('login');return;}
+  if(adminPages.includes(page)&&!isLoggedIn()&&!isDemo()){navigate('login');return;}
   // Onboarding is guided, not blocking: new admins can explore every page immediately and
   // finish setup from the Dashboard checklist (renderSetupChecklist). Only a genuinely
   // company-less account is routed to step 1, since most pages are meaningless without one.
@@ -3892,6 +3896,84 @@ function _roundPunchMs(iso, mins){
   if(!mins) return ms;
   const step=mins*60000;
   return Math.round(ms/step)*step;
+}
+
+// ═══════════════════════════════════════════════════
+// DEMO MODE — a fully sandboxed sample company so visitors can see the product
+// working before registering. Never touches the database: refreshCache is skipped
+// and every supaFetch call is intercepted (see _demoFetch).
+// ═══════════════════════════════════════════════════
+function isDemo(){ return !!window._demoMode; }
+function _demoBuildData(){
+  const CO={id:'demo-co',name:'Café Rivière (démo)',admin_id:'demo-admin',week_start:'monday',payroll_frequency:'biweekly',track_overtime:true,punch_rounding:0,alerts_enabled:false};
+  const SITES=[{id:'demo-s1',company_id:CO.id,name:'Plateau',description:'Rue Saint-Denis'},
+               {id:'demo-s2',company_id:CO.id,name:'Vieux-Port',description:'Rue de la Commune'}];
+  const NAMES=[['Marie Lavoie','demo-s1'],['David Pham','demo-s1'],['Sofia Ricci','demo-s1'],
+               ['Jean Tremblay','demo-s2'],['Aïsha Benali','demo-s2'],['Liam O\'Connor','demo-s2']];
+  const EMPS=NAMES.map((n,i)=>({id:'demo-e'+i,name:n[0],site_id:n[1],company_id:CO.id,active:true,pin:String(1000+i*7),dept:'',emp_code:'E'+(100+i),email:null,send_report:false,photo_url:null}));
+  const punches=[]; let pid=0;
+  const mk=(emp,d,h,m,type)=>{const dt=new Date(d);dt.setHours(h,m,0,0);
+    punches.push({id:'demo-p'+(pid++),emp_id:emp.id,emp_name:emp.name,company_id:CO.id,site_id:emp.site_id,
+      site_name:(SITES.find(s=>s.id===emp.site_id)||{}).name,type,
+      punch_date:dt.toLocaleDateString('en-CA'),punch_time:dt.toLocaleTimeString('en-US',{hour12:false}),
+      punched_at:dt.toISOString(),is_manual:false});};
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let back=6;back>=1;back--){                       // completed shifts, last 6 days
+    const d=new Date(today); d.setDate(today.getDate()-back);
+    if(d.getDay()===0) continue;                        // closed Sundays
+    EMPS.forEach((e,i)=>{ if((i+back)%5===0) return;    // occasional day off
+      mk(e,d,8+(i%2),(i*7)%60,'IN'); mk(e,d,16+(i%3),(i*11)%60,'OUT'); });
+  }
+  EMPS.forEach((e,i)=>{                                  // today: 4 still in, 2 finished
+    if(i<4){ mk(e,today,8+(i%2),(i*9)%60,'IN'); }
+    else { mk(e,today,8,(i*5)%60,'IN'); mk(e,today,14,(i*13)%60,'OUT'); }
+  });
+  punches.sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
+  return {CO,SITES,EMPS,punches};
+}
+function startDemo(){
+  const {CO,SITES,EMPS,punches}=_demoBuildData();
+  window._demoMode=true;
+  try{ sessionStorage.setItem('pc_demo','1'); }catch(_){}
+  Sess.clear();
+  C.companies=[CO]; C.sites=SITES; C.employees=EMPS; C.punches=punches; C.coAdmins=[]; C.primaryAdmin=null;
+  managerSiteIds=null;
+  Ctx.set({co:CO,site:null});
+  hideLanding(); updateNav(); _renderDemoBanner();
+  navigate('dashboard');
+  showToast(t('demo.started')||'Demo mode — this is sample data. Nothing is saved.','info');
+}
+function exitDemo(){
+  window._demoMode=false;
+  try{ sessionStorage.removeItem('pc_demo'); }catch(_){}
+  Ctx.clear(); C.companies=[];C.sites=[];C.employees=[];C.punches=[];
+  const b=document.getElementById('demoBanner'); if(b) b.remove();
+  updateNav(); showLanding();
+}
+function _renderDemoBanner(){
+  if(document.getElementById('demoBanner')) return;
+  const bar=document.createElement('div');
+  bar.id='demoBanner';
+  bar.style.cssText='position:sticky;top:0;z-index:9500;background:linear-gradient(90deg,var(--accent),#7c5cbf);color:#fff;padding:9px 16px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+  bar.innerHTML=`<span>${t('demo.banner')||'🎬 Demo mode — sample data, nothing is saved.'}</span>
+    <button onclick="exitDemo();navigate('register')" style="background:#fff;color:var(--accent);border:none;border-radius:8px;padding:6px 15px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">${t('demo.cta')||'Create my free account'}</button>
+    <button onclick="exitDemo()" style="background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit">${t('demo.exit')||'Exit demo'}</button>`;
+  document.body.insertBefore(bar,document.body.firstChild);
+}
+// Sandbox every DB call while in demo mode. Reads return empty (the cache is pre-seeded);
+// a punch insert is synthesized locally so the clock-in flow works end to end.
+function _demoFetch(method,table,opts){
+  if(method==='POST'&&table==='punches'&&opts&&opts.body){
+    const now=new Date();
+    return Promise.resolve([Object.assign({
+      id:'demo-p'+Date.now(),
+      punched_at:now.toISOString(),
+      punch_date:now.toLocaleDateString('en-CA'),
+      punch_time:now.toLocaleTimeString('en-US',{hour12:false}),
+    },opts.body)]);
+  }
+  if(method==='GET') return Promise.resolve([]);
+  return Promise.resolve(null);
 }
 
 // ═══════════════════════════════════════════════════
@@ -4159,6 +4241,7 @@ function currentAdminPlan() {
 // Returns the plan to use for limit checks for logged-in admin
 function getAdminPlan() {
   const s = Sess.get();
+  if(isDemo()) return PLANS.business;   // demo showcases the full product, ungated
   if(!s) return PLANS.free;
   if(isSuperAdmin()) return PLANS.unlimited;
   // Co-admin inherits the primary admin's plan
@@ -4183,10 +4266,10 @@ function updateNav(){
   // Mark resolved role on body so role-gated UI can show/hide cleanly
   const sess = Sess.get();
   document.body.classList.add('role-resolved');
-  document.body.classList.toggle('role-admin', !!sess && !isManager());
+  document.body.classList.toggle('role-admin', (!!sess && !isManager()) || isDemo());
   document.body.classList.toggle('role-manager', !!sess && isManager());
 
-  const ok=isLoggedIn();
+  const ok=isLoggedIn()||isDemo();   // demo has no session but shows the full nav
   const isKiosk=!!Ctx.get();
   const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
@@ -4227,7 +4310,7 @@ function updateNav(){
   ['mobileNavDashboard','mobileNavAdmin','mobileNavReports','mobileNavCompanies','mobileNavActivity'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display=ok?'':'none';
   });
-  if(ok){
+  if(ok&&Sess.get()){   // the user dropdown is session-specific; demo mode has none
     const a=Sess.get();
     const roleLabel = isSuperAdmin() ? '⭐ '+a.name : a.name;
     // Legacy badge (kept hidden, used by some internal checks)
@@ -9156,10 +9239,19 @@ async function init(){
   // Register the service worker first so the auto-heal (update check + controllerchange reload)
   // is armed on every load, regardless of auth state.
   registerServiceWorker();
+  // Demo context must never leak into a real session. sessionStorage dies with the tab but the
+  // stored Ctx doesn't, so drop any leftover demo context before the normal flow reads it.
+  let _wasDemo=false;
+  try{
+    _wasDemo=sessionStorage.getItem('pc_demo')==='1';
+    if(!_wasDemo && (Ctx.get()||{}).co?.id==='demo-co') Ctx.clear();
+  }catch(_){}
   // Init theme + language first (theme already applied by inline head script — this just syncs toggle icon)
   applyTheme(getStoredTheme()==='dark' ? 'dark' : 'light');
   if(typeof initLang==='function')initLang();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
+  // Restore an in-progress demo now that translations are loaded.
+  if(_wasDemo){ document.getElementById('loadingOverlay').classList.add('hidden'); startDemo(); return; }
   // Start clock after lang is ready
   setInterval(updateClock,1000);updateClock();
   // Set default activity log dates (last 7 days)
@@ -10166,6 +10258,7 @@ en:{
 'setup.s3':'Add your employees','setup.s3d':'Each one gets a 4-digit PIN to clock in with.','setup.s3c':'Add employees',
 'setup.s4':'Try your first clock-in','setup.s4d':'Open the punch page and clock someone in — it appears here instantly.','setup.s4c':'Open punch page','ob.later':'I\'ll do this later',
 'dash.emptyTitle':'Your dashboard lights up once your team clocks in','dash.emptyDesc':'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.',
+'land.ctaDemo':'▶ See a live demo — no signup','demo.banner':'🎬 Demo mode — sample data, nothing is saved.','demo.cta':'Create my free account','demo.exit':'Exit demo','demo.started':'Demo mode — this is sample data. Nothing is saved.',
 'nav.companies':'🏢 Companies','nav.sites':'Sites','nav.activity':'Activity','nav.schedule':'Schedule','nav.dd.help':'Help','nav.dd.support':'Support',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
@@ -10761,6 +10854,7 @@ fr:{
 'setup.s3':'Ajoutez vos employés','setup.s3d':'Chacun reçoit un NIP à 4 chiffres pour pointer.','setup.s3c':'Ajouter des employés',
 'setup.s4':'Essayez un premier pointage','setup.s4d':'Ouvrez la page de pointage et pointez quelqu\'un — ça s\'affiche ici instantanément.','setup.s4c':'Page de pointage','ob.later':'Je le ferai plus tard',
 'dash.emptyTitle':'Votre tableau de bord s\'anime dès que votre équipe pointe','dash.emptyDesc':'Ajoutez un site et quelques employés, et vous verrez les pointages en direct, les heures et l\'activité ici même.',
+'land.ctaDemo':'▶ Voir une démo — sans inscription','demo.banner':'🎬 Mode démo — données d\'exemple, rien n\'est enregistré.','demo.cta':'Créer mon compte gratuit','demo.exit':'Quitter la démo','demo.started':'Mode démo — ce sont des données d\'exemple. Rien n\'est enregistré.',
 'nav.companies':'🏢 Compagnies','nav.sites':'Sites','nav.activity':'Activité','nav.schedule':'Horaires','nav.dd.help':'Aide','nav.dd.support':'Soutien',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
