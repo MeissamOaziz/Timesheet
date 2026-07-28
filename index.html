@@ -1810,6 +1810,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><h1 data-i18n="dash.title">Dashboard</h1><p data-i18n="dash.subtitle">Your team at a glance</p></div>
     <button class="btn-secondary" style="width:auto;padding:9px 16px;font-size:13px" onclick="renderDashboard()"><span data-i18n="dash.refresh">↻ Refresh</span></button>
   </div>
+  <div id="setupChecklist" style="display:none"></div>
   <div id="dashboardContent"></div>
 </div>
 
@@ -2564,7 +2565,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <!-- ONBOARDING MODAL -->
-<div class="modal-overlay" id="onboardingModal" style="z-index:9800" data-no-dismiss>
+<div class="modal-overlay" id="onboardingModal" style="z-index:9800">
   <div class="modal" style="max-width:480px;text-align:center">
     <div id="onboardStep1">
       <div style="margin-bottom:12px;color:var(--accent)"><svg style="width:40px;height:40px"><use href="#i-nav-building"/></svg></div>
@@ -2572,6 +2573,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <p id="ob1Desc" style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:6px"></p>
       <p style="font-size:12px;color:var(--text3);margin-bottom:24px" id="ob1Note"></p>
       <button class="btn-primary" style="width:100%;padding:12px;font-size:15px" id="ob1Btn" onclick="onboardCreateCompany()"></button>
+      <button onclick="closeModal('onboardingModal');navigate('dashboard')" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-top:12px" data-i18n="ob.later">I'll do this later</button>
     </div>
     <div id="onboardStep2" style="display:none">
       <div style="margin-bottom:12px;color:var(--green)"><svg style="width:40px;height:40px"><use href="#i-check"/></svg></div>
@@ -2774,7 +2776,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="destroyGeoMap();needsSiteOnboarding()?showOnboardStep2():closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="destroyGeoMap();closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()" data-i18n="modal.save">Save</button>
     </div>
   </div>
@@ -3860,21 +3862,11 @@ function navigate(page){
   if(page==='companies'){navigate('sites');return;}
   const adminPages=['dashboard','admin','reports','sites','activity','schedule'];
   if(adminPages.includes(page)&&!isLoggedIn()){navigate('login');return;}
-  // ── HARD BLOCK: force site creation before anything else ──
+  // Onboarding is guided, not blocking: new admins can explore every page immediately and
+  // finish setup from the Dashboard checklist (renderSetupChecklist). Only a genuinely
+  // company-less account is routed to step 1, since most pages are meaningless without one.
   if(adminPages.includes(page)&&isLoggedIn()&&!isSuperAdmin()){
-    if(needsOnboarding()){showOnboardStep1();return;}
-    // Has company but no site → block ALL pages except sites tab (so they can't run away)
-    if(needsSiteOnboarding()&&page!=='sites'){
-      // Briefly navigate to admin/sites then show step 2
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-      const el=document.getElementById('page-admin');
-      if(el){el.classList.add('active');currentPage='admin';}
-      // Switch to sites tab
-      const siteTab=document.querySelectorAll('#page-admin .tabs .tab')[1];
-      if(siteTab)adminTab('sites',siteTab);
-      showOnboardStep2();
-      return;
-    }
+    if(needsOnboarding()&&page!=='dashboard'){showOnboardStep1();return;}
   }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -3903,9 +3895,61 @@ function _roundPunchMs(iso, mins){
 }
 
 // ═══════════════════════════════════════════════════
+// SETUP CHECKLIST — guided, non-blocking onboarding
+// Replaces the old hard-block modal: users can explore the product immediately
+// and complete setup at their own pace. Auto-hides once everything is done.
+// ═══════════════════════════════════════════════════
+function _checklistDismissed(){try{return localStorage.getItem('pc_setup_done')==='1';}catch(_){return false;}}
+function dismissSetupChecklist(){try{localStorage.setItem('pc_setup_done','1');}catch(_){}
+  const el=document.getElementById('setupChecklist'); if(el) el.style.display='none';}
+function renderSetupChecklist(){
+  const host=document.getElementById('setupChecklist');
+  if(!host) return;
+  const sess=Sess.get();
+  if(!sess||isSuperAdmin()||sess.parent_admin_id||isManager()||_checklistDismissed()){ host.style.display='none'; return; }
+  const hasCompany=(C.companies||[]).length>0;
+  const hasSite=(C.sites||[]).length>0;
+  const emps=(C.employees||[]).filter(e=>e.active!==false);
+  const hasEmployees=emps.length>0;
+  const hasPunch=(C.punches||[]).length>0;
+  const steps=[
+    {done:hasCompany, title:t('setup.s1')||'Create your company', desc:t('setup.s1d')||'Your company details and payroll settings.', cta:t('setup.s1c')||'Add company', fn:'openAddCompanyModal()'},
+    {done:hasSite,    title:t('setup.s2')||'Add your first site', desc:t('setup.s2d')||'A location where your team clocks in — a store, office, or job site.', cta:t('setup.s2c')||'Add site', fn:"navigate('sites');setTimeout(openAddSiteModal,150)"},
+    {done:hasEmployees,title:t('setup.s3')||'Add your employees', desc:t('setup.s3d')||'Each one gets a 4-digit PIN to clock in with.', cta:t('setup.s3c')||'Add employees', fn:"navigate('admin');setTimeout(openAddEmpModal,150)"},
+    {done:hasPunch,   title:t('setup.s4')||'Try your first clock-in', desc:t('setup.s4d')||'Open the punch page and clock someone in — it appears here instantly.', cta:t('setup.s4c')||'Open punch page', fn:"navigate('punch')"},
+  ];
+  const doneCount=steps.filter(s=>s.done).length;
+  if(doneCount===steps.length){ host.style.display='none'; return; }   // fully set up → hide for good
+  const next=steps.find(s=>!s.done);
+  const pct=Math.round((doneCount/steps.length)*100);
+  const row=(s,i)=>{
+    const isNext=(s===next);
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;${i<steps.length-1?'border-bottom:1px solid var(--border)':''}">
+      <div style="width:22px;height:22px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;${s.done?'background:var(--green);color:#fff':(isNext?'background:rgba(79,142,247,.15);color:var(--accent);border:1.5px solid var(--accent)':'background:var(--surface2);color:var(--text3);border:1.5px solid var(--border)')}">${s.done?'✓':(i+1)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:${s.done?'var(--text3)':'var(--text)'};${s.done?'text-decoration:line-through':''}">${s.title}</div>
+        ${s.done?'':`<div style="font-size:12.5px;color:var(--text2);margin-top:2px;line-height:1.5">${s.desc}</div>`}
+      </div>
+      ${s.done?'':`<button class="${isNext?'btn-primary':'btn-secondary'}" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0" onclick="${s.fn}">${s.cta}</button>`}
+    </div>`;
+  };
+  host.style.display='';
+  host.innerHTML=`<div style="background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:18px 20px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px">
+      <div style="font-size:15px;font-weight:700">${t('setup.title')||'Finish setting up — you\'re almost there'}</div>
+      <button onclick="dismissSetupChecklist()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;flex-shrink:0">${t('setup.hide')||'Hide'}</button>
+    </div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:12px">${(t('setup.progress')||'Step {done} of {total}').replace('{done}',doneCount).replace('{total}',steps.length)}</div>
+    <div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);transition:width .3s"></div></div>
+    ${steps.map(row).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
 // DASHBOARD (stats landing) — computed from the local cache
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
+  renderSetupChecklist();
   const host=document.getElementById('dashboardContent');
   if(!host) return;
   const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -3973,7 +4017,12 @@ function renderDashboard(){
 
   host.innerHTML = sites.length
     ? sites.map(sectionFor).join('')
-    : `<div style="color:var(--text3);font-size:14px;padding:30px;text-align:center">${t('dash.noSites')||'No sites to show yet. Add a site to see your dashboard.'}</div>`;
+    : `<div style="background:var(--surface);border:1px dashed var(--border);border-radius:14px;padding:38px 24px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:14px;background:rgba(79,142,247,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--accent)"><svg style="width:26px;height:26px"><use href="#i-nav-sites"/></svg></div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">${t('dash.emptyTitle')||'Your dashboard lights up once your team clocks in'}</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 16px">${t('dash.emptyDesc')||'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.'}</div>
+        <button class="btn-primary" style="width:auto;padding:9px 20px;font-size:13px" onclick="navigate('sites');setTimeout(openAddSiteModal,150)">${t('setup.s2c')||'Add site'}</button>
+      </div>`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -4730,10 +4779,8 @@ async function doVerify(){
     updateNav();
     await refreshCache();
     showMsg('registerMsg',t('msg.accountCreated'),'success');
-    setTimeout(()=>{
-      navigate('admin');
-      setTimeout(()=>showOnboardStep2(),400);
-    },1000);
+    // Land on the Dashboard, where the guided setup checklist picks up from here.
+    setTimeout(()=>{ navigate('dashboard'); },1000);
   }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
 }
 
@@ -5946,15 +5993,10 @@ async function loadAdminPage(){
   if(!isLoggedIn()){navigate('login');return;}
   const ctx=Ctx.get();
   await refreshCache(ctx?{coId:ctx.co.id}:{});
-  // Trigger onboarding for new accounts with no company
+  // Only a company-less account needs the blocking step; a missing site is handled by the
+  // non-blocking Dashboard checklist so the admin page stays explorable.
   if(needsOnboarding()){
     showOnboardStep1();
-    return;
-  }
-  // Trigger site onboarding if company exists but no sites yet
-  if(needsSiteOnboarding()&&!window._onboardingSiteShown){
-    window._onboardingSiteShown=true;
-    showOnboardStep2();
     return;
   }
   const sess=Sess.get();
@@ -7853,7 +7895,8 @@ async function saveCompany(){
       }
       if(window._onboardingActive) window._onboardingActive=false;
       closeModal('addCompanyModal');
-      showOnboardStep2();
+      // Guided, not blocking: the Dashboard checklist prompts for the first site.
+      navigate('dashboard');
       return;
     }
     closeModal('addCompanyModal');loadSitesPage();
@@ -10117,6 +10160,12 @@ var TRANSLATIONS={
 en:{
 'nav.clockInOut':'Clock In/Out','nav.dashboard':'Dashboard','nav.admin':'Admin','nav.reports':'Reports',
 'dash.title':'Dashboard','dash.subtitle':'Your team at a glance','dash.refresh':'↻ Refresh','dash.clockedIn':'Clocked in now','dash.hoursToday':'Hours today','dash.hoursWeek':'Hours this week','dash.activeEmps':'Active employees','dash.currentlyIn':'Currently clocked in','dash.recentActivity':'Recent activity','dash.since':'since','dash.noneIn':'Nobody is clocked in right now.','dash.noActivity':'No recent activity.','dash.noSites':'No sites to show yet. Add a site to see your dashboard.',
+'setup.title':'Finish setting up — you\'re almost there','setup.hide':'Hide','setup.progress':'Step {done} of {total}',
+'setup.s1':'Create your company','setup.s1d':'Your company details and payroll settings.','setup.s1c':'Add company',
+'setup.s2':'Add your first site','setup.s2d':'A location where your team clocks in — a store, office, or job site.','setup.s2c':'Add site',
+'setup.s3':'Add your employees','setup.s3d':'Each one gets a 4-digit PIN to clock in with.','setup.s3c':'Add employees',
+'setup.s4':'Try your first clock-in','setup.s4d':'Open the punch page and clock someone in — it appears here instantly.','setup.s4c':'Open punch page','ob.later':'I\'ll do this later',
+'dash.emptyTitle':'Your dashboard lights up once your team clocks in','dash.emptyDesc':'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.',
 'nav.companies':'🏢 Companies','nav.sites':'Sites','nav.activity':'Activity','nav.schedule':'Schedule','nav.dd.help':'Help','nav.dd.support':'Support',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
@@ -10706,6 +10755,12 @@ en:{
 fr:{
 'nav.clockInOut':'Entrée/Sortie','nav.dashboard':'Tableau de bord','nav.admin':'Admin','nav.reports':'Rapports',
 'dash.title':'Tableau de bord','dash.subtitle':'Votre équipe en un coup d\'œil','dash.refresh':'↻ Actualiser','dash.clockedIn':'Pointés en ce moment','dash.hoursToday':'Heures aujourd\'hui','dash.hoursWeek':'Heures cette semaine','dash.activeEmps':'Employés actifs','dash.currentlyIn':'Actuellement pointés','dash.recentActivity':'Activité récente','dash.since':'depuis','dash.noneIn':'Personne n\'est pointé en ce moment.','dash.noActivity':'Aucune activité récente.','dash.noSites':'Aucun site à afficher. Ajoutez un site pour voir votre tableau de bord.',
+'setup.title':'Terminez la configuration — vous y êtes presque','setup.hide':'Masquer','setup.progress':'Étape {done} sur {total}',
+'setup.s1':'Créez votre compagnie','setup.s1d':'Les détails de votre compagnie et les paramètres de paie.','setup.s1c':'Ajouter',
+'setup.s2':'Ajoutez votre premier site','setup.s2d':'Un lieu où votre équipe pointe — magasin, bureau ou chantier.','setup.s2c':'Ajouter un site',
+'setup.s3':'Ajoutez vos employés','setup.s3d':'Chacun reçoit un NIP à 4 chiffres pour pointer.','setup.s3c':'Ajouter des employés',
+'setup.s4':'Essayez un premier pointage','setup.s4d':'Ouvrez la page de pointage et pointez quelqu\'un — ça s\'affiche ici instantanément.','setup.s4c':'Page de pointage','ob.later':'Je le ferai plus tard',
+'dash.emptyTitle':'Votre tableau de bord s\'anime dès que votre équipe pointe','dash.emptyDesc':'Ajoutez un site et quelques employés, et vous verrez les pointages en direct, les heures et l\'activité ici même.',
 'nav.companies':'🏢 Compagnies','nav.sites':'Sites','nav.activity':'Activité','nav.schedule':'Horaires','nav.dd.help':'Aide','nav.dd.support':'Soutien',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
