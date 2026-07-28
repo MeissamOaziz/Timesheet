@@ -241,6 +241,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* PAGES */
 .page{display:none;padding:28px 22px;max-width:1120px;margin:0 auto;}
 .page.active{display:block;}
+/* ── Left sidebar navigation (opt-in via body.nav-sidebar) ── */
+#sideNav{display:none;position:fixed;top:60px;left:0;bottom:0;width:216px;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;z-index:90;flex-direction:column;gap:2px;}
+body.nav-sidebar.nav-authed #sideNav{display:flex;}
+body.nav-sidebar.nav-authed .nav-links{display:none;}
+body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:auto;}
+.sn-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;color:var(--text2);font-family:inherit;font-size:13.5px;font-weight:500;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
+.sn-item:hover{background:var(--surface2);color:var(--text);}
+.sn-item.active{background:rgba(79,142,247,.14);color:var(--accent);font-weight:600;}
+.sn-item svg{width:17px;height:17px;flex-shrink:0;}
+.sn-sub{display:flex;flex-direction:column;gap:2px;margin:2px 0 2px 13px;padding-left:9px;border-left:1px solid var(--border);}
+.sn-sub .sn-item{font-size:13px;padding:7px 10px;}
+.sn-chev{margin-left:auto;font-size:11px;color:var(--text3);transition:transform .18s;}
+.sn-group.open .sn-chev{transform:rotate(180deg);}
+.sn-label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:12px 11px 5px;}
+@media(max-width:900px){
+  body.nav-sidebar.nav-authed #sideNav{display:none;}
+  body.nav-sidebar.nav-authed .page{margin-left:auto;}
+}
 
 /* PUNCH */
 .punch-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 120px);gap:28px;}
@@ -1433,6 +1451,11 @@ border-top:1px solid var(--border);margin:18px 0;}
           <span class="user-dd-addon-badge" id="ddSchedulingBadge"></span>
         </div>
         <hr class="user-dd-sep" id="ddAddonSep" style="display:none">
+        <button class="user-dd-item" onclick="closeUserMenu();toggleNavMode()">
+          <div class="dd-icon" style="background:rgba(79,142,247,.12)"><svg style="width:16px;height:16px;color:var(--accent)"><use href="#i-nav-dashboard"/></svg></div>
+          <div><div id="ddNavModeLabel">Try the new sidebar</div></div>
+        </button>
+        <hr class="user-dd-sep">
         <button class="user-dd-item" onclick="closeUserMenu();showHelpModal()">
           <div class="dd-icon" style="background:var(--surface2)"><svg style="width:16px;height:16px;color:var(--text2)"><use href="#i-nav-help"/></svg></div>
           <div><div data-i18n="nav.dd.help">Help</div></div>
@@ -1474,6 +1497,26 @@ border-top:1px solid var(--border);margin:18px 0;}
   <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> Admin Login</button>
   <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)"><svg><use href="#i-nav-logout"/></svg> Logout</button>
 </div>
+
+<!-- ═══════════════ LEFT SIDEBAR NAV (opt-in) ═══════════════ -->
+<aside id="sideNav">
+  <button class="sn-item" data-nav="dashboard" onclick="navigate('dashboard')"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
+  <button class="sn-item" data-nav="punch" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
+  <button class="sn-item" data-nav="schedule" onclick="navigate('schedule')"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
+  <div class="sn-label" data-i18n="sn.manage">Manage</div>
+  <div class="sn-group" id="snTeamGroup">
+    <button class="sn-item" onclick="toggleSideGroup('snTeamGroup')"><svg><use href="#i-nav-admin"/></svg><span data-i18n="sn.team">Team</span><span class="sn-chev">▾</span></button>
+    <div class="sn-sub">
+      <button class="sn-item" data-nav="admin" onclick="goAdminTab('employees')"><svg><use href="#i-user"/></svg><span data-i18n="admin.tabs.employees">Employees</span></button>
+      <button class="sn-item" data-nav="sites" onclick="navigate('sites')"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
+      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-nav-building"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
+    </div>
+  </div>
+  <button class="sn-item" data-nav="reports" onclick="navigate('reports')"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
+  <button class="sn-item" data-nav="activity" onclick="navigate('activity')"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
+  <div style="margin-top:auto"></div>
+  <button class="sn-item" onclick="setNavMode('top')" style="color:var(--text3);font-size:12px"><svg><use href="#i-nav-chevron"/></svg><span data-i18n="sn.backToTabs">Back to top tabs</span></button>
+</aside>
 
 <!-- ═══════════════ PUNCH PAGE ═══════════════ -->
 <div class="page active" id="page-punch">
@@ -3887,6 +3930,49 @@ function navigate(page){
   else if(page==='activity'){loadActivityPage();renderMissedPunchRequests();}
   else if(page==='schedule')loadSchedulePage();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
+  _syncSideNav(page);
+}
+
+// ═══════════════════════════════════════════════════
+// LEFT SIDEBAR NAV — opt-in alternative to the header tabs.
+// Pages are untouched; only the navigation chrome changes, so switching is safe
+// and instantly reversible.
+// ═══════════════════════════════════════════════════
+function getNavMode(){ try{ return localStorage.getItem('pc_nav')==='sidebar'?'sidebar':'top'; }catch(_){ return 'top'; } }
+function setNavMode(mode){
+  const sidebar = mode==='sidebar';
+  try{ localStorage.setItem('pc_nav', sidebar?'sidebar':'top'); }catch(_){}
+  document.body.classList.toggle('nav-sidebar', sidebar);
+  _syncSideNav(typeof currentPage!=='undefined'?currentPage:'dashboard');
+  _syncNavModeLabel();
+  showToast(sidebar?(t('sn.switched')||'Sidebar navigation enabled — switch back anytime from your profile menu.')
+                   :(t('sn.reverted')||'Back to the classic top tabs.'),'success');
+}
+function toggleNavMode(){ setNavMode(getNavMode()==='sidebar'?'top':'sidebar'); }
+function _syncNavModeLabel(){
+  const el=document.getElementById('ddNavModeLabel');
+  if(el) el.textContent = getNavMode()==='sidebar'
+    ? (t('sn.useTabs')||'Use classic top tabs')
+    : (t('sn.trySidebar')||'Try the new sidebar');
+}
+function toggleSideGroup(id){ const g=document.getElementById(id); if(g) g.classList.toggle('open'); }
+function _syncSideNav(page){
+  const key=page;
+  document.querySelectorAll('#sideNav .sn-item[data-nav]').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-nav')===key);
+  });
+  const g=document.getElementById('snTeamGroup');
+  if(g && ['admin','sites','admins'].includes(key)) g.classList.add('open');
+}
+function goAdminTab(tab){
+  navigate('admin');
+  setTimeout(()=>{
+    const idx={employees:0,sites:1,admins:2}[tab];
+    const btn=document.querySelectorAll('#page-admin .tabs .tab')[idx];
+    if(btn) adminTab(tab,btn);
+    document.querySelectorAll('#sideNav .sn-item[data-nav]').forEach(b=>
+      b.classList.toggle('active', b.getAttribute('data-nav')===(tab==='admins'?'admins':'admin')));
+  },120);
 }
 
 // Round a punch time (ISO) to the nearest `mins` minutes (0 = exact). Returns ms.
@@ -4290,6 +4376,8 @@ function updateNav(){
   document.body.classList.toggle('role-manager', !!sess && isManager());
 
   const ok=isLoggedIn()||isDemo();   // demo has no session but shows the full nav
+  // Sidebar chrome only applies to authenticated/demo views, never the landing page.
+  document.body.classList.toggle('nav-authed', ok);
   const isKiosk=!!Ctx.get();
   const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
@@ -9270,6 +9358,9 @@ async function init(){
   applyTheme(getStoredTheme()==='dark' ? 'dark' : 'light');
   if(typeof initLang==='function')initLang();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
+  // Apply the saved navigation preference (classic top tabs by default).
+  document.body.classList.toggle('nav-sidebar', getNavMode()==='sidebar');
+  _syncNavModeLabel();
   // Restore an in-progress demo now that translations are loaded.
   if(_wasDemo){ document.getElementById('loadingOverlay').classList.add('hidden'); startDemo(); return; }
   // Start clock after lang is ready
@@ -10279,6 +10370,7 @@ en:{
 'setup.s4':'Try your first clock-in','setup.s4d':'Open the punch page and clock someone in — it appears here instantly.','setup.s4c':'Open punch page','ob.later':'I\'ll do this later',
 'dash.emptyTitle':'Your dashboard lights up once your team clocks in','dash.emptyDesc':'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.',
 'land.ctaDemo':'▶ See a live demo — no signup','demo.banner':'🎬 Demo mode — sample data, nothing is saved.','demo.cta':'Create my free account','demo.exit':'Exit demo','demo.started':'Demo mode — this is sample data. Nothing is saved.',
+'sn.manage':'Manage','sn.team':'Team','sn.backToTabs':'Back to top tabs','sn.trySidebar':'Try the new sidebar','sn.useTabs':'Use classic top tabs','sn.switched':'Sidebar navigation enabled — switch back anytime from your profile menu.','sn.reverted':'Back to the classic top tabs.',
 'nav.companies':'🏢 Companies','nav.sites':'Sites','nav.activity':'Activity','nav.schedule':'Schedule','nav.dd.help':'Help','nav.dd.support':'Support',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
@@ -10875,6 +10967,7 @@ fr:{
 'setup.s4':'Essayez un premier pointage','setup.s4d':'Ouvrez la page de pointage et pointez quelqu\'un — ça s\'affiche ici instantanément.','setup.s4c':'Page de pointage','ob.later':'Je le ferai plus tard',
 'dash.emptyTitle':'Votre tableau de bord s\'anime dès que votre équipe pointe','dash.emptyDesc':'Ajoutez un site et quelques employés, et vous verrez les pointages en direct, les heures et l\'activité ici même.',
 'land.ctaDemo':'▶ Voir une démo — sans inscription','demo.banner':'🎬 Mode démo — données d\'exemple, rien n\'est enregistré.','demo.cta':'Créer mon compte gratuit','demo.exit':'Quitter la démo','demo.started':'Mode démo — ce sont des données d\'exemple. Rien n\'est enregistré.',
+'sn.manage':'Gestion','sn.team':'Équipe','sn.backToTabs':'Revenir aux onglets','sn.trySidebar':'Essayer le nouveau menu latéral','sn.useTabs':'Utiliser les onglets classiques','sn.switched':'Menu latéral activé — vous pouvez revenir en arrière depuis votre menu de profil.','sn.reverted':'Retour aux onglets classiques.',
 'nav.companies':'🏢 Compagnies','nav.sites':'Sites','nav.activity':'Activité','nav.schedule':'Horaires','nav.dd.help':'Aide','nav.dd.support':'Soutien',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
