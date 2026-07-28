@@ -3929,11 +3929,24 @@ function _demoBuildData(){
     else { mk(e,today,8,(i*5)%60,'IN'); mk(e,today,14,(i*13)%60,'OUT'); }
   });
   punches.sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
-  return {CO,SITES,EMPS,punches};
+  // Upcoming shifts so the Schedule page has something to show
+  const shifts=[]; let sid=0;
+  const wk=new Date(today); wk.setDate(today.getDate()-((today.getDay()+6)%7)); // Monday of this week
+  for(let d=0;d<7;d++){
+    const day=new Date(wk); day.setDate(wk.getDate()+d);
+    if(day.getDay()===0) continue;
+    EMPS.forEach((e,i)=>{ if((i+d)%4===0) return;
+      shifts.push({id:'demo-sh'+(sid++),admin_id:'demo-admin',company_id:CO.id,site_id:e.site_id,
+        employee_id:e.id,shift_date:day.toLocaleDateString('en-CA'),
+        start_time:(8+(i%2))+':00',end_time:(16+(i%3))+':00',note:null});
+    });
+  }
+  return {CO,SITES,EMPS,punches,shifts};
 }
 function startDemo(){
-  const {CO,SITES,EMPS,punches}=_demoBuildData();
+  const {CO,SITES,EMPS,punches,shifts}=_demoBuildData();
   window._demoMode=true;
+  window._demoShifts=shifts;
   try{ sessionStorage.setItem('pc_demo','1'); }catch(_){}
   Sess.clear();
   C.companies=[CO]; C.sites=SITES; C.employees=EMPS; C.punches=punches; C.coAdmins=[]; C.primaryAdmin=null;
@@ -3972,7 +3985,14 @@ function _demoFetch(method,table,opts){
       punch_time:now.toLocaleTimeString('en-US',{hour12:false}),
     },opts.body)]);
   }
-  if(method==='GET') return Promise.resolve([]);
+  if(method==='GET'){
+    if(table==='shifts')   return Promise.resolve((window._demoShifts||[]).slice());
+    if(table==='employees')return Promise.resolve((C.employees||[]).slice());
+    if(table==='sites')    return Promise.resolve((C.sites||[]).slice());
+    if(table==='companies')return Promise.resolve((C.companies||[]).slice());
+    if(table==='punches')  return Promise.resolve((C.punches||[]).slice());
+    return Promise.resolve([]);
+  }
   return Promise.resolve(null);
 }
 
@@ -6073,7 +6093,7 @@ async function submitMissedPunch(){
 // ADMIN PAGE
 // ═══════════════════════════════════════════════════
 async function loadAdminPage(){
-  if(!isLoggedIn()){navigate('login');return;}
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   const ctx=Ctx.get();
   await refreshCache(ctx?{coId:ctx.co.id}:{});
   // Only a company-less account needs the blocking step; a missing site is handled by the
@@ -7718,7 +7738,7 @@ async function saveSite(){
 // COMPANIES PAGE
 // ═══════════════════════════════════════════════════
 async function loadCompaniesPage(){
-  if(!isLoggedIn()){navigate('login');return;}
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   await refreshCache();
   const grid=document.getElementById('companyGrid');
   if(!C.companies.length){grid.innerHTML=`<div class="empty"><p>${t('companies.empty')}</p></div>`;return;}
@@ -7766,7 +7786,7 @@ async function loadCompaniesPage(){
 }
 
 async function loadSitesPage(){
-  if(!isLoggedIn()){navigate('login');return;}
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   await refreshCache();
   const _isMgr=isManager();
   // Managers: ensure their assigned site IDs are loaded before filtering
@@ -7990,7 +8010,7 @@ async function saveCompany(){
 // REPORTS
 // ═══════════════════════════════════════════════════
 async function loadReportsPage(){
-  if(!isLoggedIn()){navigate('login');return;}
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   await refreshCache();
   await ensureManagerSiteIds();
   const ctx=Ctx.get();
@@ -8373,7 +8393,7 @@ function exportReport(fmt){
 // ACTIVITY LOG
 // ═══════════════════════════════════════════════════
 async function loadActivityPage(){
-  if(!isLoggedIn()){navigate('login');return;}
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   await ensureManagerSiteIds();
   const coId=document.getElementById('actCoFilter').value;
   const siteId=document.getElementById('actSiteFilter').value;
@@ -9689,13 +9709,13 @@ function schedGoToday() {
 }
 
 async function loadSchedulePage() {
-  if(!isLoggedIn()){navigate('login');return;}
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   await ensureManagerSiteIds();
   if(isManager()&&!C.primaryAdmin)await refreshCache();
   const s = Sess.get();
 
   // Check add-on access — scheduling_addon must be explicitly purchased or granted
-  const hasAddon = !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin();
+  const hasAddon = !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin() || isDemo();
   if(!hasAddon) {
     document.getElementById('schedGridContent').innerHTML = `
       <div class="sched-empty">
