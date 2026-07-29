@@ -853,6 +853,67 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free tier includes 1 company · 1 site · 5 employees · 1 admin</p>
   </div>
 
+  <!-- PRODUCT PREVIEW — real UI, real sample data; clicking opens the live demo -->
+  <div style="max-width:1000px;margin:-10px auto 0;padding:0 20px 10px">
+    <div onclick="startDemo()" style="cursor:pointer;border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 18px 50px rgba(15,23,42,.16);background:var(--surface)">
+      <div style="display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border)">
+        <span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:#22c55e"></span>
+        <span style="margin-left:10px;font-size:11.5px;color:var(--text3);font-family:'DM Mono',monospace">punchclock.ca — Café Rivière</span>
+      </div>
+      <div style="padding:18px 20px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.clockedIn">Clocked in now</div><div style="font-size:22px;font-weight:700;color:var(--green);margin-top:4px">4</div></div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.hoursToday">Hours today</div><div style="font-size:22px;font-weight:700;margin-top:4px">27h 15m</div></div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.hoursWeek">Hours this week</div><div style="font-size:22px;font-weight:700;margin-top:4px">218h</div></div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.activeEmps">Active employees</div><div style="font-size:22px;font-weight:700;margin-top:4px">6</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="border:1px solid var(--border);border-radius:10px;padding:13px 15px">
+            <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px" data-i18n="dash.currentlyIn">Currently clocked in</div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Marie Lavoie</span><span style="color:var(--text2)">8:07</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">David Pham</span><span style="color:var(--text2)">9:14</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0"><span style="font-weight:600">Sofia Ricci</span><span style="color:var(--text2)">9:31</span></div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:10px;padding:13px 15px">
+            <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px" data-i18n="dash.recentActivity">Recent activity</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Jean Tremblay</span><span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;background:rgba(34,197,94,.14);color:var(--green)">IN</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Aïsha Benali</span><span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;background:rgba(239,68,68,.14);color:var(--red)">OUT</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0"><span style="font-weight:600">Liam O'Connor</span><span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;background:rgba(239,68,68,.14);color:var(--red)">OUT</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12.5px;color:var(--text3);margin-top:10px"><span data-i18n="land.previewNote">This is the real dashboard — click it to explore the live demo with sample data.</span></p>
+  </div>
+
+  <!-- TRUST BAND — Quebec-first positioning -->
+  <div style="max-width:1000px;margin:34px auto 0;padding:0 20px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 17px">
+        <div style="font-size:19px;margin-bottom:5px">🍁</div>
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:3px" data-i18n="land.trust1t">Built in Québec</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5" data-i18n="land.trust1d">Made for Québec businesses, with real bilingual support — not a translated afterthought.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 17px">
+        <div style="font-size:19px;margin-bottom:5px">🇨🇦</div>
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:3px" data-i18n="land.trust2t">Your data stays in Canada</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5" data-i18n="land.trust2d">Hosted on Canadian infrastructure and built with Law 25 privacy rules in mind.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 17px">
+        <div style="font-size:19px;margin-bottom:5px">💸</div>
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:3px" data-i18n="land.trust3t">Flat pricing, no per-employee fees</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5" data-i18n="land.trust3d">One predictable monthly price. Your bill doesn't jump when you hire.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 17px">
+        <div style="font-size:19px;margin-bottom:5px">⚡</div>
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:3px" data-i18n="land.trust4t">Running in minutes</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5" data-i18n="land.trust4d">Add a site, add your team, and start clocking in. No installation, no hardware.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- FEATURES -->
   <div class="land-section" id="landingFeatures">
     <h2 data-i18n="land.featTitle">Everything you need to manage shift workers</h2>
@@ -1014,8 +1075,8 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="price-sub" data-i18n="land.freeSub">Perfect for trying it out</div>
         <ul class="price-features">
           <li data-i18n="land.f.free1">1 company</li>
-          <li data-i18n="land.f.free2">1 site</li>
-          <li data-i18n="land.f.free3">Up to 5 employees</li>
+          <li data-i18n="land.f.free2">1 site · geofencing &amp; kiosk included</li>
+          <li data-i18n="land.f.free3">Up to 10 employees</li>
           <li data-i18n="land.f.free4">Basic reports (PDF only)</li>
           <li data-i18n="land.f.free5">Manual punch editing</li>
           <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
@@ -1029,15 +1090,15 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="price-card">
         <div class="price-name" data-i18n="plan.starter">Starter</div>
         <div class="price-amount">$19.49<span>/mo CAD</span></div>
-        <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · 10 employees · 1 admin<br>+$4.90/mo per extra employee or admin</div>
+        <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin</div>
         <ul class="price-features">
-          <li data-i18n="land.f.start1">1 company, 2 sites</li>
-          <li data-i18n="land.f.start2">Up to 10 employees</li>
+          <li data-i18n="land.f.start1">1 company, 2 sites, 2 admins</li>
+          <li data-i18n="land.f.start2">Up to 25 employees</li>
           <li data-i18n="land.f.start3">All Free features</li>
           <li data-i18n="land.f.start4">Automated period email reports</li>
           <li data-i18n="land.f.start5">Overtime tracking</li>
           <li data-i18n="land.f.start6">QuickBooks IIF export</li>
-          <li class="dim" data-i18n="land.f.start8">Co-admin access (upgrade to add)</li>
+          <li data-i18n="land.f.start8">1 co-admin included</li>
         </ul>
         <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
       </div>
@@ -1046,14 +1107,14 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
         <div class="price-name" data-i18n="plan.growth">Growth</div>
         <div class="price-amount">$39.49<span>/mo CAD</span></div>
-        <div class="price-sub" data-i18n-html="land.growthSub">1 company · 5 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin</div>
+        <div class="price-sub" data-i18n-html="land.growthSub">3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin</div>
         <ul class="price-features">
-          <li data-i18n="land.f.grow1">1 company</li>
-          <li data-i18n="land.f.grow2">Up to 5 sites</li>
-          <li data-i18n="land.f.grow3">Up to 25 employees</li>
+          <li data-i18n="land.f.grow1">Up to 3 companies</li>
+          <li data-i18n="land.f.grow2">Up to 6 sites</li>
+          <li data-i18n="land.f.grow3">Up to 60 employees</li>
           <li data-i18n="land.f.grow4">All Starter features</li>
           <li data-i18n="land.f.grow5">Priority support</li>
-          <li data-i18n="land.f.grow6">Up to 2 admins per account</li>
+          <li data-i18n="land.f.grow6">Up to 4 admins per account</li>
         </ul>
         <button class="price-cta accent" onclick="isLoggedIn()?startCheckout('growth'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial2">Get Growth</button>
       </div>
@@ -1067,7 +1128,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.biz2">Unlimited sites</li>
           <li data-i18n="land.f.biz3">Unlimited employees</li>
           <li data-i18n="land.f.biz4">All Growth features</li>
-          <li data-i18n="land.f.biz5">Up to 3 admins per account</li>
+          <li data-i18n="land.f.biz5">Up to 6 admins per account</li>
           <li data-i18n="land.f.biz6">Dedicated support</li>
           <li data-i18n="land.f.biz7">Early access to new features</li>
         </ul>
@@ -1075,6 +1136,29 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
     <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">All plans include a 14-day free trial. No credit card required to start.</p>
+
+    <!-- HOW WE COMPARE -->
+    <div style="max-width:760px;margin:44px auto 0">
+      <h3 style="text-align:center;font-size:19px;font-weight:700;margin-bottom:6px" data-i18n="land.cmpTitle">How we compare</h3>
+      <p style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:20px" data-i18n="land.cmpSub">The differences that actually show up on your invoice.</p>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:560px">
+          <thead><tr style="background:var(--surface2)">
+            <th style="text-align:left;padding:11px 14px;font-weight:700;color:var(--text2)"></th>
+            <th style="padding:11px 14px;font-weight:700;color:var(--accent)">PunchClock Pro</th>
+            <th style="padding:11px 14px;font-weight:600;color:var(--text3)" data-i18n="land.cmpOthers">Typical alternatives</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR1">Pricing model</td><td style="padding:10px 14px;text-align:center;font-weight:600" data-i18n="land.cmpR1a">Flat monthly rate</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR1b">Often per employee / per location</td></tr>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR2">Geofencing on the free plan</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR2b">Usually a paid upgrade</td></tr>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR3">Full French &amp; English</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR3b">Partial or English-first</td></tr>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR4">Shared tablet kiosk with PINs</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR4b">Often needs a per-user app</td></tr>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR5">Support in French, from a human</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR5b">Rarely</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="text-align:center;font-size:11.5px;color:var(--text3);margin-top:10px" data-i18n="land.cmpNote">Comparison reflects commonly advertised plans of similar time-tracking tools; competitor terms change — check their current pricing.</p>
+    </div>
 
     <!-- SCHEDULING ADD-ON -->
     <div style="margin-top:40px;border:1.5px solid rgba(124,92,191,.4);border-radius:20px;padding:28px 32px;background:linear-gradient(135deg,rgba(124,92,191,.07),rgba(79,142,247,.04));max-width:800px;margin-left:auto;margin-right:auto">
@@ -3382,10 +3466,11 @@ function showPlanGate(msg, hintId) {
 // PLAN SYSTEM
 // ═══════════════════════════════════════════════════
 const PLANS = {
-  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:5,  maxCoAdmins:1, price:0     },
-  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:10, maxCoAdmins:1, price:19.49 },
-  growth:   { name:'Growth',   maxCompanies:2, maxSites:5,  maxEmployees:25, maxCoAdmins:2, price:39.49 },
-  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:3, price:79.49 },
+  // maxCoAdmins INCLUDES the primary admin — so free (1) means owner only, no co-admins.
+  free:     { name:'Free',     maxCompanies:1, maxSites:1,  maxEmployees:10, maxCoAdmins:1, price:0     },
+  starter:  { name:'Starter',  maxCompanies:1, maxSites:2,  maxEmployees:25, maxCoAdmins:2, price:19.49 },
+  growth:   { name:'Growth',   maxCompanies:3, maxSites:6,  maxEmployees:60, maxCoAdmins:4, price:39.49 },
+  business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:6, price:79.49 },
   unlimited:{ name:'Unlimited',maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:Infinity, price:0  },
 };
 // Grandfathered companies — always unlimited regardless of plan
@@ -3448,8 +3533,8 @@ function showLimitGate(containerId, type, current, max, plan) {
   const nextPlanKey = nextPlan[planKey];
   const nextPlanPrices = {starter:'$19.49/mo', growth:'$39.49/mo', business:'$79.49/mo'};
   const nextPlanLimits = {
-    starter: {employees:10, sites:2,  companies:1},
-    growth:  {employees:25, sites:5,  companies:2},
+    starter: {employees:25, sites:2,  companies:1},
+    growth:  {employees:60, sites:6,  companies:3},
     business:{employees:'∞',sites:'∞',companies:'∞'},
   };
 
@@ -5254,9 +5339,9 @@ async function handleStripeReturn(){
   const isExtraSeat = plan==='extra_seat' || plan==='scheduling_addon';
   const planNames={starter:t('plan.starter')||'Starter',growth:t('plan.growth')||'Growth',business:t('plan.business')||'Business',extra_seat:'Extra Seat',scheduling_addon:t('addon.scheduling')||'Scheduling Add-On'};
   const planIncludes={
-    starter:'1 company · 2 sites · up to 10 employees',
-    growth: '1 company · 5 sites · up to 25 employees',
-    business:'1 company · Unlimited sites & employees',
+    starter:'1 company · 2 sites · up to 25 employees',
+    growth: '3 companies · 6 sites · up to 60 employees',
+    business:'Unlimited companies, sites & employees',
   };
 
   // Small delay to let admin page render before showing overlay
@@ -10370,6 +10455,18 @@ en:{
 'setup.s4':'Try your first clock-in','setup.s4d':'Open the punch page and clock someone in — it appears here instantly.','setup.s4c':'Open punch page','ob.later':'I\'ll do this later',
 'dash.emptyTitle':'Your dashboard lights up once your team clocks in','dash.emptyDesc':'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.',
 'land.ctaDemo':'▶ See a live demo — no signup','demo.banner':'🎬 Demo mode — sample data, nothing is saved.','demo.cta':'Create my free account','demo.exit':'Exit demo','demo.started':'Demo mode — this is sample data. Nothing is saved.',
+'land.previewNote':'This is the real dashboard — click it to explore the live demo with sample data.',
+'land.cmpTitle':'How we compare','land.cmpSub':'The differences that actually show up on your invoice.','land.cmpOthers':'Typical alternatives',
+'land.cmpR1':'Pricing model','land.cmpR1a':'Flat monthly rate','land.cmpR1b':'Often per employee / per location',
+'land.cmpR2':'Geofencing on the free plan','land.cmpR2b':'Usually a paid upgrade',
+'land.cmpR3':'Full French & English','land.cmpR3b':'Partial or English-first',
+'land.cmpR4':'Shared tablet kiosk with PINs','land.cmpR4b':'Often needs a per-user app',
+'land.cmpR5':'Support in French, from a human','land.cmpR5b':'Rarely',
+'land.cmpNote':'Comparison reflects commonly advertised plans of similar time-tracking tools; competitor terms change — check their current pricing.',
+'land.trust1t':'Built in Québec','land.trust1d':'Made for Québec businesses, with real bilingual support — not a translated afterthought.',
+'land.trust2t':'Your data stays in Canada','land.trust2d':'Hosted on Canadian infrastructure and built with Law 25 privacy rules in mind.',
+'land.trust3t':'Flat pricing, no per-employee fees','land.trust3d':'One predictable monthly price. Your bill doesn\'t jump when you hire.',
+'land.trust4t':'Running in minutes','land.trust4d':'Add a site, add your team, and start clocking in. No installation, no hardware.',
 'sn.manage':'Manage','sn.team':'Team','sn.backToTabs':'Back to top tabs','sn.trySidebar':'Try the new sidebar','sn.useTabs':'Use classic top tabs','sn.switched':'Sidebar navigation enabled — switch back anytime from your profile menu.','sn.reverted':'Back to the classic top tabs.',
 'nav.companies':'🏢 Companies','nav.sites':'Sites','nav.activity':'Activity','nav.schedule':'Schedule','nav.dd.help':'Help','nav.dd.support':'Support',
 'nav.login':'🔒 Admin Login','nav.logout':'✕ Logout',
@@ -10545,7 +10642,7 @@ en:{
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
 'land.heroSub':'PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
-'land.freeNote':'Free tier includes 1 company · 1 site · 5 employees · 1 admin',
+'land.freeNote':'Free forever: 1 site · up to 10 employees · geofencing & kiosk included',
 'land.featTitle':'Everything you need to manage shift workers',
 'land.featSub':'No complicated setup. No per-feature upsells. Just the tools your team needs.',
 'land.feat1Title':'PIN Clock In/Out','land.feat1Desc':'Employees clock in and out with a 4-digit PIN on any shared tablet or computer. No smartphones or apps required.',
@@ -10618,19 +10715,19 @@ en:{
 'profile.curPwRequired':'Please enter your current password.','profile.newPwRequired':'Please enter a new password.',
 'profile.pwTooShort':'Password must be at least 6 characters.','profile.wrongCurPw':'Current password is incorrect.',
 'profile.saved':'✓ Profile updated successfully.',
-'land.starterSub':'1 company · 2 sites · 10 employees · 1 admin<br>+$4.90/mo per extra employee or admin',
-'land.growthSub':'1 company · 5 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin',
+'land.starterSub':'1 company · 2 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin',
+'land.growthSub':'3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin',
 'land.businessSub':'1 company · Unlimited sites &amp; employees · 3 admins<br>+$4.90/mo per extra admin',
-'land.f.free1':'1 company','land.f.free2':'1 site','land.f.free3':'Up to 5 employees',
+'land.f.free1':'1 company','land.f.free2':'1 site · geofencing & kiosk included','land.f.free3':'Up to 10 employees',
 'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Manual punch editing',
 'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free8':'QuickBooks export','land.f.free9':'Excel & CSV export',
-'land.f.start1':'1 company, 2 sites','land.f.start2':'Up to 10 employees','land.f.start3':'All Free features + Excel & CSV exports',
+'land.f.start1':'1 company, 2 sites, 2 admins','land.f.start2':'Up to 25 employees','land.f.start3':'All Free features + Excel & CSV exports',
 'land.f.start4':'Automated period email reports','land.f.start5':'Overtime tracking',
 'land.f.start6':'QuickBooks IIF export',
-'land.f.grow1':'1 company','land.f.grow2':'Up to 5 sites','land.f.grow3':'Up to 25 employees',
+'land.f.grow1':'Up to 3 companies','land.f.grow2':'Up to 6 sites','land.f.grow3':'Up to 60 employees',
 'land.f.grow4':'All Starter features','land.f.grow5':'Priority support',
 'land.f.biz1':'1 company','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
-'land.f.biz4':'All Growth features','land.f.biz5':'Up to 3 admins per account','land.f.biz6':'Dedicated support','land.f.biz7':'Early access to new features','land.f.start8':'Co-admin access (upgrade to add)','land.f.grow6':'Up to 2 admins per account',
+'land.f.biz4':'All Growth features','land.f.biz5':'Up to 6 admins per account','land.f.biz6':'Dedicated support','land.f.biz7':'Early access to new features','land.f.start8':'1 co-admin included','land.f.grow6':'Up to 4 admins per account',
 
 'legal.back':'← Back',
 'tos.title':'Terms of Service','tos.updated':'Last updated: January 1, 2026',
@@ -10803,9 +10900,9 @@ en:{
 'faq.a21':'That device was set up as a kiosk, so it remembers the site. To reset it: on that device, tap the <strong>\'Not a kiosk? Reset this device\'</strong> link at the bottom of the clock-in page, or open <strong>punchclock.ca/?nokiosk=1</strong> in the browser — the device returns to the normal login page. You can re-create a kiosk shortcut anytime from <strong>Admin → Sites → Kiosk Shortcut</strong>.',
 'faq.q22':'I\'m getting alert emails about clock-outs or overtime. Can I turn them off or change how often?',
 'faq.a22':'Yes — manager alerts are fully optional and set per company. Go to <strong>Sites → your company → Edit → Manager Alerts</strong>. Uncheck <strong>"Receive manager alerts by email"</strong> to stop all of them, or keep just the ones you want (forgot-to-clock-out, daily overtime) and adjust the <strong>"Alert after"</strong> hours. Overtime alerts also require overtime tracking to be on. Reports and timesheet emails have their own frequency under <strong>payroll frequency</strong> (weekly / bi-weekly / monthly). Changes take effect right away.',
-'upgrade.desc.starter':'1 company · 2 sites · 10 employees · 1 admin',
-'upgrade.desc.growth':'1 company · 5 sites · 25 employees · 2 admins',
-'upgrade.desc.business':'1 company · Unlimited sites & employees · 3 admins',
+'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
+'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
+'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
 'msg.noSiteTitle':'Create a Site First',
 'msg.noSiteFirst':'You need to create at least one site before adding employees.',
 'msg.goToSites':'→ Go to Sites tab',
@@ -10967,6 +11064,18 @@ fr:{
 'setup.s4':'Essayez un premier pointage','setup.s4d':'Ouvrez la page de pointage et pointez quelqu\'un — ça s\'affiche ici instantanément.','setup.s4c':'Page de pointage','ob.later':'Je le ferai plus tard',
 'dash.emptyTitle':'Votre tableau de bord s\'anime dès que votre équipe pointe','dash.emptyDesc':'Ajoutez un site et quelques employés, et vous verrez les pointages en direct, les heures et l\'activité ici même.',
 'land.ctaDemo':'▶ Voir une démo — sans inscription','demo.banner':'🎬 Mode démo — données d\'exemple, rien n\'est enregistré.','demo.cta':'Créer mon compte gratuit','demo.exit':'Quitter la démo','demo.started':'Mode démo — ce sont des données d\'exemple. Rien n\'est enregistré.',
+'land.previewNote':'C\'est le vrai tableau de bord — cliquez pour explorer la démo avec des données d\'exemple.',
+'land.cmpTitle':'Comment on se compare','land.cmpSub':'Les différences qui paraissent vraiment sur votre facture.','land.cmpOthers':'Alternatives courantes',
+'land.cmpR1':'Modèle de prix','land.cmpR1a':'Tarif mensuel fixe','land.cmpR1b':'Souvent par employé / par emplacement',
+'land.cmpR2':'Géorepérage inclus au forfait gratuit','land.cmpR2b':'Habituellement payant',
+'land.cmpR3':'Français et anglais complets','land.cmpR3b':'Partiel ou anglais d\'abord',
+'land.cmpR4':'Kiosque sur tablette partagée avec NIP','land.cmpR4b':'Exige souvent une appli par employé',
+'land.cmpR5':'Soutien en français, par un humain','land.cmpR5b':'Rarement',
+'land.cmpNote':'La comparaison reflète les forfaits couramment annoncés d\'outils similaires; les conditions changent — vérifiez leurs prix actuels.',
+'land.trust1t':'Conçu au Québec','land.trust1d':'Fait pour les entreprises d\'ici, avec un vrai support bilingue — pas une traduction ajoutée après coup.',
+'land.trust2t':'Vos données restent au Canada','land.trust2d':'Hébergé sur une infrastructure canadienne et conçu en tenant compte de la Loi 25.',
+'land.trust3t':'Prix fixe, aucun frais par employé','land.trust3d':'Un prix mensuel prévisible. Votre facture n\'augmente pas quand vous embauchez.',
+'land.trust4t':'Opérationnel en quelques minutes','land.trust4d':'Ajoutez un site, ajoutez votre équipe, et pointez. Aucune installation, aucun matériel.',
 'sn.manage':'Gestion','sn.team':'Équipe','sn.backToTabs':'Revenir aux onglets','sn.trySidebar':'Essayer le nouveau menu latéral','sn.useTabs':'Utiliser les onglets classiques','sn.switched':'Menu latéral activé — vous pouvez revenir en arrière depuis votre menu de profil.','sn.reverted':'Retour aux onglets classiques.',
 'nav.companies':'🏢 Compagnies','nav.sites':'Sites','nav.activity':'Activité','nav.schedule':'Horaires','nav.dd.help':'Aide','nav.dd.support':'Soutien',
 'nav.login':'🔒 Connexion Admin','nav.logout':'✕ Déconnexion',
@@ -11142,7 +11251,7 @@ fr:{
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
 'land.heroSub':'Pointage par NIP sur terminal tablette fixe, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
-'land.freeNote':'Forfait gratuit : 1 compagnie · 1 site · 5 employés · 1 admin',
+'land.freeNote':'Gratuit pour toujours : 1 site · jusqu\'à 10 employés · géorepérage et kiosque inclus',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
 'land.featSub':'Pas de configuration compliquée. Pas de frais cachés. Juste les outils dont votre équipe a besoin.',
 'land.feat1Title':'Pointage par NIP','land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur n\'importe quelle tablette ou ordinateur partagé. Aucun téléphone requis.',
@@ -11215,19 +11324,19 @@ fr:{
 'profile.curPwRequired':'Veuillez entrer votre mot de passe actuel.','profile.newPwRequired':'Veuillez entrer un nouveau mot de passe.',
 'profile.pwTooShort':'Le mot de passe doit comporter au moins 6 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
 'profile.saved':'✓ Profil mis à jour avec succès.',
-'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
-'land.growthSub':'1 compagnie · 5 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
+'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
+'land.growthSub':'3 compagnies · 6 sites · 60 employés · 4 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.businessSub':'1 compagnie · Sites et employés illimités · 3 admins<br>+4,90$/mois par admin supplémentaire',
-'land.f.free1':'1 compagnie','land.f.free2':'1 site','land.f.free3':'Jusqu\'à 5 employés',
+'land.f.free1':'1 compagnie','land.f.free2':'1 site · géorepérage et kiosque inclus','land.f.free3':'Jusqu\'à 10 employés',
 'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Modification manuelle des pointages',
 'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free8':'Export QuickBooks','land.f.free9':'Export Excel et CSV',
-'land.f.start1':'1 compagnie, 2 sites','land.f.start2':'Jusqu\'à 10 employés','land.f.start3':'Toutes les fonctions Gratuit + exports Excel et CSV',
+'land.f.start1':'1 compagnie, 2 sites, 2 admins','land.f.start2':'Jusqu\'à 25 employés','land.f.start3':'Toutes les fonctions Gratuit + exports Excel et CSV',
 'land.f.start4':'Rapports de période automatisés','land.f.start5':'Suivi des heures supp.',
 'land.f.start6':'Export QuickBooks IIF',
-'land.f.grow1':'1 compagnie','land.f.grow2':'Jusqu\'à 5 sites','land.f.grow3':'Jusqu\'à 25 employés',
+'land.f.grow1':'Jusqu\'à 3 compagnies','land.f.grow2':'Jusqu\'à 6 sites','land.f.grow3':'Jusqu\'à 60 employés',
 'land.f.grow4':'Toutes les fonctions Débutant','land.f.grow5':'Support prioritaire',
 'land.f.biz1':'1 compagnie','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
-'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Jusqu\'à 3 admins par compte','land.f.biz6':'Assistance dédiée','land.f.biz7':'Accès anticipé aux nouvelles fonctionnalités','land.f.start8':'Accès co-admin (avec mise à niveau)','land.f.grow6':'Jusqu\'à 2 admins par compte',
+'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Jusqu\'à 6 admins par compte','land.f.biz6':'Assistance dédiée','land.f.biz7':'Accès anticipé aux nouvelles fonctionnalités','land.f.start8':'1 co-admin inclus','land.f.grow6':'Jusqu\'à 4 admins par compte',
 
 'legal.back':'← Retour',
 'tos.title':'Conditions d\'utilisation','tos.updated':'Dernière mise à jour : 1er janvier 2026',
@@ -11400,13 +11509,13 @@ fr:{
 'faq.a21':'Cet appareil a été configuré comme kiosque, il se souvient donc du site. Pour le réinitialiser : sur cet appareil, touchez le lien <strong>\'Réinitialiser cet appareil\'</strong> au bas de la page de pointage, ou ouvrez <strong>punchclock.ca/?nokiosk=1</strong> dans le navigateur — l\'appareil revient à la page de connexion normale. Vous pouvez recréer un raccourci kiosque à tout moment depuis <strong>Admin → Sites → Raccourci kiosque</strong>.',
 'faq.q22':'Je reçois des courriels d\'alerte sur les pointages ou les heures supplémentaires. Puis-je les désactiver ou en changer la fréquence?',
 'faq.a22':'Oui — les alertes gestionnaire sont facultatives et se gèrent par compagnie. Allez dans <strong>Sites → votre compagnie → Modifier → Alertes gestionnaire</strong>. Décochez <strong>« Recevoir les alertes par courriel »</strong> pour toutes les arrêter, ou gardez seulement celles voulues (oubli de sortie, heures supplémentaires) et ajustez le seuil <strong>« Alerter après »</strong>. Les alertes d\'heures supplémentaires exigent aussi le suivi des heures supp. activé. Les rapports et feuilles de temps ont leur propre fréquence sous <strong>fréquence de paie</strong> (hebdo / aux deux semaines / mensuel). Les changements prennent effet immédiatement.',
-'upgrade.desc.starter':'1 compagnie · 2 sites · 10 employés · 1 admin',
-'land.starterSub':'1 compagnie · 2 sites · 10 employés · 1 admin<br>+4,90$/mois par employé ou admin supplémentaire',
-'land.f.start8':'Accès co-admin (avec mise à niveau)',
-'upgrade.desc.growth':'1 compagnie · 5 sites · 25 employés · 2 admins',
-'land.growthSub':'1 compagnie · 5 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
-'land.f.grow6':'Jusqu\'à 2 admins par compte',
-'upgrade.desc.business':'1 compagnie · Sites et employés illimités · 3 admins',
+'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
+'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
+'land.f.start8':'1 co-admin inclus',
+'upgrade.desc.growth':'3 compagnies · 6 sites · 60 employés · 4 admins',
+'land.growthSub':'3 compagnies · 6 sites · 60 employés · 4 admins<br>+4,90$/mois par employé ou admin supplémentaire',
+'land.f.grow6':'Jusqu\'à 4 admins par compte',
+'upgrade.desc.business':'Compagnies, sites et employés illimités · 6 admins',
 'msg.noSiteTitle':'Créez d\'abord un site',
 'msg.noSiteFirst':'Vous devez créer au moins un site avant d\'ajouter des employés.',
 'msg.goToSites':'→ Aller à l\'onglet Sites',
