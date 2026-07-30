@@ -1560,6 +1560,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:6px 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
+    <button class="theme-toggle-btn" id="navModeBtn" onclick="toggleNavMode()" aria-label="Switch navigation layout" title="Switch navigation layout" style="display:none"><svg class="tt-icon"><use href="#i-nav-dashboard"/></svg></button>
     <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
     <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
@@ -4028,6 +4029,9 @@ function setNavMode(mode){
   const sidebar = mode==='sidebar';
   try{ localStorage.setItem('pc_nav', sidebar?'sidebar':'top'); }catch(_){}
   document.body.classList.toggle('nav-sidebar', sidebar);
+  // updateNav owns the nav-authed class the sidebar CSS also depends on — refresh it here so
+  // the switch can never land in a half-applied state.
+  if(typeof updateNav==='function') updateNav();
   _syncSideNav(typeof currentPage!=='undefined'?currentPage:'dashboard');
   _syncNavModeLabel();
   showToast(sidebar?(t('sn.switched')||'Sidebar navigation enabled — switch back anytime from your profile menu.')
@@ -4035,10 +4039,14 @@ function setNavMode(mode){
 }
 function toggleNavMode(){ setNavMode(getNavMode()==='sidebar'?'top':'sidebar'); }
 function _syncNavModeLabel(){
+  const sidebar=getNavMode()==='sidebar';
+  const label = sidebar ? (t('sn.useTabs')||'Use classic top tabs')
+                        : (t('sn.trySidebar')||'Try the new sidebar');
   const el=document.getElementById('ddNavModeLabel');
-  if(el) el.textContent = getNavMode()==='sidebar'
-    ? (t('sn.useTabs')||'Use classic top tabs')
-    : (t('sn.trySidebar')||'Try the new sidebar');
+  if(el) el.textContent=label;
+  const btn=document.getElementById('navModeBtn');
+  if(btn){ btn.title=label; btn.setAttribute('aria-label',label);
+    btn.style.color = sidebar ? 'var(--accent)' : ''; }
 }
 function toggleSideGroup(id){ const g=document.getElementById(id); if(g) g.classList.toggle('open'); }
 function _syncSideNav(page){
@@ -4463,6 +4471,8 @@ function updateNav(){
   const ok=isLoggedIn()||isDemo();   // demo has no session but shows the full nav
   // Sidebar chrome only applies to authenticated/demo views, never the landing page.
   document.body.classList.toggle('nav-authed', ok);
+  const _nmBtn=document.getElementById('navModeBtn');
+  if(_nmBtn){ _nmBtn.style.display=ok?'':'none'; _syncNavModeLabel(); }
   const isKiosk=!!Ctx.get();
   const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
