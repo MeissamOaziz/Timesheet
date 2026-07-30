@@ -190,8 +190,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* NAV */
 .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:6px;height:60px;position:sticky;top:0;z-index:100;}
-.nav-logo{font-weight:700;font-size:17px;color:var(--accent);letter-spacing:-.5px;margin-right:6px;display:flex;align-items:center;gap:7px;white-space:nowrap;}
-.nav-logo svg{width:20px;height:20px;}
+.nav-logo{color:var(--accent);margin-right:4px;display:flex;align-items:center;flex-shrink:0;}
+.nav-logo svg{width:27px;height:27px;}
 /* Every header control shares --h-md so the bar reads as one row of equal-height pills.
    (These used to be 28/36/38/42px, which is why the bar looked ragged.) */
 .context-pill{display:flex;align-items:center;gap:8px;height:var(--h-md);max-width:min(340px,28vw);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:0 12px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;box-sizing:border-box;}
@@ -269,7 +269,7 @@ body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:non
 /* Classic top-tab mode needs ~1350px for logo + context pill + 7 tabs + the right-hand controls.
    Below that it used to overflow and force the whole page to scroll sideways, so hand over to the
    hamburger menu, which already lists every page. Sidebar mode is unaffected. */
-@media(max-width:1180px){
+@media(max-width:1240px){
   body:not(.nav-sidebar) .nav-links,
   body:not(.nav-authed) .nav-links{display:none;}
   body:not(.nav-sidebar) .hamburger,
@@ -462,9 +462,11 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .landing.show{display:block;}
 .land-nav{position:sticky;top:0;background:rgba(15,17,23,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
 [data-theme="light"] .land-nav{background:rgba(255,255,255,.92);}
-.land-logo{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;}
+.land-logo{font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .land-nav-links{display:flex;gap:10px;align-items:center;min-width:0;}
-.land-nav-sections{display:flex;gap:2px;align-items:center;min-width:0;}
+/* overflow:hidden is the last-resort guard — without it the links overflowed their box and the
+   theme toggle rendered on top of "Contact" instead of the links simply collapsing. */
+.land-nav-sections{display:flex;gap:2px;align-items:center;min-width:0;overflow:hidden;}
 .land-nav-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 /* nowrap matters: without it "Connexion Admin" broke onto two lines and burst the 64px bar. */
 .land-nav-links a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;transition:all .15s;cursor:pointer;display:inline-block;white-space:nowrap;}
@@ -703,8 +705,7 @@ border-top:1px solid var(--border);margin:18px 0;}
      landing page with no Login and no Get Started button in the header on mobile. */
   .land-nav-actions .theme-toggle-btn{display:none;}
   .land-nav{padding:0 14px;}
-  .land-logo{font-size:16px;gap:6px;}
-  .land-logo img{height:28px!important;margin-right:4px!important;}
+  .land-logo img{height:34px!important;}
   .lnb{padding:0 11px!important;font-size:12px;}
   .land-footer-inner{flex-direction:column;padding:24px 16px;gap:16px;}
   .land-footer-links{flex-wrap:wrap;gap:12px;}
@@ -715,8 +716,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 @media(max-width:480px){
   /* Narrowest phones: keep only the primary CTA and the language switch in the landing header. */
   .land-nav-actions .lnb-ghost{display:none;}
-  .land-logo{font-size:0;}
-  .land-logo img{margin-right:0!important;}
+  .land-logo img{height:30px!important;}
   .user-menu-info{display:none;}
   .clock-time{font-size:38px;}
   .stats-grid{grid-template-columns:1fr;}
@@ -870,7 +870,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 <symbol id="i-smartphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
 </defs></svg>
   <nav class="land-nav">
-    <div class="land-logo"><img src="/PunchClockPro-Logo.png" alt="PunchClock Pro" style="height:36px;vertical-align:middle;margin-right:8px">PunchClock Pro</div>
+    <!-- Mark only, no wordmark: the text cost ~170px and pushed the nav links into the controls.
+         The footer still carries the full lockup. -->
+    <div class="land-logo"><img src="/PunchClockPro-Logo.png" alt="PunchClock Pro" title="PunchClock Pro" style="height:46px;vertical-align:middle"></div>
     <div class="land-nav-links">
       <!-- Section anchors collapse first when space runs out; the actions below always stay. -->
       <div class="land-nav-sections">
@@ -1513,9 +1515,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- NAV -->
 <nav class="nav" id="mainNav">
-  <div class="nav-logo">
+  <!-- Mark only, same reason as the landing nav: the wordmark was crowding the tabs. -->
+  <div class="nav-logo" title="PunchClock Pro">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    PunchClock
   </div>
   <div class="context-pill" id="contextPill" onclick="handleContextClick()" style="display:none">
     <svg class="ctx-loc"><use href="#i-nav-building"/></svg>
