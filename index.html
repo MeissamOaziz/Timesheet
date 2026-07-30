@@ -245,7 +245,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 #sideNav{display:none;position:fixed;top:60px;left:0;bottom:0;width:216px;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;z-index:90;flex-direction:column;gap:2px;}
 body.nav-sidebar.nav-authed #sideNav{display:flex;}
 body.nav-sidebar.nav-authed .nav-links{display:none;}
-body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:auto;}
+/* With a fixed sidebar the centered 1120px column leaves dead space on wide screens, so the
+   content area fills the space next to the sidebar and breathes more as the viewport grows. */
+body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:none;padding:28px clamp(22px,3.5vw,60px);}
 .sn-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;color:var(--text2);font-family:inherit;font-size:13.5px;font-weight:500;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
 .sn-item:hover{background:var(--surface2);color:var(--text);}
 .sn-item.active{background:rgba(79,142,247,.14);color:var(--accent);font-weight:600;}
@@ -393,7 +395,7 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .modal-footer{display:flex;gap:9px;justify-content:flex-end;margin-top:22px;}
 
 /* FILTER BAR */
-.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end;}
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px;align-items:end;}
 .filter-bar label{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
 .filter-bar input,.filter-bar select{width:100%;height:var(--h-md);padding:0 11px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none;}
 .filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent);}
