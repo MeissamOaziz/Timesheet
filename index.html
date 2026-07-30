@@ -328,8 +328,19 @@ body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:non
 .form-card>p{color:var(--text2);margin-bottom:26px;font-size:14px;}
 .form-group{margin-bottom:16px;}
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+/* Text-like fields only. Checkboxes/radios must be excluded: width:100% inflates their box to the
+   full row, which pushes the control away from the left edge and squeezes the label beside it. */
+.form-group input:not([type="checkbox"]):not([type="radio"]),.form-group select,.form-group textarea{width:100%;padding:10px 13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
+.form-group input:not([type="checkbox"]):not([type="radio"]):focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group input[type="checkbox"],.form-group input[type="radio"]{width:15px;height:15px;flex:0 0 auto;accent-color:var(--accent);cursor:pointer;}
+/* Selectable role/option card: radio pinned left, text takes the whole remaining row. */
+.role-opt{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface2);cursor:pointer;transition:border-color .15s,background .15s;}
+.role-opt:hover{border-color:var(--accent);}
+.role-opt.selected{border-color:var(--accent);background:rgba(79,142,247,.08);}
+.role-opt input[type="radio"]{margin-top:2px;}
+.role-opt-txt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+.role-opt-name{font-size:13px;font-weight:600;color:var(--text);}
+.role-opt-desc{font-size:12px;color:var(--text2);line-height:1.4;}
 .pw-wrap{position:relative;}
 .pw-wrap input{padding-right:40px !important;}
 .pw-toggle{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);padding:2px;line-height:1;transition:color .15s;}
@@ -2101,40 +2112,41 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- INVITE TEAM MEMBER MODAL -->
 <div class="modal-overlay" id="inviteModal">
   <div class="modal">
-    <h3>Invite Team Member</h3>
+    <h3 data-i18n="inv.title">Invite Admin or Manager</h3>
     <div id="inviteMsg"></div>
     <div class="form-group">
-      <label>Email Address</label>
-      <input type="email" id="inviteEmail" placeholder="colleague@company.com">
+      <label data-i18n="inv.email">Email address</label>
+      <input type="email" id="inviteEmail" placeholder="collegue@entreprise.com">
     </div>
     <div class="form-group">
-      <label>Role</label>
+      <label data-i18n="inv.role">Role</label>
+      <!-- Each option is one flex row: radio, then title over description filling the rest. -->
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-        <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--accent);border-radius:10px;cursor:pointer;background:rgba(79,142,247,.08);transition:all .15s" id="inviteRoleCoAdminLabel" onclick="setInviteRole('co_admin')">
-          <input type="radio" name="inviteRole" value="co_admin" checked style="margin-top:2px;accent-color:var(--accent)">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">Co-Admin</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">Full access (except billing)</div>
-          </div>
+        <label class="role-opt selected" id="inviteRoleCoAdminLabel" onclick="setInviteRole('co_admin')">
+          <input type="radio" name="inviteRole" value="co_admin" checked>
+          <span class="role-opt-txt">
+            <span class="role-opt-name" data-i18n="inv.coAdmin">Co-Admin</span>
+            <span class="role-opt-desc" data-i18n="inv.coAdminDesc">Full access except billing</span>
+          </span>
         </label>
-        <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:var(--surface2);transition:all .15s" id="inviteRoleManagerLabel" onclick="setInviteRole('manager')">
-          <input type="radio" name="inviteRole" value="manager" style="margin-top:2px;accent-color:var(--accent)">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">Manager</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:2px">Can manage assigned site(s) and employees</div>
-          </div>
+        <label class="role-opt" id="inviteRoleManagerLabel" onclick="setInviteRole('manager')">
+          <input type="radio" name="inviteRole" value="manager">
+          <span class="role-opt-txt">
+            <span class="role-opt-name" data-i18n="inv.manager">Manager</span>
+            <span class="role-opt-desc" data-i18n="inv.managerDesc">Manages assigned sites and their employees</span>
+          </span>
         </label>
       </div>
     </div>
     <div id="inviteSitesSection" style="display:none">
       <div class="form-group">
-        <label>Assign Sites <span style="color:var(--text3);font-size:11px;font-weight:400">(select at least one)</span></label>
+        <label data-i18n="inv.assignSites">Assign sites (select at least one)</label>
         <div id="inviteSiteCheckboxes" style="display:flex;flex-direction:column;gap:6px;margin-top:6px"></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('inviteModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveInvite()">Send Invitation</button>
+      <button class="btn-secondary" onclick="closeModal('inviteModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveInvite()" data-i18n="inv.send">Send invitation</button>
     </div>
   </div>
 </div>
@@ -6791,16 +6803,15 @@ function openInviteModal(){
   const mySites=myCo?C.sites.filter(s=>s.company_id===myCo.id):[];
   const container=document.getElementById('inviteSiteCheckboxes');
   container.innerHTML=mySites.length===0
-    ?`<p style="font-size:12px;color:var(--text3)">No sites found. Add a site first.</p>`
+    ?`<p style="font-size:12px;color:var(--text3)">${t('inv.noSites')||'No sites found. Add a site first.'}</p>`
     :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
   openModal('inviteModal');
 }
 function setInviteRole(role){
   document.querySelector('input[name="inviteRole"][value="'+role+'"]').checked=true;
-  document.getElementById('inviteRoleCoAdminLabel').style.borderColor=role==='co_admin'?'var(--accent)':'var(--border)';
-  document.getElementById('inviteRoleCoAdminLabel').style.background=role==='co_admin'?'rgba(79,142,247,.08)':'var(--surface2)';
-  document.getElementById('inviteRoleManagerLabel').style.borderColor=role==='manager'?'var(--accent)':'var(--border)';
-  document.getElementById('inviteRoleManagerLabel').style.background=role==='manager'?'rgba(79,142,247,.08)':'var(--surface2)';
+  // Selected state lives in the .role-opt.selected CSS rule so it themes with the rest of the app.
+  document.getElementById('inviteRoleCoAdminLabel').classList.toggle('selected',role==='co_admin');
+  document.getElementById('inviteRoleManagerLabel').classList.toggle('selected',role==='manager');
   document.getElementById('inviteSitesSection').style.display=role==='manager'?'':'none';
 }
 async function saveInvite(){
@@ -6950,7 +6961,7 @@ async function openEditCoAdminModal(id){
     }
     const container=document.getElementById('editManagerSiteCheckboxes');
     container.innerHTML=mySites.length===0
-      ?`<p style="font-size:12px;color:var(--text3)">No sites found. Add a site first.</p>`
+      ?`<p style="font-size:12px;color:var(--text3)">${t('inv.noSites')||'No sites found. Add a site first.'}</p>`
       :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer"><input type="checkbox" value="${s.id}"${assignedIds.has(s.id)?' checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
 
     toggleEditCoAdminSites();
@@ -10592,6 +10603,11 @@ en:{
 'admin.noEmployeesFor':'No employees for','admin.noEmployees':'No employees found.',
 'admin.addSite':'+ Add Site','admin.allAdminAccounts':'All Admin Accounts','admin.createAdmin':'+ Create Admin',
 'admin.inviteMember':'+ Invite Admin or Manager',
+'inv.title':'Invite Admin or Manager','inv.email':'Email address','inv.role':'Role',
+'inv.coAdmin':'Co-Admin','inv.coAdminDesc':'Full access except billing',
+'inv.manager':'Manager','inv.managerDesc':'Manages assigned sites and their employees',
+'inv.assignSites':'Assign sites (select at least one)','inv.send':'Send invitation',
+'inv.noSites':'No sites found. Add a site first.',
 'site.name':'Site Name','site.namePlaceholder':'Main Office, Warehouse A...',
 'site.desc':'Description (optional)','site.descPlaceholder':'Brief description',
 'site.noSites':'No sites yet for this company. Click \"+ Add Site\" to create one.',
@@ -10618,7 +10634,7 @@ en:{
 'geo.locationDenied':'Could not get location. Please allow location access or enter coordinates manually.',
 'geo.deviceNotRegistered':'This device is not registered for',
 'geo.askAdmin':'Ask your manager to register this device using the Kiosk Shortcut button.',
-'geo.setGeofence':'📍 Set Geofence',
+'geo.setGeofence':'Set Geofence',
 'geo.search':'Search',
 'geo.useLocation':'📍 Use My Current Location',
 'geo.radius':'Radius',
@@ -11202,6 +11218,11 @@ fr:{
 'admin.noEmployeesFor':'Aucun employé pour','admin.noEmployees':'Aucun employé trouvé.',
 'admin.addSite':'+ Ajouter un site','admin.allAdminAccounts':'Tous les comptes admin','admin.createAdmin':'+ Créer un admin',
 'admin.inviteMember':'+ Inviter un admin ou gestionnaire',
+'inv.title':'Inviter un admin ou gestionnaire','inv.email':'Adresse courriel','inv.role':'Rôle',
+'inv.coAdmin':'Co-admin','inv.coAdminDesc':'Accès complet, sauf la facturation',
+'inv.manager':'Gestionnaire','inv.managerDesc':'Gère les sites assignés et leurs employés',
+'inv.assignSites':'Assigner des sites (au moins un)','inv.send':'Envoyer l\'invitation',
+'inv.noSites':'Aucun site trouvé. Ajoutez d\'abord un site.',
 'site.name':'Nom du site','site.namePlaceholder':'Bureau principal, Entrepôt A...',
 'site.desc':'Description (optionnel)','site.descPlaceholder':'Brève description',
 'site.noSites':'Aucun site pour cette compagnie. Cliquez sur \"+ Ajouter un site\" pour en créer un.',
@@ -11228,7 +11249,7 @@ fr:{
 'geo.locationDenied':'Impossible d\'obtenir la position. Veuillez autoriser l\'accès à la localisation ou entrer les coordonnées manuellement.',
 'geo.deviceNotRegistered':'Cet appareil n\'est pas enregistré pour',
 'geo.askAdmin':'Demandez à votre gestionnaire d\'enregistrer cet appareil via le bouton Raccourci kiosque.',
-'geo.setGeofence':'📍 Définir le géofence',
+'geo.setGeofence':'Définir le géofence',
 'geo.search':'Rechercher',
 'geo.useLocation':'📍 Utiliser ma position actuelle',
 'geo.radius':'Rayon',
