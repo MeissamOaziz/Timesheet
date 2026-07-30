@@ -245,6 +245,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 #sideNav{display:none;position:fixed;top:60px;left:0;bottom:0;width:216px;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;z-index:90;flex-direction:column;gap:2px;}
 body.nav-sidebar.nav-authed #sideNav{display:flex;}
 body.nav-sidebar.nav-authed .nav-links{display:none;}
+/* The sidebar already exposes Employees/Sites/Admins, so the in-page tab strip is a second
+   copy of the same navigation. Hide it here; the H1 names the active section instead. */
+body.nav-sidebar.nav-authed #page-admin .tabs{display:none;}
 /* With a fixed sidebar the centered 1120px column leaves dead space on wide screens, so the
    content area fills the space next to the sidebar and breathes more as the viewport grows. */
 body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:none;padding:28px clamp(22px,3.5vw,60px);}
@@ -1596,7 +1599,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="sn-sub">
       <button class="sn-item" data-nav="admin" onclick="goAdminTab('employees')"><svg><use href="#i-user"/></svg><span data-i18n="admin.tabs.employees">Employees</span></button>
       <button class="sn-item" data-nav="sites" onclick="navigate('sites')"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-nav-building"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
+      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-shield-pin"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
     </div>
   </div>
   <button class="sn-item" data-nav="reports" onclick="navigate('reports')"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
@@ -1947,8 +1950,10 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <div class="page" id="page-admin">
   <div class="page-header">
-    <div><h1 id="adminTitle" data-i18n="admin.title">Admin Panel</h1><p id="adminSub" data-i18n="admin.subtitle">Manage employees and sites</p></div>
-    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openAddEmpModal()" data-i18n="admin.addEmployee">+ Add Employee</button>
+    <!-- Heading + primary action both follow the active tab, so they carry no data-i18n:
+         _syncAdminHeading()/_syncAdminHeaderBtn() own their text (see applyAllTranslations). -->
+    <div><h1 id="adminTitle">Admin Panel</h1><p id="adminSub">Manage employees and sites</p></div>
+    <button class="btn-primary" id="adminHeaderBtn" style="width:auto;padding:9px 18px" onclick="adminHeaderAction()">+ Add Employee</button>
   </div>
   <!-- MISSED PUNCH REQUESTS -->
   <div id="missedPunchRequestsSection" class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
@@ -2006,9 +2011,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <!-- SITES TAB -->
   <div id="tab-sites" style="display:none">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn-primary" data-admin-only style="width:auto;padding:9px 18px" onclick="openAddSiteModal()" data-i18n="admin.addSite">+ Add Site</button>
-    </div>
+    <!-- "+ Add Site" now lives in the page header (adminHeaderBtn), which follows the active tab. -->
     <div class="site-list" id="siteListAdmin"></div>
   </div>
   <!-- ADMINS TAB (Super Admin only) -->
@@ -2025,7 +2028,6 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">All Admin Accounts</h3>
-        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openCreateAdminModal()" data-i18n="admin.createAdmin">+ Create Admin</button>
       </div>
       <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1000px">
         <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th>Trial</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
@@ -2049,7 +2051,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <h3 style="font-size:14px;font-weight:600" data-i18n="coAdmin.myCoAdmins">My Co-Admins</h3>
           <p style="font-size:12px;color:var(--text2);margin-top:2px" data-i18n="coAdmin.desc">Invite co-admins to manage your account. Free/Starter: 1 admin total. Growth: 2 admins. Business: 3 admins. Extra admins: $4.90/mo each.</p>
         </div>
-        <button class="btn-primary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openInviteModal()">+ Invite Team Member</button>
+        <!-- "+ Invite Admin or Manager" now lives in the page header (adminHeaderBtn). -->
       </div>
       <div id="coAdminMsg" style="margin-bottom:8px"></div>
       <div class="table-wrap"><table>
@@ -4036,6 +4038,9 @@ function setNavMode(mode){
   if(typeof updateNav==='function') updateNav();
   _syncSideNav(typeof currentPage!=='undefined'?currentPage:'dashboard');
   _syncNavModeLabel();
+  // The Admin heading differs per mode (section name vs. "Company — Admin"), so refresh it
+  // immediately rather than waiting for the next page load.
+  if(typeof _syncAdminHeading==='function') _syncAdminHeading();
   showToast(sidebar?(t('sn.switched')||'Sidebar navigation enabled — switch back anytime from your profile menu.')
                    :(t('sn.reverted')||'Back to the classic top tabs.'),'success');
 }
@@ -6289,14 +6294,13 @@ async function loadAdminPage(){
   }
   const sess=Sess.get();
   const co=ctx?.co;
-  document.getElementById('adminTitle').textContent=co?`${co.name} — ${t('admin.title')||'Admin'}`:t('admin.title')||'Admin Panel';
-  document.getElementById('adminSub').textContent=co?`${t('admin.managing')||'Managing employees and sites for'} ${co.name}`:t('admin.subtitle')||'Manage employees and sites';
   // Manager: load assigned site IDs, hide Sites/Admins tabs
   if(isManager()){
     const mgRows=await DB.all('manager_sites',`manager_id=eq.${sess.id}`);
     managerSiteIds=(mgRows||[]).map(r=>r.site_id);
     // Admins tab + panel handled by CSS via [data-admin-only]; no inline display work needed.
     // Default to Employees tab on entry so it doesn't matter where they last were.
+    _adminTab='employees';
     const tabBtns=document.querySelectorAll('#page-admin .tabs .tab');
     tabBtns.forEach(b=>b.classList.remove('active'));
     tabBtns[0].classList.add('active');
@@ -6317,10 +6321,54 @@ async function loadAdminPage(){
   applyAllTranslations();
 }
 
+// Which Admin-panel tab is showing. Drives the page heading and the single header action button,
+// which matters most in sidebar mode where the tab strip is hidden.
+let _adminTab='employees';
+
+function _syncAdminHeading(){
+  const ttl=document.getElementById('adminTitle'), sub=document.getElementById('adminSub');
+  if(!ttl||!sub) return;
+  const co=(typeof Ctx!=='undefined'&&Ctx.get)?Ctx.get()?.co:null;
+  if(getNavMode()==='sidebar'){
+    // No tab strip to show position, so the heading names the section and the subtitle the company.
+    ttl.textContent={employees:t('admin.tabs.employees')||'Employees',
+                     sites:t('admin.tabs.sites')||'Sites',
+                     admins:t('admin.tabs.admins')||'Admins'}[_adminTab]||(t('admin.title')||'Admin Panel');
+    sub.textContent=co?co.name:(t('admin.subtitle')||'Manage employees and sites');
+  }else{
+    ttl.textContent=co?`${co.name} — ${t('admin.title')||'Admin'}`:(t('admin.title')||'Admin Panel');
+    sub.textContent=co?`${t('admin.managing')||'Managing employees and sites for'} ${co.name}`
+                      :(t('admin.subtitle')||'Manage employees and sites');
+  }
+}
+
+function _syncAdminHeaderBtn(){
+  const btn=document.getElementById('adminHeaderBtn');
+  if(!btn) return;
+  // Each tab gets the action that belongs to it — the Admins tab has no employees to add.
+  const spec=_adminTab==='admins'
+      ? (isSuperAdmin()?{k:'admin.createAdmin',f:'+ Create Admin'}
+                       :{k:'admin.inviteMember',f:'+ Invite Admin or Manager'})
+    : _adminTab==='sites' ? {k:'admin.addSite',f:'+ Add Site'}
+                          : {k:'admin.addEmployee',f:'+ Add Employee'};
+  btn.textContent=t(spec.k)||spec.f;
+  // Managers may not create sites or admins, so don't offer a button that would be refused.
+  btn.style.display=(_adminTab!=='employees'&&isManager())?'none':'';
+}
+
+function adminHeaderAction(){
+  if(_adminTab==='sites') return openAddSiteModal();
+  if(_adminTab==='admins') return isSuperAdmin()?openCreateAdminModal():openInviteModal();
+  return openAddEmpModal();
+}
+
 function adminTab(tab,btn){
-  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  ['employees','sites','admins'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'':'none');
+  _adminTab=tab;
+  document.querySelectorAll('#page-admin .tabs .tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  ['employees','sites','admins'].forEach(t=>{
+    const el=document.getElementById('tab-'+t); if(el) el.style.display=t===tab?'':'none';
+  });
   applyAllTranslations();
 }
 
@@ -10543,6 +10591,7 @@ en:{
 'admin.managing':'Managing employees and sites for',
 'admin.noEmployeesFor':'No employees for','admin.noEmployees':'No employees found.',
 'admin.addSite':'+ Add Site','admin.allAdminAccounts':'All Admin Accounts','admin.createAdmin':'+ Create Admin',
+'admin.inviteMember':'+ Invite Admin or Manager',
 'site.name':'Site Name','site.namePlaceholder':'Main Office, Warehouse A...',
 'site.desc':'Description (optional)','site.descPlaceholder':'Brief description',
 'site.noSites':'No sites yet for this company. Click \"+ Add Site\" to create one.',
@@ -11152,6 +11201,7 @@ fr:{
 'admin.managing':'Gestion des employés et sites pour',
 'admin.noEmployeesFor':'Aucun employé pour','admin.noEmployees':'Aucun employé trouvé.',
 'admin.addSite':'+ Ajouter un site','admin.allAdminAccounts':'Tous les comptes admin','admin.createAdmin':'+ Créer un admin',
+'admin.inviteMember':'+ Inviter un admin ou gestionnaire',
 'site.name':'Nom du site','site.namePlaceholder':'Bureau principal, Entrepôt A...',
 'site.desc':'Description (optionnel)','site.descPlaceholder':'Brève description',
 'site.noSites':'Aucun site pour cette compagnie. Cliquez sur \"+ Ajouter un site\" pour en créer un.',
@@ -11805,6 +11855,9 @@ function applyAllTranslations(){
   document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
     btn.classList.toggle('active',btn.dataset.lang===_appLang);
   });
+  // Admin heading + header action depend on the active tab, not just the key, so they can't use
+  // data-i18n. Re-derive them here so a language switch keeps them in sync.
+  if(typeof _syncAdminHeading==='function'){_syncAdminHeading();_syncAdminHeaderBtn();}
 }
 
 function applyPunchTranslations(){
