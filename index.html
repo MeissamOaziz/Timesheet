@@ -6224,7 +6224,8 @@ function showDoublePunchWarning(empId, attemptedType){
     document.getElementById('empSelect').value='';
     return;
   }
-  _dblPunchPending = {empId, attemptedType};
+  const {last} = getEmpStatus(empId);
+  _dblPunchPending = {empId, attemptedType, openPunch: last||null};
   const titleKey = attemptedType==='IN' ? 'dblPunch.alreadyInTitle' : 'dblPunch.notInTitle';
   const msgKey   = attemptedType==='IN' ? 'dblPunch.alreadyInMsg'   : 'dblPunch.notInMsg';
   const fallbackTitle = attemptedType==='IN' ? 'Already Clocked In' : 'Not Clocked In';
@@ -6233,7 +6234,16 @@ function showDoublePunchWarning(empId, attemptedType){
     : `${emp.name} has no active clock-in. Did you forget to clock in? Use 'Report a Missed Punch' if needed.`;
   const titleEl = document.getElementById('dblPunchWarnTitle');
   if(titleEl) titleEl.textContent = t(titleKey)||fallbackTitle;
-  const msg = (t(msgKey)||fallbackMsg).replace('{name}', emp.name);
+  let msg = (t(msgKey)||fallbackMsg).replace('{name}', emp.name);
+  // Name the punch that is still open. Without the date an overnight leftover reads like a
+  // glitch, when in fact it is yesterday's shift that was never closed.
+  if(attemptedType==='IN' && last && last.punch_date){
+    const today = new Date().toLocaleDateString('en-CA');
+    const when = `${last.punch_date} ${(last.punch_time||'').slice(0,5)}`;
+    msg += ' ' + (last.punch_date < today
+      ? (t('dblPunch.sinceEarlier')||'The open clock-in is from {when} — an earlier day. Report the missing clock-out so your hours stay correct.').replace('{when}',when)
+      : (t('dblPunch.sinceToday')||'Clocked in at {when}.').replace('{when}',when));
+  }
   document.getElementById('dblPunchWarnMsg').textContent = msg;
   openModal('dblPunchWarnModal');
 }
@@ -6254,13 +6264,17 @@ function confirmReportFromWarning(){
   if(pending){
     // attempted IN but already IN → likely a missed OUT; attempted OUT with no IN → likely a missed IN
     const reportType = pending.attemptedType==='IN' ? 'OUT' : 'IN';
-    openMissedPunchModal(pending.empId, reportType);
+    // The missing OUT belongs to the day of the still-open IN, not to today — otherwise someone
+    // closing yesterday's shift files it against this morning and the hours stay wrong.
+    const op = pending.openPunch;
+    const prefillDate = (reportType==='OUT' && op && op.punch_date) ? op.punch_date : null;
+    openMissedPunchModal(pending.empId, reportType, prefillDate);
   } else {
     openMissedPunchModal();
   }
 }
 
-function openMissedPunchModal(prefillEmpId, prefillType){
+function openMissedPunchModal(prefillEmpId, prefillType, prefillDate){
   const ctx = Ctx.get();
   if(!ctx){ showCompanyPicker(); return; }
   // Populate dropdown with current site employees (or all company employees if no site context)
@@ -6276,8 +6290,10 @@ function openMissedPunchModal(prefillEmpId, prefillType){
   if(prefillEmpId) sel.value = prefillEmpId;
   document.getElementById('missedPunchType').value = prefillType||'IN';
   const now = new Date();
-  document.getElementById('missedPunchDate').value = now.toLocaleDateString('en-CA');
-  document.getElementById('missedPunchTime').value = now.toTimeString().slice(0,5);
+  // prefillDate carries the day of the punch being corrected; leave the time blank for a past day
+  // so the person has to state when they actually left instead of accepting "now".
+  document.getElementById('missedPunchDate').value = prefillDate || now.toLocaleDateString('en-CA');
+  document.getElementById('missedPunchTime').value = prefillDate ? '' : now.toTimeString().slice(0,5);
   document.getElementById('missedPunchNotes').value = '';
   document.getElementById('missedPunchMsg').innerHTML = '';
   applyAllTranslations();
@@ -7415,6 +7431,10 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
   const fullTime=punch_time+':00';
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const site=C.sites.find(s=>s.id===req.site_id);
+  // Approving inserts a real punch, so it needs the same sequence guard as adding one by hand.
+  const nb=await _punchNeighbours(req.emp_id,punched_at);
+  const seqErr=_punchSequenceError(req.type,nb.prev,nb.next);
+  if(seqErr){showToast(seqErr,'error');return;}
   try{
     const punchPayload={
       emp_id:req.emp_id,emp_name:req.emp_name,company_id:req.company_id,
@@ -8993,6 +9013,40 @@ function openAddPunchModal(){
   openModal('addPunchModal');
 }
 
+// Punches immediately before/after a moment, read from the DB rather than the cache so the check
+// is right even for dates outside the cached window. Bounded to ±4 days to stay cheap.
+async function _punchNeighbours(empId, iso, ignoreId){
+  const t=new Date(iso).getTime();
+  const from=new Date(t-4*864e5).toISOString(), to=new Date(t+4*864e5).toISOString();
+  let rows=[];
+  try{
+    rows=await DB.all('punches',`emp_id=eq.${empId}&punched_at=gte.${from}&punched_at=lte.${to}&order=punched_at.asc`)||[];
+  }catch(_){
+    rows=C.punches.filter(p=>p.emp_id===empId).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+  }
+  rows=rows.filter(p=>p.id!==ignoreId);
+  let prev=null,next=null;
+  for(const p of rows){
+    const pt=new Date(p.punched_at).getTime();
+    if(pt<=t) prev=p; else { next=p; break; }
+  }
+  return {prev,next};
+}
+
+// Rejects anything that would leave two INs or two OUTs in a row for the same employee.
+// Returns an error string, or null when the punch is safe to insert.
+function _punchSequenceError(type, prev, next){
+  const at=p=>`${p.punch_date} ${(p.punch_time||'').slice(0,5)}`;
+  if(type==='IN'){
+    if(prev&&prev.type==='IN') return (t('addPunch.errAlreadyIn')||'This employee is already clocked IN since {when}. Add the missing OUT first, or edit that punch.').replace('{when}',at(prev));
+    if(next&&next.type==='IN') return (t('addPunch.errNextIn')||'The next punch ({when}) is also an IN. Adding this would leave two clock-ins in a row.').replace('{when}',at(next));
+  }else{
+    if(!prev||prev.type==='OUT') return (t('addPunch.errNotIn')||'This employee is not clocked IN at that moment, so an OUT would be out of sequence. Add the missing IN first.');
+    if(next&&next.type==='OUT') return (t('addPunch.errNextOut')||'The next punch ({when}) is also an OUT. Adding this would leave two clock-outs in a row.').replace('{when}',at(next));
+  }
+  return null;
+}
+
 async function saveAddPunch(){
   const empId=document.getElementById('addPunchEmp').value;
   const type=document.getElementById('addPunchType').value;
@@ -9005,6 +9059,11 @@ async function saveAddPunch(){
   const emp=C.employees.find(e=>e.id===empId);
   const ctx=Ctx.get();
   const site=ctx?.site||C.sites.find(s=>s.id===emp?.site_id);
+  // Guard the IN/OUT sequence — without this an admin could add a second IN for someone who was
+  // already clocked in, silently doubling their hours.
+  const {prev,next}=await _punchNeighbours(empId,punched_at);
+  const seqErr=_punchSequenceError(type,prev,next);
+  if(seqErr){showMsg('addPunchMsg',seqErr,'error');return;}
   try{
     const payload={emp_id:empId,emp_name:emp.name,company_id:emp.company_id,type,punch_date,punch_time:fullTime,punched_at,is_manual:true};
     if(site){payload.site_id=site.id;payload.site_name=site.name;}
@@ -10641,6 +10700,12 @@ en:{
 'missed.success':'Missed punch reported. Admin has been notified.',
 'dblPunch.alreadyInTitle':'Already Clocked In','dblPunch.notInTitle':'Not Clocked In',
 'dblPunch.alreadyInMsg':"{name} is already clocked IN. Did you forget to clock out? Use 'Report a Missed Punch' if needed.",
+'dblPunch.sinceEarlier':'The open clock-in is from {when} — an earlier day. Report the missing clock-out so your hours stay correct.',
+'dblPunch.sinceToday':'Clocked in at {when}.',
+'addPunch.errAlreadyIn':'This employee is already clocked IN since {when}. Add the missing OUT first, or edit that punch.',
+'addPunch.errNextIn':'The next punch ({when}) is also an IN. Adding this would leave two clock-ins in a row.',
+'addPunch.errNotIn':'This employee is not clocked IN at that moment, so an OUT would be out of sequence. Add the missing IN first.',
+'addPunch.errNextOut':'The next punch ({when}) is also an OUT. Adding this would leave two clock-outs in a row.',
 'dblPunch.notInMsg':"{name} has no active clock-in. Did you forget to clock in? Use 'Report a Missed Punch' if needed.",
 'dblPunch.report':'📋 Report Missed Punch',
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
@@ -11256,6 +11321,12 @@ fr:{
 'missed.success':"Pointage manqué signalé. L'administrateur a été notifié.",
 'dblPunch.alreadyInTitle':'Déjà pointé','dblPunch.notInTitle':'Pas pointé',
 'dblPunch.alreadyInMsg':"{name} est déjà pointé en ENTRÉE. Avez-vous oublié de pointer en sortie? Utilisez « Signaler un pointage manqué » au besoin.",
+'dblPunch.sinceEarlier':'L\'entrée toujours ouverte date du {when} — une journée antérieure. Signalez la sortie manquante pour que vos heures restent exactes.',
+'dblPunch.sinceToday':'Pointé en entrée à {when}.',
+'addPunch.errAlreadyIn':'Cet employé est déjà pointé en ENTRÉE depuis le {when}. Ajoutez d\'abord la SORTIE manquante, ou modifiez ce pointage.',
+'addPunch.errNextIn':'Le pointage suivant ({when}) est aussi une ENTRÉE. L\'ajout créerait deux entrées consécutives.',
+'addPunch.errNotIn':'Cet employé n\'est pas pointé en ENTRÉE à ce moment; une SORTIE serait hors séquence. Ajoutez d\'abord l\'ENTRÉE manquante.',
+'addPunch.errNextOut':'Le pointage suivant ({when}) est aussi une SORTIE. L\'ajout créerait deux sorties consécutives.',
 'dblPunch.notInMsg':"{name} n'a pas de pointage d'entrée actif. Avez-vous oublié de pointer en entrée? Utilisez « Signaler un pointage manqué » au besoin.",
 'dblPunch.report':'📋 Signaler un pointage manqué',
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',

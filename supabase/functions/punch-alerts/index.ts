@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     const sinceIso = new Date(now - 3 * 864e5).toISOString();
     const [coRes, empRes, punchRes] = await Promise.all([
       rest('companies?select=id,name,admin_id,track_overtime,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours'),
-      rest('employees?active=eq.true&select=id,name,company_id'),
+      rest('employees?active=eq.true&select=id,name,company_id,site_id'),
       rest(`punches?punched_at=gte.${sinceIso}&select=id,emp_id,company_id,type,punch_date,punched_at&order=punched_at.asc`),
     ]);
     const companies = coRes.ok ? await coRes.json() : [];
@@ -89,13 +89,34 @@ Deno.serve(async (req) => {
     const punches = punchRes.ok ? await punchRes.json() : [];
 
     const adminIds = [...new Set((companies as Array<{ admin_id: string }>).map((c) => c.admin_id).filter(Boolean))];
-    const admins = adminIds.length
-      ? await (await rest(`admins?id=in.(${adminIds.join(',')})&select=id,email,name`)).json()
+    // Owners plus everyone they delegated to. Alerts used to go to the account owner only, so
+    // co-admins and managers never learned about a missed punch on a site they run.
+    const teamRes = adminIds.length
+      ? await Promise.all([
+        rest(`admins?id=in.(${adminIds.join(',')})&select=id,email,name,role,status,expires_at,parent_admin_id`),
+        rest(`admins?parent_admin_id=in.(${adminIds.join(',')})&status=eq.active&select=id,email,name,role,status,expires_at,parent_admin_id`),
+      ])
       : [];
+    type AdminRow = { id: string; email: string; name: string; role: string; status: string; expires_at: string | null; parent_admin_id: string | null };
+    const owners: AdminRow[] = teamRes.length && teamRes[0].ok ? await teamRes[0].json() : [];
+    const delegates: AdminRow[] = teamRes.length && teamRes[1].ok ? await teamRes[1].json() : [];
     const adminById: Record<string, { email: string; name: string }> = {};
-    for (const a of admins as Array<{ id: string; email: string; name: string }>) adminById[a.id] = a;
-    const empById: Record<string, { name: string; company_id: string }> = {};
-    for (const e of employees as Array<{ id: string; name: string; company_id: string }>) empById[e.id] = e;
+    for (const a of owners) adminById[a.id] = a;
+
+    // Managers only hear about sites they are actually assigned to.
+    const managerIds = delegates.filter((a) => a.role === 'manager').map((a) => a.id);
+    const mgrSiteIds: Record<string, Set<string>> = {};
+    if (managerIds.length) {
+      const msRes = await rest(`manager_sites?manager_id=in.(${managerIds.join(',')})&select=manager_id,site_id`);
+      if (msRes.ok) {
+        for (const r of (await msRes.json()) as Array<{ manager_id: string; site_id: string }>) {
+          (mgrSiteIds[r.manager_id] || (mgrSiteIds[r.manager_id] = new Set())).add(r.site_id);
+        }
+      }
+    }
+
+    const empById: Record<string, { name: string; company_id: string; site_id: string | null }> = {};
+    for (const e of employees as Array<{ id: string; name: string; company_id: string; site_id: string | null }>) empById[e.id] = e;
     const coById: Record<string, { name: string; admin_id: string; track_overtime: boolean; punch_rounding: number; alerts_enabled: boolean; alert_forgot_out: boolean; alert_overtime: boolean; forgot_out_hours: number }> = {};
     for (const c of companies as Array<{ id: string; name: string; admin_id: string; track_overtime: boolean; punch_rounding: number; alerts_enabled: boolean; alert_forgot_out: boolean; alert_overtime: boolean; forgot_out_hours: number }>) coById[c.id] = c;
 
@@ -105,7 +126,7 @@ Deno.serve(async (req) => {
       (byEmp[p.emp_id] || (byEmp[p.emp_id] = [])).push(p);
     }
 
-    const candidates: Array<{ alert_type: string; ref_key: string; company_id: string; emp_id: string; alert: Alert }> = [];
+    const candidates: Array<{ alert_type: string; ref_key: string; company_id: string; emp_id: string; site_id: string | null; alert: Alert }> = [];
     for (const empId of Object.keys(byEmp)) {
       const emp = empById[empId];
       if (!emp) continue;
@@ -118,7 +139,7 @@ Deno.serve(async (req) => {
         const hoursOpen = (now - new Date(last.punched_at).getTime()) / 3600000;
         if (hoursOpen > (co.forgot_out_hours || FORGOT_OUT_HOURS)) {
           const since = new Date(last.punched_at).toISOString().slice(0, 16).replace('T', ' ');
-          candidates.push({ alert_type: 'forgot_out', ref_key: last.id, company_id: co.admin_id ? emp.company_id : emp.company_id, emp_id: empId,
+          candidates.push({ alert_type: 'forgot_out', ref_key: last.id, company_id: emp.company_id, emp_id: empId, site_id: emp.site_id,
             alert: { type: 'forgot_out', empName: emp.name, detail: `still clocked in for ${Math.round(hoursOpen)}h (since ${since} UTC) — forgot to clock out?`, detailFr: `toujours pointé depuis ${Math.round(hoursOpen)} h (depuis ${since} UTC) — oubli de pointer la sortie?` } });
         }
       }
@@ -136,7 +157,7 @@ Deno.serve(async (req) => {
         for (const d of Object.keys(dayHours)) {
           if (dayHours[d] > OT_DAILY_HOURS) {
             const h = dayHours[d]; const hh = Math.floor(h); const mm = Math.round((h - hh) * 60);
-            candidates.push({ alert_type: 'ot_daily', ref_key: `${empId}|${d}`, company_id: emp.company_id, emp_id: empId,
+            candidates.push({ alert_type: 'ot_daily', ref_key: `${empId}|${d}`, company_id: emp.company_id, emp_id: empId, site_id: emp.site_id,
               alert: { type: 'ot_daily', empName: emp.name, detail: `worked ${hh}h ${mm}m on ${d} — over the ${OT_DAILY_HOURS}h daily overtime threshold.`, detailFr: `a travaillé ${hh} h ${mm} le ${d} — au-dessus du seuil de ${OT_DAILY_HOURS} h.` } });
           }
         }
@@ -153,21 +174,48 @@ Deno.serve(async (req) => {
       if (ins.ok) { const rows = await ins.json(); if (Array.isArray(rows) && rows.length) fresh.push(c); }
     }
 
-    // Group fresh alerts by company and email the primary admin
-    const byCo: Record<string, Alert[]> = {};
-    for (const c of fresh) (byCo[c.company_id] || (byCo[c.company_id] = [])).push(c.alert);
+    // Fan out per company: the owner and every co-admin see all of it; a manager sees only the
+    // alerts for the sites assigned to them, so nobody gets another site's data.
+    const nowMs = Date.now();
+    const active = (a: AdminRow) =>
+      a.status === 'active' && !!a.email && (!a.expires_at || new Date(a.expires_at).getTime() > nowMs);
+
+    const freshByCo: Record<string, typeof fresh> = {};
+    for (const c of fresh) (freshByCo[c.company_id] || (freshByCo[c.company_id] = [])).push(c);
+
     let emailed = 0;
     const errors: string[] = [];
-    for (const coId of Object.keys(byCo)) {
+    const recipients: string[] = [];
+    for (const coId of Object.keys(freshByCo)) {
       const co = coById[coId];
-      const admin = co && adminById[co.admin_id];
-      if (!admin || !admin.email) continue;
-      try {
-        await sendEmail(admin.email, `Alertes PunchClock / PunchClock alerts — ${co.name}`, alertEmailHtml(admin.name, co.name, byCo[coId]));
-        emailed++;
-      } catch (e) { errors.push(`${admin.email}: ${(e as Error).message}`); }
+      if (!co) continue;
+      const items = freshByCo[coId];
+
+      const team: AdminRow[] = [];
+      const owner = owners.find((o) => o.id === co.admin_id);
+      if (owner && active(owner)) team.push(owner);
+      for (const d of delegates) {
+        if (d.parent_admin_id === co.admin_id && active(d) && (d.role === 'co_admin' || d.role === 'manager')) team.push(d);
+      }
+
+      const seen = new Set<string>();
+      for (const person of team) {
+        const key = person.email.toLowerCase();
+        if (seen.has(key)) continue; // never mail the same address twice for one company
+        seen.add(key);
+        const mine = person.role === 'manager'
+          ? items.filter((c) => c.site_id && (mgrSiteIds[person.id] || new Set()).has(c.site_id))
+          : items;
+        if (!mine.length) continue;
+        try {
+          await sendEmail(person.email, `Alertes PunchClock / PunchClock alerts — ${co.name}`,
+            alertEmailHtml(person.name, co.name, mine.map((c) => c.alert)));
+          emailed++;
+          recipients.push(person.email);
+        } catch (e) { errors.push(`${person.email}: ${(e as Error).message}`); }
+      }
     }
-    return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, errors }, null, 2),
+    return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, recipients, errors }, null, 2),
       { headers: { ...CORS, 'Content-Type': 'application/json' } });
   } catch (e) {
     return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
