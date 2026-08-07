@@ -2043,11 +2043,11 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="empBulkBar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(79,142,247,.08);border:1.5px solid rgba(79,142,247,.3);border-radius:10px;padding:10px 14px;margin-bottom:10px">
       <span id="empBulkCount" style="font-size:13px;font-weight:600;color:var(--accent)">0 selected</span>
       <div style="flex:1"></div>
-      <button class="btn-amber" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkSendReport()"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Send Report</button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="bulkToggleActive(false)"><svg class="ic" style="margin-right:5px"><use href="#i-pause"/></svg>Deactivate</button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="bulkToggleActive(true)"><svg class="ic" style="margin-right:5px"><use href="#i-play"/></svg>Activate</button>
-      <button class="btn-danger" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkDelete()"><svg class="ic" style="margin-right:5px"><use href="#i-trash"/></svg>Delete</button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="clearEmpSelection()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Clear</button>
+      <button class="btn-amber" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkSendReport()"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg><span data-i18n="bulk.sendReport">Send Report</span></button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="bulkToggleActive(false)"><svg class="ic" style="margin-right:5px"><use href="#i-pause"/></svg><span data-i18n="admin.deactivate">Deactivate</span></button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="bulkToggleActive(true)"><svg class="ic" style="margin-right:5px"><use href="#i-play"/></svg><span data-i18n="admin.activate">Activate</span></button>
+      <button class="btn-danger" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkDelete()"><svg class="ic" style="margin-right:5px"><use href="#i-trash"/></svg><span data-i18n="bulk.delete">Delete</span></button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="clearEmpSelection()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg><span data-i18n="bulk.clear">Clear</span></button>
     </div>
     <div class="table-wrap"><table>
       <thead><tr>
@@ -2372,6 +2372,12 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button onclick="selAll(true)" data-i18n="reports.selectAll">Select All</button>
       <span style="color:var(--border)">|</span>
       <button onclick="selAll(false)" data-i18n="reports.deselectAll">Deselect All</button>
+      <!-- Departed staff are deactivated, not deleted, so their final pay period still has to be
+           reportable. Off by default to keep the usual list short. -->
+      <label style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:500">
+        <input type="checkbox" id="reportInclInactive" onchange="loadReportEmps()" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer">
+        <span data-i18n="reports.inclInactive">Include inactive employees</span>
+      </label>
     </div>
     <div class="emp-list-check" id="empCheckList"></div>
   </div>
@@ -3692,7 +3698,7 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22];
+  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -6462,7 +6468,7 @@ function updateBulkBar(){
   if(!bar) return;
   if(_selectedEmps.size > 0){
     bar.style.display = 'flex';
-    cnt.textContent = _selectedEmps.size + ' selected';
+    cnt.textContent = (t('bulk.selected')||'{n} selected').replace('{n}', _selectedEmps.size);
     // Hide bulk-delete for managers; keep activate/deactivate
     const bulkDelBtn = bar.querySelector('[onclick="bulkDelete()"]');
     if(bulkDelBtn) bulkDelBtn.style.display = isManager() ? 'none' : '';
@@ -6527,7 +6533,11 @@ async function bulkDelete(){
     const email=(e.email||'').toLowerCase();
     return email&&(C.coAdmins||[]).some(a=>a.role==='manager'&&(a.email||'').toLowerCase()===email&&a.status!=='suspended');
   }).length;
-  if(!confirm(`Permanently delete ${ids.length} employee(s)? This cannot be undone.`)) return;
+  // Same warning as the single delete — the cascade takes every punch with them.
+  const punchCount=C.punches.filter(p=>_selectedEmps.has(p.emp_id)).length;
+  const bulkWarn=(t('msg.bulkDeleteConfirm')||'Permanently delete {n} employee(s)? This also deletes their {p} punch records — payroll history you may be required to keep. To free a seat under your plan without losing history, deactivate them instead.')
+    .replace('{n}',ids.length).replace('{p}',punchCount);
+  if(!confirm(bulkWarn)) return;
   try{
     for(const id of ids){
       await DB.del('employees',`id=eq.${id}`);
@@ -8359,16 +8369,20 @@ function onReportCompanyChange(){
 function loadReportEmps(){
   const coId=document.getElementById('reportCompany').value;
   const siteId=document.getElementById('reportSite').value;
-  let emps=C.employees.filter(e=>e.active);
+  const inclInactive=!!document.getElementById('reportInclInactive')?.checked;
+  let emps=inclInactive?C.employees.slice():C.employees.filter(e=>e.active);
   if(coId!=='all')emps=emps.filter(e=>e.company_id===coId);
   if(siteId!=='all')emps=emps.filter(e=>e.site_id===siteId);
   if(managerSiteIds!==null)emps=emps.filter(e=>managerSiteIds.includes(e.site_id));
+  // Active first, then inactive, each alphabetical — a long-departed list never buries current staff.
+  emps.sort((a,b)=>(a.active===b.active)?(a.name||'').localeCompare(b.name||''):(a.active?-1:1));
   document.getElementById('empCheckList').innerHTML=emps.map(e=>{
     const co=C.companies.find(c=>c.id===e.company_id);
     const site=C.sites.find(s=>s.id===e.site_id);
+    const inactiveTag=e.active?'':` <span style="font-size:10px;color:var(--text3);border:1px solid var(--border);border-radius:10px;padding:0 6px;margin-left:4px">${t('admin.inactive')||'Inactive'}</span>`;
     return`<label class="emp-check-item">
-      <input type="checkbox" class="emp-check" value="${e.id}" checked>
-      <span>${e.name}</span>
+      <input type="checkbox" class="emp-check" value="${e.id}"${e.active?' checked':''}>
+      <span>${esc(e.name)}${inactiveTag}</span>
       <span style="color:var(--text3);font-size:11px;margin-left:auto">${[co?.name,site?.name].filter(Boolean).join(' · ')}</span>
     </label>`;
   }).join('');
@@ -9103,7 +9117,16 @@ function confirmDelete(type,id,name){
     if(warnRow){warnRow.style.display='none';}
     if(warnChk){warnChk.checked=false;}
   }
-  document.getElementById('deleteMsg').textContent=`${t('msg.deleteConfirm1')} "${name}"? ${t('msg.deleteConfirm2')}`;
+  let delMsg=`${t('msg.deleteConfirm1')} "${name}"? ${t('msg.deleteConfirm2')}`;
+  if(type==='emp'){
+    // Deleting an employee also wipes every punch they ever made (explicitly here, and again via
+    // the ON DELETE CASCADE). Say so with a count — "cannot be undone" alone hid what is lost,
+    // and people were deleting departed staff just to free a seat under the plan limit.
+    const n=C.punches.filter(p=>p.emp_id===id).length;
+    delMsg+=' '+(t('msg.deleteEmpPunches')||'This also permanently deletes their {n} punch records — payroll history you may be required to keep.').replace('{n}',n);
+    delMsg+=' '+(t('msg.deleteEmpHint')||'To free a seat under your plan without losing history, deactivate them instead.');
+  }
+  document.getElementById('deleteMsg').textContent=delMsg;
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{
       if(type==='emp'){
@@ -10849,6 +10872,11 @@ en:{
 'land.tos':'Terms of Service','land.privacyPolicy':'Privacy Policy','land.adminLogin':'Admin Login',
 'land.copyright':'© 2026 PunchClock Pro. All rights reserved.',
 'msg.deleteConfirm1':'Are you sure you want to delete','msg.deleteConfirm2':'This cannot be undone.',
+'msg.deleteEmpPunches':'This also permanently deletes their {n} punch records — payroll history you may be required to keep.',
+'msg.deleteEmpHint':'To free a seat under your plan without losing history, deactivate them instead.',
+'msg.bulkDeleteConfirm':'Permanently delete {n} employee(s)? This also deletes their {p} punch records — payroll history you may be required to keep. To free a seat under your plan without losing history, deactivate them instead.',
+'bulk.selected':'{n} selected','bulk.sendReport':'Send Report','bulk.delete':'Delete','bulk.clear':'Clear',
+'reports.inclInactive':'Include inactive employees',
 'msg.deletePunch':'Delete this punch record? This is permanent and will affect reports.',
 'msg.deleteAdmin1':'Permanently delete','msg.deleteAdmin2':'This will delete their account, all their companies, and all associated sites. Their employees will be flagged as "Admin Deleted" and deactivated. This cannot be undone.',
 'msg.deleteAdminDone':'deleted. Their companies and sites have been permanently removed.',
@@ -11087,6 +11115,8 @@ en:{
 'faq.a21':'That device was set up as a kiosk, so it remembers the site. To reset it: on that device, tap the <strong>\'Not a kiosk? Reset this device\'</strong> link at the bottom of the clock-in page, or open <strong>punchclock.ca/?nokiosk=1</strong> in the browser — the device returns to the normal login page. You can re-create a kiosk shortcut anytime from <strong>Admin → Sites → Kiosk Shortcut</strong>.',
 'faq.q22':'I\'m getting alert emails about clock-outs or overtime. Can I turn them off or change how often?',
 'faq.a22':'Yes — manager alerts are fully optional and set per company. Go to <strong>Sites → your company → Edit → Manager Alerts</strong>. Uncheck <strong>"Receive manager alerts by email"</strong> to stop all of them, or keep just the ones you want (forgot-to-clock-out, daily overtime) and adjust the <strong>"Alert after"</strong> hours. Overtime alerts also require overtime tracking to be on. Reports and timesheet emails have their own frequency under <strong>payroll frequency</strong> (weekly / bi-weekly / monthly). Changes take effect right away.',
+'faq.q23':'Do I have to delete employees who have left to stay within my plan limit?',
+'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -11470,6 +11500,11 @@ fr:{
 'land.tos':'Conditions d\'utilisation','land.privacyPolicy':'Politique de confidentialité','land.adminLogin':'Connexion Admin',
 'land.copyright':'© 2026 PunchClock Pro. Tous droits réservés.',
 'msg.deleteConfirm1':'Voulez-vous vraiment supprimer','msg.deleteConfirm2':'Cette action est irréversible.',
+'msg.deleteEmpPunches':'Cela supprime aussi définitivement ses {n} pointages — un historique de paie que vous devez possiblement conserver.',
+'msg.deleteEmpHint':'Pour libérer une place dans votre forfait sans perdre l\'historique, désactivez-le plutôt.',
+'msg.bulkDeleteConfirm':'Supprimer définitivement {n} employé(s)? Cela supprime aussi leurs {p} pointages — un historique de paie que vous devez possiblement conserver. Pour libérer des places dans votre forfait sans perdre l\'historique, désactivez-les plutôt.',
+'bulk.selected':'{n} sélectionné(s)','bulk.sendReport':'Envoyer rapport','bulk.delete':'Supprimer','bulk.clear':'Effacer',
+'reports.inclInactive':'Inclure les employés inactifs',
 'msg.deletePunch':'Supprimer ce pointage? Cette action est permanente et affectera les rapports.',
 'msg.deleteAdmin1':'Supprimer définitivement','msg.deleteAdmin2':'Cela supprimera leur compte, toutes leurs compagnies et tous les sites associés. Leurs employés seront marqués "Admin supprimé" et désactivés. Cette action est irréversible.',
 'msg.deleteAdminDone':'supprimé. Ses compagnies et sites ont été définitivement supprimés.',
@@ -11708,6 +11743,8 @@ fr:{
 'faq.a21':'Cet appareil a été configuré comme kiosque, il se souvient donc du site. Pour le réinitialiser : sur cet appareil, touchez le lien <strong>\'Réinitialiser cet appareil\'</strong> au bas de la page de pointage, ou ouvrez <strong>punchclock.ca/?nokiosk=1</strong> dans le navigateur — l\'appareil revient à la page de connexion normale. Vous pouvez recréer un raccourci kiosque à tout moment depuis <strong>Admin → Sites → Raccourci kiosque</strong>.',
 'faq.q22':'Je reçois des courriels d\'alerte sur les pointages ou les heures supplémentaires. Puis-je les désactiver ou en changer la fréquence?',
 'faq.a22':'Oui — les alertes gestionnaire sont facultatives et se gèrent par compagnie. Allez dans <strong>Sites → votre compagnie → Modifier → Alertes gestionnaire</strong>. Décochez <strong>« Recevoir les alertes par courriel »</strong> pour toutes les arrêter, ou gardez seulement celles voulues (oubli de sortie, heures supplémentaires) et ajustez le seuil <strong>« Alerter après »</strong>. Les alertes d\'heures supplémentaires exigent aussi le suivi des heures supp. activé. Les rapports et feuilles de temps ont leur propre fréquence sous <strong>fréquence de paie</strong> (hebdo / aux deux semaines / mensuel). Les changements prennent effet immédiatement.',
+'faq.q23':'Dois-je supprimer les employés qui ont quitté pour respecter la limite de mon forfait?',
+'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',

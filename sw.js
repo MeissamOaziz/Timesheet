@@ -2,7 +2,7 @@
 // Enables PWA installation (desktop/home screen shortcut).
 // Keeps a minimal cache so the app shell loads instantly even on slow connections.
 
-const CACHE_NAME = 'punchclock-v73';
+const CACHE_NAME = 'punchclock-v74';
 
 // Only cache the app shell — never cache API/database calls
 const PRECACHE = [
