@@ -2392,6 +2392,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <table><thead><tr><th>Employee</th><th>Site</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th class="num" data-i18n="reports.col.reg">Reg Hours</th><th class="num" data-i18n="reports.col.ot">OT Hours</th></tr></thead>
     <tbody id="reportTableBody"></tbody></table>
   </div>
+  <div id="reportTimeOffWrap" style="display:none"></div>
   <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
 </div>
 
@@ -8830,13 +8831,28 @@ async function generateReport(){
   const doneRows=dataRows.filter(r=>r.hours!==null);
   const hasOT=allRows.some(r=>r.trackOT);
 
+  // Paid absence inside the period, per selected employee. Counted separately from worked hours
+  // so payroll can see both without either distorting the other.
+  const selSet=new Set(selEmps);
+  _reportTimeOff=_timeOff.filter(r=>r.status==='approved'&&selSet.has(r.emp_id)&&r.start_date<=end&&r.end_date>=start);
+  let offDays=0, offHours=0;
+  for(const r of _reportTimeOff){
+    // Only the part of the absence that falls inside the reporting window.
+    const a=r.start_date>start?r.start_date:start, b=r.end_date<end?r.end_date:end;
+    const d=Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)+1;
+    if(d>0){ offDays+=d; if(r.kind!=='unpaid') offHours+=d*Number(r.hours_per_day||0); }
+  }
+
   document.getElementById('reportStats').style.display='grid';
   document.getElementById('reportStats').innerHTML=`
     <div class="stat-card"><div class="lbl">Total Sessions</div><div class="val blue">${dataRows.length}</div></div>
     <div class="stat-card"><div class="lbl">Total Hours</div><div class="val green">${totalH.toFixed(2)}</div></div>
     ${hasOT?`<div class="stat-card"><div class="lbl">Overtime Hours</div><div class="val amber">${grandOT.toFixed(2)}</div></div>`:''}
+    ${offDays?`<div class="stat-card"><div class="lbl">${t('to.paidLeaveHours')||'Paid Leave Hours'}</div><div class="val amber">${offHours.toFixed(2)}</div></div>`:''}
     <div class="stat-card"><div class="lbl">Employees</div><div class="val purple">${selEmps.length}</div></div>
     <div class="stat-card"><div class="lbl">Avg Hrs / Session</div><div class="val">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
+
+  renderReportTimeOff(start,end);
 
   if(!dataRows.length){document.getElementById('reportTableWrap').style.display='none';document.getElementById('reportEmpty').style.display='';return;}
   document.getElementById('reportEmpty').style.display='none';
@@ -8890,6 +8906,19 @@ function exportReport(fmt){
     const reg=r.regHours!=null?r.regHours:r.hours;
     return[r.empName+(r.isManual?' [MANUAL]':''),r.empCode,r.siteName,r.date,r.punchIn,r.punchOut,reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
   });
+  // Append approved absences so an exported timesheet is the whole picture, not just worked time.
+  if(_reportTimeOff.length){
+    rows.push(['','','','','','','','']);
+    rows.push([`=== ${(t('to.inPeriod')||'Time off in this period').toUpperCase()} ===`,'','','','','','','']);
+    for(const r of _reportTimeOff){
+      const a=r.start_date>startD?r.start_date:startD, b=r.end_date<endD?r.end_date:endD;
+      const d=Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)+1;
+      if(d<=0) continue;
+      const paid=r.kind!=='unpaid';
+      rows.push([r.emp_name||'','',_toKindLabel(r.kind),a+(b!==a?' → '+b:''),'',`${d} ${t('to.days')||'day(s)'}`,
+                 paid?(d*Number(r.hours_per_day||0)).toFixed(2):'0.00','']);
+    }
+  }
 
   if(fmt==='excel'){
     const wb=XLSX.utils.book_new();
@@ -9418,6 +9447,36 @@ function renderTimeOff(){
         <td><button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="openTimeOffModal('${r.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
             <button class="icon-btn" style="color:var(--red)" title="${t('common.delete')||'Delete'}" onclick="deleteTimeOff('${r.id}')"><svg class="ic"><use href="#i-trash"/></svg></button></td>
       </tr>`;}).join('')}</tbody></table></div>`;
+}
+
+// Absences inside the last generated report period, rendered under the results table so payroll
+// sees worked hours and paid leave side by side. Included in the CSV/Excel export too.
+let _reportTimeOff=[];
+function renderReportTimeOff(start,end){
+  const host=document.getElementById('reportTimeOffWrap');
+  if(!host) return;
+  if(!_reportTimeOff.length){ host.style.display='none'; host.innerHTML=''; return; }
+  const clip=r=>{
+    const a=r.start_date>start?r.start_date:start, b=r.end_date<end?r.end_date:end;
+    return {a,b,d:Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)+1};
+  };
+  host.style.display='';
+  host.innerHTML=`<div style="margin-top:22px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">${t('to.inPeriod')||'Time off in this period'}</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>${t('to.employee')||'Employee'}</th><th>${t('to.kind')||'Type'}</th><th>${t('to.dates')||'Dates'}</th><th class="num">${t('to.days')||'Days'}</th><th class="num">${t('to.hours')||'Hours'}</th></tr></thead>
+      <tbody>${_reportTimeOff.map(r=>{const c=clip(r);
+        const paid=r.kind!=='unpaid';
+        return `<tr>
+          <td style="font-weight:600">${esc(r.emp_name||'')}</td>
+          <td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${(TO_KINDS[r.kind]||{}).c||'var(--text3)'}"></span>${_toKindLabel(r.kind)}</span></td>
+          <td style="font-size:12.5px">${c.a}${c.b!==c.a?' → '+c.b:''}</td>
+          <td class="num">${c.d}</td>
+          <td class="num">${paid?(c.d*Number(r.hours_per_day||0)).toFixed(2):'—'}</td>
+        </tr>`;}).join('')}</tbody>
+    </table></div>
+    <div style="font-size:11.5px;color:var(--text3);margin-top:7px">${t('to.unpaidNote')||'Unpaid leave is listed for the record but contributes no hours.'}</div>
+  </div>`;
 }
 
 function _toSyncEnd(){
@@ -10729,6 +10788,7 @@ function openAddShiftModal(empId = '', dateStr = '') {
   document.getElementById('shiftModalTitle').textContent = t('sched.addShift')||'Add Shift';
   document.getElementById('shiftModalId').value = '';
   document.getElementById('shiftModalMsg').innerHTML = '';
+  window._shiftIgnoreTimeOff = false;   // each shift re-checks the time-off conflict
   document.getElementById('shiftDeleteBtn').style.display = 'none';
 
   const coId = document.getElementById('schedCoFilter')?.value;
@@ -10750,6 +10810,7 @@ function openEditShiftModal(shiftId) {
   document.getElementById('shiftModalTitle').textContent = t('sched.editShift')||'Edit Shift';
   document.getElementById('shiftModalId').value = sh.id;
   document.getElementById('shiftModalMsg').innerHTML = '';
+  window._shiftIgnoreTimeOff = false;   // each shift re-checks the time-off conflict
   document.getElementById('shiftDeleteBtn').style.display = '';
 
   const coId = document.getElementById('schedCoFilter')?.value;
@@ -10785,6 +10846,20 @@ async function saveShift() {
   const s   = Sess.get();
   const emp = C.employees.find(e => e.id === empId);
   if(!emp) return;
+
+  // Scheduling someone who is booked off is almost always a mistake, but occasionally deliberate
+  // (a sick day being covered, a half day). Warn and let them confirm rather than block.
+  const away = timeOffOn(date, empId);
+  if(away.length && !window._shiftIgnoreTimeOff){
+    const a = away[0];
+    msgEl.innerHTML = `<div class="msg error" style="text-align:left">
+      ${(t('to.schedConflict')||'{name} is off that day ({kind}).').replace('{name}',esc(emp.name)).replace('{kind}',_toKindLabel(a.kind))}
+      ${a.end_date!==a.start_date?`<div style="font-size:12px;margin-top:3px;opacity:.85">${a.start_date} → ${a.end_date}</div>`:''}
+      <div style="margin-top:9px"><button class="btn-secondary" style="width:auto;padding:5px 13px;font-size:12px" onclick="window._shiftIgnoreTimeOff=true;saveShift()">${t('to.scheduleAnyway')||'Schedule anyway'}</button></div>
+    </div>`;
+    return;
+  }
+  window._shiftIgnoreTimeOff = false;
 
   const adminId = s?.parent_admin_id || s?.id;
   const payload = {
@@ -11241,6 +11316,8 @@ en:{
 'to.errHours':'Hours per day must be between 0.5 and 24.',
 'to.errOverlap':'{name} already has time off from {a} to {b}. Edit that entry instead.',
 'to.schedConflict':'{name} is off that day ({kind}).',
+'to.scheduleAnyway':'Schedule anyway','to.paidLeaveHours':'Paid Leave Hours',
+'to.inPeriod':'Time off in this period','to.unpaidNote':'Unpaid leave is listed for the record but contributes no hours.',
 'nav.dd.tour':'Take the tour','help.forThisPage':'For this page','help.everythingElse':'Everything else',
 'tour.step':'Step {n} of {total}','tour.next':'Next','tour.back':'Back','tour.skip':'Skip','tour.finish':'Finish',
 'tour.replay':'▶ Replay the 5-step tour',
@@ -11900,6 +11977,8 @@ fr:{
 'to.errHours':'Les heures par jour doivent être entre 0,5 et 24.',
 'to.errOverlap':'{name} a déjà un congé du {a} au {b}. Modifiez cette entrée plutôt.',
 'to.schedConflict':'{name} est absent ce jour-là ({kind}).',
+'to.scheduleAnyway':'Planifier quand même','to.paidLeaveHours':'Heures de congé payé',
+'to.inPeriod':'Congés dans cette période','to.unpaidNote':'Les congés sans solde sont listés pour référence mais ne comptent aucune heure.',
 'nav.dd.tour':'Visite guidée','help.forThisPage':'Pour cette page','help.everythingElse':'Tout le reste',
 'tour.step':'Étape {n} sur {total}','tour.next':'Suivant','tour.back':'Retour','tour.skip':'Passer','tour.finish':'Terminer',
 'tour.replay':'▶ Revoir la visite en 5 étapes',
