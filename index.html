@@ -1533,6 +1533,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
     <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
     <button class="nav-btn" onclick="navigate('schedule')" id="navSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
+    <button class="nav-btn" onclick="navigate('timeoff')" id="navTimeOff" style="display:none"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span></button>
   </div>
   <div class="nav-right">
     <!-- User dropdown menu (shown when logged in) -->
@@ -1642,6 +1643,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('timeoff')" id="mobileNavTimeOff" style="display:none"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span></button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
   <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa"><svg><use href="#i-nav-schedule"/></svg> <span id="mobileSchedulingLabel"></span></button>
@@ -1664,6 +1666,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-shield-pin"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
     </div>
   </div>
+  <button class="sn-item" data-nav="timeoff" onclick="navigate('timeoff')"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span><span id="snTimeOffBadge" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
   <button class="sn-item" data-nav="reports" onclick="navigate('reports')"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
   <button class="sn-item" data-nav="activity" onclick="navigate('activity')"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <div style="margin-top:auto"></div>
@@ -2393,6 +2396,75 @@ border-top:1px solid var(--border);margin:18px 0;}
     <tbody id="reportTableBody"></tbody></table>
   </div>
   <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
+</div>
+
+<!-- ═══════════════ TIME OFF PAGE ═══════════════ -->
+<div class="page" id="page-timeoff">
+  <div class="page-header">
+    <div><h1 data-i18n="to.title">Time Off</h1><p data-i18n="to.subtitle">Vacation, sick days and absences</p></div>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openTimeOffModal()" data-i18n="to.add">+ Add time off</button>
+  </div>
+  <!-- Pending approvals surface first; the block hides itself when the queue is empty. -->
+  <div id="toPendingSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,.35);border-radius:var(--radius);padding:14px 16px">
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="to.pending">Pending requests</span>
+    </h3>
+    <div id="toPendingList"></div>
+  </div>
+  <div class="stats-grid" id="toStats"></div>
+  <div class="filter-bar" style="margin-top:18px">
+    <div><label data-i18n="admin.site">Site</label><select id="toSiteFilter" onchange="renderTimeOff()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
+    <div><label data-i18n="to.filterWhen">Period</label>
+      <select id="toWhenFilter" onchange="renderTimeOff()">
+        <option value="upcoming" data-i18n="to.fUpcoming">Upcoming &amp; current</option>
+        <option value="year" data-i18n="to.fYear">This year</option>
+        <option value="past" data-i18n="to.fPast">Past</option>
+        <option value="all" data-i18n="to.fAll">All</option>
+      </select>
+    </div>
+    <div><label data-i18n="to.filterKind">Type</label>
+      <select id="toKindFilter" onchange="renderTimeOff()">
+        <option value="all" data-i18n="admin.allStatuses">All</option>
+        <option value="vacation" data-i18n="to.k.vacation">Vacation</option>
+        <option value="sick" data-i18n="to.k.sick">Sick</option>
+        <option value="personal" data-i18n="to.k.personal">Personal</option>
+        <option value="unpaid" data-i18n="to.k.unpaid">Unpaid</option>
+        <option value="other" data-i18n="to.k.other">Other</option>
+      </select>
+    </div>
+  </div>
+  <div id="toListWrap"></div>
+</div>
+
+<!-- ADD / EDIT TIME OFF MODAL -->
+<div class="modal-overlay" id="timeOffModal">
+  <div class="modal">
+    <h3 id="timeOffModalTitle" data-i18n="to.add">Add time off</h3>
+    <div id="timeOffMsg"></div>
+    <div class="form-group"><label data-i18n="to.employee">Employee</label><select id="toEmp"></select></div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label data-i18n="to.start">First day off</label><input type="date" id="toStart" onchange="_toSyncEnd()"></div>
+      <div class="form-group"><label data-i18n="to.end">Last day off</label><input type="date" id="toEnd"></div>
+    </div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label data-i18n="to.kind">Type</label>
+        <select id="toKind">
+          <option value="vacation" data-i18n="to.k.vacation">Vacation</option>
+          <option value="sick" data-i18n="to.k.sick">Sick</option>
+          <option value="personal" data-i18n="to.k.personal">Personal</option>
+          <option value="unpaid" data-i18n="to.k.unpaid">Unpaid</option>
+          <option value="other" data-i18n="to.k.other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label data-i18n="to.hours">Hours per day</label><input type="number" id="toHours" value="8" min="0.5" max="24" step="0.5"></div>
+    </div>
+    <div class="form-group"><label data-i18n="to.note">Note (optional)</label><input type="text" id="toReason" data-i18n="to.notePlaceholder" placeholder="Booked in advance"></div>
+    <div id="toConflictWarn" style="display:none"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('timeOffModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveTimeOff()" data-i18n="to.save">Save</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════ COMPANIES PAGE ═══════════════ -->
@@ -3834,11 +3906,15 @@ async function refreshCache(opts={}){
   if(opts.startDate)parts.push(`punch_date=gte.${opts.startDate}`);
   if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
   if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
-  const[sites,employees,punches]=await Promise.all([
+  const[sites,employees,punches,timeOff]=await Promise.all([
     DB.all('sites',sitesFilter),
     DB.all('employees',empsFilter),
     DB.all('punches',parts.join('&')),
+    // Loaded with the rest so the dashboard, schedule and reports can all read absences without
+    // each having to fetch. Failure is non-fatal — the rest of the app must still work.
+    DB.all('time_off','order=start_date.desc').catch(()=>[]),
   ]);
+  _timeOff=(timeOff||[]).filter(r=>superAdmin||visibleCoIds.has(r.company_id));
   // Client-side guards — belt-and-suspenders in case DB returns unexpected rows
   C.sites=(sites||[]).filter(s=>superAdmin||visibleCoIds.has(s.company_id));
   C.employees=(employees||[]).filter(e=>superAdmin||visibleCoIds.has(e.company_id));
@@ -4084,7 +4160,7 @@ function navigate(page){
   if(window._kioskUrlMode && !['punch','login','landing'].includes(page)) return;
   // Redirect legacy 'companies' references to the new sites page
   if(page==='companies'){navigate('sites');return;}
-  const adminPages=['dashboard','admin','reports','sites','activity','schedule'];
+  const adminPages=['dashboard','admin','reports','sites','activity','schedule','timeoff'];
   if(adminPages.includes(page)&&!isLoggedIn()&&!isDemo()){navigate('login');return;}
   // Onboarding is guided, not blocking: new admins can explore every page immediately and
   // finish setup from the Dashboard checklist (renderSetupChecklist). Only a genuinely
@@ -4096,7 +4172,7 @@ function navigate(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('page-'+page);
   if(el){el.classList.add('active');currentPage=page;}
-  const map={punch:0,dashboard:1,admin:2,reports:3,sites:4,activity:5,schedule:6};
+  const map={punch:0,dashboard:1,admin:2,reports:3,sites:4,activity:5,schedule:6,timeoff:7};
   const btns=document.querySelectorAll('.nav-links .nav-btn');
   if(map[page]!==undefined&&btns[map[page]])btns[map[page]].classList.add('active');
   if(page==='punch')loadPunchPage();
@@ -4106,6 +4182,7 @@ function navigate(page){
   else if(page==='sites')loadSitesPage();
   else if(page==='activity'){loadActivityPage();renderMissedPunchRequests();}
   else if(page==='schedule')loadSchedulePage();
+  else if(page==='timeoff')loadTimeOffPage();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
   _syncSideNav(page);
 }
@@ -4373,7 +4450,16 @@ function renderDashboard(){
       ${card(t('dash.hoursToday')||'Hours today', fmtH(hToday))}
       ${card(t('dash.hoursWeek')||'Hours this week', fmtH(hWeek))}
       ${card(t('dash.activeEmps')||'Active employees', emps.length)}
+      ${(()=>{const off=timeOffOn(todayStr).filter(r=>empIds.has(r.emp_id));
+              return card(t('to.offToday')||'Off today', off.length, off.length?'var(--amber)':'var(--text)');})()}
     </div>`;
+    // Who is away today — the thing a manager actually wants at a glance each morning.
+    const offToday=timeOffOn(todayStr).filter(r=>empIds.has(r.emp_id));
+    const offBanner=offToday.length?`<div style="display:flex;align-items:flex-start;gap:9px;flex-wrap:wrap;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:9px 13px;margin-bottom:14px">
+        <svg style="width:15px;height:15px;color:#f59e0b;flex-shrink:0;margin-top:2px"><use href="#i-calendar"/></svg>
+        <div style="font-size:12.5px;color:var(--text);line-height:1.6"><strong>${t('to.offTodayLabel')||'Off today'}:</strong> ${
+          offToday.map(r=>`${esc(r.emp_name||'')} <span style="color:var(--text3)">(${_toKindLabel(r.kind)}${r.end_date!==r.start_date?', '+(t('to.until')||'until')+' '+r.end_date:''})</span>`).join(' · ')}</div>
+      </div>`:'';
     const inList=clockedIn.length
       ? clockedIn.map(({e,since})=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(e.name)}</span><span style="font-size:13px;color:var(--text2)">${t('dash.since')||'since'} ${fmtTime(since.punched_at)}</span></div>`).join('')
       : `<div style="color:var(--text3);font-size:13px;padding:12px 0">${t('dash.noneIn')||'Nobody is clocked in right now.'}</div>`;
@@ -4387,6 +4473,7 @@ function renderDashboard(){
         <div><div style="font-size:15px;font-weight:700">${esc(site.name)}</div><div style="font-size:12px;color:var(--text3)">${esc(co?co.name:'')}${emps.length?(' · '+emps.length+' '+(emps.length===1?(t('site.employee')||'employee'):(t('site.employees')||'employees'))):''}</div></div>
       </div>
       ${cards}
+      ${offBanner}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">${panel((t('dash.currentlyIn')||'Currently clocked in')+(clockedIn.length?` (${clockedIn.length})`:''), inList)}${panel(t('dash.recentActivity')||'Recent activity', recentList)}</div>
     </section>`;
   }
@@ -4690,13 +4777,15 @@ function updateNav(){
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
-  ['navDashboard','navAdmin','navReports','navCompanies','navActivity'].forEach(id=>{
+  ['navDashboard','navAdmin','navReports','navCompanies','navActivity','navTimeOff'].forEach(id=>{
     const _el=document.getElementById(id); if(_el)_el.style.display=ok?'':'none';});
   // Schedule nav — only show if logged in (access check happens in loadSchedulePage)
   const navSched=document.getElementById('navSchedule');
   if(navSched) navSched.style.display=ok?'':'none';
   const mobileNavSched=document.getElementById('mobileNavSchedule');
   if(mobileNavSched) mobileNavSched.style.display=ok?'':'none';
+  const mobileNavTO=document.getElementById('mobileNavTimeOff');
+  if(mobileNavTO) mobileNavTO.style.display=ok?'':'none';
   // Sync mobile menu
   document.getElementById('mobileLoginBtn').style.display=ok?'none':'';
   document.getElementById('mobileLogoutBtn').style.display=ok?'':'none';
@@ -9248,6 +9337,206 @@ async function saveAddPunch(){
 }
 
 // ═══════════════════════════════════════════════════
+// TIME OFF
+// Absences are stored as a date range per employee. Everything else (dashboard "off today",
+// scheduling conflicts, report totals) reads from this one list.
+// ═══════════════════════════════════════════════════
+const TO_KINDS={vacation:{c:'#4f8ef7'},sick:{c:'#ef4444'},personal:{c:'#a78bfa'},unpaid:{c:'#94a3b8'},other:{c:'#f59e0b'}};
+let _timeOff=[];
+let _toEditId=null;
+
+function _toKindLabel(k){ return t('to.k.'+k)||k; }
+function _toDays(r){
+  const a=new Date(r.start_date+'T00:00:00'), b=new Date(r.end_date+'T00:00:00');
+  return Math.round((b-a)/864e5)+1;
+}
+function _toToday(){ return new Date().toLocaleDateString('en-CA'); }
+function _toCovers(r,dateStr){ return r.start_date<=dateStr && r.end_date>=dateStr; }
+
+// Approved absences overlapping a date — used by the dashboard and the schedule conflict check.
+function timeOffOn(dateStr, empId){
+  return _timeOff.filter(r=>r.status==='approved' && _toCovers(r,dateStr) && (!empId||r.emp_id===empId));
+}
+
+async function loadTimeOffPage(){
+  if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
+  const ctx=Ctx.get();
+  const sel=document.getElementById('toSiteFilter');
+  let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
+  if(managerSiteIds!==null) sites=sites.filter(s=>managerSiteIds.includes(s.id));
+  sel.innerHTML=`<option value="all">${t('admin.allSites')||'All Sites'}</option>`+
+    sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  await refreshTimeOff();
+  renderTimeOff();
+  applyAllTranslations();
+}
+
+async function refreshTimeOff(){
+  try{
+    _timeOff=await DB.all('time_off','order=start_date.desc')||[];
+  }catch(e){ _timeOff=[]; }
+  if(managerSiteIds!==null) _timeOff=_timeOff.filter(r=>!r.site_id||managerSiteIds.includes(r.site_id));
+}
+
+function renderTimeOff(){
+  const site=document.getElementById('toSiteFilter')?.value||'all';
+  const when=document.getElementById('toWhenFilter')?.value||'upcoming';
+  const kind=document.getElementById('toKindFilter')?.value||'all';
+  const today=_toToday(), yr=today.slice(0,4);
+
+  let rows=_timeOff.slice();
+  if(site!=='all') rows=rows.filter(r=>r.site_id===site);
+  if(kind!=='all') rows=rows.filter(r=>r.kind===kind);
+  if(when==='upcoming') rows=rows.filter(r=>r.end_date>=today);
+  else if(when==='past') rows=rows.filter(r=>r.end_date<today);
+  else if(when==='year') rows=rows.filter(r=>r.start_date.slice(0,4)===yr);
+
+  // Pending queue — always every pending row, regardless of the period filter, so an approval
+  // can never hide behind a date range.
+  const pending=_timeOff.filter(r=>r.status==='pending'&&(site==='all'||r.site_id===site));
+  const pendSec=document.getElementById('toPendingSection');
+  if(pending.length){
+    pendSec.style.display='';
+    document.getElementById('toPendingList').innerHTML=pending.map(r=>`
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--border)">
+        <div style="flex:1;min-width:180px">
+          <div style="font-weight:600;font-size:13.5px">${esc(r.emp_name||'')}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">
+            ${_toKindLabel(r.kind)} · ${r.start_date}${r.end_date!==r.start_date?' → '+r.end_date:''} · ${_toDays(r)} ${t('to.days')||'day(s)'}
+            ${r.reason?' · '+esc(r.reason):''}
+          </div>
+        </div>
+        <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="reviewTimeOff('${r.id}','approved')">${t('to.approve')||'Approve'}</button>
+        <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--red);border-color:var(--red)" onclick="reviewTimeOff('${r.id}','denied')">${t('to.deny')||'Deny'}</button>
+      </div>`).join('');
+  } else { pendSec.style.display='none'; }
+
+  // Stats
+  const offToday=timeOffOn(today).filter(r=>site==='all'||r.site_id===site);
+  const in7=new Date(Date.now()+7*864e5).toLocaleDateString('en-CA');
+  const soon=_timeOff.filter(r=>r.status==='approved'&&r.start_date>today&&r.start_date<=in7&&(site==='all'||r.site_id===site));
+  const ytd=_timeOff.filter(r=>r.status==='approved'&&r.start_date.slice(0,4)===yr&&(site==='all'||r.site_id===site));
+  const ytdDays=ytd.reduce((n,r)=>n+_toDays(r),0);
+  document.getElementById('toStats').innerHTML=[
+    {l:t('to.offToday')||'Off today',v:offToday.length,c:offToday.length?'var(--amber)':'var(--text)'},
+    {l:t('to.next7')||'Starting in 7 days',v:soon.length,c:'var(--accent)'},
+    {l:t('to.pendingCount')||'Awaiting approval',v:pending.length,c:pending.length?'var(--amber)':'var(--text)'},
+    {l:t('to.ytdDays')||'Days off this year',v:ytdDays,c:'var(--text)'},
+  ].map(s=>`<div class="stat-card"><div class="lbl">${s.l}</div><div class="val" style="color:${s.c}">${s.v}</div></div>`).join('');
+
+  // List
+  const host=document.getElementById('toListWrap');
+  if(!rows.length){
+    host.innerHTML=`<div class="empty" style="padding:34px"><p>${t('to.none')||'No time off recorded for this filter.'}</p></div>`;
+    return;
+  }
+  const statusPill=r=>{
+    const m={approved:['var(--green)',t('to.approved')||'Approved'],pending:['var(--amber)',t('to.statusPending')||'Pending'],
+             denied:['var(--red)',t('to.denied')||'Denied'],cancelled:['var(--text3)',t('to.cancelled')||'Cancelled']}[r.status]||['var(--text3)',r.status];
+    return `<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid ${m[0]};color:${m[0]}">${m[1]}</span>`;
+  };
+  host.innerHTML=`<div class="table-wrap"><table>
+    <thead><tr>
+      <th data-i18n="to.employee">Employee</th><th data-i18n="to.kind">Type</th>
+      <th data-i18n="to.dates">Dates</th><th class="num" data-i18n="to.days">Days</th>
+      <th data-i18n="col.status">Status</th><th data-i18n="col.actions">Actions</th>
+    </tr></thead><tbody>${rows.map(r=>{
+      const current=_toCovers(r,today)&&r.status==='approved';
+      return `<tr${current?' style="background:rgba(245,158,11,.06)"':''}>
+        <td style="font-weight:600">${esc(r.emp_name||'')}</td>
+        <td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${(TO_KINDS[r.kind]||{}).c||'var(--text3)'}"></span>${_toKindLabel(r.kind)}</span></td>
+        <td style="font-size:12.5px">${r.start_date}${r.end_date!==r.start_date?' → '+r.end_date:''}${current?` <span style="color:var(--amber);font-weight:600">· ${t('to.now')||'off now'}</span>`:''}</td>
+        <td class="num">${_toDays(r)}</td>
+        <td>${statusPill(r)}</td>
+        <td><button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="openTimeOffModal('${r.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
+            <button class="icon-btn" style="color:var(--red)" title="${t('common.delete')||'Delete'}" onclick="deleteTimeOff('${r.id}')"><svg class="ic"><use href="#i-trash"/></svg></button></td>
+      </tr>`;}).join('')}</tbody></table></div>`;
+}
+
+function _toSyncEnd(){
+  const s=document.getElementById('toStart').value, e=document.getElementById('toEnd');
+  if(s&&(!e.value||e.value<s)) e.value=s;   // single-day is the common case
+}
+
+function openTimeOffModal(id){
+  const ctx=Ctx.get();
+  if(!ctx){showCompanyPicker();return;}
+  _toEditId=id||null;
+  document.getElementById('timeOffMsg').innerHTML='';
+  document.getElementById('toConflictWarn').style.display='none';
+  let emps=C.employees.filter(e=>e.active&&e.company_id===ctx.co.id);
+  if(managerSiteIds!==null) emps=emps.filter(e=>managerSiteIds.includes(e.site_id));
+  document.getElementById('toEmp').innerHTML=emps.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');
+  const r=id?_timeOff.find(x=>x.id===id):null;
+  document.getElementById('timeOffModalTitle').textContent=r?(t('to.edit')||'Edit time off'):(t('to.add')||'Add time off');
+  document.getElementById('toEmp').value=r?r.emp_id:(emps[0]?.id||'');
+  document.getElementById('toStart').value=r?r.start_date:_toToday();
+  document.getElementById('toEnd').value=r?r.end_date:_toToday();
+  document.getElementById('toKind').value=r?r.kind:'vacation';
+  document.getElementById('toHours').value=r?r.hours_per_day:8;
+  document.getElementById('toReason').value=r?(r.reason||''):'';
+  applyAllTranslations();
+  openModal('timeOffModal');
+}
+
+async function saveTimeOff(){
+  const empId=document.getElementById('toEmp').value;
+  const start=document.getElementById('toStart').value;
+  const end=document.getElementById('toEnd').value;
+  const kind=document.getElementById('toKind').value;
+  const hours=parseFloat(document.getElementById('toHours').value);
+  const reason=document.getElementById('toReason').value.trim();
+  if(!empId||!start||!end){showMsg('timeOffMsg',t('to.errFields')||'Employee and both dates are required.','error');return;}
+  if(end<start){showMsg('timeOffMsg',t('to.errOrder')||'The last day cannot be before the first day.','error');return;}
+  if(!(hours>0&&hours<=24)){showMsg('timeOffMsg',t('to.errHours')||'Hours per day must be between 0.5 and 24.','error');return;}
+  const emp=C.employees.find(e=>e.id===empId);
+  if(!emp)return;
+  // Overlapping absences for the same person double-count in reports, so block them outright.
+  const clash=_timeOff.find(r=>r.id!==_toEditId&&r.emp_id===empId&&r.status!=='denied'&&r.status!=='cancelled'
+                              &&r.start_date<=end&&r.end_date>=start);
+  if(clash){
+    showMsg('timeOffMsg',(t('to.errOverlap')||'{name} already has time off from {a} to {b}. Edit that entry instead.')
+      .replace('{name}',emp.name).replace('{a}',clash.start_date).replace('{b}',clash.end_date),'error');
+    return;
+  }
+  const payload={company_id:emp.company_id,site_id:emp.site_id||null,emp_id:empId,emp_name:emp.name,
+                 kind,start_date:start,end_date:end,hours_per_day:hours,reason:reason||null};
+  try{
+    if(_toEditId){
+      await DB.update('time_off',`id=eq.${_toEditId}`,payload);
+    }else{
+      // Added by an admin, so it is already decided — no self-approval step.
+      const sess=Sess.get();
+      await DB.insert('time_off',{...payload,status:'approved',requested_by:'admin',
+                                  reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()});
+    }
+    closeModal('timeOffModal');
+    await refreshTimeOff(); renderTimeOff();
+    showToast(t('to.saved')||'Time off saved.','success');
+  }catch(e){ showMsg('timeOffMsg','Error: '+e.message,'error'); }
+}
+
+async function reviewTimeOff(id,decision){
+  const sess=Sess.get();
+  try{
+    await DB.update('time_off',`id=eq.${id}`,{status:decision,reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()});
+    await refreshTimeOff(); renderTimeOff();
+    showToast(decision==='approved'?(t('to.okApproved')||'Time off approved.'):(t('to.okDenied')||'Request denied.'),'success');
+  }catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+async function deleteTimeOff(id){
+  const r=_timeOff.find(x=>x.id===id);
+  if(!r) return;
+  if(!confirm((t('to.confirmDelete')||'Delete this time off for {name}?').replace('{name}',r.emp_name||''))) return;
+  try{
+    await DB.del('time_off',`id=eq.${id}`);
+    await refreshTimeOff(); renderTimeOff();
+    showToast(t('to.deleted')||'Time off deleted.','success');
+  }catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ═══════════════════════════════════════════════════
 // DELETE
 // ═══════════════════════════════════════════════════
 function confirmDelete(type,id,name){
@@ -10969,6 +11258,22 @@ en:{
 'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another',
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'admin.pinShow':'Show','admin.pinNone':'None',
+'to.title':'Time Off','to.subtitle':'Vacation, sick days and absences','to.add':'+ Add time off','to.edit':'Edit time off',
+'to.pending':'Pending requests','to.approve':'Approve','to.deny':'Deny','to.employee':'Employee',
+'to.start':'First day off','to.end':'Last day off','to.kind':'Type','to.hours':'Hours per day',
+'to.note':'Note (optional)','to.notePlaceholder':'Booked in advance','to.save':'Save','to.dates':'Dates','to.days':'Days',
+'to.k.vacation':'Vacation','to.k.sick':'Sick','to.k.personal':'Personal','to.k.unpaid':'Unpaid','to.k.other':'Other',
+'to.filterWhen':'Period','to.filterKind':'Type','to.fUpcoming':'Upcoming & current','to.fYear':'This year','to.fPast':'Past','to.fAll':'All',
+'to.offToday':'Off today','to.offTodayLabel':'Off today','to.until':'until','to.next7':'Starting in 7 days',
+'to.pendingCount':'Awaiting approval','to.ytdDays':'Days off this year','to.now':'off now',
+'to.approved':'Approved','to.statusPending':'Pending','to.denied':'Denied','to.cancelled':'Cancelled',
+'to.none':'No time off recorded for this filter.','to.saved':'Time off saved.','to.deleted':'Time off deleted.',
+'to.okApproved':'Time off approved.','to.okDenied':'Request denied.',
+'to.confirmDelete':'Delete this time off for {name}?',
+'to.errFields':'Employee and both dates are required.','to.errOrder':'The last day cannot be before the first day.',
+'to.errHours':'Hours per day must be between 0.5 and 24.',
+'to.errOverlap':'{name} already has time off from {a} to {b}. Edit that entry instead.',
+'to.schedConflict':'{name} is off that day ({kind}).',
 'nav.dd.tour':'Take the tour','help.forThisPage':'For this page','help.everythingElse':'Everything else',
 'tour.step':'Step {n} of {total}','tour.next':'Next','tour.back':'Back','tour.skip':'Skip','tour.finish':'Finish',
 'tour.replay':'▶ Replay the 5-step tour',
@@ -11612,6 +11917,22 @@ fr:{
 'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre',
 "admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Défini',
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
+'to.title':'Congés','to.subtitle':'Vacances, congés maladie et absences','to.add':'+ Ajouter un congé','to.edit':'Modifier le congé',
+'to.pending':'Demandes en attente','to.approve':'Approuver','to.deny':'Refuser','to.employee':'Employé',
+'to.start':'Premier jour d\'absence','to.end':'Dernier jour d\'absence','to.kind':'Type','to.hours':'Heures par jour',
+'to.note':'Note (optionnel)','to.notePlaceholder':'Réservé à l\'avance','to.save':'Sauvegarder','to.dates':'Dates','to.days':'Jours',
+'to.k.vacation':'Vacances','to.k.sick':'Maladie','to.k.personal':'Personnel','to.k.unpaid':'Sans solde','to.k.other':'Autre',
+'to.filterWhen':'Période','to.filterKind':'Type','to.fUpcoming':'À venir et en cours','to.fYear':'Cette année','to.fPast':'Passés','to.fAll':'Tous',
+'to.offToday':'Absents aujourd\'hui','to.offTodayLabel':'Absents aujourd\'hui','to.until':'jusqu\'au','to.next7':'Débutent dans 7 jours',
+'to.pendingCount':'En attente d\'approbation','to.ytdDays':'Jours de congé cette année','to.now':'absent maintenant',
+'to.approved':'Approuvé','to.statusPending':'En attente','to.denied':'Refusé','to.cancelled':'Annulé',
+'to.none':'Aucun congé enregistré pour ce filtre.','to.saved':'Congé enregistré.','to.deleted':'Congé supprimé.',
+'to.okApproved':'Congé approuvé.','to.okDenied':'Demande refusée.',
+'to.confirmDelete':'Supprimer ce congé pour {name}?',
+'to.errFields':'L\'employé et les deux dates sont obligatoires.','to.errOrder':'Le dernier jour ne peut pas précéder le premier.',
+'to.errHours':'Les heures par jour doivent être entre 0,5 et 24.',
+'to.errOverlap':'{name} a déjà un congé du {a} au {b}. Modifiez cette entrée plutôt.',
+'to.schedConflict':'{name} est absent ce jour-là ({kind}).',
 'nav.dd.tour':'Visite guidée','help.forThisPage':'Pour cette page','help.everythingElse':'Tout le reste',
 'tour.step':'Étape {n} sur {total}','tour.next':'Suivant','tour.back':'Retour','tour.skip':'Passer','tour.finish':'Terminer',
 'tour.replay':'▶ Revoir la visite en 5 étapes',

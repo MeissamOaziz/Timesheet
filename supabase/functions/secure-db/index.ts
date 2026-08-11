@@ -15,6 +15,7 @@ const CORS = {
 const PROTECTED_TABLES = new Set([
   'admins', 'punches', 'employees', 'companies', 'sites',
   'invitations', 'manager_sites', 'missed_punch_requests', 'join_requests',
+  'time_off',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -109,7 +110,7 @@ async function ownedCompanyIds(primaryAdminId: string): Promise<string[]> {
 }
 
 // Tables scoped to a tenant by their company_id column.
-const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts']);
+const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off']);
 
 // Ownership constraint to AND onto a read/update/delete filter for `table`. '' = not scoped here.
 function tenantScopeFilter(table: string, caller: Caller, owned: string[]): string {
