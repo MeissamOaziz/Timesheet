@@ -1601,9 +1601,13 @@ border-top:1px solid var(--border);margin:18px 0;}
           <div><div id="ddNavModeLabel">Try the new sidebar</div></div>
         </button>
         <hr class="user-dd-sep">
-        <button class="user-dd-item" onclick="closeUserMenu();showHelpModal()">
+        <button class="user-dd-item" onclick="closeUserMenu();showPageHelp()">
           <div class="dd-icon" style="background:var(--surface2)"><svg style="width:16px;height:16px;color:var(--text2)"><use href="#i-nav-help"/></svg></div>
           <div><div data-i18n="nav.dd.help">Help</div></div>
+        </button>
+        <button class="user-dd-item" onclick="closeUserMenu();startTour()">
+          <div class="dd-icon" style="background:rgba(79,142,247,.12)"><svg style="width:16px;height:16px;color:var(--accent)"><use href="#i-play"/></svg></div>
+          <div><div data-i18n="nav.dd.tour">Take the tour</div></div>
         </button>
         <button class="user-dd-item" onclick="closeUserMenu();showSupportModal()">
           <div class="dd-icon" style="background:var(--surface2)"><svg style="width:16px;height:16px;color:var(--text2)"><use href="#i-nav-headset"/></svg></div>
@@ -1621,6 +1625,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:0 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
+    <!-- Always in the same spot, but the content follows the page you are on (showPageHelp). -->
+    <button class="theme-toggle-btn" id="navHelpBtn" onclick="showPageHelp()" aria-label="Help" title="Help" style="display:none"><svg class="tt-icon"><use href="#i-nav-help"/></svg></button>
     <button class="theme-toggle-btn" id="navModeBtn" onclick="toggleNavMode()" aria-label="Switch navigation layout" title="Switch navigation layout" style="display:none"><svg class="tt-icon"><use href="#i-nav-dashboard"/></svg></button>
     <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
     <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -2747,6 +2753,24 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <!-- HELP MODAL -->
+<!-- FIRST-RUN TOUR — shown once on the first login, replayable from the profile menu. -->
+<div class="modal-overlay" id="tourModal" style="z-index:9950">
+  <div class="modal" style="max-width:600px;padding:0;overflow:hidden">
+    <div id="tourArt" style="background:var(--surface2);border-bottom:1px solid var(--border);padding:22px 22px 0;display:flex;align-items:flex-end;justify-content:center;min-height:190px"></div>
+    <div style="padding:22px 26px 24px">
+      <div id="tourStepNum" style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin-bottom:7px"></div>
+      <h3 id="tourTitle" style="margin:0 0 8px;font-size:19px"></h3>
+      <p id="tourBody" style="margin:0;font-size:14px;color:var(--text2);line-height:1.65;min-height:66px"></p>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:20px">
+        <div id="tourDots" style="display:flex;gap:6px;flex:1"></div>
+        <button class="btn-secondary" id="tourSkipBtn" style="width:auto;padding:8px 15px;font-size:13px" onclick="endTour(true)"></button>
+        <button class="btn-secondary" id="tourPrevBtn" style="width:auto;padding:8px 15px;font-size:13px" onclick="tourGo(-1)"></button>
+        <button class="btn-primary" id="tourNextBtn" style="width:auto;padding:8px 20px;font-size:13px" onclick="tourGo(1)"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="helpModal" style="z-index:9900">
   <div class="modal" style="max-width:560px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -4301,6 +4325,7 @@ function renderSetupChecklist(){
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
   renderSetupChecklist();
+  maybeStartTour();   // first login only; no-ops afterwards
   const host=document.getElementById('dashboardContent');
   if(!host) return;
   const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -4450,7 +4475,104 @@ async function submitLandingContact(){
   }
 }
 
-function showHelpModal(){
+// ═══════════════════════════════════════════════════
+// FIRST-RUN TOUR
+// The trial data is blunt: people add employees and then never make a single punch. The tour
+// exists to close that gap — it ends on "where the PIN lives", which is the step everyone got
+// stuck on. Illustrations are drawn inline rather than screenshotted so they theme, translate,
+// and never go stale when the UI changes.
+// ═══════════════════════════════════════════════════
+let _tourStep = 0;
+
+function _tourArt(kind){
+  const box=(inner,h)=>`<svg viewBox="0 0 320 ${h||150}" style="width:100%;max-width:330px;height:auto;display:block">${inner}</svg>`;
+  const card=(x,y,w,h,fill)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${fill||'var(--surface)'}" stroke="var(--border)" stroke-width="1.5"/>`;
+  const line=(x,y,w,op)=>`<rect x="${x}" y="${y}" width="${w}" height="6" rx="3" fill="var(--text3)" opacity="${op||.45}"/>`;
+  if(kind==='sites') return box(`
+    ${card(18,16,284,52)}<circle cx="44" cy="42" r="12" fill="var(--accent)" opacity=".16"/><circle cx="44" cy="42" r="4.5" fill="var(--accent)"/>
+    ${line(66,34,120,.7)}${line(66,48,80)}
+    ${card(18,80,284,52)}<circle cx="44" cy="106" r="12" fill="var(--accent)" opacity=".16"/><circle cx="44" cy="106" r="4.5" fill="var(--accent)"/>
+    ${line(66,98,150,.7)}${line(66,112,66)}`);
+  if(kind==='employees') return box(`
+    ${card(18,14,284,40)}<circle cx="42" cy="34" r="11" fill="var(--accent)" opacity=".22"/>${line(62,29,96,.7)}
+    <rect x="228" y="26" width="56" height="17" rx="8.5" fill="var(--green)" opacity=".18"/><text x="256" y="38" font-size="9" font-weight="700" fill="var(--green)" text-anchor="middle">PIN 4821</text>
+    ${card(18,60,284,40)}<circle cx="42" cy="80" r="11" fill="var(--accent)" opacity=".22"/>${line(62,75,120,.7)}
+    <rect x="228" y="72" width="56" height="17" rx="8.5" fill="var(--green)" opacity=".18"/><text x="256" y="84" font-size="9" font-weight="700" fill="var(--green)" text-anchor="middle">PIN 9037</text>
+    ${card(18,106,284,40)}<circle cx="42" cy="126" r="11" fill="var(--accent)" opacity=".22"/>${line(62,121,78,.7)}
+    <rect x="228" y="118" width="56" height="17" rx="8.5" fill="var(--green)" opacity=".18"/><text x="256" y="130" font-size="9" font-weight="700" fill="var(--green)" text-anchor="middle">PIN 1265</text>`);
+  if(kind==='punch') return box(`
+    ${card(60,10,200,132)}
+    <text x="160" y="42" font-size="26" font-weight="300" fill="var(--text)" text-anchor="middle" font-family="monospace">07:58</text>
+    <rect x="78" y="56" width="164" height="24" rx="6" fill="var(--surface2)" stroke="var(--border)"/>${line(90,65,84,.6)}
+    <rect x="78" y="90" width="76" height="38" rx="8" fill="var(--green)" opacity=".9"/><text x="116" y="114" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">IN</text>
+    <rect x="166" y="90" width="76" height="38" rx="8" fill="var(--red)" opacity=".25"/><text x="204" y="114" font-size="13" font-weight="700" fill="var(--red)" text-anchor="middle">OUT</text>`);
+  if(kind==='pin') return box(`
+    ${card(88,8,144,134)}
+    <text x="160" y="30" font-size="9" font-weight="700" fill="var(--text3)" text-anchor="middle">ENTER PIN</text>
+    ${[0,1,2,3].map(i=>`<circle cx="${124+i*16}" cy="46" r="5.5" fill="${i<2?'var(--accent)':'none'}" stroke="var(--accent)" stroke-width="1.5"/>`).join('')}
+    ${[0,1,2,3,4,5,6,7,8].map(i=>`<rect x="${105+(i%3)*26}" y="${62+Math.floor(i/3)*26}" width="22" height="22" rx="5" fill="var(--surface2)" stroke="var(--border)"/><text x="${116+(i%3)*26}" y="${77+Math.floor(i/3)*26}" font-size="10" fill="var(--text2)" text-anchor="middle">${i+1}</text>`).join('')}`);
+  if(kind==='reports') return box(`
+    ${card(18,12,284,40)}${line(32,27,58,.5)}<rect x="32" y="36" width="70" height="8" rx="4" fill="var(--accent)" opacity=".5"/>
+    <rect x="196" y="24" width="46" height="18" rx="5" fill="var(--accent)" opacity=".85"/><text x="219" y="36" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">CSV</text>
+    <rect x="248" y="24" width="46" height="18" rx="5" fill="var(--green)" opacity=".85"/><text x="271" y="36" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">QBO</text>
+    ${[0,1,2].map(i=>`${card(18,60+i*30,284,24)}${line(32,69+i*30,64,.6)}${line(150,69+i*30,40,.4)}<text x="286" y="${76+i*30}" font-size="9" font-weight="700" fill="var(--text2)" text-anchor="end">${['38h 15m','41h 00m','36h 30m'][i]}</text>`).join('')}`);
+  return '';
+}
+
+function _tourSteps(){
+  return [
+    {art:'sites',     t:t('tour.s1t')||'Start with a site',           b:t('tour.s1b')||'A site is a place your team works — a store, an office, a job site. Most businesses need only one. You can add more later.'},
+    {art:'employees', t:t('tour.s2t')||'Add your people',             b:t('tour.s2b')||'Each employee gets their own 4-digit PIN. That PIN is how they clock in — there is no app to install and nothing for them to remember but four digits.'},
+    {art:'punch',     t:t('tour.s3t')||'They clock in here',          b:t('tour.s3b')||'Leave the Clock In/Out page open on a tablet or old phone at the entrance. Your team taps their name, then IN or OUT. That is the whole daily routine.'},
+    {art:'pin',       t:t('tour.s4t')||'Where to find a PIN',         b:t('tour.s4b')||'Trying it yourself? You need the employee PIN. Go to Team → Employees and click Show next to any PIN to reveal it. This is the step most people get stuck on.'},
+    {art:'reports',   t:t('tour.s5t')||'Hours add up on their own',   b:t('tour.s5b')||'Every punch feeds Reports. Pick a date range and export to Excel, CSV, PDF or QuickBooks when you run payroll. Nothing to tally by hand.'},
+  ];
+}
+
+function _tourSeen(){try{return localStorage.getItem('pc_tour_v1')==='1';}catch(_){return true;}}
+function maybeStartTour(){
+  const sess=Sess.get();
+  // Owners only: co-admins and managers join an account that is already set up.
+  if(!sess||isSuperAdmin()||sess.parent_admin_id||isManager()||_tourSeen()) return;
+  setTimeout(()=>startTour(),400);
+}
+function startTour(){ _tourStep=0; renderTour(); openModal('tourModal'); }
+function tourGo(d){
+  const steps=_tourSteps();
+  if(_tourStep+d>=steps.length){ endTour(false); return; }
+  _tourStep=Math.max(0,Math.min(steps.length-1,_tourStep+d));
+  renderTour();
+}
+function endTour(skipped){
+  try{localStorage.setItem('pc_tour_v1','1');}catch(_){}
+  closeModal('tourModal');
+  if(!skipped) showToast(t('tour.done')||'You can replay this any time from your profile menu → Take the tour.','success');
+}
+function renderTour(){
+  const steps=_tourSteps(), s=steps[_tourStep], last=_tourStep===steps.length-1;
+  document.getElementById('tourArt').innerHTML=_tourArt(s.art);
+  document.getElementById('tourStepNum').textContent=(t('tour.step')||'Step {n} of {total}').replace('{n}',_tourStep+1).replace('{total}',steps.length);
+  document.getElementById('tourTitle').textContent=s.t;
+  document.getElementById('tourBody').textContent=s.b;
+  document.getElementById('tourDots').innerHTML=steps.map((_,i)=>
+    `<span style="width:${i===_tourStep?18:7}px;height:7px;border-radius:4px;background:${i===_tourStep?'var(--accent)':'var(--border)'};transition:all .2s"></span>`).join('');
+  const prev=document.getElementById('tourPrevBtn');
+  prev.style.display=_tourStep===0?'none':'';
+  prev.textContent=t('tour.back')||'Back';
+  document.getElementById('tourSkipBtn').style.display=last?'none':'';
+  document.getElementById('tourSkipBtn').textContent=t('tour.skip')||'Skip';
+  document.getElementById('tourNextBtn').textContent=last?(t('tour.finish')||'Finish'):(t('tour.next')||'Next');
+}
+
+// Help scoped to wherever the user currently is: the matching topics float to the top and are
+// highlighted, so "Help" answers the question they have now instead of opening a wall of text.
+const HELP_PAGE_TOPICS={
+  punch:[4,5,7],dashboard:[1,2,3],admin:[3,7,11],sites:[2,6],
+  reports:[8,9],activity:[10,4],schedule:[1,3],
+};
+function showPageHelp(){ showHelpModal(typeof currentPage!=='undefined'?currentPage:null); }
+
+function showHelpModal(page){
   document.getElementById('helpModalTitle').textContent=t('help.title')||'❓ How to Use PunchClock Pro';
   document.getElementById('helpCloseBtn').textContent=t('help.close')||'Got it';
   const steps=[
@@ -4466,14 +4588,32 @@ function showHelpModal(){
     {icon:'📋',title:t('help.s10title'),desc:t('help.s10desc')},
     {icon:'👥',title:t('help.s11title'),desc:t('help.s11desc')},
   ];
-  document.getElementById('helpStepsList').innerHTML=steps.map((s,i)=>`
-    <div style="display:flex;gap:14px;margin-bottom:18px;align-items:flex-start">
+  const relevant=(page&&HELP_PAGE_TOPICS[page])||[];
+  // Topics for the current page first, in the order listed, then everything else.
+  const order=[...relevant.map(n=>n-1),...steps.map((_,i)=>i).filter(i=>!relevant.includes(i+1))];
+  const rel=new Set(relevant.map(n=>n-1));
+  const row=i=>{
+    const s=steps[i], hot=rel.has(i);
+    return `<div style="display:flex;gap:14px;margin-bottom:${hot?10:18}px;align-items:flex-start;${hot?'background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.22);border-radius:11px;padding:12px 14px;margin-left:-2px':''}">
       <div style="width:36px;height:36px;border-radius:50%;background:rgba(79,142,247,.12);border:1.5px solid rgba(79,142,247,.25);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${s.icon}</div>
       <div>
         <div style="font-weight:600;font-size:13px;color:var(--accent);margin-bottom:2px">${i+1}. ${s.title}</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.55">${s.desc}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  };
+  const header=relevant.length
+    ? `<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">${t('help.forThisPage')||'For this page'}</div>`
+    : '';
+  const restHeader=relevant.length
+    ? `<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin:22px 0 12px;padding-top:16px;border-top:1px solid var(--border)">${t('help.everythingElse')||'Everything else'}</div>`
+    : '';
+  document.getElementById('helpStepsList').innerHTML =
+    header + order.slice(0,relevant.length).map(row).join('') +
+    restHeader + order.slice(relevant.length).map(row).join('') +
+    `<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+       <button class="btn-secondary" style="width:auto;padding:7px 18px;font-size:12.5px" onclick="closeModal('helpModal');startTour()">${t('tour.replay')||'▶ Replay the 5-step tour'}</button>
+     </div>`;
   openModal('helpModal');
 }
 
@@ -4543,6 +4683,8 @@ function updateNav(){
   document.body.classList.toggle('nav-authed', ok);
   const _nmBtn=document.getElementById('navModeBtn');
   if(_nmBtn){ _nmBtn.style.display=ok?'':'none'; _syncNavModeLabel(); }
+  const _hBtn=document.getElementById('navHelpBtn');
+  if(_hBtn){ _hBtn.style.display=ok?'':'none'; _hBtn.title=t('nav.dd.help')||'Help'; }
   const isKiosk=!!Ctx.get();
   const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
   if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
@@ -6451,6 +6593,19 @@ function adminTab(tab,btn){
   applyAllTranslations();
 }
 
+// Reveal a PIN for a few seconds, then hide it again — long enough to read and type, short enough
+// that it is not left sitting on screen. Never rendered into the DOM until asked for.
+function revealPin(empId){
+  const cell=document.getElementById('pincell-'+empId);
+  const emp=(C.employees||[]).find(e=>e.id===empId);
+  if(!cell||!emp||!emp.pin) return;
+  cell.innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;letter-spacing:2px;color:var(--green)">${esc(emp.pin)}</span>`;
+  setTimeout(()=>{
+    const c=document.getElementById('pincell-'+empId);
+    if(c) c.innerHTML=`<button class="btn-secondary" style="width:auto;padding:3px 10px;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:1px" onclick="revealPin('${empId}')" title="${t('admin.pinShow')||'Show PIN'}">•••• <span style="font-family:inherit;letter-spacing:0;font-weight:600">${t('admin.pinShow')||'Show'}</span></button>`;
+  },8000);
+}
+
 function populateEmpSiteFilter(){
   const ctx=Ctx.get();
   let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
@@ -6624,7 +6779,12 @@ function renderEmployees(){
   const rows=emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
     const ini=e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-    const pin=e.pin?`<span class="pill in"><svg class="ic" style="margin-right:4px"><use href="#i-key"/></svg>${t('admin.pinSet')||'Set'}</span>`:`<span class="pill out"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>None</span>`;
+    // Click-to-reveal. The PIN used to show only as "Set", so an admin trying their own first
+    // punch had no way to learn the 4 digits without opening Edit on every employee — the exact
+    // point where trials stalled with employees added and zero punches.
+    const pin=e.pin
+      ? `<span id="pincell-${e.id}"><button class="btn-secondary" style="width:auto;padding:3px 10px;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:1px" onclick="revealPin('${e.id}')" title="${t('admin.pinShow')||'Show PIN'}">•••• <span style="font-family:inherit;letter-spacing:0;font-weight:600">${t('admin.pinShow')||'Show'}</span></button></span>`
+      : `<span class="pill out"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>${t('admin.pinNone')||'None'}</span>`;
     const emailStatus=e.send_report&&e.email
       ?`<span style="font-size:11px;color:var(--amber)"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${e.email}</span>`
       :`<span style="color:var(--text3);font-size:12px">—</span>`;
@@ -10808,6 +10968,21 @@ en:{
 'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
 'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another',
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
+'admin.pinShow':'Show','admin.pinNone':'None',
+'nav.dd.tour':'Take the tour','help.forThisPage':'For this page','help.everythingElse':'Everything else',
+'tour.step':'Step {n} of {total}','tour.next':'Next','tour.back':'Back','tour.skip':'Skip','tour.finish':'Finish',
+'tour.replay':'▶ Replay the 5-step tour',
+'tour.done':'You can replay this any time from your profile menu → Take the tour.',
+'tour.s1t':'Start with a site',
+'tour.s1b':'A site is a place your team works — a store, an office, a job site. Most businesses need only one. You can add more later.',
+'tour.s2t':'Add your people',
+'tour.s2b':'Each employee gets their own 4-digit PIN. That PIN is how they clock in — there is no app to install and nothing for them to remember but four digits.',
+'tour.s3t':'They clock in here',
+'tour.s3b':'Leave the Clock In/Out page open on a tablet or old phone at the entrance. Your team taps their name, then IN or OUT. That is the whole daily routine.',
+'tour.s4t':'Where to find a PIN',
+'tour.s4b':'Trying it yourself? You need the employee PIN. Go to Team → Employees and click Show next to any PIN to reveal it. This is the step most people get stuck on.',
+'tour.s5t':'Hours add up on their own',
+'tour.s5b':'Every punch feeds Reports. Pick a date range and export to Excel, CSV, PDF or QuickBooks when you run payroll. Nothing to tally by hand.',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All','reports.col.reg':'Reg Hours','reports.col.ot':'OT Hours',
 'reports.period':'Period','reports.lastPeriod':'Last Payroll Period','reports.currentPeriod':'Current Period',
@@ -11435,7 +11610,22 @@ fr:{
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
 'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
 'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre',
-"admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Définir',
+"admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Défini',
+'admin.pinShow':'Voir','admin.pinNone':'Aucun',
+'nav.dd.tour':'Visite guidée','help.forThisPage':'Pour cette page','help.everythingElse':'Tout le reste',
+'tour.step':'Étape {n} sur {total}','tour.next':'Suivant','tour.back':'Retour','tour.skip':'Passer','tour.finish':'Terminer',
+'tour.replay':'▶ Revoir la visite en 5 étapes',
+'tour.done':'Vous pouvez la revoir en tout temps depuis votre menu profil → Visite guidée.',
+'tour.s1t':'Commencez par un site',
+'tour.s1b':'Un site est un endroit où votre équipe travaille — un commerce, un bureau, un chantier. La plupart des entreprises n\'en ont qu\'un. Vous pourrez en ajouter plus tard.',
+'tour.s2t':'Ajoutez vos employés',
+'tour.s2b':'Chaque employé reçoit son NIP à 4 chiffres. C\'est avec ce NIP qu\'il pointe — aucune application à installer, rien à retenir sauf quatre chiffres.',
+'tour.s3t':'C\'est ici qu\'ils pointent',
+'tour.s3b':'Laissez la page Entrée/Sortie ouverte sur une tablette ou un vieux téléphone à l\'entrée. Votre équipe touche son nom, puis ENTRÉE ou SORTIE. Voilà toute la routine quotidienne.',
+'tour.s4t':'Où trouver un NIP',
+'tour.s4b':'Vous faites un essai? Il vous faut le NIP de l\'employé. Allez dans Équipe → Employés et cliquez Voir à côté du NIP pour l\'afficher. C\'est l\'étape où la plupart des gens bloquent.',
+'tour.s5t':'Les heures se calculent seules',
+'tour.s5b':'Chaque pointage alimente les Rapports. Choisissez une période et exportez vers Excel, CSV, PDF ou QuickBooks au moment de la paie. Aucun calcul à la main.',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner','reports.col.reg':'Heures rég.','reports.col.ot':'Heures supp.',
 'reports.period':'Période','reports.lastPeriod':'Dernière période de paie','reports.currentPeriod':'Période en cours',
