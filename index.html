@@ -81,7 +81,6 @@
     "Suivi des heures supplémentaires / Overtime tracking",
     "Planification des quarts de travail / Shift scheduling",
     "Interface en français et en anglais / French and English interface",
-    "Export QuickBooks",
     "Conforme Loi 25 Québec / Quebec Law 25 compliant",
     "Géofence par site / Per-site geofencing",
     "Raccourci kiosque PWA / PWA kiosk shortcut",
@@ -898,12 +897,12 @@ border-top:1px solid var(--border);margin:18px 0;}
       <span data-i18n="land.badge">✨ Now with automated payroll period reports</span>
     </div>
     <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
-    <p data-i18n="land.heroSub">PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
+    <p data-i18n="land.heroSub">PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
     <!-- Feature pills -->
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px;margin-top:-8px">
       <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">🖥️ <span data-i18n="land.pill1">Tablet terminal clock-in</span></span>
       <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">📊 <span data-i18n="land.pill2">Automated payroll reports</span></span>
-      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">📦 <span data-i18n="land.pill3">QuickBooks export</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--text2)">📊 <span data-i18n="land.pill3">Excel &amp; CSV export</span></span>
       <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,92,191,.15);border:1px solid rgba(124,92,191,.35);border-radius:20px;padding:4px 13px;font-size:12px;color:#a78bfa">🗓️ <span data-i18n="land.pill4">Employee scheduling</span> <span style="font-size:10px;background:#7c5cbf;color:#fff;border-radius:10px;padding:1px 6px;margin-left:2px" data-i18n="land.pillAddon">Add-On</span></span>
     </div>
     <div class="land-cta-group">
@@ -1006,9 +1005,9 @@ border-top:1px solid var(--border);margin:18px 0;}
         <p data-i18n="land.feat5Desc">Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-file-export"/></svg></div>
-        <h3 data-i18n="land.feat6Title">QuickBooks Export</h3>
-        <p data-i18n="land.feat6Desc">Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.</p>
+        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
+        <h3 data-i18n="land.feat6Title">Time Off Tracking</h3>
+        <p data-i18n="land.feat6Desc">Log vacation, sick days and absences. See who is off today at a glance, and approve requests in one click.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-users"/></svg></div>
@@ -1143,7 +1142,6 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
           <li class="dim" data-i18n="land.f.free9">Excel &amp; CSV export</li>
           <li class="dim" data-i18n="land.f.free7">Overtime tracking</li>
-          <li class="dim" data-i18n="land.f.free8">QuickBooks export</li>
         </ul>
         <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.getStartedFree">Get started free</button>
       </div>
@@ -1158,7 +1156,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.start3">All Free features</li>
           <li data-i18n="land.f.start4">Automated period email reports</li>
           <li data-i18n="land.f.start5">Overtime tracking</li>
-          <li data-i18n="land.f.start6">QuickBooks IIF export</li>
+          <li data-i18n="land.f.start6">Excel, CSV &amp; PDF export</li>
           <li data-i18n="land.f.start8">1 co-admin included</li>
         </ul>
         <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
@@ -1290,7 +1288,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:14px">
         <div style="font-size:34px;margin-bottom:10px">&#128336;</div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA3Title">Overtime Alerts</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA3Desc">Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and QuickBooks exports.</p>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA3Desc">Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and exports.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:14px">
         <div style="font-size:34px;margin-bottom:10px">&#128276;</div>
@@ -2346,7 +2344,6 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="btn-export" onclick="guardedExport('excel')"><svg class="ic" style="margin-right:5px"><use href="#i-download"/></svg>Excel</button>
       <button class="btn-export" onclick="guardedExport('csv')"><svg class="ic" style="margin-right:5px"><use href="#i-file"/></svg>CSV</button>
       <button class="btn-export" onclick="exportReport('pdf')"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg>PDF</button>
-      <button class="btn-export" onclick="guardedExport('qb')" style="border-color:rgba(34,197,94,.4);color:var(--green)"><svg class="ic" style="margin-right:5px"><use href="#i-package"/></svg>QuickBooks IIF</button>
     </div>
   </div>
   <div class="filter-bar">
@@ -3597,7 +3594,7 @@ function guardedExport(fmt) {
     return;
   }
   if(!isCurrentCompanyPaid()){
-    showPlanGate('Excel, CSV, and QuickBooks exports require a paid plan (Starter or above). Upgrade to unlock these formats.','reports-upgrade-hint');
+    showPlanGate('Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','reports-upgrade-hint');
     return;
   }
   exportReport(fmt);
@@ -4601,7 +4598,7 @@ function _tourArt(kind){
   if(kind==='reports') return box(`
     ${card(18,12,284,40)}${line(32,27,58,.5)}<rect x="32" y="36" width="70" height="8" rx="4" fill="var(--accent)" opacity=".5"/>
     <rect x="196" y="24" width="46" height="18" rx="5" fill="var(--accent)" opacity=".85"/><text x="219" y="36" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">CSV</text>
-    <rect x="248" y="24" width="46" height="18" rx="5" fill="var(--green)" opacity=".85"/><text x="271" y="36" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">QBO</text>
+    <rect x="248" y="24" width="46" height="18" rx="5" fill="var(--green)" opacity=".85"/><text x="271" y="36" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">PDF</text>
     ${[0,1,2].map(i=>`${card(18,60+i*30,284,24)}${line(32,69+i*30,64,.6)}${line(150,69+i*30,40,.4)}<text x="286" y="${76+i*30}" font-size="9" font-weight="700" fill="var(--text2)" text-anchor="end">${['38h 15m','41h 00m','36h 30m'][i]}</text>`).join('')}`);
   return '';
 }
@@ -4612,7 +4609,7 @@ function _tourSteps(){
     {art:'employees', t:t('tour.s2t')||'Add your people',             b:t('tour.s2b')||'Each employee gets their own 4-digit PIN. That PIN is how they clock in — there is no app to install and nothing for them to remember but four digits.'},
     {art:'punch',     t:t('tour.s3t')||'They clock in here',          b:t('tour.s3b')||'Leave the Clock In/Out page open on a tablet or old phone at the entrance. Your team taps their name, then IN or OUT. That is the whole daily routine.'},
     {art:'pin',       t:t('tour.s4t')||'Where to find a PIN',         b:t('tour.s4b')||'Trying it yourself? You need the employee PIN. Go to Team → Employees and click Show next to any PIN to reveal it. This is the step most people get stuck on.'},
-    {art:'reports',   t:t('tour.s5t')||'Hours add up on their own',   b:t('tour.s5b')||'Every punch feeds Reports. Pick a date range and export to Excel, CSV, PDF or QuickBooks when you run payroll. Nothing to tally by hand.'},
+    {art:'reports',   t:t('tour.s5t')||'Hours add up on their own',   b:t('tour.s5b')||'Every punch feeds Reports. Pick a date range and export to Excel, CSV or PDF when you run payroll. Nothing to tally by hand.'},
   ];
 }
 
@@ -8885,36 +8882,6 @@ function exportReport(fmt){
   const startD=document.getElementById('reportStart').value;
   const endD=document.getElementById('reportEnd').value;
 
-  if(fmt==='qb'){
-    // QuickBooks IIF export
-    const dataRows=reportData.filter(r=>!r.isSubtotal&&!r.isSiteHeader&&!r.isSiteTotal&&r.hours!==null);
-    // Group by employee, sum hours
-    const empMap={};
-    dataRows.forEach(r=>{
-      if(!empMap[r.empName]) empMap[r.empName]={name:r.empName,code:r.empCode,reg:0,ot:0};
-      empMap[r.empName].reg+=r.regHours||r.hours||0;
-      empMap[r.empName].ot+=r.otHours||0;
-    });
-    let iif = `!TIMEHDR	DATE	JOB	EMP	ITEM	DURATION	NOTE	BILLINGSTATUS
-`;
-    iif += `!TIMEDATA	DATE	JOB	EMP	ITEM	DURATION	NOTE	BILLINGSTATUS
-`;
-    Object.values(empMap).forEach(emp=>{
-      const regH=Math.floor(emp.reg), regM=Math.round((emp.reg%1)*60);
-      iif += `TIMEDATA	${endD}		${emp.name}	Regular Time	${regH}:${String(regM).padStart(2,'0')}	${startD} to ${endD}	0
-`;
-      if(emp.ot>0){
-        const otH=Math.floor(emp.ot), otM=Math.round((emp.ot%1)*60);
-        iif += `TIMEDATA	${endD}		${emp.name}	Overtime	${otH}:${String(otM).padStart(2,'0')}	${startD} to ${endD} OT	0
-`;
-      }
-    });
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([iif],{type:'text/plain'}));
-    a.download=`quickbooks-${startD}-to-${endD}.iif`;a.click();
-    return;
-  }
-
   const headers=['Employee','Employee ID','Site','Date','Punch In','Punch Out','Reg Hours','OT Hours'];
   const rows=reportData.map(r=>{
     if(r.isSiteHeader)return[`=== SITE: ${r.siteName} ===`,'','','','','','',''];
@@ -11287,7 +11254,7 @@ en:{
 'tour.s4t':'Where to find a PIN',
 'tour.s4b':'Trying it yourself? You need the employee PIN. Go to Team → Employees and click Show next to any PIN to reveal it. This is the step most people get stuck on.',
 'tour.s5t':'Hours add up on their own',
-'tour.s5b':'Every punch feeds Reports. Pick a date range and export to Excel, CSV, PDF or QuickBooks when you run payroll. Nothing to tally by hand.',
+'tour.s5b':'Every punch feeds Reports. Pick a date range and export to Excel, CSV or PDF when you run payroll. Nothing to tally by hand.',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All','reports.col.reg':'Reg Hours','reports.col.ot':'OT Hours',
 'reports.period':'Period','reports.lastPeriod':'Last Payroll Period','reports.currentPeriod':'Current Period',
@@ -11325,12 +11292,12 @@ en:{
 'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.geoNav':'Geofencing',
 'land.getStarted':'Get Started Free','land.badge':'✨ Now with automated payroll period reports',
-'land.pill1':'Tablet terminal clock-in','land.pill2':'Automated payroll reports','land.pill3':'QuickBooks export','land.pill4':'Employee scheduling','land.pillAddon':'Add-On',
+'land.pill1':'Tablet terminal clock-in','land.pill2':'Automated payroll reports','land.pill3':'Excel & CSV export','land.pill4':'Employee scheduling','land.pillAddon':'Add-On',
 'land.howSchedTitle':'Employee Scheduling Add-On',
 'land.howSchedDesc':'Once your team is set up, unlock the Scheduling Add-On to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page — all for $14.95/mo added to any paid plan.',
 'land.howSchedCta':'See pricing →',
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
-'land.heroSub':'PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, and QuickBooks export — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
+'land.heroSub':'PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free forever: 1 site · up to 10 employees · geofencing & kiosk included',
 'land.featTitle':'Everything you need to manage shift workers',
@@ -11340,7 +11307,7 @@ en:{
 'land.feat3Title':'Automated Reports','land.feat3Desc':'Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.',
 'land.feat4Title':'Manual Punch Editing','land.feat4Desc':'Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.',
 'land.feat5Title':'Overtime Tracking','land.feat5Desc':'Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.',
-'land.feat6Title':'QuickBooks Export','land.feat6Desc':'Export payroll-ready IIF files that import directly into QuickBooks. One click at the end of every period.',
+'land.feat6Title':'Time Off Tracking','land.feat6Desc':'Log vacation, sick days and absences. See who is off today at a glance, and approve requests in one click.',
 'land.feat7Title':'Team Access','land.feat7Desc':'Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.',
 'land.feat8Title':'Flexible Payroll Periods','land.feat8Desc':'Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.',
 'land.priceTitle':'Simple, transparent pricing','land.priceSub':'Start free. Upgrade as you grow. No hidden fees.',
@@ -11415,10 +11382,10 @@ en:{
 'land.businessSub':'1 company · Unlimited sites &amp; employees · 3 admins<br>+$4.90/mo per extra admin',
 'land.f.free1':'1 company','land.f.free2':'1 site · geofencing & kiosk included','land.f.free3':'Up to 10 employees',
 'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Manual punch editing',
-'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free8':'QuickBooks export','land.f.free9':'Excel & CSV export',
+'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free9':'Excel & CSV export',
 'land.f.start1':'1 company, 2 sites, 2 admins','land.f.start2':'Up to 25 employees','land.f.start3':'All Free features + Excel & CSV exports',
 'land.f.start4':'Automated period email reports','land.f.start5':'Overtime tracking',
-'land.f.start6':'QuickBooks IIF export',
+'land.f.start6':'Excel, CSV & PDF export',
 'land.f.grow1':'Up to 3 companies','land.f.grow2':'Up to 6 sites','land.f.grow3':'Up to 60 employees',
 'land.f.grow4':'All Starter features','land.f.grow5':'Priority support',
 'land.f.biz1':'1 company','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
@@ -11517,7 +11484,7 @@ en:{
 'help.s7title':'Device Token — Extra Security Layer (Optional)',
 'help.s7desc':'If you want the strongest protection, enable <strong>"Require registered device token"</strong> in the Geofence settings for a site. Then open the <strong>📲 Kiosk Shortcut</strong> modal for that site on each authorised kiosk device and click <strong>"Register This Device"</strong>. After that, punches only work on devices that have been explicitly registered — even someone standing at the right location on an unregistered phone will be blocked. To remove a device, open the Kiosk Shortcut modal and click <strong>"Revoke"</strong>.',
 'help.s8title':'Generate Reports',
-'help.s8desc':'Go to the <strong>Reports</strong> tab (admin login required). Filter by company, site, date range, or employee. Export to Excel, CSV, or PDF. QuickBooks IIF export is also available on paid plans.',
+'help.s8desc':'Go to the <strong>Reports</strong> tab (admin login required). Filter by company, site, date range, or employee. Export to Excel, CSV, or PDF. Excel and CSV exports require a paid plan.',
 'help.s9title':'Automated Email Reports',
 'help.s9desc':'At the end of each pay period, employees with a registered email automatically receive a PDF summary of their hours. The period is determined by the payroll frequency set in your company settings (weekly, bi-weekly, or monthly).',
 'help.s10title':'Audit Logs & Manual Corrections',
@@ -11532,7 +11499,7 @@ en:{
 'land.howSetupLabel':'Getting Set Up','land.howAdminLabel':'What Admins Can Do',
 'land.howA1Title':'Edit Any Punch','land.howA1Desc':'Correct clock-in/out times, add missed punches, or remove invalid entries — all logged in an audit trail.',
 'land.howA2Title':'Generate Reports','land.howA2Desc':'Export hours by employee, site, or period in Excel, CSV, or PDF. Send reports directly to employees by email.',
-'land.howA3Title':'Overtime Alerts','land.howA3Desc':'Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and QuickBooks exports.',
+'land.howA3Title':'Overtime Alerts','land.howA3Desc':'Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and exports.',
 'land.howA4Title':'Automated Emails','land.howA4Desc':'At the end of each pay period, PunchClock automatically emails each employee their hours summary — no manual work.',
 'land.howA5Title':'Bulk Actions','land.howA5Desc':'Select multiple employees to send reports, activate, deactivate, or delete them all at once.',
 'land.howA6Title':'Co-Admin Access','land.howA6Desc':'Invite co-admins to share management duties. Each co-admin sees the same companies, sites, and employees.',
@@ -11561,10 +11528,10 @@ en:{
 'faq.a4':'Yes. Admins can correct, add, or delete any punch record from the Activity tab. All changes are logged in the audit trail with a timestamp.',
 'faq.q5':'What happens to the clock page when I log out?',
 'faq.a5':'The clock in/out page stays active after you log out of your admin account — it keeps recording punches for the selected company and site. For tablet setup, log in as admin, pick your company and site, then tap <strong>"Set up for employees"</strong> at the top of the clock page. This logs you out while keeping the page active, so employees can punch in/out without touching your admin account. Use <strong>"Logout & go to PunchClock.ca"</strong> if you want to fully exit instead.',
-'faq.q6':'Does PunchClock Pro integrate with QuickBooks?',
-'faq.a6':'Yes. You can export payroll-ready IIF files from the Reports tab that import directly into QuickBooks Desktop. CSV and Excel exports are also available for other payroll systems.',
+'faq.q6':'Can I use PunchClock Pro with my payroll system?',
+'faq.a6':'Yes. From the Reports tab you can export any date range to Excel, CSV or PDF, with regular and overtime hours separated per employee. Those formats open in every major payroll and accounting package, or can be sent straight to your bookkeeper. There is nothing to configure &mdash; pick the period, export, done.',
 'faq.q7':'What is overtime tracking?',
-'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view, in exported reports, and in QuickBooks IIF exports — so your payroll process is always accurate.',
+'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view and in exported reports — so your payroll process is always accurate.',
 'faq.q8':'Is there a free plan?',
 'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 5 active employees — no credit card required. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports.',
 'faq.q9':'Can I add more employees or admins beyond my plan limit?',
@@ -11946,7 +11913,7 @@ fr:{
 'tour.s4t':'Où trouver un NIP',
 'tour.s4b':'Vous faites un essai? Il vous faut le NIP de l\'employé. Allez dans Équipe → Employés et cliquez Voir à côté du NIP pour l\'afficher. C\'est l\'étape où la plupart des gens bloquent.',
 'tour.s5t':'Les heures se calculent seules',
-'tour.s5b':'Chaque pointage alimente les Rapports. Choisissez une période et exportez vers Excel, CSV, PDF ou QuickBooks au moment de la paie. Aucun calcul à la main.',
+'tour.s5b':'Chaque pointage alimente les Rapports. Choisissez une période et exportez vers Excel, CSV ou PDF au moment de la paie. Aucun calcul à la main.',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner','reports.col.reg':'Heures rég.','reports.col.ot':'Heures supp.',
 'reports.period':'Période','reports.lastPeriod':'Dernière période de paie','reports.currentPeriod':'Période en cours',
@@ -11984,12 +11951,12 @@ fr:{
 'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.geoNav':'Géofence',
 'land.getStarted':'Commencer gratuitement','land.badge':'✨ Maintenant avec rapports de paie automatisés',
-'land.pill1':'Pointage sur terminal tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export QuickBooks','land.pill4':'Planification des employés','land.pillAddon':'Complément',
+'land.pill1':'Pointage sur terminal tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export Excel et CSV','land.pill4':'Planification des employés','land.pillAddon':'Complément',
 'land.howSchedTitle':'Complément Planification des employés',
 'land.howSchedDesc':'Une fois votre équipe configurée, activez le complément Planification pour créer des horaires de quarts hebdomadaires directement dans PunchClock. Assignez des quarts par site, envoyez les horaires par courriel et permettez aux employés de voir leurs prochains quarts sur la page de pointage — tout ça pour 14,95 $/mois en supplément de tout plan payant.',
 'land.howSchedCta':'Voir les tarifs →',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
-'land.heroSub':'Pointage par NIP sur terminal tablette fixe, multi-sites, rapports de période automatisés, suivi des heures supplémentaires et export QuickBooks — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
+'land.heroSub':'Pointage par NIP sur terminal tablette fixe, multi-sites, rapports de période automatisés, suivi des heures supplémentaires — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
 'land.freeNote':'Gratuit pour toujours : 1 site · jusqu\'à 10 employés · géorepérage et kiosque inclus',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
@@ -11999,7 +11966,7 @@ fr:{
 'land.feat3Title':'Rapports automatisés','land.feat3Desc':'Des courriels de résumé de période sont envoyés automatiquement à chaque employé en fin de période de paie.',
 'land.feat4Title':'Modification manuelle','land.feat4Desc':'Les admins peuvent corriger les oublis de pointage, modifier les heures ou ajouter des entrées manquantes depuis le journal.',
 'land.feat5Title':'Suivi des heures supp.','land.feat5Desc':'Signale automatiquement les heures supplémentaires quotidiennes (>8h) et hebdomadaires (>40h). Activable par compagnie.',
-'land.feat6Title':'Export QuickBooks','land.feat6Desc':'Exportez des fichiers IIF prêts pour la paie qui s\'importent directement dans QuickBooks. Un seul clic.',
+'land.feat6Title':'Suivi des congés','land.feat6Desc':'Enregistrez vacances, congés maladie et absences. Voyez d\'un coup d\'œil qui est absent aujourd\'hui et approuvez les demandes en un clic.',
 'land.feat7Title':'Accès équipe','land.feat7Desc':'Invitez des co-administrateurs avec accès complet ou des gestionnaires avec accès limité à leurs sites. Chaque invitation est envoyée par courriel.',
 'land.feat8Title':'Périodes de paie flexibles','land.feat8Desc':'Paie hebdomadaire, aux deux semaines ou mensuelle. Début de semaine dimanche ou lundi. Préréglages automatiques par compagnie.',
 'land.priceTitle':'Tarifs simples et transparents','land.priceSub':'Commencez gratuitement. Évoluez selon vos besoins. Aucun frais caché.',
@@ -12074,10 +12041,10 @@ fr:{
 'land.businessSub':'1 compagnie · Sites et employés illimités · 3 admins<br>+4,90$/mois par admin supplémentaire',
 'land.f.free1':'1 compagnie','land.f.free2':'1 site · géorepérage et kiosque inclus','land.f.free3':'Jusqu\'à 10 employés',
 'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Modification manuelle des pointages',
-'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free8':'Export QuickBooks','land.f.free9':'Export Excel et CSV',
+'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free9':'Export Excel et CSV',
 'land.f.start1':'1 compagnie, 2 sites, 2 admins','land.f.start2':'Jusqu\'à 25 employés','land.f.start3':'Toutes les fonctions Gratuit + exports Excel et CSV',
 'land.f.start4':'Rapports de période automatisés','land.f.start5':'Suivi des heures supp.',
-'land.f.start6':'Export QuickBooks IIF',
+'land.f.start6':'Export Excel, CSV et PDF',
 'land.f.grow1':'Jusqu\'à 3 compagnies','land.f.grow2':'Jusqu\'à 6 sites','land.f.grow3':'Jusqu\'à 60 employés',
 'land.f.grow4':'Toutes les fonctions Débutant','land.f.grow5':'Support prioritaire',
 'land.f.biz1':'1 compagnie','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
@@ -12176,7 +12143,7 @@ fr:{
 'help.s7title':'Jeton d\'appareil — sécurité supplémentaire (optionnel)',
 'help.s7desc':'Activez <strong>«Exiger un jeton d\'appareil»</strong> dans les paramètres du géofence d\'un site. Ouvrez ensuite <strong>📲 Raccourci kiosque</strong> sur chaque appareil autorisé et cliquez <strong>«Enregistrer cet appareil»</strong>. Seuls les appareils enregistrés peuvent pointer — même quelqu\'un au bon endroit sur un téléphone non enregistré est bloqué. Pour supprimer un appareil, cliquez <strong>«Révoquer»</strong> dans le raccourci kiosque.',
 'help.s8title':'Générer des rapports',
-'help.s8desc':'Allez dans l\'onglet <strong>Rapports</strong> (connexion admin requise). Filtrez par compagnie, site, période ou employé. Exportez en Excel, CSV ou PDF. L\'export QuickBooks IIF est disponible sur les plans payants.',
+'help.s8desc':'Allez dans l\'onglet <strong>Rapports</strong> (connexion admin requise). Filtrez par compagnie, site, période ou employé. Exportez en Excel, CSV ou PDF. Les exports Excel et CSV exigent un forfait payant.',
 'help.s9title':'Rapports par courriel automatiques',
 'help.s9desc':'À la fin de chaque période de paie, les employés avec un courriel enregistré reçoivent automatiquement un PDF de leurs heures. La période est déterminée par la fréquence de paie de votre compagnie.',
 'help.s10title':'Journaux d\'audit et corrections manuelles',
@@ -12191,7 +12158,7 @@ fr:{
 'land.howSetupLabel':'Mise en place','land.howAdminLabel':'Ce que les admins peuvent faire',
 'land.howA1Title':'Modifier les pointages','land.howA1Desc':'Corrigez les heures, ajoutez des pointages manqués ou supprimez des entrées invalides — tout est consigné dans un journal d\'audit.',
 'land.howA2Title':'Générer des rapports','land.howA2Desc':'Exportez les heures par employé, site ou période en Excel, CSV ou PDF. Envoyez les rapports directement aux employés par courriel.',
-'land.howA3Title':'Alertes de surtemps','land.howA3Desc':'Signalez automatiquement les quarts de plus de 8 h ou les semaines de plus de 40 h. Mis en évidence dans les rapports et exports QuickBooks.',
+'land.howA3Title':'Alertes de surtemps','land.howA3Desc':'Signalez automatiquement les quarts de plus de 8 h ou les semaines de plus de 40 h. Mis en évidence dans les rapports et les exports.',
 'land.howA4Title':'Courriels automatiques','land.howA4Desc':'À la fin de chaque période de paie, PunchClock envoie automatiquement le résumé des heures à chaque employé — sans travail manuel.',
 'land.howA5Title':'Actions groupées','land.howA5Desc':'Sélectionnez plusieurs employés pour envoyer des rapports, activer, désactiver ou supprimer en un seul clic.',
 'land.howA6Title':'Accès co-admin','land.howA6Desc':'Invitez des co-admins pour partager la gestion. Chaque co-admin voit les mêmes compagnies, sites et employés.',
@@ -12220,10 +12187,10 @@ fr:{
 'faq.a4':'Oui. Les admins peuvent corriger, ajouter ou supprimer n\'importe quel pointage depuis l\'onglet Activité. Toutes les modifications sont enregistrées dans le journal d\'audit.',
 'faq.q5':'Que se passe-t-il sur la page de pointage quand je me déconnecte?',
 'faq.a5':'La page de pointage reste active après la déconnexion admin. Pour configurer une tablette, connectez-vous en admin, choisissez la compagnie et le site, puis appuyez sur <strong>«Configurer pour les employés»</strong> en haut de la page de pointage. Cela vous déconnecte tout en maintenant la page active — les employés peuvent pointer sans accéder à votre compte. Utilisez <strong>«Se déconnecter et aller sur PunchClock.ca»</strong> pour revenir au site principal.',
-'faq.q6':'PunchClock Pro s\'intègre-t-il avec QuickBooks?',
-'faq.a6':'Oui. Vous pouvez exporter des fichiers IIF prêts pour la paie depuis l\'onglet Rapports, importables directement dans QuickBooks Desktop. Les exports CSV et Excel sont également disponibles.',
+'faq.q6':'Puis-je utiliser PunchClock Pro avec mon système de paie?',
+'faq.a6':'Oui. Depuis l\'onglet Rapports, vous pouvez exporter n\'importe quelle période en Excel, CSV ou PDF, avec les heures régulières et supplémentaires séparées par employé. Ces formats s\'ouvrent dans tous les principaux logiciels de paie et de comptabilité, ou s\'envoient directement à votre comptable. Rien à configurer &mdash; choisissez la période, exportez, c\'est fait.',
 'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
-'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 h/jour et les semaines dépassant 40 h. Les heures supplémentaires sont mises en évidence dans la vue Activité, les rapports exportés et les exports QuickBooks IIF — pour un traitement de paie toujours précis.',
+'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 h/jour et les semaines dépassant 40 h. Les heures supplémentaires sont mises en évidence dans la vue Activité et les rapports exportés — pour un traitement de paie toujours précis.',
 'faq.q8':'Y a-t-il un plan gratuit?',
 'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 5 employés actifs — sans carte de crédit requise. Les plans payants commencent à 19,49$/mois CAD et débloquent plus de sites, d\'employés et d\'admins, ainsi que les rapports automatiques.',
 'faq.q9':'Puis-je ajouter plus d\'employés ou d\'administrateurs au-delà de la limite?',
