@@ -127,6 +127,89 @@ function buildDay3(name: string): { subject: string; html: string } {
   };
 }
 
+// Stalled after adding people but before any punch — by far the most common way a trial dies.
+// The usual cause is not knowing the employee PIN, so that is what this email leads with.
+function buildNoPunch(name: string, dayLabelEn: string, dayLabelFr: string): { subject: string; html: string } {
+  return {
+    subject: "Your team is set up — here's how they clock in ⏱ | Voici comment pointer",
+    html: wrapper(`
+      <!-- ENGLISH -->
+      <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Hi ${name}, one step left</h1>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 18px">
+        Your employees are in — nice work. There have been no clock-ins yet, and there is usually one reason for that:
+        <strong>you need the employee&rsquo;s 4-digit PIN</strong> to punch on their behalf.
+      </p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin:0 0 22px">
+        <p style="color:#1e293b;font-size:14px;line-height:1.7;margin:0">
+          <strong>To try it yourself:</strong><br>
+          1. Open <strong>Team &rarr; Employees</strong><br>
+          2. Click <strong>Show</strong> next to any PIN to reveal it<br>
+          3. Go to <strong>Clock In/Out</strong>, pick that name, tap <strong>IN</strong>, enter the PIN
+        </p>
+      </div>
+      <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 8px">
+        For daily use, just leave the Clock In/Out page open on a tablet or an old phone by the door. Your team taps their
+        name and their PIN — nothing to install.
+      </p>
+      ${ctaButton("Open PunchClock Pro →", APP_URL)}
+      <p style="color:#f59e0b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">${dayLabelEn}</p>
+
+      ${divider()}
+
+      <!-- FRANÇAIS -->
+      <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Bonjour ${name}, il ne reste qu&rsquo;une &eacute;tape</h1>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 18px">
+        Vos employ&eacute;s sont ajout&eacute;s — bravo. Aucun pointage n&rsquo;a encore &eacute;t&eacute; enregistr&eacute;, et c&rsquo;est
+        g&eacute;n&eacute;ralement pour une seule raison&nbsp;: <strong>il vous faut le NIP &agrave; 4 chiffres de l&rsquo;employ&eacute;</strong> pour pointer &agrave; sa place.
+      </p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;margin:0 0 22px">
+        <p style="color:#1e293b;font-size:14px;line-height:1.7;margin:0">
+          <strong>Pour l&rsquo;essayer vous-m&ecirc;me&nbsp;:</strong><br>
+          1. Ouvrez <strong>&Eacute;quipe &rarr; Employ&eacute;s</strong><br>
+          2. Cliquez <strong>Voir</strong> &agrave; c&ocirc;t&eacute; d&rsquo;un NIP pour l&rsquo;afficher<br>
+          3. Allez dans <strong>Entr&eacute;e/Sortie</strong>, choisissez ce nom, touchez <strong>ENTR&Eacute;E</strong>, entrez le NIP
+        </p>
+      </div>
+      <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 8px">
+        Au quotidien, laissez simplement la page Entr&eacute;e/Sortie ouverte sur une tablette ou un vieux t&eacute;l&eacute;phone pr&egrave;s de la porte.
+        Votre &eacute;quipe touche son nom et son NIP — rien &agrave; installer.
+      </p>
+      ${ctaButton("Ouvrir PunchClock Pro →", APP_URL)}
+      <p style="color:#f59e0b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">${dayLabelFr}</p>
+    `)
+  };
+}
+
+// Site exists but nobody has been added yet.
+function buildNoEmployees(name: string, dayLabelEn: string, dayLabelFr: string): { subject: string; html: string } {
+  return {
+    subject: "Add your team to start tracking hours 👥 | Ajoutez votre équipe",
+    html: wrapper(`
+      <!-- ENGLISH -->
+      <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Hi ${name}, your site is ready</h1>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px">
+        The next step is adding the people who will clock in. Each one gets a 4-digit PIN — that is all they need,
+        no app and no account to create.
+      </p>
+      ${stepListEn()}
+      ${ctaButton("Add My Employees →", APP_URL)}
+      <p style="color:#f59e0b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">${dayLabelEn}</p>
+
+      ${divider()}
+
+      <!-- FRANÇAIS -->
+      <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Bonjour ${name}, votre site est pr&ecirc;t</h1>
+      <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px">
+        L&rsquo;&eacute;tape suivante est d&rsquo;ajouter les personnes qui vont pointer. Chacune re&ccedil;oit un NIP &agrave; 4 chiffres —
+        c&rsquo;est tout ce qu&rsquo;il leur faut, aucune application ni compte &agrave; cr&eacute;er.
+      </p>
+      ${stepListFr()}
+      ${ctaButton("Ajouter mes employ&eacute;s →", APP_URL)}
+      <p style="color:#f59e0b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">${dayLabelFr}</p>
+    `)
+  };
+}
+
 function buildDay6(name: string): { subject: string; html: string } {
   return {
     subject: "⏰ Your PunchClock Pro trial expires tomorrow | Votre essai expire demain",
@@ -270,39 +353,59 @@ Deno.serve(async (req) => {
       const emailsSent: Record<string, boolean> = admin.onboarding_emails_sent || {};
       const daysSinceReg = Math.floor((Date.now() - new Date(admin.created_at).getTime()) / 86400000);
 
-      // Check if admin has any sites — company always exists after registration,
-      // so Day 1/3 nudges fire only when setup is still incomplete (no sites yet).
-      let hasSite = false;
+      // Where in the funnel are they actually stuck? Day 1/3 used to fire only when no site
+      // existed, but nearly everyone creates a site and then stalls later — so the people who
+      // needed a nudge most were the only ones excluded, and heard nothing until "trial expiring".
+      let stage: "no_site" | "no_employees" | "no_punch" | "active" = "no_site";
       if (daysSinceReg >= 1 && daysSinceReg <= 5) {
-        const { data: coData } = await supabase
+        const { data: coRows } = await supabase
           .from("companies")
           .select("id")
-          .eq("admin_id", admin.id)
-          .maybeSingle();
-        if (coData) {
-          const { count } = await supabase
-            .from("sites")
-            .select("id", { count: "exact", head: true })
-            .eq("company_id", coData.id);
-          hasSite = (count ?? 0) > 0;
+          .eq("admin_id", admin.id);
+        const coIds = (coRows ?? []).map((c: { id: string }) => c.id);
+        if (coIds.length) {
+          const { count: siteCount } = await supabase
+            .from("sites").select("id", { count: "exact", head: true }).in("company_id", coIds);
+          if ((siteCount ?? 0) > 0) {
+            const { count: empCount } = await supabase
+              .from("employees").select("id", { count: "exact", head: true })
+              .in("company_id", coIds).eq("active", true);
+            if ((empCount ?? 0) > 0) {
+              const { count: punchCount } = await supabase
+                .from("punches").select("id", { count: "exact", head: true }).in("company_id", coIds);
+              stage = (punchCount ?? 0) > 0 ? "active" : "no_punch";
+            } else {
+              stage = "no_employees";
+            }
+          }
         }
       }
 
-      // Day 1: welcome (only if no site added yet)
-      if (daysSinceReg >= 1 && daysSinceReg <= 2 && !emailsSent.day1 && !hasSite) {
-        const { subject, html } = buildDay1(admin.name);
-        if (await sendEmail(admin.email, subject, html)) {
+      // Pick the message that matches the stage. Anyone already punching is left alone.
+      const stageEmail = (dayEn: string, dayFr: string) => {
+        if (stage === "no_site") return buildDay1(admin.name);
+        if (stage === "no_employees") return buildNoEmployees(admin.name, dayEn, dayFr);
+        if (stage === "no_punch") return buildNoPunch(admin.name, dayEn, dayFr);
+        return null;
+      };
+
+      // Day 1
+      if (daysSinceReg >= 1 && daysSinceReg <= 2 && !emailsSent.day1) {
+        const msg = stageEmail("6 days left in your trial.", "Il vous reste 6 jours d'essai.");
+        if (msg && await sendEmail(admin.email, msg.subject, msg.html)) {
           emailsSent.day1 = true;
-          sent.push("day1");
+          sent.push("day1:" + stage);
         }
       }
 
-      // Day 3: nudge (only if no site added yet)
-      if (daysSinceReg >= 3 && daysSinceReg <= 4 && !emailsSent.day3 && !hasSite) {
-        const { subject, html } = buildDay3(admin.name);
-        if (await sendEmail(admin.email, subject, html)) {
+      // Day 3
+      if (daysSinceReg >= 3 && daysSinceReg <= 4 && !emailsSent.day3) {
+        const msg = stage === "no_site"
+          ? buildDay3(admin.name)   // keeps the "still no site?" wording
+          : stageEmail("Only 4 days left in your trial.", "Il ne vous reste que 4 jours d'essai.");
+        if (msg && await sendEmail(admin.email, msg.subject, msg.html)) {
           emailsSent.day3 = true;
-          sent.push("day3");
+          sent.push("day3:" + stage);
         }
       }
 
