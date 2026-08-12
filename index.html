@@ -3487,6 +3487,13 @@ async function supaFetch(method,table,opts={}){
     throw e;
   }
 }
+// HTML-escape for values interpolated into innerHTML. This used to exist only as a local inside
+// renderDashboard, so any other function calling esc() threw ReferenceError and killed the render.
+// Declared with `function` so it is hoisted above every caller regardless of file order.
+function esc(v){
+  return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 const DB={
   all:(t,f)=>supaFetch('GET',t,{filter:f}),
   insert:(t,b)=>supaFetch('POST',t,{body:b}),
@@ -9358,7 +9365,7 @@ async function loadTimeOffPage(){
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   const ctx=Ctx.get();
   const sel=document.getElementById('toSiteFilter');
-  let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
+  let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites.slice();
   if(managerSiteIds!==null) sites=sites.filter(s=>managerSiteIds.includes(s.id));
   sel.innerHTML=`<option value="all">${t('admin.allSites')||'All Sites'}</option>`+
     sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
@@ -9486,12 +9493,18 @@ function _toSyncEnd(){
 
 function openTimeOffModal(id){
   const ctx=Ctx.get();
-  if(!ctx){showCompanyPicker();return;}
   _toEditId=id||null;
   document.getElementById('timeOffMsg').innerHTML='';
   document.getElementById('toConflictWarn').style.display='none';
-  let emps=C.employees.filter(e=>e.active&&e.company_id===ctx.co.id);
+  // No site context is fine here — an admin managing absences does not need to have "entered" a
+  // site first. Scope to the active company when there is one, otherwise show everyone they can
+  // see. Sending them to the site picker used to bounce them out to the punch page entirely.
+  let emps=C.employees.filter(e=>e.active&&(!ctx||e.company_id===ctx.co.id));
   if(managerSiteIds!==null) emps=emps.filter(e=>managerSiteIds.includes(e.site_id));
+  if(!emps.length){
+    showToast(t('to.noEmployees')||'Add an employee first, then you can record time off for them.','info');
+    return;
+  }
   document.getElementById('toEmp').innerHTML=emps.map(e=>`<option value="${e.id}">${esc(e.name)}</option>`).join('');
   const r=id?_timeOff.find(x=>x.id===id):null;
   document.getElementById('timeOffModalTitle').textContent=r?(t('to.edit')||'Edit time off'):(t('to.add')||'Add time off');
@@ -11316,7 +11329,7 @@ en:{
 'to.errHours':'Hours per day must be between 0.5 and 24.',
 'to.errOverlap':'{name} already has time off from {a} to {b}. Edit that entry instead.',
 'to.schedConflict':'{name} is off that day ({kind}).',
-'to.scheduleAnyway':'Schedule anyway','to.paidLeaveHours':'Paid Leave Hours',
+'to.scheduleAnyway':'Schedule anyway','to.noEmployees':'Add an employee first, then you can record time off for them.','to.paidLeaveHours':'Paid Leave Hours',
 'to.inPeriod':'Time off in this period','to.unpaidNote':'Unpaid leave is listed for the record but contributes no hours.',
 'nav.dd.tour':'Take the tour','help.forThisPage':'For this page','help.everythingElse':'Everything else',
 'tour.step':'Step {n} of {total}','tour.next':'Next','tour.back':'Back','tour.skip':'Skip','tour.finish':'Finish',
@@ -11977,7 +11990,7 @@ fr:{
 'to.errHours':'Les heures par jour doivent être entre 0,5 et 24.',
 'to.errOverlap':'{name} a déjà un congé du {a} au {b}. Modifiez cette entrée plutôt.',
 'to.schedConflict':'{name} est absent ce jour-là ({kind}).',
-'to.scheduleAnyway':'Planifier quand même','to.paidLeaveHours':'Heures de congé payé',
+'to.scheduleAnyway':'Planifier quand même','to.noEmployees':'Ajoutez d\'abord un employé, puis vous pourrez enregistrer ses congés.','to.paidLeaveHours':'Heures de congé payé',
 'to.inPeriod':'Congés dans cette période','to.unpaidNote':'Les congés sans solde sont listés pour référence mais ne comptent aucune heure.',
 'nav.dd.tour':'Visite guidée','help.forThisPage':'Pour cette page','help.everythingElse':'Tout le reste',
 'tour.step':'Étape {n} sur {total}','tour.next':'Suivant','tour.back':'Retour','tour.skip':'Passer','tour.finish':'Terminer',
