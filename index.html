@@ -866,6 +866,10 @@ border-top:1px solid var(--border);margin:18px 0;}
 <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
 <symbol id="i-calendar-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="18" cy="17" r="4"/><path d="M18 15.5v1.5l1 1"/></symbol>
 <symbol id="i-shield-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><circle cx="12" cy="9" r="2"/></symbol>
+<!-- Nav-sized shield. i-shield-pin has a 18x22 ink box, but every other sidebar icon is 18x20,
+     so next to Employees/Sites it overhung top and bottom and read as misaligned. Geometry here
+     is x 4-20, y 3-21, which with the set's 2px stroke gives exactly the 18x20 the others have. -->
+<symbol id="i-nav-admins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 5.8V12c0 4.9-3.9 7.6-8 9-4.1-1.4-8-4.1-8-9V5.8Z"/><circle cx="12" cy="10.5" r="2"/></symbol>
 <symbol id="i-smartphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
 </defs></svg>
   <nav class="land-nav">
@@ -1636,12 +1640,12 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('dashboard')" id="mobileNavDashboard" style="display:none"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('timeoff')" id="mobileNavTimeOff" style="display:none"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
   <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa"><svg><use href="#i-nav-schedule"/></svg> <span id="mobileSchedulingLabel"></span></button>
@@ -1652,21 +1656,23 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ═══════════════ LEFT SIDEBAR NAV (opt-in) ═══════════════ -->
 <aside id="sideNav">
+  <!-- Daily view first (what happened), then the management section (what to plan).
+       Schedule sits directly above Time Off because the two are used together. -->
   <button class="sn-item" data-nav="dashboard" onclick="navigate('dashboard')"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
   <button class="sn-item" data-nav="punch" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
-  <button class="sn-item" data-nav="schedule" onclick="navigate('schedule')"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
+  <button class="sn-item" data-nav="activity" onclick="navigate('activity')"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <div class="sn-label" data-i18n="sn.manage">Manage</div>
   <div class="sn-group" id="snTeamGroup">
     <button class="sn-item" onclick="toggleSideGroup('snTeamGroup')"><svg><use href="#i-nav-admin"/></svg><span data-i18n="sn.team">Team</span><span class="sn-chev">▾</span></button>
     <div class="sn-sub">
       <button class="sn-item" data-nav="admin" onclick="goAdminTab('employees')"><svg><use href="#i-user"/></svg><span data-i18n="admin.tabs.employees">Employees</span></button>
       <button class="sn-item" data-nav="sites" onclick="navigate('sites')"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-shield-pin"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
+      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-nav-admins"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
     </div>
   </div>
+  <button class="sn-item" data-nav="schedule" onclick="navigate('schedule')"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="sn-item" data-nav="timeoff" onclick="navigate('timeoff')"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span><span id="snTimeOffBadge" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
   <button class="sn-item" data-nav="reports" onclick="navigate('reports')"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
-  <button class="sn-item" data-nav="activity" onclick="navigate('activity')"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <div style="margin-top:auto"></div>
   <button class="sn-item" onclick="setNavMode('top')" style="color:var(--text3);font-size:12px"><svg><use href="#i-nav-chevron"/></svg><span data-i18n="sn.backToTabs">Back to top tabs</span></button>
 </aside>
@@ -10638,6 +10644,9 @@ async function renderScheduleGrid() {
   const todayStr = schedDateStr(new Date());
   const startStr = schedDateStr(weekDays[0]);
   const endStr   = schedDateStr(weekDays[6]);
+  // Absences drive the cell markers below, so make sure they are current rather than whatever
+  // the cache happened to hold when the page first loaded.
+  await refreshTimeOff();
 
   // Fetch shifts for this week
   const adminId = s?.parent_admin_id || s?.id;
@@ -10757,13 +10766,24 @@ async function renderScheduleGrid() {
       const isUnavail = !!unavailEntry;
       const dayHols = _weekHolidays[dateStr] || [];
       const isHoliday = dayHols.length > 0;
+      // Approved absence for this person on this day. Shown before anything is clicked, so the
+      // gap is visible while building the week rather than discovered at save time.
+      const dayOff = timeOffOn(dateStr, emp.id)[0] || null;
 
-      const tdStyle = isUnavail
-        ? 'background:rgba(239,68,68,.07);'
+      const tdStyle = dayOff
+        ? 'background:rgba(245,158,11,.10);'
+        : isUnavail ? 'background:rgba(239,68,68,.07);'
         : isHoliday ? 'background:rgba(245,158,11,.05);' : '';
 
-      html += `<td class="${isToday&&!isUnavail&&!isHoliday?'today-col':''}" style="${tdStyle}">
+      html += `<td class="${isToday&&!isUnavail&&!isHoliday&&!dayOff?'today-col':''}" style="${tdStyle}">
         <div class="sched-cell-inner">`;
+
+      if(dayOff) {
+        const multi = dayOff.end_date !== dayOff.start_date;
+        const tip = `${_toKindLabel(dayOff.kind)}${multi?` · ${dayOff.start_date} → ${dayOff.end_date}`:''}${dayOff.reason?` · ${dayOff.reason}`:''}`;
+        html += `<div title="${esc(tip)}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#b45309;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:3px 7px;margin-bottom:2px">
+          <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${(TO_KINDS[dayOff.kind]||{}).c||'#f59e0b'}"></span>${esc(_toKindLabel(dayOff.kind))}</div>`;
+      }
 
       if(isHoliday) {
         const holNames = dayHols.map(h=>(_appLang==='fr'&&h.name_fr)?h.name_fr:h.name).join(', ');
@@ -10786,7 +10806,13 @@ async function renderScheduleGrid() {
         </div>`;
       });
 
-      html += `<button class="sched-add-btn" onclick="openAddShiftModal('${emp.id}','${dateStr}')" title="${isUnavail?(t('sched.unavailableHint')||'Employee unavailable — add shift anyway?'):(t('sched.addShift')||'Add Shift')}" style="${isUnavail?'border-color:rgba(239,68,68,.3);color:var(--red);opacity:.6':''}">+</button>
+      const addTitle = dayOff
+        ? (t('to.schedConflict')||'{name} is off that day ({kind}).').replace('{name}',emp.name).replace('{kind}',_toKindLabel(dayOff.kind))
+        : isUnavail ? (t('sched.unavailableHint')||'Employee unavailable — add shift anyway?')
+        : (t('sched.addShift')||'Add Shift');
+      const addStyle = dayOff ? 'border-color:rgba(245,158,11,.45);color:#b45309;opacity:.6'
+        : isUnavail ? 'border-color:rgba(239,68,68,.3);color:var(--red);opacity:.6' : '';
+      html += `<button class="sched-add-btn" onclick="openAddShiftModal('${emp.id}','${dateStr}')" title="${esc(addTitle)}" style="${addStyle}">+</button>
         </div></td>`;
     });
 
