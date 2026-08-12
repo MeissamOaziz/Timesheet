@@ -237,6 +237,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="tab-btn active" onclick="showTab('schedule')" id="tabSchedule">🗓️ <span id="tabSchedLabel">Schedule</span></button>
     <button class="tab-btn" onclick="showTab('reports')" id="tabReports">📊 <span id="tabReportsLabel">My Hours</span></button>
     <button class="tab-btn" onclick="showTab('availability')" id="tabAvail">🚫 <span id="tabAvailLabel">Availability</span></button>
+    <button class="tab-btn" onclick="showTab('timeoff')" id="tabTimeOff">🌴 <span id="tabTimeOffLabel">Time Off</span></button>
   </div>
 
   <div class="main">
@@ -307,6 +308,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
 
+    <!-- TIME OFF TAB -->
+    <div id="tabContentTimeOff" style="display:none">
+      <h1 class="page-title" id="toTitle">Time Off</h1>
+      <p class="page-sub" id="toSub">Request vacation, sick days or personal time — your manager approves it</p>
+
+      <div class="card">
+        <div class="card-title">➕ <span id="toNewLabel">New request</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px" id="toFromLabel">First day off</label>
+            <input type="date" id="toStartInput" class="form-input" onchange="toSyncEnd()">
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px" id="toToLabel">Last day off</label>
+            <input type="date" id="toEndInput" class="form-input">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <select id="toKindInput" class="form-input" style="flex:1;min-width:140px"></select>
+          <input type="text" id="toReasonInput" class="form-input" style="flex:2;min-width:160px" placeholder="Reason (optional)">
+          <button class="btn-secondary" onclick="submitTimeOff()" id="toSubmitBtn" style="white-space:nowrap">Send request</button>
+        </div>
+        <div id="toMsg"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 <span id="toListLabel">My requests</span></div>
+        <div id="toList"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -354,6 +386,11 @@ async function rpc(fn, params) {
   const text = await res.text(); return text ? JSON.parse(text) : null;
 }
 function asRows(r) { return Array.isArray(r) ? r : (r ? [r] : []); }
+// HTML-escape anything interpolated into innerHTML. Declared with `function` so it hoists above
+// every caller regardless of where it sits in the file.
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 // ══════════════════════════════════════════════════════
 // I18N
@@ -370,6 +407,26 @@ const T = {
     passShort: 'Password must be at least 6 characters.', passMismatch: 'Passwords do not match.',
     logoutBtn: 'Sign Out', navSub: 'Employee Portal',
     tabSched: 'Schedule', tabReports: 'My Hours', tabAvail: 'Availability',
+    tabTimeOff: 'Time Off',
+    toTitle: 'Time Off', toSub: 'Request vacation, sick days or personal time — your manager approves it',
+    toNewLabel: 'New request', toListLabel: 'My requests',
+    toFromLabel: 'First day off', toToLabel: 'Last day off',
+    toReasonPh: 'Reason (optional)', toSubmitBtn: 'Send request',
+    toKind_vacation: 'Vacation', toKind_sick: 'Sick', toKind_personal: 'Personal',
+    toKind_unpaid: 'Unpaid', toKind_other: 'Other',
+    toStatus_pending: 'Pending', toStatus_approved: 'Approved', toStatus_denied: 'Denied', toStatus_cancelled: 'Cancelled',
+    toDays: 'day(s)', toNone: 'No time off requested yet.',
+    toSent: 'Request sent — your manager will review it.',
+    toCancel: 'Withdraw request', toCancelled: 'Request withdrawn.',
+    toConfirmCancel: 'Withdraw this request?',
+    toErrDates: 'Please choose both dates.', toErrOrder: 'The last day cannot be before the first day.',
+    toErr_overlap: 'You already have time off booked that overlaps those dates.',
+    toErr_invalid_dates: 'Those dates are not valid.', toErr_invalid_kind: 'Please choose a type.',
+    toErr_too_far_past: 'That date is too far in the past. Ask your manager to add it for you.',
+    toErr_too_far_future: 'That date is too far ahead.',
+    toErr_not_authenticated: 'Your session expired. Please sign in again.',
+    toErr_not_cancellable: 'That request can no longer be withdrawn.',
+    toErr_no_company: 'Your account is not linked to a company. Contact your manager.',
     schedTitle: 'My Schedule', schedSub: 'Your upcoming shifts for the next 2 weeks',
     noShifts: 'No shifts scheduled in the next 2 weeks.',
     reportsTitle: 'My Hours', reportsSub: 'View your punch records and hours worked',
@@ -398,6 +455,26 @@ const T = {
     passShort: 'Le mot de passe doit contenir au moins 6 caractères.', passMismatch: 'Les mots de passe ne correspondent pas.',
     logoutBtn: 'Déconnexion', navSub: 'Portail employé',
     tabSched: 'Horaire', tabReports: 'Mes heures', tabAvail: 'Disponibilité',
+    tabTimeOff: 'Congés',
+    toTitle: 'Congés', toSub: 'Demandez des vacances, un congé maladie ou personnel — votre gestionnaire approuve',
+    toNewLabel: 'Nouvelle demande', toListLabel: 'Mes demandes',
+    toFromLabel: 'Premier jour d\'absence', toToLabel: 'Dernier jour d\'absence',
+    toReasonPh: 'Raison (optionnel)', toSubmitBtn: 'Envoyer la demande',
+    toKind_vacation: 'Vacances', toKind_sick: 'Maladie', toKind_personal: 'Personnel',
+    toKind_unpaid: 'Sans solde', toKind_other: 'Autre',
+    toStatus_pending: 'En attente', toStatus_approved: 'Approuvé', toStatus_denied: 'Refusé', toStatus_cancelled: 'Annulé',
+    toDays: 'jour(s)', toNone: 'Aucune demande de congé pour l\'instant.',
+    toSent: 'Demande envoyée — votre gestionnaire va la réviser.',
+    toCancel: 'Retirer la demande', toCancelled: 'Demande retirée.',
+    toConfirmCancel: 'Retirer cette demande?',
+    toErrDates: 'Veuillez choisir les deux dates.', toErrOrder: 'Le dernier jour ne peut pas précéder le premier.',
+    toErr_overlap: 'Vous avez déjà un congé qui chevauche ces dates.',
+    toErr_invalid_dates: 'Ces dates ne sont pas valides.', toErr_invalid_kind: 'Veuillez choisir un type.',
+    toErr_too_far_past: 'Cette date est trop ancienne. Demandez à votre gestionnaire de l\'ajouter.',
+    toErr_too_far_future: 'Cette date est trop éloignée.',
+    toErr_not_authenticated: 'Votre session a expiré. Veuillez vous reconnecter.',
+    toErr_not_cancellable: 'Cette demande ne peut plus être retirée.',
+    toErr_no_company: 'Votre compte n\'est lié à aucune compagnie. Contactez votre gestionnaire.',
     schedTitle: 'Mon horaire', schedSub: 'Vos prochains quarts de travail pour les 2 prochaines semaines',
     noShifts: 'Aucun quart prévu dans les 2 prochaines semaines.',
     reportsTitle: 'Mes heures', reportsSub: 'Consultez vos pointages et vos heures travaillées',
@@ -441,6 +518,9 @@ function applyTranslations() {
     setPassConfirmLabel:'setPassConfirmLabel', setPassBtn:'setPassBtn',
     logoutBtn:'logoutBtn', navSub:'navEmpSub',
     tabSched:'tabSchedLabel', tabReports:'tabReportsLabel', tabAvail:'tabAvailLabel',
+    tabTimeOff:'tabTimeOffLabel', toTitle:'toTitle', toSub:'toSub',
+    toNewLabel:'toNewLabel', toListLabel:'toListLabel',
+    toFromLabel:'toFromLabel', toToLabel:'toToLabel', toSubmitBtn:'toSubmitBtn',
     schedTitle:'schedTitle', schedSub:'schedSub',
     reportsTitle:'reportsTitle', reportsSub:'reportsSub',
     availTitle:'availTitle', availSub:'availSub',
@@ -465,6 +545,10 @@ function applyTranslations() {
   }
   const noteInput = document.getElementById('specificNoteInput');
   if (noteInput) noteInput.placeholder = t('notePlaceholder');
+  const toReason = document.getElementById('toReasonInput');
+  if (toReason) toReason.placeholder = t('toReasonPh');
+  // The type dropdown is built in the active language, so rebuild it on a language switch.
+  if (document.getElementById('tabContentTimeOff')?.style.display === '') renderTimeOff();
 }
 
 // ══════════════════════════════════════════════════════
@@ -508,9 +592,9 @@ function togglePw(inputId, btn) {
 }
 function showTab(name) {
   // Explicit id maps — button ids and content-div ids are NOT a simple capitalization of the name
-  const contentIds = { schedule:'tabContentSchedule', reports:'tabContentReports', availability:'tabContentAvailability' };
-  const buttonIds  = { schedule:'tabSchedule',        reports:'tabReports',        availability:'tabAvail' };
-  ['schedule','reports','availability'].forEach(tab => {
+  const contentIds = { schedule:'tabContentSchedule', reports:'tabContentReports', availability:'tabContentAvailability', timeoff:'tabContentTimeOff' };
+  const buttonIds  = { schedule:'tabSchedule',        reports:'tabReports',        availability:'tabAvail',              timeoff:'tabTimeOff' };
+  ['schedule','reports','availability','timeoff'].forEach(tab => {
     const content = document.getElementById(contentIds[tab]);
     if (content) content.style.display = (tab === name) ? '' : 'none';
     const btn = document.getElementById(buttonIds[tab]);
@@ -519,6 +603,7 @@ function showTab(name) {
   if (name === 'schedule') renderSchedule();
   else if (name === 'reports') renderReports();
   else if (name === 'availability') renderAvailability();
+  else if (name === 'timeoff') renderTimeOff();
 }
 function dateStr(d) { return d.toISOString().slice(0,10); }
 function fmtDate(str) {
@@ -812,6 +897,98 @@ function buildPeriods(freq, weekStart, count) {
 // ══════════════════════════════════════════════════════
 // AVAILABILITY TAB
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// TIME OFF
+// Requests land as 'pending' for an admin to approve. Employees can withdraw their own request
+// while it is still pending, but never an absence an admin recorded for them.
+// ══════════════════════════════════════════════════════
+let _timeOff = [];
+const TO_KINDS = ['vacation','sick','personal','unpaid','other'];
+
+function toSyncEnd() {
+  const s = document.getElementById('toStartInput').value;
+  const e = document.getElementById('toEndInput');
+  if (s && (!e.value || e.value < s)) e.value = s;   // single day is the common case
+}
+
+async function loadTimeOff() {
+  try { _timeOff = asRows(await rpc('portal_get_time_off', { p_session: _session.token })); }
+  catch(e) { _timeOff = []; }
+}
+
+async function renderTimeOff() {
+  // Populate the type dropdown in the current language, preserving any selection.
+  const sel = document.getElementById('toKindInput');
+  const keep = sel.value;
+  sel.innerHTML = TO_KINDS.map(k => `<option value="${k}">${t('toKind_'+k)}</option>`).join('');
+  if (keep) sel.value = keep;
+  const startEl = document.getElementById('toStartInput');
+  if (!startEl.value) {
+    const tomorrow = new Date(Date.now() + 864e5).toLocaleDateString('en-CA');
+    startEl.value = tomorrow;
+    document.getElementById('toEndInput').value = tomorrow;
+  }
+
+  await loadTimeOff();
+  const list = document.getElementById('toList');
+  if (!_timeOff.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:13px;padding:16px">${t('toNone')}</div>`;
+    return;
+  }
+  const colours = { approved:'#22c55e', pending:'#f59e0b', denied:'#ef4444', cancelled:'var(--text3)' };
+  list.innerHTML = _timeOff.map(r => {
+    const days = Math.round((new Date(r.end_date+'T00:00:00') - new Date(r.start_date+'T00:00:00')) / 864e5) + 1;
+    const label = r.end_date !== r.start_date ? `${fmtDate(r.start_date)} → ${fmtDate(r.end_date)}` : fmtDate(r.start_date);
+    const c = colours[r.status] || 'var(--text3)';
+    // Only a pending request the employee raised themselves can be withdrawn.
+    const canCancel = r.status === 'pending' && r.requested_by === 'employee';
+    return `
+    <div class="avail-specific-row">
+      <div>
+        <div class="avail-specific-date">${label} <span style="color:var(--text3);font-weight:400">· ${days} ${t('toDays')}</span></div>
+        <div class="avail-specific-note">${t('toKind_'+r.kind) || r.kind}${r.reason ? ' · ' + escHtml(r.reason) : ''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid ${c};color:${c};white-space:nowrap">${t('toStatus_'+r.status) || r.status}</span>
+        ${canCancel ? `<button class="btn-remove-avail" title="${t('toCancel')}" onclick="cancelTimeOff('${r.id}')">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function submitTimeOff() {
+  const start  = document.getElementById('toStartInput').value;
+  const end    = document.getElementById('toEndInput').value;
+  const kind   = document.getElementById('toKindInput').value;
+  const reason = document.getElementById('toReasonInput').value.trim();
+  const msg    = document.getElementById('toMsg');
+  msg.innerHTML = '';
+  if (!start || !end) { showToast(t('toErrDates'), 'error'); return; }
+  if (end < start)    { showToast(t('toErrOrder'), 'error'); return; }
+  try {
+    const res = asRows(await rpc('portal_request_time_off',
+      { p_session: _session.token, p_kind: kind, p_start: start, p_end: end, p_reason: reason || null }))[0];
+    if (res && res.err) { showToast(t('toErr_' + res.err) || t('errorSaving'), 'error'); return; }
+    document.getElementById('toReasonInput').value = '';
+    await renderTimeOff();
+    showToast(t('toSent'), 'success');
+  } catch(e) {
+    showToast(t('errorSaving'), 'error');
+  }
+}
+
+async function cancelTimeOff(id) {
+  if (!confirm(t('toConfirmCancel'))) return;
+  try {
+    const res = asRows(await rpc('portal_cancel_time_off', { p_session: _session.token, p_id: id }))[0];
+    if (res && res.err) { showToast(t('toErr_' + res.err) || t('errorSaving'), 'error'); return; }
+    await renderTimeOff();
+    showToast(t('toCancelled'), 'success');
+  } catch(e) {
+    showToast(t('errorSaving'), 'error');
+  }
+}
+
 async function loadAvailability() {
   try {
     _availability = asRows(await rpc('portal_get_availability', { p_session: _session.token }));
@@ -869,7 +1046,7 @@ function renderSpecificDates() {
     <div class="avail-specific-row">
       <div>
         <div class="avail-specific-date">${label}</div>
-        ${a.note ? `<div class="avail-specific-note">${a.note}</div>` : ''}
+        ${a.note ? `<div class="avail-specific-note">${escHtml(a.note)}</div>` : ''}
       </div>
       <button class="btn-remove-avail" onclick="removeSpecificDate('${a.id}')">✕</button>
     </div>`;
