@@ -435,9 +435,9 @@ const T = {
     punchLogLabel: 'Punch Log', thDate: 'Date', thIn: 'Clock In', thOut: 'Clock Out', thHours: 'Hours',
     noPunches: 'No punch records for this period.',
     availTitle: 'My Availability', availSub: 'Set the days and times when you are NOT available to be scheduled.',
-    recurringLabel: '🔁 Weekly Recurring Unavailability',
+    recurringLabel: 'Weekly Recurring Unavailability',
     recurringDesc: 'Click a day to mark yourself unavailable every week on that day.',
-    specificLabel: '📅 Specific Dates', specificDesc: 'Add specific dates when you are not available.',
+    specificLabel: 'Specific Dates', specificDesc: 'Add specific dates when you are not available.',
     addDateBtn: '+ Add Date', notePlaceholder: 'Reason (optional)', unavailable: 'Unavailable',
     available: 'Available', savedOk: '✓ Saved', errorSaving: 'Error saving.',
     fromDate: 'From', toDate: 'To (leave blank for single day)',
@@ -483,9 +483,9 @@ const T = {
     punchLogLabel: 'Journal de pointage', thDate: 'Date', thIn: 'Entrée', thOut: 'Sortie', thHours: 'Heures',
     noPunches: 'Aucun pointage pour cette période.',
     availTitle: 'Ma disponibilité', availSub: 'Indiquez les jours et heures où vous N\'ÊTES PAS disponible.',
-    recurringLabel: '🔁 Indisponibilité hebdomadaire récurrente',
+    recurringLabel: 'Indisponibilité hebdomadaire récurrente',
     recurringDesc: 'Cliquez sur un jour pour vous marquer indisponible chaque semaine ce jour-là.',
-    specificLabel: '📅 Dates spécifiques', specificDesc: 'Ajoutez des dates précises où vous n\'êtes pas disponible.',
+    specificLabel: 'Dates spécifiques', specificDesc: 'Ajoutez des dates précises où vous n\'êtes pas disponible.',
     addDateBtn: '+ Ajouter une date', notePlaceholder: 'Raison (optionnel)', unavailable: 'Indisponible',
     available: 'Disponible', savedOk: '✓ Sauvegardé', errorSaving: 'Erreur lors de la sauvegarde.',
     fromDate: 'Du', toDate: 'Au (laisser vide pour un seul jour)',
@@ -969,6 +969,18 @@ async function submitTimeOff() {
     const res = asRows(await rpc('portal_request_time_off',
       { p_session: _session.token, p_kind: kind, p_start: start, p_end: end, p_reason: reason || null }))[0];
     if (res && res.err) { showToast(t('toErr_' + res.err) || t('errorSaving'), 'error'); return; }
+    // Notification is resolved server-side (notify-time-off works out the approvers and mails them
+    // plus a confirmation to the employee). Best-effort: a mail failure must not lose the request.
+    if (res && res.id) {
+      try {
+        const nr = await fetch(`${SUPA_URL}/functions/v1/notify-time-off`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+          body: JSON.stringify({ requestId: res.id })
+        });
+        if (!nr.ok) console.error('notify-time-off failed', nr.status, await nr.text().catch(()=>''));
+      } catch(e) { console.error('notify-time-off error', e); }
+    }
     document.getElementById('toReasonInput').value = '';
     await renderTimeOff();
     showToast(t('toSent'), 'success');

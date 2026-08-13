@@ -425,7 +425,9 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:92vh;overflow-y:auto;margin:8px;}
 .modal h3{font-size:17px;font-weight:600;margin-bottom:18px;}
-.modal-footer{display:flex;gap:9px;justify-content:flex-end;margin-top:22px;}
+/* wrap matters: the employee modal has four buttons, and with justify-content:flex-end and no
+   wrapping the leftmost (Cancel) was pushed outside the modal and clipped. */
+.modal-footer{display:flex;flex-wrap:wrap;gap:9px;justify-content:flex-end;margin-top:22px;}
 
 /* FILTER BAR */
 .filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px;align-items:end;}
@@ -1635,6 +1637,10 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
+
+<!-- ACTION REQUIRED BANNER — sits under the nav on every page so an approval waiting on the
+     admin cannot be missed by simply being on a different tab. -->
+<div id="actionBanner" style="display:none"></div>
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
@@ -4196,6 +4202,7 @@ function navigate(page){
   else if(page==='activity'){loadActivityPage();renderMissedPunchRequests();}
   else if(page==='schedule')loadSchedulePage();
   else if(page==='timeoff')loadTimeOffPage();
+  refreshPendingCounts();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
   _syncSideNav(page);
 }
@@ -7584,6 +7591,7 @@ async function renderMissedPunchRequests(){
     if(managerSiteIds!==null) visible=visible.filter(r=>managerSiteIds.includes(r.site_id));
     _missedPunchRequests=visible;
     updateMissedPunchBadge(visible.length);
+    renderActionBanner();
     const sections=document.querySelectorAll('.missedPunchSection');
     if(!visible.length){
       sections.forEach(s=>s.style.display='none');
@@ -9422,6 +9430,64 @@ async function saveAddPunch(){
 }
 
 // ═══════════════════════════════════════════════════
+// ACTION REQUIRED BANNER
+// Anything waiting on an approver is surfaced on every page. Previously a request only appeared
+// on the one page that listed it, so it was easy to log in and never notice.
+// ═══════════════════════════════════════════════════
+// Kept separate from _timeOff on purpose: that array feeds the dashboard, schedule and reports,
+// and merging a pending-only fetch into it would drop approved absences whenever this ran before
+// the main cache load.
+let _pendingTimeOff=[];
+
+async function refreshPendingCounts(){
+  try{
+    if(isLoggedIn()&&!isDemo()){
+      const rows=await DB.all('time_off','status=eq.pending&order=start_date.asc').catch(()=>null);
+      if(rows) _pendingTimeOff=rows;
+    }else{
+      _pendingTimeOff=[];
+    }
+  }catch(_){}
+  renderActionBanner();
+}
+
+function renderActionBanner(){
+  const host=document.getElementById('actionBanner');
+  if(!host) return;
+  const sess=Sess.get();
+  // Only approvers see it, and never on the landing/login/punch screens.
+  if(!sess||isDemo()||['landing','login','register','punch','setpassword'].includes(currentPage)){
+    host.style.display='none'; return;
+  }
+  // Prefer the dedicated pending fetch; fall back to the main cache before it has run.
+  let pendingTO=(_pendingTimeOff.length?_pendingTimeOff:(_timeOff||[])).filter(r=>r.status==='pending');
+  if(managerSiteIds!==null) pendingTO=pendingTO.filter(r=>!r.site_id||managerSiteIds.includes(r.site_id));
+  const pendingMP=(_missedPunchRequests||[]).length;
+
+  const items=[];
+  if(pendingTO.length) items.push({
+    n:pendingTO.length,
+    label:(pendingTO.length===1?(t('act.timeOffOne')||'{n} time off request'):(t('act.timeOffMany')||'{n} time off requests')).replace('{n}',pendingTO.length),
+    go:"navigate('timeoff')"
+  });
+  if(pendingMP) items.push({
+    n:pendingMP,
+    label:(pendingMP===1?(t('act.missedOne')||'{n} missed punch request'):(t('act.missedMany')||'{n} missed punch requests')).replace('{n}',pendingMP),
+    go:"navigate('activity')"
+  });
+
+  if(!items.length){ host.style.display='none'; host.innerHTML=''; return; }
+  host.style.display='';
+  host.innerHTML=`<div style="background:rgba(245,158,11,.12);border-bottom:1px solid rgba(245,158,11,.35);padding:9px clamp(14px,3vw,28px);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <svg style="width:16px;height:16px;color:#b45309;flex-shrink:0"><use href="#i-hourglass"/></svg>
+    <span style="font-size:13px;font-weight:600;color:#b45309">${t('act.title')||'Waiting for your approval'}</span>
+    <span style="display:flex;gap:8px;flex-wrap:wrap;flex:1">
+      ${items.map(i=>`<button onclick="${i.go}" style="background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.45);border-radius:20px;color:#b45309;font-family:inherit;font-size:12px;font-weight:600;padding:3px 12px;cursor:pointer;white-space:nowrap">${esc(i.label)} →</button>`).join('')}
+    </span>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
 // TIME OFF
 // Absences are stored as a date range per employee. Everything else (dashboard "off today",
 // scheduling conflicts, report totals) reads from this one list.
@@ -9642,6 +9708,7 @@ async function reviewTimeOff(id,decision){
   try{
     await DB.update('time_off',`id=eq.${id}`,{status:decision,reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()});
     await refreshTimeOff(); renderTimeOff();
+    await refreshPendingCounts();   // re-fetch, so the banner count reflects the decision
     showToast(decision==='approved'?(t('to.okApproved')||'Time off approved.'):(t('to.okDenied')||'Request denied.'),'success');
   }catch(e){ showToast('Error: '+e.message,'error'); }
 }
@@ -11431,6 +11498,9 @@ en:{
 'to.errHours':'Hours per day must be between 0.5 and 24.',
 'to.errOverlap':'{name} already has time off from {a} to {b}. Edit that entry instead.',
 'to.schedConflict':'{name} is off that day ({kind}).',
+'act.title':'Waiting for your approval',
+'act.timeOffOne':'{n} time off request','act.timeOffMany':'{n} time off requests',
+'act.missedOne':'{n} missed punch request','act.missedMany':'{n} missed punch requests',
 'to.scheduleAnyway':'Schedule anyway','to.noEmployees':'Add an employee first, then you can record time off for them.','to.paidLeaveHours':'Paid Leave Hours',
 'to.inPeriod':'Time off in this period','to.unpaidNote':'Unpaid leave is listed for the record but contributes no hours.',
 'nav.dd.tour':'Take the tour','help.forThisPage':'For this page','help.everythingElse':'Everything else',
@@ -12096,6 +12166,9 @@ fr:{
 'to.errHours':'Les heures par jour doivent être entre 0,5 et 24.',
 'to.errOverlap':'{name} a déjà un congé du {a} au {b}. Modifiez cette entrée plutôt.',
 'to.schedConflict':'{name} est absent ce jour-là ({kind}).',
+'act.title':'En attente de votre approbation',
+'act.timeOffOne':'{n} demande de congé','act.timeOffMany':'{n} demandes de congé',
+'act.missedOne':'{n} demande de pointage manqué','act.missedMany':'{n} demandes de pointage manqué',
 'to.scheduleAnyway':'Planifier quand même','to.noEmployees':'Ajoutez d\'abord un employé, puis vous pourrez enregistrer ses congés.','to.paidLeaveHours':'Heures de congé payé',
 'to.inPeriod':'Congés dans cette période','to.unpaidNote':'Les congés sans solde sont listés pour référence mais ne comptent aucune heure.',
 'nav.dd.tour':'Visite guidée','help.forThisPage':'Pour cette page','help.everythingElse':'Tout le reste',
