@@ -2941,7 +2941,9 @@ border-top:1px solid var(--border);margin:18px 0;}
             <div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:2px;display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-link"/></svg><span data-i18n="emp.portalInviteTitle">Employee Portal Access</span></div>
             <div style="font-size:11px;color:var(--text3)" id="empPortalStatus"></div>
           </div>
-          <button type="button" id="empPortalInviteBtn" onclick="sendEmpPortalInvite()" style="background:rgba(124,92,191,.2);border:1px solid rgba(124,92,191,.4);border-radius:8px;color:#a78bfa;font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;cursor:pointer;white-space:nowrap;transition:all .15s"></button>
+          <!-- No inline onclick: the handler is assigned per employee so it can never fire with
+               stale or missing arguments. -->
+          <button type="button" id="empPortalInviteBtn" style="background:rgba(124,92,191,.2);border:1px solid rgba(124,92,191,.4);border-radius:8px;color:#a78bfa;font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;cursor:pointer;white-space:nowrap;transition:all .15s"></button>
         </div>
         <div id="empPortalInviteMsg" style="margin-top:8px"></div>
       </div>
@@ -7944,6 +7946,9 @@ function openAddEmpModal(){
   if(manageAvailBtnAdd) manageAvailBtnAdd.style.display='none';
   const promoteBtnAdd = document.getElementById('promoteToManagerBtn');
   if(promoteBtnAdd) promoteBtnAdd.style.display='none';
+  // Reset the portal invite row. Without this it kept the state — and the click handler — from
+  // whichever employee was edited last, so pressing it here invited that person instead.
+  showEmpPortalRowForNew();
   const emailRow = document.getElementById('emailReportToggleRow');
   if(emailRow) emailRow.closest('div[style*="margin-top:10px"], div').parentElement;
   // Hide entire email section for free plan
@@ -8072,12 +8077,62 @@ function editEmployee(id){
 // ═══════════════════════════════════════════════════
 // EMPLOYEE PORTAL INVITE
 // ═══════════════════════════════════════════════════
+// Clear every trace of the previous employee from the invite row. The button's onclick is
+// reassigned per employee, so leaving it bound is how an invite ended up going to the wrong person.
+function resetEmpPortalRow(){
+  const row = document.getElementById('empPortalInviteRow');
+  const btn = document.getElementById('empPortalInviteBtn');
+  const msg = document.getElementById('empPortalInviteMsg');
+  const st  = document.getElementById('empPortalStatus');
+  if(msg) msg.innerHTML='';
+  if(st)  st.textContent='';
+  if(btn){
+    btn.onclick=null;
+    btn.disabled=false;
+    btn.style.background='rgba(124,92,191,.2)';
+    btn.style.borderColor='rgba(124,92,191,.4)';
+    btn.style.color='#a78bfa';
+  }
+  if(row) row.style.display='none';
+}
+
+// Add mode: the employee does not exist yet, so there is nothing to invite. Rather than hide the
+// option (which is what made it feel broken), offer it and save first — the flow Meissam asked for.
+function showEmpPortalRowForNew(){
+  resetEmpPortalRow();
+  const row = document.getElementById('empPortalInviteRow');
+  const btn = document.getElementById('empPortalInviteBtn');
+  const st  = document.getElementById('empPortalStatus');
+  if(!row||!btn) return;
+  row.style.display='';
+  if(st) st.textContent = t('emp.portalNewHint')||'Enter an email above, then this will save the employee and send the invitation.';
+  btn.textContent = t('emp.portalSaveAndInvite')||'💾 Save & send invitation';
+  btn.onclick = saveEmpThenInvite;
+}
+
+// Saves the new employee, then invites the address currently in the email box. Reading the field
+// at click time (rather than a captured value) is what keeps this honest.
+async function saveEmpThenInvite(){
+  const msgEl = document.getElementById('empPortalInviteMsg');
+  const email = (document.getElementById('empEmail').value||'').trim().toLowerCase();
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">${t('emp.portalNeedEmail')||'Enter a valid email address above first.'}</div>`;
+    return;
+  }
+  const btn = document.getElementById('empPortalInviteBtn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳'; }
+  const saved = await saveEmployee({keepOpen:true});
+  if(!saved){ if(btn){ btn.disabled=false; btn.textContent=t('emp.portalSaveAndInvite')||'💾 Save & send invitation'; } return; }
+  await sendEmpPortalInvite(saved.id, saved.email||email, saved.name);
+}
+
 async function loadEmpPortalStatus(emp) {
   const inviteRow = document.getElementById('empPortalInviteRow');
   const statusEl  = document.getElementById('empPortalStatus');
   const inviteBtn = document.getElementById('empPortalInviteBtn');
   const msgEl     = document.getElementById('empPortalInviteMsg');
   if(!inviteRow) return;
+  inviteBtn.onclick = null;   // drop any handler left from the previously opened employee
   if(!emp.email) { inviteRow.style.display='none'; return; }
   inviteRow.style.display='';
   if(msgEl) msgEl.innerHTML='';
@@ -8114,6 +8169,17 @@ async function loadEmpPortalStatus(emp) {
 async function sendEmpPortalInvite(empId, email, empName) {
   const btn = document.getElementById('empPortalInviteBtn');
   const msgEl = document.getElementById('empPortalInviteMsg');
+  // Last line of defence: never send on incomplete arguments. This is an outbound email to a real
+  // person, so refusing loudly beats guessing.
+  if(!empId || !email){
+    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">${t('emp.portalNeedEmail')||'Enter a valid email address above first.'}</div>`;
+    return;
+  }
+  // The employee must actually exist before we tell someone they have access to their record.
+  if(!(C.employees||[]).some(e=>e.id===empId)){
+    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">${t('emp.portalSaveFirst')||'Save the employee first, then send the invitation.'}</div>`;
+    return;
+  }
   btn.disabled = true; btn.textContent = '⏳';
   if(msgEl) msgEl.innerHTML='';
   try {
@@ -8184,7 +8250,8 @@ function generatePin(){
   const p=document.getElementById('pinPreview');p.textContent=`PIN: ${pin}`;p.style.display='';
 }
 
-async function saveEmployee(){
+async function saveEmployee(opts){
+  opts=opts||{};
   const ctx=Ctx.get();
   const name=document.getElementById('empName').value.trim();
   const dept=document.getElementById('empDept').value.trim();
@@ -8194,36 +8261,45 @@ async function saveEmployee(){
   const send_report=document.getElementById('emailReportSection').style.display!=='none';
   const email=document.getElementById('empEmail').value.trim()||null;
   const editId=document.getElementById('editEmpUid').value;
-  if(!name){showMsg('empModalMsg','Name is required.','error');return;}
-  if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg','PIN must be exactly 4 digits.','error');return;}
-  if(!editId&&!pin){showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error');return;}
-  if(send_report&&!email){showMsg('empModalMsg','Please enter an email address for the report, or turn off the email report toggle.','error');return;}
-  if(send_report&&email&&!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('empModalMsg','Please enter a valid email address.','error');return;}
+  if(!name){showMsg('empModalMsg','Name is required.','error');return null;}
+  if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg','PIN must be exactly 4 digits.','error');return null;}
+  if(!editId&&!pin){showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error');return null;}
+  if(send_report&&!email){showMsg('empModalMsg','Please enter an email address for the report, or turn off the email report toggle.','error');return null;}
+  if(send_report&&email&&!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('empModalMsg','Please enter a valid email address.','error');return null;}
   try{
     // Upload photo if new file selected
     const photoFile = document.getElementById('empPhotoInput').files[0];
     let photo_url = document.getElementById('existingPhotoUrl').value || null;
     if(photoFile) photo_url = await uploadImage(photoFile,'avatars',`emp-${Date.now()}`);
 
+    let savedRow=null;
     if(editId){
       const upd={name,dept,emp_code,site_id,email,send_report,photo_url};if(pin)upd.pin=pin;
       await DB.update('employees',`id=eq.${editId}`,upd);
       const idx=C.employees.findIndex(e=>e.id===editId);
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd};
+      savedRow=(idx!==-1)?C.employees[idx]:{id:editId,name,email};
     }else{
-      if(!ctx){showMsg('empModalMsg','No active company.','error');return;}
+      if(!ctx){showMsg('empModalMsg','No active company.','error');return null;}
       // Hard enforce limit — re-check even if UI was bypassed
       const {ok,current,max,plan}=canAddEmployee(ctx.co);
       if(!ok){
         showMsg('empModalMsg','','error');
         showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
-        return;
+        return null;
       }
       const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,photo_url});
-      if(r?.[0])C.employees.push(r[0]);
+      if(r?.[0]){C.employees.push(r[0]);savedRow=r[0];}
     }
-    closeModal('addEmpModal');renderEmployees();renderSitesAdmin();
-  }catch(e){showMsg('empModalMsg','Error: '+e.message,'error');}
+    renderEmployees();renderSitesAdmin();
+    // keepOpen lets "Save & send invitation" continue in the same modal; normal saves still close.
+    if(opts.keepOpen){
+      if(savedRow) document.getElementById('editEmpUid').value=savedRow.id;
+      return savedRow;
+    }
+    closeModal('addEmpModal');
+    return savedRow;
+  }catch(e){showMsg('empModalMsg','Error: '+e.message,'error');return null;}
 }
 
 async function toggleEmp(id){
@@ -11810,6 +11886,10 @@ en:{
 'emp.portalLoading':'Checking...',
 'emp.portalNotInvited':'No portal access yet',
 'emp.portalSendInvite':'📧 Send Invitation',
+'emp.portalSaveAndInvite':'💾 Save & send invitation',
+'emp.portalNewHint':'Enter an email above, then this will save the employee and send the invitation.',
+'emp.portalNeedEmail':'Enter a valid email address above first.',
+'emp.portalSaveFirst':'Save the employee first, then send the invitation.',
 'emp.portalResend':'🔁 Resend Invitation',
 'emp.portalInviteSent':'Invitation sent — awaiting activation',
 'emp.portalActive':'✓ Active',
@@ -12475,6 +12555,10 @@ fr:{
 'emp.portalLoading':'Vérification...',
 'emp.portalNotInvited':'Aucun accès portail',
 'emp.portalSendInvite':'📧 Envoyer l\'invitation',
+'emp.portalSaveAndInvite':'💾 Enregistrer et envoyer l\'invitation',
+'emp.portalNewHint':'Entrez un courriel ci-dessus; l\'employé sera enregistré et l\'invitation envoyée.',
+'emp.portalNeedEmail':'Entrez d\'abord une adresse courriel valide ci-dessus.',
+'emp.portalSaveFirst':'Enregistrez d\'abord l\'employé, puis envoyez l\'invitation.',
 'emp.portalResend':'🔁 Renvoyer l\'invitation',
 'emp.portalInviteSent':'Invitation envoyée — en attente d\'activation',
 'emp.portalActive':'✓ Actif',
