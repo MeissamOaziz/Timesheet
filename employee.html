@@ -3,6 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<!-- Tighter than the admin app's policy: the portal loads no third-party scripts at all. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com data:;
+  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co;
+  connect-src 'self' https://uziwymrwaeojhqaagqcm.supabase.co;
+  worker-src 'self';
+  manifest-src 'self';
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+  object-src 'none';
+">
 <title>PunchClock Pro — Employee Portal</title>
 <meta name="description" content="PunchClock Pro employee portal — view your schedules, hours reports, and manage your availability.">
 <meta name="robots" content="noindex, nofollow">
@@ -760,7 +776,7 @@ async function renderSchedule() {
       html += `<div style="background:var(--surface);border:1.5px solid ${isToday ? 'rgba(79,142,247,.4)' : 'var(--border)'};border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;${isToday ? 'background:rgba(79,142,247,.06)' : ''}">
         <div>
           <div style="font-weight:700;font-size:14px;${isToday ? 'color:var(--accent)' : ''}">${dayLabel}</div>
-          ${sh.note ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${sh.note}</div>` : ''}
+          ${sh.note ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${escHtml(sh.note)}</div>` : ''}
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)">${sh.start_time.slice(0,5)} – ${sh.end_time.slice(0,5)}</div>
@@ -771,7 +787,7 @@ async function renderSchedule() {
     html += '</div>';
     wrap.innerHTML = html;
   } catch(e) {
-    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">Error: ${e.message}</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">Error: ${escHtml(e.message)}</p></div>`;
   }
 }
 
@@ -862,7 +878,7 @@ async function loadPeriodData(period) {
       </tr>
     `).join('');
   } catch(e) {
-    statsEl.innerHTML = `<p style="color:var(--red);grid-column:1/-1">Error: ${e.message}</p>`;
+    statsEl.innerHTML = `<p style="color:var(--red);grid-column:1/-1">Error: ${escHtml(e.message)}</p>`;
   }
 }
 

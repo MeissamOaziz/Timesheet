@@ -4,6 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
+<!-- Content Security Policy.
+     'unsafe-inline' is unavoidable for now: the whole app is one file of inline script and inline
+     style attributes, so removing it would mean a rewrite. It still buys real protection —
+     script-src pins which external hosts may serve code, connect-src pins where data may be sent,
+     frame-ancestors blocks clickjacking, base-uri stops <base> hijacking of every relative URL,
+     form-action stops a form being pointed at an attacker, and object-src kills plugin embeds. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+  font-src 'self' https://fonts.gstatic.com data:;
+  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://api.qrserver.com https://cdnjs.cloudflare.com https://*.basemaps.cartocdn.com;
+  connect-src 'self' https://uziwymrwaeojhqaagqcm.supabase.co https://nominatim.openstreetmap.org;
+  worker-src 'self';
+  manifest-src 'self';
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+  object-src 'none';
+">
+
 <!-- Primary EN meta -->
 <title id="metaTitle">PunchClock Pro — Logiciel de pointage pour équipes au Québec &amp; Canada</title>
 <meta name="description" id="metaDesc" content="PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts. Essai gratuit.">
@@ -7603,7 +7624,7 @@ async function renderMissedPunchRequests(){
       const typePill=r.type==='IN'
         ?'<span class="pill in" style="font-size:10px">IN</span>'
         :'<span class="pill out" style="font-size:10px">OUT</span>';
-      const reason=(r.reason||'').replace(/[<>]/g,'');
+      const reason=esc(r.reason||'');
       const timeStr=(r.requested_time||'').slice(0,5);
       return `<tr>
         <td style="font-weight:500">${r.emp_name}</td>
@@ -7632,7 +7653,7 @@ async function renderMissedPunchRequests(){
       const typePill=r.type==='IN'
         ?'<span class="pill in" style="font-size:10px">IN</span>'
         :'<span class="pill out" style="font-size:10px">OUT</span>';
-      const reason=(r.reason||'').replace(/[<>]/g,'');
+      const reason=esc(r.reason||'');
       const timeStr=(r.requested_time||'').slice(0,5);
       return `<div class="mobile-card-row">
         <div class="mc-name"><span style="font-weight:500">${r.emp_name}</span>${typePill}</div>
@@ -10671,7 +10692,7 @@ async function renderAdminAvailList() {
       return `<div class="avail-admin-item">
         <div>
           <div class="avail-admin-label">${label}</div>
-          <div class="avail-admin-sub">${sub}${a.note ? ` · ${a.note}` : ''}</div>
+          <div class="avail-admin-sub">${sub}${a.note ? ` · ${esc(a.note)}` : ''}</div>
         </div>
         <button class="btn-avail-remove" onclick="deleteAdminAvail('${a.id}')" title="${t('common.delete')||'Delete'}"><svg style="width:13px;height:13px"><use href="#i-x"/></svg></button>
       </div>`;
@@ -10935,7 +10956,7 @@ async function renderScheduleGrid() {
       }
 
       if(isUnavail) {
-        html += `<div title="${unavailEntry.note||t('sched.unavailable')||'Unavailable'}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--red);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:3px 7px;margin-bottom:2px">🚫 ${t('sched.unavailable')||'Unavailable'}${unavailEntry.note?` · ${unavailEntry.note}`:''}</div>`;
+        html += `<div title="${esc(unavailEntry.note||t('sched.unavailable')||'Unavailable')}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--red);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:3px 7px;margin-bottom:2px">🚫 ${t('sched.unavailable')||'Unavailable'}${unavailEntry.note?` · ${esc(unavailEntry.note)}`:''}</div>`;
       }
 
       dayShifts.forEach(sh => {
