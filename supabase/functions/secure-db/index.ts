@@ -16,6 +16,9 @@ const PROTECTED_TABLES = new Set([
   'admins', 'punches', 'employees', 'companies', 'sites',
   'invitations', 'manager_sites', 'missed_punch_requests', 'join_requests',
   'time_off',
+  // These three were readable by any anonymous caller: shift schedules, holiday calendars and
+  // staff availability for every tenant. Read-only, but still cross-tenant customer data.
+  'availability', 'holidays', 'shifts',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -102,6 +105,19 @@ async function resolveCaller(sessionToken: string | null): Promise<Caller | null
 async function ownedCompanyIds(primaryAdminId: string): Promise<string[]> {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/companies?admin_id=eq.${primaryAdminId}&select=id`,
+    { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!res.ok) return [];
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows.map((r: { id: string }) => r.id) : [];
+}
+
+// availability has no company_id — it hangs off an employee — so it is scoped by resolving the
+// caller's employees first.
+async function ownedEmployeeIds(companyIds: string[]): Promise<string[]> {
+  if (!companyIds.length) return [];
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/employees?company_id=in.(${companyIds.join(',')})&select=id`,
     { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
   );
   if (!res.ok) return [];
@@ -304,9 +320,11 @@ Deno.serve(async (req: Request) => {
     if (authedAdminId) {
       // Path 1 — authenticated admin (token or, during transition, legacy admin id)
 
-    } else if (kioskSiteId && (table === 'employees' || table === 'punches')) {
+    } else if (kioskSiteId && (table === 'employees' || table === 'punches' || table === 'shifts')) {
       // Path 2 — kiosk: verify site exists, then force site_id filter so the kiosk can only
       // read its own site's employees and punches (the latter drives the clocked-in board).
+      // 'shifts' is included because an employee at the terminal can PIN in to have their own
+      // schedule emailed; the forced filter keeps that to the terminal's own site.
       const validSite = await verifySite(kioskSiteId);
       if (!validSite) return errResp('Unauthorized', 401);
       filter = `site_id=eq.${kioskSiteId}`;
@@ -328,11 +346,19 @@ Deno.serve(async (req: Request) => {
   // Pre-auth lookups and kiosk paths have no caller and are unaffected.
   if (caller && caller.role !== 'super_admin' &&
       (method === 'GET' || method === 'PATCH' || method === 'DELETE') &&
-      (COMPANY_SCOPED.has(table) || table === 'companies' || table === 'admins')) {
-    const owned = (COMPANY_SCOPED.has(table) || table === 'companies')
-      ? await ownedCompanyIds(caller.primaryAdminId) : [];
-    const scope = tenantScopeFilter(table, caller, owned);
-    if (scope) filter = filter ? `${filter}&${scope}` : scope;
+      (COMPANY_SCOPED.has(table) || table === 'companies' || table === 'admins' || table === 'availability')) {
+    if (table === 'availability') {
+      // Scope through the caller's employees. An empty list yields a sentinel that matches
+      // nothing, so the failure mode is "no rows" rather than "everyone's rows".
+      const empIds = await ownedEmployeeIds(await ownedCompanyIds(caller.primaryAdminId));
+      const scope = `employee_id=in.(${empIds.length ? empIds.join(',') : '00000000-0000-0000-0000-000000000000'})`;
+      filter = filter ? `${filter}&${scope}` : scope;
+    } else {
+      const owned = (COMPANY_SCOPED.has(table) || table === 'companies')
+        ? await ownedCompanyIds(caller.primaryAdminId) : [];
+      const scope = tenantScopeFilter(table, caller, owned);
+      if (scope) filter = filter ? `${filter}&${scope}` : scope;
+    }
   }
 
   // ── Build and forward upstream request ───────────────────────────────────
