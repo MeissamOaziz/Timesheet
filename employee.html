@@ -14,11 +14,18 @@
   connect-src 'self' https://uziwymrwaeojhqaagqcm.supabase.co;
   worker-src 'self';
   manifest-src 'self';
-  frame-ancestors 'none';
   base-uri 'self';
   form-action 'self';
   object-src 'none';
 ">
+<!-- Clickjacking guard. frame-ancestors only works as an HTTP header and GitHub Pages cannot send
+     one, so refuse to render inside someone else's frame. Runs before anything else is parsed. -->
+<script>
+if (window.top !== window.self) {
+  try { window.top.location = window.self.location; }
+  catch (e) { document.documentElement.innerHTML = ''; }
+}
+</script>
 <title>PunchClock Pro — Employee Portal</title>
 <meta name="description" content="PunchClock Pro employee portal — view your schedules, hours reports, and manage your availability.">
 <meta name="robots" content="noindex, nofollow">
