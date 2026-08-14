@@ -125,6 +125,89 @@ async function ownedEmployeeIds(companyIds: string[]): Promise<string[]> {
   return Array.isArray(rows) ? rows.map((r: { id: string }) => r.id) : [];
 }
 
+async function idList(path: string): Promise<Set<string>> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
+  });
+  if (!res.ok) return new Set();
+  const rows = await res.json();
+  return new Set(Array.isArray(rows) ? rows.map((r: { id: string }) => r.id) : []);
+}
+
+// Reject a write whose payload points at another tenant.
+//
+// Reads/updates/deletes are already narrowed by filter, so a caller can only *touch* their own
+// rows — but nothing stopped the body of an INSERT (or a PATCH) from naming another tenant's
+// company, site or employee, which would plant a row in, or move one into, someone else's account.
+// Every tenant-bearing key present in the payload must resolve to something the caller owns.
+// Keys that are absent are left alone: the database's own NOT NULL and FK constraints still apply.
+//
+// Returns null when the payload is acceptable, or a message naming the offending field.
+async function validateWritePayload(
+  table: string, body: unknown, caller: Caller,
+): Promise<string | null> {
+  const rows: Record<string, unknown>[] = Array.isArray(body)
+    ? body as Record<string, unknown>[]
+    : (body && typeof body === 'object' ? [body as Record<string, unknown>] : []);
+  if (!rows.length) return null;
+
+  // Resolved lazily — most writes only need the company list.
+  let companies: Set<string> | null = null;
+  let sites: Set<string> | null = null;
+  let employees: Set<string> | null = null;
+  let adminIds: Set<string> | null = null;
+
+  const companyIds = async () => {
+    if (!companies) companies = new Set(await ownedCompanyIds(caller.primaryAdminId));
+    return companies;
+  };
+  const siteIds = async () => {
+    if (!sites) {
+      const cs = [...(await companyIds())];
+      sites = cs.length ? await idList(`sites?company_id=in.(${cs.join(',')})&select=id`) : new Set();
+    }
+    return sites;
+  };
+  const employeeIds = async () => {
+    if (!employees) {
+      const cs = [...(await companyIds())];
+      employees = cs.length ? await idList(`employees?company_id=in.(${cs.join(',')})&select=id`) : new Set();
+    }
+    return employees;
+  };
+  // The caller, the account owner, and everyone delegated under that owner.
+  const teamIds = async () => {
+    if (!adminIds) {
+      adminIds = await idList(`admins?parent_admin_id=eq.${caller.primaryAdminId}&select=id`);
+      adminIds.add(caller.adminId);
+      adminIds.add(caller.primaryAdminId);
+    }
+    return adminIds;
+  };
+
+  const str = (v: unknown) => (typeof v === 'string' && v ? v : null);
+
+  for (const row of rows) {
+    const co = str(row.company_id);
+    if (co && !(await companyIds()).has(co)) return 'company_id';
+
+    const site = str(row.site_id);
+    if (site && !(await siteIds()).has(site)) return 'site_id';
+
+    for (const key of ['employee_id', 'emp_id']) {
+      const emp = str(row[key]);
+      if (emp && !(await employeeIds()).has(emp)) return key;
+    }
+
+    // admin-ish references must stay inside the caller's own account
+    for (const key of ['admin_id', 'inviter_admin_id', 'manager_id', 'parent_admin_id', 'reviewed_by']) {
+      const a = str(row[key]);
+      if (a && !(await teamIds()).has(a)) return key;
+    }
+  }
+  return null;
+}
+
 // Tables scoped to a tenant by their company_id column.
 const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off']);
 
@@ -296,7 +379,15 @@ Deno.serve(async (req: Request) => {
   // narrowly-scoped kiosk insert. (Action requests are handled earlier and never reach here.)
   if (method === 'POST' || method === 'PATCH' || method === 'DELETE') {
     if (authedAdminId) {
-      // Authenticated admin — allowed. (Per-tenant/role write scoping is a deeper layer.)
+      // Authenticated admin — allowed, but the payload must not point at another tenant.
+      // Super admins are deliberately unscoped, matching the read path.
+      if (caller && caller.role !== 'super_admin' && (method === 'POST' || method === 'PATCH')) {
+        const bad = await validateWritePayload(table, body, caller);
+        if (bad) {
+          logAudit(authedAdminId, 'cross_tenant_write_blocked', table, method, bad);
+          return errResp(`Forbidden: ${bad} does not belong to your account`, 403);
+        }
+      }
     } else if (
       kioskSiteId &&
       method === 'POST' &&
