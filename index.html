@@ -3268,7 +3268,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="pin-err" id="pinErrorMsg"></div>
     </div>
     <div class="modal-footer" style="justify-content:center;margin-top:14px">
-      <button class="btn-secondary" onclick="closeModal('pinModal');resetPin()">Cancel</button>
+      <button class="btn-secondary" onclick="cancelPinEntry()">Cancel</button>
     </div>
   </div>
 </div>
@@ -3438,7 +3438,14 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="form-group"><label data-i18n="missed.date">Date</label><input type="date" id="missedPunchDate"></div>
     </div>
-    <div class="form-group"><label data-i18n="missed.time">Time</label><input type="time" id="missedPunchTime"></div>
+    <div class="form-group"><label data-i18n="missed.time">Time</label>
+      <div style="display:flex;gap:7px">
+        <select id="missedPunchHour" style="flex:1" onchange="syncMissedPunchTime()"><option value="">--</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
+        <select id="missedPunchMinute" style="flex:1" onchange="syncMissedPunchTime()"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select>
+        <select id="missedPunchAmPm" style="flex:1" onchange="syncMissedPunchTime()"><option value="">--</option><option value="AM">AM</option><option value="PM">PM</option></select>
+      </div>
+      <input type="hidden" id="missedPunchTime">
+    </div>
     <div class="form-group"><label data-i18n="missed.notes">Notes (optional)</label><textarea id="missedPunchNotes" rows="2" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('missedPunchModal')" data-i18n="modal.cancel">Cancel</button>
@@ -3995,7 +4002,8 @@ async function refreshCache(opts={}){
 let currentPage='punch';
 let reportData=[];
 let pendingVerify=null;
-let pinState={empId:null,punchType:null,entered:''};
+let pinState={empId:null,punchType:null,entered:'',purpose:'punch'};
+let _pendingMissedPunchReport=null;
 const _punchInFlight = new Set();
 const _actSelectedIds = new Set();
 
@@ -6138,7 +6146,7 @@ function requestPunch(type){
   const{status}=getEmpStatus(empId);
   if(type==='IN'&&status==='IN'){ showDoublePunchWarning(empId,'IN'); return; }
   if(type==='OUT'&&status==='OUT'){ showDoublePunchWarning(empId,'OUT'); return; }
-  pinState={empId,punchType:type,entered:''};
+  pinState={empId,punchType:type,entered:'',purpose:'punch'};
   document.getElementById('pinEmpName').textContent=emp.name;
   document.getElementById('pinActionLabel').textContent=`Enter PIN to clock ${type}`;
   document.getElementById('pinActionLabel').style.color=type==='IN'?'var(--green)':'var(--red)';
@@ -6158,10 +6166,21 @@ function validatePin(){
     document.getElementById('pinErrorMsg').textContent='Incorrect PIN. Try again.';
     setTimeout(()=>{pinState.entered='';resetPinDots();},900);return;
   }
-  const empId=pinState.empId,punchType=pinState.punchType;
-  closeModal('pinModal');resetPin();executePunch(empId,punchType);
+  const{empId,punchType,purpose}=pinState;
+  closeModal('pinModal');resetPin();
+  if(purpose==='missedPunchReport'){ _finalizeMissedPunchReport(); }
+  else{ executePunch(empId,punchType); }
 }
-function resetPin(){pinState={empId:null,punchType:null,entered:''};resetPinDots();document.getElementById('pinErrorMsg').textContent='';}
+function resetPin(){pinState={empId:null,punchType:null,entered:'',purpose:'punch'};resetPinDots();document.getElementById('pinErrorMsg').textContent='';}
+
+// Cancelling PIN entry for a missed-punch report should return the person to their
+// in-progress report instead of just dropping them with nothing open.
+function cancelPinEntry(){
+  const purpose=pinState.purpose;
+  closeModal('pinModal');resetPin();
+  if(purpose==='missedPunchReport'){ openModal('missedPunchModal'); }
+  _pendingMissedPunchReport=null;
+}
 
 // ═══════════════════════════════════════════════════
 // GEOFENCE HELPERS
@@ -6581,13 +6600,47 @@ function openMissedPunchModal(prefillEmpId, prefillType, prefillDate){
   // prefillDate carries the day of the punch being corrected; leave the time blank for a past day
   // so the person has to state when they actually left instead of accepting "now".
   document.getElementById('missedPunchDate').value = prefillDate || now.toLocaleDateString('en-CA');
-  document.getElementById('missedPunchTime').value = prefillDate ? '' : now.toTimeString().slice(0,5);
+  setMissedPunchTime(prefillDate ? '' : now.toTimeString().slice(0,5));
   document.getElementById('missedPunchNotes').value = '';
   document.getElementById('missedPunchMsg').innerHTML = '';
   applyAllTranslations();
   openModal('missedPunchModal');
 }
 
+// Drives the hour/minute/AM-PM selects that stand in for a native <input type="time">.
+// The OS's own time-picker dialog can get clipped by the phone's nav/gesture bar with
+// no way for the page to control it, so this keeps time entry fully inside our own modal.
+function setMissedPunchTime(hhmm){
+  const hourSel=document.getElementById('missedPunchHour');
+  const minSel=document.getElementById('missedPunchMinute');
+  const apSel=document.getElementById('missedPunchAmPm');
+  if(!hhmm){
+    hourSel.value='';minSel.value='';apSel.value='';
+    document.getElementById('missedPunchTime').value='';
+    return;
+  }
+  const [hh,mm]=hhmm.split(':').map(Number);
+  let h12=hh%12; if(h12===0)h12=12;
+  hourSel.value=String(h12);
+  minSel.value=String(mm).padStart(2,'0');
+  apSel.value=hh>=12?'PM':'AM';
+  document.getElementById('missedPunchTime').value=hhmm;
+}
+
+function syncMissedPunchTime(){
+  const h=document.getElementById('missedPunchHour').value;
+  const m=document.getElementById('missedPunchMinute').value;
+  const ap=document.getElementById('missedPunchAmPm').value;
+  const hidden=document.getElementById('missedPunchTime');
+  if(!h||!m||!ap){hidden.value='';return;}
+  let hh=parseInt(h,10);
+  if(ap==='AM'){if(hh===12)hh=0;}else if(hh!==12){hh+=12;}
+  hidden.value=String(hh).padStart(2,'0')+':'+m;
+}
+
+// Reporting a missed punch requires the affected employee's own PIN, the same proof-of-
+// identity the app already uses for real clock in/out — otherwise anyone logged into the
+// shared terminal could file (and get approved) a punch under someone else's name.
 async function submitMissedPunch(){
   const empId = document.getElementById('missedPunchEmp').value;
   const type  = document.getElementById('missedPunchType').value;
@@ -6598,17 +6651,34 @@ async function submitMissedPunch(){
     showMsg('missedPunchMsg', t('missed.allRequired')||'Employee, date, and time are required.', 'error');
     return;
   }
-  const fullTime = (time.length===5 ? time+':00' : time);
   const emp = C.employees.find(e=>e.id===empId); if(!emp) return;
+  if(!emp.pin){
+    showMsg('missedPunchMsg', t('msg.noPin')||`${emp.name} has no PIN set. Ask an admin to set one first.`, 'error');
+    return;
+  }
+  const fullTime = (time.length===5 ? time+':00' : time);
   const ctx = Ctx.get();
   const site = ctx?.site || C.sites.find(s=>s.id===emp.site_id);
   const co = C.companies.find(c=>c.id===emp.company_id);
-  const btn = document.getElementById('missedPunchSubmit');
-  const origLabel = btn.textContent;
-  btn.disabled = true; btn.textContent = '⏳';
+
+  _pendingMissedPunchReport = { emp, site, co, type, punch_date, fullTime, notes };
+  pinState = {empId, punchType:null, entered:'', purpose:'missedPunchReport'};
+  document.getElementById('pinEmpName').textContent = emp.name;
+  document.getElementById('pinActionLabel').textContent = 'Enter your PIN to confirm this report';
+  document.getElementById('pinActionLabel').style.color = 'var(--amber)';
+  document.getElementById('pinErrorMsg').textContent = '';
+  resetPinDots();
+  closeModal('missedPunchModal');
+  openModal('pinModal');
+}
+
+async function _finalizeMissedPunchReport(){
+  const report = _pendingMissedPunchReport; _pendingMissedPunchReport = null;
+  if(!report) return;
+  const {emp, site, type, punch_date, fullTime, notes} = report;
   try{
     const payload = {
-      emp_id:empId,emp_name:emp.name,company_id:emp.company_id,
+      emp_id:emp.id,emp_name:emp.name,company_id:emp.company_id,
       type,requested_date:punch_date,requested_time:fullTime,
       reason:notes||null,status:'pending'
     };
@@ -6631,12 +6701,9 @@ async function submitMissedPunch(){
       console.error('missed-punch insert returned no id; notification skipped');
     }
 
-    closeModal('missedPunchModal');
     showPunchMsg(`✓ ${t('missed.success')||'Your request has been submitted and is pending approval.'}`,'success');
   }catch(e){
-    showMsg('missedPunchMsg', (t('msg.errorSaving')||'Error: ')+e.message, 'error');
-  }finally{
-    btn.disabled = false; btn.textContent = origLabel;
+    showPunchMsg((t('msg.errorSaving')||'Error: ')+e.message,'error');
   }
 }
 
@@ -7643,17 +7710,17 @@ async function renderMissedPunchRequests(){
         <td style="white-space:nowrap">${timeStr}</td>
         <td style="font-size:12px;color:var(--text2);max-width:160px">${reason||'<span style="color:var(--text3)">—</span>'}</td>
         <td>
-          <div id="mpr-actions-${r.id}" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+          <div class="mpr-actions" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
             <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Approve</button>
-            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit+Approve</button>
+            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch(this)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit+Approve</button>
             <button class="btn-danger" style="padding:4px 11px;font-size:11px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>Deny</button>
           </div>
-          <div id="mpr-edit-${r.id}" style="display:none;margin-top:6px">
+          <div class="mpr-edit" style="display:none;margin-top:6px">
             <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
-              <input type="date" id="mpr-date-${r.id}" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
-              <input type="time" id="mpr-time-${r.id}" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
-              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
-              <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px" onclick="toggleEditMissedPunch('${r.id}')">Cancel</button>
+              <input type="date" class="mpr-date-input" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              <input type="time" class="mpr-time-input" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited(this,'${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
+              <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px" onclick="toggleEditMissedPunch(this)">Cancel</button>
             </div>
           </div>
         </td>
@@ -7670,19 +7737,19 @@ async function renderMissedPunchRequests(){
         <div class="mc-row"><span>Date</span><span>${r.requested_date}</span></div>
         <div class="mc-row"><span>Time</span><span>${timeStr}</span></div>
         ${reason?`<div class="mc-row"><span>Reason</span><span style="font-size:12px">${reason}</span></div>`:''}
-        <div id="mprc-normal-${r.id}" class="mc-actions">
+        <div class="mc-actions mpr-actions">
           <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Approve</button>
-          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch('${r.id}',true)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit</button>
+          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch(this)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit</button>
           <button class="btn-danger" style="font-size:12px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>Deny</button>
         </div>
-        <div id="mprc-editmode-${r.id}" style="display:none;padding:4px 0">
+        <div class="mpr-edit" style="display:none;padding:4px 0">
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">
-            <input type="date" id="mprc-date-${r.id}" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
-            <input type="time" id="mprc-time-${r.id}" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+            <input type="date" class="mpr-date-input" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
+            <input type="time" class="mpr-time-input" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit">
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited('${r.id}',true)"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
-            <button class="btn-secondary" style="font-size:12px" onclick="toggleEditMissedPunch('${r.id}',true)">Cancel</button>
+            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited(this,'${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
+            <button class="btn-secondary" style="font-size:12px" onclick="toggleEditMissedPunch(this)">Cancel</button>
           </div>
         </div>
       </div>`;
@@ -7705,20 +7772,17 @@ async function renderMissedPunchRequests(){
   }
 }
 
-function toggleEditMissedPunch(id, isMobile){
-  if(isMobile){
-    const normal=document.getElementById('mprc-normal-'+id);
-    const editMode=document.getElementById('mprc-editmode-'+id);
-    const isEditing=editMode&&editMode.style.display!=='none';
-    if(normal)normal.style.display=isEditing?'flex':'none';
-    if(editMode)editMode.style.display=isEditing?'none':'';
-  }else{
-    const actionsDiv=document.getElementById('mpr-actions-'+id);
-    const editDiv=document.getElementById('mpr-edit-'+id);
-    const isEditing=editDiv&&editDiv.style.display!=='none';
-    if(actionsDiv)actionsDiv.style.display=isEditing?'flex':'none';
-    if(editDiv)editDiv.style.display=isEditing?'none':'';
-  }
+function toggleEditMissedPunch(btn){
+  // The missed-punch section is rendered into multiple places in the page (desktop
+  // table + mobile cards, on more than one tab), all with the same markup. Looking
+  // elements up by id would always hit the first copy in the DOM instead of the one
+  // actually being clicked, so we walk up from the button that was clicked instead.
+  const container=btn.closest('.mpr-actions,.mc-actions,.mpr-edit').parentElement;
+  const actionsDiv=container.querySelector('.mpr-actions,.mc-actions');
+  const editDiv=container.querySelector('.mpr-edit');
+  const isEditing=editDiv&&editDiv.style.display!=='none';
+  if(actionsDiv)actionsDiv.style.display=isEditing?'flex':'none';
+  if(editDiv)editDiv.style.display=isEditing?'none':'';
 }
 
 async function approveMissedPunch(id){
@@ -7727,9 +7791,10 @@ async function approveMissedPunch(id){
   await _doApproveMissedPunch(req,req.requested_date,req.requested_time);
 }
 
-async function approveMissedPunchEdited(id,isMobile){
-  const dateEl=document.getElementById((isMobile?'mprc-':'mpr-')+'date-'+id);
-  const timeEl=document.getElementById((isMobile?'mprc-':'mpr-')+'time-'+id);
+async function approveMissedPunchEdited(btn,id){
+  const container=btn.closest('.mpr-edit');
+  const dateEl=container.querySelector('.mpr-date-input');
+  const timeEl=container.querySelector('.mpr-time-input');
   if(!dateEl?.value||!timeEl?.value){showToast('Please enter a date and time.','error');return;}
   const req=_missedPunchRequests.find(r=>r.id===id);
   if(!req)return;
