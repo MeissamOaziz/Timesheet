@@ -287,6 +287,9 @@ body.nav-sidebar.nav-authed #page-admin .tabs{display:none;}
 /* With a fixed sidebar the centered 1120px column leaves dead space on wide screens, so the
    content area fills the space next to the sidebar and breathes more as the viewport grows. */
 body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:none;padding:28px clamp(22px,3.5vw,60px);}
+/* The action banner is a full-width bar outside .page, so the fixed sidebar (which .page
+   dodges via margin-left above) was drawing over its left edge instead of pushing it aside. */
+body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
 .sn-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;color:var(--text2);font-family:inherit;font-size:13.5px;font-weight:500;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
 .sn-item:hover{background:var(--surface2);color:var(--text);}
 .sn-item.active{background:rgba(79,142,247,.14);color:var(--accent);font-weight:600;}
@@ -310,6 +313,7 @@ body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:non
 @media(max-width:900px){
   body.nav-sidebar.nav-authed #sideNav{display:none;}
   body.nav-sidebar.nav-authed .page{margin-left:auto;}
+  body.nav-sidebar.nav-authed #actionBanner{margin-left:0;}
   /* Sidebar is hidden here too, so this mode also falls back to the hamburger. */
   .nav-links{display:none;}
   .hamburger{display:flex;}

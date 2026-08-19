@@ -120,6 +120,12 @@ Deno.serve(async (req) => {
     const subLabel = SUBJECT_LABELS[subject] ?? subject;
     const typeLabel = isSales ? '📣 Sales Inquiry' : '🎧 Support Request';
     const emailSubject = `[PunchClock Pro] ${typeLabel} — ${subLabel}`;
+    // Many mail clients (Gmail webmail among them) strip <style> blocks entirely, so the
+    // .message-box white-space:pre-wrap rule below can't be relied on to keep line breaks —
+    // convert them to real <br> tags, which every client honours regardless of CSS support.
+    const messageHtml = message
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
 
     const html = `
 <!DOCTYPE html>
@@ -143,7 +149,7 @@ Deno.serve(async (req) => {
     <div class="row"><div class="label">From</div><div class="value">${name} &lt;${email}&gt;</div></div>
     ${adminId ? `<div class="row"><div class="label">Admin ID</div><div class="value">${adminId}</div></div>` : ''}
     <div class="row"><div class="label">Subject</div><div class="value">${subLabel}</div></div>
-    <div class="row"><div class="label">Message</div><div class="value message-box">${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div></div>
+    <div class="row"><div class="label">Message</div><div class="value message-box" style="white-space:normal;line-height:1.6">${messageHtml}</div></div>
     <div class="footer">Sent via PunchClock Pro contact form</div>
   </div>
 </body>
