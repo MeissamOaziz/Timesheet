@@ -3,13 +3,7 @@
 // JWT verification: OFF (custom auth logic below)
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-// Both this and the deprecated SUPABASE_SERVICE_ROLE_KEY currently get rejected by
-// PostgREST with "JWT issued at future" (PGRST303) — confirmed to be a Supabase
-// platform-side issue (their gateway substitutes an internally pre-signed JWT for
-// service-role-equivalent access regardless of key format; that internal token has a
-// bad iat). Filed with Supabase support. Kept on SUPABASE_SECRET_KEYS anyway since it's
-// the non-deprecated path and will start working once they fix it, with no code change.
-const SERVICE_KEY  = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')!)['default'];
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const CORS = {
   'Access-Control-Allow-Origin':  'https://www.punchclock.ca',
