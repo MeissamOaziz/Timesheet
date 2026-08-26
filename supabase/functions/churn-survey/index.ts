@@ -6,6 +6,9 @@ const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
 const APP_URL = 'https://www.punchclock.ca';
 const TEAM_INBOX = 'meissam.h.p@gmail.com';
+// Customer-facing reply-to — TEAM_INBOX is a personal address and must never be the
+// reply-to on anything a trial user actually receives (they hit "reply" and see it).
+const SUPPORT_REPLY_TO = 'support@punchclock.ca';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -124,7 +127,7 @@ Deno.serve(async (req) => {
         to: TEAM_INBOX,
         subject: 'Votre avis sur PunchClock Pro? / Your feedback on PunchClock Pro? (1 min)',
         html: surveyEmailHtml('', `${APP_URL}/?survey=${tok}`),
-        replyTo: TEAM_INBOX,
+        replyTo: SUPPORT_REPLY_TO,
       });
       return new Response(JSON.stringify({ ok: true, url: `${APP_URL}/?survey=${tok}` }),
         { headers: { ...CORS, 'Content-Type': 'application/json' } });
@@ -166,7 +169,7 @@ Deno.serve(async (req) => {
           to: a.email as string,
           subject: 'Votre avis sur PunchClock Pro? / Your feedback on PunchClock Pro? (1 min)',
           html: surveyEmailHtml((a.name as string) || '', `${APP_URL}/?survey=${tok}`),
-          replyTo: TEAM_INBOX,
+          replyTo: SUPPORT_REPLY_TO,
         });
         sent++;
       } catch (e) { errors.push(`email ${a.email}: ${(e as Error).message}`); }
