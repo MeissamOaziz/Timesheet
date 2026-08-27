@@ -522,6 +522,27 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .land-btn-primary:hover{opacity:.88;transform:translateY(-1px);}
 .land-btn-secondary{padding:14px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;}
 .land-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+/* ── Hero product screenshot ──
+   Real captures from tools/capture-screenshots.mjs, one per theme. Note the theme convention
+   here is inverted from the usual: dark is the unstamped default (:root), and light is stamped
+   [data-theme="light"] by the boot script — so the dark shot is the default and the light shot
+   is what gets swapped in. */
+.land-preview{max-width:1000px;margin:-10px auto 0;padding:0 20px 10px;}
+.land-shot-frame{display:block;width:100%;padding:0;cursor:pointer;border-radius:14px;overflow:hidden;
+  border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow-lg);
+  transition:transform .18s ease,box-shadow .18s ease;}
+.land-shot-frame:hover{transform:translateY(-2px);}
+.land-shot-frame:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+.land-shot-chrome{display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface2);
+  border-bottom:1px solid var(--border);}
+.land-dot{width:10px;height:10px;border-radius:50%;}
+.land-shot-url{margin-left:10px;font-size:11.5px;color:var(--text3);font-family:'DM Mono',monospace;}
+.land-shot{display:block;width:100%;height:auto;}
+.land-shot-light{display:none;}
+[data-theme="light"] .land-shot-light{display:block;}
+[data-theme="light"] .land-shot-dark{display:none;}
+.land-preview-note{text-align:center;font-size:12.5px;color:var(--text3);margin-top:10px;}
+@media (prefers-reduced-motion:reduce){.land-shot-frame{transition:none;}.land-shot-frame:hover{transform:none;}}
 .land-section{padding:70px 24px;max-width:1080px;margin:0 auto;}
 .land-section h2{text-align:center;font-size:32px;font-weight:700;margin-bottom:10px;}
 .land-section .sub{text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px;}
@@ -954,39 +975,25 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · geofencing &amp; kiosk included</p>
   </div>
 
-  <!-- PRODUCT PREVIEW — real UI, real sample data; clicking opens the live demo -->
-  <div style="max-width:1000px;margin:-10px auto 0;padding:0 20px 10px">
-    <div onclick="startDemo()" style="cursor:pointer;border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 18px 50px rgba(15,23,42,.16);background:var(--surface)">
-      <div style="display:flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border)">
-        <span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span>
-        <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></span>
-        <span style="width:10px;height:10px;border-radius:50%;background:#22c55e"></span>
-        <span style="margin-left:10px;font-size:11.5px;color:var(--text3);font-family:'DM Mono',monospace">punchclock.ca — Café Rivière</span>
-      </div>
-      <div style="padding:18px 20px">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
-          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.clockedIn">Clocked in now</div><div style="font-size:22px;font-weight:700;color:var(--green);margin-top:4px">4</div></div>
-          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.hoursToday">Hours today</div><div style="font-size:22px;font-weight:700;margin-top:4px">27h 15m</div></div>
-          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.hoursWeek">Hours this week</div><div style="font-size:22px;font-weight:700;margin-top:4px">218h</div></div>
-          <div style="background:var(--surface2);border-radius:10px;padding:12px 14px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:700" data-i18n="dash.activeEmps">Active employees</div><div style="font-size:22px;font-weight:700;margin-top:4px">6</div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div style="border:1px solid var(--border);border-radius:10px;padding:13px 15px">
-            <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px" data-i18n="dash.currentlyIn">Currently clocked in</div>
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Marie Lavoie</span><span style="color:var(--text2)">8:07</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">David Pham</span><span style="color:var(--text2)">9:14</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0"><span style="font-weight:600">Sofia Ricci</span><span style="color:var(--text2)">9:31</span></div>
-          </div>
-          <div style="border:1px solid var(--border);border-radius:10px;padding:13px 15px">
-            <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px" data-i18n="dash.recentActivity">Recent activity</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Jean Tremblay</span><span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;background:rgba(34,197,94,.14);color:var(--green)">IN</span></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">Aïsha Benali</span><span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;background:rgba(239,68,68,.14);color:var(--red)">OUT</span></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0"><span style="font-weight:600">Liam O'Connor</span><span style="font-size:10px;font-weight:700;padding:1px 8px;border-radius:20px;background:rgba(239,68,68,.14);color:var(--red)">OUT</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <p style="text-align:center;font-size:12.5px;color:var(--text3);margin-top:10px"><span data-i18n="land.previewNote">This is the real dashboard — click it to explore the live demo with sample data.</span></p>
+  <!-- PRODUCT PREVIEW — an actual screenshot of the running app, captured by
+       tools/capture-screenshots.mjs. Swaps with language (data-shot, applied in
+       applyAllTranslations) and with theme (.land-shot-light/.land-shot-dark in CSS). -->
+  <div class="land-preview">
+    <button type="button" class="land-shot-frame" onclick="startDemo()" aria-label="Open the live demo">
+      <span class="land-shot-chrome">
+        <span class="land-dot" style="background:#ef4444"></span>
+        <span class="land-dot" style="background:#f59e0b"></span>
+        <span class="land-dot" style="background:#22c55e"></span>
+        <span class="land-shot-url">punchclock.ca</span>
+      </span>
+      <img class="land-shot land-shot-dark" data-shot="product-dashboard-dark"
+           src="assets/screenshots/product-dashboard-dark-en.webp"
+           width="1440" height="900" alt="" fetchpriority="high" decoding="async">
+      <img class="land-shot land-shot-light" data-shot="hero-dashboard"
+           src="assets/screenshots/hero-dashboard-en.webp"
+           width="1440" height="900" alt="" fetchpriority="high" decoding="async">
+    </button>
+    <p class="land-preview-note"><span data-i18n="land.previewNote">This is the real dashboard — click it to explore the live demo with sample data.</span></p>
   </div>
 
   <!-- TRUST BAND — Quebec-first positioning -->
@@ -4390,9 +4397,14 @@ function _demoBuildData(){
     EMPS.forEach((e,i)=>{ if((i+back)%5===0) return;    // occasional day off
       mk(e,d,8+(i%2),(i*7)%60,'IN'); mk(e,d,16+(i%3),(i*11)%60,'OUT'); });
   }
-  EMPS.forEach((e,i)=>{                                  // today: 4 still in, 2 finished
-    if(i<4){ mk(e,today,8+(i%2),(i*9)%60,'IN'); }
-    else { mk(e,today,8,(i*5)%60,'IN'); mk(e,today,14,(i*13)%60,'OUT'); }
+  // Today: some finished, some still on the clock — but deliberately at BOTH sites. Employees
+  // 0-2 are Plateau and 3-5 are Vieux-Port, so a plain "first four are still in" split leaves
+  // Plateau with no completed shift and its "hours today" tile reads 0h 00m. That tile is the
+  // first number a prospect sees in the live demo, and it's in the landing-page screenshot.
+  const finishedToday=new Set([0,4,5]);                  // one at Plateau, two at Vieux-Port
+  EMPS.forEach((e,i)=>{
+    if(finishedToday.has(i)){ mk(e,today,6+(i%2),(i*5)%60,'IN'); mk(e,today,14,(i*13)%60,'OUT'); }
+    else { mk(e,today,8+(i%2),(i*9)%60,'IN'); }
   });
   punches.sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
   // Upcoming shifts so the Schedule page has something to show
@@ -13003,6 +13015,11 @@ function applyAllTranslations(){
   // Handle HTML translations (e.g. hero title with <span>)
   document.querySelectorAll('[data-i18n-html]').forEach(function(el){
     el.innerHTML=t(el.dataset.i18nHtml);
+  });
+  // Screenshots exist per language — swap the file rather than any text on it.
+  document.querySelectorAll('img[data-shot]').forEach(function(img){
+    var next='assets/screenshots/'+img.dataset.shot+'-'+_appLang+'.webp';
+    if(!img.getAttribute('src').endsWith(next)) img.setAttribute('src',next);
   });
   // Sync lang switcher button states
   document.querySelectorAll('.lang-btn[data-lang]').forEach(function(btn){
