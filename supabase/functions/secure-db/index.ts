@@ -22,6 +22,9 @@ const PROTECTED_TABLES = new Set([
   // Holds the addresses payroll summaries get mailed to — must never be readable or writable
   // across tenants, or one company could redirect another's hours to itself.
   'report_recipients',
+  // Which tablets are acting as punch terminals. Admin-visible only; the tablets themselves
+  // check in through the kiosk_device_checkin RPC rather than this path.
+  'kiosk_devices',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -212,7 +215,7 @@ async function validateWritePayload(
 }
 
 // Tables scoped to a tenant by their company_id column.
-const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients']);
+const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients', 'kiosk_devices']);
 
 // Ownership constraint to AND onto a read/update/delete filter for `table`. '' = not scoped here.
 function tenantScopeFilter(table: string, caller: Caller, owned: string[]): string {

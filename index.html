@@ -522,6 +522,38 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .land-btn-primary:hover{opacity:.88;transform:translateY(-1px);}
 .land-btn-secondary{padding:14px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;}
 .land-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+/* ── Kiosk setup wizard ── */
+.kiosk-wiz{max-width:520px;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden;}
+.kw-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px 12px;}
+.kw-head h3{margin:0 0 2px;font-size:17px;}
+.kw-head p{margin:0;font-size:13px;color:var(--text2);}
+.kw-body{flex:1;overflow-y:auto;padding:4px 22px 8px;}
+.kw-foot{display:flex;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border);}
+.kw-step{display:flex;gap:13px;padding:12px 0;}
+.kw-step + .kw-step{border-top:1px solid var(--border);}
+.kw-num{width:26px;height:26px;flex-shrink:0;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.kw-txt{flex:1;font-size:13px;color:var(--text2);line-height:1.55;}
+.kw-txt strong{display:block;color:var(--text);font-size:13.5px;margin-bottom:2px;}
+.kw-qr{display:flex;justify-content:center;padding:14px 0 10px;}
+.kw-qr canvas{border:1px solid var(--border);}
+.kw-or{text-align:center;font-size:11.5px;color:var(--text3);margin-bottom:7px;}
+.kw-actions{display:flex;gap:8px;margin-top:9px;}
+.kw-actions button{width:auto;padding:7px 14px;font-size:12.5px;}
+.kw-status{display:flex;align-items:center;gap:9px;margin-top:8px;padding:10px 13px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);font-size:13px;}
+.kw-status.ok{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35);color:var(--green);font-weight:600;}
+.kw-dot{width:9px;height:9px;border-radius:50%;background:var(--amber);flex-shrink:0;
+  animation:kwPulse 1.4s ease-in-out infinite;}
+.kw-status.ok .kw-dot{background:var(--green);animation:none;}
+@keyframes kwPulse{0%,100%{opacity:.35}50%{opacity:1}}
+.kw-dev{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);
+  border-radius:9px;background:var(--surface2);margin-bottom:7px;font-size:12.5px;}
+.kw-dev-meta{color:var(--text3);font-size:11.5px;}
+.kw-adv{margin:10px 0 4px;border-top:1px solid var(--border);padding-top:12px;}
+.kw-adv summary{cursor:pointer;font-size:12.5px;color:var(--accent);font-weight:600;}
+.kw-adv p{font-size:12.5px;color:var(--text2);line-height:1.6;margin:9px 0 0;}
+@media (prefers-reduced-motion:reduce){.kw-dot{animation:none;}}
 /* ── Payroll summary recipients (Reports page) ── */
 .recip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:22px;}
 .recip-head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px;}
@@ -3457,87 +3489,78 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <!-- KIOSK SHORTCUT MODAL -->
+<!-- KIOSK SETUP WIZARD
+     Replaces three disconnected mechanisms (a URL/QR dialog with five OS instruction tabs, a
+     "stay on this page" button that silently logged the admin out, and a separate site-code
+     screen). The funnel says this step is where trials die: people finish adding employees and
+     never get a tablet clocking in. So the flow is scan-and-confirm, and the wizard watches for
+     the tablet to check in — the owner sees it work rather than hoping it did. -->
 <div class="modal-overlay" id="kioskShortcutModal" style="z-index:9700">
-  <div class="modal" style="max-width:500px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <h3 style="margin:0;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-smartphone"/></svg><span id="kioskShortcutTitle">Save Kiosk Shortcut</span></h3>
-      <button onclick="closeModal('kioskShortcutModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
-    </div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskShortcutSubtitle">Save a shortcut to this site's clock-in page. Employees can open it directly — no admin login needed.</p>
-
-    <!-- Kiosk URL -->
-    <div style="margin-bottom:4px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Kiosk URL</div>
-    <div class="kiosk-url-box" id="kioskUrlDisplay" onclick="copyKioskUrl()" title="Click to copy"></div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="copyKioskUrl()" id="kioskCopyBtn"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg>Copy URL</button>
-      <button class="btn-secondary" style="flex:1;padding:8px;font-size:12px" onclick="openKioskQR()"><svg class="ic" style="margin-right:5px"><use href="#i-qr"/></svg>Show QR Code</button>
+  <div class="modal kiosk-wiz">
+    <div class="kw-head">
+      <div>
+        <h3 data-i18n="kw.title">Set up your punch tablet</h3>
+        <p id="kwSiteName"></p>
+      </div>
+      <button onclick="closeKioskWizard()" class="help-x" aria-label="Close"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
     </div>
 
-    <!-- Device token registration -->
-    <div id="kioskDeviceSection" style="display:none;margin-bottom:16px;background:var(--surface2);border-radius:12px;padding:14px 16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-key"/></svg><span data-i18n="site.geoDevice">Device Token</span></div>
-      <div id="kioskDeviceStatus" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
-      <div style="display:flex;gap:8px">
-        <button id="kioskRegisterBtn" class="btn-primary" style="flex:1;padding:8px;font-size:12px" onclick="registerThisDevice()"><svg class="ic" style="margin-right:5px"><use href="#i-key"/></svg>Register This Device</button>
-        <button id="kioskRevokeBtn" class="btn-danger" style="flex:1;padding:8px;font-size:12px;display:none" onclick="revokeThisDevice()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Revoke</button>
+    <div class="kw-body">
+      <div class="kw-step">
+        <div class="kw-num">1</div>
+        <div class="kw-txt"><strong data-i18n="kw.s1">Pick up the tablet or spare phone your team will clock in on.</strong>
+          <span data-i18n="kw.s1sub">Any device with a browser works — it stays on this screen at your entrance.</span></div>
       </div>
+
+      <div class="kw-step">
+        <div class="kw-num">2</div>
+        <div class="kw-txt">
+          <strong data-i18n="kw.s2">Point its camera at this code.</strong>
+          <div class="kw-qr" id="kioskWizQR"></div>
+          <div class="kw-or" data-i18n="kw.or">or type this address into the tablet's browser</div>
+          <div class="kiosk-url-box" id="kioskUrlDisplay" onclick="copyKioskUrl()" title="Click to copy"></div>
+          <div class="kw-actions">
+            <button class="btn-secondary" onclick="copyKioskUrl()" id="kioskCopyBtn"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg><span data-i18n="kw.copy">Copy link</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="kw-step">
+        <div class="kw-num">3</div>
+        <div class="kw-txt">
+          <strong data-i18n="kw.s3">Wait for it to connect.</strong>
+          <div class="kw-status" id="kwStatus"></div>
+        </div>
+      </div>
+
+      <!-- Only for sites with the device-token option on. That option deliberately requires an
+           admin to authorise each device by hand — auto-registering whoever opens the link
+           would defeat the whole point of it — so the step stays, scoped to sites using it. -->
+      <div class="kw-step" id="kwTokenStep" style="display:none">
+        <div class="kw-num">4</div>
+        <div class="kw-txt">
+          <strong data-i18n="kw.s4">Authorise this device.</strong>
+          <span data-i18n="kw.s4sub">This site only accepts punches from devices you approve. Do this step on the tablet itself, signed in as an admin.</span>
+          <div class="kw-status" id="kwTokenStatus"></div>
+          <div class="kw-actions">
+            <button class="btn-secondary" id="kioskRegisterBtn" onclick="registerThisDevice()"></button>
+            <button class="btn-danger" id="kioskRevokeBtn" onclick="revokeThisDevice()" style="padding:7px 14px;font-size:12.5px"></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="kwDevices"></div>
+
+      <details class="kw-adv">
+        <summary data-i18n="kw.advanced">Make it open like an app (optional)</summary>
+        <p data-i18n="kw.advBody">On the tablet, open the link then use the browser menu: on iPhone/iPad tap Share then <strong>Add to Home Screen</strong>; on Android tap the ⋮ menu then <strong>Add to Home screen</strong>. Staff then tap the icon and land straight on the punch screen.</p>
+        <p data-i18n="kw.advReset">Need to un-kiosk a device later? On that device, tap <em>Reset this device</em> at the bottom of the punch screen.</p>
+      </details>
     </div>
 
-    <!-- Clear saved kiosk binding on THIS device -->
-    <div id="kioskClearSection" style="display:none;margin-bottom:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:14px 16px">
-      <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-nav-admin"/></svg><span id="kioskClearTitle">This device is set up as a kiosk</span></div>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5" id="kioskClearDesc">Opening punchclock.ca on this device will go directly to the punch page. Click below to remove this setup.</p>
-      <button class="btn-danger" style="width:100%;padding:8px;font-size:12px" onclick="clearKioskDevice()" id="kioskClearBtn"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Remove kiosk setup from this device</button>
+    <div class="kw-foot">
+      <button class="btn-primary" onclick="closeKioskWizard()" style="width:auto;padding:9px 22px" data-i18n="kw.done">Done</button>
     </div>
-
-    <!-- OS-specific instructions -->
-    <div style="background:var(--surface2);border-radius:12px;padding:14px 16px">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">📖 How to save as a desktop shortcut:</div>
-      <div class="kiosk-os-tabs">
-        <button class="kiosk-os-tab active" onclick="switchKioskOS('chrome',this)">🖥 Chrome</button>
-        <button class="kiosk-os-tab" onclick="switchKioskOS('edge',this)">🔷 Edge</button>
-        <button class="kiosk-os-tab" onclick="switchKioskOS('safari',this)">🧭 Safari</button>
-        <button class="kiosk-os-tab" onclick="switchKioskOS('iphone',this)">📱 iPhone</button>
-        <button class="kiosk-os-tab" onclick="switchKioskOS('android',this)">🤖 Android</button>
-      </div>
-      <div id="kioskOsChrome">
-        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the copied URL in Chrome on the device employees will use</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Click the <strong>⋮ menu</strong> (top-right) → <strong>Save and share</strong> → <strong>Create shortcut…</strong></span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Check <strong>"Open as window"</strong> and click <strong>Create</strong> — a desktop icon appears</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Employees double-click the icon to open the punch page directly</span></div>
-      </div>
-      <div id="kioskOsEdge" style="display:none">
-        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the copied URL in Edge on the kiosk device</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Click <strong>⋯ menu</strong> → <strong>Apps</strong> → <strong>Install this site as an app</strong></span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Click <strong>Install</strong> — a desktop shortcut is created automatically</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Employees click the icon — it opens fullscreen directly to punch mode</span></div>
-      </div>
-      <div id="kioskOsSafari" style="display:none">
-        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the copied URL in Safari on the Mac used by employees</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Go to <strong>File</strong> menu → <strong>Add to Dock…</strong> (macOS Sonoma+) or bookmark it</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>The punch page icon appears in the Dock for quick access</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Alternatively: right-click the URL bar → <strong>Add Bookmark</strong> to Favourites Bar</span></div>
-      </div>
-      <div id="kioskOsIphone" style="display:none">
-        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the kiosk URL in <strong>Safari</strong> on the iPad/iPhone</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Tap the <strong>Share</strong> button (□ with arrow) at the bottom</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Scroll down and tap <strong>Add to Home Screen</strong></span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Tap <strong>Add</strong> — the PunchClock icon appears on the home screen like a native app</span></div>
-      </div>
-      <div id="kioskOsAndroid" style="display:none">
-        <div class="kiosk-step"><div class="kiosk-step-num">1</div><span>Open the kiosk URL in <strong>Chrome</strong> on the Android tablet/phone</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">2</div><span>Tap the <strong>⋮ menu</strong> → <strong>Add to Home screen</strong></span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">3</div><span>Tap <strong>Add</strong> — an icon appears on the home screen</span></div>
-        <div class="kiosk-step"><div class="kiosk-step-num">4</div><span>Employees tap it to open the punch page directly, fullscreen</span></div>
-      </div>
-    </div>
-
-    <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;margin-top:14px;font-size:12px;color:var(--text2);line-height:1.55">
-      <strong>📌 Appareil bloqué sur la page de pointage? / Device stuck on the punch page?</strong><br>
-      Touchez le lien « <em>Réinitialiser cet appareil</em> » au bas de la page de pointage, ou ouvrez <code>punchclock.ca/?nokiosk=1</code>.<br>
-      Tap the “<em>Reset this device</em>” link at the bottom of the punch page, or open <code>punchclock.ca/?nokiosk=1</code>.
-    </div>
-    <button class="btn-secondary" style="width:100%;margin-top:14px" onclick="closeModal('kioskShortcutModal')">Done</button>
   </div>
 </div>
 
@@ -5790,15 +5813,30 @@ function logout(){
   showLanding();
 }
 
+// "Set this device up as the kiosk", used when the admin is already holding the tablet. This
+// used to sign them out while keeping only in-memory context: nothing was persisted, so the
+// next browser restart dropped the tablet back to the login screen, and the device never showed
+// up as connected on the admin side. It now leaves the device in exactly the state the QR path
+// produces — and says plainly that it signs you out first, because it does.
 function kioskMode(){
-  // Log out admin but keep Ctx (company+site) so punch page stays active
   const ctx=Ctx.get();
-  if(!ctx){return;}
+  if(!ctx || !ctx.site){
+    showToast(t('punch.kioskNeedsSite')||'Choose a site first, then set this device up as its kiosk.','error');
+    return;
+  }
+  const msg=(t('punch.kioskConfirm')||'Set this device up as the punch terminal for {site}? You will be signed out here so staff can clock in.')
+    .replace('{site}', ctx.site.name);
+  if(!confirm(msg)) return;
+
+  try{ localStorage.setItem('pc_kiosk_device', ctx.site.id); }catch(_){}
+  kioskCheckIn(ctx.site.id);
+  window._kioskUrlMode = true;
+
   const _t=Sess.get()?.token; if(_t){try{DB.rpc('admin_logout',{p_token:_t});}catch(_){}}
   Sess.clear();
   updateNav();
   navigate('punch');
-  document.getElementById('kioskSetupBar').style.display='none';
+  const bar=document.getElementById('kioskSetupBar'); if(bar) bar.style.display='none';
   showToast((t('punch.kioskActive')||'Kiosk mode active. Employees can now clock in and out.'),'success');
 }
 
@@ -6590,6 +6628,30 @@ async function checkGeofence(site){
 }
 
 // Check device token for a site
+// A stable per-device id, so the same tablet reappears as one entry instead of a new one on
+// every reload. Not a secret and not used for access control — the site id already is the
+// kiosk credential; this only answers "which physical device is this".
+function getDeviceId(){
+  try{
+    let id = localStorage.getItem('pc_device_id');
+    if(!id){
+      id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(36).slice(2)).replace(/-/g,'');
+      localStorage.setItem('pc_device_id', id);
+    }
+    return id;
+  }catch(_){ return null; }
+}
+
+async function kioskCheckIn(siteId){
+  const deviceId = getDeviceId();
+  if(!siteId || !deviceId || window._demoMode) return;
+  try{
+    await DB.rpc('kiosk_device_checkin',{
+      p_site_id: siteId, p_device_id: deviceId, p_user_agent: navigator.userAgent.slice(0,200)
+    });
+  }catch(_){ /* visibility only — never block clocking in */ }
+}
+
 function checkDeviceToken(siteId){
   if(!siteId) return true;
   try{
@@ -10734,95 +10796,163 @@ function getKioskUrl(siteId){
   return `${base}?kiosk=${siteId}`;
 }
 
-function openKioskShortcut(siteId){
+// Opens the setup wizard for a site and starts watching for the tablet to check in. The old
+// version of this dumped a URL, a QR button and five tabs of per-OS shortcut instructions on
+// the admin and left them to guess whether any of it worked.
+let _kwPoll = null, _kwSeenBefore = new Set();
+
+async function openKioskShortcut(siteId){
   const site = C.sites.find(s=>s.id===siteId);
-  const co = site ? C.companies.find(c=>c.id===site.company_id) : null;
   if(!site) return;
+  const url = getKioskUrl(siteId);
 
-  const lang = _appLang||'en';
-  const isFr = lang==='fr';
-
-  document.getElementById('kioskShortcutTitle').textContent =
-    isFr ? `Raccourci kiosque — ${site.name}` : `Kiosk Shortcut — ${site.name}`;
-  document.getElementById('kioskShortcutSubtitle').innerHTML =
-    isFr
-      ? `<strong>Une seule fois :</strong> Sur l'appareil du kiosque, ouvrez l'URL ci-dessous. L'appareil se souviendra de ${site.name} pour toutes les visites futures — même un favori vers punchclock.ca ouvrira directement la page de pointage.`
-      : `<strong>One time only:</strong> On the kiosk device, open the URL below. The device will remember ${site.name} for all future visits — even a bookmark to plain punchclock.ca will open the punch page directly.`;
-
-  const kioskUrl = getKioskUrl(siteId);
-  document.getElementById('kioskUrlDisplay').textContent = kioskUrl;
-
-  // Device token section — show only if site requires it
-  const deviceSection = document.getElementById('kioskDeviceSection');
-  const deviceStatus = document.getElementById('kioskDeviceStatus');
-  const registerBtn = document.getElementById('kioskRegisterBtn');
-  const revokeBtn = document.getElementById('kioskRevokeBtn');
-
-  if(site.require_device_token){
-    deviceSection.style.display = '';
-    const isRegistered = checkDeviceToken(siteId);
-    if(isRegistered){
-      deviceStatus.innerHTML = `<span class="geo-status-badge geo-ok">✓ ${isFr?'Cet appareil est enregistré':'This device is registered'}</span> <span style="font-size:11px;color:var(--text3);margin-left:6px">${isFr?'Les employés peuvent pointer ici.':'Employees can punch from here.'}</span>`;
-      registerBtn.style.display = 'none';
-      revokeBtn.style.display = '';
-    } else {
-      deviceStatus.innerHTML = `<span class="geo-status-badge geo-block">✗ ${isFr?'Appareil non enregistré':'Device not registered'}</span> <span style="font-size:11px;color:var(--text3);margin-left:6px">${isFr?'Les employés ne pourront pas pointer ici.':'Employees cannot punch from here yet.'}</span>`;
-      registerBtn.style.display = '';
-      revokeBtn.style.display = 'none';
-    }
-    registerBtn.textContent = isFr ? '🔑 Enregistrer cet appareil' : '🔑 Register This Device';
-    revokeBtn.textContent = isFr ? '✕ Révoquer' : '✕ Revoke';
-  } else {
-    deviceSection.style.display = 'none';
-  }
-
-  window._currentKioskUrl = kioskUrl;
+  window._currentKioskUrl = url;
   window._currentKioskSite = site.name;
   window._currentKioskSiteId = siteId;
 
-  // Show "remove kiosk setup" section if this device is currently bound to any site
-  try {
-    const boundSiteId = localStorage.getItem('pc_kiosk_device');
-    const clearSection = document.getElementById('kioskClearSection');
-    if(clearSection){
-      if(boundSiteId){
-        clearSection.style.display = '';
-        const boundSite = C.sites.find(s => s.id === boundSiteId);
-        const boundName = boundSite ? boundSite.name : boundSiteId;
-        document.getElementById('kioskClearTitle').textContent =
-          isFr ? `Cet appareil est configuré comme kiosque pour : ${boundName}` :
-                 `This device is set up as a kiosk for: ${boundName}`;
-        document.getElementById('kioskClearDesc').textContent =
-          isFr ? `Ouvrir punchclock.ca sur cet appareil ira directement à la page de pointage de ${boundName}. Cliquez ci-dessous pour retirer ce réglage.` :
-                 `Opening punchclock.ca on this device will go directly to ${boundName}'s punch page. Click below to remove this setup.`;
-        document.getElementById('kioskClearBtn').textContent =
-          isFr ? '✕ Retirer le réglage kiosque de cet appareil' :
-                 '✕ Remove kiosk setup from this device';
-      } else {
-        clearSection.style.display = 'none';
-      }
-    }
-  } catch(_){}
+  document.getElementById('kwSiteName').textContent = site.name;
+  document.getElementById('kioskUrlDisplay').textContent = url;
+  renderQrInto(document.getElementById('kioskWizQR'), url, 190);
+  applyAllTranslations();
+  setKioskWizStatus(false, null);
+  document.getElementById('kwDevices').innerHTML = '';
+  renderKioskTokenStep(site);
 
   openModal('kioskShortcutModal');
+
+  // Remember which tablets were already known, so a device connecting *now* can be called out
+  // as "just connected" rather than blending into the existing list.
+  _kwSeenBefore = new Set();
+  const first = await fetchKioskDevices(siteId);
+  first.forEach(d=>_kwSeenBefore.add(d.device_id));
+  renderKioskDevices(first, siteId);
+  if(first.length) setKioskWizStatus(true, first[0], true);
+
+  if(_kwPoll) clearInterval(_kwPoll);
+  _kwPoll = setInterval(async ()=>{
+    if(!document.getElementById('kioskShortcutModal').classList.contains('open')) return closeKioskWizard();
+    const devs = await fetchKioskDevices(siteId);
+    renderKioskDevices(devs, siteId);
+    const fresh = devs.find(d=>!_kwSeenBefore.has(d.device_id));
+    if(fresh){ _kwSeenBefore.add(fresh.device_id); setKioskWizStatus(true, fresh); }
+    else if(devs.length) setKioskWizStatus(true, devs[0], true);
+  }, 3000);
 }
+
+// The device-token step reflects THIS browser, not the tablet — the token lives in the device's
+// own storage — so the copy has to be explicit that it must be done on the tablet.
+function renderKioskTokenStep(site){
+  const step = document.getElementById('kwTokenStep');
+  if(!step) return;
+  if(!site.require_device_token){ step.style.display='none'; return; }
+  step.style.display='';
+  const ok = checkDeviceToken(site.id);
+  const status = document.getElementById('kwTokenStatus');
+  status.className = 'kw-status' + (ok ? ' ok' : '');
+  status.innerHTML = '<span class="kw-dot"></span><span>' +
+    (ok ? (t('kw.tokenOk')||'This device is authorised.')
+        : (t('kw.tokenNo')||'This device is not authorised yet.')) + '</span>';
+  const reg = document.getElementById('kioskRegisterBtn');
+  const rev = document.getElementById('kioskRevokeBtn');
+  reg.textContent = t('kw.authorise')||'Authorise this device';
+  rev.textContent = t('kw.deauthorise')||'Remove authorisation';
+  reg.style.display = ok ? 'none' : '';
+  rev.style.display = ok ? '' : 'none';
+}
+
+function closeKioskWizard(){
+  if(_kwPoll){ clearInterval(_kwPoll); _kwPoll=null; }
+  closeModal('kioskShortcutModal');
+}
+
+async function fetchKioskDevices(siteId){
+  if(window._demoMode) return [];
+  try{
+    return await DB.all('kiosk_devices', `site_id=eq.${siteId}&revoked=eq.false&order=last_seen.desc`) || [];
+  }catch(_){ return []; }
+}
+
+function setKioskWizStatus(connected, device, quiet){
+  const el = document.getElementById('kwStatus');
+  if(!el) return;
+  el.className = 'kw-status' + (connected ? ' ok' : '');
+  if(!connected){
+    el.innerHTML = '<span class="kw-dot"></span><span>' +
+      (t('kw.waiting')||'Waiting for the tablet to open the link…') + '</span>';
+    return;
+  }
+  const label = deviceLabel(device);
+  const msg = quiet
+    ? (t('kw.connected')||'{device} is set up and ready.').replace('{device}', esc(label))
+    : (t('kw.justConnected')||'{device} just connected — you’re all set.').replace('{device}', esc(label));
+  el.innerHTML = '<span class="kw-dot"></span><span>'+msg+'</span>';
+}
+
+// Turn a user-agent string into something an owner recognises on a list of their own devices.
+function deviceLabel(d){
+  if(!d) return t('kw.aDevice')||'A tablet';
+  if(d.label) return d.label;
+  const ua = d.user_agent||'';
+  if(/iPad/i.test(ua)) return 'iPad';
+  if(/iPhone/i.test(ua)) return 'iPhone';
+  if(/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android phone' : 'Android tablet';
+  if(/Macintosh/i.test(ua)) return 'Mac';
+  if(/Windows/i.test(ua)) return 'Windows PC';
+  return t('kw.aDevice')||'A tablet';
+}
+
+function sinceLabel(iso){
+  const mins = Math.max(0, Math.floor((Date.now()-new Date(iso).getTime())/60000));
+  if(mins < 1) return t('kw.justNow')||'just now';
+  if(mins < 60) return (t('kw.minsAgo')||'{n} min ago').replace('{n}', mins);
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return (t('kw.hrsAgo')||'{n}h ago').replace('{n}', hrs);
+  return (t('kw.daysAgo')||'{n}d ago').replace('{n}', Math.floor(hrs/24));
+}
+
+function renderKioskDevices(devs, siteId){
+  const el = document.getElementById('kwDevices');
+  if(!el) return;
+  if(!devs.length){ el.innerHTML=''; return; }
+  el.innerHTML = '<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin:14px 0 8px">'
+    + (t('kw.connectedTablets')||'Connected tablets') + '</div>'
+    + devs.map(d=>`<div class="kw-dev">
+        <svg style="width:15px;height:15px;color:var(--green);flex-shrink:0"><use href="#i-monitor"/></svg>
+        <div><div>${esc(deviceLabel(d))}</div>
+          <div class="kw-dev-meta">${(t('kw.lastSeen')||'last active {when}').replace('{when}', sinceLabel(d.last_seen))}</div></div>
+        <button class="btn-danger" style="margin-left:auto;padding:4px 10px;font-size:11px" data-kw-revoke="${d.id}">${t('kw.unlink')||'Unlink'}</button>
+      </div>`).join('');
+}
+
+async function revokeKioskDevice(id){
+  if(!confirm(t('kw.confirmUnlink')||'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.')) return;
+  try{
+    await DB.update('kiosk_devices', `id=eq.${id}`, {revoked:true});
+    const sid = window._currentKioskSiteId;
+    renderKioskDevices(await fetchKioskDevices(sid), sid);
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+document.addEventListener('click', function(e){
+  const r = e.target.closest('[data-kw-revoke]');
+  if(r) revokeKioskDevice(r.getAttribute('data-kw-revoke'));
+});
 
 function registerThisDevice(){
   const siteId = window._currentKioskSiteId;
   if(!siteId) return;
   registerDeviceToken(siteId);
-  showToast('✓ Device registered! Employees can now punch from this device.','success');
-  // Refresh the modal state
-  openKioskShortcut(siteId);
+  showToast(t('kw.tokenAdded')||'Device authorised. Staff can now clock in here.','success');
+  renderKioskTokenStep(C.sites.find(s=>s.id===siteId)||{});
 }
 
 function revokeThisDevice(){
   const siteId = window._currentKioskSiteId;
   if(!siteId) return;
-  if(!confirm('Remove this device\'s registration? Employees will no longer be able to punch from it.')) return;
+  if(!confirm(t('kw.tokenConfirmRemove')||'Remove this device\'s authorisation? Staff will no longer be able to clock in from it.')) return;
   revokeDeviceToken(siteId);
-  showToast('Device registration removed.','info');
-  openKioskShortcut(siteId);
+  showToast(t('kw.tokenRemoved')||'Authorisation removed.','info');
+  renderKioskTokenStep(C.sites.find(s=>s.id===siteId)||{});
 }
 
 // Discreet on-screen reset for a kiosk-bound device (confirm-gated so employees can't exit by
@@ -11292,6 +11422,10 @@ async function init(){
     if(!kioskFromStorage){
       try { localStorage.setItem('pc_kiosk_device', kioskSiteId); } catch(_){}
     }
+    // Tell the server this tablet is live, so the setup wizard can show the owner it worked and
+    // the Sites page can list connected terminals. Best-effort: a kiosk must still clock people
+    // in if this fails.
+    kioskCheckIn(kioskSiteId);
     document.getElementById('loadingOverlay').classList.remove('hidden');
     try{
       // One anon RPC returns the site, its owning company, and its active employees (the site
@@ -12292,6 +12426,29 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'kw.title':'Set up your punch tablet',
+'kw.s1':'Pick up the tablet or spare phone your team will clock in on.',
+'kw.s1sub':'Any device with a browser works — it stays on this screen at your entrance.',
+'kw.s2':'Point its camera at this code.','kw.or':'or type this address into the tablet’s browser',
+'kw.copy':'Copy link','kw.s3':'Wait for it to connect.',
+'kw.waiting':'Waiting for the tablet to open the link…',
+'kw.justConnected':'{device} just connected — you’re all set.',
+'kw.connected':'{device} is set up and ready.',
+'kw.aDevice':'A tablet','kw.connectedTablets':'Connected tablets','kw.lastSeen':'last active {when}',
+'kw.unlink':'Unlink','kw.confirmUnlink':'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.',
+'kw.justNow':'just now','kw.minsAgo':'{n} min ago','kw.hrsAgo':'{n}h ago','kw.daysAgo':'{n}d ago',
+'kw.s4':'Authorise this device.',
+'kw.s4sub':'This site only accepts punches from devices you approve. Do this step on the tablet itself, signed in as an admin.',
+'kw.tokenOk':'This device is authorised.','kw.tokenNo':'This device is not authorised yet.',
+'kw.authorise':'Authorise this device','kw.deauthorise':'Remove authorisation',
+'kw.tokenAdded':'Device authorised. Staff can now clock in here.','kw.tokenRemoved':'Authorisation removed.',
+'kw.tokenConfirmRemove':'Remove this device’s authorisation? Staff will no longer be able to clock in from it.',
+'kw.advanced':'Make it open like an app (optional)',
+'kw.advBody':'On the tablet, open the link then use the browser menu: on iPhone/iPad tap Share then <strong>Add to Home Screen</strong>; on Android tap the ⋮ menu then <strong>Add to Home screen</strong>. Staff then tap the icon and land straight on the punch screen.',
+'kw.advReset':'Need to un-kiosk a device later? On that device, tap <em>Reset this device</em> at the bottom of the punch screen.',
+'kw.done':'Done','kiosk.qrFailed':'Could not draw the QR code.','kiosk.qrAlt':'QR code for the kiosk link',
+'punch.kioskNeedsSite':'Choose a site first, then set this device up as its kiosk.',
+'punch.kioskConfirm':'Set this device up as the punch terminal for {site}? You will be signed out here so staff can clock in.',
 'recip.title':'Automatic payroll summary',
 'recip.sub':'When a pay period closes, everyone here is emailed one summary of all employees’ hours, with a CSV to enter into payroll. They don’t need a PunchClock login.',
 'recip.add':'Add recipient',
@@ -13006,6 +13163,29 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'kw.title':'Configurer votre tablette de pointage',
+'kw.s1':'Prenez la tablette ou le téléphone que votre équipe utilisera pour pointer.',
+'kw.s1sub':'N’importe quel appareil avec un navigateur fonctionne — il reste sur cet écran à votre entrée.',
+'kw.s2':'Dirigez sa caméra vers ce code.','kw.or':'ou tapez cette adresse dans le navigateur de la tablette',
+'kw.copy':'Copier le lien','kw.s3':'Attendez la connexion.',
+'kw.waiting':'En attente que la tablette ouvre le lien…',
+'kw.justConnected':'{device} vient de se connecter — tout est prêt.',
+'kw.connected':'{device} est configuré et prêt.',
+'kw.aDevice':'Une tablette','kw.connectedTablets':'Tablettes connectées','kw.lastSeen':'dernière activité {when}',
+'kw.unlink':'Délier','kw.confirmUnlink':'Délier cette tablette? Elle disparaîtra d’ici jusqu’à ce qu’elle rouvre le lien du kiosque.',
+'kw.justNow':'à l’instant','kw.minsAgo':'il y a {n} min','kw.hrsAgo':'il y a {n} h','kw.daysAgo':'il y a {n} j',
+'kw.s4':'Autoriser cet appareil.',
+'kw.s4sub':'Ce site n’accepte que les pointages provenant d’appareils que vous approuvez. Faites cette étape sur la tablette elle-même, connecté comme admin.',
+'kw.tokenOk':'Cet appareil est autorisé.','kw.tokenNo':'Cet appareil n’est pas encore autorisé.',
+'kw.authorise':'Autoriser cet appareil','kw.deauthorise':'Retirer l’autorisation',
+'kw.tokenAdded':'Appareil autorisé. Le personnel peut maintenant pointer ici.','kw.tokenRemoved':'Autorisation retirée.',
+'kw.tokenConfirmRemove':'Retirer l’autorisation de cet appareil? Le personnel ne pourra plus y pointer.',
+'kw.advanced':'L’ouvrir comme une application (optionnel)',
+'kw.advBody':'Sur la tablette, ouvrez le lien puis utilisez le menu du navigateur : sur iPhone/iPad, touchez Partager puis <strong>Sur l’écran d’accueil</strong>; sur Android, touchez le menu ⋮ puis <strong>Ajouter à l’écran d’accueil</strong>. Le personnel touche l’icône et arrive directement à l’écran de pointage.',
+'kw.advReset':'Besoin de retirer le mode kiosque plus tard? Sur cet appareil, touchez <em>Réinitialiser cet appareil</em> au bas de l’écran de pointage.',
+'kw.done':'Terminé','kiosk.qrFailed':'Impossible de générer le code QR.','kiosk.qrAlt':'Code QR du lien kiosque',
+'punch.kioskNeedsSite':'Choisissez d’abord un site, puis configurez cet appareil comme kiosque.',
+'punch.kioskConfirm':'Configurer cet appareil comme terminal de pointage pour {site}? Vous serez déconnecté ici afin que le personnel puisse pointer.',
 'recip.title':'Sommaire de paie automatique',
 'recip.sub':'À la fin de chaque période de paie, ces personnes reçoivent un seul sommaire des heures de tous les employés, avec un CSV à entrer dans la paie. Aucun compte PunchClock requis.',
 'recip.add':'Ajouter un destinataire',
