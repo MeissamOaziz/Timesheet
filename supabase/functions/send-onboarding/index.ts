@@ -110,7 +110,7 @@ function buildDay3(name: string): { subject: string; html: string } {
       <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 8px">Quick reminder of the steps:</p>
       ${stepListEn()}
       ${ctaButton("Add My First Site →", APP_URL)}
-      <p style="color:#f59e0b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">Only 4 days left in your trial.</p>
+      <p style="color:#64748b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">Free plan &mdash; no time limit, no card.</p>
 
       ${divider()}
 
@@ -122,7 +122,7 @@ function buildDay3(name: string): { subject: string; html: string } {
       <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 8px">Rappel des &eacute;tapes&nbsp;:</p>
       ${stepListFr()}
       ${ctaButton("Ajouter mon premier site →", APP_URL)}
-      <p style="color:#f59e0b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">Il ne vous reste que 4 jours dans votre essai.</p>
+      <p style="color:#64748b;font-size:13px;margin-top:20px;text-align:center;font-weight:600">Forfait gratuit &mdash; sans limite de dur&eacute;e, sans carte.</p>
     `)
   };
 }
@@ -322,6 +322,21 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
   return true;
 }
 
+// There is no trial. The free plan is free forever, capped at 10 employees — that is what
+// PLANS says, what the landing page promises ("free forever, no credit card"), and what the
+// code enforces, which is nothing date-based at all. The only thing that ever referenced
+// seven days was a cosmetic "Day N / 7" badge in the super-admin panel.
+//
+// This drip nevertheless told people their trial was expiring: 11 of 15 free accounts were
+// sent "Your trial expires tomorrow" and 12 were sent "Your trial has ended". Nothing
+// actually ended, so the day-7 mail reads as "the thing you were evaluating just shut off",
+// arriving exactly where the funnel shows people disappear.
+//
+// The two messages are switched off rather than deleted, so they are one line away from
+// working again if a real trial is ever built. The stage-based nudges below stay: they are
+// true, and they are the useful half.
+const TRIAL_EMAILS_ENABLED = false;
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -391,7 +406,7 @@ Deno.serve(async (req) => {
 
       // Day 1
       if (daysSinceReg >= 1 && daysSinceReg <= 2 && !emailsSent.day1) {
-        const msg = stageEmail("6 days left in your trial.", "Il vous reste 6 jours d'essai.");
+        const msg = stageEmail("Free plan — no time limit, no card.", "Forfait gratuit — sans limite de durée, sans carte.");
         if (msg && await sendEmail(admin.email, msg.subject, msg.html)) {
           emailsSent.day1 = true;
           sent.push("day1:" + stage);
@@ -402,15 +417,15 @@ Deno.serve(async (req) => {
       if (daysSinceReg >= 3 && daysSinceReg <= 4 && !emailsSent.day3) {
         const msg = stage === "no_site"
           ? buildDay3(admin.name)   // keeps the "still no site?" wording
-          : stageEmail("Only 4 days left in your trial.", "Il ne vous reste que 4 jours d'essai.");
+          : stageEmail("Free plan — no time limit, no card.", "Forfait gratuit — sans limite de durée, sans carte.");
         if (msg && await sendEmail(admin.email, msg.subject, msg.html)) {
           emailsSent.day3 = true;
           sent.push("day3:" + stage);
         }
       }
 
-      // Day 6: trial expiring tomorrow
-      if (daysSinceReg >= 6 && daysSinceReg <= 6 && !emailsSent.day6) {
+      // Day 6: trial expiring tomorrow — untrue, see TRIAL_EMAILS_ENABLED
+      if (TRIAL_EMAILS_ENABLED && daysSinceReg >= 6 && daysSinceReg <= 6 && !emailsSent.day6) {
         const { subject, html } = buildDay6(admin.name);
         if (await sendEmail(admin.email, subject, html)) {
           emailsSent.day6 = true;
@@ -418,8 +433,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Day 7+: trial ended
-      if (daysSinceReg >= 7 && !emailsSent.day7) {
+      // Day 7+: trial ended — untrue, see TRIAL_EMAILS_ENABLED
+      if (TRIAL_EMAILS_ENABLED && daysSinceReg >= 7 && !emailsSent.day7) {
         const { subject, html } = buildDay7(admin.name);
         if (await sendEmail(admin.email, subject, html)) {
           emailsSent.day7 = true;
