@@ -522,6 +522,52 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .land-btn-primary:hover{opacity:.88;transform:translateY(-1px);}
 .land-btn-secondary{padding:14px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;}
 .land-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+/* ── Help centre ──
+   A searchable article list rather than a wall of prose: people arrive with a problem in their
+   own words, so search is the primary control and browsing is the fallback. */
+.help-modal{max-width:720px;max-height:86vh;display:flex;flex-direction:column;padding:0;overflow:hidden;}
+.help-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 14px;}
+.help-head h3{margin:0;font-size:18px;display:flex;align-items:center;gap:8px;}
+.help-x{background:none;border:none;cursor:pointer;color:var(--text2);line-height:1;padding:4px;border-radius:6px;}
+.help-x:hover{background:var(--surface2);color:var(--text);}
+.help-searchbar{position:relative;display:flex;align-items:center;margin:0 24px 4px;}
+.help-search-ic{width:16px;height:16px;position:absolute;left:13px;color:var(--text3);pointer-events:none;}
+.help-searchbar input{width:100%;padding:11px 38px 11px 38px;border:1.5px solid var(--border);border-radius:10px;
+  background:var(--surface2);color:var(--text);font-family:inherit;font-size:14px;}
+.help-searchbar input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+.help-searchbar input::-webkit-search-cancel-button{display:none;}
+.help-clear{position:absolute;right:9px;background:none;border:none;cursor:pointer;color:var(--text3);
+  padding:4px;border-radius:5px;display:none;}
+.help-clear:hover{background:var(--surface2);color:var(--text);}
+.help-searchbar.has-text .help-clear{display:block;}
+.help-body{flex:1;overflow-y:auto;padding:14px 24px 4px;}
+.help-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:14px 24px;border-top:1px solid var(--border);}
+.help-sec{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);
+  margin:18px 0 9px;}
+.help-sec:first-child{margin-top:0;}
+.help-art{border:1px solid var(--border);border-radius:11px;margin-bottom:8px;overflow:hidden;background:var(--surface);}
+.help-art.hot{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.05);}
+.help-art-q{width:100%;display:flex;align-items:center;gap:11px;background:none;border:none;cursor:pointer;
+  padding:12px 14px;text-align:left;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--text);}
+.help-art-q:hover{background:var(--surface2);}
+.help-art-ic{width:30px;height:30px;border-radius:8px;background:rgba(79,142,247,.12);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.help-art-ic svg{width:15px;height:15px;}
+.help-art-chev{margin-left:auto;flex-shrink:0;width:15px;height:15px;color:var(--text3);transition:transform .18s;}
+.help-art.open .help-art-chev{transform:rotate(180deg);}
+.help-art-a{display:none;padding:0 14px 14px 55px;font-size:13px;color:var(--text2);line-height:1.6;}
+.help-art.open .help-art-a{display:block;}
+.help-shot{display:block;width:100%;margin-top:11px;border:1px solid var(--border);border-radius:9px;
+  cursor:zoom-in;background:var(--surface2);}
+.help-empty{text-align:center;padding:26px 10px;color:var(--text2);font-size:13.5px;line-height:1.6;}
+@media(max-width:600px){
+  .help-modal{max-height:92vh;}
+  .help-head,.help-searchbar,.help-body,.help-foot{padding-left:15px;padding-right:15px;}
+  .help-searchbar{margin-left:15px;margin-right:15px;}
+  .help-art-a{padding-left:15px;}
+}
+@media (prefers-reduced-motion:reduce){.help-art-chev{transition:none;}}
+
 /* ── Hero product screenshot ──
    Real captures from tools/capture-screenshots.mjs, one per theme. Note the theme convention
    here is inverted from the usual: dark is the unstamped default (:root), and light is stamped
@@ -878,6 +924,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 <symbol id="i-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></symbol>
 <symbol id="i-nav-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
 <symbol id="i-nav-headset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-3a9 9 0 0 1 18 0v3"/><path d="M21 16a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2zM3 16a2 2 0 0 0 2 2h1v-5H5a2 2 0 0 0-2 2z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></symbol>
 <symbol id="i-nav-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
 <symbol id="i-nav-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
@@ -1385,6 +1432,14 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="land-section" id="landingFAQ">
     <h2 data-i18n="land.faqTitle">Frequently Asked Questions</h2>
     <p class="sub" data-i18n="land.faqSub">Everything you need to know before signing up.</p>
+    <div style="max-width:720px;margin:0 auto 18px" class="help-searchbar faq-searchbar">
+      <svg class="help-search-ic"><use href="#i-search"/></svg>
+      <input id="faqSearch" type="search" autocomplete="off" oninput="renderFAQ()"
+             data-i18n="land.faqSearchPh" placeholder="Search the questions…">
+      <button type="button" class="help-clear" onclick="document.getElementById('faqSearch').value='';renderFAQ()" aria-label="Clear">
+        <svg style="width:14px;height:14px"><use href="#i-x"/></svg>
+      </button>
+    </div>
     <div style="max-width:720px;margin:0 auto" id="faqAccordion"></div>
   </div>
 
@@ -2896,14 +2951,24 @@ border-top:1px solid var(--border);margin:18px 0;}
 </div>
 
 <div class="modal-overlay" id="helpModal" style="z-index:9900">
-  <div class="modal" style="max-width:560px;max-height:80vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h3 id="helpModalTitle" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-nav-help"/></svg>How to Use PunchClock Pro</h3>
-      <button onclick="closeModal('helpModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
+  <div class="modal help-modal">
+    <div class="help-head">
+      <h3 id="helpModalTitle"><svg style="width:18px;height:18px"><use href="#i-nav-help"/></svg>How to Use PunchClock Pro</h3>
+      <button onclick="closeModal('helpModal')" aria-label="Close" class="help-x"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
     </div>
-    <div id="helpStepsList"></div>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-      <button class="btn-secondary" onclick="closeModal('helpModal')" id="helpCloseBtn" style="width:auto;padding:8px 24px">Got it</button>
+    <div class="help-searchbar">
+      <svg class="help-search-ic"><use href="#i-search"/></svg>
+      <input id="helpSearch" type="search" autocomplete="off" oninput="renderHelpResults()"
+             placeholder="Describe your problem — e.g. tablet, PIN, payroll">
+      <button type="button" id="helpSearchClear" class="help-clear" onclick="clearHelpSearch()" aria-label="Clear">
+        <svg style="width:14px;height:14px"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    <div id="helpBody" class="help-body"></div>
+    <div class="help-foot">
+      <button class="btn-secondary" onclick="closeModal('helpModal');startTour()" id="helpTourBtn" style="width:auto;padding:7px 16px;font-size:12.5px"></button>
+      <button class="btn-secondary" onclick="closeModal('helpModal');showSupportModal()" id="helpContactBtn" style="width:auto;padding:7px 16px;font-size:12.5px"></button>
+      <button class="btn-primary" onclick="closeModal('helpModal')" id="helpCloseBtn" style="width:auto;padding:8px 22px;margin-left:auto">Got it</button>
     </div>
   </div>
 </div>
@@ -3915,7 +3980,24 @@ function hideLegal(type) {
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
-  const qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+  const box=document.getElementById('faqSearch');
+  const raw=box?box.value.trim():'';
+  const bar=document.querySelector('.faq-searchbar');
+  if(bar) bar.classList.toggle('has-text', !!raw);
+  // Same accent-insensitive matching as the in-app help centre, so "geofence" and
+  // "géorepérage" both find the geofencing answer regardless of page language.
+  const terms=_helpNorm(raw).split(/\s+/).filter(Boolean);
+  let qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+  if(terms.length){
+    qs=qs.filter(i=>{
+      const hay=_helpNorm((t('faq.q'+i)||'')+' '+(t('faq.a'+i)||''));
+      return terms.every(term=>_helpHit(hay,term));
+    });
+  }
+  if(!qs.length){
+    acc.innerHTML='<div class="help-empty">'+(t('land.faqNoResults')||'No question matches that.')+'</div>';
+    return;
+  }
   acc.innerHTML=qs.map(i=>`
     <div class="faq-item" id="faqItem${i}">
       <button class="faq-q" onclick="toggleFAQ(${i})">
@@ -4786,55 +4868,191 @@ function renderTour(){
 
 // Help scoped to wherever the user currently is: the matching topics float to the top and are
 // highlighted, so "Help" answers the question they have now instead of opening a wall of text.
-const HELP_PAGE_TOPICS={
-  punch:[4,5,7],dashboard:[1,2,3],admin:[3,7,11],sites:[2,6],
-  reports:[8,9],activity:[10,4],schedule:[1,3],
-};
+// ── Help centre ──────────────────────────────────────────────────────────────
+// One catalogue drives search, the per-page "for this screen" shortlist, and the article
+// bodies. `tk`/`dk` point at the translation dictionary so copy stays editable per language;
+// `shot` names a capture in assets/screenshots (see tools/capture-screenshots.mjs), loaded in
+// the reader's language. `kw` carries the words people actually type — including the ones the
+// UI never uses ("tablet", "buddy punching", "timesheet") — since that's what they search for.
+const HELP_ARTICLES=[
+  {id:'account', tk:'help.s1title', dk:'help.s1desc', cat:'setup', icon:'i-nav-building', pages:['dashboard'],
+   kw:{en:'company account payroll week overtime setup register',fr:'entreprise compte paie semaine heures supplémentaires configuration'}},
+  {id:'site', tk:'help.s2title', dk:'help.s2desc', cat:'setup', icon:'i-nav-sites', pages:['sites','dashboard'], shot:'01-add-site',
+   kw:{en:'site location branch store add new place',fr:'site emplacement succursale magasin ajouter nouveau lieu'}},
+  {id:'employees', tk:'help.s3title', dk:'help.s3desc', cat:'setup', icon:'i-nav-admin', pages:['admin'], shot:'03-add-employee',
+   kw:{en:'employee staff worker add team people hire',fr:'employé personnel travailleur ajouter équipe embaucher'}},
+  {id:'pin', tk:'help.pinTitle', dk:'help.pinDesc', cat:'setup', icon:'i-key', pages:['admin','punch'], shot:'05-find-pin',
+   kw:{en:'pin code forgot lost reveal show reset 4 digit password',fr:'nip code oublié perdu afficher voir réinitialiser 4 chiffres mot de passe'}},
+  {id:'kiosk', tk:'help.s5title', dk:'help.s5desc', cat:'setup', icon:'i-monitor', pages:['sites','punch'], shot:'07-kiosk-modal',
+   kw:{en:'kiosk tablet ipad shortcut terminal setup device screen qr',fr:'kiosque tablette ipad raccourci terminal configurer appareil écran qr'}},
+  {id:'clock', tk:'help.s4title', dk:'help.s4desc', cat:'daily', icon:'i-nav-clock', pages:['punch'], shot:'08-punch-clock-in',
+   kw:{en:'clock in out punch employees how to use terminal',fr:'pointer entrée sortie pointage employés utiliser terminal'}},
+  {id:'punching', tk:'help.punchTitle', dk:'help.punchDesc', cat:'daily', icon:'i-clock', pages:['punch'], shot:'09-pin-pad',
+   kw:{en:'clock in employee pin pad keypad enter buddy punching',fr:'pointer employé nip clavier entrer'}},
+  {id:'fixpunch', tk:'help.fixTitle', dk:'help.fixDesc', cat:'daily', icon:'i-edit', pages:['activity'], shot:'11-fix-a-punch',
+   kw:{en:'edit punch wrong time forgot clock out missed correct fix delete mistake',fr:'modifier pointage mauvaise heure oublié sortie manqué corriger supprimer erreur'}},
+  {id:'audit', tk:'help.s10title', dk:'help.s10desc', cat:'daily', icon:'i-nav-activity', pages:['activity'],
+   kw:{en:'audit log history who changed manual entry',fr:'journal audit historique qui modifié saisie manuelle'}},
+  {id:'reports', tk:'help.s8title', dk:'help.s8desc', cat:'payroll', icon:'i-nav-reports', pages:['reports'], shot:'10-reports',
+   kw:{en:'report payroll hours export excel csv pdf timesheet period',fr:'rapport paie heures exporter excel csv pdf feuille de temps période'}},
+  {id:'autoemail', tk:'help.s9title', dk:'help.s9desc', cat:'payroll', icon:'i-mail', pages:['reports','admin'],
+   kw:{en:'automatic email report period summary send employee',fr:'automatique courriel rapport sommaire période envoyer employé'}},
+  {id:'timeoff', tk:'help.toTitle', dk:'help.toDesc', cat:'payroll', icon:'i-calendar', pages:['timeoff'],
+   kw:{en:'time off vacation sick leave absence request approve deny holiday',fr:'congé vacances maladie absence demande approuver refuser férié'}},
+  {id:'scheduling', tk:'help.schedTitle', dk:'help.schedDesc', cat:'payroll', icon:'i-nav-schedule', pages:['schedule'],
+   kw:{en:'schedule shift roster week plan add-on rota',fr:'horaire quart semaine planifier module complémentaire'}},
+  {id:'geofence', tk:'help.s6title', dk:'help.s6desc', cat:'security', icon:'i-map-pin', pages:['sites'],
+   kw:{en:'geofence gps location radius block far away gps gps required gps off',fr:'géorepérage gps localisation rayon bloquer loin position'}},
+  {id:'devicetoken', tk:'help.s7title', dk:'help.s7desc', cat:'security', icon:'i-lock', pages:['sites'],
+   kw:{en:'device token register lock security only this tablet',fr:'jeton appareil enregistrer verrouiller sécurité tablette'}},
+  {id:'coadmins', tk:'help.s11title', dk:'help.s11desc', cat:'team', icon:'i-nav-admins', pages:['admin'],
+   kw:{en:'co-admin manager invite team access permission role',fr:'co-admin gestionnaire inviter équipe accès permission rôle'}},
+  {id:'portal', tk:'help.portalTitle', dk:'help.portalDesc', cat:'team', icon:'i-link', pages:['admin'],
+   kw:{en:'employee portal invite login self serve schedule own hours',fr:'portail employé invitation connexion horaire propres heures'}},
+  {id:'billing', tk:'help.billTitle', dk:'help.billDesc', cat:'team', icon:'i-card', pages:[],
+   kw:{en:'billing plan upgrade downgrade cancel invoice price subscription seats payment',fr:'facturation forfait améliorer annuler facture prix abonnement sièges paiement'}},
+];
+const HELP_CATS=[['setup','help.catSetup'],['daily','help.catDaily'],['payroll','help.catPayroll'],
+                 ['security','help.catSecurity'],['team','help.catTeam']];
+
+// Accent- and case-insensitive so "employe"/"employé" and "georepérage"/"geofence" all land.
+function _helpNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+
+// People search with the word they know, not the word the interface uses — "tablet" for the
+// kiosk, "timesheet" for a report, "badge" for a PIN. These groups also bridge the two
+// languages (a francophone owner may well type "geofence") and paper over our own inconsistent
+// French wording, where geofencing appears variously as "géofence" and "géorepérage".
+const HELP_SYNONYMS=[
+  ['geofence','geofencing','georeperage','gps','perimetre','radius','rayon'],
+  ['pin','nip','badge','passcode'],
+  ['tablet','tablette','ipad','kiosk','kiosque','terminal','borne','device','appareil'],
+  ['report','rapport','timesheet','payroll','paie','export','exporter'],
+  ['schedule','horaire','shift','quart','roster','rota'],
+  ['vacation','vacances','conge','sick','maladie','absence','holiday','ferie'],
+  ['employee','employe','staff','personnel','worker','team','equipe'],
+  ['billing','facturation','forfait','invoice','facture','subscription','abonnement'],
+  ['portal','portail'],
+  ['punch','pointage','pointer','clock','clocking'],
+];
+// Short fragments are left alone — expanding them would match almost everything.
+function _helpExpand(term){
+  if(term.length<3) return [term];
+  const out=new Set([term]);
+  for(const g of HELP_SYNONYMS){
+    if(g.some(w=>w.indexOf(term)===0||term.indexOf(w)===0)) g.forEach(w=>out.add(w));
+  }
+  return Array.from(out);
+}
+function _helpHit(hay, term){ return _helpExpand(term).some(w=>hay.indexOf(w)>-1); }
+
 function showPageHelp(){ showHelpModal(typeof currentPage!=='undefined'?currentPage:null); }
 
 function showHelpModal(page){
-  document.getElementById('helpModalTitle').textContent=t('help.title')||'❓ How to Use PunchClock Pro';
-  document.getElementById('helpCloseBtn').textContent=t('help.close')||'Got it';
-  const steps=[
-    {icon:'🏢',title:t('help.s1title'),desc:t('help.s1desc')},
-    {icon:'📍',title:t('help.s2title'),desc:t('help.s2desc')},
-    {icon:'👥',title:t('help.s3title'),desc:t('help.s3desc')},
-    {icon:'⏱',title:t('help.s4title'),desc:t('help.s4desc')},
-    {icon:'📲',title:t('help.s5title'),desc:t('help.s5desc')},
-    {icon:'📍',title:t('help.s6title'),desc:t('help.s6desc')},
-    {icon:'🔑',title:t('help.s7title'),desc:t('help.s7desc')},
-    {icon:'📊',title:t('help.s8title'),desc:t('help.s8desc')},
-    {icon:'📧',title:t('help.s9title'),desc:t('help.s9desc')},
-    {icon:'📋',title:t('help.s10title'),desc:t('help.s10desc')},
-    {icon:'👥',title:t('help.s11title'),desc:t('help.s11desc')},
-  ];
-  const relevant=(page&&HELP_PAGE_TOPICS[page])||[];
-  // Topics for the current page first, in the order listed, then everything else.
-  const order=[...relevant.map(n=>n-1),...steps.map((_,i)=>i).filter(i=>!relevant.includes(i+1))];
-  const rel=new Set(relevant.map(n=>n-1));
-  const row=i=>{
-    const s=steps[i], hot=rel.has(i);
-    return `<div style="display:flex;gap:14px;margin-bottom:${hot?10:18}px;align-items:flex-start;${hot?'background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.22);border-radius:11px;padding:12px 14px;margin-left:-2px':''}">
-      <div style="width:36px;height:36px;border-radius:50%;background:rgba(79,142,247,.12);border:1.5px solid rgba(79,142,247,.25);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${s.icon}</div>
-      <div>
-        <div style="font-weight:600;font-size:13px;color:var(--accent);margin-bottom:2px">${i+1}. ${s.title}</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.55">${s.desc}</div>
-      </div>
-    </div>`;
-  };
-  const header=relevant.length
-    ? `<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">${t('help.forThisPage')||'For this page'}</div>`
-    : '';
-  const restHeader=relevant.length
-    ? `<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin:22px 0 12px;padding-top:16px;border-top:1px solid var(--border)">${t('help.everythingElse')||'Everything else'}</div>`
-    : '';
-  document.getElementById('helpStepsList').innerHTML =
-    header + order.slice(0,relevant.length).map(row).join('') +
-    restHeader + order.slice(relevant.length).map(row).join('') +
-    `<div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
-       <button class="btn-secondary" style="width:auto;padding:7px 18px;font-size:12.5px" onclick="closeModal('helpModal');startTour()">${t('tour.replay')||'▶ Replay the 5-step tour'}</button>
-     </div>`;
+  _helpPage = page || null;
+  document.getElementById('helpModalTitle').innerHTML =
+    '<svg style="width:18px;height:18px"><use href="#i-nav-help"/></svg>' + (t('help.title')||'Help centre');
+  document.getElementById('helpSearch').placeholder = t('help.searchPh')||'Describe your problem…';
+  document.getElementById('helpCloseBtn').textContent  = t('help.close')||'Got it';
+  document.getElementById('helpTourBtn').textContent   = t('tour.replay')||'Replay the tour';
+  document.getElementById('helpContactBtn').textContent= t('help.contact')||'Message us';
+  document.getElementById('helpSearch').value = '';
+  document.querySelector('.help-searchbar').classList.remove('has-text');
+  renderHelpResults();
   openModal('helpModal');
+  // Don't steal focus on touch devices - it pops the keyboard over the article list.
+  if(!window.matchMedia('(pointer:coarse)').matches) setTimeout(function(){document.getElementById('helpSearch').focus();},60);
+}
+let _helpPage = null;
+
+function clearHelpSearch(){
+  const box=document.getElementById('helpSearch');
+  box.value=''; renderHelpResults(); box.focus();
+}
+
+// Score an article against the query. Title matches beat keyword matches beat body matches, so
+// searching "pin" surfaces the PIN article rather than every article that mentions a PIN.
+function _helpScore(a, q){
+  const lang = (typeof _appLang!=='undefined'?_appLang:'en');
+  const title=_helpNorm(t(a.tk)), body=_helpNorm(t(a.dk)), kw=_helpNorm((a.kw&&a.kw[lang])||'');
+  let score=0;
+  for(const term of q){
+    let s=0;
+    if(_helpHit(title,term)) s=10;
+    else if(_helpHit(kw,term)) s=6;
+    else if(_helpHit(body,term)) s=2;
+    if(!s) return 0;                       // every term must match somewhere
+    if(title.startsWith(term)) s+=4;       // exact prefix on the title outranks a synonym hit
+    score+=s;
+  }
+  return score;
+}
+
+function renderHelpResults(){
+  const box=document.getElementById('helpSearch');
+  const raw=box?box.value.trim():'';
+  document.querySelector('.help-searchbar').classList.toggle('has-text', !!raw);
+  const q=_helpNorm(raw).split(/\s+/).filter(Boolean);
+  const body=document.getElementById('helpBody');
+
+  if(q.length){
+    const hits=HELP_ARTICLES.map(a=>({a,s:_helpScore(a,q)})).filter(x=>x.s>0)
+                            .sort((x,y)=>y.s-x.s).map(x=>x.a);
+    body.innerHTML = hits.length
+      ? '<div class="help-sec">'+((t('help.results')||'{n} result(s)').replace('{n}',hits.length))+'</div>'
+        + hits.map(a=>_helpArt(a,false)).join('')
+      : '<div class="help-empty">'+(t('help.noResults')||'Nothing matched that.')+'</div>'
+        + '<div style="text-align:center"><button class="btn-secondary" data-help-contact style="width:auto;padding:8px 18px;font-size:12.5px">'
+        + (t('help.contact')||'Message us') + '</button></div>';
+    return;
+  }
+
+  // No query: lead with what's relevant to the screen they're on, then the full catalogue.
+  const rel=HELP_ARTICLES.filter(a=>_helpPage && a.pages.indexOf(_helpPage)>-1);
+  let html='';
+  if(rel.length){
+    html+='<div class="help-sec">'+(t('help.forThisPage')||'For this screen')+'</div>'
+        + rel.map(a=>_helpArt(a,true)).join('');
+  }
+  for(const [cat,key] of HELP_CATS){
+    const items=HELP_ARTICLES.filter(a=>a.cat===cat && rel.indexOf(a)<0);
+    if(!items.length) continue;
+    html+='<div class="help-sec">'+t(key)+'</div>'+items.map(a=>_helpArt(a,false)).join('');
+  }
+  body.innerHTML=html;
+}
+
+// Rendered with data-attributes rather than inline onclick handlers: the article ids and image
+// paths would otherwise need quote-escaping inside an HTML attribute inside a JS string, which
+// is exactly where this kind of markup usually breaks. One delegated listener handles them all.
+function _helpArt(a, hot){
+  const lang=(typeof _appLang!=='undefined'?_appLang:'en');
+  const shot=a.shot
+    ? '<img class="help-shot" loading="lazy" alt="" data-help-zoom src="assets/screenshots/'+a.shot+'-'+lang+'.webp">'
+    : '';
+  return '<div class="help-art'+(hot?' hot':'')+'" id="helpArt-'+a.id+'">'
+    + '<button type="button" class="help-art-q" data-help-art="'+a.id+'" aria-expanded="false">'
+    +   '<span class="help-art-ic"><svg><use href="#'+a.icon+'"/></svg></span>'
+    +   '<span>'+t(a.tk)+'</span><svg class="help-art-chev"><use href="#i-nav-chevron"/></svg>'
+    + '</button>'
+    + '<div class="help-art-a">'+t(a.dk)+shot+'</div>'
+  + '</div>';
+}
+
+document.addEventListener('click', function(e){
+  const art=e.target.closest('[data-help-art]');
+  if(art){ toggleHelpArt(art.getAttribute('data-help-art')); return; }
+  const zoom=e.target.closest('[data-help-zoom]');
+  if(zoom){ window.open(zoom.src,'_blank','noopener'); return; }
+  const contact=e.target.closest('[data-help-contact]');
+  if(contact){ closeModal('helpModal'); showSupportModal(); }
+});
+
+function toggleHelpArt(id){
+  const el=document.getElementById('helpArt-'+id);
+  if(!el) return;
+  const open=el.classList.toggle('open');
+  const btn=el.querySelector('.help-art-q');
+  if(btn) btn.setAttribute('aria-expanded', open?'true':'false');
 }
 
 // ═══════════════════════════════════════════════════
@@ -11962,8 +12180,30 @@ en:{
 'ob.step2Btn':'📍 Create My First Site',
 'ob.siteCreated':'Site created! You can now add employees.',
 'nav.help':'❓ Help',
-'help.title':'How to Use PunchClock Pro',
+'land.faqSearchPh':'Search the questions…',
+'land.faqNoResults':'No question matches that. Try another word, or use the contact form below.',
+'help.title':'Help centre',
 'help.close':'Got it',
+'help.searchPh':'Describe your problem — e.g. tablet, PIN, payroll',
+'help.results':'{n} matching article(s)',
+'help.noResults':'Nothing matched that. Try a different word — or send us the question and we\'ll answer it.',
+'help.contact':'Message us',
+'help.catSetup':'Getting set up','help.catDaily':'Everyday use','help.catPayroll':'Hours & payroll',
+'help.catSecurity':'Location & security','help.catTeam':'Team & account',
+'help.pinTitle':'Find or change an employee\'s PIN',
+'help.pinDesc':'Each employee clocks in with their own 4-digit PIN. To look one up, go to <strong>Admin → Employees</strong> and click <em>Show</em> in the PIN column — it reveals for a few seconds, then hides again. To change it, click the edit (pencil) button on that row and type a new 4-digit code. PINs are how the app knows who is punching, so share each one only with that employee.',
+'help.punchTitle':'How an employee clocks in',
+'help.punchDesc':'On the clock-in screen the employee picks their name, taps <strong>IN</strong> or <strong>OUT</strong>, then types their 4-digit PIN. That\'s the whole flow — no app to install and no login. If they tap IN when they are already clocked in, the app warns them and offers to report a missed punch instead.',
+'help.fixTitle':'Fix a wrong punch, or one that never happened',
+'help.fixDesc':'Go to <strong>Activity</strong>, find the punch and click <em>Edit</em> to correct the time, or <em>Delete</em> to remove it. To add one that was never recorded, use <strong>+ Add Punch</strong>. If an employee reported the problem themselves, their request appears at the top of the page with <em>Approve</em>, <em>Edit + Approve</em> and <em>Deny</em> buttons. Every correction is written to the audit log with your name on it.',
+'help.toTitle':'Time off requests',
+'help.toDesc':'The <strong>Time Off</strong> page lists vacation, sick days and other absences. Employees with portal access request time off themselves and it lands here as <em>Pending</em>; you can also add an absence directly. Approved time off shows on the schedule and is listed at the bottom of payroll reports, so hours and absences line up for the same period.',
+'help.schedTitle':'Build a schedule',
+'help.schedDesc':'<strong>Schedule</strong> shows one week at a time, employees down the side and days across the top. Click a <em>+</em> in any cell to add a shift, or click a shift to edit it. The grid flags conflicts for you — it marks days an employee said they are unavailable, and shows approved time off before you assign anything. Scheduling is a paid add-on ($14.95/mo on any paid plan).',
+'help.portalTitle':'Give an employee access to their own hours',
+'help.portalDesc':'The employee portal lets staff check their own punches, hours and schedule, and request time off — without an admin doing it for them. Open <strong>Admin → Employees</strong>, edit the employee, turn on email and enter their address, then use <em>Send Invitation</em>. They set their own password from the emailed link. You can resend or revoke access from the same place at any time.',
+'help.billTitle':'Plans, billing and adding seats',
+'help.billDesc':'Your plan sets how many employees, sites and admins you can have. Open the menu under your name and choose <strong>Manage Billing</strong> to change plan, update your card or download invoices. If you only need a little more room, extra employee or admin seats can be added to your current plan rather than upgrading it outright.',
 'help.s1title':'Set Up Your Account',
 'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
@@ -12635,8 +12875,30 @@ fr:{
 'ob.step2Btn':'📍 Créer mon premier site',
 'ob.siteCreated':'Site créé! Vous pouvez maintenant ajouter des employés.',
 'nav.help':'❓ Aide',
-'help.title':'Comment utiliser PunchClock Pro',
+'land.faqSearchPh':'Rechercher dans les questions…',
+'land.faqNoResults':'Aucune question ne correspond. Essayez un autre mot, ou utilisez le formulaire de contact ci-dessous.',
+'help.title':'Centre d\'aide',
 'help.close':'Compris',
+'help.searchPh':'Décrivez votre problème — p. ex. tablette, NIP, paie',
+'help.results':'{n} article(s) correspondant(s)',
+'help.noResults':'Aucun résultat. Essayez un autre mot — ou envoyez-nous la question et nous y répondrons.',
+'help.contact':'Écrivez-nous',
+'help.catSetup':'Configuration','help.catDaily':'Utilisation quotidienne','help.catPayroll':'Heures et paie',
+'help.catSecurity':'Localisation et sécurité','help.catTeam':'Équipe et compte',
+'help.pinTitle':'Trouver ou modifier le NIP d\'un employé',
+'help.pinDesc':'Chaque employé pointe avec son propre NIP à 4 chiffres. Pour le consulter, allez dans <strong>Admin → Employés</strong> et cliquez sur <em>Afficher</em> dans la colonne NIP — il apparaît quelques secondes, puis se masque. Pour le changer, cliquez sur le crayon de cette ligne et saisissez un nouveau code à 4 chiffres. Le NIP sert à identifier qui pointe : ne le partagez qu\'avec l\'employé concerné.',
+'help.punchTitle':'Comment un employé pointe',
+'help.punchDesc':'Sur l\'écran de pointage, l\'employé choisit son nom, touche <strong>ENTRÉE</strong> ou <strong>SORTIE</strong>, puis tape son NIP à 4 chiffres. C\'est tout — aucune application à installer, aucune connexion. S\'il touche ENTRÉE alors qu\'il est déjà pointé, l\'application l\'avertit et propose plutôt de signaler un pointage manqué.',
+'help.fixTitle':'Corriger un pointage erroné ou manquant',
+'help.fixDesc':'Allez dans <strong>Activité</strong>, trouvez le pointage et cliquez sur <em>Modifier</em> pour corriger l\'heure, ou <em>Supprimer</em> pour l\'effacer. Pour en ajouter un qui n\'a jamais été enregistré, utilisez <strong>+ Ajouter un pointage</strong>. Si l\'employé a signalé le problème lui-même, sa demande apparaît en haut de la page avec les boutons <em>Approuver</em>, <em>Modifier + Approuver</em> et <em>Refuser</em>. Chaque correction est inscrite au journal d\'audit à votre nom.',
+'help.toTitle':'Demandes de congé',
+'help.toDesc':'La page <strong>Congés</strong> regroupe les vacances, les congés de maladie et autres absences. Les employés ayant accès au portail font leurs demandes eux-mêmes et celles-ci arrivent ici avec le statut <em>En attente</em>; vous pouvez aussi ajouter une absence directement. Les congés approuvés apparaissent dans l\'horaire et au bas des rapports de paie, pour que les heures et les absences concordent sur la même période.',
+'help.schedTitle':'Créer un horaire',
+'help.schedDesc':'<strong>Horaires</strong> affiche une semaine à la fois : les employés en colonne, les jours en rangée. Cliquez sur un <em>+</em> dans une case pour ajouter un quart, ou sur un quart pour le modifier. La grille signale les conflits : elle indique les jours où un employé s\'est déclaré non disponible et affiche les congés approuvés avant que vous n\'assigniez quoi que ce soit. Les horaires sont un module complémentaire (14,95 $/mois sur tout forfait payant).',
+'help.portalTitle':'Donner à un employé l\'accès à ses heures',
+'help.portalDesc':'Le portail employé permet à votre personnel de consulter ses pointages, ses heures et son horaire, et de demander des congés — sans passer par un administrateur. Ouvrez <strong>Admin → Employés</strong>, modifiez l\'employé, activez le courriel et saisissez son adresse, puis utilisez <em>Envoyer l\'invitation</em>. Il choisit son mot de passe à partir du lien reçu. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès au même endroit.',
+'help.billTitle':'Forfaits, facturation et sièges supplémentaires',
+'help.billDesc':'Votre forfait détermine le nombre d\'employés, de sites et d\'administrateurs permis. Ouvrez le menu sous votre nom et choisissez <strong>Gérer la facturation</strong> pour changer de forfait, mettre à jour votre carte ou télécharger vos factures. S\'il vous manque seulement un peu d\'espace, vous pouvez ajouter des sièges employé ou admin à votre forfait actuel au lieu de passer au forfait supérieur.',
 'help.s1title':'Configurez votre compte',
 'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',

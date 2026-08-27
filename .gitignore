@@ -14,3 +14,4 @@ tools/sheet-*.png
 
 # Review gallery is a generated review aid, not source
 tools/review-gallery.html
+tools/verify-*.png
