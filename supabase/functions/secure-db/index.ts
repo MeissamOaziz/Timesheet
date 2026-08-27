@@ -19,6 +19,9 @@ const PROTECTED_TABLES = new Set([
   // These three were readable by any anonymous caller: shift schedules, holiday calendars and
   // staff availability for every tenant. Read-only, but still cross-tenant customer data.
   'availability', 'holidays', 'shifts',
+  // Holds the addresses payroll summaries get mailed to — must never be readable or writable
+  // across tenants, or one company could redirect another's hours to itself.
+  'report_recipients',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -209,7 +212,7 @@ async function validateWritePayload(
 }
 
 // Tables scoped to a tenant by their company_id column.
-const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off']);
+const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients']);
 
 // Ownership constraint to AND onto a read/update/delete filter for `table`. '' = not scoped here.
 function tenantScopeFilter(table: string, caller: Caller, owned: string[]): string {

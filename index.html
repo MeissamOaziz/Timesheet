@@ -522,6 +522,21 @@ body.role-resolved.role-admin [data-admin-only]{display:block;}
 .land-btn-primary:hover{opacity:.88;transform:translateY(-1px);}
 .land-btn-secondary{padding:14px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;}
 .land-btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+/* ── Payroll summary recipients (Reports page) ── */
+.recip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:22px;}
+.recip-head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px;}
+.recip-head h3{margin:0 0 4px;font-size:15px;font-weight:600;}
+.recip-head p{margin:0;font-size:12.5px;color:var(--text2);line-height:1.55;max-width:62ch;}
+.recip-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--border);
+  border-radius:10px;background:var(--surface2);margin-bottom:8px;flex-wrap:wrap;}
+.recip-row .recip-mail{font-size:13.5px;font-weight:600;word-break:break-all;}
+.recip-row .recip-meta{font-size:11.5px;color:var(--text2);}
+.recip-tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;
+  border-radius:20px;background:var(--accent-soft);color:var(--accent);}
+.recip-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.recip-empty{font-size:13px;color:var(--text2);padding:16px 2px;line-height:1.6;}
+@media(max-width:600px){.recip-actions{margin-left:0;width:100%;}}
+
 /* ── Help centre ──
    A searchable article list rather than a wall of prose: people arrive with a problem in their
    own words, so search is the primary control and browsing is the fallback. */
@@ -2503,6 +2518,22 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div id="reportTimeOffWrap" style="display:none"></div>
   <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
+
+  <!-- Who automatically receives the payroll summary when a period closes. Lives on the Reports
+       page because that's where an admin is already thinking about reports; the recipients
+       themselves need no PunchClock login. -->
+  <div class="recip-card" id="recipCard">
+    <div class="recip-head">
+      <div>
+        <h3 data-i18n="recip.title">Automatic payroll summary</h3>
+        <p data-i18n="recip.sub">When a pay period closes, everyone here is emailed one summary of all employees' hours, with a CSV to enter into payroll. They don't need a PunchClock login.</p>
+      </div>
+      <button class="btn-secondary" id="recipAddBtn" onclick="openRecipModal()" style="width:auto;padding:8px 15px;font-size:12.5px;white-space:nowrap">
+        <svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg><span data-i18n="recip.add">Add recipient</span>
+      </button>
+    </div>
+    <div id="recipList"></div>
+  </div>
 </div>
 
 <!-- ═══════════════ TIME OFF PAGE ═══════════════ -->
@@ -3374,6 +3405,33 @@ border-top:1px solid var(--border);margin:18px 0;}
         <button class="btn-secondary" onclick="closeModal('editPunchModal')">Cancel</button>
         <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="savePunchEdit()">Save Changes</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYROLL SUMMARY RECIPIENT MODAL -->
+<div class="modal-overlay" id="recipModal">
+  <div class="modal" style="max-width:480px">
+    <h3 data-i18n="recip.modalTitle">Add a payroll summary recipient</h3>
+    <div id="recipMsg"></div>
+    <div class="msg info" style="margin-bottom:14px" data-i18n="recip.modalNote">This address will receive every employee's hours for the period, plus a CSV. Only add people who should see the whole team's payroll data.</div>
+    <div class="form-group">
+      <label data-i18n="recip.email">Email address</label>
+      <input type="email" id="recipEmail" placeholder="accounting@yourcompany.com" onkeydown="if(event.key==='Enter')saveRecipient()">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label data-i18n="recip.label">Label <span style="color:var(--text3);font-weight:400" data-i18n="recip.optional">(optional)</span></label>
+        <input type="text" id="recipLabel" placeholder="Accountant" maxlength="40">
+      </div>
+      <div class="form-group">
+        <label data-i18n="recip.scope">Which hours?</label>
+        <select id="recipSite"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('recipModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" id="recipSaveBtn" onclick="saveRecipient()" style="width:auto;padding:9px 18px" data-i18n="recip.save">Add recipient</button>
     </div>
   </div>
 </div>
@@ -9080,6 +9138,144 @@ async function saveCompany(){
 }
 
 // ═══════════════════════════════════════════════════
+// PAYROLL SUMMARY RECIPIENTS
+// Addresses that get the whole team's hours emailed when a pay period closes — typically the
+// bookkeeper or accountant, who needs the numbers to run payroll but has no reason to hold a
+// PunchClock login. Sending is done by the send-period-summary function on its daily cron.
+// ═══════════════════════════════════════════════════
+let _recipients = [];
+
+function _recipCompanyId(){
+  // Recipients hang off a company. Follow the Reports company filter when it names one,
+  // otherwise fall back to the active context.
+  const sel = document.getElementById('reportCompany');
+  if (sel && sel.value && sel.value !== 'all') return sel.value;
+  return Ctx.get()?.co?.id || C.companies[0]?.id || null;
+}
+
+async function renderRecipients(){
+  const card = document.getElementById('recipCard');
+  const list = document.getElementById('recipList');
+  if (!card || !list) return;
+  // Managers don't own payroll distribution, and there's nothing to attach recipients to
+  // without a company.
+  const coId = _recipCompanyId();
+  if (isManager() || !coId){ card.style.display='none'; return; }
+  card.style.display='';
+
+  if (isDemo()){
+    _recipients = [];
+    list.innerHTML = `<div class="recip-empty">${t('recip.demo')||'Add your accountant here once you have an account — they will get the hours automatically every pay period.'}</div>`;
+    return;
+  }
+  try{
+    _recipients = await DB.all('report_recipients', `company_id=eq.${coId}&order=created_at.asc`) || [];
+  }catch(e){
+    list.innerHTML = `<div class="recip-empty" style="color:var(--red)">${esc(e.message)}</div>`;
+    return;
+  }
+  if (!_recipients.length){
+    list.innerHTML = `<div class="recip-empty">${t('recip.empty')||'No one yet. Add your accountant or bookkeeper and the summary goes out on its own when each period closes.'}</div>`;
+    return;
+  }
+  const siteName = id => C.sites.find(s=>s.id===id)?.name || '—';
+  list.innerHTML = _recipients.map(r=>{
+    const scope = r.site_id
+      ? `${t('recip.scopeSite')||'Site'}: ${esc(siteName(r.site_id))}`
+      : (t('recip.scopeAll')||'All sites');
+    return `<div class="recip-row">
+      <div>
+        <div class="recip-mail">${esc(r.email)}${r.label?` <span class="recip-tag">${esc(r.label)}</span>`:''}</div>
+        <div class="recip-meta">${scope}${r.active?'':' · '+(t('recip.paused')||'paused')}</div>
+      </div>
+      <div class="recip-actions">
+        <button class="btn-secondary" style="width:auto;padding:5px 11px;font-size:11.5px" data-recip-test="${r.id}">${t('recip.test')||'Send test'}</button>
+        <button class="btn-danger" style="padding:5px 11px;font-size:11.5px" data-recip-del="${r.id}">${t('recip.remove')||'Remove'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRecipModal(){
+  if (isDemo()){ showToast(t('demo.readOnly'),'info'); return; }
+  const coId=_recipCompanyId();
+  if(!coId){ showToast(t('recip.noCompany')||'Create a company first.','error'); return; }
+  document.getElementById('recipEmail').value='';
+  document.getElementById('recipLabel').value='';
+  document.getElementById('recipMsg').innerHTML='';
+  const sites=C.sites.filter(s=>s.company_id===coId);
+  document.getElementById('recipSite').innerHTML =
+    `<option value="">${t('recip.scopeAll')||'All sites'}</option>` +
+    sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  applyAllTranslations();
+  openModal('recipModal');
+}
+
+async function saveRecipient(){
+  const email=(document.getElementById('recipEmail').value||'').trim().toLowerCase();
+  const label=(document.getElementById('recipLabel').value||'').trim();
+  const siteId=document.getElementById('recipSite').value||null;
+  const coId=_recipCompanyId();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    showMsg('recipMsg', t('recip.badEmail')||'Enter a valid email address.','error'); return;
+  }
+  if(_recipients.some(r=>r.email.toLowerCase()===email && (r.site_id||null)===siteId)){
+    showMsg('recipMsg', t('recip.dupe')||'That address is already on the list for this scope.','error'); return;
+  }
+  const btn=document.getElementById('recipSaveBtn');
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='⏳';
+  try{
+    const sess=Sess.get();
+    await DB.insert('report_recipients',{
+      company_id:coId, site_id:siteId, email, label:label||null, created_by:sess?.id||null
+    });
+    closeModal('recipModal');
+    await renderRecipients();
+    showToast((t('recip.added')||'{email} will get the payroll summary each period.').replace('{email}',email),'success');
+  }catch(e){
+    showMsg('recipMsg', e.message,'error');
+  }finally{ btn.disabled=false; btn.textContent=orig; }
+}
+
+async function removeRecipient(id){
+  const r=_recipients.find(x=>x.id===id); if(!r) return;
+  if(!confirm((t('recip.confirmRemove')||'Stop sending the payroll summary to {email}?').replace('{email}',r.email))) return;
+  try{
+    await DB.del('report_recipients',`id=eq.${id}`);
+    await renderRecipients();
+    showToast(t('recip.removed')||'Recipient removed.','success');
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+// Sends the real email for the most recently closed period, so a typo is caught now rather
+// than on payroll day.
+async function testRecipient(id){
+  const r=_recipients.find(x=>x.id===id); if(!r) return;
+  const btn=document.querySelector(`[data-recip-test="${id}"]`);
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='⏳'; }
+  try{
+    const res=await fetch(`${SUPA_URL}/functions/v1/send-period-summary`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+      body:JSON.stringify({test_recipients:true, company_id:_recipCompanyId()})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||data.success===false) throw new Error((data.errors&&data.errors[0])||data.error||'Send failed');
+    showToast((t('recip.testSent')||'Test summary sent for {start} to {end}.')
+      .replace('{start}',data.period?.start||'').replace('{end}',data.period?.end||''),'success');
+  }catch(e){ showToast(e.message,'error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=orig; } }
+}
+
+document.addEventListener('click', function(e){
+  const del=e.target.closest('[data-recip-del]');
+  if(del){ removeRecipient(del.getAttribute('data-recip-del')); return; }
+  const test=e.target.closest('[data-recip-test]');
+  if(test){ testRecipient(test.getAttribute('data-recip-test')); }
+});
+
+// ═══════════════════════════════════════════════════
 // REPORTS
 // ═══════════════════════════════════════════════════
 async function loadReportsPage(){
@@ -9092,6 +9288,7 @@ async function loadReportsPage(){
   if(managerSiteIds!==null)_repCos=_repCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
   rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_repCos.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
   onReportCompanyChange();
+  renderRecipients();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
   applyAllTranslations();
   // Re-translate period dropdown options (browser ignores data-i18n on <option> in some cases)
@@ -11762,6 +11959,23 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'recip.title':'Automatic payroll summary',
+'recip.sub':'When a pay period closes, everyone here is emailed one summary of all employees’ hours, with a CSV to enter into payroll. They don’t need a PunchClock login.',
+'recip.add':'Add recipient',
+'recip.modalTitle':'Add a payroll summary recipient',
+'recip.modalNote':'This address will receive every employee’s hours for the period, plus a CSV. Only add people who should see the whole team’s payroll data.',
+'recip.email':'Email address','recip.label':'Label','recip.optional':'(optional)','recip.scope':'Which hours?',
+'recip.save':'Add recipient','recip.remove':'Remove','recip.test':'Send test','recip.paused':'paused',
+'recip.scopeAll':'All sites','recip.scopeSite':'Site',
+'recip.empty':'No one yet. Add your accountant or bookkeeper and the summary goes out on its own when each period closes.',
+'recip.demo':'Add your accountant here once you have an account — they will get the hours automatically every pay period.',
+'recip.badEmail':'Enter a valid email address.',
+'recip.dupe':'That address is already on the list for this scope.',
+'recip.noCompany':'Create a company first.',
+'recip.added':'{email} will get the payroll summary each period.',
+'recip.removed':'Recipient removed.',
+'recip.confirmRemove':'Stop sending the payroll summary to {email}?',
+'recip.testSent':'Test summary sent for {start} to {end}.',
 'sched.enterPin':'Enter your 4-digit PIN to confirm',
 'sched.confirmPin':'Confirm',
 'sched.emailSaveNote':'This email will be saved to your profile so your admin can send you reports too.',
@@ -12459,6 +12673,23 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'recip.title':'Sommaire de paie automatique',
+'recip.sub':'À la fin de chaque période de paie, ces personnes reçoivent un seul sommaire des heures de tous les employés, avec un CSV à entrer dans la paie. Aucun compte PunchClock requis.',
+'recip.add':'Ajouter un destinataire',
+'recip.modalTitle':'Ajouter un destinataire du sommaire de paie',
+'recip.modalNote':'Cette adresse recevra les heures de tous les employés pour la période, ainsi qu’un CSV. N’ajoutez que des personnes autorisées à voir les données de paie de toute l’équipe.',
+'recip.email':'Adresse courriel','recip.label':'Étiquette','recip.optional':'(optionnel)','recip.scope':'Quelles heures?',
+'recip.save':'Ajouter','recip.remove':'Retirer','recip.test':'Envoyer un test','recip.paused':'en pause',
+'recip.scopeAll':'Tous les sites','recip.scopeSite':'Site',
+'recip.empty':'Personne pour l’instant. Ajoutez votre comptable ou teneur de livres et le sommaire partira automatiquement à la fin de chaque période.',
+'recip.demo':'Ajoutez votre comptable ici une fois votre compte créé — il recevra les heures automatiquement à chaque période de paie.',
+'recip.badEmail':'Entrez une adresse courriel valide.',
+'recip.dupe':'Cette adresse est déjà dans la liste pour cette portée.',
+'recip.noCompany':'Créez d’abord une compagnie.',
+'recip.added':'{email} recevra le sommaire de paie à chaque période.',
+'recip.removed':'Destinataire retiré.',
+'recip.confirmRemove':'Cesser d’envoyer le sommaire de paie à {email}?',
+'recip.testSent':'Sommaire test envoyé pour la période du {start} au {end}.',
 'sched.enterPin':'Entrez votre NIP à 4 chiffres pour confirmer',
 'sched.confirmPin':'Confirmer',
 'sched.emailSaveNote':'Ce courriel sera enregistré à votre profil afin que votre administrateur puisse aussi vous envoyer des rapports.',
@@ -13261,12 +13492,25 @@ function setLang(lang,scope){
   });
 }
 
+// Returns the key itself when a string is missing, which means the common `t('x')||'fallback'`
+// idiom never reaches its fallback — a mistyped key silently ships as raw text like
+// "demo.readonly" in the UI. Nothing here can fix that safely at runtime (a real key and a typo
+// are indistinguishable), so instead we make it loud in the console the first time each miss
+// happens, and list them via __missingI18n() so they get caught before release.
+var _i18nMissing = {};
 function t(key,lang){
   var l=lang||_appLang||'en';
   if(!TRANSLATIONS)return key;
   var dict=TRANSLATIONS[l]||TRANSLATIONS.en||{};
-  return dict[key]||(TRANSLATIONS.en&&TRANSLATIONS.en[key])||key;
+  var hit=dict[key]||(TRANSLATIONS.en&&TRANSLATIONS.en[key]);
+  if(hit) return hit;
+  if(!_i18nMissing[key]){
+    _i18nMissing[key]=true;
+    if(typeof console!=='undefined'&&console.warn) console.warn('[punchclock] missing translation key:',key);
+  }
+  return key;
 }
+function __missingI18n(){ return Object.keys(_i18nMissing).sort(); }
 function tp(key){return t(key,_punchLang);}
 
 function applyAllTranslations(){

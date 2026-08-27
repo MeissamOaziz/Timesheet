@@ -223,27 +223,222 @@ function buildEmailHtml(params) {
 </body>
 </html>`;
 }
-async function sendEmail(to, subject, html) {
+async function sendEmail(to, subject, html, attachments) {
+  const payload = {
+    from: 'PunchClock Pro <noreply@punchclock.ca>',
+    to: [
+      to
+    ],
+    subject,
+    html
+  };
+  if (attachments && attachments.length) payload.attachments = attachments;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      from: 'PunchClock Pro <noreply@punchclock.ca>',
-      to: [
-        to
-      ],
-      subject,
-      html
-    })
+    body: JSON.stringify(payload)
   });
   if (!res.ok) {
     const err = await res.text();
     throw new Error(`Resend error for ${to}: ${err}`);
   }
 }
+// ── Consolidated payroll summary ─────────────────────────────────────────────
+// The per-employee email above tells one person their own hours. Whoever actually runs payroll
+// needs the opposite shape: every employee's totals for the closed period, on one page, in an
+// order they can type straight into a payroll system. Overtime is split out because it's paid
+// at a different rate, and a CSV rides along so the numbers don't have to be retyped at all.
+
+// Pair IN/OUT punches into worked hours. Mirrors the pairing the per-employee email and the
+// in-app report use, so an accountant and an employee never see different numbers for the same
+// week. An unclosed IN is skipped and surfaced separately as a warning rather than guessed at.
+function totalsForPunches(punches, roundMin) {
+  const round = (iso) => {
+    const ms = new Date(iso).getTime();
+    if (!roundMin) return ms;
+    const step = roundMin * 60000;
+    return Math.round(ms / step) * step;
+  };
+  const byDay = {};
+  for (const p of punches) (byDay[p.punch_date] = byDay[p.punch_date] || []).push(p);
+
+  let regular = 0, overtime = 0, openPunches = 0, days = 0;
+  for (const date of Object.keys(byDay)) {
+    const list = byDay[date].slice().sort((a, b) => new Date(a.punched_at) - new Date(b.punched_at));
+    let dayHours = 0, openIn = null;
+    for (const p of list) {
+      if (p.type === 'IN') openIn = p;
+      else if (p.type === 'OUT' && openIn) {
+        dayHours += Math.max(0, (round(p.punched_at) - round(openIn.punched_at)) / 3600000);
+        openIn = null;
+      }
+    }
+    if (openIn) openPunches++;
+    if (dayHours > 0) days++;
+    // Daily overtime past 8h, matching the threshold used elsewhere in the app.
+    const ot = Math.max(0, dayHours - 8);
+    overtime += ot;
+    regular += dayHours - ot;
+  }
+  return { regular, overtime, total: regular + overtime, openPunches, days };
+}
+
+function csvEscape(v) {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function buildPayrollCsv(rows, periodStart, periodEnd) {
+  const head = ['Employee', 'Employee code', 'Site', 'Days worked', 'Regular hours', 'Overtime hours', 'Total hours', 'Period start', 'Period end'];
+  const body = rows.map((r) => [
+    r.name, r.code || '', r.site || '', r.days,
+    r.regular.toFixed(2), r.overtime.toFixed(2), r.total.toFixed(2),
+    periodStart, periodEnd
+  ].map(csvEscape).join(','));
+  return [head.join(','), ...body].join('\r\n');
+}
+
+function buildPayrollSummaryHtml(params) {
+  const { companyName, scopeLabel, periodStart, periodEnd, freqLabel, rows, trackOvertime } = params;
+  const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
+  const warn = rows.filter((r) => r.openPunches > 0);
+  const fmt = (h) => formatHours(h);
+
+  const otHead = trackOvertime ? '<th style="padding:9px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600">Overtime</th>' : '';
+  const rowsHtml = rows.map((r, i) => `
+    <tr style="background:${i % 2 ? '#f8fafc' : '#ffffff'}">
+      <td style="padding:9px 12px;font-size:13px;color:#0f172a">${r.name}${r.code ? ` <span style="color:#94a3b8">${r.code}</span>` : ''}</td>
+      <td style="padding:9px 12px;font-size:13px;color:#64748b">${r.site || '—'}</td>
+      <td style="padding:9px 12px;font-size:13px;color:#64748b;text-align:right">${r.days}</td>
+      <td style="padding:9px 12px;font-size:13px;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums">${fmt(r.regular)}</td>
+      ${trackOvertime ? `<td style="padding:9px 12px;font-size:13px;text-align:right;color:${r.overtime > 0 ? '#b45309' : '#94a3b8'};font-variant-numeric:tabular-nums">${r.overtime > 0 ? fmt(r.overtime) : '—'}</td>` : ''}
+      <td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums">${fmt(r.total)}</td>
+    </tr>`).join('');
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 14px"><tr><td align="center">
+<table width="680" cellpadding="0" cellspacing="0" style="max-width:680px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 22px rgba(15,23,42,.08)">
+  <tr><td style="padding:20px 26px;border-bottom:1px solid #e2e8f0">
+    <div style="font-size:18px;font-weight:700;color:#4f8ef7">&#9201; PunchClock Pro</div>
+  </td></tr>
+  <tr><td style="padding:24px 26px 8px">
+    <h1 style="margin:0 0 6px;font-size:20px;color:#0f172a">${freqLabel} payroll summary</h1>
+    <p style="margin:0 0 4px;font-size:14px;color:#475569">${companyName}${scopeLabel ? ` · ${scopeLabel}` : ''}</p>
+    <p style="margin:0 0 18px;font-size:14px;color:#475569">Period <strong style="color:#0f172a">${periodStart}</strong> to <strong style="color:#0f172a">${periodEnd}</strong> (now closed)</p>
+  </td></tr>
+  <tr><td style="padding:0 26px">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;border-collapse:separate;border-spacing:0;overflow:hidden">
+      <thead><tr style="background:#f1f5f9">
+        <th style="padding:9px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600">Employee</th>
+        <th style="padding:9px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600">Site</th>
+        <th style="padding:9px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600">Days</th>
+        <th style="padding:9px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600">Regular</th>
+        ${otHead}
+        <th style="padding:9px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600">Total</th>
+      </tr></thead>
+      <tbody>${rowsHtml || `<tr><td colspan="6" style="padding:22px;text-align:center;font-size:13px;color:#94a3b8">No hours recorded in this period.</td></tr>`}</tbody>
+      ${rows.length ? `<tfoot><tr style="background:#f8fafc;border-top:2px solid #e2e8f0">
+        <td style="padding:11px 12px;font-size:13px;font-weight:700;color:#0f172a" colspan="2">${rows.length} employee${rows.length === 1 ? '' : 's'}</td>
+        <td style="padding:11px 12px;font-size:13px;font-weight:700;color:#0f172a;text-align:right">${sum('days')}</td>
+        <td style="padding:11px 12px;font-size:13px;font-weight:700;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums">${fmt(sum('regular'))}</td>
+        ${trackOvertime ? `<td style="padding:11px 12px;font-size:13px;font-weight:700;color:#b45309;text-align:right;font-variant-numeric:tabular-nums">${fmt(sum('overtime'))}</td>` : ''}
+        <td style="padding:11px 12px;font-size:14px;font-weight:700;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums">${fmt(sum('total'))}</td>
+      </tr></tfoot>` : ''}
+    </table>
+  </td></tr>
+  ${warn.length ? `<tr><td style="padding:16px 26px 0">
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;line-height:1.6">
+      <strong>Check before you run payroll.</strong> ${warn.length} employee${warn.length === 1 ? '' : 's'} had a clock-in with no matching clock-out
+      (${warn.map((w) => w.name).join(', ')}). Those shifts are not counted above until an admin corrects them in PunchClock.
+    </div></td></tr>` : ''}
+  <tr><td style="padding:18px 26px 26px">
+    <p style="margin:0;font-size:12.5px;color:#64748b;line-height:1.65">
+      The attached CSV has the same figures, ready to import or copy into payroll.
+      Hours are paired clock-in to clock-out${params.roundMin ? `, rounded to the nearest ${params.roundMin} minutes` : ''}${trackOvertime ? ', with anything past 8 hours in a day counted as overtime' : ''}.
+    </p>
+  </td></tr>
+  <tr><td style="padding:14px 26px;border-top:1px solid #e2e8f0;background:#f8fafc">
+    <p style="margin:0;font-size:11.5px;color:#94a3b8;line-height:1.6">
+      You receive this because an administrator at ${companyName} added you as a payroll report recipient in PunchClock Pro.
+      Ask them to remove you if you'd rather not get it.
+    </p>
+  </td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+// Build the rows once per scope, then mail them to everyone in that scope.
+async function buildSummaryRows(company, siteId, startStr, endStr) {
+  let q = supabase.from('employees').select('id,name,emp_code,site_id').eq('company_id', company.id).eq('active', true);
+  if (siteId) q = q.eq('site_id', siteId);
+  const { data: emps, error } = await q;
+  if (error) throw error;
+
+  const { data: sites } = await supabase.from('sites').select('id,name').eq('company_id', company.id);
+  const siteName = (id) => (sites || []).find((s) => s.id === id)?.name || null;
+
+  const rows = [];
+  for (const e of emps || []) {
+    const { data: punches, error: pErr } = await supabase.from('punches')
+      .select('type,punch_date,punched_at').eq('emp_id', e.id)
+      .gte('punch_date', startStr).lte('punch_date', endStr)
+      .order('punched_at', { ascending: true });
+    if (pErr) throw pErr;
+    const tot = totalsForPunches(punches || [], company.punch_rounding || 0);
+    // Someone with no punches at all in the period is noise on a payroll sheet; someone with an
+    // unclosed punch still needs to be seen, so they stay in.
+    if (tot.total === 0 && tot.openPunches === 0) continue;
+    rows.push({ name: e.name, code: e.emp_code, site: siteName(e.site_id), ...tot });
+  }
+  rows.sort((a, b) => a.name.localeCompare(b.name));
+  return rows;
+}
+
+async function sendPayrollSummaries(company, startStr, endStr, result) {
+  const { data: recips, error } = await supabase.from('report_recipients')
+    .select('id,email,site_id,label').eq('company_id', company.id).eq('active', true);
+  if (error) throw error;
+  if (!recips || !recips.length) return;
+
+  const freqLabel = { weekly: 'Weekly', biweekly: 'Bi-weekly', monthly: 'Monthly' }[company.payroll_frequency || 'biweekly'] || 'Period';
+  const { data: sites } = await supabase.from('sites').select('id,name').eq('company_id', company.id);
+
+  // One set of figures per distinct scope, so ten recipients on the same scope cost one query.
+  const scopes = [...new Set(recips.map((r) => r.site_id || ''))];
+  for (const scope of scopes) {
+    const siteId = scope || null;
+    const scopeLabel = siteId ? ((sites || []).find((s) => s.id === siteId)?.name || null) : null;
+    let rows;
+    try {
+      rows = await buildSummaryRows(company, siteId, startStr, endStr);
+    } catch (e) {
+      result.errors.push(`summary rows (${scopeLabel || 'all sites'}): ${e.message}`);
+      continue;
+    }
+    const html = buildPayrollSummaryHtml({
+      companyName: company.name, scopeLabel, periodStart: startStr, periodEnd: endStr,
+      freqLabel, rows, trackOvertime: company.track_overtime !== false, roundMin: company.punch_rounding || 0
+    });
+    const csv = buildPayrollCsv(rows, startStr, endStr);
+    const attachments = [{
+      filename: `payroll-hours-${startStr}-to-${endStr}.csv`,
+      content: btoa(unescape(encodeURIComponent(csv)))
+    }];
+    const subject = `${freqLabel} payroll summary — ${company.name}${scopeLabel ? ` (${scopeLabel})` : ''} · ${startStr} to ${endStr}`;
+    for (const r of recips.filter((x) => (x.site_id || '') === scope)) {
+      try {
+        await sendEmail(r.email, subject, html, attachments);
+        result.recipientsSent = (result.recipientsSent || 0) + 1;
+      } catch (e) {
+        result.errors.push(`recipient ${r.email}: ${e.message}`);
+      }
+    }
+  }
+}
+
 async function sendToEmployee(emp, startStr, endStr, frequency, companyName, roundMin) {
   const { data: punches, error: pErr } = await supabase.from('punches').select('type,punch_date,punch_time,punched_at,site_name').eq('emp_id', emp.id).gte('punch_date', startStr).lte('punch_date', endStr).order('punched_at', {
     ascending: true
@@ -288,6 +483,28 @@ Deno.serve(async (req)=>{
   try {
     if (req.method === 'POST') {
       const body = await req.json().catch(()=>({}));
+      // "Send a test now" from the recipients panel: same email the cron would send, for the
+      // period the admin picked, so a typo'd address gets caught before payroll day.
+      if (body.test_recipients && body.company_id) {
+        const { data: co, error: cErr } = await supabase.from('companies').select('*').eq('id', body.company_id).single();
+        if (cErr || !co) throw new Error('Company not found');
+        const info = getPeriodInfo(addDays(new Date(new Date().setHours(0, 0, 0, 0)), 0), co.week_start || 'monday', co.payroll_frequency || 'biweekly');
+        // The cron only fires on the first day of a period; a test can run any day, so fall back
+        // to the period that ended yesterday.
+        const endStr = body.end_date || toDateStr(info ? info.periodEnd : addDays(today, -1));
+        const startStr = body.start_date || toDateStr(info ? info.periodStart
+          : addDays(addDays(today, -1), -((co.payroll_frequency === 'weekly' ? 7 : 14) - 1)));
+        const result = { company: co.name, sent: 0, skipped: 0, errors: [], recipientsSent: 0 };
+        await sendPayrollSummaries(co, startStr, endStr, result);
+        return new Response(JSON.stringify({
+          success: result.errors.length === 0,
+          test: true,
+          period: { start: startStr, end: endStr },
+          ...result
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       if (body.manual && body.emp_id) {
         const { data: emp, error: empErr } = await supabase.from('employees').select('*').eq('id', body.emp_id).single();
         if (empErr || !emp) throw new Error('Employee not found');
@@ -338,6 +555,13 @@ Deno.serve(async (req)=>{
         } catch (e) {
           companyResult.errors.push(`${emp.name}: ${e.message}`);
         }
+      }
+      // Whoever runs payroll gets the consolidated version. Kept outside the employee loop and
+      // in its own try so a failure here can't stop employees getting their own summaries.
+      try {
+        await sendPayrollSummaries(company, startStr, endStr, companyResult);
+      } catch (e) {
+        companyResult.errors.push(`payroll recipients: ${e.message}`);
       }
       results.push(companyResult);
     }
