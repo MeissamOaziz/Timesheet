@@ -3272,7 +3272,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="pin-err" id="pinErrorMsg"></div>
     </div>
     <div class="modal-footer" style="justify-content:center;margin-top:14px">
-      <button class="btn-secondary" onclick="cancelPinEntry()">Cancel</button>
+      <button class="btn-secondary" onclick="cancelPinEntry()" data-i18n="modal.cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -4459,7 +4459,12 @@ function _demoFetch(method,table,opts){
     if(table==='punches')  return Promise.resolve((C.punches||[]).slice());
     return Promise.resolve([]);
   }
-  return Promise.resolve(null);
+  // Any other write. This used to resolve(null), so "Add Site"/"Add Employee" in the demo
+  // closed the modal and silently did nothing — it read as a broken product rather than a
+  // sandbox. Say so, and turn it into the signup prompt.
+  const msg = t('demo.readOnly')||'This is a demo — changes are not saved. Create a free account to set up your own team.';
+  showToast(msg,'info');
+  return Promise.reject(new Error(msg));
 }
 
 // ═══════════════════════════════════════════════════
@@ -5126,7 +5131,7 @@ async function doSetInvitePassword(){
     await refreshCache();
     navigate('admin');
     showToast(t('coAdmin.accountActivated')||'Account activated! Welcome to PunchClock Pro. 🎉','success');
-  }catch(e){showMsg('setpassMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('setpassMsg',e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -5195,7 +5200,7 @@ async function doAcceptInvite(){
       if(titleEl)titleEl.textContent=`Welcome to the Manager portal, ${firstName}!`;
       openModal('managerWelcomeModal');
     }
-  }catch(e){showMsg('acceptInviteMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('acceptInviteMsg',e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -5252,7 +5257,7 @@ async function submitSurvey(){
     document.getElementById('surveyForm').style.display='none';
     document.getElementById('surveyThanks').style.display='';
   }catch(e){
-    showMsg('surveyMsg','Error: '+e.message,'error');
+    showMsg('surveyMsg',e.message,'error');
     if(btn){btn.disabled=false;btn.textContent=orig;}
   }
 }
@@ -5300,12 +5305,12 @@ function renderSurveyCard(s){
 }
 async function setSurveyStatus(id,status){
   const tok=Sess.get()?.token;
-  try{const r=await DB.rpc('admin_set_survey_status',{p_token:tok,p_id:id,p_status:status});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not update.','error');}}catch(e){showToast('Error: '+e.message,'error');}
+  try{const r=await DB.rpc('admin_set_survey_status',{p_token:tok,p_id:id,p_status:status});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not update.','error');}}catch(e){showToast(e.message,'error');}
 }
 async function deleteSurveyResponse(id){
   if(!confirm('Delete this feedback permanently?'))return;
   const tok=Sess.get()?.token;
-  try{const r=await DB.rpc('admin_delete_survey',{p_token:tok,p_id:id});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not delete.','error');}}catch(e){showToast('Error: '+e.message,'error');}
+  try{const r=await DB.rpc('admin_delete_survey',{p_token:tok,p_id:id});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not delete.','error');}}catch(e){showToast(e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -5421,7 +5426,7 @@ async function doRegister(){
     document.getElementById('regStep2').style.display = '';
     showMsg('registerMsg',t('msg.codeSent'),'success');
 
-  }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('registerMsg',e.message,'error');}
 }
 
 async function resendVerificationCode(){
@@ -5484,7 +5489,7 @@ async function doVerify(){
     showMsg('registerMsg',t('msg.accountCreated'),'success');
     // Land on the Dashboard, where the guided setup checklist picks up from here.
     setTimeout(()=>{ navigate('dashboard'); },1000);
-  }catch(e){showMsg('registerMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('registerMsg',e.message,'error');}
 }
 
 function logout(){
@@ -6208,7 +6213,9 @@ function requestPunch(type){
   if(type==='OUT'&&status==='OUT'){ showDoublePunchWarning(empId,'OUT'); return; }
   pinState={empId,punchType:type,entered:'',purpose:'punch'};
   document.getElementById('pinEmpName').textContent=emp.name;
-  document.getElementById('pinActionLabel').textContent=`Enter PIN to clock ${type}`;
+  document.getElementById('pinActionLabel').textContent=
+    (type==='IN' ? (t('pin.toClockIn')||'Enter PIN to clock IN')
+                 : (t('pin.toClockOut')||'Enter PIN to clock OUT'));
   document.getElementById('pinActionLabel').style.color=type==='IN'?'var(--green)':'var(--red)';
   document.getElementById('pinErrorMsg').textContent='';
   resetPinDots();openModal('pinModal');
@@ -6223,7 +6230,7 @@ function validatePin(){
   const emp=C.employees.find(e=>e.id===pinState.empId);
   if(!emp||pinState.entered!==emp.pin){
     for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
-    document.getElementById('pinErrorMsg').textContent='Incorrect PIN. Try again.';
+    document.getElementById('pinErrorMsg').textContent=t('pin.incorrect')||'Incorrect PIN. Try again.';
     setTimeout(()=>{pinState.entered='';resetPinDots();},900);return;
   }
   const{empId,punchType,purpose}=pinState;
@@ -6724,7 +6731,7 @@ async function submitMissedPunch(){
   _pendingMissedPunchReport = { emp, site, co, type, punch_date, fullTime, notes };
   pinState = {empId, punchType:null, entered:'', purpose:'missedPunchReport'};
   document.getElementById('pinEmpName').textContent = emp.name;
-  document.getElementById('pinActionLabel').textContent = 'Enter your PIN to confirm this report';
+  document.getElementById('pinActionLabel').textContent = t('pin.confirmReport')||'Enter your PIN to confirm this report';
   document.getElementById('pinActionLabel').style.color = 'var(--amber)';
   document.getElementById('pinErrorMsg').textContent = '';
   resetPinDots();
@@ -6942,7 +6949,7 @@ async function bulkToggleActive(activate){
     clearEmpSelection();
     renderEmployees();
     showToast(`${ids.length} employee(s) ${activate?'activated':'deactivated'}.`,'success');
-  }catch(e){showToast('Error: '+e.message,'error');}
+  }catch(e){showToast(e.message,'error');}
 }
 
 async function bulkDelete(){
@@ -6975,7 +6982,7 @@ async function bulkDelete(){
           :`Note: ${linkedMgrCount} deleted employee(s) had an active Manager account. Manage those under the Admins tab.`
         ,'info'),600);
     }
-  }catch(e){showToast('Error: '+e.message,'error');}
+  }catch(e){showToast(e.message,'error');}
 }
 
 async function bulkSendReport(){
@@ -7192,7 +7199,7 @@ function openSiteManagersModal(siteId){
       <span style="font-size:11px;color:var(--text3);margin-left:auto">${a.email}</span>
     </label>`).join('');
     openModal('siteManagersModal');
-  }).catch(e=>alert('Error: '+e.message));
+  }).catch(e=>alert(e.message));
 }
 
 async function saveSiteManagers(){
@@ -7205,7 +7212,7 @@ async function saveSiteManagers(){
     closeModal('siteManagersModal');
     showToast(t('site.managersUpdated')||'Manager assignments updated','success');
     await renderSiteManagerPills(siteId);
-  }catch(e){showMsg('siteManagersMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('siteManagersMsg',e.message,'error');}
 }
 
 async function renderSiteManagerPills(siteId){
@@ -7267,7 +7274,7 @@ async function sendPromotionInvite(){
     closeModal('promoteToManagerModal');
     showToast(`✓ ${t('emp.promoteInviteSent')||'Invitation sent to'} ${email}. ${t('emp.promoteInviteNote')||"They'll appear as a manager once they accept."}`, 'success');
     if(_promoteEmpId){ editEmployee(_promoteEmpId); _promoteEmpId=null; }
-  }catch(e){showMsg('promoteToManagerMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('promoteToManagerMsg',e.message,'error');}
 }
 
 // ─── CO-ADMIN MANAGEMENT (for regular admins) ─────────────────────────────
@@ -7345,7 +7352,7 @@ async function saveInvite(){
     }catch(emailErr){console.warn('Invite email failed:',emailErr);}
     showMsg('inviteMsg',`✓ Invitation sent to ${email}`,'success');
     setTimeout(()=>closeModal('inviteModal'),2200);
-  }catch(e){showMsg('inviteMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('inviteMsg',e.message,'error');}
 }
 
 
@@ -7466,7 +7473,7 @@ async function openEditCoAdminModal(id){
 
     toggleEditCoAdminSites();
     openModal('editCoAdminModal');
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert(e.message);}
 }
 
 async function saveEditCoAdmin(){
@@ -7491,7 +7498,7 @@ async function saveEditCoAdmin(){
     }
     closeModal('editCoAdminModal');
     await loadCoAdmins();
-  }catch(e){showMsg('editCoAdminMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('editCoAdminMsg',e.message,'error');}
 }
 
 async function deleteCoAdmin(id,name){
@@ -7500,7 +7507,7 @@ async function deleteCoAdmin(id,name){
     await DB.del('admins',`id=eq.${id}`);
     await loadCoAdmins();
     showToast(`✓ ${name} removed.`,'success');
-  }catch(e){showToast('Error: '+e.message,'error');}
+  }catch(e){showToast(e.message,'error');}
 }
 
 async function resendCoAdminInvite(id, email, name) {
@@ -7535,7 +7542,7 @@ async function resendCoAdminInvite(id, email, name) {
     });
     showToast(`✓ ${t('coAdmin.inviteResent')||'Invitation resent to'} ${email}`, 'success');
   } catch(e) {
-    showToast('Error: '+e.message, 'error');
+    showToast(e.message,'error');
   }
 }
 
@@ -7548,7 +7555,7 @@ async function cancelInvitation(invId, email){
     await loadCoAdmins();
     showToast(`✓ ${t('coAdmin.cancelled')||'Invitation cancelled.'} (${email})`,'success');
     return true;
-  }catch(e){ showToast('Error: '+e.message,'error'); return false; }
+  }catch(e){ showToast(e.message,'error'); return false; }
 }
 
 // ─── END CO-ADMIN MANAGEMENT ──────────────────────────────────────────────
@@ -7890,7 +7897,7 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
     });
     showToast(`✓ Punch approved for ${req.emp_name}`,'success');
     await renderMissedPunchRequests();
-  }catch(e){showToast('Error: '+e.message,'error');}
+  }catch(e){showToast(e.message,'error');}
 }
 
 async function denyMissedPunch(id){
@@ -7906,7 +7913,7 @@ async function denyMissedPunch(id){
     });
     showToast(`Request denied for ${req.emp_name}`,'info');
     await renderMissedPunchRequests();
-  }catch(e){showToast('Error: '+e.message,'error');}
+  }catch(e){showToast(e.message,'error');}
 }
 
 // ─── END MISSED PUNCH REQUESTS ────────────────────────────────────────────────
@@ -7947,7 +7954,7 @@ async function approveJoinRequest(reqId, adminId){
     }
     showToast(t('coAdmin.approved')||'Co-admin approved successfully.');
     if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert(e.message);}
 }
 
 async function denyJoinRequest(reqId, adminId){
@@ -7979,7 +7986,7 @@ async function denyJoinRequest(reqId, adminId){
     }
     if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
     showToast('Access request denied.','info');
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){alert(e.message);}
 }
 
 function openCreateAdminModal(){
@@ -8009,7 +8016,7 @@ async function saveCreateAdmin(){
     closeModal('createAdminModal');
     await renderAdmins();
     showMsg('adminSub','','');
-  }catch(e){showMsg('createAdminMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('createAdminMsg',e.message,'error');}
 }
 
 function openEditAdminModal(id){
@@ -8027,7 +8034,7 @@ function openEditAdminModal(id){
     // Prevent editing super admin role if it's the main super admin email
     document.getElementById('editAdminRole').disabled = a.email===SUPER_ADMIN_EMAIL;
     openModal('editAdminModal');
-  }).catch(e=>alert('Error: '+e.message));
+  }).catch(e=>alert(e.message));
 }
 
 async function saveEditAdmin(){
@@ -8041,7 +8048,7 @@ async function saveEditAdmin(){
     await DB.update('admins',`id=eq.${id}`,{name,role,plan,status});
     closeModal('editAdminModal');
     await renderAdmins();
-  }catch(e){showMsg('editAdminMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('editAdminMsg',e.message,'error');}
 }
 
 // ---- Employee modal ----
@@ -8200,7 +8207,7 @@ async function handlePromoteButtonClick(){
       } else {
         showToast('Error: '+((r&&r.error)||'demote failed'),'error');
       }
-    }catch(e){ showToast('Error: '+e.message,'error'); }
+    }catch(e){ showToast(e.message,'error'); }
   } else if(state==='pending_invite'){
     const ok = await cancelInvitation(btn.dataset.invId, btn.dataset.invEmail||'');
     if(ok) await refreshRoleButton(document.getElementById('editEmpUid').value);
@@ -8396,7 +8403,7 @@ async function revokeEmpPortalAccess(empId) {
     if(emp) loadEmpPortalStatus(emp);
     showToast(t('emp.portalRevoked')||'Portal access revoked.','success');
   } catch(e) {
-    showToast('Error: '+e.message);
+    showToast(e.message,'error');
   }
 }
 
@@ -8427,11 +8434,11 @@ async function saveEmployee(opts){
   const send_report=document.getElementById('emailReportSection').style.display!=='none';
   const email=document.getElementById('empEmail').value.trim()||null;
   const editId=document.getElementById('editEmpUid').value;
-  if(!name){showMsg('empModalMsg','Name is required.','error');return null;}
-  if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg','PIN must be exactly 4 digits.','error');return null;}
-  if(!editId&&!pin){showMsg('empModalMsg','A 4-digit PIN is required for new employees.','error');return null;}
-  if(send_report&&!email){showMsg('empModalMsg','Please enter an email address for the report, or turn off the email report toggle.','error');return null;}
-  if(send_report&&email&&!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('empModalMsg','Please enter a valid email address.','error');return null;}
+  if(!name){showMsg('empModalMsg',t('val.nameRequired')||'Name is required.','error');return null;}
+  if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg',t('val.pinDigits')||'PIN must be exactly 4 digits.','error');return null;}
+  if(!editId&&!pin){showMsg('empModalMsg',t('val.pinRequired')||'A 4-digit PIN is required for new employees.','error');return null;}
+  if(send_report&&!email){showMsg('empModalMsg',t('val.emailForReport')||'Please enter an email address for the report, or turn off the email report toggle.','error');return null;}
+  if(send_report&&email&&!/^[^@]+@[^@]+\.[^@]+$/.test(email)){showMsg('empModalMsg',t('val.emailInvalid')||'Please enter a valid email address.','error');return null;}
   try{
     // Upload photo if new file selected
     const photoFile = document.getElementById('empPhotoInput').files[0];
@@ -8446,7 +8453,7 @@ async function saveEmployee(opts){
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd};
       savedRow=(idx!==-1)?C.employees[idx]:{id:editId,name,email};
     }else{
-      if(!ctx){showMsg('empModalMsg','No active company.','error');return null;}
+      if(!ctx){showMsg('empModalMsg',t('val.noCompany')||'No active company.','error');return null;}
       // Hard enforce limit — re-check even if UI was bypassed
       const {ok,current,max,plan}=canAddEmployee(ctx.co);
       if(!ok){
@@ -8465,7 +8472,7 @@ async function saveEmployee(opts){
     }
     closeModal('addEmpModal');
     return savedRow;
-  }catch(e){showMsg('empModalMsg','Error: '+e.message,'error');return null;}
+  }catch(e){showMsg('empModalMsg',e.message,'error');return null;}
 }
 
 async function toggleEmp(id){
@@ -8516,7 +8523,7 @@ async function saveSite(){
   const name=document.getElementById('siteName').value.trim();
   const description=document.getElementById('siteDesc').value.trim();
   const editId=document.getElementById('editSiteUid').value;
-  if(!name){showMsg('siteModalMsg','Site name is required.','error');return;}
+  if(!name){showMsg('siteModalMsg',t('val.siteNameRequired')||'Site name is required.','error');return;}
 
   // Collect geo fields
   const _latRaw = document.getElementById('siteGeoLat').value;
@@ -8533,7 +8540,7 @@ async function saveSite(){
       const s=C.sites.find(s=>s.id===editId);
       if(s)Object.assign(s,{name,description,geo_lat,geo_lng,geo_radius_m,geo_strict});
     }else{
-      if(!ctx){showMsg('siteModalMsg','No active company.','error');return;}
+      if(!ctx){showMsg('siteModalMsg',t('val.noCompany')||'No active company.','error');return;}
       const r=await DB.insert('sites',{company_id:ctx.co.id,...payload});
       if(r?.[0])C.sites.push(r[0]);
     }
@@ -8560,7 +8567,7 @@ async function saveSite(){
       return;
     }
     renderSitesAdmin();populateEmpSiteFilter();
-  }catch(e){showMsg('siteModalMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('siteModalMsg',e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -8832,7 +8839,7 @@ async function saveCompany(){
       return;
     }
     closeModal('addCompanyModal');loadSitesPage();
-  }catch(e){showMsg('companyModalMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('companyModalMsg',e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -8993,7 +9000,7 @@ async function generateReport(){
       // Client-side guard in case DB returns unexpected rows
       if(!isSuperAdmin())punches=(punches||[]).filter(p=>_rptCoIds.includes(p.company_id));
     }
-  }catch(e){alert('Error: '+e.message);return;}
+  }catch(e){alert(e.message);return;}
 
   // Group employees by site for organised output
   // Build site groups in order
@@ -9382,7 +9389,7 @@ async function bulkDeletePunches(){
     );
     await loadActivityPage();
   } catch(e){
-    showToast('Error: '+e.message,'error');
+    showToast(e.message,'error');
   }
 }
 
@@ -9430,7 +9437,7 @@ async function confirmBulkReassignSite(){
     );
     await loadActivityPage();
   } catch(e){
-    showToast('Error: '+e.message,'error');
+    showToast(e.message,'error');
   }
 }
 
@@ -9502,7 +9509,7 @@ async function savePunchEdit(){
     const idx=C.punches.findIndex(p=>p.id===id);
     if(idx!==-1)C.punches[idx]={...C.punches[idx],type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true};
     closeModal('editPunchModal');loadActivityPage();
-  }catch(e){showMsg('editPunchMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('editPunchMsg',e.message,'error');}
 }
 
 function confirmDeletePunch(id){
@@ -9592,7 +9599,7 @@ async function saveAddPunch(){
     const r=await DB.insert('punches',payload);
     if(r?.[0])C.punches.push(r[0]);
     closeModal('addPunchModal');loadActivityPage();
-  }catch(e){showMsg('addPunchMsg','Error: '+e.message,'error');}
+  }catch(e){showMsg('addPunchMsg',e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -9866,7 +9873,7 @@ async function saveTimeOff(){
     closeModal('timeOffModal');
     await refreshTimeOff(); renderTimeOff();
     showToast(t('to.saved')||'Time off saved.','success');
-  }catch(e){ showMsg('timeOffMsg','Error: '+e.message,'error'); }
+  }catch(e){ showMsg('timeOffMsg',e.message,'error'); }
 }
 
 async function reviewTimeOff(id,decision){
@@ -9876,7 +9883,7 @@ async function reviewTimeOff(id,decision){
     await refreshTimeOff(); renderTimeOff();
     await refreshPendingCounts();   // re-fetch, so the banner count reflects the decision
     showToast(decision==='approved'?(t('to.okApproved')||'Time off approved.'):(t('to.okDenied')||'Request denied.'),'success');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+  }catch(e){ showToast(e.message,'error'); }
 }
 
 async function deleteTimeOff(id){
@@ -9887,7 +9894,7 @@ async function deleteTimeOff(id){
     await DB.del('time_off',`id=eq.${id}`);
     await refreshTimeOff(); renderTimeOff();
     showToast(t('to.deleted')||'Time off deleted.','success');
-  }catch(e){ showToast('Error: '+e.message,'error'); }
+  }catch(e){ showToast(e.message,'error'); }
 }
 
 // ═══════════════════════════════════════════════════
@@ -10404,7 +10411,7 @@ function clearKioskDevice(){
     const siteId = window._currentKioskSiteId;
     if(siteId) openKioskShortcut(siteId);
   } catch(e){
-    showToast('Error: '+e.message, 'error');
+    showToast(e.message,'error');
   }
 }
 
@@ -10754,7 +10761,7 @@ async function deleteHoliday(id) {
     await DB.del('holidays', `id=eq.${id}`);
     await renderHolidayList();
     await renderScheduleGrid();
-  } catch(e) { showToast('Error: '+e.message); }
+  } catch(e) { showToast(e.message,'error'); }
 }
 
 function dismissHolidayReminder() {
@@ -10888,7 +10895,7 @@ async function deleteAdminAvail(id) {
     await renderAdminAvailList();
     await renderScheduleGrid();
     showToast(t('sched.availRemoved')||'Removed.','success');
-  } catch(e) { showToast('Error: '+e.message); }
+  } catch(e) { showToast(e.message,'error'); }
 }
 
 // ═══════════════════════════════════════════════
@@ -11280,7 +11287,7 @@ async function deleteShift() {
     await renderScheduleGrid();
     showToast(t('sched.shiftDeleted')||'Shift deleted.','success');
   } catch(e) {
-    showToast('Error: '+e.message);
+    showToast(e.message,'error');
   }
 }
 
@@ -11291,7 +11298,7 @@ async function deleteShiftById(shiftId) {
     await renderScheduleGrid();
     showToast(t('sched.shiftDeleted')||'Shift deleted.','success');
   } catch(e) {
-    showToast('Error: '+e.message);
+    showToast(e.message,'error');
   }
 }
 
@@ -11680,6 +11687,9 @@ en:{
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
 'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
+'pin.toClockIn':'Enter PIN to clock IN','pin.toClockOut':'Enter PIN to clock OUT','pin.incorrect':'Incorrect PIN. Try again.','pin.confirmReport':'Enter your PIN to confirm this report',
+'val.nameRequired':'Name is required.','val.pinDigits':'PIN must be exactly 4 digits.','val.pinRequired':'A 4-digit PIN is required for new employees.','val.siteNameRequired':'Site name is required.','val.noCompany':'No active company.','val.emailForReport':'Please enter an email address for the report, or turn off the email report toggle.','val.emailInvalid':'Please enter a valid email address.',
+'demo.readOnly':'This is a demo — changes are not saved. Create a free account to set up your own team.',
 'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
 'gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Manual punch editing is available on paid plans.',
 'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another','sendReport.bulkCount':'{n} employees','sendReport.bulkSent':'✓ {n} reports sent',
@@ -12350,6 +12360,9 @@ fr:{
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
 'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
+'pin.toClockIn':'Entrez le NIP pour pointer l\'ENTRÉE','pin.toClockOut':'Entrez le NIP pour pointer la SORTIE','pin.incorrect':'NIP incorrect. Réessayez.','pin.confirmReport':'Entrez votre NIP pour confirmer ce signalement',
+'val.nameRequired':'Le nom est obligatoire.','val.pinDigits':'Le NIP doit contenir exactement 4 chiffres.','val.pinRequired':'Un NIP à 4 chiffres est obligatoire pour un nouvel employé.','val.siteNameRequired':'Le nom du site est obligatoire.','val.noCompany':'Aucune compagnie active.','val.emailForReport':'Veuillez entrer une adresse courriel pour le rapport, ou désactiver l\'envoi par courriel.','val.emailInvalid':'Veuillez entrer une adresse courriel valide.',
+'demo.readOnly':'Ceci est une démo — les changements ne sont pas enregistrés. Créez un compte gratuit pour configurer votre propre équipe.',
 'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',
 'gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':'La correction manuelle des pointages est offerte sur les forfaits payants.',
 'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre','sendReport.bulkCount':'{n} employés','sendReport.bulkSent':'✓ {n} rapports envoyés',
