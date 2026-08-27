@@ -3499,7 +3499,42 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const STRIPE_PK='pk_live_51T90YEIhFqyQNAEWaa6dhdav8LKCMgKb48xgnG00YP8vjy0iP0bRUIxZY0EHjuSJqfnS8CbrVbgrknREXwZCjgeA009y7vglwt';
 const EDGE_URL='https://uziwymrwaeojhqaagqcm.supabase.co/functions/v1/stripe-handler';
 
-async function supaFetch(method,table,opts={}){
+// Turn a raw backend response body into something a shop owner can act on. Roughly 45 call
+// sites render `'Error: '+e.message` straight into the UI, so without this a PostgREST payload
+// like {"code":"PGRST303","message":"JWT issued at future"} is what the customer reads.
+// The raw text is kept on the Error (._raw) and logged, so debugging loses nothing.
+function friendlyError(raw, status){
+  const rawStr = typeof raw==='string' ? raw : JSON.stringify(raw||'');
+  let code='', message='';
+  try{ const j=JSON.parse(rawStr); code=j.code||''; message=j.message||j.error||j.error_description||''; }
+  catch(_){ message=rawStr; }
+  if(rawStr) console.error('[punchclock] backend error', {status, code, raw: rawStr});
+
+  // Transient platform faults — the user did nothing wrong and a retry usually works.
+  if(code==='PGRST303'||/JWT issued at future|JWT expired/i.test(message))
+    return t('err.temporary')||'Temporary connection problem. Please try again in a moment.';
+  if(status===401||status===403||code==='42501')
+    return t('err.notAllowed')||'You do not have permission to do that. Try logging out and back in.';
+  if(code==='23505')
+    return t('err.duplicate')||'That already exists. Please use a different value.';
+  if(code==='23503')
+    return t('err.linked')||'This item is still linked to other records and cannot be removed.';
+  if(status===0||status>=500||/failed to fetch|networkerror/i.test(message))
+    return t('err.server')||'The server is temporarily unavailable. Please try again shortly.';
+  // Anything unmapped: show a clean sentence rather than a JSON blob.
+  if(!message || /^[\s{[]/.test(message)) return t('err.generic')||'Something went wrong. Please try again.';
+  return message;
+}
+
+// PostgREST occasionally rejects a perfectly valid token with PGRST303 ("JWT issued at future")
+// when its clock drifts behind the auth layer's — a known Supabase platform fault. It clears on
+// its own, so absorb one retry rather than surfacing a failure the user can't act on.
+function _isTransientAuthFault(rawStr){
+  return /PGRST303|JWT issued at future/i.test(rawStr||'');
+}
+const _sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+async function supaFetch(method,table,opts={},_retried){
   // Demo mode is fully sandboxed — no request ever leaves the browser.
   if(window._demoMode) return _demoFetch(method,table,opts);
   const controller=new AbortController();
@@ -3524,16 +3559,23 @@ async function supaFetch(method,table,opts={}){
     clearTimeout(timer);
     if(!res.ok){
       const text=await res.text();
+      // Transient clock-skew rejection — retry once before bothering the user.
+      if(_isTransientAuthFault(text) && !_retried){
+        await _sleep(1200);
+        return supaFetch(method,table,opts,true);
+      }
       // A 401 while a session exists means the token expired/was revoked → force clean re-login.
       // Also nudge a service-worker update check: if this client is stale (predates the current
       // login mechanism) and a newer one is available, it self-heals via controllerchange reload.
-      if(res.status===401 && Sess.get()){
+      // PGRST303 also arrives as a 401 but is a server clock fault, not an expired session —
+      // don't log the user out for it.
+      if(res.status===401 && Sess.get() && !_isTransientAuthFault(text)){
         _healStaleClient();
         Sess.clear();
         try{ document.body.classList.remove('role-admin','role-manager'); updateNav(); showLanding(); }catch(_){}
         showToast(t('msg.sessionExpired')||'Your session has expired. Please log in again.','error');
       }
-      throw new Error(text||res.statusText);
+      const err=new Error(friendlyError(text,res.status)); err._raw=text; throw err;
     }
     const text=await res.text();
     return text?JSON.parse(text):null;
@@ -3555,13 +3597,22 @@ const DB={
   insert:(t,b)=>supaFetch('POST',t,{body:b}),
   update:(t,f,b)=>supaFetch('PATCH',t,{filter:f,body:b}),
   del:(t,f)=>supaFetch('DELETE',t,{filter:f}),
-  rpc:async(fn,params)=>{
+  rpc:async(fn,params,_retried)=>{
     const res=await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`,{
       method:'POST',
       headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json'},
       body:JSON.stringify(params)
     });
-    if(!res.ok)throw new Error(await res.text());
+    if(!res.ok){
+      const text=await res.text();
+      // Same transient clock-skew fault as supaFetch — this is the path login uses, and it is
+      // where customers saw a raw PGRST303 payload on the sign-in screen.
+      if(_isTransientAuthFault(text) && !_retried){
+        await _sleep(1200);
+        return DB.rpc(fn,params,true);
+      }
+      const err=new Error(friendlyError(text,res.status)); err._raw=text; throw err;
+    }
     const text=await res.text();
     return text?JSON.parse(text):null;
   },
@@ -3658,7 +3709,7 @@ function guardedExport(fmt) {
     return;
   }
   if(!isCurrentCompanyPaid()){
-    showPlanGate('Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','reports-upgrade-hint');
+    showPlanGate(t('gate.exports')||'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','reports-upgrade-hint');
     return;
   }
   exportReport(fmt);
@@ -3666,7 +3717,7 @@ function guardedExport(fmt) {
 
 function guardedAddPunch() {
   if(!isCurrentCompanyPaid()){
-    showPlanGate('Manual punch editing is available on paid plans.','activity-upgrade-hint');
+    showPlanGate(t('gate.addPunch')||'Manual punch editing is available on paid plans.','activity-upgrade-hint');
     return;
   }
   openAddPunchModal();
@@ -3679,9 +3730,11 @@ function showPlanGate(msg, hintId) {
   div.id = hintId;
   div.className = 'upgrade-wall';
   div.style.margin = '12px 0 0';
-  div.innerHTML = `<h3>🔒 Paid Plan Required</h3><p>${msg}</p>
-    <button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px" onclick="navigate('companies')">View Plans</button>
-    <button onclick="document.getElementById('${hintId}').remove()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-left:10px">Dismiss</button>`;
+  // "View Plans" used to navigate('companies'), which navigate() silently redirects to the
+  // Sites page — a page with no plans on it. Open the real plans modal instead.
+  div.innerHTML = `<h3>🔒 ${t('gate.title')||'Paid Plan Required'}</h3><p>${msg}</p>
+    <button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px" onclick="showUpgradePlans()">${t('gate.viewPlans')||'View Plans'}</button>
+    <button onclick="document.getElementById('${hintId}').remove()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-left:10px">${t('gate.dismiss')||'Dismiss'}</button>`;
   // Insert after export buttons or add punch button
   const refEl = document.querySelector('.export-btns') || document.getElementById('addPunchBtn');
   if(refEl) refEl.insertAdjacentElement('afterend', div);
@@ -5525,7 +5578,10 @@ async function startSchedulingAddonCheckout(){
   const s=Sess.get();
   if(!s){navigate('login');return;}
   if(!s.plan||s.plan==='free'){
+    // Don't dead-end on a toast — the add-on needs a paid plan, so take them straight
+    // to the plans they'd have to buy anyway.
     showToast(t('addon.paidOnly')||'Scheduling is available on paid plans only. Please upgrade first.');
+    showUpgradePlans();
     return;
   }
   if(s.scheduling_addon){
@@ -11624,6 +11680,8 @@ en:{
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
 'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
+'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
+'gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Manual punch editing is available on paid plans.',
 'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another','sendReport.bulkCount':'{n} employees','sendReport.bulkSent':'✓ {n} reports sent',
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'admin.pinShow':'Show','admin.pinNone':'None',
@@ -12292,6 +12350,8 @@ fr:{
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
 'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
+'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',
+'gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':'La correction manuelle des pointages est offerte sur les forfaits payants.',
 'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre','sendReport.bulkCount':'{n} employés','sendReport.bulkSent':'✓ {n} rapports envoyés',
 "admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Défini',
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
