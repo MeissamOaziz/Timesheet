@@ -4675,6 +4675,38 @@ function _demoFetch(method,table,opts){
 // Replaces the old hard-block modal: users can explore the product immediately
 // and complete setup at their own pace. Auto-hides once everything is done.
 // ═══════════════════════════════════════════════════
+// Whether any tablet has ever connected, for the checklist's tablet step. Deliberately not
+// part of the main data load: it is one tiny query, only while setup is unfinished, and the
+// checklist hides for good once it is. null = not looked yet.
+let _kioskSeen = null, _kioskSeenPending = false;
+async function _checkKioskSeen(){
+  if(_kioskSeenPending) return;
+  if(window._demoMode){ _kioskSeen = false; return; }
+  const ids=(C.sites||[]).map(s=>s.id);
+  if(!ids.length){ _kioskSeen = false; return; }
+  _kioskSeenPending = true;
+  try{
+    const rows = await DB.all('kiosk_devices', `site_id=in.(${ids.join(',')})&revoked=eq.false&select=id&limit=1`);
+    _kioskSeen = !!(rows && rows.length);
+  }catch(_){
+    // A failed lookup is not evidence the tablet went away. Forcing false here would un-tick
+    // a step the owner had genuinely finished and put the checklist back to nagging about it.
+    if(_kioskSeen === null) _kioskSeen = false;
+  }
+  _kioskSeenPending = false;
+  renderSetupChecklist();
+}
+
+// The wizard needs a site. With one site that choice is obvious; with several the owner has to
+// pick, so send them to the list rather than guessing which tablet they meant.
+function setupTabletFromChecklist(){
+  const sites = C.sites || [];
+  if(!sites.length){ showToast(t('setup.needSite')||'Add a site first — the tablet belongs to one.','info'); return; }
+  if(sites.length === 1){ openKioskShortcut(sites[0].id); return; }
+  navigate('sites');
+  showToast(t('setup.pickSite')||'Pick the site this tablet is for, then choose Kiosk Shortcut.','info');
+}
+
 function _checklistDismissed(){try{return localStorage.getItem('pc_setup_done')==='1';}catch(_){return false;}}
 function dismissSetupChecklist(){try{localStorage.setItem('pc_setup_done','1');}catch(_){}
   const el=document.getElementById('setupChecklist'); if(el) el.style.display='none';}
@@ -4688,12 +4720,24 @@ function renderSetupChecklist(){
   const emps=(C.employees||[]).filter(e=>e.active!==false);
   const hasEmployees=emps.length>0;
   const hasPunch=(C.punches||[]).length>0;
-  const steps=[
-    {done:hasCompany, title:t('setup.s1')||'Create your company', desc:t('setup.s1d')||'Your company details and payroll settings.', cta:t('setup.s1c')||'Add company', fn:'openAddCompanyModal()'},
-    {done:hasSite,    title:t('setup.s2')||'Add your first site', desc:t('setup.s2d')||'A location where your team clocks in — a store, office, or job site.', cta:t('setup.s2c')||'Add site', fn:"navigate('sites');setTimeout(openAddSiteModal,150)"},
-    {done:hasEmployees,title:t('setup.s3')||'Add your employees', desc:t('setup.s3d')||'Each one gets a 4-digit PIN to clock in with.', cta:t('setup.s3c')||'Add employees', fn:"navigate('admin');setTimeout(openAddEmpModal,150)"},
-    {done:hasPunch,   title:t('setup.s4')||'Try your first clock-in', desc:t('setup.s4d')||'Open the punch page and clock someone in — it appears here instantly.', cta:t('setup.s4c')||'Open punch page', fn:"navigate('punch')"},
-  ];
+
+  // Setting up the tablet is the step the funnel actually dies on — accounts finish sites and
+  // employees, then never deploy a terminal and never punch. It gets its own line so it is a
+  // task the owner can see they haven't done, not a thing they were supposed to infer.
+  if(_kioskSeen===null) _checkKioskSeen();
+  const hasKiosk=_kioskSeen===true;
+
+  const steps=[];
+  // Registration creates the company, so for almost everyone this line would render
+  // pre-ticked — a dead first step that makes the list look longer than the work.
+  // It only appears for the accounts that genuinely lack one.
+  if(!hasCompany) steps.push(
+    {done:false, title:t('setup.s1')||'Create your company', desc:t('setup.s1d')||'Your company details and payroll settings.', cta:t('setup.s1c')||'Add company', fn:'openAddCompanyModal()'});
+  steps.push(
+    {done:hasSite,     title:t('setup.s2')||'Add your first site', desc:t('setup.s2d')||'A location where your team clocks in — a store, office, or job site.', cta:t('setup.s2c')||'Add site', fn:"navigate('sites');setTimeout(openAddSiteModal,150)"},
+    {done:hasEmployees,title:t('setup.s3')||'Add your employees', desc:t('setup.s3d')||'Each one gets a 4-digit PIN to clock in with. You can print the PINs as cut-out cards to hand out.', cta:t('setup.s3c')||'Add employees', fn:"navigate('admin');setTimeout(openAddEmpModal,150)"},
+    {done:hasKiosk,    title:t('setup.s5')||'Set up your punch tablet', desc:t('setup.s5d')||'Put a tablet or spare phone at your entrance and scan one QR code. This is what your team clocks in on.', cta:t('setup.s5c')||'Set up tablet', fn:'setupTabletFromChecklist()', disabled:!hasSite},
+    {done:hasPunch,    title:t('setup.s4')||'Try your first clock-in', desc:t('setup.s4d')||'Open the punch page and clock someone in — it appears here instantly.', cta:t('setup.s4c')||'Open punch page', fn:"navigate('punch')"});
   const doneCount=steps.filter(s=>s.done).length;
   if(doneCount===steps.length){ host.style.display='none'; return; }   // fully set up → hide for good
   const next=steps.find(s=>!s.done);
@@ -4706,7 +4750,7 @@ function renderSetupChecklist(){
         <div style="font-size:14px;font-weight:600;color:${s.done?'var(--text3)':'var(--text)'};${s.done?'text-decoration:line-through':''}">${s.title}</div>
         ${s.done?'':`<div style="font-size:12.5px;color:var(--text2);margin-top:2px;line-height:1.5">${s.desc}</div>`}
       </div>
-      ${s.done?'':`<button class="${isNext?'btn-primary':'btn-secondary'}" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0" onclick="${s.fn}">${s.cta}</button>`}
+      ${s.done?'':`<button class="${isNext&&!s.disabled?'btn-primary':'btn-secondary'}" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0${s.disabled?';opacity:.45;cursor:not-allowed':''}" ${s.disabled?'disabled':`onclick="${s.fn}"`}>${s.cta}</button>`}
     </div>`;
   };
   host.style.display='';
@@ -4715,7 +4759,7 @@ function renderSetupChecklist(){
       <div style="font-size:15px;font-weight:700">${t('setup.title')||'Finish setting up — you\'re almost there'}</div>
       <button onclick="dismissSetupChecklist()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;flex-shrink:0">${t('setup.hide')||'Hide'}</button>
     </div>
-    <div style="font-size:12.5px;color:var(--text2);margin-bottom:12px">${(t('setup.progress')||'Step {done} of {total}').replace('{done}',doneCount).replace('{total}',steps.length)}</div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:12px">${(t('setup.progress')||'{done} of {total} done').replace('{done}',doneCount).replace('{total}',steps.length)}</div>
     <div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${pct}%;background:var(--accent);transition:width .3s"></div></div>
     ${steps.map(row).join('')}
   </div>`;
@@ -4726,7 +4770,12 @@ function renderSetupChecklist(){
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
   renderSetupChecklist();
-  maybeStartTour();   // first login only; no-ops afterwards
+  // The tour used to auto-open here, 400ms after the checklist rendered, and land a modal
+  // squarely on top of it — two onboarding systems competing on the same screen, with the
+  // one the owner could act on hidden behind the one they could only read. The checklist
+  // wins because its steps are the actual work. The tour stays available on demand from
+  // the profile menu.
+  _markTourAvailable();
   const host=document.getElementById('dashboardContent');
   if(!host) return;
   const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -4941,11 +4990,10 @@ function _tourSteps(){
 }
 
 function _tourSeen(){try{return localStorage.getItem('pc_tour_v1')==='1';}catch(_){return true;}}
-function maybeStartTour(){
-  const sess=Sess.get();
-  // Owners only: co-admins and managers join an account that is already set up.
-  if(!sess||isSuperAdmin()||sess.parent_admin_id||isManager()||_tourSeen()) return;
-  setTimeout(()=>startTour(),400);
+// The tour is opt-in now. Stamping it seen on the first dashboard means the profile menu's
+// "Take the tour" is the only way in, rather than it ambushing the owner on a later visit.
+function _markTourAvailable(){
+  try{ localStorage.setItem('pc_tour_v1','1'); }catch(_){}
 }
 function startTour(){ _tourStep=0; renderTour(); openModal('tourModal'); }
 function tourGo(d){
@@ -10956,6 +11004,9 @@ function renderKioskTokenStep(site){
 function closeKioskWizard(){
   if(_kwPoll){ clearInterval(_kwPoll); _kwPoll=null; }
   closeModal('kioskShortcutModal');
+  // A tablet may have connected while the wizard was open — re-check so the setup checklist
+  // ticks its tablet step instead of still nagging about work the owner just did.
+  if(typeof _checkKioskSeen==='function') _checkKioskSeen();
 }
 
 async function fetchKioskDevices(siteId){
@@ -12519,6 +12570,10 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'setup.s5':'Set up your punch tablet','setup.s5c':'Set up tablet',
+'setup.s5d':'Put a tablet or spare phone at your entrance and scan one QR code. This is what your team clocks in on.',
+'setup.needSite':'Add a site first — the tablet belongs to one.',
+'setup.pickSite':'Pick the site this tablet is for, then choose Kiosk Shortcut.',
 'pin.print':'PIN cards','pin.printHint':'Print a cut-out card for each employee shown, with their PIN and how to clock in.',
 'pin.printNone':'No employees to print.','pin.sheetTitle':'Clock-in PIN cards','pin.sheetCount':'employees',
 'pin.sheetNote':'Cut along the dashed lines and hand each card to the employee in private. Treat PINs like passwords.',
@@ -12572,10 +12627,10 @@ en:{
 'common.cancel':'Cancel',
 'nav.clockInOut':'Clock In/Out','nav.dashboard':'Dashboard','nav.admin':'Admin','nav.reports':'Reports',
 'dash.title':'Dashboard','dash.subtitle':'Your team at a glance','dash.refresh':'↻ Refresh','dash.clockedIn':'Clocked in now','dash.hoursToday':'Hours today','dash.hoursWeek':'Hours this week','dash.activeEmps':'Active employees','dash.currentlyIn':'Currently clocked in','dash.recentActivity':'Recent activity','dash.since':'since','dash.noneIn':'Nobody is clocked in right now.','dash.noActivity':'No recent activity.','dash.noSites':'No sites to show yet. Add a site to see your dashboard.',
-'setup.title':'Finish setting up — you\'re almost there','setup.hide':'Hide','setup.progress':'Step {done} of {total}',
+'setup.title':'Finish setting up — you\'re almost there','setup.hide':'Hide','setup.progress':'{done} of {total} done',
 'setup.s1':'Create your company','setup.s1d':'Your company details and payroll settings.','setup.s1c':'Add company',
 'setup.s2':'Add your first site','setup.s2d':'A location where your team clocks in — a store, office, or job site.','setup.s2c':'Add site',
-'setup.s3':'Add your employees','setup.s3d':'Each one gets a 4-digit PIN to clock in with.','setup.s3c':'Add employees',
+'setup.s3':'Add your employees','setup.s3d':'Each one gets a 4-digit PIN to clock in with. You can print the PINs as cut-out cards to hand out.','setup.s3c':'Add employees',
 'setup.s4':'Try your first clock-in','setup.s4d':'Open the punch page and clock someone in — it appears here instantly.','setup.s4c':'Open punch page','ob.later':'I\'ll do this later',
 'dash.emptyTitle':'Your dashboard lights up once your team clocks in','dash.emptyDesc':'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.',
 'land.ctaDemo':'▶ See a live demo — no signup','demo.banner':'🎬 Demo mode — sample data, nothing is saved.','demo.cta':'Create my free account','demo.exit':'Exit demo','demo.started':'Demo mode — this is sample data. Nothing is saved.',
@@ -13262,6 +13317,10 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'setup.s5':'Configurez votre tablette de pointage','setup.s5c':'Configurer la tablette',
+'setup.s5d':'Placez une tablette ou un téléphone à votre entrée et scannez un code QR. C’est là que votre équipe pointera.',
+'setup.needSite':'Ajoutez d’abord un site — la tablette appartient à un site.',
+'setup.pickSite':'Choisissez le site de cette tablette, puis « Raccourci kiosque ».',
 'pin.print':'Cartes NIP','pin.printHint':'Imprimez une carte à découper pour chaque employé affiché, avec son NIP et la marche à suivre.',
 'pin.printNone':'Aucun employé à imprimer.','pin.sheetTitle':'Cartes NIP de pointage','pin.sheetCount':'employés',
 'pin.sheetNote':'Découpez le long des pointillés et remettez chaque carte à l’employé en privé. Traitez les NIP comme des mots de passe.',
@@ -13315,10 +13374,10 @@ fr:{
 'common.cancel':'Annuler',
 'nav.clockInOut':'Entrée/Sortie','nav.dashboard':'Tableau de bord','nav.admin':'Admin','nav.reports':'Rapports',
 'dash.title':'Tableau de bord','dash.subtitle':'Votre équipe en un coup d\'œil','dash.refresh':'↻ Actualiser','dash.clockedIn':'Pointés en ce moment','dash.hoursToday':'Heures aujourd\'hui','dash.hoursWeek':'Heures cette semaine','dash.activeEmps':'Employés actifs','dash.currentlyIn':'Actuellement pointés','dash.recentActivity':'Activité récente','dash.since':'depuis','dash.noneIn':'Personne n\'est pointé en ce moment.','dash.noActivity':'Aucune activité récente.','dash.noSites':'Aucun site à afficher. Ajoutez un site pour voir votre tableau de bord.',
-'setup.title':'Terminez la configuration — vous y êtes presque','setup.hide':'Masquer','setup.progress':'Étape {done} sur {total}',
+'setup.title':'Terminez la configuration — vous y êtes presque','setup.hide':'Masquer','setup.progress':'{done} sur {total} terminées',
 'setup.s1':'Créez votre compagnie','setup.s1d':'Les détails de votre compagnie et les paramètres de paie.','setup.s1c':'Ajouter',
 'setup.s2':'Ajoutez votre premier site','setup.s2d':'Un lieu où votre équipe pointe — magasin, bureau ou chantier.','setup.s2c':'Ajouter un site',
-'setup.s3':'Ajoutez vos employés','setup.s3d':'Chacun reçoit un NIP à 4 chiffres pour pointer.','setup.s3c':'Ajouter des employés',
+'setup.s3':'Ajoutez vos employés','setup.s3d':'Chacun reçoit un NIP à 4 chiffres pour pointer. Vous pouvez imprimer les NIP en cartes à découper.','setup.s3c':'Ajouter des employés',
 'setup.s4':'Essayez un premier pointage','setup.s4d':'Ouvrez la page de pointage et pointez quelqu\'un — ça s\'affiche ici instantanément.','setup.s4c':'Page de pointage','ob.later':'Je le ferai plus tard',
 'dash.emptyTitle':'Votre tableau de bord s\'anime dès que votre équipe pointe','dash.emptyDesc':'Ajoutez un site et quelques employés, et vous verrez les pointages en direct, les heures et l\'activité ici même.',
 'land.ctaDemo':'▶ Voir une démo — sans inscription','demo.banner':'🎬 Mode démo — données d\'exemple, rien n\'est enregistré.','demo.cta':'Créer mon compte gratuit','demo.exit':'Quitter la démo','demo.started':'Mode démo — ce sont des données d\'exemple. Rien n\'est enregistré.',
