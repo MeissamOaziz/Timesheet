@@ -14,12 +14,12 @@ create table if not exists kiosk_devices (
   user_agent  text,
   first_seen  timestamptz not null default now(),
   last_seen   timestamptz not null default now(),
-  revoked     boolean not null default false,
-  unique (site_id, device_id)
+  revoked     boolean not null default false
 );
 
-create index if not exists kiosk_devices_site_idx    on kiosk_devices (site_id, revoked, last_seen desc);
-create index if not exists kiosk_devices_company_idx on kiosk_devices (company_id);
+-- One row per tablet per site; the check-in RPC upserts on this.
+create unique index if not exists kiosk_devices_site_device_uniq on kiosk_devices (site_id, device_id);
+create index if not exists kiosk_devices_site_idx on kiosk_devices (site_id, revoked, last_seen desc);
 
 -- Project convention: RLS on with zero policies. Nothing reaches this table except through
 -- secure-db (service role, tenant-scoped) or the SECURITY DEFINER check-in below.
