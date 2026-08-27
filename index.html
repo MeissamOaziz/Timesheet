@@ -2093,75 +2093,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <hr class="divider">
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
-        <div class="form-row">
-          <div class="form-group"><label data-i18n="reg.companyAddress">Corporate Address <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="text" id="regAddress" placeholder="123 Main St, City"></div>
-          <div class="form-group"><label data-i18n="reg.companyPhone">Company Phone <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="text" id="regPhone" placeholder="+1 (555) 000-0000"></div>
-        </div>
-        <div class="form-group">
-          <label data-i18n="reg.industry">Industry</label>
-          <select id="regIndustry">
-            <option value="" data-i18n="reg.ind.select">— Select industry —</option>
-            <option value="retail" data-i18n="reg.ind.retail">Retail</option>
-            <option value="restaurants" data-i18n="reg.ind.restaurants">Restaurants &amp; Food Service</option>
-            <option value="healthcare" data-i18n="reg.ind.healthcare">Healthcare</option>
-            <option value="construction" data-i18n="reg.ind.construction">Construction</option>
-            <option value="hospitality" data-i18n="reg.ind.hospitality">Hospitality &amp; Hotels</option>
-            <option value="transportation" data-i18n="reg.ind.transportation">Transportation &amp; Logistics</option>
-            <option value="manufacturing" data-i18n="reg.ind.manufacturing">Manufacturing</option>
-            <option value="technology" data-i18n="reg.ind.technology">Technology</option>
-            <option value="education" data-i18n="reg.ind.education">Education</option>
-            <option value="professional" data-i18n="reg.ind.professional">Professional Services</option>
-            <option value="nonprofit" data-i18n="reg.ind.nonprofit">Non-Profit</option>
-            <option value="other" data-i18n="reg.ind.other">Other</option>
-          </select>
-        </div>
-        <hr class="divider" style="margin:14px 0">
-        <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.payrollSettings">Payroll Settings</p>
-        <div class="form-row">
-          <div class="form-group">
-            <label data-i18n="modal.weekStartsOn">Week Starts On</label>
-            <select id="regWeekStart">
-              <option value="monday" data-i18n="modal.monday">Monday</option>
-              <option value="sunday" data-i18n="modal.sunday">Sunday</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label data-i18n="modal.payrollFreq">Payroll Frequency</label>
-            <select id="regPayrollFreq" onchange="toggleRegAnchorDate()">
-              <option value="weekly" data-i18n="modal.weekly">Weekly</option>
-              <option value="biweekly" data-i18n="modal.biweekly">Bi-Weekly</option>
-              <option value="monthly" data-i18n="modal.monthly">Monthly</option>
-            </select>
-          </div>
-        </div>
-        <div id="regAnchorDateRow" style="display:none;margin-top:10px">
-          <div class="form-group">
-            <label data-i18n="reg.anchorDate">Payroll Cycle Start Date</label>
-            <input type="date" id="regAnchorDate">
-            <p style="font-size:11px;color:var(--text3);margin-top:4px" data-i18n="reg.anchorDateHint">Enter the first day of your first payroll period. Used to align bi-weekly pay boundaries.</p>
-          </div>
-        </div>
-        <p style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:16px" data-i18n="reg.payrollNote">Payroll settings apply to all sites</p>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:16px" onclick="toggleRegOvertime()">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-alarm"/></svg><span data-i18n="reg.trackOvertime">Track Overtime</span></div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="reg.overtimeDesc">Flag daily &gt;8h and weekly &gt;40h in reports</div>
-          </div>
-          <div id="regOvertimeToggle" style="width:40px;height:22px;border-radius:11px;background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
-            <div id="regOvertimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
-          </div>
-        </div>
-        <hr class="divider" style="margin:14px 0">
-        <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.logoOptional">Company Logo (optional)</p>
-        <div class="upload-area" id="regLogoArea">
-          <input type="file" id="regLogoInput" accept="image/*" onchange="previewRegLogo()">
-          <img id="regLogoPreview" class="upload-preview" style="display:none;border-radius:12px">
-          <div id="regLogoHint">
-            <div style="margin-bottom:6px;color:var(--accent)"><svg style="width:24px;height:24px"><use href="#i-nav-building"/></svg></div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.uploadLogo">Upload Company Logo</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:3px" data-i18n="modal.logoHint">PNG, JPG up to 2MB — shown on clock page and email reports</div>
-          </div>
-        </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:2px" data-i18n="reg.settingsLater">Address, payroll schedule, overtime and your logo are all in Settings once you're in — with sensible defaults until you change them.</p>
       <button class="btn-primary" style="margin-top:20px" onclick="doRegister()" data-i18n="reg.continue">Continue →</button>
     </div>
 
@@ -2189,6 +2121,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <button class="btn-secondary" style="width:auto;padding:9px 16px;font-size:13px" onclick="renderDashboard()"><span data-i18n="dash.refresh">↻ Refresh</span></button>
   </div>
   <div id="setupChecklist" style="display:none"></div>
+  <div id="payrollPrompt" style="display:none"></div>
   <div id="dashboardContent"></div>
 </div>
 
@@ -4765,11 +4698,46 @@ function renderSetupChecklist(){
   </div>`;
 }
 
+// Payroll settings used to be asked for at signup, ahead of the account existing — the cycle
+// anchor date in particular is a question most owners cannot answer while creating a login.
+// They now start at defaults and get asked here instead, once punches exist and the answer
+// actually changes a report. Dismissible, and never while the setup checklist is still up:
+// two prompts on one screen is the collision this release just removed.
+function _payrollPromptDismissed(){try{return localStorage.getItem('pc_payroll_prompt')==='1';}catch(_){return false;}}
+function dismissPayrollPrompt(){
+  try{localStorage.setItem('pc_payroll_prompt','1');}catch(_){}
+  const el=document.getElementById('payrollPrompt'); if(el) el.style.display='none';
+}
+function renderPayrollPrompt(){
+  const host=document.getElementById('payrollPrompt');
+  if(!host) return;
+  host.style.display='none';
+  const sess=Sess.get();
+  if(!sess||isSuperAdmin()||sess.parent_admin_id||isManager()||_payrollPromptDismissed()) return;
+  if(!(C.punches||[]).length) return;                                   // nothing to pay out yet
+  const checklist=document.getElementById('setupChecklist');
+  if(checklist && checklist.style.display!=='none') return;             // one prompt at a time
+  const co=(C.companies||[])[0];
+  if(!co) return;
+
+  host.style.display='';
+  host.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:13px">
+    <svg style="width:18px;height:18px;color:var(--amber);flex-shrink:0;margin-top:1px"><use href="#i-alarm"/></svg>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:600">${esc(t('payroll.promptTitle')||'Check your payroll settings before your first payroll')}</div>
+      <div style="font-size:12.5px;color:var(--text2);margin-top:3px;line-height:1.5">${esc(t('payroll.promptBody')||'Your pay period, week start and overtime rules are on their defaults. Confirm them so your reports come out right.')}</div>
+    </div>
+    <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0" onclick="editCompany('${co.id}')">${esc(t('payroll.promptCta')||'Review settings')}</button>
+    <button onclick="dismissPayrollPrompt()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;flex-shrink:0" aria-label="Dismiss">${esc(t('setup.hide')||'Hide')}</button>
+  </div>`;
+}
+
 // ═══════════════════════════════════════════════════
 // DASHBOARD (stats landing) — computed from the local cache
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
   renderSetupChecklist();
+  renderPayrollPrompt();
   // The tour used to auto-open here, 400ms after the checklist rendered, and land a modal
   // squarely on top of it — two onboarding systems competing on the same screen, with the
   // one the owner could act on hidden behind the one they could only read. The checklist
@@ -5780,15 +5748,17 @@ async function doRegister(){
   if(pass.length<6){showMsg('registerMsg',t('msg.shortPassword'),'error');return;}
 
   const company=document.getElementById('regCompany').value.trim();
-  const address=document.getElementById('regAddress').value.trim();
-  const phone=document.getElementById('regPhone').value.trim();
-  const industry=document.getElementById('regIndustry').value;
-  const weekStart=document.getElementById('regWeekStart').value;
-  const payrollFreq=document.getElementById('regPayrollFreq').value;
-  const anchorDate=document.getElementById('regAnchorDate').value||null;
-  const trackOvertime=document.getElementById('regOvertimeThumb').style.left==='20px';
-  const logoFile=document.getElementById('regLogoInput').files[0]||null;
   if(!company){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
+
+  // Signup used to ask for address, phone, industry, week start, payroll frequency, the
+  // payroll cycle anchor date, an overtime toggle and a logo — thirteen fields before an
+  // account existed, fronted by a date question most owners cannot answer on the spot.
+  // Every one of them is editable in company settings, so they start at exactly the values
+  // the untouched form used to submit: whoever clicked straight through before gets the
+  // identical account today, minus the wall.
+  const address='', phone='', industry='';
+  const weekStart='monday', payrollFreq='weekly', anchorDate=null;
+  const trackOvertime=false, logoFile=null;
 
   showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
 
@@ -9263,27 +9233,6 @@ function setOvertimeToggle(on){
   document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
 }
-function toggleRegAnchorDate(){
-  const freq=document.getElementById('regPayrollFreq').value;
-  document.getElementById('regAnchorDateRow').style.display=freq==='biweekly'?'':'none';
-}
-function toggleRegOvertime(){
-  const on=document.getElementById('regOvertimeThumb').style.left!=='20px';
-  document.getElementById('regOvertimeToggle').style.background=on?'var(--accent)':'var(--border)';
-  document.getElementById('regOvertimeThumb').style.left=on?'20px':'2px';
-}
-function previewRegLogo(){
-  const file=document.getElementById('regLogoInput').files[0];
-  if(!file) return;
-  if(file.size>2*1024*1024){alert('File too large. Max 2MB.');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=document.getElementById('regLogoPreview');
-    img.src=e.target.result; img.style.display='block';
-    document.getElementById('regLogoHint').style.display='none';
-  };
-  reader.readAsDataURL(file);
-}
 
 async function saveCompany(){
   const name=document.getElementById('companyName').value.trim();
@@ -12570,6 +12519,10 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'reg.settingsLater':'Address, payroll schedule, overtime and your logo are all in Settings once you’re in — with sensible defaults until you change them.',
+'payroll.promptTitle':'Check your payroll settings before your first payroll',
+'payroll.promptBody':'Your pay period, week start and overtime rules are on their defaults. Confirm them so your reports come out right.',
+'payroll.promptCta':'Review settings',
 'setup.s5':'Set up your punch tablet','setup.s5c':'Set up tablet',
 'setup.s5d':'Put a tablet or spare phone at your entrance and scan one QR code. This is what your team clocks in on.',
 'setup.needSite':'Add a site first — the tablet belongs to one.',
@@ -13317,6 +13270,10 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'reg.settingsLater':'L’adresse, le calendrier de paie, les heures supp. et votre logo sont dans les paramètres une fois connecté — avec des valeurs par défaut sensées en attendant.',
+'payroll.promptTitle':'Vérifiez vos paramètres de paie avant votre première paie',
+'payroll.promptBody':'Votre période de paie, le début de semaine et les règles d’heures supplémentaires sont aux valeurs par défaut. Confirmez-les pour que vos rapports soient justes.',
+'payroll.promptCta':'Voir les paramètres',
 'setup.s5':'Configurez votre tablette de pointage','setup.s5c':'Configurer la tablette',
 'setup.s5d':'Placez une tablette ou un téléphone à votre entrée et scannez un code QR. C’est là que votre équipe pointera.',
 'setup.needSite':'Ajoutez d’abord un site — la tablette appartient à un site.',
