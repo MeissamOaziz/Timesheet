@@ -951,7 +951,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="land-btn-secondary" onclick="startDemo()" data-i18n="land.ctaDemo">▶ See a live demo — no signup</button>
       <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free tier includes 1 company · 1 site · 5 employees · 1 admin</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · geofencing &amp; kiosk included</p>
   </div>
 
   <!-- PRODUCT PREVIEW — real UI, real sample data; clicking opens the live demo -->
@@ -1062,7 +1062,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
         <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-calendar-clock"/></svg></div>
-        <h3 data-i18n="land.feat9Title">Employee Scheduling <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:6px;white-space:nowrap">ADD-ON</span></h3>
+        <h3><span data-i18n="land.feat9Title">Employee Scheduling</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.addonBadge">ADD-ON</span></h3>
         <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.</p>
       </div>
       <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
@@ -1222,9 +1222,9 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="price-card">
         <div class="price-name" data-i18n="plan.business">Business</div>
         <div class="price-amount">$79.49<span>/mo CAD</span></div>
-        <div class="price-sub" data-i18n-html="land.businessSub">1 company · Unlimited sites &amp; employees · 3 admins<br>+$4.90/mo per extra admin</div>
+        <div class="price-sub" data-i18n-html="land.businessSub">Unlimited companies, sites &amp; employees · 6 admins<br>+$4.90/mo per extra admin</div>
         <ul class="price-features">
-          <li data-i18n="land.f.biz1">1 company</li>
+          <li data-i18n="land.f.biz1">Unlimited companies</li>
           <li data-i18n="land.f.biz2">Unlimited sites</li>
           <li data-i18n="land.f.biz3">Unlimited employees</li>
           <li data-i18n="land.f.biz4">All Growth features</li>
@@ -1235,7 +1235,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('business'):(hideLanding(),navigate('register'))" data-i18n="land.contactUs">Get Business</button>
       </div>
     </div>
-    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">All plans include a 14-day free trial. No credit card required to start.</p>
+    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:28px" data-i18n="land.trialNote">Start on the Free plan — free forever, no credit card. Upgrade only when you outgrow it.</p>
 
     <!-- HOW WE COMPARE -->
     <div style="max-width:760px;margin:44px auto 0">
@@ -1441,7 +1441,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h2 data-i18n="tos.h3">3. Account Registration</h2>
     <p data-i18n="tos.p3">You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.</p>
     <h2 data-i18n="tos.h4">4. Subscription Plans and Billing</h2>
-    <p data-i18n="tos.p4">PunchClock Pro offers several subscription tiers: Free, Starter ($19/month), Growth ($39.90/month), and Business ($79/month). Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. No refunds are provided for partial months.</p>
+    <p data-i18n="tos.p4">PunchClock Pro offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). An optional Scheduling Add-On is available for $14.95/month on any paid plan. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. No refunds are provided for partial months.</p>
     <p data-i18n="tos.p4b">Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan's included limit.</p>
     <h2 data-i18n="tos.h5">5. Employee Data</h2>
     <p data-i18n="tos.p5">You are responsible for obtaining any necessary consent from your employees to collect and store their time and attendance data. You represent that you have the legal authority to use the Service on behalf of your organization and to submit employee data through the platform.</p>
@@ -6935,7 +6935,9 @@ async function bulkSendReport(){
     ? `Send reports to ${withEmail.length} employee(s)?`
     : `Send reports to ${withEmail.length} of ${emps.length} employee(s) (${noEmail.length} have no report email configured)?`;
   if(!confirm(msg)) return;
-  // Open send report modal for the first employee, then chain the rest
+  // One modal, one period choice, sent to everyone selected — executeSendReport() loops the
+  // queue. (This used to open the modal for the first employee only and never touch the rest,
+  // so a "send to 8 employees" confirmation actually sent exactly one report.)
   _bulkReportQueue = withEmail.map(e=>e.id);
   openSendReportModal(_bulkReportQueue[0], true);
 }
@@ -8483,7 +8485,15 @@ async function saveSite(){
     closeModal('addSiteModal');
     window._onboardingSiteShown=false;
     const ctx2=Ctx.get();
-    const isFirstSite=ctx2&&C.sites.filter(s=>s.company_id===ctx2.co.id).length===1;
+    const companySites=ctx2?C.sites.filter(s=>s.company_id===ctx2.co.id):[];
+    const isFirstSite=ctx2&&companySites.length===1;
+    // Registration leaves Ctx.site null, and nothing else sets it until the user picks a site
+    // by hand. Without this the very first punches are written with no site_id/site_name and
+    // show up as "Company · —" in Activity and every export.
+    if(ctx2&&!ctx2.site&&companySites.length===1){
+      Ctx.set({...ctx2,site:companySites[0]});
+      updateContextPill();
+    }
     if(isFirstSite){
       showToast('✓ '+(t('ob.siteCreated')||'Site created! You can now add employees.'),'success');
       navigate('admin');
@@ -9987,13 +9997,18 @@ function getSendPeriodDates(periodVal, co){
   return null;
 }
 
-function openSendReportModal(empId){
+function openSendReportModal(empId, isBulk){
   const emp = C.employees.find(e=>e.id===empId);
   if(!emp) return;
+  // Opening for a single employee (the row ✉ button) must not inherit a stale bulk queue.
+  if(!isBulk) _bulkReportQueue = [];
   const co = C.companies.find(c=>c.id===emp.company_id);
 
   document.getElementById('sendReportEmpId').value = empId;
-  document.getElementById('sendReportEmpName').textContent = emp.name + (emp.emp_code?' ('+emp.emp_code+')':'');
+  const bulkIds = _bulkReportQueue.length>1 ? _bulkReportQueue : null;
+  document.getElementById('sendReportEmpName').textContent = bulkIds
+    ? (t('sendReport.bulkCount')||'{n} employees').replace('{n}', bulkIds.length)
+    : emp.name + (emp.emp_code?' ('+emp.emp_code+')':'');
   document.getElementById('sendReportMsg').innerHTML = '';
   // Reset send button to idle state every time modal opens
   const sBtn = document.getElementById('sendReportBtn');
@@ -10005,7 +10020,10 @@ function openSendReportModal(empId){
 
   // Show email status
   const emailEl = document.getElementById('sendReportEmpEmail');
-  if(emp.email){
+  if(bulkIds){
+    const names = bulkIds.map(id=>C.employees.find(e=>e.id===id)).filter(Boolean).map(e=>esc(e.name));
+    emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>${names.join(', ')}`;
+  } else if(emp.email){
     emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Will be sent to <strong style="color:var(--text)">${emp.email}</strong>`;
   } else {
     emailEl.innerHTML = `<span style="color:var(--red)"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>No email address on file — please edit this employee and add one first.</span>`;
@@ -10067,6 +10085,11 @@ async function executeSendReport(){
   if(!emp){showMsg('sendReportMsg','Employee not found.','error');return;}
   if(!emp.email){showMsg('sendReportMsg','This employee has no email address. Edit the employee and add one first.','error');return;}
 
+  // Bulk selection from the employees table: one period choice, sent to everyone queued.
+  const targets = _bulkReportQueue.length>1
+    ? _bulkReportQueue.map(id=>C.employees.find(e=>e.id===id)).filter(e=>e&&e.email)
+    : [emp];
+
   const periodVal = document.querySelector('input[name="sendPeriod"]:checked')?.value||'last_period';
   const co = C.companies.find(c=>c.id===emp.company_id);
 
@@ -10092,30 +10115,52 @@ async function executeSendReport(){
     const SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
     const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
 
-    const res = await fetch(`${SUPA_URL}/functions/v1/send-period-summary`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPA_KEY}`,
-      },
-      body: JSON.stringify({
-        manual: true,
-        emp_id: empId,
-        start_date: start,
-        end_date: end,
-      })
-    });
+    const sendOne = async (target)=>{
+      const res = await fetch(`${SUPA_URL}/functions/v1/send-period-summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPA_KEY}`,
+        },
+        body: JSON.stringify({
+          manual: true,
+          emp_id: target.id,
+          start_date: start,
+          end_date: end,
+        })
+      });
+      const data = await res.json();
+      const ok = data.success && (data.results?.[0]?.sent > 0 || data.manual_sent);
+      return { ok, err: data.results?.[0]?.errors?.[0] || data.error || 'Unknown error' };
+    };
 
-    const data = await res.json();
-    if(data.success && (data.results?.[0]?.sent > 0 || data.manual_sent)){
-      const sentTpl = t('sendReport.sentSuccess')||'✓ Report sent successfully to {email}';
-      showMsg('sendReportMsg', sentTpl.replace('{email}', emp.email)+` <span style="opacity:.75">(${periodLabel})</span>`, 'success');
+    const sent = [], failed = [];
+    for(const target of targets){
+      if(targets.length>1){
+        btn.innerHTML = `⏳ ${sent.length+failed.length+1}/${targets.length}...`;
+      }
+      try{
+        const r = await sendOne(target);
+        (r.ok ? sent : failed).push({name:target.name, err:r.err});
+      }catch(e){ failed.push({name:target.name, err:e.message}); }
+    }
+
+    if(sent.length && !failed.length){
+      const okMsg = targets.length>1
+        ? (t('sendReport.bulkSent')||'✓ {n} reports sent').replace('{n}', sent.length)
+        : (t('sendReport.sentSuccess')||'✓ Report sent successfully to {email}').replace('{email}', emp.email);
+      showMsg('sendReportMsg', okMsg+` <span style="opacity:.75">(${periodLabel})</span>`, 'success');
+      btn.dataset.state = 'sent';
+      btn.innerHTML = t('sendReport.closeWindow')||'✓ Close Window';
+      btn.disabled = false;
+    } else if(sent.length && failed.length){
+      showMsg('sendReportMsg',
+        `${sent.length} sent, ${failed.length} failed: ${failed.map(f=>esc(f.name)).join(', ')}`, 'info');
       btn.dataset.state = 'sent';
       btn.innerHTML = t('sendReport.closeWindow')||'✓ Close Window';
       btn.disabled = false;
     } else {
-      const err = data.results?.[0]?.errors?.[0] || data.error || 'Unknown error';
-      showMsg('sendReportMsg','Send failed: '+err,'error');
+      showMsg('sendReportMsg','Send failed: '+(failed[0]?.err||'Unknown error'),'error');
       btn.dataset.state = 'idle';
       btn.innerHTML = t('sendReport.send')||'📧 Send Now'; btn.disabled = false;
     }
@@ -11579,7 +11624,7 @@ en:{
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
 'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
-'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another',
+'sendReport.send':'📧 Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another','sendReport.bulkCount':'{n} employees','sendReport.bulkSent':'✓ {n} reports sent',
 'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
 'admin.pinShow':'Show','admin.pinNone':'None',
 'to.title':'Time Off','to.subtitle':'Vacation, sick days and absences','to.add':'+ Add time off','to.edit':'Edit time off',
@@ -11676,7 +11721,7 @@ en:{
 'land.freeSub':'Perfect for trying it out','land.getStartedFree':'Get started free',
 'land.freeTrial':'Start free trial','land.freeTrial2':'Start free trial',
 'land.mostPopular':'Most Popular','land.unlimitedSub':'Unlimited everything','land.contactUs':'Contact us',
-'land.trialNote':'All plans include a 14-day free trial. No credit card required to start.',
+'land.trialNote':'Start on the Free plan — free forever, no credit card. Upgrade only when you outgrow it.',
 'land.footerTagline':'Time & attendance software for modern shift workforces.',
 'land.tos':'Terms of Service','land.privacyPolicy':'Privacy Policy','land.adminLogin':'Admin Login',
 'land.copyright':'© 2026 PunchClock Pro. All rights reserved.',
@@ -11741,7 +11786,7 @@ en:{
 'profile.saved':'✓ Profile updated successfully.',
 'land.starterSub':'1 company · 2 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin',
 'land.growthSub':'3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin',
-'land.businessSub':'1 company · Unlimited sites &amp; employees · 3 admins<br>+$4.90/mo per extra admin',
+'land.businessSub':'Unlimited companies, sites &amp; employees · 6 admins<br>+$4.90/mo per extra admin',
 'land.f.free1':'1 company','land.f.free2':'1 site · geofencing & kiosk included','land.f.free3':'Up to 10 employees',
 'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Manual punch editing',
 'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free9':'Excel & CSV export',
@@ -11750,7 +11795,7 @@ en:{
 'land.f.start6':'Excel, CSV & PDF export',
 'land.f.grow1':'Up to 3 companies','land.f.grow2':'Up to 6 sites','land.f.grow3':'Up to 60 employees',
 'land.f.grow4':'All Starter features','land.f.grow5':'Priority support',
-'land.f.biz1':'1 company','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
+'land.f.biz1':'Unlimited companies','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
 'land.f.biz4':'All Growth features','land.f.biz5':'Up to 6 admins per account','land.f.biz6':'Dedicated support','land.f.biz7':'Early access to new features','land.f.start8':'1 co-admin included','land.f.grow6':'Up to 4 admins per account',
 
 'legal.back':'← Back',
@@ -11883,7 +11928,7 @@ en:{
 'faq.q1':'Do employees need smartphones or apps to clock in?',
 'faq.a1':'No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required.',
 'faq.q2':'Can I manage multiple locations?',
-'faq.a2':'Yes. You can add as many sites (locations) as your plan allows under your single company account. Each site has its own employees, access code, and optional geofencing. Starter: 1 site, Growth: 3 sites, Business: unlimited.',
+'faq.a2':'Yes. You can add as many sites (locations) as your plan allows under your single company account. Each site has its own employees, access code, and optional geofencing. Free: 1 site, Starter: 2 sites, Growth: 6 sites, Business: unlimited.',
 'faq.q3':'How do automated email reports work?',
 'faq.a3':'At the end of each pay period (weekly, bi-weekly, or monthly — set per company), every employee with a registered email and reports enabled automatically receives a PDF summary of their hours. Admins can also send a report manually at any time for any individual employee, or select multiple employees and send reports in bulk.',
 'faq.q4':'Can I edit or correct time punches after the fact?',
@@ -11895,9 +11940,9 @@ en:{
 'faq.q7':'What is overtime tracking?',
 'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view and in exported reports — so your payroll process is always accurate.',
 'faq.q8':'Is there a free plan?',
-'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 5 active employees — no credit card required. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports.',
+'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 10 active employees — no credit card required, free forever. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports.',
 'faq.q9':'Can I add more employees or admins beyond my plan limit?',
-'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Free: 1 admin max. Starter: 1 admin included. Growth: 2 admins included. Business: 3 admins included. Extra admins beyond those limits are $4.90/mo each.',
+'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Admins included (the owner counts as one): Free 1, Starter 2, Growth 4, Business 6. Extra admins beyond those limits are $4.90/mo each.',
 'faq.q10':'Can I take bulk actions on multiple employees at once?',
 'faq.a10':'Yes. In the Employees tab of the admin panel, you can check any number of employees and then: send their pay period reports by email, activate or deactivate their accounts, or permanently delete them — all in one click. The bulk action toolbar appears automatically as soon as you select at least one employee.',
 'faq.q11':'How secure is my data?',
@@ -11917,7 +11962,7 @@ en:{
 'faq.q18':'What is the Kiosk Shortcut and how do I set it up so employees can always find the punch page?',
 'faq.a18':'The Kiosk Shortcut solves a common problem: the punch page disappears when the browser is closed or the tab is lost. Here\'s how it works: (1) Log in as admin and go to <strong>Admin → Sites</strong>. (2) Click the <strong>📲 Kiosk Shortcut</strong> button on the site card. (3) Choose your method: click <strong>"Install PunchClock App"</strong> to install a real desktop/home screen app icon (Chrome/Edge on desktop; Safari on iPhone; Chrome on Android), or copy the kiosk URL to create a browser bookmark or desktop shortcut manually, or use the QR code to set up a tablet. (4) Once set up, employees tap that icon and land directly on the correct punch page — no login, no navigation needed. The shortcut works even if the browser is closed or the device restarts. Step-by-step instructions for Chrome, Edge, Safari, iPhone, and Android are shown in the Kiosk Shortcut panel.',
 'faq.q19':'Can I have multiple companies under one account?',
-'faq.a19':'No — each PunchClock Pro account is linked to one company. If you manage a second business, simply register a new account with a different email address. Each account has its own billing, sites, and employees.',
+'faq.a19':'Yes, on the right plan. Free, Starter and Business are single-company accounts; Growth supports up to 3 companies under one login and one bill. If you are on a single-company plan and manage a second business, either upgrade to Growth or register a separate account with a different email address.',
 'faq.q20':'How do I invite team members?',
 'faq.a20':'From the Admin panel, go to the Admins tab and click <strong>\'Invite Team Member\'</strong>. Choose Co-Admin for full access (except billing) or Manager for site-specific access. The person receives an email with a secure link to create their account — no join requests needed.',
 'faq.q21':'A device keeps opening the clock-in page instead of the website. How do I reset it?',
@@ -11956,7 +12001,7 @@ en:{
 'land.tablet4Desc':'Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.',
 'land.feat1Title':'Tablet Terminal — No GPS Needed',
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
-'land.feat9Title':'Employee Scheduling',
+'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON',
 'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
 'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
@@ -12247,7 +12292,7 @@ fr:{
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
 'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
-'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre',
+'sendReport.send':'📧 Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre','sendReport.bulkCount':'{n} employés','sendReport.bulkSent':'✓ {n} rapports envoyés',
 "admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Défini',
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
 'to.title':'Congés','to.subtitle':'Vacances, congés maladie et absences','to.add':'+ Ajouter un congé','to.edit':'Modifier le congé',
@@ -12344,7 +12389,7 @@ fr:{
 'land.freeSub':'Parfait pour essayer','land.getStartedFree':'Commencer gratuitement',
 'land.freeTrial':'Essai gratuit','land.freeTrial2':'Essai gratuit',
 'land.mostPopular':'Le plus populaire','land.unlimitedSub':'1 compagnie · Sites et employés illimités','land.contactUs':'Nous contacter',
-'land.trialNote':'Tous les forfaits incluent un essai gratuit de 14 jours. Aucune carte de crédit requise.',
+'land.trialNote':'Commencez avec le forfait Gratuit — gratuit pour toujours, sans carte de crédit. Passez à un forfait payant seulement quand vous en aurez besoin.',
 'land.footerTagline':'Logiciel de pointage pour les équipes de travail modernes.',
 'land.tos':'Conditions d\'utilisation','land.privacyPolicy':'Politique de confidentialité','land.adminLogin':'Connexion Admin',
 'land.copyright':'© 2026 PunchClock Pro. Tous droits réservés.',
@@ -12409,7 +12454,7 @@ fr:{
 'profile.saved':'✓ Profil mis à jour avec succès.',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.growthSub':'3 compagnies · 6 sites · 60 employés · 4 admins<br>+4,90$/mois par employé ou admin supplémentaire',
-'land.businessSub':'1 compagnie · Sites et employés illimités · 3 admins<br>+4,90$/mois par admin supplémentaire',
+'land.businessSub':'Compagnies, sites et employés illimités · 6 admins<br>+4,90$/mois par admin supplémentaire',
 'land.f.free1':'1 compagnie','land.f.free2':'1 site · géorepérage et kiosque inclus','land.f.free3':'Jusqu\'à 10 employés',
 'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Modification manuelle des pointages',
 'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free9':'Export Excel et CSV',
@@ -12418,7 +12463,7 @@ fr:{
 'land.f.start6':'Export Excel, CSV et PDF',
 'land.f.grow1':'Jusqu\'à 3 compagnies','land.f.grow2':'Jusqu\'à 6 sites','land.f.grow3':'Jusqu\'à 60 employés',
 'land.f.grow4':'Toutes les fonctions Débutant','land.f.grow5':'Support prioritaire',
-'land.f.biz1':'1 compagnie','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
+'land.f.biz1':'Compagnies illimitées','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
 'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Jusqu\'à 6 admins par compte','land.f.biz6':'Assistance dédiée','land.f.biz7':'Accès anticipé aux nouvelles fonctionnalités','land.f.start8':'1 co-admin inclus','land.f.grow6':'Jusqu\'à 4 admins par compte',
 
 'legal.back':'← Retour',
@@ -12551,7 +12596,7 @@ fr:{
 'faq.q1':'Les employés ont-ils besoin d\'un téléphone ou d\'une application?',
 'faq.a1':'Non. Les employés pointent avec un NIP à 4 chiffres sur n\'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis.',
 'faq.q2':'Puis-je gérer plusieurs emplacements?',
-'faq.a2':'Oui. Vous pouvez ajouter autant de sites (emplacements) que votre forfait le permet sous votre compte d\'entreprise. Chaque site a ses propres employés, code d\'accès et géolocalisation optionnelle. Débutant : 1 site, Croissance : 3 sites, Entreprise : illimité.',
+'faq.a2':'Oui. Vous pouvez ajouter autant de sites (emplacements) que votre forfait le permet sous votre compte d\'entreprise. Chaque site a ses propres employés, code d\'accès et géolocalisation optionnelle. Gratuit : 1 site, Débutant : 2 sites, Croissance : 6 sites, Entreprise : illimité.',
 'faq.q3':'Comment fonctionnent les rapports par courriel automatiques?',
 'faq.a3':'À la fin de chaque période de paie (hebdomadaire, bimensuelle ou mensuelle — défini par compagnie), chaque employé avec un courriel et les rapports activés reçoit automatiquement un PDF de ses heures. L\'admin peut aussi envoyer un rapport manuellement à tout moment, ou sélectionner plusieurs employés et les envoyer en lot.',
 'faq.q4':'Puis-je corriger des pointages après coup?',
@@ -12563,9 +12608,9 @@ fr:{
 'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
 'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 h/jour et les semaines dépassant 40 h. Les heures supplémentaires sont mises en évidence dans la vue Activité et les rapports exportés — pour un traitement de paie toujours précis.',
 'faq.q8':'Y a-t-il un plan gratuit?',
-'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 5 employés actifs — sans carte de crédit requise. Les plans payants commencent à 19,49$/mois CAD et débloquent plus de sites, d\'employés et d\'admins, ainsi que les rapports automatiques.',
+'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 10 employés actifs — sans carte de crédit requise, gratuit pour toujours. Les plans payants commencent à 19,49$/mois CAD et débloquent plus de sites, d\'employés et d\'admins, ainsi que les rapports automatiques.',
 'faq.q9':'Puis-je ajouter plus d\'employés ou d\'administrateurs au-delà de la limite?',
-'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Gratuit: 1 admin max. Débutant: 1 admin inclus. Croissance: 2 admins inclus. Entreprise: 3 admins inclus.',
+'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Admins inclus (le propriétaire en compte pour un) : Gratuit 1, Débutant 2, Croissance 4, Entreprise 6. Les admins au-delà de ces limites coûtent 4,90$/mois chacun.',
 'faq.q10':'Puis-je effectuer des actions groupées sur plusieurs employés?',
 'faq.a10':'Oui. Dans l\'onglet Employés, cochez autant d\'employés que souhaité, puis envoyez leurs rapports, activez, désactivez ou supprimez-les en un seul clic. La barre d\'actions groupées apparaît dès qu\'un employé est sélectionné.',
 'faq.q11':'Mes données sont-elles sécurisées?',
@@ -12585,7 +12630,7 @@ fr:{
 'faq.q18':'Qu\'est-ce que le raccourci kiosque et comment le configurer pour que les employés trouvent toujours la page de pointage?',
 'faq.a18':'Le raccourci kiosque résout un problème courant : la page de pointage disparaît quand le navigateur est fermé ou l\'onglet perdu. Voici comment ça fonctionne : (1) Connectez-vous en admin et allez dans <strong>Admin → Sites</strong>. (2) Cliquez sur <strong>📲 Raccourci kiosque</strong> sur la fiche du site. (3) Choisissez votre méthode : cliquez <strong>«Installer l\'app PunchClock»</strong> pour installer une vraie icône d\'app sur le bureau/écran d\'accueil, ou copiez l\'URL kiosque pour créer un favori ou raccourci bureau, ou utilisez le code QR pour configurer une tablette. (4) Une fois configuré, les employés appuient sur cette icône et arrivent directement sur la bonne page de pointage — sans connexion ni navigation. Le raccourci fonctionne même si le navigateur est fermé ou l\'appareil redémarre.',
 'faq.q19':'Puis-je avoir plusieurs entreprises sous un même compte?',
-'faq.a19':'Non — chaque compte PunchClock Pro est lié à une seule entreprise. Si vous gérez une deuxième entreprise, créez simplement un nouveau compte avec une adresse courriel différente. Chaque compte a sa propre facturation, ses sites et ses employés.',
+'faq.a19':'Oui, avec le bon forfait. Gratuit, Débutant et Entreprise sont des comptes à une seule compagnie; Croissance permet jusqu\'à 3 compagnies sous un même compte et une seule facture. Si vous êtes sur un forfait à compagnie unique et gérez une deuxième entreprise, passez à Croissance ou créez un compte distinct avec une autre adresse courriel.',
 'faq.q20':'Comment inviter des membres de l\'équipe?',
 'faq.a20':'Depuis le panneau Admin, allez dans l\'onglet Admins et cliquez sur <strong>\'Inviter un membre\'</strong>. Choisissez Co-Admin pour un accès complet (sauf facturation) ou Gestionnaire pour un accès limité à des sites spécifiques. La personne reçoit un courriel avec un lien sécurisé pour créer son compte.',
 'faq.q21':'Un appareil ouvre toujours la page de pointage au lieu du site. Comment le réinitialiser?',
@@ -12628,7 +12673,7 @@ fr:{
 'land.tablet4Desc':'Chaque employé a un NIP unique, et pointer pour quelqu\'un d\'autre exige une présence physique au terminal — bien plus difficile à contourner qu\'une appli mobile partagée par texto.',
 'land.feat1Title':'Terminal tablette — Sans GPS',
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
-'land.feat9Title':'Planification des employés',
+'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT',
 'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts aux employés par site, et permettez à votre équipe de voir ses prochains quarts — directement dans PunchClock. Disponible en complément à 14,95 $/mois sur tout plan payant.',
 'land.feat10Title':'Géofence — Pointage verrouillé par localisation',
 'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
