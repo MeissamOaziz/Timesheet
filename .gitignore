@@ -11,3 +11,6 @@ Thumbs.db
 tools/node_modules/
 tools/package-lock.json
 tools/sheet-*.png
+
+# Review gallery is a generated review aid, not source
+tools/review-gallery.html
