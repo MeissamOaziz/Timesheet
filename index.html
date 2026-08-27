@@ -7050,7 +7050,15 @@ function renderEmployees(){
   });
 
   const tbody=document.getElementById('empTableBody');
-  if(!emps.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px">${ctx?`${t('admin.noEmployeesFor')||'No employees for'} ${ctx.co.name}.`:t('admin.noEmployees')||'No employees found.'}</td></tr>`;return;}
+  if(!emps.length){
+    const empty=ctx?`${t('admin.noEmployeesFor')||'No employees for'} ${esc(ctx.co.name)}.`:(t('admin.noEmployees')||'No employees found.');
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:28px">${empty}</td></tr>`;
+    // Below 768px the table is display:none and these cards are what's actually on screen —
+    // returning without clearing them left the previous filter's employees visible.
+    const cards=document.getElementById('empCardsContainer');
+    if(cards)cards.innerHTML=`<div style="text-align:center;color:var(--text3);padding:24px">${empty}</div>`;
+    return;
+  }
 
   const rows=emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
