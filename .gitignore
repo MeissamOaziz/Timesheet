@@ -16,3 +16,8 @@ tools/sheet-*.png
 tools/review-gallery.html
 tools/verify-*.png
 tools/snap-*.json
+
+# Test byproducts. The suites in tools/ write screenshots and PDFs next to the real
+# assets; an underscore prefix keeps them out of the published site.
+assets/screenshots/_*
+tools/_*
