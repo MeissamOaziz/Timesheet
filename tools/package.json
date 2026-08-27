@@ -1,0 +1,10 @@
+{
+  "name": "punchclock-tools",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only utilities (screenshot capture). Not part of the deployed site.",
+  "dependencies": {
+    "playwright": "^1.62.0",
+    "sharp": "^0.35.4"
+  }
+}

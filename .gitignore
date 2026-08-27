@@ -6,3 +6,8 @@ supabase/supabase/
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+
+# Screenshot tooling: deps and local review sheets are regenerable, not source
+tools/node_modules/
+tools/package-lock.json
+tools/sheet-*.png
