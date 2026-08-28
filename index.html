@@ -1914,6 +1914,13 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div id="myShiftsList"></div>
     </div>
+    <!-- The portal exists but the punch screen never mentioned it, so the only way an employee
+         learned they could check their own hours was an invite email they may never have got.
+         This is the screen they stand at every shift. -->
+    <div id="portalLinkFooter" style="text-align:center;margin-top:22px">
+      <a href="employee.html" style="color:var(--text3);font-size:12px;text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px"
+         data-i18n="punch.portalLink">Employee? Check your hours and schedule &rarr;</a>
+    </div>
     <!-- Discreet kiosk-reset escape (shown only on a device bound as a kiosk) -->
     <div id="kioskResetFooter" style="display:none;text-align:center;margin-top:20px">
       <button onclick="resetKioskDevice()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;text-decoration:underline;opacity:.65">⚙ Cet appareil n'est pas un kiosque? Réinitialiser · Not a kiosk? Reset this device</button>
@@ -8981,7 +8988,10 @@ async function sendEmpPortalInvite(empId, email, empName) {
   try {
     // Generate a secure token
     const token = crypto.randomUUID ? crypto.randomUUID().replace(/-/g,'') : Math.random().toString(36).slice(2)+Date.now().toString(36);
-    const expires = new Date(Date.now() + 48*60*60*1000).toISOString(); // 48h
+    // Seven days, the same as an admin invite. At 48h an invite sent on a Friday evening was
+    // dead before the employee next checked their email on Monday, and there is no self-serve
+    // way for them to request another — they had to go back to their manager.
+    const expires = new Date(Date.now() + 7*24*60*60*1000).toISOString();
 
     // Upsert employee_portal record
     const existing = await DB.all('employee_portal',`employee_id=eq.${empId}`);
@@ -11769,6 +11779,9 @@ async function init(){
     // Keep ?kiosk= in the URL so "Add to Home Screen" saves the correct kiosk URL.
     // The site ID is a UUID — acceptable as a semi-secret kiosk credential.
     window._kioskUrlMode = true;
+    // navigate() refuses to leave the punch page in kiosk mode, but a plain <a href> is a full
+    // page load and bypasses it entirely — so the portal link has to go, not just be blocked.
+    const _plf=document.getElementById('portalLinkFooter'); if(_plf) _plf.style.display='none';
     // Persist so opening bare punchclock.ca on this device returns here in future sessions.
     if(!kioskFromStorage){
       try { localStorage.setItem('pc_kiosk_device', kioskSiteId); } catch(_){}
@@ -12777,6 +12790,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'punch.portalLink':'Employee? Check your hours and schedule →',
 'unsub.done':'Weekly summary emails are off. You can turn them back on in Settings.','unsub.bad':'That unsubscribe link is no longer valid.',
 'admin.joinTarget':'Requesting access to','admin.col.requested':'Requested','admin.col.type':'Type',
 'common.approve':'Approve','common.deny':'Deny',
@@ -13545,6 +13559,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'punch.portalLink':'Employé? Consultez vos heures et votre horaire →',
 'unsub.done':'Les résumés hebdomadaires sont désactivés. Vous pouvez les réactiver dans les paramètres.','unsub.bad':'Ce lien de désabonnement n’est plus valide.',
 'admin.joinTarget':'Demande d’accès à','admin.col.requested':'Demandé le','admin.col.type':'Type',
 'common.approve':'Approuver','common.deny':'Refuser',
