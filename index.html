@@ -11734,6 +11734,22 @@ async function init(){
   // URL param takes priority so visiting a new kiosk URL re-binds the device.
   // If no URL param, fall back to the site saved in localStorage by a prior visit.
   const _kqp = new URLSearchParams(window.location.search);
+
+  // Unsubscribe from the weekly digest. Clicked from an inbox, so it must work with no session
+  // and no login: the token is unguessable, controls exactly one boolean, and the RPC is
+  // idempotent, so a second click is harmless. Handled before anything else touches the URL.
+  if(_kqp.has('unsub')){
+    const _tok = _kqp.get('unsub');
+    window.history.replaceState({},'',window.location.pathname);
+    DB.rpc('unsubscribe_weekly_digest',{p_token:_tok})
+      .then(r=>{
+        showToast(r && r.ok
+          ? (t('unsub.done')||'Weekly summary emails are off. You can turn them back on in Settings.')
+          : (t('unsub.bad')||'That unsubscribe link is no longer valid.'), r && r.ok ? 'success' : 'info');
+      })
+      .catch(()=>showToast(t('unsub.bad')||'That unsubscribe link is no longer valid.','info'));
+  }
+
   let kioskSiteId = _kqp.get('kiosk');
   let kioskFromStorage = false;
   if(_kqp.has('nokiosk') || _kqp.has('exitkiosk')){
@@ -12761,6 +12777,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'unsub.done':'Weekly summary emails are off. You can turn them back on in Settings.','unsub.bad':'That unsubscribe link is no longer valid.',
 'admin.joinTarget':'Requesting access to','admin.col.requested':'Requested','admin.col.type':'Type',
 'common.approve':'Approve','common.deny':'Deny',
 'activity.none':'No punch records found for the selected filters.',
@@ -13528,6 +13545,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'unsub.done':'Les résumés hebdomadaires sont désactivés. Vous pouvez les réactiver dans les paramètres.','unsub.bad':'Ce lien de désabonnement n’est plus valide.',
 'admin.joinTarget':'Demande d’accès à','admin.col.requested':'Demandé le','admin.col.type':'Type',
 'common.approve':'Approuver','common.deny':'Refuser',
 'activity.none':'Aucun pointage trouvé pour les filtres sélectionnés.',

@@ -258,6 +258,9 @@ function stripAdminRows(rows: unknown[], sessionId: string | null, filter: strin
     if (!isSelf) {
       delete r['stripe_customer_id'];
       delete r['stripe_subscription_id'];
+      // The unsubscribe token silences that admin's digest from an unauthenticated link, so a
+      // co-admin reading the team list must not be able to lift their owner's out of the API.
+      delete r['unsub_token'];
     }
     return r;
   });
