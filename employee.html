@@ -861,7 +861,31 @@ async function loadPeriodData(period) {
       } else i++;
     }
 
-    const otHours = Math.max(0, totalHours - 40); // simplified weekly OT estimate
+    // Overtime has to match what payroll will actually pay, because this is the screen an
+    // employee checks to see whether they were paid correctly. The old line subtracted 40 from
+    // the WHOLE selected period, so on a biweekly period two ordinary 38h weeks showed 36h of
+    // overtime that nobody worked. Same rule as the admin report now: >8h in a day, >40h in a
+    // week, with the weekly bucket reset at each week boundary.
+    const dailyMap = {};
+    pairs.forEach(p => { if (p.hours) dailyMap[p.date] = (dailyMap[p.date] || 0) + p.hours; });
+    const weekKey = dateStr => {
+      const d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d)) return dateStr;
+      const dow = d.getDay();                       // 0 = Sunday
+      d.setDate(d.getDate() - ((dow + 6) % 7));     // weeks start Monday
+      return d.toLocaleDateString('en-CA');
+    };
+    let otHours = 0, weeklyReg = 0, curWeek = null;
+    [...pairs].filter(p => p.hours).sort((a, b) => a.date < b.date ? -1 : 1).forEach(p => {
+      const wk = weekKey(p.date);
+      if (wk !== curWeek) { curWeek = wk; weeklyReg = 0; }
+      const dayTotal = dailyMap[p.date];
+      const dailyOT = dayTotal > 8 ? Math.max(0, (p.hours / dayTotal) * (dayTotal - 8)) : 0;
+      let reg = p.hours - dailyOT, ot = dailyOT;
+      if (weeklyReg + reg > 40) { const over = weeklyReg + reg - 40; ot += over; reg -= over; }
+      weeklyReg += reg;
+      otHours += Math.max(0, ot);
+    });
     const regHours = totalHours - otHours;
 
     statsEl.innerHTML = `

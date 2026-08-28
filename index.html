@@ -9767,7 +9767,13 @@ async function generateReport(){
   if(noSiteEmps.length)siteGroups.push({site:null,emps:noSiteEmps});
 
   // ── Overtime helper: compute OT for a set of sessions within a period ──
-  function calcOT(sessions, trackOT) {
+  //
+  // The weekly bucket MUST reset at each week boundary. It used to be a single accumulator
+  // for the whole report range, so once week one had filled 40 regular hours, every hour
+  // that followed was classified as overtime for the rest of the period: two ordinary 40h
+  // weeks reported 40h of OT, and a monthly report was worse. Sessions arrive sorted by
+  // punch time per employee, which is what makes a running reset correct here.
+  function calcOT(sessions, trackOT, weekStartsSunday) {
     // sessions: [{date, hours}]
     if(!trackOT) return sessions.map(s=>({reg:s.hours,ot:0}));
     // Daily OT: >8h/day
@@ -9776,9 +9782,20 @@ async function generateReport(){
       if(!dailyMap[s.date]) dailyMap[s.date]=0;
       dailyMap[s.date]+=(s.hours||0);
     });
-    // Weekly OT: >40h/week (accumulate reg after daily cap)
-    let weeklyReg=0;
+    // Which week a date belongs to, honouring the company's week-start setting — the same
+    // rule the dashboard uses, so "this week" means one thing across the product.
+    const weekKey=dateStr=>{
+      const d=new Date(dateStr+'T00:00:00');
+      if(isNaN(d)) return dateStr;
+      const dow=d.getDay();                          // 0 = Sunday
+      d.setDate(d.getDate()-(weekStartsSunday?dow:((dow+6)%7)));
+      return d.toLocaleDateString('en-CA');
+    };
+    // Weekly OT: >40h/week (accumulate reg after daily cap), reset every week.
+    let weeklyReg=0, curWeek=null;
     return sessions.map(s=>{
+      const wk=weekKey(s.date);
+      if(wk!==curWeek){ curWeek=wk; weeklyReg=0; }
       const dayTotal=dailyMap[s.date];
       const h=s.hours||0;
       // Proportion of this session's daily OT
@@ -9818,7 +9835,7 @@ async function generateReport(){
       }
       if(rawRows.length){
         // Calculate OT per session
-        const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT);
+        const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT,co?.week_start==='sunday');
         const empRows=rawRows.map((r,idx)=>({...r,regHours:otResults[idx].reg,otHours:otResults[idx].ot}));
         allRows.push(...empRows);
         const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
