@@ -830,6 +830,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 /* ═══ MOBILE CARD TABLES ═══ */
 .mobile-card-row{display:none;}
+.mcards{display:none;}
 
 @media(max-width:768px){
   /* Nav */
@@ -870,6 +871,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   /* Tables → Cards on mobile */
   .table-wrap{overflow:visible;background:transparent;border:none;}
   .table-wrap table{display:none;}
+  .mcards{display:block;}
   .mobile-card-row{display:block;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
   .mobile-card-row .mc-name{font-weight:600;font-size:15px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .mobile-card-row .mc-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text2);padding:3px 0;}
@@ -2225,6 +2227,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.requestedAdmin">Requested Admin</th><th data-i18n="col.date">Date</th><th data-i18n="col.actions">Actions</th></tr></thead>
           <tbody id="joinRequestsBody"></tbody>
         </table></div>
+        <div id="joinReqCardsContainer" class="mcards"></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">All Admin Accounts</h3>
@@ -2529,6 +2532,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <table><thead><tr><th>Employee</th><th>Site</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th class="num" data-i18n="reports.col.reg">Reg Hours</th><th class="num" data-i18n="reports.col.ot">OT Hours</th></tr></thead>
     <tbody id="reportTableBody"></tbody></table>
   </div>
+  <div id="reportCardsContainer" class="mcards"></div>
   <div id="reportTimeOffWrap" style="display:none"></div>
   <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
 
@@ -2683,6 +2687,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </tr></thead>
     <tbody id="activityBody"></tbody>
   </table></div>
+  <div id="activityCardsContainer" class="mcards"></div>
 </div>
 
 <!-- ══════════════ SCHEDULE PAGE ══════════════ -->
@@ -8294,6 +8299,21 @@ function updateJoinRequestBadge(count){
   if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
   if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
 }
+// Below 768px every <table> is display:none and these cards are what is actually on screen.
+// Five of the eleven tables never had a card build, so Activity, Report results, both Time Off
+// lists and Pending Access Requests rendered as blank space on a phone — which is precisely the
+// device an owner reaches for on day two, and the visit the funnel says never happens.
+function mcard(title, rows, actions){
+  return `<div class="mobile-card-row">
+    <div class="mc-name">${title}</div>
+    ${rows.filter(Boolean).map(r=>`<div class="mc-row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('')}
+    ${actions ? `<div class="mc-actions">${actions}</div>` : ''}
+  </div>`;
+}
+function mcardEmpty(msg){
+  return `<div style="text-align:center;color:var(--text3);padding:24px">${msg}</div>`;
+}
+
 async function renderJoinRequests(){
   try{
     // Superadmin sees all; regular admin query is handled in loadCoAdmins
@@ -8302,6 +8322,15 @@ async function renderJoinRequests(){
     const tbody = document.getElementById('joinRequestsBody');
     if(!requests.length){section.style.display='none';return;}
     section.style.display='';
+    const jrCards=document.getElementById('joinReqCardsContainer');
+    if(jrCards) jrCards.innerHTML = requests.map(r=>mcard(
+      esc(r.requester_name||''),
+      [[t('admin.col.email')||'Email', esc(r.requester_email||'')],
+       [t('admin.joinTarget')||'Requesting access to', esc(r.target_admin_email||'')],
+       [t('admin.col.requested')||'Requested', new Date(r.created_at).toLocaleDateString()]],
+      `<button class="btn-primary" style="font-size:12px" onclick="approveJoinRequest('${r.id}','${r.requester_id}')">${t('common.approve')||'Approve'}</button>
+       <button class="btn-danger" style="font-size:12px" onclick="denyJoinRequest('${r.id}','${r.requester_id}')">${t('common.deny')||'Deny'}</button>`
+    )).join('');
     tbody.innerHTML = requests.map(r=>`<tr>
       <td style="font-weight:500">${r.requester_name}</td>
       <td>${r.requester_email}</td>
@@ -9836,9 +9865,38 @@ async function generateReport(){
 
   renderReportTimeOff(start,end);
 
-  if(!dataRows.length){document.getElementById('reportTableWrap').style.display='none';document.getElementById('reportEmpty').style.display='';return;}
+  if(!dataRows.length){
+    document.getElementById('reportTableWrap').style.display='none';
+    const rc=document.getElementById('reportCardsContainer'); if(rc) rc.innerHTML='';
+    document.getElementById('reportEmpty').style.display='';return;}
   document.getElementById('reportEmpty').style.display='none';
   document.getElementById('reportTableWrap').style.display='';
+
+  // Same rows as the table, as cards, because below 768px the table is display:none and this
+  // screen was simply empty on a phone. Section headers and totals become their own emphasised
+  // cards rather than being dropped — a payroll total is the one line worth reading on a phone.
+  const repCards=document.getElementById('reportCardsContainer');
+  if(repCards) repCards.innerHTML=allRows.map(r=>{
+    if(r.isSiteHeader) return `<div style="font-weight:700;font-size:13px;color:var(--accent);margin:14px 0 8px;letter-spacing:.3px">${esc(r.siteName)}</div>`;
+    if(r.isSiteTotal)  return mcard(
+      `<span style="color:var(--accent)">${esc(r.siteName)} — ${t('reports.siteTotal')||'Site Total'}</span>`,
+      [[t('reports.hours')||'Hours', `<strong>${r.hours.toFixed(2)}</strong>`],
+       r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
+    if(r.isSubtotal)   return mcard(
+      `<span style="color:var(--text2);font-size:13px">${esc(r.subtotalLabel)}</span>`,
+      [[t('reports.hours')||'Hours', r.hours.toFixed(2)],
+       r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
+    return mcard(
+      esc(r.empName||'') + (r.isManual?' <span class="manual-badge">MANUAL</span>':''),
+      [r.siteName!=='—' ? [t('admin.col.site')||'Site', esc(r.siteName)] : null,
+       [t('reports.date')||'Date', r.date],
+       [t('punch.in')||'In', `<span style="color:var(--green)">${r.punchIn}</span>`],
+       [t('punch.out')||'Out', r.punchOut!=='—' ? `<span style="color:var(--red)">${r.punchOut}</span>` : '—'],
+       [t('reports.hours')||'Hours', r.hours!==null
+          ? `<strong>${(r.trackOT?(r.hours-(r.otHours||0)):r.hours).toFixed(2)}</strong>`
+          : (t('reports.stillIn')||'Still in')],
+       r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
+  }).join('');
 
   document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if(r.isSiteHeader)return`<tr style="background:rgba(79,142,247,.1)">
@@ -10006,7 +10064,27 @@ async function loadActivityPage(){
   if(_actSelectAllCb)_actSelectAllCb.checked=false;
   updateActBulkBar();
 
-  if(!show.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:36px">No punch records found for the selected filters.</td></tr>`;return;}
+  const actCards=document.getElementById('activityCardsContainer');
+  if(!show.length){
+    const none=t('activity.none')||'No punch records found for the selected filters.';
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:36px">${none}</td></tr>`;
+    if(actCards) actCards.innerHTML=mcardEmpty(none);
+    return;
+  }
+  if(actCards) actCards.innerHTML=show.map(p=>{
+    const pco=C.companies.find(c=>c.id===p.company_id);
+    const site=C.sites.find(s2=>s2.id===p.site_id);
+    const pill=`<span class="pill ${p.type.toLowerCase()}">${p.type==='IN'?t('punch.in').replace('✓ ',''):t('punch.out').replace('✕ ','')}</span>`;
+    return mcard(
+      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">MANUAL</span>':''),
+      [[t('admin.col.site')||'Site', esc([pco?.name,site?.name].filter(Boolean).join(' · ')||'—')],
+       [t('admin.col.type')||'Type', pill],
+       [t('reports.date')||'Date', p.punch_date],
+       [t('reports.time')||'Time', String(p.punch_time||'').slice(0,5)]],
+      `<button class="btn-secondary" style="font-size:12px" onclick="openEditPunch('${p.id}')">${t('common.edit')||'Edit'}</button>
+       <button class="btn-danger" style="font-size:12px" onclick="confirmDeletePunch('${p.id}')">${t('common.delete')||'Delete'}</button>`
+    );
+  }).join('');
   tbody.innerHTML=show.map(p=>{
     const pco=C.companies.find(c=>c.id===p.company_id);
     const emp=C.employees.find(e=>e.id===p.emp_id);
@@ -10486,7 +10564,19 @@ function renderTimeOff(){
         <td>${statusPill(r)}</td>
         <td><button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="openTimeOffModal('${r.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
             <button class="icon-btn" style="color:var(--red)" title="${t('common.delete')||'Delete'}" onclick="deleteTimeOff('${r.id}')"><svg class="ic"><use href="#i-trash"/></svg></button></td>
-      </tr>`;}).join('')}</tbody></table></div>`;
+      </tr>`;}).join('')}</tbody></table></div>
+    <div class="mcards">${rows.map(r=>{
+      const current=_toCovers(r,today)&&r.status==='approved';
+      return mcard(
+        esc(r.emp_name||''),
+        [[t('to.kind')||'Type', _toKindLabel(r.kind)],
+         [t('to.dates')||'Dates', `${r.start_date}${r.end_date!==r.start_date?' → '+r.end_date:''}` +
+            (current?` <span style="color:var(--amber);font-weight:600">· ${t('to.now')||'off now'}</span>`:'')],
+         [t('to.days')||'Days', _toDays(r)],
+         [t('col.status')||'Status', statusPill(r)]],
+        `<button class="btn-secondary" style="font-size:12px" onclick="openTimeOffModal('${r.id}')">${t('common.edit')||'Edit'}</button>
+         <button class="btn-danger" style="font-size:12px" onclick="deleteTimeOff('${r.id}')">${t('common.delete')||'Delete'}</button>`
+      );}).join('')}</div>`;
 }
 
 // Absences inside the last generated report period, rendered under the results table so payroll
@@ -10515,6 +10605,14 @@ function renderReportTimeOff(start,end){
           <td class="num">${paid?(c.d*Number(r.hours_per_day||0)).toFixed(2):'—'}</td>
         </tr>`;}).join('')}</tbody>
     </table></div>
+    <div class="mcards">${_reportTimeOff.map(r=>{const c=clip(r); const paid=r.kind!=='unpaid';
+      return mcard(
+        esc(r.emp_name||''),
+        [[t('to.kind')||'Type', _toKindLabel(r.kind)],
+         [t('to.dates')||'Dates', `${c.a}${c.b!==c.a?' → '+c.b:''}`],
+         [t('to.days')||'Days', c.d],
+         [t('to.hours')||'Hours', paid?(c.d*Number(r.hours_per_day||0)).toFixed(2):'—']]);
+    }).join('')}</div>
     <div style="font-size:11.5px;color:var(--text3);margin-top:7px">${t('to.unpaidNote')||'Unpaid leave is listed for the record but contributes no hours.'}</div>
   </div>`;
 }
@@ -12646,6 +12744,11 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'admin.joinTarget':'Requesting access to','admin.col.requested':'Requested','admin.col.type':'Type',
+'common.approve':'Approve','common.deny':'Deny',
+'activity.none':'No punch records found for the selected filters.',
+'reports.siteTotal':'Site total','reports.hours':'Hours','reports.ot':'Overtime',
+'reports.date':'Date','reports.time':'Time','reports.stillIn':'Still in',
 'dc.step':'Step {n} of {total}','dc.hide':'Hide',
 'dc.s1t':'Clock someone in','dc.s1c':'Open clock-in',
 'dc.s1b':'This is what your team does every shift. Open the clock-in screen and tap a name — the PIN is filled in for you here.',
@@ -13408,6 +13511,11 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'admin.joinTarget':'Demande d’accès à','admin.col.requested':'Demandé le','admin.col.type':'Type',
+'common.approve':'Approuver','common.deny':'Refuser',
+'activity.none':'Aucun pointage trouvé pour les filtres sélectionnés.',
+'reports.siteTotal':'Total du site','reports.hours':'Heures','reports.ot':'Heures supp.',
+'reports.date':'Date','reports.time':'Heure','reports.stillIn':'En cours',
 'dc.step':'Étape {n} sur {total}','dc.hide':'Masquer',
 'dc.s1t':'Faites pointer quelqu’un','dc.s1c':'Ouvrir le pointage',
 'dc.s1b':'C’est ce que votre équipe fait à chaque quart. Ouvrez l’écran de pointage et touchez un nom — le NIP est déjà rempli ici.',
