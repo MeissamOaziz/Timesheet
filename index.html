@@ -8430,6 +8430,22 @@ function toggleEditMissedPunch(btn){
   if(editDiv)editDiv.style.display=isEditing?'none':'';
 }
 
+// Tell the employee what was decided. The request functions resolve the recipient themselves
+// from the row — the caller never supplies an address — so this is only a trigger. Best effort:
+// a mail failure must never make an approval look like it did not happen, since the row is
+// already updated by the time we get here.
+async function notifyDecision(fn, requestId){
+  if(!requestId || window._demoMode) return;
+  try{
+    const r = await fetch(`${SUPA_URL}/functions/v1/${fn}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
+      body:JSON.stringify({ requestId, mode:'decision' })
+    });
+    if(!r.ok) console.error(fn+' decision failed', r.status, await r.text().catch(()=>''));
+  }catch(e){ console.error(fn+' decision error', e); }
+}
+
 async function approveMissedPunch(id){
   const req=_missedPunchRequests.find(r=>r.id===id);
   if(!req)return;
@@ -8472,6 +8488,7 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
       punch_id:punchId
     });
     showToast(`✓ Punch approved for ${req.emp_name}`,'success');
+    notifyDecision('notify-missed-punch', req.id);
     await renderMissedPunchRequests();
   }catch(e){showToast(e.message,'error');}
 }
@@ -8488,6 +8505,7 @@ async function denyMissedPunch(id){
       reviewed_at:new Date().toISOString()
     });
     showToast(`Request denied for ${req.emp_name}`,'info');
+    notifyDecision('notify-missed-punch', id);
     await renderMissedPunchRequests();
   }catch(e){showToast(e.message,'error');}
 }
@@ -10574,6 +10592,7 @@ async function reviewTimeOff(id,decision){
   const sess=Sess.get();
   try{
     await DB.update('time_off',`id=eq.${id}`,{status:decision,reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()});
+    notifyDecision('notify-time-off', id);
     await refreshTimeOff(); renderTimeOff();
     await refreshPendingCounts();   // re-fetch, so the banner count reflects the decision
     showToast(decision==='approved'?(t('to.okApproved')||'Time off approved.'):(t('to.okDenied')||'Request denied.'),'success');

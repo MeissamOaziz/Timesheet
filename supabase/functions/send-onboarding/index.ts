@@ -477,8 +477,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Fetch all eligible free-plan primary admins
-    const { data: admins, error: adminsErr } = await supabase
+    // Fetch all eligible free-plan primary admins.
+    //
+    // PGRST303 "JWT issued at future" is a platform-side clock-skew fault, not a bad key — the
+    // same credential works seconds later. On 2026-08-28 it threw right here and the entire 9am
+    // run mailed nobody, with the failure visible only in the function log. One retry after a
+    // pause turns a day of lost onboarding email into a non-event. The per-admin sent flags make
+    // the whole run idempotent, so retrying cannot double-send.
+    const loadAdmins = async () => await supabase
       .from("admins")
       .select("id, name, email, plan, created_at, onboarding_emails_sent")
       .eq("plan", "free")
@@ -486,6 +492,12 @@ Deno.serve(async (req) => {
       .neq("role", "super_admin")
       .is("parent_admin_id", null);
 
+    let { data: admins, error: adminsErr } = await loadAdmins();
+    if (adminsErr && /PGRST303|JWT issued at future/i.test(JSON.stringify(adminsErr))) {
+      console.warn("clock skew on admin fetch — retrying once");
+      await new Promise((r) => setTimeout(r, 1500));
+      ({ data: admins, error: adminsErr } = await loadAdmins());
+    }
     if (adminsErr) throw adminsErr;
     if (!admins?.length) {
       return new Response(JSON.stringify({ ok: true, processed: 0, message: "No eligible admins" }), {

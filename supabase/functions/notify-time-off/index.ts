@@ -21,11 +21,28 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-async function rest(path: string): Promise<any[]> {
+// PGRST303 "JWT issued at future" is a platform-side clock-skew fault, not a bad key: the same
+// credential succeeds seconds later. It took this project offline for days in August, and it
+// silently killed the 9am run on 2026-08-28 — the whole drip threw before mailing anyone. The
+// client already retries it once (see _isTransientAuthFault in index.html); the server side had
+// no such guard, so a momentary skew read as "no such row" and a notification vanished.
+function isClockSkew(text: string): boolean {
+  return /PGRST303|JWT issued at future/i.test(text);
+}
+const pause = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+async function rest(path: string, retried = false): Promise<any[]> {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
   });
-  if (!r.ok) return [];
+  if (!r.ok) {
+    const body = await r.text().catch(() => '');
+    if (!retried && isClockSkew(body)) { await pause(1500); return rest(path, true); }
+    // Swallowing the status made every failure look identical to "no such row", which is how
+    // a transient auth fault turned into a silently dropped email.
+    console.error('rest failed', r.status, path, body.slice(0, 200));
+    return [];
+  }
   const j = await r.json().catch(() => []);
   return Array.isArray(j) ? j : [];
 }
@@ -54,14 +71,98 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  let requestId: string;
-  try { requestId = (await req.json()).requestId; }
+  let requestId: string, mode = 'submitted';
+  try {
+    const body = await req.json();
+    requestId = body.requestId;
+    mode = body.mode === 'decision' ? 'decision' : 'submitted';
+  }
   catch { return json({ error: 'Invalid body' }, 400); }
   if (!requestId) return json({ error: 'Missing requestId' }, 400);
 
   try {
     const row = (await rest(`time_off?id=eq.${requestId}&select=*&limit=1`))[0];
     if (!row) return json({ error: 'Request not found' }, 404);
+
+    // ── Decision notice ──────────────────────────────────────────────────────
+    // The submission confirmation tells the employee "You'll be notified once it has been
+    // reviewed", and until now nothing ever did — they had to guess, or ask their manager in
+    // person, which is the whole thing this feature exists to avoid. Approving or declining
+    // now closes the loop. Status is read from the row, never taken from the caller.
+    if (mode === 'decision') {
+      if (row.status !== 'approved' && row.status !== 'denied') {
+        return json({ ok: true, skipped: `status is ${row.status}` });
+      }
+      if (row.requested_by !== 'employee') {
+        return json({ ok: true, skipped: 'admin-entered absence' });
+      }
+      if (!row.emp_id) return json({ ok: true, skipped: 'no employee on request' });
+      const emp = (await rest(`employees?id=eq.${row.emp_id}&select=email`))[0];
+      const to = emp?.email?.toLowerCase();
+      if (!to) return json({ ok: true, skipped: 'employee has no email' });
+
+      const coName2 = row.company_id ? ((await rest(`companies?id=eq.${row.company_id}&select=name`))[0]?.name || '—') : '—';
+      const dates2 = row.end_date !== row.start_date ? `${row.start_date} → ${row.end_date}` : row.start_date;
+      const approved = row.status === 'approved';
+      const headEn = approved
+        ? `Your time off has been approved.`
+        : `Your time off request was not approved.`;
+      const headFr = approved
+        ? `Votre demande de congé a été approuvée.`
+        : `Votre demande de congé n'a pas été approuvée.`;
+      const tailEn = approved
+        ? `Enjoy the time off. Nothing further is needed from you.`
+        : `If you think this was a mistake, speak with your manager — they can review it again.`;
+      const tailFr = approved
+        ? `Profitez bien de votre congé. Rien d'autre n'est requis de votre part.`
+        : `Si vous pensez qu'il s'agit d'une erreur, parlez-en à votre gestionnaire — la demande peut être réexaminée.`;
+
+      const sentOk = await sendContact({
+        type: 'time_off',
+        name: row.emp_name,
+        email: 'noreply@punchclock.ca',
+        subject: approved
+          ? `Time off approved — ${dates2} | Congé approuvé`
+          : `Time off declined — ${dates2} | Congé refusé`,
+        message:
+          `Hi ${row.emp_name},
+
+${headEn}
+
+` +
+          `Type: ${KIND_LABEL[row.kind] || row.kind}
+` +
+          `Dates: ${dates2}
+` +
+          `Company: ${coName2}
+
+` +
+          `${tailEn}
+
+` +
+          `— — —
+
+` +
+          `Bonjour ${row.emp_name},
+
+${headFr}
+
+` +
+          `Type : ${KIND_LABEL[row.kind] || row.kind}
+` +
+          `Dates : ${dates2}
+` +
+          `Entreprise : ${coName2}
+
+` +
+          `${tailFr}`,
+        companyId: row.company_id, companyName: coName2,
+        recipients: [to],
+      });
+      console.log('notify-time-off decision', requestId, row.status, sentOk);
+      return json({ ok: true, mode: 'decision', status: row.status, sent: sentOk });
+    }
+
     // Only unreviewed employee requests generate a "needs review" notice. An absence an admin
     // entered directly is already decided and must not mail anybody.
     if (row.status !== 'pending' || row.requested_by !== 'employee') {
