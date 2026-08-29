@@ -3171,7 +3171,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="sendReportEmpId">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('sendReportModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 20px" id="sendReportBtn" data-state="idle" onclick="executeSendReport()">Send Now</button>
+      <button class="btn-primary" style="width:auto;padding:9px 20px" id="sendReportBtn" data-state="idle" onclick="executeSendReport()"><svg class="ic" style="margin-right:6px"><use href="#i-mail"/></svg>Send Now</button>
     </div>
   </div>
 </div>
@@ -9358,23 +9358,23 @@ async function loadSitesPage(){
     const activeEmp=C.employees.filter(e=>e.site_id===s.id&&e.active).length;
     const hasGeo=!!(s.geo_lat&&s.geo_lng);
     const geoBadge=hasGeo
-      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius">${s.geo_radius_m||25}m</span>`
-      :`<span class="geo-status-badge geo-none" title="No geofence set">No geofence</span>`;
+      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${s.geo_radius_m||25}m</span>`
+      :`<span class="geo-status-badge geo-none" title="No geofence set"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>No geofence</span>`;
     const payrollLine=co?`${freqLabel[co.payroll_frequency]||'—'} · ${weekLabel[co.week_start]||'—'}`:'';
     const companyLine=superAdmin&&co?`<div class="meta" style="margin-bottom:3px;color:var(--accent)">${co.name}</div>`:'';
     return`<div class="company-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="width:36px;height:36px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"></div>
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)"><svg class="ic" style="width:18px;height:18px"><use href="#i-nav-sites"/></svg></div>
         <div style="flex:1;min-width:0">
           ${companyLine}
           <h3 style="margin:0;font-size:14px;font-weight:600">${s.name}</h3>
           <div style="margin-top:4px">${geoBadge}</div>
         </div>
       </div>
-      ${payrollLine?`<div class="meta" style="margin-bottom:4px">${payrollLine}</div>`:''}
-      <div class="meta">${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+s.description:''}</div>
+      ${payrollLine?`<div class="meta" style="margin-bottom:4px"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-calendar"/></svg>${payrollLine}</div>`:''}
+      <div class="meta"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-users"/></svg>${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+s.description:''}</div>
       ${_isMgr?'':`<div class="actions">
-        <button class="btn-primary" style="font-size:11px;padding:5px 11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')">${t('site.kioskShortcut')||'Kiosk'}</button>
+        <button class="btn-primary" style="font-size:11px;padding:5px 11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-tablet"/></svg>${t('site.kioskShortcut')||'Kiosk'}</button>
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
         <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
       </div>`}
@@ -12436,7 +12436,7 @@ async function renderScheduleGrid() {
         <div class="sched-emp-avatar">${initials}</div>
         <div>
           <div class="sched-emp-name">${emp.name}</div>
-          ${site ? `<div class="sched-emp-site">${site.name}</div>` : ''}
+          ${site ? `<div class="sched-emp-site"><svg class="ic" style="width:11px;height:11px;margin-right:4px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${site.name}</div>` : ''}
           <div class="sched-emp-actions">${empShiftsThisWeek.length > 0 ? emailBtn : ''}</div>
         </div>
       </div>

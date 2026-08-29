@@ -209,8 +209,12 @@ async function newPage(browser, { width, height, theme, lang, url }) {
   await page.evaluate(() => startDemo());
   await page.waitForTimeout(900);
   await page.evaluate(() => {
-    // The demo banner and its toast are true in the app but noise in a product shot.
+    // The demo banner, its toast and the guided coach are all true in the app but noise in a
+    // product shot — and the coach in particular would put "STEP 1 OF 4" over the marketing
+    // hero, advertising the demo walkthrough rather than the product.
     const b = document.getElementById('demoBanner'); if (b) b.remove();
+    const dc = document.getElementById('demoCoach'); if (dc) dc.remove();
+    try { sessionStorage.setItem('pc_demo_coach', 'off'); } catch (e) {}
     const style = document.createElement('style');
     style.textContent = '#pcToast{display:none !important}';
     document.head.appendChild(style);
