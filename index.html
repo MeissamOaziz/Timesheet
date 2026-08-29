@@ -2058,8 +2058,11 @@ border-top:1px solid var(--border);margin:18px 0;}
          data-i18n="punch.portalLink">Employee? Check your hours and schedule &rarr;</a>
     </div>
     <!-- Discreet kiosk-reset escape (shown only on a device bound as a kiosk) -->
-    <div id="kioskResetFooter" style="display:none;text-align:center;margin-top:20px">
-      <button onclick="resetKioskDevice()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;text-decoration:underline;opacity:.65">Cet appareil n'est pas un kiosque? Réinitialiser · Not a kiosk? Reset this device</button>
+    <div id="kioskResetFooter" style="display:none;text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:12.5px" onclick="navigate('login')"><svg class="ic" style="margin-right:6px"><use href="#i-lock"/></svg><span data-i18n="kiosk.adminLogin">Admin sign-in</span></button>
+      <div style="margin-top:9px">
+        <button onclick="resetKioskDevice()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;text-decoration:underline" data-i18n="kiosk.notAKiosk">This device isn't a kiosk? Reset it</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4573,7 +4576,12 @@ function updateContextPill(){
 // ═══════════════════════════════════════════════════
 function navigate(page){
   // Kiosk sessions are locked to the punch page; allow login/landing so logout still works
-  if(window._kioskUrlMode && !['punch','login','landing'].includes(page)) return;
+  // Kiosk devices are locked to the punch page so staff cannot wander off it — but an admin
+  // who has signed in on that device is not staff. Without the isLoggedIn() exemption, an
+  // owner who set up their own phone as a kiosk could reach the login screen, authenticate
+  // successfully, and then have every navigation silently refused: signed in, and still
+  // stuck on the punch page with no way into admin.
+  if(window._kioskUrlMode && !isLoggedIn() && !['punch','login','landing'].includes(page)) return;
   // Redirect legacy 'companies' references to the new sites page
   if(page==='companies'){navigate('sites');return;}
   const adminPages=['dashboard','admin','reports','sites','activity','schedule','timeoff'];
@@ -5759,6 +5767,11 @@ async function doLogin(){
     // moment that value is still available, since the update below overwrites it.
     try{ sessionStorage.setItem('pc_prev_login', full.last_login||''); }catch(_){}
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
+    // Signing in on a kiosk-bound device releases the lock for this session so the admin gets
+    // the normal app. The device binding itself is left in place, so signing out returns it
+    // to being a terminal — a manager fixing something on the wall tablet should not have to
+    // set the kiosk up again afterwards.
+    window._kioskUrlMode = false;
     updateNav();
     await refreshCache();
     navigate('dashboard');
@@ -6174,6 +6187,11 @@ function logout(){
   const le=document.getElementById('loginEmail'); if(le) le.value='';
   const lp=document.getElementById('loginPass'); if(lp) lp.value='';
   document.body.classList.remove('role-admin','role-manager');
+  // A kiosk-bound device should go back to being a terminal when the admin signs out, not
+  // land on the marketing page. Reloading re-runs the kiosk boot path.
+  let _boundKiosk=null;
+  try{ _boundKiosk = localStorage.getItem('pc_kiosk_device'); }catch(_){}
+  if(_boundKiosk){ window.location.href = window.location.origin + window.location.pathname; return; }
   updateNav();
   showLanding();
 }
@@ -13233,6 +13251,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'kiosk.adminLogin':'Admin sign-in','kiosk.notAKiosk':'This device isn’t a kiosk? Reset it',
 'land.costTitle':'Your bill shouldn’t grow every time you hire',
 'land.costSub':'Most time-tracking tools charge per employee, per month. We charge one flat price for the whole team, so hiring a seasonal crew costs nothing extra.',
 'land.costTeam':'Team size','land.costPerUser':'Per employee','land.costMo':'/mo','land.costFree':'Free',
@@ -14018,6 +14037,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'kiosk.adminLogin':'Connexion admin','kiosk.notAKiosk':'Cet appareil n’est pas un kiosque? Réinitialiser',
 'land.costTitle':'Votre facture ne devrait pas grimper à chaque embauche',
 'land.costSub':'La plupart des outils de pointage facturent par employé, par mois. Nous facturons un prix fixe pour toute l’équipe — embaucher une équipe saisonnière ne coûte rien de plus.',
 'land.costTeam':'Taille de l’équipe','land.costPerUser':'Par employé','land.costMo':'/mois','land.costFree':'Gratuit',
