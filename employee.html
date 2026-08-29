@@ -34,7 +34,16 @@ if (window.top !== window.self) {
 <meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,.4);}
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--accent:#4f8ef7;--accent2:#7c5cbf;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#555e7a;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,.4);
+  /* Same scales the admin app uses. The portal was a hand-forked copy with its own values,
+     so the two halves of the product drifted independently. */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;
+  --r-xs:6px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-pill:999px;
+  --h-sm:32px;--h-md:38px;--h-lg:44px;}
+/* Dark is the unstamped :root and light is stamped, matching the admin app's inverted
+   convention — and reading the same pc_theme key, so an employee who set light mode there
+   does not get a dark portal in the same browser. */
+[data-theme="light"]{--bg:#f5f7fa;--surface:#ffffff;--surface2:#f0f2f7;--border:#d1d5e0;--text:#1a1d2e;--text2:#4a5568;--text3:#718096;--shadow:0 4px 16px rgba(15,23,42,0.08);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
 
@@ -54,8 +63,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nav-right{display:flex;align-items:center;gap:10px;}
 .nav-emp-name{font-size:13px;font-weight:600;color:var(--text);}
 .nav-emp-sub{font-size:11px;color:var(--text3);}
-.emp-avatar{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
-.btn-logout{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.emp-avatar{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.btn-logout{background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text2);padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
 .btn-logout:hover{border-color:var(--red);color:var(--red);}
 
 /* TABS */
@@ -75,7 +84,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* STATS ROW */
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
-.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;text-align:center;}
 .stat-val{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);}
 .stat-label{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
 
@@ -84,26 +93,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .punch-table th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
 .punch-table td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .punch-table tr:last-child td{border-bottom:none;}
-.punch-type-in{color:var(--green);font-weight:600;font-size:11px;background:rgba(34,197,94,.12);padding:2px 8px;border-radius:6px;}
-.punch-type-out{color:var(--red);font-weight:600;font-size:11px;background:rgba(239,68,68,.12);padding:2px 8px;border-radius:6px;}
+.punch-type-in{color:var(--green);font-weight:600;font-size:11px;background:rgba(34,197,94,.12);padding:2px 8px;border-radius:var(--r-xs);}
+.punch-type-out{color:var(--red);font-weight:600;font-size:11px;background:rgba(239,68,68,.12);padding:2px 8px;border-radius:var(--r-xs);}
 .period-selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-.period-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.period-btn{padding:7px 14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .period-btn:hover{border-color:var(--accent);color:var(--accent);}
 .period-btn.active{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
 
 /* SCHEDULE GRID */
-.sched-table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;}
+.sched-table{width:100%;border-collapse:collapse;border-radius:var(--r-md);overflow:hidden;}
 .sched-table th{background:var(--surface2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
 .sched-table th.today-col{background:rgba(79,142,247,.12);color:var(--accent);}
 .sched-table td{padding:8px;text-align:center;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:12px;min-height:50px;vertical-align:middle;}
 .sched-table tr:last-child td{border-bottom:none;}
-.shift-pill{background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);border-radius:7px;padding:5px 8px;font-size:11px;font-weight:600;color:var(--accent);display:inline-block;}
+.shift-pill{background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);border-radius:var(--r-sm);padding:5px 8px;font-size:11px;font-weight:600;color:var(--accent);display:inline-block;}
 .no-shift{color:var(--text3);font-size:12px;}
 .today-col{background:rgba(79,142,247,.04);}
 
 /* AVAILABILITY */
 .avail-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;}
-.avail-day{background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;user-select:none;}
+.avail-day{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;user-select:none;}
 .avail-day:hover{border-color:var(--accent);}
 .avail-day.unavailable{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);}
 .avail-day.unavailable .day-name{color:var(--red);}
@@ -112,30 +121,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .avail-day.unavailable .day-status{color:var(--red);}
 .avail-specific{margin-top:16px;}
 .avail-specific-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
-.avail-specific-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:9px;border:1px solid var(--border);}
+.avail-specific-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border);}
 .avail-specific-date{font-size:13px;font-weight:600;}
 .avail-specific-note{font-size:11px;color:var(--text3);}
-.btn-remove-avail{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px;transition:background .15s;}
+.btn-remove-avail{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:var(--r-xs);transition:background .15s;}
 .btn-remove-avail:hover{background:rgba(239,68,68,.1);}
 
 /* FORMS */
 .form-group{margin-bottom:16px;}
 .form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
-.form-input{width:100%;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
+.form-input{width:100%;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:border-color .15s;}
 .form-input:focus{border-color:var(--accent);}
-.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;width:100%;}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--r-md);padding:11px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;width:100%;}
 .btn-primary:hover{opacity:.88;}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
-.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
-.msg{padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;}
+.msg{padding:10px 14px;border-radius:var(--r-sm);font-size:13px;margin-bottom:12px;}
 .msg.error{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);}
 .msg.success{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25);}
 .msg.info{background:rgba(79,142,247,.1);color:var(--accent);border:1px solid rgba(79,142,247,.2);}
 
 /* AUTH SCREENS */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
-.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 32px;width:100%;max-width:420px;box-shadow:var(--shadow);}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:36px 32px;width:100%;max-width:420px;box-shadow:var(--shadow);}
 .auth-logo{font-size:22px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:8px;}
 .auth-title{font-size:20px;font-weight:700;text-align:center;margin-bottom:6px;}
 .auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px;line-height:1.5;}
@@ -145,12 +154,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .pw-toggle svg{width:18px;height:18px;}
 
 /* LANG SWITCHER */
-.lang-sw{display:flex;gap:3px;background:var(--surface2);border-radius:20px;padding:3px;border:1px solid var(--border);}
-.lang-sw button{padding:3px 11px;border:none;border-radius:20px;background:none;color:var(--text3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
+.theme-btn{display:inline-flex;align-items:center;justify-content:center;width:var(--h-sm);height:var(--h-sm);
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-pill);color:var(--text2);
+  cursor:pointer;font-family:inherit;transition:color .15s,border-color .15s;}
+.theme-btn:hover{color:var(--text);border-color:var(--accent);}
+.theme-btn .ic{width:16px;height:16px;}
+.lang-sw{display:flex;gap:3px;background:var(--surface2);border-radius:var(--r-xl);padding:3px;border:1px solid var(--border);}
+.lang-sw button{padding:3px 11px;border:none;border-radius:var(--r-xl);background:none;color:var(--text3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
 .lang-sw button.active{background:var(--accent);color:#fff;}
 
 /* TOAST */
-#empToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;}
+#empToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 20px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;}
 #empToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 #empToast.toast-success{border-color:var(--green);color:var(--green);}
 #empToast.toast-error{border-color:var(--red);color:var(--red);}
@@ -160,6 +174,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .empty-state .icon{font-size:44px;margin-bottom:14px;}
 .empty-state p{font-size:14px;color:var(--text2);}
 
+/* Inline busy mark. Several places set a button's label to an hourglass emoji, which is a
+   picture that varies per platform and cannot follow the text colour. */
+.mini-spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;
+  border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;}
+@media (prefers-reduced-motion:reduce){.mini-spin{animation-duration:2.4s;}}
+/* Punch history as cards on a phone, mirroring the admin app's pattern. */
+.pcards{display:none;}
+.pcard{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3) var(--s4);margin-bottom:var(--s2);}
+.pcard-date{font-weight:600;font-size:14px;margin-bottom:6px;}
+.pcard-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text2);padding:3px 0;}
+.pcard-row span:last-child{color:var(--text);font-weight:500;}
+@media(max-width:600px){
+  .table-wrap table{display:none;}
+  .pcards{display:block;}
+  /* Four tabs plus a French label set overflow a narrow screen; they scrolled nowhere. */
+  .tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .tabs-bar::-webkit-scrollbar{display:none;}
+  .tab-btn{flex-shrink:0;}
+}
 /* TABLE WRAP */
 .table-wrap{overflow-x:auto;}
 
@@ -170,6 +203,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .stats-row{grid-template-columns:1fr 1fr;}
 }
 </style>
+<!-- Before first paint, or the portal flashes dark then repaints light. -->
+<script>(function(){try{var t=localStorage.getItem('pc_theme');if(t!=='dark')document.documentElement.setAttribute('data-theme','light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 </head>
 <body>
 <!-- The portal had no icon sprite and used colour emoji for its tabs and card headings, which
@@ -181,6 +216,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/></symbol>
 <symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></symbol>
 <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
 </defs></svg>
 <style>.ic{width:15px;height:15px;flex-shrink:0;vertical-align:-2px;}</style>
@@ -194,11 +230,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div id="screenLogin" style="display:none">
   <div class="auth-wrap">
     <div class="auth-card">
-      <div class="auth-logo">⏱ PunchClock Pro</div>
+      <div class="auth-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:-3px;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>PunchClock Pro</div>
       <div style="display:flex;justify-content:center;margin-bottom:20px">
-        <div class="lang-sw" id="authLangSw">
-          <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
-          <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="theme-btn" onclick="toggleEmpTheme()" id="authThemeBtn" aria-label="Toggle theme" title="Toggle theme"><svg class="ic"><use href="#i-sun"/></svg></button>
+          <div class="lang-sw" id="authLangSw">
+            <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
+            <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
+          </div>
         </div>
       </div>
       <h2 class="auth-title" id="loginTitle">Employee Portal</h2>
@@ -276,7 +315,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div id="screenSetPassword" style="display:none">
   <div class="auth-wrap">
     <div class="auth-card">
-      <div class="auth-logo">⏱ PunchClock Pro</div>
+      <div class="auth-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:-3px;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>PunchClock Pro</div>
       <h2 class="auth-title" id="setPassTitle">Welcome! Set your password</h2>
       <p class="auth-sub" id="setPassSub">You've been invited to the employee portal. Choose a password to activate your account.</p>
       <div id="setPassMsg"></div>
@@ -307,6 +346,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       PunchClock Pro
     </div>
     <div class="nav-right">
+      <button class="theme-btn" onclick="toggleEmpTheme()" id="empThemeBtn" aria-label="Toggle theme" title="Toggle theme"><svg class="ic"><use href="#i-sun"/></svg></button>
       <div class="lang-sw" id="appLangSw">
         <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
         <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
@@ -356,6 +396,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
             </thead>
             <tbody id="punchBody"></tbody>
           </table>
+          <!-- Below 600px the table is display:none and these are what is actually on screen.
+               The admin app got this treatment; the portal never did, so an employee checking
+               their own hours on a phone saw an empty card. -->
+          <div id="punchCards" class="pcards"></div>
         </div>
       </div>
     </div>
@@ -778,6 +822,29 @@ async function doSetEmpPassword() {
 // Mirrors the admin reset: a 6-digit code, 15-minute expiry, throttled server-side, and the
 // response never says whether the address has an account — an unauthenticated form that
 // confirms which emails are real is an account-enumeration oracle.
+// Theme. Reads and writes the same pc_theme key the admin app uses, so the two halves of
+// the product agree in one browser instead of each keeping its own preference.
+function applyEmpTheme(t){
+  if(t==='dark') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme','light');
+  const mark='<svg class="ic"><use href="#i-'+(t==='dark'?'sun':'moon')+'"/></svg>';
+  ['empThemeBtn','authThemeBtn'].forEach(id=>{
+    const b=document.getElementById(id); if(b) b.innerHTML=mark;
+  });
+}
+function toggleEmpTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';
+  const next=cur==='light'?'dark':'light';
+  try{ localStorage.setItem('pc_theme',next); }catch(e){}
+  applyEmpTheme(next);
+}
+(function(){
+  let t='light';
+  try{ t=localStorage.getItem('pc_theme')==='dark'?'dark':'light'; }catch(e){}
+  if(document.readyState!=='loading') applyEmpTheme(t);
+  else document.addEventListener('DOMContentLoaded',()=>applyEmpTheme(t));
+})();
+
 function showEmpForgot(){
   document.getElementById('fgStep1').style.display='';
   document.getElementById('fgStep2').style.display='none';
@@ -909,7 +976,7 @@ function showPortal() {
 // ══════════════════════════════════════════════════════
 async function renderSchedule() {
   const wrap = document.getElementById('schedContent');
-  wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)">⏳</div>';
+  wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)"><span class="mini-spin"></span></div>';
   const today = dateStr(new Date());
   const twoWeeks = dateStr(new Date(Date.now() + 14*24*60*60*1000));
   try {
@@ -924,7 +991,7 @@ async function renderSchedule() {
       const isToday = sh.shift_date === todayStr;
       const d = new Date(sh.shift_date + 'T12:00:00');
       const dayLabel = isToday ? t('today') : d.toLocaleDateString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
-      html += `<div style="background:var(--surface);border:1.5px solid ${isToday ? 'rgba(79,142,247,.4)' : 'var(--border)'};border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;${isToday ? 'background:rgba(79,142,247,.06)' : ''}">
+      html += `<div style="background:var(--surface);border:1.5px solid ${isToday ? 'rgba(79,142,247,.4)' : 'var(--border)'};border-radius:var(--r-md);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;${isToday ? 'background:rgba(79,142,247,.06)' : ''}">
         <div>
           <div style="font-weight:700;font-size:14px;${isToday ? 'color:var(--accent)' : ''}">${dayLabel}</div>
           ${sh.note ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${escHtml(sh.note)}</div>` : ''}
@@ -984,7 +1051,7 @@ async function selectPeriod(idx, btn) {
 async function loadPeriodData(period) {
   const statsEl = document.getElementById('statsRow');
   const bodyEl = document.getElementById('punchBody');
-  statsEl.innerHTML = '<div style="text-align:center;color:var(--text2);grid-column:1/-1;padding:16px">⏳</div>';
+  statsEl.innerHTML = '<div style="text-align:center;color:var(--text2);grid-column:1/-1;padding:16px"><span class="mini-spin"></span></div>';
   bodyEl.innerHTML = '';
 
   try {
@@ -1041,8 +1108,19 @@ async function loadPeriodData(period) {
 
     if (!pairs.length) {
       bodyEl.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px">${t('noPunches')}</td></tr>`;
+      const ce=document.getElementById('punchCards');
+      if(ce) ce.innerHTML = `<div style="text-align:center;color:var(--text3);padding:22px">${t('noPunches')}</div>`;
       return;
     }
+
+    const cardsEl = document.getElementById('punchCards');
+    if(cardsEl) cardsEl.innerHTML = pairs.map(p => `
+      <div class="pcard">
+        <div class="pcard-date">${fmtDate(p.date)}</div>
+        <div class="pcard-row"><span>${t('thIn')||'Clock In'}</span><span class="punch-type-in">${p.in}</span></div>
+        <div class="pcard-row"><span>${t('thOut')||'Clock Out'}</span><span>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '—'}</span></div>
+        <div class="pcard-row"><span>${t('thHours')||'Hours'}</span><span style="font-family:'DM Mono',monospace">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</span></div>
+      </div>`).join('');
 
     bodyEl.innerHTML = pairs.map(p => `
       <tr>
@@ -1140,7 +1218,7 @@ async function renderTimeOff() {
         <div class="avail-specific-note">${t('toKind_'+r.kind) || r.kind}${r.reason ? ' · ' + escHtml(r.reason) : ''}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid ${c};color:${c};white-space:nowrap">${t('toStatus_'+r.status) || r.status}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:var(--r-xl);border:1px solid ${c};color:${c};white-space:nowrap">${t('toStatus_'+r.status) || r.status}</span>
         ${canCancel ? `<button class="btn-remove-avail" title="${t('toCancel')}" onclick="cancelTimeOff('${r.id}')">✕</button>` : ''}
       </div>
     </div>`;

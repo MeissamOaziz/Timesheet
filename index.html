@@ -581,6 +581,11 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
   .emp-grid{grid-template-columns:1fr 1fr;max-height:40vh;}
   .emp-tile{min-height:64px;}
 }
+/* Inline busy mark. Several places set a button's label to an hourglass emoji, which is a
+   picture that varies per platform and cannot follow the text colour. */
+.mini-spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;
+  border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;}
+@media (prefers-reduced-motion:reduce){.mini-spin{animation-duration:2.4s;}}
 /* Busy state. A submit button that looks identical mid-request invites a second click, and
    several of these create records — a double-submitted employee or punch is a real cost. The
    label is hidden rather than replaced so the button keeps its width and nothing jumps. */
@@ -6074,7 +6079,7 @@ async function doRegister(){
   const weekStart='monday', payrollFreq='weekly', anchorDate=null;
   const trackOvertime=false, logoFile=null;
 
-  showMsg('registerMsg','<span style="color:var(--text2)">⏳ Sending verification code...</span>','info');
+  showMsg('registerMsg','<span style="color:var(--text2)"><span class="mini-spin"></span> Sending verification code...</span>','info');
 
   try{
     const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
@@ -8079,7 +8084,7 @@ async function saveSiteManagers(){
   const siteId=_smSiteId;if(!siteId)return;
   const checked=[...document.querySelectorAll('#siteManagersCheckboxes input:checked')].map(cb=>cb.value);
   try{
-    showMsg('siteManagersMsg','⏳ Saving...','info');
+    showMsg('siteManagersMsg','<span class="mini-spin"></span> Saving...','info');
     await DB.del('manager_sites',`site_id=eq.${siteId}`);
     for(const mid of checked){try{await DB.insert('manager_sites',{manager_id:mid,site_id:siteId});}catch(_){}}
     closeModal('siteManagersModal');
@@ -9224,7 +9229,7 @@ async function saveEmpThenInvite(){
     return;
   }
   const btn = document.getElementById('empPortalInviteBtn');
-  if(btn){ btn.disabled=true; btn.textContent='⏳'; }
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="mini-spin"></span>'; }
   const saved = await saveEmployee({keepOpen:true});
   if(!saved){ if(btn){ btn.disabled=false; btn.textContent=t('emp.portalSaveAndInvite')||'Save & send invitation'; } return; }
   await sendEmpPortalInvite(saved.id, saved.email||email, saved.name);
@@ -9284,7 +9289,7 @@ async function sendEmpPortalInvite(empId, email, empName) {
     if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">${t('emp.portalSaveFirst')||'Save the employee first, then send the invitation.'}</div>`;
     return;
   }
-  btn.disabled = true; btn.textContent = '⏳';
+  btn.disabled = true; btn.innerHTML = '<span class="mini-spin"></span>';
   if(msgEl) msgEl.innerHTML='';
   try {
     // Generate a secure token
@@ -9841,7 +9846,7 @@ async function saveRecipient(){
     showMsg('recipMsg', t('recip.dupe')||'That address is already on the list for this scope.','error'); return;
   }
   const btn=document.getElementById('recipSaveBtn');
-  const orig=btn.textContent; btn.disabled=true; btn.textContent='⏳';
+  const orig=btn.textContent; btn.disabled=true; btn.innerHTML='<span class="mini-spin"></span>';
   try{
     const sess=Sess.get();
     await DB.insert('report_recipients',{
@@ -9871,7 +9876,7 @@ async function testRecipient(id){
   const r=_recipients.find(x=>x.id===id); if(!r) return;
   const btn=document.querySelector(`[data-recip-test="${id}"]`);
   const orig=btn?btn.textContent:'';
-  if(btn){ btn.disabled=true; btn.textContent='⏳'; }
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="mini-spin"></span>'; }
   try{
     const res=await fetch(`${SUPA_URL}/functions/v1/send-period-summary`,{
       method:'POST',
@@ -11396,7 +11401,7 @@ async function executeSendReport(){
   }
 
   btn.dataset.state = 'sending';
-  btn.innerHTML = '⏳ Sending...';
+  btn.innerHTML = '<span class="mini-spin"></span> Sending...';
   btn.disabled = true;
   document.getElementById('sendReportMsg').innerHTML = '';
 
@@ -11426,7 +11431,7 @@ async function executeSendReport(){
     const sent = [], failed = [];
     for(const target of targets){
       if(targets.length>1){
-        btn.innerHTML = `⏳ ${sent.length+failed.length+1}/${targets.length}...`;
+        btn.innerHTML = `<span class="mini-spin"></span> ${sent.length+failed.length+1}/${targets.length}...`;
       }
       try{
         const r = await sendOne(target);
@@ -12709,7 +12714,7 @@ async function renderScheduleGrid() {
 
   let html = `<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
     <div style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">${totalShifts}</strong> ${t('sched.shiftsThisWeek')||'shifts this week'}</div>
-    ${todayShifts ? `<div style="font-size:12px;color:var(--accent)">⏰ <strong>${todayShifts}</strong> ${t('sched.today')||'today'}</div>` : ''}
+    ${todayShifts ? `<div style="font-size:12px;color:var(--accent)"><svg class="ic" style="margin-right:5px"><use href="#i-alarm"/></svg><strong>${todayShifts}</strong> ${t('sched.today')||'today'}</div>` : ''}
   </div>
   <table class="sched-grid">
     <thead><tr>
@@ -13489,7 +13494,7 @@ en:{
 'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
 'gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Manual punch editing is available on paid plans.',
 'sendReport.send':'Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another','sendReport.bulkCount':'{n} employees','sendReport.bulkSent':'✓ {n} reports sent',
-'admin.pendingRequests':'⏳ Pending Access Requests','admin.pinSet':'Set',
+'admin.pendingRequests':'Pending Access Requests','admin.pinSet':'Set',
 'admin.pinShow':'Show','admin.pinNone':'None',
 'to.title':'Time Off','to.subtitle':'Vacation, sick days and absences','to.add':'+ Add time off','to.edit':'Edit time off',
 'to.pending':'Pending requests','to.approve':'Approve','to.deny':'Deny','to.employee':'Employee',
@@ -13553,7 +13558,7 @@ en:{
 'common.deactivate':'Deactivate','common.sendReport':'Send Report',
 'common.switchTo':'Switch To','common.total':'total','common.active':'active','common.sites':'sites',
 'common.biweeklyPayroll':'Bi-Weekly payroll','common.weekStarts':'Week',
-'common.overtimeOn':'⏰ Overtime on',
+'common.overtimeOn':'Overtime on',
 'modal.weekly':'Weekly','modal.biweekly':'Bi-Weekly','modal.monthly':'Monthly',
 'common.days.mon':'Mon','common.days.tue':'Tue','common.days.wed':'Wed',
 'common.days.thu':'Thu','common.days.fri':'Fri','common.days.sat':'Sat','common.days.sun':'Sun',
@@ -14274,7 +14279,7 @@ fr:{
 'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',
 'gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':'La correction manuelle des pointages est offerte sur les forfaits payants.',
 'sendReport.send':'Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre','sendReport.bulkCount':'{n} employés','sendReport.bulkSent':'✓ {n} rapports envoyés',
-"admin.pendingRequests":"⏳ Demandes d'accès en attente",'admin.pinSet':'Défini',
+"admin.pendingRequests":"Demandes d'accès en attente",'admin.pinSet':'Défini',
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
 'to.title':'Congés','to.subtitle':'Vacances, congés maladie et absences','to.add':'+ Ajouter un congé','to.edit':'Modifier le congé',
 'to.pending':'Demandes en attente','to.approve':'Approuver','to.deny':'Refuser','to.employee':'Employé',
@@ -14338,7 +14343,7 @@ fr:{
 'common.deactivate':'Désactiver','common.sendReport':'Envoyer rapport',
 'common.switchTo':'Sélectionner','common.total':'total','common.active':'actif','common.sites':'sites',
 'common.biweeklyPayroll':'Paie aux deux semaines','common.weekStarts':'Semaine',
-'common.overtimeOn':'⏰ Heures supp. activées',
+'common.overtimeOn':'Heures supp. activées',
 'modal.weekly':'Hebdomadaire','modal.biweekly':'Aux deux semaines','modal.monthly':'Mensuel',
 'common.days.mon':'Lun','common.days.tue':'Mar','common.days.wed':'Mer',
 'common.days.thu':'Jeu','common.days.fri':'Ven','common.days.sat':'Sam','common.days.sun':'Dim',
