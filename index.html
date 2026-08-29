@@ -518,6 +518,25 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 /* One card recipe. Ten near-identical inline versions of this existed, differing by a pixel
    or two of padding and nothing else — which is exactly how a design drifts out of step with
    itself. Padding comes from the spacing scale rather than being eyeballed per instance. */
+/* Busy state. A submit button that looks identical mid-request invites a second click, and
+   several of these create records — a double-submitted employee or punch is a real cost. The
+   label is hidden rather than replaced so the button keeps its width and nothing jumps. */
+.btn-busy{position:relative;color:transparent !important;pointer-events:none;}
+.btn-busy>*{visibility:hidden;}
+.btn-busy::after{content:'';position:absolute;top:50%;left:50%;width:15px;height:15px;margin:-8px 0 0 -8px;
+  border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+.btn-secondary.btn-busy::after,.btn-danger.btn-busy::after{border-color:var(--border);border-top-color:var(--text2);}
+@media (prefers-reduced-motion:reduce){.btn-busy::after{animation-duration:2s;}}
+/* Loading states. Every list previously showed either the word "Loading..." or nothing at
+   all while its fetch was in flight, so a slow connection looked like an empty account —
+   which for a new signup is indistinguishable from the product not working. A skeleton says
+   "rows are coming" and holds the layout so nothing jumps when they arrive. */
+@keyframes skelShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel{background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 37%,var(--surface2) 63%);
+  background-size:200% 100%;animation:skelShimmer 1.4s ease-in-out infinite;border-radius:var(--r-xs);}
+.skel-row{height:14px;margin:10px 0;}
+.skel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s4) var(--s5);margin-bottom:10px;}
+@media (prefers-reduced-motion:reduce){.skel{animation:none;}}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s4) var(--s5);}
 .card-lg{border-radius:var(--r-lg);padding:var(--s6) var(--s5);}
 .card-center{text-align:center;}
@@ -930,7 +949,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 .lang-btn.active{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(79,142,247,.35)}
 .lang-btn:not(.active):hover{color:var(--text);background:var(--surface2)}
 /* ── TOAST ── */
-#pcToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 20px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;}
+/* white-space:nowrap with a max-width meant a long toast was simply cut off mid-sentence —
+   and the longest toasts are the error messages, the ones worth reading. */
+#pcToast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 20px;font-size:13px;font-weight:500;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:min(90vw,420px);text-align:center;overflow-wrap:anywhere;}
 #pcToast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 #pcToast.toast-error{border-color:var(--red);color:var(--red);}
 #pcToast.toast-success{border-color:var(--green);color:var(--green);}
@@ -1990,7 +2011,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <input type="checkbox" id="rememberMe" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
       <label for="rememberMe" style="font-size:13px;color:var(--text2);cursor:pointer" data-i18n="login.rememberMe">Stay logged in</label>
     </div>
-    <button class="btn-primary" onclick="doLogin()" data-i18n="login.signIn">Sign In</button>
+    <button class="btn-primary" onclick="withBusy(this,doLogin)" data-i18n="login.signIn">Sign In</button>
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px"><span data-i18n="login.noAccount">No account?</span> <button class="link-btn" onclick="navigate('register')" data-i18n="login.register">Register</button></p>
   </div>
@@ -2129,7 +2150,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
         <p style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:2px" data-i18n="reg.settingsLater">Address, payroll schedule, overtime and your logo are all in Settings once you're in — with sensible defaults until you change them.</p>
-      <button class="btn-primary" style="margin-top:20px" onclick="doRegister()" data-i18n="reg.continue">Continue →</button>
+      <button class="btn-primary" style="margin-top:20px" onclick="withBusy(this,doRegister)" data-i18n="reg.continue">Continue →</button>
     </div>
 
     <!-- STEP 2: Email verification -->
@@ -2140,7 +2161,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <p style="color:var(--text2);font-size:13px;margin-top:6px"><span data-i18n="reg.checkEmailDesc">We sent a 6-digit verification code to</span> <strong id="regEmailSent" style="color:var(--text)"></strong></p>
       </div>
       <div class="form-group"><label data-i18n="reg.verificationCode">Verification Code</label><input type="text" id="codeInput" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-family:'DM Mono',monospace;font-size:22px;letter-spacing:8px"></div>
-      <button class="btn-primary" onclick="doVerify()" data-i18n="reg.verifyActivate">Verify &amp; Activate</button>
+      <button class="btn-primary" onclick="withBusy(this,doVerify)" data-i18n="reg.verifyActivate">Verify &amp; Activate</button>
       <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:14px"><span data-i18n="reg.noCode">Didn't receive it?</span> <button class="link-btn" style="font-size:12px" onclick="resendVerificationCode()" data-i18n="reg.resend">Resend code</button></p>
     </div>
 
@@ -2519,7 +2540,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="reportStart"></div>
     <div><label data-i18n="common.endDate">End Date</label><input type="date" id="reportEnd"></div>
     <div class="filter-action">
-      <button class="btn-primary" onclick="generateReport()" data-i18n="reports.generate">Generate</button>
+      <button class="btn-primary" onclick="withBusy(this,generateReport)" data-i18n="reports.generate">Generate</button>
     </div>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -3130,7 +3151,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="btn-secondary" onclick="closeModal('addEmpModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-secondary" id="promoteToManagerBtn" onclick="handlePromoteButtonClick()" style="display:none;border-color:rgba(124,92,191,.4);color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-upload"/></svg><span data-i18n="emp.promoteBtn">Promote</span></button>
       <button class="btn-secondary" id="manageAvailBtn" onclick="openAdminAvailModal()" style="display:none"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg><span data-i18n="sched.manageAvailBtn">Availability</span></button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEmployee()" data-i18n="modal.save">Save</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="withBusy(this,saveEmployee)" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -3252,7 +3273,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="editSiteUid">
     <div class="modal-footer">
       <button class="btn-secondary" onclick="destroyGeoMap();closeModal('addSiteModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSite()" data-i18n="modal.save">Save</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="withBusy(this,saveSite)" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -3607,7 +3628,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="form-group"><label data-i18n="missed.notes">Notes (optional)</label><textarea id="missedPunchNotes" rows="2" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface2);color:var(--text);font-family:inherit;font-size:13px;resize:vertical"></textarea></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('missedPunchModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-primary" id="missedPunchSubmit" style="width:auto;padding:9px 18px" onclick="submitMissedPunch()" data-i18n="missed.submit">Submit</button>
+      <button class="btn-primary" id="missedPunchSubmit" style="width:auto;padding:9px 18px" onclick="withBusy(this,submitMissedPunch)" data-i18n="missed.submit">Submit</button>
     </div>
   </div>
 </div>
@@ -6353,7 +6374,7 @@ function showActivationOverlay(isExtraSeat, plan, planNames, planIncludes, s){
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
   overlay.innerHTML=`
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:32px;max-width:480px;width:100%;text-align:center">
-      <div id="activationSpinner" style="font-size:40px;margin-bottom:16px">⏳</div>
+      <div id="activationSpinner" style="margin-bottom:16px;display:flex;justify-content:center"><div class="spinner"></div></div>
       <h3 id="activationTitle" style="margin:0 0 8px;font-size:20px">${t('activation.processing')||'Processing your payment...'}</h3>
       <p id="activationDesc" style="font-size:14px;color:var(--text2);margin:0 0 24px">${t('activation.wait')||'Please wait while we activate your purchase. This usually takes a few seconds.'}</p>
       <div id="activationForm" style="display:none"></div>
@@ -6406,7 +6427,7 @@ function showActivationSuccess(overlay, isExtraSeat, plan, planNames, planInclud
 
   if(delayed){
     // Webhook still in flight
-    spinner.textContent='';
+    spinner.innerHTML='<svg style="width:40px;height:40px;color:var(--green)"><use href="#i-check"/></svg>';
     title.textContent=t('activation.paymentReceived')||'Payment received!';
     desc.textContent=t('activation.activatingSoon')||'Your purchase will activate within a minute. You can close this and try adding the employee shortly.';
     dismiss.style.display='';
@@ -6416,14 +6437,14 @@ function showActivationSuccess(overlay, isExtraSeat, plan, planNames, planInclud
   if(isExtraSeat){
     // Scheduling add-on has its own success message
     if(plan==='scheduling_addon'){
-      spinner.textContent='';
+      spinner.innerHTML='<svg style="width:40px;height:40px;color:var(--green)"><use href="#i-check"/></svg>';
       title.textContent=t('activation.schedulingAdded')||'Scheduling Add-On Activated!';
       desc.textContent=t('activation.schedulingDesc')||'Your scheduling add-on is now active. You can now build weekly shift schedules for your team.';
       dismiss.style.display='';
       dismiss.textContent=t('activation.goToAdmin')||'Go to Admin Panel';
       return;
     }
-    spinner.textContent='';
+    spinner.innerHTML='<svg style="width:40px;height:40px;color:var(--green)"><use href="#i-check"/></svg>';
     title.textContent=t('activation.seatAdded')||'Extra seat activated!';
     desc.textContent=t('activation.seatDesc')||'Your extra employee seat is now active. Fill in the details below to add your new employee.';
     // Show inline add-employee mini form
@@ -6453,7 +6474,7 @@ function showActivationSuccess(overlay, isExtraSeat, plan, planNames, planInclud
     const newPlanName=planNames[plan]||plan;
     const planIncludesRaw=planIncludes[plan]||'';
     const includes=t('upgrade.desc.'+plan)||planIncludesRaw;
-    spinner.textContent='';
+    spinner.innerHTML='<svg style="width:40px;height:40px;color:var(--green)"><use href="#i-check"/></svg>';
     title.textContent=`${t('activation.planUpgraded')||'Plan upgraded!'} → ${newPlanName}`;
     desc.innerHTML=`<strong>${newPlanName}</strong> ${t('activation.nowActive')||'is now active.'}<br><span style="font-size:12px;color:var(--text3)">${includes}</span>`;
     dismiss.style.display='';
@@ -7362,8 +7383,32 @@ async function _finalizeMissedPunchReport(){
 // ═══════════════════════════════════════════════════
 // ADMIN PAGE
 // ═══════════════════════════════════════════════════
+// Paint a placeholder while a fetch is in flight. Every list previously showed the literal
+// word "Loading..." or nothing at all, so a slow connection was indistinguishable from an
+// empty account — and for a brand-new signup, an empty account looks like a broken product.
+// Cleared implicitly: whatever renders next overwrites the same container.
+function showSkeleton(target, rows, kind){
+  const el = typeof target === 'string' ? document.getElementById(target) : target;
+  if(!el) return;
+  rows = rows || 4;
+  if(kind === 'rows'){
+    // <tbody>: keep the column count so the table does not reflow when data lands.
+    const cols = el.closest('table') ? el.closest('table').querySelectorAll('thead th').length || 5 : 5;
+    el.innerHTML = Array.from({length:rows},()=>
+      `<tr>${Array.from({length:cols},()=>'<td><div class="skel skel-row"></div></td>').join('')}</tr>`).join('');
+    return;
+  }
+  el.innerHTML = Array.from({length:rows},()=>
+    `<div class="skel-card">
+       <div class="skel skel-row" style="width:38%"></div>
+       <div class="skel skel-row" style="width:72%"></div>
+     </div>`).join('');
+}
+
 async function loadAdminPage(){
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
+  showSkeleton('empTableBody',5,'rows');
+  showSkeleton('empCardsContainer',3);
   const ctx=Ctx.get();
   await refreshCache(ctx?{coId:ctx.co.id}:{});
   // Only a company-less account needs the blocking step; a missing site is handled by the
@@ -10115,6 +10160,8 @@ function exportReport(fmt){
 // ═══════════════════════════════════════════════════
 async function loadActivityPage(){
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
+  showSkeleton('activityBody',6,'rows');
+  showSkeleton('activityCardsContainer',3);
   await ensureManagerSiteIds();
   const coId=document.getElementById('actCoFilter').value;
   const siteId=document.getElementById('actSiteFilter').value;
@@ -10924,6 +10971,19 @@ async function confirmDelete(type,id,name){
 // ═══════════════════════════════════════════════════
 // MODAL / UTIL
 // ═══════════════════════════════════════════════════
+// Run an async action with the button visibly busy and un-clickable. Restores the previous
+// disabled state rather than blindly enabling, so a button that was disabled for another
+// reason stays that way.
+async function withBusy(btn, fn){
+  if(typeof btn === 'string') btn = document.getElementById(btn);
+  if(!btn) return fn();
+  const was = btn.disabled;
+  btn.classList.add('btn-busy');
+  btn.disabled = true;
+  try { return await fn(); }
+  finally { btn.classList.remove('btn-busy'); btn.disabled = was; }
+}
+
 // ── Confirm / alert dialogs ────────────────────────────────────────────────
 // The browser's own confirm() and alert() dropped an OS dialog on top of the app: system
 // fonts, system buttons, no theme, no translation of "OK" and "Cancel", and on mobile a
