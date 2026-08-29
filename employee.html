@@ -2,7 +2,10 @@
 <html lang="en" id="empHtmlRoot">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<!-- maximum-scale=1.0 blocked pinch-zoom entirely, which is an accessibility failure and a
+     practical one: these run on wall-mounted tablets where someone may genuinely need to
+     zoom to read a name or a time. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Tighter than the admin app's policy: the portal loads no third-party scripts at all. -->
 <meta http-equiv="Content-Security-Policy" content="

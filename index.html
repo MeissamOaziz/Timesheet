@@ -2,7 +2,10 @@
 <html lang="en" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<!-- maximum-scale=1.0 blocked pinch-zoom entirely, which is an accessibility failure and a
+     practical one: these run on wall-mounted tablets where someone may genuinely need to
+     zoom to read a name or a time. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Content Security Policy.
      'unsafe-inline' is unavoidable for now: the whole app is one file of inline script and inline
@@ -518,6 +521,35 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 /* One card recipe. Ten near-identical inline versions of this existed, differing by a pixel
    or two of padding and nothing else — which is exactly how a design drifts out of step with
    itself. Padding comes from the spacing scale rather than being eyeballed per instance. */
+/* Punch screen employee picker. This is the single most-touched surface in the product —
+   every employee, every shift, twice a day — and it was a 20-name native <select>: a dropdown
+   that opens an OS list, needs a precise tap, and shows a handful of names at a time. Tiles
+   are a big target with the person's initials on them, and typing filters instantly. */
+.emp-filter{width:100%;padding:12px 14px;font-size:15px;font-family:inherit;background:var(--surface2);
+  color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-md);outline:none;margin-bottom:12px;}
+.emp-filter:focus{border-color:var(--accent);}
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:9px;
+  max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px;margin-bottom:var(--s5);}
+.emp-tile{display:flex;align-items:center;gap:10px;padding:12px 13px;background:var(--surface2);
+  border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer;font-family:inherit;
+  text-align:left;transition:border-color .12s,background .12s;min-height:60px;}
+.emp-tile:hover{border-color:var(--accent);}
+.emp-tile.sel{border-color:var(--accent);background:rgba(79,142,247,.14);}
+.emp-tile-ini{width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.18);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.emp-tile.sel .emp-tile-ini{background:var(--accent);color:#fff;}
+/* break-word, not anywhere: "anywhere" split Tremblay into "Trembla / y". A name should
+   wrap between words and only break inside one if it genuinely cannot fit. */
+.emp-tile-name{display:block;font-size:14px;font-weight:600;color:var(--text);line-height:1.25;overflow-wrap:break-word;}
+.emp-tile-code{display:block;font-size:11px;color:var(--text3);margin-top:2px;}
+/* An employee already clocked in is the single most useful thing to show here: it is how
+   someone notices they never clocked out yesterday. */
+.emp-tile-in{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;margin-left:auto;}
+.emp-grid-empty{text-align:center;color:var(--text3);font-size:13.5px;padding:22px 10px;}
+@media(max-width:520px){
+  .emp-grid{grid-template-columns:1fr 1fr;max-height:40vh;}
+  .emp-tile{min-height:64px;}
+}
 /* Busy state. A submit button that looks identical mid-request invites a second click, and
    several of these create records — a double-submitted employee or punch is a real cost. The
    label is hidden rather than replaced so the button keeps its width and nothing jumps. */
@@ -1482,17 +1514,17 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h3 style="text-align:center;font-size:14px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:36px 0 20px" data-i18n="land.howSetupLabel">Getting Set Up</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#127970;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-nav-building"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how1Title">1. Create Your Account</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register with your name, email, and company details — payroll settings included. Verify your email and add your first site.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128205;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-map-pin"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how2Title">2. Add Sites</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how2Desc">Create one or more physical locations — stores, warehouses, offices.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128101;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how3Title">3. Add Employees</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how3Desc">Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.</p>
       </div>
@@ -1507,32 +1539,32 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h3 style="text-align:center;font-size:14px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:44px 0 20px" data-i18n="land.howAdminLabel">What Admins Can Do</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#9998;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-edit"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA1Title">Edit Any Punch</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA1Desc">Correct clock-in/out times, add missed punches, or remove invalid entries — all logged in an audit trail.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128202;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-bar-chart"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA2Title">Generate Reports</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA2Desc">Export hours by employee, site, or period in Excel, CSV, or PDF. Send reports directly to employees by email.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128336;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-clock"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA3Title">Overtime Alerts</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA3Desc">Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and exports.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128276;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-bell"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA4Title">Automated Emails</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA4Desc">At the end of each pay period, PunchClock automatically emails each employee their hours summary — no manual work.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128101;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA5Title">Bulk Actions</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA5Desc">Select multiple employees to send reports, activate, deactivate, or delete them all at once.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#128274;</div>
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-lock"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA6Title">Co-Admin Access</div>
         <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA6Desc">Invite co-admins to share management duties. Each co-admin sees the same companies, sites, and employees.</p>
       </div>
@@ -1713,7 +1745,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div class="picker-grid" id="pickerCompanyGrid"></div>
   <div class="picker-hints" id="pickerCompanyHints">
-    <span class="picker-hint" onclick="closePicker();navigate('login')">&#128274; Admin Login</span>
+    <span class="picker-hint" onclick="closePicker();navigate('login')"><svg class="ic" style="margin-right:5px"><use href="#i-lock"/></svg>Admin Login</span>
   </div>
 </div>
 
@@ -1721,13 +1753,13 @@ border-top:1px solid var(--border);margin:18px 0;}
 <div class="picker-screen hidden" id="pickerSite">
   <button class="picker-back" onclick="showCompanyPicker()">&#8592; Back</button>
   <div style="text-align:center">
-    <div style="font-size:38px;margin-bottom:10px">&#128205;</div>
+    <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:38px;height:38px"><use href="#i-map-pin"/></svg></div>
     <h2 id="sitePickerTitle">Select Site</h2>
     <p class="sub" id="sitePickerSub">Choose your work location</p>
   </div>
   <div class="picker-grid" id="pickerSiteGrid"></div>
   <div class="picker-hints">
-    <span class="picker-hint" onclick="closePicker();navigate('login')">&#128274; Admin Login</span>
+    <span class="picker-hint" onclick="closePicker();navigate('login')"><svg class="ic" style="margin-right:5px"><use href="#i-lock"/></svg>Admin Login</span>
   </div>
 </div>
 
@@ -1916,7 +1948,16 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="punch-card">
       <div id="punchCoLogo"></div>
       <h2 id="punchCoName">Select Your Name</h2>
-      <div class="select-wrap"><select id="empSelect"><option value="">-- Choose employee --</option></select></div>
+      <!-- The select is now hidden but still the source of truth: a dozen call sites read and
+           clear empSelect.value, and the punch flow, PIN gate and shift panel all key off its
+           change event. The tiles drive it rather than replacing it. -->
+      <div class="select-wrap" id="empSelectWrap" style="display:none"><select id="empSelect"><option value="">-- Choose employee --</option></select></div>
+      <div id="empPickerWrap">
+        <input type="text" id="empFilter" class="emp-filter" autocomplete="off"
+               placeholder="Search your name" data-i18n="punch.searchName" oninput="renderEmpTiles()">
+        <div id="empGrid" class="emp-grid"></div>
+        <div id="empGridEmpty" class="emp-grid-empty" style="display:none"></div>
+      </div>
       <div class="punch-btns">
         <button class="punch-btn btn-in" onclick="requestPunch('IN')">&#10003; IN</button>
         <button class="punch-btn btn-out" onclick="requestPunch('OUT')">&#10005; OUT</button>
@@ -3649,7 +3690,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="modal">
     <h3>Add Punch Record</h3>
     <div id="addPunchMsg"></div>
-    <div class="msg info" style="margin-bottom:14px">&#128221; Manual entry — use for forgotten clock-ins/outs.</div>
+    <div class="msg info" style="margin-bottom:14px"><svg class="ic" style="margin-right:6px"><use href="#i-edit"/></svg>Manual entry — use for forgotten clock-ins/outs.</div>
     <div class="form-group"><label>Employee</label><select id="addPunchEmp"></select></div>
     <div class="form-row">
       <div class="form-group"><label>Type</label>
@@ -4307,7 +4348,6 @@ function showCompanyPicker(){
     return;
   }
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
-  const icons=['&#127970;','&#127968;','&#127963;','&#127981;','&#127979;','&#128736;'];
   grid.innerHTML=C.companies.map((co,i)=>{
     const empCnt=C.employees.filter(e=>e.company_id===co.id&&e.active).length;
     const siteCnt=C.sites.filter(s=>s.company_id===co.id).length;
@@ -4360,7 +4400,6 @@ function showSitePicker(co,sites){
   document.getElementById('sitePickerTitle').textContent=co.name;
   document.getElementById('sitePickerSub').textContent=t('msg.chooseSite');
   const colors=['#4f8ef7','#22c55e','#a78bfa','#f59e0b','#ef4444','#06b6d4'];
-  const icons=['&#128205;','&#127970;','&#127968;','&#128336;','&#127963;','&#9962;'];
   const grid=document.getElementById('pickerSiteGrid');
   grid.innerHTML=sites.map((s,i)=>{
     const empCnt=C.employees.filter(e=>e.site_id===s.id&&e.active).length;
@@ -6665,6 +6704,68 @@ function getEmpStatus(empId){
 // ═══════════════════════════════════════════════════
 // PUNCH PAGE
 // ═══════════════════════════════════════════════════
+// ── Punch screen: employee tiles ───────────────────────────────────────────
+let _punchEmps = [];
+
+function _initials(name){
+  return String(name||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
+}
+
+function renderEmpTiles(){
+  const grid = document.getElementById('empGrid');
+  const empty = document.getElementById('empGridEmpty');
+  const sel = document.getElementById('empSelect');
+  if(!grid || !sel) return;
+  const q = (document.getElementById('empFilter')?.value || '').trim().toLowerCase();
+  // Accent-insensitive: someone called Aïsha should be found by typing "aisha".
+  const norm = x => String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const nq = norm(q);
+  const list = nq ? _punchEmps.filter(e => norm(e.name).includes(nq) || norm(e.emp_code).includes(nq))
+                  : _punchEmps;
+
+  if(!list.length){
+    grid.innerHTML = '';
+    if(empty){
+      empty.style.display = '';
+      empty.textContent = _punchEmps.length
+        ? (t('punch.noMatch')||'No one matches that.')
+        : (t('punch.noEmployees')||'No employees yet at this site.');
+    }
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  grid.innerHTML = list.map(e => {
+    const on = sel.value === e.id;
+    const isIn = (typeof getEmpStatus === 'function' && getEmpStatus(e.id).status === 'IN');
+    return `<button type="button" class="emp-tile${on?' sel':''}" data-emp="${esc(e.id)}"
+              aria-pressed="${on?'true':'false'}">
+        <span class="emp-tile-ini">${esc(_initials(e.name))}</span>
+        <span style="min-width:0">
+          <span class="emp-tile-name">${esc(e.name)}</span>
+          ${e.emp_code?`<span class="emp-tile-code">${esc(e.emp_code)}</span>`:''}
+        </span>
+        ${isIn?`<span class="emp-tile-in" title="${esc(t('punch.currentlyIn')||'Currently clocked in')}"></span>`:''}
+      </button>`;
+  }).join('');
+}
+
+function selectPunchEmp(id){
+  const sel = document.getElementById('empSelect');
+  if(!sel) return;
+  sel.value = id;
+  // The select is what the rest of the punch flow listens to, so fire its handler rather than
+  // duplicating what it does.
+  if(typeof sel.onchange === 'function') sel.onchange.call(sel);
+  renderEmpTiles();
+}
+
+// Delegated so re-rendering the grid never leaves stale handlers behind.
+document.addEventListener('click', function(e){
+  const tile = e.target.closest && e.target.closest('.emp-tile');
+  if(tile && tile.dataset.emp) selectPunchEmp(tile.dataset.emp);
+});
+
 async function loadPunchPage(){
   const ctx=Ctx.get();
   if(!ctx){
@@ -6686,8 +6787,8 @@ async function loadPunchPage(){
   // Banner
   const banner=document.getElementById('punchBanner');
   banner.innerHTML=siteId
-    ?`&#127970; ${ctx.co.name} &nbsp;·&nbsp; &#128205; ${ctx.site.name}`
-    :`&#127970; ${ctx.co.name}`;
+    ?`<svg class="ic" style="width:14px;height:14px;margin-right:5px;vertical-align:-2px"><use href="#i-nav-building"/></svg>${esc(ctx.co.name)} &nbsp;·&nbsp; <svg class="ic" style="width:14px;height:14px;margin-right:5px;vertical-align:-2px"><use href="#i-map-pin"/></svg>${esc(ctx.site.name)}`
+    :`<svg class="ic" style="width:14px;height:14px;margin-right:5px;vertical-align:-2px"><use href="#i-nav-building"/></svg>${esc(ctx.co.name)}`;
   // Show kiosk setup bar only when admin is logged in
   const kioskBar=document.getElementById('kioskSetupBar');
   if(kioskBar) kioskBar.style.display=isLoggedIn()?'flex':'none';
@@ -6717,6 +6818,10 @@ async function loadPunchPage(){
     o.textContent=e.name+(e.emp_code?` (${e.emp_code})`:'');
     sel.appendChild(o);
   });
+  // The tiles are the visible picker; the select stays authoritative.
+  _punchEmps = emps;
+  renderEmpTiles();
+
   // Show My Shifts when employee is selected
   sel.onchange = function() {
     const empId = this.value;
@@ -7121,7 +7226,7 @@ async function executePunch(empId,type){
           `${t('geo.deviceNotRegistered')||'This device is not registered for'} <strong>${site.name}</strong>. ${t('geo.askAdmin')||'Ask your manager to register this device using the Kiosk Shortcut button.'}`,
           'error'
         );
-        document.getElementById('empSelect').value='';
+        document.getElementById('empSelect').value='';renderEmpTiles();
         return;
       }
     }
@@ -7150,7 +7255,7 @@ async function executePunch(empId,type){
           // GPS unavailable + strict mode
           showPunchMsg(`${geoResult.message||t('geo.blockedNoGps')}`, 'error');
         }
-        document.getElementById('empSelect').value='';
+        document.getElementById('empSelect').value='';renderEmpTiles();
         return;
       }
 
@@ -7179,7 +7284,7 @@ async function executePunch(empId,type){
       const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
       const geoNote = geoResult.status==='ok' ? ` · ${geoResult.distance}m` : '';
       showPunchMsg(`&#10003; ${emp.name} clocked ${type} at ${timeStr}${geoNote}`,'success');
-      document.getElementById('empSelect').value='';
+      document.getElementById('empSelect').value='';renderEmpTiles();
       refreshClockedIn();
     }catch(e){showPunchMsg(t('msg.errorSaving')+': '+e.message,'error');}
   } finally {
@@ -7201,7 +7306,7 @@ let _dblPunchPending = null; // {empId, attemptedType}
 function showDoublePunchWarning(empId, attemptedType){
   const emp = C.employees.find(e=>e.id===empId);
   if(!emp){
-    document.getElementById('empSelect').value='';
+    document.getElementById('empSelect').value='';renderEmpTiles();
     return;
   }
   const {last} = getEmpStatus(empId);
@@ -12130,7 +12235,7 @@ async function init(){
     setTimeout(()=>{
       const msg=document.createElement('div');
       msg.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1d27;border:1px solid var(--red);border-radius:var(--r-md);padding:12px 20px;color:var(--text);font-size:13px;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.5)';
-      msg.innerHTML=`<span style="color:var(--red)">&#9888;</span> Database connection failed. <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:var(--r-xs);color:#fff;padding:4px 12px;font-family:inherit;font-size:12px;cursor:pointer;margin-left:4px">Retry</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 4px">&times;</button>`;
+      msg.innerHTML=`<span style="color:var(--red)"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg></span> Database connection failed. <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:var(--r-xs);color:#fff;padding:4px 12px;font-family:inherit;font-size:12px;cursor:pointer;margin-left:4px">Retry</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 4px">&times;</button>`;
       document.body.appendChild(msg);
       setTimeout(()=>msg.remove(),10000);
     },300);
@@ -13058,6 +13163,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'punch.searchName':'Search your name','punch.noMatch':'No one matches that.','punch.noEmployees':'No employees yet at this site.',
 'dlg.confirmTitle':'Are you sure?','dlg.confirm':'Confirm','dlg.noticeTitle':'Heads up','dlg.ok':'OK',
 'fb.title':'Welcome back — can we ask one question?','fb.body':'It has been {n} days. What got in the way?',
 'fb.thanks':'Thank you — that helps.','fb.more':'Anything you want to add? (optional)','fb.placeholder':'Optional',
@@ -13837,6 +13943,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'punch.searchName':'Cherchez votre nom','punch.noMatch':'Aucune correspondance.','punch.noEmployees':'Aucun employé à ce site pour l’instant.',
 'dlg.confirmTitle':'Êtes-vous sûr?','dlg.confirm':'Confirmer','dlg.noticeTitle':'Avis','dlg.ok':'OK',
 'fb.title':'Content de vous revoir — une seule question?','fb.body':'Ça fait {n} jours. Qu’est-ce qui vous a bloqué?',
 'fb.thanks':'Merci — c’est utile.','fb.more':'Souhaitez-vous ajouter quelque chose? (optionnel)','fb.placeholder':'Optionnel',
