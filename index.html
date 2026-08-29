@@ -2151,6 +2151,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div id="setupChecklist" style="display:none"></div>
   <div id="payrollPrompt" style="display:none"></div>
+  <div id="feedbackPrompt" style="display:none"></div>
   <div id="dashboardContent"></div>
 </div>
 
@@ -4852,12 +4853,93 @@ function renderPayrollPrompt(){
   </div>`;
 }
 
+// One question, asked of someone who just came back after being away. The email churn survey
+// drew a single response from thirteen invites and it was Meissam's own test, so voice-of-
+// customer is effectively zero; this asks while they are demonstrably in the product. Shown at
+// most once per account per 30 days (enforced server-side too), never alongside another prompt.
+const FEEDBACK_REASONS = [
+  { k:'too_complicated', en:'It was harder to set up than I expected', fr:'Plus difficile à configurer que prévu' },
+  { k:'no_time',         en:'I just have not had time',                fr:'Je n’ai simplement pas eu le temps' },
+  { k:'missing_feature', en:'Something I need is missing',             fr:'Il manque quelque chose dont j’ai besoin' },
+  { k:'team_resistance', en:'Getting my team to use it is the hard part', fr:'Faire adopter l’outil par mon équipe' },
+  { k:'other',           en:'Something else',                          fr:'Autre chose' },
+];
+
+function _feedbackAsked(){try{return localStorage.getItem('pc_feedback_asked')==='1';}catch(_){return true;}}
+function dismissFeedbackPrompt(){
+  try{localStorage.setItem('pc_feedback_asked','1');}catch(_){}
+  const el=document.getElementById('feedbackPrompt'); if(el) el.style.display='none';
+}
+
+function renderFeedbackPrompt(){
+  const host=document.getElementById('feedbackPrompt');
+  if(!host) return;
+  host.style.display='none';
+  const sess=Sess.get();
+  if(!sess||isSuperAdmin()||sess.parent_admin_id||isManager()||_feedbackAsked()||window._demoMode) return;
+  // Never stack prompts: the checklist and the payroll nudge both own this space first.
+  for(const id of ['setupChecklist','payrollPrompt']){
+    const el=document.getElementById(id);
+    if(el && el.style.display!=='none') return;
+  }
+  // Only worth asking someone who went away and came back.
+  let prev=null;
+  try{ prev=sessionStorage.getItem('pc_prev_login'); }catch(_){}
+  if(!prev) return;
+  const daysAway=Math.floor((Date.now()-new Date(prev).getTime())/86400000);
+  if(!(daysAway>=14)) return;
+
+  host.style.display='';
+  host.innerHTML=`<div style="background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:16px 19px;margin-bottom:20px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14.5px;font-weight:600">${esc(t('fb.title')||'Welcome back — can we ask one question?')}</div>
+        <div style="font-size:12.5px;color:var(--text2);margin-top:3px">${esc((t('fb.body')||'It has been {n} days. What got in the way?').replace('{n}',daysAway))}</div>
+      </div>
+      <button onclick="dismissFeedbackPrompt()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;flex-shrink:0">${esc(t('setup.hide')||'Hide')}</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">
+      ${FEEDBACK_REASONS.map(r=>`<button class="btn-secondary" style="width:auto;padding:6px 13px;font-size:12.5px" onclick="submitFeedback('${r.k}')">${esc(_appLang==='fr'?r.fr:r.en)}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+async function submitFeedback(reasonKey){
+  const host=document.getElementById('feedbackPrompt');
+  // Mark it asked before the network call: whether or not the write lands, this account has
+  // now been asked, and asking twice is worse than losing one answer.
+  try{localStorage.setItem('pc_feedback_asked','1');}catch(_){}
+  const label=(FEEDBACK_REASONS.find(r=>r.k===reasonKey)||{});
+  if(host) host.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 19px;margin-bottom:20px">
+    <div style="font-size:14px;font-weight:600">${esc(t('fb.thanks')||'Thank you — that helps.')}</div>
+    <div style="font-size:12.5px;color:var(--text2);margin-top:4px">${esc(t('fb.more')||'Anything you want to add? (optional)')}</div>
+    <textarea id="fbNote" rows="2" style="width:100%;margin-top:8px;font-family:inherit;font-size:13px" placeholder="${esc(t('fb.placeholder')||'Optional')}"></textarea>
+    <button class="btn-primary" style="width:auto;padding:6px 15px;font-size:12.5px;margin-top:6px" onclick="submitFeedbackNote('${reasonKey}')">${esc(t('fb.send')||'Send')}</button>
+    <button class="btn-secondary" style="width:auto;padding:6px 13px;font-size:12.5px;margin-top:6px" onclick="dismissFeedbackPrompt()">${esc(t('fb.noThanks')||'No thanks')}</button>
+  </div>`;
+  const sess=Sess.get();
+  try{ await DB.rpc('submit_inapp_feedback',{p_session:sess?.token||'',p_reason:reasonKey,p_note:null}); }
+  catch(e){ console.warn('feedback submit failed', e); }
+}
+
+async function submitFeedbackNote(reasonKey){
+  const note=(document.getElementById('fbNote')?.value||'').trim();
+  const sess=Sess.get();
+  if(note){
+    try{ await DB.rpc('submit_inapp_feedback',{p_session:sess?.token||'',p_reason:reasonKey,p_note:note}); }
+    catch(e){ console.warn('feedback note failed', e); }
+  }
+  dismissFeedbackPrompt();
+  showToast(t('fb.sent')||'Thanks — we read every one of these.','success');
+}
+
 // ═══════════════════════════════════════════════════
 // DASHBOARD (stats landing) — computed from the local cache
 // ═══════════════════════════════════════════════════
 function renderDashboard(){
   renderSetupChecklist();
   renderPayrollPrompt();
+  renderFeedbackPrompt();
   // The tour used to auto-open here, 400ms after the checklist rendered, and land a modal
   // squarely on top of it — two onboarding systems competing on the same screen, with the
   // one the owner could act on hidden behind the one they could only read. The checklist
@@ -5559,6 +5641,9 @@ async function doLogin(){
       scheduling_addon: !!full.scheduling_addon,
       token: _tok,
     }, rememberMe);
+    // verify_admin_login is a pure SELECT, so full.last_login is the PREVIOUS login — the only
+    // moment that value is still available, since the update below overwrites it.
+    try{ sessionStorage.setItem('pc_prev_login', full.last_login||''); }catch(_){}
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
     updateNav();
     await refreshCache();
@@ -12844,6 +12929,9 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'fb.title':'Welcome back — can we ask one question?','fb.body':'It has been {n} days. What got in the way?',
+'fb.thanks':'Thank you — that helps.','fb.more':'Anything you want to add? (optional)','fb.placeholder':'Optional',
+'fb.send':'Send','fb.noThanks':'No thanks','fb.sent':'Thanks — we read every one of these.',
 'sched.notifyTeam':'Notify team','sched.noShiftsWeek':'No shifts scheduled this week.',
 'sched.noneHaveEmail':'None of the scheduled employees have an email address yet.',
 'sched.confirmNotify':'Send this week’s schedule to {n} employee(s)?',
@@ -13619,6 +13707,9 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'fb.title':'Content de vous revoir — une seule question?','fb.body':'Ça fait {n} jours. Qu’est-ce qui vous a bloqué?',
+'fb.thanks':'Merci — c’est utile.','fb.more':'Souhaitez-vous ajouter quelque chose? (optionnel)','fb.placeholder':'Optionnel',
+'fb.send':'Envoyer','fb.noThanks':'Non merci','fb.sent':'Merci — nous lisons chacun de ces messages.',
 'sched.notifyTeam':'Aviser l’équipe','sched.noShiftsWeek':'Aucun quart planifié cette semaine.',
 'sched.noneHaveEmail':'Aucun des employés planifiés n’a encore d’adresse courriel.',
 'sched.confirmNotify':'Envoyer l’horaire de cette semaine à {n} employé(s)?',
