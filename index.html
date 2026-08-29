@@ -3783,7 +3783,7 @@ const DB={
 function previewUpload(inputId, previewId, areaId, isRound=false) {
   const file = document.getElementById(inputId).files[0];
   if(!file) return;
-  if(file.size > 2*1024*1024){ alert('File too large. Max 2MB.'); return; }
+  if(file.size > 2*1024*1024){ uiAlert('File too large. Max 2MB.'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     const img = document.getElementById(previewId);
@@ -5851,7 +5851,7 @@ async function setSurveyStatus(id,status){
   try{const r=await DB.rpc('admin_set_survey_status',{p_token:tok,p_id:id,p_status:status});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not update.','error');}}catch(e){showToast(e.message,'error');}
 }
 async function deleteSurveyResponse(id){
-  if(!confirm('Delete this feedback permanently?'))return;
+  if(!(await uiConfirm('Delete this feedback permanently?')))return;
   const tok=Sess.get()?.token;
   try{const r=await DB.rpc('admin_delete_survey',{p_token:tok,p_id:id});if(r&&r.ok){loadSurveyFeedback();}else{showToast('Could not delete.','error');}}catch(e){showToast(e.message,'error');}
 }
@@ -6053,7 +6053,7 @@ function logout(){
 // next browser restart dropped the tablet back to the login screen, and the device never showed
 // up as connected on the admin side. It now leaves the device in exactly the state the QR path
 // produces — and says plainly that it signs you out first, because it does.
-function kioskMode(){
+async function kioskMode(){
   const ctx=Ctx.get();
   if(!ctx || !ctx.site){
     showToast(t('punch.kioskNeedsSite')||'Choose a site first, then set this device up as its kiosk.','error');
@@ -6061,7 +6061,7 @@ function kioskMode(){
   }
   const msg=(t('punch.kioskConfirm')||'Set this device up as the punch terminal for {site}? You will be signed out here so staff can clock in.')
     .replace('{site}', ctx.site.name);
-  if(!confirm(msg)) return;
+  if(!(await uiConfirm(msg))) return;
 
   try{ localStorage.setItem('pc_kiosk_device', ctx.site.id); }catch(_){}
   kioskCheckIn(ctx.site.id);
@@ -7572,7 +7572,7 @@ function clearEmpSelection(){
 async function bulkToggleActive(activate){
   if(!_selectedEmps.size) return;
   const word = activate ? 'activate' : 'deactivate';
-  if(!confirm(`${word.charAt(0).toUpperCase()+word.slice(1)} ${_selectedEmps.size} employee(s)?`)) return;
+  if(!(await uiConfirm(`${word.charAt(0).toUpperCase()+word.slice(1)} ${_selectedEmps.size} employee(s)?`))) return;
   const ids = [..._selectedEmps];
   try{
     for(const id of ids){
@@ -7600,7 +7600,7 @@ async function bulkDelete(){
   const punchCount=C.punches.filter(p=>_selectedEmps.has(p.emp_id)).length;
   const bulkWarn=(t('msg.bulkDeleteConfirm')||'Permanently delete {n} employee(s)? This also deletes their {p} punch records — payroll history you may be required to keep. To free a seat under your plan without losing history, deactivate them instead.')
     .replace('{n}',ids.length).replace('{p}',punchCount);
-  if(!confirm(bulkWarn)) return;
+  if(!(await uiConfirm(bulkWarn))) return;
   try{
     for(const id of ids){
       await DB.del('employees',`id=eq.${id}`);
@@ -7631,7 +7631,7 @@ async function bulkSendReport(){
   const msg = withEmail.length===emps.length
     ? `Send reports to ${withEmail.length} employee(s)?`
     : `Send reports to ${withEmail.length} of ${emps.length} employee(s) (${noEmail.length} have no report email configured)?`;
-  if(!confirm(msg)) return;
+  if(!(await uiConfirm(msg))) return;
   // One modal, one period choice, sent to everyone selected — executeSendReport() loops the
   // queue. (This used to open the modal for the first employee only and never touch the rest,
   // so a "send to 8 employees" confirmation actually sent exactly one report.)
@@ -7857,7 +7857,7 @@ function openSiteManagersModal(siteId){
       <span style="font-size:11px;color:var(--text3);margin-left:auto">${a.email}</span>
     </label>`).join('');
     openModal('siteManagersModal');
-  }).catch(e=>alert(e.message));
+  }).catch(e=>uiAlert(e.message));
 }
 
 async function saveSiteManagers(){
@@ -8131,7 +8131,7 @@ async function openEditCoAdminModal(id){
 
     toggleEditCoAdminSites();
     openModal('editCoAdminModal');
-  }catch(e){alert(e.message);}
+  }catch(e){uiAlert(e.message);}
 }
 
 async function saveEditCoAdmin(){
@@ -8160,7 +8160,7 @@ async function saveEditCoAdmin(){
 }
 
 async function deleteCoAdmin(id,name){
-  if(!confirm(`${t('msg.deleteAdmin1')} "${name}"?\n\n${t('msg.deleteAdmin2')}`))return;
+  if(!(await uiConfirm(`${t('msg.deleteAdmin1')} "${name}"?\n\n${t('msg.deleteAdmin2')}`)))return;
   try{
     await DB.del('admins',`id=eq.${id}`);
     await loadCoAdmins();
@@ -8207,7 +8207,7 @@ async function resendCoAdminInvite(id, email, name) {
 async function cancelInvitation(invId, email){
   if(!invId) return false;
   const msg = (t('coAdmin.cancelConfirm')||'Cancel the invitation sent to')+' '+email+'?';
-  if(!confirm(msg)) return false;
+  if(!(await uiConfirm(msg))) return false;
   try{
     await DB.del('invitations', `id=eq.${invId}`);
     await loadCoAdmins();
@@ -8331,7 +8331,7 @@ async function renderAdmins(){
 }
 
 async function deleteAdmin(id, name){
-  if(!confirm(`${t('msg.deleteAdmin1')} "${name}"?\n\n${t('msg.deleteAdmin2')}`)) return;
+  if(!(await uiConfirm(`${t('msg.deleteAdmin1')} "${name}"?\n\n${t('msg.deleteAdmin2')}`))) return;
   try{
     // 1. Find all companies owned by this admin
     const ownedCompanies = await DB.all('companies',`admin_id=eq.${id}`);
@@ -8618,7 +8618,7 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
 async function denyMissedPunch(id){
   const req=_missedPunchRequests.find(r=>r.id===id);
   if(!req)return;
-  if(!confirm(`Deny missed punch request for ${req.emp_name}?`))return;
+  if(!(await uiConfirm(`Deny missed punch request for ${req.emp_name}?`)))return;
   const sess=Sess.get();
   try{
     await DB.update('missed_punch_requests',`id=eq.${id}`,{
@@ -8646,7 +8646,7 @@ async function approveJoinRequest(reqId, adminId){
     const extraSeats=Number(sess.extra_seats??0);
     const maxCoAdmins=(plan.maxCoAdmins===Infinity?Infinity:plan.maxCoAdmins-1)+extraSeats;
     if(currentCoAdmins.length>=maxCoAdmins){
-      alert((t('coAdmin.limitReached')||'Co-admin limit reached for your plan. Upgrade or add an extra seat.'));
+      uiAlert((t('coAdmin.limitReached')||'Co-admin limit reached for your plan. Upgrade or add an extra seat.'));
       return;
     }
     // Approve: set parent_admin_id to primary admin so co-admin sees the right companies
@@ -8670,11 +8670,11 @@ async function approveJoinRequest(reqId, adminId){
     }
     showToast(t('coAdmin.approved')||'Co-admin approved successfully.');
     if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
-  }catch(e){alert(e.message);}
+  }catch(e){uiAlert(e.message);}
 }
 
 async function denyJoinRequest(reqId, adminId){
-  if(!confirm(t('msg.denyRequest')||'Deny this access request?')) return;
+  if(!(await uiConfirm(t('msg.denyRequest')||'Deny this access request?'))) return;
   try{
     // Fetch request details before denying — needed for denial notification
     const reqRows=await DB.all('join_requests',`id=eq.${reqId}`);
@@ -8702,7 +8702,7 @@ async function denyJoinRequest(reqId, adminId){
     }
     if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
     showToast('Access request denied.','info');
-  }catch(e){alert(e.message);}
+  }catch(e){uiAlert(e.message);}
 }
 
 function openCreateAdminModal(){
@@ -8750,7 +8750,7 @@ function openEditAdminModal(id){
     // Prevent editing super admin role if it's the main super admin email
     document.getElementById('editAdminRole').disabled = a.email===SUPER_ADMIN_EMAIL;
     openModal('editAdminModal');
-  }).catch(e=>alert(e.message));
+  }).catch(e=>uiAlert(e.message));
 }
 
 async function saveEditAdmin(){
@@ -8910,7 +8910,7 @@ async function handlePromoteButtonClick(){
   if(state==='active_manager'){
     const mgrId = btn.dataset.mgrId;
     const empName = (document.getElementById('empName')?.value)||'this manager';
-    if(!confirm(_appLang==='fr'
+    if(!(await uiConfirm(_appLang==='fr')
       ? `Rétrograder ${empName} en employé? Cette personne perdra l'accès gestionnaire et ses sites assignés, mais conservera ses pointages. Réversible.`
       : `Demote ${empName} to employee? They'll lose manager access and site assignments but keep their punch records. This can be reversed.`)) return;
     try{
@@ -9115,7 +9115,7 @@ async function sendEmpPortalInvite(empId, email, empName) {
 }
 
 async function revokeEmpPortalAccess(empId) {
-  if(!confirm(t('emp.portalRevokeConfirm')||'Revoke this employee\'s portal access? They will no longer be able to log in.')) return;
+  if(!(await uiConfirm(t('emp.portalRevokeConfirm')||'Revoke this employee\'s portal access? They will no longer be able to log in.'))) return;
   try {
     await DB.del('employee_portal',`employee_id=eq.${empId}`);
     const emp = C.employees.find(e=>e.id===empId);
@@ -9642,7 +9642,7 @@ async function saveRecipient(){
 
 async function removeRecipient(id){
   const r=_recipients.find(x=>x.id===id); if(!r) return;
-  if(!confirm((t('recip.confirmRemove')||'Stop sending the payroll summary to {email}?').replace('{email}',r.email))) return;
+  if(!(await uiConfirm((t('recip.confirmRemove')||'Stop sending the payroll summary to {email}?').replace('{email}',r.email)))) return;
   try{
     await DB.del('report_recipients',`id=eq.${id}`);
     await renderRecipients();
@@ -9823,8 +9823,8 @@ async function generateReport(){
   const coId=document.getElementById('reportCompany').value;
   const siteId=document.getElementById('reportSite').value;
   const selEmps=[...document.querySelectorAll('.emp-check:checked')].map(c=>c.value);
-  if(!start||!end){alert('Please select a date range.');return;}
-  if(!selEmps.length){alert('Please select at least one employee.');return;}
+  if(!start||!end){uiAlert('Please select a date range.');return;}
+  if(!selEmps.length){uiAlert('Please select at least one employee.');return;}
 
   let punches;
   try{
@@ -9837,7 +9837,7 @@ async function generateReport(){
       // Client-side guard in case DB returns unexpected rows
       if(!isSuperAdmin())punches=(punches||[]).filter(p=>_rptCoIds.includes(p.company_id));
     }
-  }catch(e){alert(e.message);return;}
+  }catch(e){uiAlert(e.message);return;}
 
   // Group employees by site for organised output
   // Build site groups in order
@@ -10045,7 +10045,7 @@ async function generateReport(){
 }
 
 function exportReport(fmt){
-  if(!reportData.length){alert('Generate a report first.');return;}
+  if(!reportData.length){uiAlert('Generate a report first.');return;}
   const coLabel=document.getElementById('reportCompany').options[document.getElementById('reportCompany').selectedIndex].text;
   const siteLabel=document.getElementById('reportSite').options[document.getElementById('reportSite').selectedIndex].text;
   const startD=document.getElementById('reportStart').value;
@@ -10281,7 +10281,7 @@ async function bulkDeletePunches(){
   const msg=isFr
     ?`Supprimer ${ids.length} pointage${ids.length>1?'s':''} ? Cette action est irréversible.`
     :`Delete ${ids.length} punch${ids.length>1?'es':''}? This cannot be undone.`;
-  if(!confirm(msg))return;
+  if(!(await uiConfirm(msg)))return;
   try {
     await DB.del('punches',`id=in.(${ids.join(',')})`) ;
     _actSelectedIds.clear();
@@ -10419,7 +10419,7 @@ function confirmDeletePunch(id){
   document.getElementById('deleteMsg').textContent=t('msg.deletePunch');
   document.getElementById('confirmDeleteBtn').onclick=async()=>{
     try{await DB.del('punches',`id=eq.${id}`);C.punches=C.punches.filter(p=>p.id!==id);closeModal('deleteModal');loadActivityPage();}
-    catch(e){alert('Delete failed: '+e.message);}
+    catch(e){uiAlert('Delete failed: '+e.message);}
   };
   openModal('deleteModal');
 }
@@ -10813,7 +10813,7 @@ async function reviewTimeOff(id,decision){
 async function deleteTimeOff(id){
   const r=_timeOff.find(x=>x.id===id);
   if(!r) return;
-  if(!confirm((t('to.confirmDelete')||'Delete this time off for {name}?').replace('{name}',r.emp_name||''))) return;
+  if(!(await uiConfirm((t('to.confirmDelete')||'Delete this time off for {name}?').replace('{name}',r.emp_name||'')))) return;
   try{
     await DB.del('time_off',`id=eq.${id}`);
     await refreshTimeOff(); renderTimeOff();
@@ -10824,7 +10824,7 @@ async function deleteTimeOff(id){
 // ═══════════════════════════════════════════════════
 // DELETE
 // ═══════════════════════════════════════════════════
-function confirmDelete(type,id,name){
+async function confirmDelete(type,id,name){
   if(type==='emp'&&isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   // Detect linked active manager account (captured in closure for onclick)
   let linkedMgr = null;
@@ -10916,7 +10916,7 @@ function confirmDelete(type,id,name){
         loadSitesPage();
       }
       closeModal('deleteModal');
-    }catch(e){alert('Delete failed: '+e.message);}
+    }catch(e){uiAlert('Delete failed: '+e.message);}
   };
   openModal('deleteModal');
 }
@@ -10924,6 +10924,78 @@ function confirmDelete(type,id,name){
 // ═══════════════════════════════════════════════════
 // MODAL / UTIL
 // ═══════════════════════════════════════════════════
+// ── Confirm / alert dialogs ────────────────────────────────────────────────
+// The browser's own confirm() and alert() dropped an OS dialog on top of the app: system
+// fonts, system buttons, no theme, no translation of "OK" and "Cancel", and on mobile a
+// prefix naming the site. Twenty-two confirms and ten alerts went through them, several
+// guarding destructive actions, so the most consequential moments in the product looked the
+// least like it. These are promise-based because confirm() is synchronous and callers said
+// `if(!confirm(...)) return;` — every one of those had to start awaiting.
+let _dlgResolve = null;
+
+function _closeDialog(result){
+  const el = document.getElementById('uiDialog');
+  if(el) el.classList.remove('open');
+  document.removeEventListener('keydown', _dlgKey, true);
+  const r = _dlgResolve; _dlgResolve = null;
+  if(r) r(result);
+}
+function _dlgKey(e){
+  if(e.key === 'Escape'){ e.preventDefault(); _closeDialog(false); }
+  else if(e.key === 'Enter'){ e.preventDefault(); _closeDialog(true); }
+}
+
+function _openDialog({ title, message, confirmLabel, cancelLabel, danger, alertOnly }){
+  let el = document.getElementById('uiDialog');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'uiDialog';
+    el.className = 'modal-overlay';
+    el.setAttribute('data-no-dismiss','');   // a destructive prompt should not vanish on a stray click
+    document.body.appendChild(el);
+  }
+  const esc = x => String(x==null?'':x).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  // Callers pass copy written for confirm(), which meant real newlines.
+  const body = esc(message).replace(/\n/g,'<br>');
+  el.innerHTML = `<div class="modal" style="max-width:420px" role="alertdialog" aria-modal="true" aria-labelledby="uiDlgTitle">
+    <h3 id="uiDlgTitle" style="margin:0 0 8px;font-size:16px">${esc(title)}</h3>
+    <p style="color:var(--text2);font-size:13.5px;line-height:1.55;margin:0 0 20px">${body}</p>
+    <div style="display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap">
+      ${alertOnly ? '' : `<button class="btn-secondary" id="uiDlgCancel" style="width:auto;padding:8px 16px">${esc(cancelLabel)}</button>`}
+      <button class="${danger?'btn-danger':'btn-primary'}" id="uiDlgOk" style="width:auto;padding:8px 18px">${esc(confirmLabel)}</button>
+    </div>
+  </div>`;
+  el.classList.add('open');
+  el.querySelector('#uiDlgOk').onclick = ()=>_closeDialog(true);
+  const c = el.querySelector('#uiDlgCancel');
+  if(c) c.onclick = ()=>_closeDialog(false);
+  document.addEventListener('keydown', _dlgKey, true);
+  setTimeout(()=>{ const b=el.querySelector(danger&&!alertOnly?'#uiDlgCancel':'#uiDlgOk'); if(b) b.focus(); }, 30);
+  return new Promise(res => { _dlgResolve = res; });
+}
+
+// Destructive by default: most call sites guard a delete, and defaulting the focus to Cancel
+// on those is the difference between a slip and a lost record.
+function uiConfirm(message, opts){
+  opts = opts || {};
+  return _openDialog({
+    title: opts.title || t('dlg.confirmTitle') || 'Are you sure?',
+    message,
+    confirmLabel: opts.confirmLabel || t('dlg.confirm') || 'Confirm',
+    cancelLabel: opts.cancelLabel || t('common.cancel') || 'Cancel',
+    danger: opts.danger !== false,
+  });
+}
+function uiAlert(message, opts){
+  opts = opts || {};
+  return _openDialog({
+    title: opts.title || t('dlg.noticeTitle') || 'Heads up',
+    message,
+    confirmLabel: opts.confirmLabel || t('dlg.ok') || 'OK',
+    alertOnly: true, danger: false,
+  });
+}
+
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(el=>{
@@ -11356,7 +11428,7 @@ function renderKioskDevices(devs, siteId){
 }
 
 async function revokeKioskDevice(id){
-  if(!confirm(t('kw.confirmUnlink')||'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.')) return;
+  if(!(await uiConfirm(t('kw.confirmUnlink')||'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.'))) return;
   try{
     await DB.update('kiosk_devices', `id=eq.${id}`, {revoked:true});
     const sid = window._currentKioskSiteId;
@@ -11377,10 +11449,10 @@ function registerThisDevice(){
   renderKioskTokenStep(C.sites.find(s=>s.id===siteId)||{});
 }
 
-function revokeThisDevice(){
+async function revokeThisDevice(){
   const siteId = window._currentKioskSiteId;
   if(!siteId) return;
-  if(!confirm(t('kw.tokenConfirmRemove')||'Remove this device\'s authorisation? Staff will no longer be able to clock in from it.')) return;
+  if(!(await uiConfirm(t('kw.tokenConfirmRemove')||'Remove this device\'s authorisation? Staff will no longer be able to clock in from it.'))) return;
   revokeDeviceToken(siteId);
   showToast(t('kw.tokenRemoved')||'Authorisation removed.','info');
   renderKioskTokenStep(C.sites.find(s=>s.id===siteId)||{});
@@ -11388,8 +11460,8 @@ function revokeThisDevice(){
 
 // Discreet on-screen reset for a kiosk-bound device (confirm-gated so employees can't exit by
 // accident). Clears the binding and reloads to the bare URL → normal landing/login.
-function resetKioskDevice(){
-  if(!confirm("Réinitialiser cet appareil et quitter le mode kiosque?\nReset this device and exit kiosk mode?")) return;
+async function resetKioskDevice(){
+  if(!(await uiConfirm("Réinitialiser cet appareil et quitter le mode kiosque?\nReset this device and exit kiosk mode?"))) return;
   try { localStorage.removeItem('pc_kiosk_device'); } catch(_){}
   window.location.href = window.location.origin + window.location.pathname;
 }
@@ -12104,7 +12176,7 @@ async function saveHoliday() {
 }
 
 async function deleteHoliday(id) {
-  if(!confirm(t('sched.holidayDeleteConfirm')||'Remove this holiday?')) return;
+  if(!(await uiConfirm(t('sched.holidayDeleteConfirm')||'Remove this holiday?'))) return;
   try {
     await DB.del('holidays', `id=eq.${id}`);
     await renderHolidayList();
@@ -12628,7 +12700,7 @@ async function saveShift() {
 async function deleteShift() {
   const shiftId = document.getElementById('shiftModalId').value;
   if(!shiftId) return;
-  if(!confirm(t('sched.deleteConfirm')||'Delete this shift?')) return;
+  if(!(await uiConfirm(t('sched.deleteConfirm')||'Delete this shift?'))) return;
   try {
     await DB.del('shifts', `id=eq.${shiftId}`);
     closeModal('shiftModal');
@@ -12640,7 +12712,7 @@ async function deleteShift() {
 }
 
 async function deleteShiftById(shiftId) {
-  if(!confirm(t('sched.deleteConfirm')||'Delete this shift?')) return;
+  if(!(await uiConfirm(t('sched.deleteConfirm')||'Delete this shift?'))) return;
   try {
     await DB.del('shifts', `id=eq.${shiftId}`);
     await renderScheduleGrid();
@@ -12720,7 +12792,7 @@ async function notifyTeamSchedule(){
   const ask = (t('sched.confirmNotify')||'Send this week’s schedule to {n} employee(s)?').replace('{n}',sendable.length)
     + (missing.length ? '\n\n' + (t('sched.missingEmail')||'{n} scheduled employee(s) have no email and will be skipped: {names}')
         .replace('{n}',missing.length).replace('{names}',missing.map(e=>e.name).join(', ')) : '');
-  if(!confirm(ask)) return;
+  if(!(await uiConfirm(ask))) return;
 
   const btn=document.getElementById('notifyTeamBtn');
   if(btn) btn.disabled=true;
@@ -12926,6 +12998,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'dlg.confirmTitle':'Are you sure?','dlg.confirm':'Confirm','dlg.noticeTitle':'Heads up','dlg.ok':'OK',
 'fb.title':'Welcome back — can we ask one question?','fb.body':'It has been {n} days. What got in the way?',
 'fb.thanks':'Thank you — that helps.','fb.more':'Anything you want to add? (optional)','fb.placeholder':'Optional',
 'fb.send':'Send','fb.noThanks':'No thanks','fb.sent':'Thanks — we read every one of these.',
@@ -13704,6 +13777,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'dlg.confirmTitle':'Êtes-vous sûr?','dlg.confirm':'Confirmer','dlg.noticeTitle':'Avis','dlg.ok':'OK',
 'fb.title':'Content de vous revoir — une seule question?','fb.body':'Ça fait {n} jours. Qu’est-ce qui vous a bloqué?',
 'fb.thanks':'Merci — c’est utile.','fb.more':'Souhaitez-vous ajouter quelque chose? (optionnel)','fb.placeholder':'Optionnel',
 'fb.send':'Envoyer','fb.noThanks':'Non merci','fb.sent':'Merci — nous lisons chacun de ces messages.',

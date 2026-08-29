@@ -36,7 +36,19 @@ const seed = (page, coreResult) => page.evaluate(cr=>{
     {employee_id:'e3',shift_date:'2026-09-02',start_time:'09:00:00',end_time:'17:00:00'},
   ];
   window.__sentTo=[]; window.__toasts=[]; window.__confirmText='';
-  window.confirm = msg => { window.__confirmText=msg; return true; };
+  // notifyTeamSchedule now asks through the styled dialog, so answering it means capturing
+  // the message and clicking the real button rather than stubbing window.confirm.
+  window.__answer = true;
+  const realConfirm = window.uiConfirm;
+  window.uiConfirm = (msg, opts) => {
+    window.__confirmText = String(msg);
+    const p = realConfirm(msg, opts);
+    setTimeout(()=>{
+      const btn = document.getElementById(window.__answer ? 'uiDlgOk' : 'uiDlgCancel');
+      if(btn) btn.click();
+    }, 10);
+    return p;
+  };
   const ot=window.showToast; window.showToast=(m,k)=>{window.__toasts.push(String(m));};
   window.sendScheduleEmailCore = async (email)=>{ window.__sentTo.push(email);
     return cr==='fail-ben' && email==='ben@test.ca' ? {ok:false,error:'boom'} : {ok:true}; };
@@ -61,7 +73,7 @@ for(const lang of ['en','fr']){
 
   await seed(page,'all-ok');
   await page.evaluate(()=>notifyTeamSchedule());
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(400);
   const r1 = await page.evaluate(()=>({sent:window.__sentTo, confirm:window.__confirmText, toasts:window.__toasts}));
   ok('mails only the people who have shifts AND an email',
      JSON.stringify(r1.sent)===JSON.stringify(['ana@test.ca','ben@test.ca']), r1.sent.join(', '));
@@ -76,14 +88,24 @@ for(const lang of ['en','fr']){
   // The bug this nearly shipped with: {ok:false} counted as a success.
   await seed(page,'fail-ben');
   await page.evaluate(()=>notifyTeamSchedule());
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(400);
   const last = await page.evaluate(()=>window.__toasts[window.__toasts.length-1]);
   ok('a failed send is counted as failed, not silently as sent',
      /1/.test(last) && !/^.*\b2 employee|2 employé/.test(last), last);
 
+  // Cancelling must mail nobody — this is a batch send, so a prompt that does not actually
+  // gate it would spray the whole team on a mis-click.
+  await seed(page,'all-ok');
+  await page.evaluate(()=>{ window.__answer = false; });
+  await page.evaluate(()=>notifyTeamSchedule());
+  await page.waitForTimeout(400);
+  ok('cancelling the confirm mails nobody', await page.evaluate(()=>window.__sentTo.length===0),
+     await page.evaluate(()=>window.__sentTo.join(',')||'(none)'));
+
   // Nothing scheduled at all.
   await page.evaluate(()=>{ _schedShifts=[]; window.__toasts=[]; window.__sentTo=[]; });
   await page.evaluate(()=>notifyTeamSchedule());
+  await page.waitForTimeout(250);
   ok('says so when the week is empty, and mails nobody', await page.evaluate(()=>
     window.__sentTo.length===0 && window.__toasts.length===1));
 
