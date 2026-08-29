@@ -201,8 +201,57 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
       </div>
       <button class="btn-primary" onclick="doEmpLogin()" id="loginBtn">Sign In</button>
-      <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3)" id="loginFooter">
+      <p style="text-align:center;margin-top:14px;font-size:12.5px">
+        <button type="button" class="link-btn" onclick="showEmpForgot()" id="forgotLink"
+          style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12.5px;font-family:inherit;padding:0">Forgot your password?</button>
+      </p>
+      <p style="text-align:center;margin-top:10px;font-size:12px;color:var(--text3)" id="loginFooter">
         Don't have access? Ask your admin to send you an invitation.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH: Forgot password. An employee could not recover their own account — the only route
+     was asking a manager to re-invite them, which means they cannot check their own hours
+     without involving the person whose records they might be checking. -->
+<div id="screenForgot" style="display:none">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2 class="auth-title" id="fgTitle">Reset your password</h2>
+      <p class="auth-sub" id="fgSub">We will email you a 6-digit code.</p>
+      <div id="fgMsg"></div>
+
+      <div id="fgStep1">
+        <div class="form-group">
+          <label id="fgEmailLabel">Email Address</label>
+          <input type="email" id="fgEmail" class="form-input" placeholder="you@company.com"
+                 onkeydown="if(event.key==='Enter')requestEmpReset()">
+        </div>
+        <button class="btn-primary" onclick="requestEmpReset()" id="fgSendBtn">Send code</button>
+      </div>
+
+      <div id="fgStep2" style="display:none">
+        <div class="form-group">
+          <label id="fgCodeLabel">6-digit code</label>
+          <input type="text" id="fgCode" class="form-input" maxlength="6" inputmode="numeric"
+                 style="text-align:center;font-family:monospace;font-size:20px;letter-spacing:7px"
+                 onkeydown="if(event.key==='Enter')document.getElementById('fgPass').focus()">
+        </div>
+        <div class="form-group">
+          <label id="fgPassLabel">New password</label>
+          <div class="pw-wrap">
+            <input type="password" id="fgPass" class="form-input" placeholder="Min 6 characters"
+                   onkeydown="if(event.key==='Enter')doEmpReset()">
+            <button type="button" class="pw-toggle" onclick="togglePw('fgPass',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="doEmpReset()" id="fgResetBtn">Set new password</button>
+      </div>
+
+      <p style="text-align:center;margin-top:14px;font-size:12.5px">
+        <button type="button" onclick="showEmpLogin()" id="fgBackLink"
+          style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12.5px;font-family:inherit;padding:0">Back to sign in</button>
       </p>
     </div>
   </div>
@@ -421,6 +470,15 @@ function escHtml(v) {
 const T = {
   en: {
     loading: 'Loading...', loginTitle: 'Employee Portal', loginSub: 'Sign in to view your schedule and hours.',
+    forgotLink:'Forgot your password?',
+    fgTitle:'Reset your password', fgSub:'We will email you a 6-digit code.',
+    fgEmailLabel:'Email Address', fgSendBtn:'Send code', fgCodeLabel:'6-digit code',
+    fgPassLabel:'New password', fgResetBtn:'Set new password', fgBackLink:'Back to sign in',
+    fgNeedEmail:'Enter your email address.',
+    fgSent:'If that address has a portal account, a code is on its way. It expires in 15 minutes.',
+    fgBadCode:'That code is not valid or has expired.',
+    fgWeak:'Password must be at least 6 characters.',
+    fgDone:'Password updated — sign in with your new one.',
     loginEmailLabel: 'Email Address', loginPassLabel: 'Password', loginBtn: 'Sign In',
     loginFooter: "Don't have access? Ask your admin to send you an invitation.",
     invalidCreds: 'Invalid email or password.', setPassTitle: 'Welcome! Set your password',
@@ -469,6 +527,15 @@ const T = {
   },
   fr: {
     loading: 'Chargement...', loginTitle: 'Portail employé', loginSub: 'Connectez-vous pour voir votre horaire et vos heures.',
+    forgotLink:'Mot de passe oublié?',
+    fgTitle:'Réinitialiser votre mot de passe', fgSub:'Nous vous enverrons un code à 6 chiffres.',
+    fgEmailLabel:'Adresse courriel', fgSendBtn:'Envoyer le code', fgCodeLabel:'Code à 6 chiffres',
+    fgPassLabel:'Nouveau mot de passe', fgResetBtn:'Définir le mot de passe', fgBackLink:'Retour à la connexion',
+    fgNeedEmail:'Entrez votre adresse courriel.',
+    fgSent:'Si cette adresse a un compte portail, un code est en route. Il expire dans 15 minutes.',
+    fgBadCode:'Ce code est invalide ou expiré.',
+    fgWeak:'Le mot de passe doit contenir au moins 6 caractères.',
+    fgDone:'Mot de passe mis à jour — connectez-vous avec le nouveau.',
     loginEmailLabel: 'Adresse courriel', loginPassLabel: 'Mot de passe', loginBtn: 'Se connecter',
     loginFooter: "Pas d'accès? Demandez à votre admin de vous envoyer une invitation.",
     invalidCreds: 'Courriel ou mot de passe invalide.', setPassTitle: 'Bienvenue! Définissez votre mot de passe',
@@ -537,6 +604,9 @@ function applyTranslations() {
   const ids = {
     loginTitle:'loginTitle', loginSub:'loginSub', loginEmailLabel:'loginEmailLabel',
     loginPassLabel:'loginPassLabel', loginBtn:'loginBtn', loginFooter:'loginFooter',
+    forgotLink:'forgotLink', fgTitle:'fgTitle', fgSub:'fgSub', fgEmailLabel:'fgEmailLabel',
+    fgSendBtn:'fgSendBtn', fgCodeLabel:'fgCodeLabel', fgPassLabel:'fgPassLabel',
+    fgResetBtn:'fgResetBtn', fgBackLink:'fgBackLink',
     setPassTitle:'setPassTitle', setPassSub:'setPassSub', setPassLabel:'setPassLabel',
     setPassConfirmLabel:'setPassConfirmLabel', setPassBtn:'setPassBtn',
     logoutBtn:'logoutBtn', navSub:'navEmpSub',
@@ -585,7 +655,7 @@ function clearSession() { try { localStorage.removeItem('pc_emp_sess'); } catch(
 // UI HELPERS
 // ══════════════════════════════════════════════════════
 function showScreen(name) {
-  ['screenLogin','screenSetPassword','screenApp'].forEach(id => {
+  ['screenLogin','screenForgot','screenSetPassword','screenApp'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
     if(id === name) {
@@ -689,6 +759,65 @@ async function doSetEmpPassword() {
 // ══════════════════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════════════════
+// ── Forgot password ────────────────────────────────────────────────────────
+// Mirrors the admin reset: a 6-digit code, 15-minute expiry, throttled server-side, and the
+// response never says whether the address has an account — an unauthenticated form that
+// confirms which emails are real is an account-enumeration oracle.
+function showEmpForgot(){
+  document.getElementById('fgStep1').style.display='';
+  document.getElementById('fgStep2').style.display='none';
+  document.getElementById('fgMsg').innerHTML='';
+  const typed=(document.getElementById('loginEmail')||{}).value||'';
+  document.getElementById('fgEmail').value=typed;
+  showScreen('screenForgot');
+}
+function showEmpLogin(){
+  document.getElementById('loginMsg').innerHTML='';
+  showScreen('screenLogin');
+}
+
+async function requestEmpReset(){
+  const email=(document.getElementById('fgEmail').value||'').trim().toLowerCase();
+  if(!email){ showMsg('fgMsg', t('fgNeedEmail'), 'error'); return; }
+  const btn=document.getElementById('fgSendBtn');
+  btn.disabled=true;
+  try{
+    await fetch(`${SUPA_URL}/functions/v1/secure-db`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`},
+      body:JSON.stringify({action:'portal_request_reset', body:{email}})
+    });
+  }catch(_){ /* the server answers ok regardless; a network error must not leak either */ }
+  btn.disabled=false;
+  // Same message whichever it was. If the address has no portal account, no code is sent and
+  // this still reads as success — that is the point.
+  document.getElementById('fgStep1').style.display='none';
+  document.getElementById('fgStep2').style.display='';
+  showMsg('fgMsg', t('fgSent'), 'success');
+}
+
+async function doEmpReset(){
+  const email=(document.getElementById('fgEmail').value||'').trim().toLowerCase();
+  const code=(document.getElementById('fgCode').value||'').trim();
+  const pass=document.getElementById('fgPass').value||'';
+  if(!/^\d{6}$/.test(code)){ showMsg('fgMsg', t('fgBadCode'), 'error'); return; }
+  if(pass.length<6){ showMsg('fgMsg', t('fgWeak'), 'error'); return; }
+  const btn=document.getElementById('fgResetBtn');
+  btn.disabled=true;
+  try{
+    const r=await rpc('portal_reset_password',{p_email:email,p_code:code,p_newpass:pass});
+    const res=Array.isArray(r)?r[0]:r;
+    if(res && res.ok){
+      showScreen('screenLogin');
+      document.getElementById('loginEmail').value=email;
+      showMsg('loginMsg', t('fgDone'), 'success');
+    } else {
+      showMsg('fgMsg', res && res.error==='weak_password' ? t('fgWeak') : t('fgBadCode'), 'error');
+    }
+  }catch(_){ showMsg('fgMsg', t('fgBadCode'), 'error'); }
+  btn.disabled=false;
+}
+
 async function doEmpLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;

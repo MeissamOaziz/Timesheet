@@ -295,6 +295,47 @@ Deno.serve(async (req: Request) => {
   if (!action && (!table || !method)) return errResp('Missing table or method', 400);
 
   // ── Server-side actions (non-CRUD) ──────────────────────────────────────
+  // Same shape as request_reset_code below, for the employee portal. Kept separate rather
+  // than parameterised so the two cannot be confused: an employee's code must never be able
+  // to reset an admin account, and vice versa — the purpose string is the whole boundary.
+  if (action === 'portal_request_reset') {
+    const email = (typeof (body as any)?.email === 'string') ? (body as any).email.trim() : '';
+    if (!email) return errResp('Missing email', 400);
+    try {
+      const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/issue_email_code`, {
+        method: 'POST',
+        headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: email, p_purpose: 'portal_reset' }),
+      });
+      const issued = await rpcRes.json().catch(() => null);
+      if (issued && issued.ok && issued.exists && issued.code) {
+        // Sent in the background so the response time is identical whether or not the account
+        // exists — otherwise the delay itself reveals which addresses are real.
+        const emailJob = fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: issued.email,
+            name: issued.name || '',
+            code: issued.code,
+            subject: 'Reset your PunchClock password | Réinitialisez votre mot de passe',
+            purpose: 'password_reset',
+          }),
+        }).then(() => {}).catch(() => {});
+        // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+        if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(emailJob);
+      }
+      // Always ok:true — never reveal whether that address has a portal account.
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    } catch {
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   if (action === 'request_reset_code') {
     const email = (typeof (body as any)?.email === 'string') ? (body as any).email.trim() : '';
     if (!email) return errResp('Missing email', 400);
