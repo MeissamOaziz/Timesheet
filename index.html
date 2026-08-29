@@ -2706,6 +2706,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="openHolidaysModal()" id="holidaysBtn"><svg class="ic" style="margin-right:5px"><use href="#i-star"/></svg><span data-i18n="sched.manageHolidays">Holidays</span></button>
+      <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="notifyTeamSchedule()" id="notifyTeamBtn"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg><span data-i18n="sched.notifyTeam">Notify team</span></button>
       <button class="btn-primary" style="width:auto;padding:8px 18px;margin-top:0" onclick="openAddShiftModal()" id="addShiftBtn" data-i18n="sched.addShift">+ Add Shift</button>
     </div>
   </div>
@@ -12608,6 +12609,58 @@ async function loadMyShifts(empId) {
   }
 }
 
+// ── Admin: publish the week to everyone on it ──────────────────────────────
+// Sending the schedule was one employee at a time, via a chip next to each name — six people
+// meant six clicks, and there was no single action that meant "the week is final, tell them".
+// A schedule nobody has been told about is the same as no schedule.
+async function notifyTeamSchedule(){
+  if(window._demoMode){
+    showToast(t('demo.notAvailable')||'Not available in demo — create a free account to try this.','info');
+    return;
+  }
+  const weekStart = schedGetWeekStart(_schedWeek);
+  const weekDays = Array.from({length:7}, (_,i)=>{ const d=new Date(weekStart); d.setDate(weekStart.getDate()+i); return d; });
+
+  // Only people who actually have shifts this week. Mailing "you have no shifts" to everyone
+  // else is how a useful notification becomes something people filter out.
+  const byEmp = {};
+  _schedShifts.forEach(sh=>{ (byEmp[sh.employee_id] ||= []).push(sh); });
+  const withShifts = Object.keys(byEmp).map(id=>C.employees.find(e=>e.id===id)).filter(Boolean);
+  if(!withShifts.length){ showToast(t('sched.noShiftsWeek')||'No shifts scheduled this week.','info'); return; }
+
+  const sendable = withShifts.filter(e=>e.email);
+  const missing  = withShifts.filter(e=>!e.email);
+  if(!sendable.length){
+    showToast((t('sched.noneHaveEmail')||'None of the scheduled employees have an email address yet.'),'info');
+    return;
+  }
+
+  const ask = (t('sched.confirmNotify')||'Send this week’s schedule to {n} employee(s)?').replace('{n}',sendable.length)
+    + (missing.length ? '\n\n' + (t('sched.missingEmail')||'{n} scheduled employee(s) have no email and will be skipped: {names}')
+        .replace('{n}',missing.length).replace('{names}',missing.map(e=>e.name).join(', ')) : '');
+  if(!confirm(ask)) return;
+
+  const btn=document.getElementById('notifyTeamBtn');
+  if(btn) btn.disabled=true;
+  let sent=0, failed=0;
+  // Sequential on purpose: this is a handful of people, and a burst of parallel sends is a
+  // good way to trip rate limits and half-notify a team.
+  for(const emp of sendable){
+    showToast((t('sched.notifyProgress')||'Sending {i} of {n}…')
+      .replace('{i}',sent+failed+1).replace('{n}',sendable.length),'info');
+    try{
+      const r = await sendScheduleEmailCore(emp.email, emp.name, weekDays, byEmp[emp.id], true);
+      if(r && r.ok) sent++; else failed++;
+    }catch(_){ failed++; }
+  }
+  if(btn) btn.disabled=false;
+
+  showToast(failed
+    ? (t('sched.notifyPartial')||'Sent to {n}, {f} failed.').replace('{n}',sent).replace('{f}',failed)
+    : (t('sched.notifyDone')||'Schedule sent to {n} employee(s).').replace('{n}',sent),
+    failed ? 'info' : 'success');
+}
+
 // ── Admin: send schedule by email ──────────────────────────────────────────
 async function sendScheduleEmail(empId) {
   const emp = C.employees.find(e => e.id === empId);
@@ -12743,7 +12796,7 @@ async function sendMyScheduleNow() {
   }
 }
 
-async function sendScheduleEmailCore(email, empName, weekDays, shifts) {
+async function sendScheduleEmailCore(email, empName, weekDays, shifts, quiet) {
   const lang = _appLang || 'en';
   const fmt = (d) => d.toLocaleDateString(t('sched.locale')||'en-CA', {weekday:'long', month:'short', day:'numeric'});
   const weekLabel = weekDays.length
@@ -12777,7 +12830,8 @@ async function sendScheduleEmailCore(email, empName, weekDays, shifts) {
     });
     const data = await res.json();
     if(data.success) {
-      showToast(`✓ ${t('sched.sentOk')||'Schedule sent to'} ${email}`, 'success');
+      // The batch send reports once at the end; a toast per recipient would stampede.
+      if(!quiet) showToast(`✓ ${t('sched.sentOk')||'Schedule sent to'} ${email}`, 'success');
       return { ok: true };
     }
     return { ok: false, error: data.error || 'Unknown error' };
@@ -12790,6 +12844,12 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'sched.notifyTeam':'Notify team','sched.noShiftsWeek':'No shifts scheduled this week.',
+'sched.noneHaveEmail':'None of the scheduled employees have an email address yet.',
+'sched.confirmNotify':'Send this week’s schedule to {n} employee(s)?',
+'sched.missingEmail':'{n} scheduled employee(s) have no email and will be skipped: {names}',
+'sched.notifyProgress':'Sending {i} of {n}…','sched.notifyDone':'Schedule sent to {n} employee(s).',
+'sched.notifyPartial':'Sent to {n}, {f} failed.',
 'punch.portalLink':'Employee? Check your hours and schedule →',
 'unsub.done':'Weekly summary emails are off. You can turn them back on in Settings.','unsub.bad':'That unsubscribe link is no longer valid.',
 'admin.joinTarget':'Requesting access to','admin.col.requested':'Requested','admin.col.type':'Type',
@@ -13559,6 +13619,12 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'sched.notifyTeam':'Aviser l’équipe','sched.noShiftsWeek':'Aucun quart planifié cette semaine.',
+'sched.noneHaveEmail':'Aucun des employés planifiés n’a encore d’adresse courriel.',
+'sched.confirmNotify':'Envoyer l’horaire de cette semaine à {n} employé(s)?',
+'sched.missingEmail':'{n} employé(s) planifié(s) n’ont pas de courriel et seront ignorés : {names}',
+'sched.notifyProgress':'Envoi {i} sur {n}…','sched.notifyDone':'Horaire envoyé à {n} employé(s).',
+'sched.notifyPartial':'Envoyé à {n}, {f} échec(s).',
 'punch.portalLink':'Employé? Consultez vos heures et votre horaire →',
 'unsub.done':'Les résumés hebdomadaires sont désactivés. Vous pouvez les réactiver dans les paramètres.','unsub.bad':'Ce lien de désabonnement n’est plus valide.',
 'admin.joinTarget':'Demande d’accès à','admin.col.requested':'Demandé le','admin.col.type':'Type',
