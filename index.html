@@ -232,8 +232,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .context-pill .ctx-car{width:11px;height:11px;color:var(--text3);flex-shrink:0;}
 /* min-width:0 + overflow lets the tab strip shrink instead of pushing the whole page wider
    than the viewport (which forced a horizontal scroll on smaller screens). */
-.nav-links{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;}
-.nav-links::-webkit-scrollbar{display:none;}
 .nav-btn{display:inline-flex;align-items:center;gap:7px;height:var(--h-md);padding:0 13px;background:none;border:none;border-radius:var(--r-sm);color:var(--text2);cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;transition:all .15s;}
 .nav-btn:hover{background:var(--surface2);color:var(--text);}
 .nav-btn.active{background:rgba(79,142,247,.15);color:var(--accent);}
@@ -280,7 +278,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ── Left sidebar navigation (opt-in via body.nav-sidebar) ── */
 #sideNav{display:none;position:fixed;top:60px;left:0;bottom:0;width:216px;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;z-index:90;flex-direction:column;gap:2px;}
 body.nav-sidebar.nav-authed #sideNav{display:flex;}
-body.nav-sidebar.nav-authed .nav-links{display:none;}
 /* The sidebar already exposes Employees/Sites/Admins, so the in-page tab strip is a second
    copy of the same navigation. Hide it here; the H1 names the active section instead. */
 body.nav-sidebar.nav-authed #page-admin .tabs{display:none;}
@@ -295,6 +292,10 @@ body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
 .sn-item.active{background:rgba(79,142,247,.14);color:var(--accent);font-weight:600;}
 .sn-item svg{width:17px;height:17px;flex-shrink:0;}
 .sn-sub{display:flex;flex-direction:column;gap:2px;margin:2px 0 2px 13px;padding-left:9px;border-left:1px solid var(--border);}
+/* The chevron rotated but nothing ever collapsed, so the control promised something it did
+   not do — and the group's own badge merely repeated counts already visible beneath it.
+   Open by default: Employees is the most-used page and should not sit behind a click. */
+.sn-group:not(.open) .sn-sub{display:none;}
 .sn-sub .sn-item{font-size:13px;padding:7px 10px;}
 .sn-chev{margin-left:auto;font-size:11px;color:var(--text3);transition:transform .18s;}
 .sn-group.open .sn-chev{transform:rotate(180deg);}
@@ -303,8 +304,6 @@ body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
    Below that it used to overflow and force the whole page to scroll sideways, so hand over to the
    hamburger menu, which already lists every page. Sidebar mode is unaffected. */
 @media(max-width:1240px){
-  body:not(.nav-sidebar) .nav-links,
-  body:not(.nav-authed) .nav-links{display:none;}
   body:not(.nav-sidebar) .hamburger,
   body:not(.nav-authed) .hamburger{display:flex;}
   .land-nav-sections{display:none;}
@@ -315,7 +314,6 @@ body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
   body.nav-sidebar.nav-authed .page{margin-left:auto;}
   body.nav-sidebar.nav-authed #actionBanner{margin-left:0;}
   /* Sidebar is hidden here too, so this mode also falls back to the hamburger. */
-  .nav-links{display:none;}
   .hamburger{display:flex;}
 }
 
@@ -495,6 +493,9 @@ th.sort-th:hover{color:var(--text);}
 .tab[data-admin-only]{display:none;}
 body.role-resolved.role-admin .tab[data-admin-only]{display:inline-flex;}
 body.role-resolved.role-admin [data-admin-only]{display:block;}
+/* That generic rule wins on specificity over .sn-item{display:flex}, which left the Admins
+   sidebar row rendering as a block and its icon, label and badge no longer aligned. */
+body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
@@ -834,7 +835,6 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 @media(max-width:768px){
   /* Nav */
-  .nav-links{display:none;}
   .hamburger{display:flex;}
   .nav{padding:0 14px;}
   .nav-right .btn-secondary{display:none;}
@@ -999,7 +999,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 .ic-lg{width:1.15em;height:1.15em;vertical-align:-0.2em;flex-shrink:0;}
 </style>
 <script>(function(){try{var t=localStorage.getItem('pc_theme');if(t!=='dark')document.documentElement.setAttribute('data-theme','light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
-<body>
+<body class="nav-sidebar">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
@@ -1719,17 +1719,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <span id="contextPillText"></span>
     <svg class="ctx-car"><use href="#i-nav-chevron"/></svg>
   </div>
-  <div class="nav-links">
-    <div class="nav-sep"></div>
-    <button class="nav-btn active" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
-    <button class="nav-btn" onclick="navigate('dashboard')" id="navDashboard" style="display:none"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
-    <button class="nav-btn" onclick="navigate('admin')" id="navAdmin" style="display:none;position:relative"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadge" style="display:none;position:absolute;top:-5px;right:-7px;background:#ef4444;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span><span id="missedPunchBadge" style="display:none;position:absolute;top:-5px;left:-7px;background:#f59e0b;color:#fff;border-radius:9px;font-size:9px;font-weight:700;padding:0 4px;min-width:15px;height:15px;line-height:15px;text-align:center;pointer-events:none"></span></button>
-    <button class="nav-btn" onclick="navigate('reports')" id="navReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
-    <button class="nav-btn" onclick="navigate('sites')" id="navCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-    <button class="nav-btn" onclick="navigate('activity')" id="navActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
-    <button class="nav-btn" onclick="navigate('schedule')" id="navSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
-    <button class="nav-btn" onclick="navigate('timeoff')" id="navTimeOff" style="display:none"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span></button>
-  </div>
+  <!-- The top tab strip lived here. Removed with the move to a single sidebar layout;
+       below 900px the hamburger menu takes over, and it already lists every page. -->
   <div class="nav-right">
     <!-- User dropdown menu (shown when logged in) -->
     <div class="user-menu" id="userMenu">
@@ -1792,10 +1783,6 @@ border-top:1px solid var(--border);margin:18px 0;}
           <span class="user-dd-addon-badge" id="ddSchedulingBadge"></span>
         </div>
         <hr class="user-dd-sep" id="ddAddonSep" style="display:none">
-        <button class="user-dd-item" onclick="closeUserMenu();toggleNavMode()">
-          <div class="dd-icon" style="background:rgba(79,142,247,.12)"><svg style="width:16px;height:16px;color:var(--accent)"><use href="#i-nav-dashboard"/></svg></div>
-          <div><div id="ddNavModeLabel">Try the new sidebar</div></div>
-        </button>
         <hr class="user-dd-sep">
         <button class="user-dd-item" onclick="closeUserMenu();showPageHelp()">
           <div class="dd-icon" style="background:var(--surface2)"><svg style="width:16px;height:16px;color:var(--text2)"><use href="#i-nav-help"/></svg></div>
@@ -1823,7 +1810,6 @@ border-top:1px solid var(--border);margin:18px 0;}
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
     <!-- Always in the same spot, but the content follows the page you are on (showPageHelp). -->
     <button class="theme-toggle-btn" id="navHelpBtn" onclick="showPageHelp()" aria-label="Help" title="Help" style="display:none"><svg class="tt-icon"><use href="#i-nav-help"/></svg></button>
-    <button class="theme-toggle-btn" id="navModeBtn" onclick="toggleNavMode()" aria-label="Switch navigation layout" title="Switch navigation layout" style="display:none"><svg class="tt-icon"><use href="#i-nav-dashboard"/></svg></button>
     <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
     <div class="lang-switcher nav-lang" id="navLangSwitcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div><button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
@@ -1859,19 +1845,18 @@ border-top:1px solid var(--border);margin:18px 0;}
   <button class="sn-item" data-nav="punch" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="sn-item" data-nav="activity" onclick="navigate('activity')"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <div class="sn-label" data-i18n="sn.manage">Manage</div>
-  <div class="sn-group" id="snTeamGroup">
-    <button class="sn-item" onclick="toggleSideGroup('snTeamGroup')"><svg><use href="#i-nav-admin"/></svg><span data-i18n="sn.team">Team</span><span class="sn-chev">▾</span></button>
+  <div class="sn-group open" id="snTeamGroup">
+    <button class="sn-item" onclick="toggleSideGroup('snTeamGroup')"><svg><use href="#i-nav-admin"/></svg><span data-i18n="sn.team">Team</span><span id="snTeamBadge" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span><span class="sn-chev">▾</span></button>
     <div class="sn-sub">
-      <button class="sn-item" data-nav="admin" onclick="goAdminTab('employees')"><svg><use href="#i-user"/></svg><span data-i18n="admin.tabs.employees">Employees</span></button>
-      <button class="sn-item" data-nav="sites" onclick="navigate('sites')"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-nav-admins"/></svg><span data-i18n="admin.tabs.admins">Admins</span></button>
+      <button class="sn-item" data-nav="admin" onclick="goAdminTab('employees')"><svg><use href="#i-user"/></svg><span data-i18n="admin.tabs.employees">Employees</span><span id="snMissedBadge" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
+      <button class="sn-item" id="snSites" data-nav="sites" onclick="navigate('sites')"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
+      <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-nav-admins"/></svg><span data-i18n="admin.tabs.admins">Admins</span><span id="snJoinBadge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
     </div>
   </div>
   <button class="sn-item" data-nav="schedule" onclick="navigate('schedule')"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="sn-item" data-nav="timeoff" onclick="navigate('timeoff')"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span><span id="snTimeOffBadge" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;border-radius:9px;font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
   <button class="sn-item" data-nav="reports" onclick="navigate('reports')"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
   <div style="margin-top:auto"></div>
-  <button class="sn-item" onclick="setNavMode('top')" style="color:var(--text3);font-size:12px"><svg><use href="#i-nav-chevron"/></svg><span data-i18n="sn.backToTabs">Back to top tabs</span></button>
 </aside>
 
 <!-- ═══════════════ PUNCH PAGE ═══════════════ -->
@@ -4452,9 +4437,6 @@ function navigate(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('page-'+page);
   if(el){el.classList.add('active');currentPage=page;}
-  const map={punch:0,dashboard:1,admin:2,reports:3,sites:4,activity:5,schedule:6,timeoff:7};
-  const btns=document.querySelectorAll('.nav-links .nav-btn');
-  if(map[page]!==undefined&&btns[map[page]])btns[map[page]].classList.add('active');
   if(page==='punch')loadPunchPage();
   else if(page==='dashboard')renderDashboard();
   else if(page==='admin'){window._scrollToMissedPunch=true;loadAdminPage();}
@@ -4474,34 +4456,14 @@ function navigate(page){
 // Pages are untouched; only the navigation chrome changes, so switching is safe
 // and instantly reversible.
 // ═══════════════════════════════════════════════════
-function getNavMode(){ try{ return localStorage.getItem('pc_nav')==='sidebar'?'sidebar':'top'; }catch(_){ return 'top'; } }
-function setNavMode(mode){
-  const sidebar = mode==='sidebar';
-  try{ localStorage.setItem('pc_nav', sidebar?'sidebar':'top'); }catch(_){}
-  document.body.classList.toggle('nav-sidebar', sidebar);
-  // updateNav owns the nav-authed class the sidebar CSS also depends on — refresh it here so
-  // the switch can never land in a half-applied state.
-  if(typeof updateNav==='function') updateNav();
-  _syncSideNav(typeof currentPage!=='undefined'?currentPage:'dashboard');
-  _syncNavModeLabel();
-  // The Admin heading differs per mode (section name vs. "Company — Admin"), so refresh it
-  // immediately rather than waiting for the next page load.
-  if(typeof _syncAdminHeading==='function') _syncAdminHeading();
-  showToast(sidebar?(t('sn.switched')||'Sidebar navigation enabled — switch back anytime from your profile menu.')
-                   :(t('sn.reverted')||'Back to the classic top tabs.'),'success');
-}
-function toggleNavMode(){ setNavMode(getNavMode()==='sidebar'?'top':'sidebar'); }
-function _syncNavModeLabel(){
-  const sidebar=getNavMode()==='sidebar';
-  const label = sidebar ? (t('sn.useTabs')||'Use classic top tabs')
-                        : (t('sn.trySidebar')||'Try the new sidebar');
-  const el=document.getElementById('ddNavModeLabel');
-  if(el) el.textContent=label;
-  const btn=document.getElementById('navModeBtn');
-  if(btn){ btn.title=label; btn.setAttribute('aria-label',label);
-    btn.style.color = sidebar ? 'var(--accent)' : ''; }
-}
-function toggleSideGroup(id){ const g=document.getElementById(id); if(g) g.classList.toggle('open'); }
+// The app used to ship three navigation systems at once — top tabs, a left sidebar behind a
+// preference, and a hamburger — with three different orderings of the same pages between them.
+// Three surfaces to keep in step is three chances for them to disagree, and they did. The
+// sidebar is now the only desktop layout: it is the one that scales past eight pages without
+// crowding, and it can carry grouped sections that a horizontal strip cannot. Below 900px it
+// gives way to the hamburger, which already lists every page.
+function getNavMode(){ return 'sidebar'; }
+
 function _syncSideNav(page){
   const key=page;
   document.querySelectorAll('#sideNav .sn-item[data-nav]').forEach(b=>{
@@ -4509,6 +4471,14 @@ function _syncSideNav(page){
   });
   const g=document.getElementById('snTeamGroup');
   if(g && ['admin','sites','admins'].includes(key)) g.classList.add('open');
+  if(typeof _syncTeamBadge==='function') _syncTeamBadge();
+}
+function toggleSideGroup(id){
+  const g=document.getElementById(id);
+  if(!g) return;
+  g.classList.toggle('open');
+  // The group's badge only means anything while its children are hidden.
+  if(typeof _syncTeamBadge==='function') _syncTeamBadge();
 }
 function goAdminTab(tab){
   navigate('admin');
@@ -5445,20 +5415,11 @@ function updateNav(){
   const ok=isLoggedIn()||isDemo();   // demo has no session but shows the full nav
   // Sidebar chrome only applies to authenticated/demo views, never the landing page.
   document.body.classList.toggle('nav-authed', ok);
-  const _nmBtn=document.getElementById('navModeBtn');
-  if(_nmBtn){ _nmBtn.style.display=ok?'':'none'; _syncNavModeLabel(); }
   const _hBtn=document.getElementById('navHelpBtn');
   if(_hBtn){ _hBtn.style.display=ok?'':'none'; _hBtn.title=t('nav.dd.help')||'Help'; }
   const isKiosk=!!Ctx.get();
-  const punchBtn=document.querySelector('.nav-btn[onclick="navigate(\'punch\')"]');
-  if(punchBtn)punchBtn.style.display=(ok||isKiosk)?'':'none';
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
-  ['navDashboard','navAdmin','navReports','navCompanies','navActivity','navTimeOff'].forEach(id=>{
-    const _el=document.getElementById(id); if(_el)_el.style.display=ok?'':'none';});
-  // Schedule nav — only show if logged in (access check happens in loadSchedulePage)
-  const navSched=document.getElementById('navSchedule');
-  if(navSched) navSched.style.display=ok?'':'none';
   const mobileNavSched=document.getElementById('mobileNavSchedule');
   if(mobileNavSched) mobileNavSched.style.display=ok?'':'none';
   const mobileNavTO=document.getElementById('mobileNavTimeOff');
@@ -5538,8 +5499,10 @@ function updateNav(){
       if(ddCoInfo) ddCoInfo.style.display=(a.role==='admin'&&!isSuperAdmin())?'':'none';
       // Managers: hide all nav except Admin (employees only)
       if(isManager()){
-        const el=document.getElementById('navCompanies');if(el)el.style.display='none';
         const mel=document.getElementById('mobileNavCompanies');if(mel)mel.style.display='none';
+        // The sidebar had no equivalent of this rule while it was opt-in, so a manager saw
+        // Sites there. It is the only desktop layout now, so the gap had to close.
+        const sel=document.getElementById('snSites');if(sel)sel.style.display='none';
       }
       // Scheduling add-on row
       const ddSched=document.getElementById('ddSchedulingAddon');
@@ -8385,12 +8348,19 @@ async function deleteAdmin(id, name){
   }
 }
 
+// Pending counts have to appear on every nav surface that exists, or an admin misses work
+// waiting on them purely because of which layout they are looking at. The sidebar carried no
+// badges at all while it was opt-in; now that it is the only desktop layout, it carries them.
+function _setBadge(id, count, inline){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.textContent=count;
+  el.style.display = count>0 ? (inline?'inline-block':'') : 'none';
+}
 function updateJoinRequestBadge(count){
-  const badge=document.getElementById('joinReqBadge');
-  const mob=document.getElementById('joinReqBadgeMobile');
-  const show=count>0;
-  if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
-  if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
+  _setBadge('joinReqBadgeMobile', count, true);
+  _setBadge('snJoinBadge', count);
+  _syncTeamBadge();
 }
 // Below 768px every <table> is display:none and these cards are what is actually on screen.
 // Five of the eleven tables never had a card build, so Activity, Report results, both Time Off
@@ -8440,11 +8410,20 @@ async function renderJoinRequests(){
 // ─── MISSED PUNCH REQUESTS ───────────────────────────────────────────────────
 
 function updateMissedPunchBadge(count){
-  const show=count>0;
-  const badge=document.getElementById('missedPunchBadge');
-  const mob=document.getElementById('missedPunchBadgeMobile');
-  if(badge){badge.textContent=count;badge.style.display=show?'':'none';}
-  if(mob){mob.textContent=count;mob.style.display=show?'inline-block':'none';}
+  _setBadge('missedPunchBadgeMobile', count, true);
+  _setBadge('snMissedBadge', count);
+  _syncTeamBadge();
+}
+// Employees and Admins live inside a collapsible group, so their badges are invisible while it
+// is closed. The group header shows the total so nothing hides behind a chevron.
+function _syncTeamBadge(){
+  const n = ['snMissedBadge','snJoinBadge'].reduce((sum,id)=>{
+    const el=document.getElementById(id);
+    return sum + (el && el.style.display!=='none' ? (parseInt(el.textContent,10)||0) : 0);
+  },0);
+  const grp=document.getElementById('snTeamGroup');
+  const open = grp && grp.classList.contains('open');
+  _setBadge('snTeamBadge', open ? 0 : n);
 }
 
 async function renderMissedPunchRequests(){
@@ -11814,9 +11793,6 @@ async function init(){
   applyTheme(getStoredTheme()==='dark' ? 'dark' : 'light');
   if(typeof initLang==='function')initLang();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
-  // Apply the saved navigation preference (classic top tabs by default).
-  document.body.classList.toggle('nav-sidebar', getNavMode()==='sidebar');
-  _syncNavModeLabel();
   // Restore an in-progress demo now that translations are loaded.
   if(_wasDemo){ document.getElementById('loadingOverlay').classList.add('hidden'); startDemo(); return; }
   // Start clock after lang is ready
