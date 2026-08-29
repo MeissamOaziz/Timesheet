@@ -521,6 +521,37 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 /* One card recipe. Ten near-identical inline versions of this existed, differing by a pixel
    or two of padding and nothing else — which is exactly how a design drifts out of step with
    itself. Padding comes from the spacing scale rather than being eyeballed per instance. */
+/* Pricing comparison. The flat-rate argument is the strongest thing this product has and it
+   was buried in a trust chip; it gets a table because the point is arithmetic. */
+.cmp-wrap{max-width:660px;margin:26px auto 0;}
+.cmp-table{width:100%;border-collapse:collapse;font-size:14.5px;}
+.cmp-table th,.cmp-table td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--border);}
+.cmp-table th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;}
+.cmp-table td{font-variant-numeric:tabular-nums;}
+.cmp-them{color:var(--text3);text-decoration:line-through;}
+.cmp-table th.cmp-us,.cmp-table td.cmp-us{color:var(--accent);text-align:right;}
+.cmp-table td.cmp-us strong{font-size:16px;}
+.cmp-table tr:last-child td{border-bottom:none;}
+.cmp-note{font-size:12px;color:var(--text3);line-height:1.55;margin-top:12px;}
+@media(max-width:560px){
+  .cmp-table th,.cmp-table td{padding:11px 8px;font-size:13px;}
+  .cmp-table th:first-child,.cmp-table td:first-child{white-space:nowrap;}
+}
+/* Sticky mobile CTA: the page is long, and on a phone the only call to action was at the very
+   top and the very bottom. */
+.land-sticky-cta{display:none;}
+@media(max-width:760px){
+  .land-sticky-cta{display:block;position:fixed;left:0;right:0;bottom:0;z-index:900;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -4px 18px rgba(0,0,0,.10);}
+  .land-sticky-cta button{width:100%;}
+  body.landing-open{padding-bottom:74px;}
+  /* The sticky bar carries this action already; a second identical button in the section
+     just stacks two of the same thing. */
+  .cmp-cta{display:none;}
+  /* The nav's own CTA was being clipped at this width and is redundant with the sticky bar. */
+  .land-nav-actions .lnb-cta{display:none!important;}
+}
 /* Punch screen employee picker. This is the single most-touched surface in the product —
    every employee, every shift, twice a day — and it was a 20-name native <select>: a dropdown
    that opens an OS list, needs a precise tap, and shows a handful of names at a time. Tiles
@@ -966,7 +997,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 @media(max-width:480px){
   /* Narrowest phones: keep only the primary CTA and the language switch in the landing header. */
-  .land-nav-actions .lnb-ghost{display:none;}
+  .land-nav-actions .lnb-ghost{display:none!important;}
   .land-logo img{height:30px!important;}
   .user-menu-info{display:none;}
   .clock-time{font-size:38px;}
@@ -1128,6 +1159,11 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ═══════ LANDING PAGE ═══════ -->
 <div class="landing" id="landingPage">
+  <!-- On a phone the page is long enough that the only call to action was at the very top and
+       the very bottom; this keeps one within reach the whole way down. -->
+  <div class="land-sticky-cta">
+    <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
+  </div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-tablet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
@@ -1185,7 +1221,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
       <button class="land-btn-secondary" onclick="startDemo()" data-i18n="land.ctaDemo">▶ See a live demo — no signup</button>
-      <button class="land-btn-secondary" onclick="hideLanding();navigate('login')" data-i18n="land.ctaLogin">Sign in to your account</button>
+      <!-- Sign in lives in the nav; a third hero CTA only competed with the two that matter. -->
     </div>
     <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · geofencing &amp; kiosk included</p>
   </div>
@@ -1237,6 +1273,33 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
   </div>
 
+
+  <!-- WHAT IT COSTS AS YOU GROW -->
+  <div class="land-section" id="landingCompare" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 24px">
+    <h2 data-i18n="land.costTitle">Your bill shouldn't grow every time you hire</h2>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:0;font-size:16px" data-i18n="land.costSub">Most time-tracking tools charge per employee, per month. We charge one flat price for the whole team, so hiring a seasonal crew costs nothing extra.</p>
+    <div class="cmp-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th data-i18n="land.costTeam">Team size</th>
+            <th data-i18n="land.costPerUser">Per employee</th>
+            <th class="cmp-us">PunchClock Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td data-i18n="land.cost10">10 employees</td><td class="cmp-them">$55<span data-i18n="land.costMo">/mo</span></td><td class="cmp-us"><strong data-i18n="land.costFree">Free</strong></td></tr>
+          <tr><td data-i18n="land.cost20">20 employees</td><td class="cmp-them">$110<span data-i18n="land.costMo">/mo</span></td><td class="cmp-us"><strong>$19.49<span data-i18n="land.costMo">/mo</span></strong></td></tr>
+          <tr><td data-i18n="land.cost40">40 employees</td><td class="cmp-them">$220<span data-i18n="land.costMo">/mo</span></td><td class="cmp-us"><strong>$39.49<span data-i18n="land.costMo">/mo</span></strong></td></tr>
+          <tr><td data-i18n="land.cost75">75 employees</td><td class="cmp-them">$412<span data-i18n="land.costMo">/mo</span></td><td class="cmp-us"><strong>$79.49<span data-i18n="land.costMo">/mo</span></strong></td></tr>
+        </tbody>
+      </table>
+      <p class="cmp-note" data-i18n="land.costNote">Per-employee column assumes $5.50 per employee per month, a common rate in this category. Our prices are the actual plan prices, in Canadian dollars.</p>
+    </div>
+    <div class="cmp-cta" style="text-align:center;margin-top:26px">
+      <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
+    </div>
+  </div>
   <!-- FEATURES -->
   <div class="land-section" id="landingFeatures">
     <h2 data-i18n="land.featTitle">Everything you need to manage shift workers</h2>
@@ -4097,6 +4160,7 @@ function showUpgradePrompt(containerId, msg) {
 // LANDING / LEGAL HELPERS
 // ═══════════════════════════════════════════════════
 function showLanding() {
+  document.body.classList.add('landing-open');   // reserves room for the sticky mobile CTA
   const nav = document.getElementById('mainNav');
   const mob = document.getElementById('mobileMenu');
   if(nav) nav.style.display = 'none';
@@ -4109,6 +4173,7 @@ function showLanding() {
   renderFAQ();
 }
 function hideLanding() {
+  document.body.classList.remove('landing-open');
   const nav = document.getElementById('mainNav');
   if(nav) nav.style.display = '';
   document.getElementById('landingPage').classList.remove('show');
@@ -13163,6 +13228,11 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'land.costTitle':'Your bill shouldn’t grow every time you hire',
+'land.costSub':'Most time-tracking tools charge per employee, per month. We charge one flat price for the whole team, so hiring a seasonal crew costs nothing extra.',
+'land.costTeam':'Team size','land.costPerUser':'Per employee','land.costMo':'/mo','land.costFree':'Free',
+'land.cost10':'10 employees','land.cost20':'20 employees','land.cost40':'40 employees','land.cost75':'75 employees',
+'land.costNote':'Per-employee column assumes $5.50 per employee per month, a common rate in this category. Our prices are the actual plan prices, in Canadian dollars.',
 'punch.searchName':'Search your name','punch.noMatch':'No one matches that.','punch.noEmployees':'No employees yet at this site.',
 'dlg.confirmTitle':'Are you sure?','dlg.confirm':'Confirm','dlg.noticeTitle':'Heads up','dlg.ok':'OK',
 'fb.title':'Welcome back — can we ask one question?','fb.body':'It has been {n} days. What got in the way?',
@@ -13943,6 +14013,11 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'land.costTitle':'Votre facture ne devrait pas grimper à chaque embauche',
+'land.costSub':'La plupart des outils de pointage facturent par employé, par mois. Nous facturons un prix fixe pour toute l’équipe — embaucher une équipe saisonnière ne coûte rien de plus.',
+'land.costTeam':'Taille de l’équipe','land.costPerUser':'Par employé','land.costMo':'/mois','land.costFree':'Gratuit',
+'land.cost10':'10 employés','land.cost20':'20 employés','land.cost40':'40 employés','land.cost75':'75 employés',
+'land.costNote':'La colonne par employé suppose 5,50 $ par employé par mois, un tarif courant dans cette catégorie. Nos prix sont les prix réels des forfaits, en dollars canadiens.',
 'punch.searchName':'Cherchez votre nom','punch.noMatch':'Aucune correspondance.','punch.noEmployees':'Aucun employé à ce site pour l’instant.',
 'dlg.confirmTitle':'Êtes-vous sûr?','dlg.confirm':'Confirmer','dlg.noticeTitle':'Avis','dlg.ok':'OK',
 'fb.title':'Content de vous revoir — une seule question?','fb.body':'Ça fait {n} jours. Qu’est-ce qui vous a bloqué?',
