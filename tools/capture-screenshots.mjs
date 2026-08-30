@@ -181,6 +181,71 @@ const SHOTS = [
     ],
   },
 
+  {
+    id: '12-geofence', kind: 'help', page: 'sites',
+    before: async p => {
+      await p.evaluate(() => editSite(C.sites[0].id));
+      await sleep(600);
+      // The geofence block is collapsed by default; expand it so the radius control shows.
+      await p.evaluate(() => {
+        const sec = document.getElementById('geoExpandedSection');
+        if (sec && getComputedStyle(sec).display === 'none') toggleGeoSection();
+      });
+      await sleep(500);
+    },
+    title: T("Optional — only accept punches near the site", "Optionnel — n'accepter les pointages qu'à proximité du site"),
+    annotate: [
+      { fn:'ring',  sel:'#geoRadiusSlider' },
+      { fn:'arrow', sel:'#geoRadiusSlider', side:'auto',
+        text: T("Set how close someone must be\nbefore a punch is accepted", "Choisissez la distance maximale\npour qu'un pointage soit accepté") },
+    ],
+  },
+  {
+    id: '13-export-report', kind: 'help', page: 'reports',
+    before: async p => { await p.evaluate(() => { try { generateReport(); } catch (e) {} }); await sleep(900); },
+    title: T("Export it for payroll", "Exportez-le pour la paie"),
+    annotate: [
+      { fn:'ring',  sel:'.btn-export' },
+      { fn:'arrow', sel:'.btn-export', side:'auto',
+        text: T("Excel, CSV or PDF — the same\nhours you see on screen", "Excel, CSV ou PDF — les mêmes\nheures qu'à l'écran") },
+    ],
+  },
+  {
+    id: '14-reset-device', kind: 'help', page: 'punch', viewport: { width:1440, height:1250 },
+    before: async p => {
+      // This escape only appears on a device bound as a kiosk — which is exactly the person
+      // who needs the picture.
+      await p.evaluate(() => {
+        const f = document.getElementById('kioskResetFooter');
+        if (f) f.style.display = '';
+        // The live "currently clocked in" panel pushes the footer off the frame. It is demo
+        // detail, not part of what this picture is explaining.
+        const ci = document.querySelector('.ci-panel, .ci-header') &&
+                   (document.querySelector('.ci-panel') || document.querySelector('.ci-header').parentElement);
+        if (ci) ci.style.display = 'none';
+      });
+      await sleep(350);
+    },
+    title: T("This device isn't meant to be a kiosk?", "Cet appareil ne devrait pas être un kiosque?"),
+    // Without context the crop collapses onto the footer itself and produces an unrecognisable
+    // strip — the reader needs to see it is the bottom of the punch card.
+    context: ['.punch-card'],
+    annotate: [
+      { fn:'ring',  sel:'#kioskResetFooter' },
+      { fn:'arrow', sel:'#kioskResetFooter', side:'auto',
+        text: T("Sign in as admin, or reset the\ndevice back to a normal browser", "Connectez-vous comme admin, ou\nremettez l'appareil à la normale") },
+    ],
+  },
+  {
+    id: '15-time-off', kind: 'help', page: 'timeoff',
+    before: async p => { await p.evaluate(() => openTimeOffModal()); await sleep(600); },
+    title: T("Record vacation, sick days and unpaid leave", "Enregistrez vacances, congés maladie et congés sans solde"),
+    annotate: [
+      { fn:'ring',  sel:'#toKind' },
+      { fn:'arrow', sel:'#toKind', side:'auto',
+        text: T("Paid leave feeds the hours on\nyour payroll report", "Les congés payés alimentent les\nheures de votre rapport de paie") },
+    ],
+  },
   // ---------- Landing: clean product shots ----------
   { id:'hero-dashboard', kind:'landing', page:'dashboard' },
   { id:'product-punch',  kind:'landing', page:'punch' },

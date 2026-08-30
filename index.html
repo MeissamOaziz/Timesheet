@@ -21,7 +21,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://cdnjs.cloudflare.com https://*.basemaps.cartocdn.com;
+  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://cdnjs.cloudflare.com https://tile.openstreetmap.org;
   connect-src 'self' https://uziwymrwaeojhqaagqcm.supabase.co https://nominatim.openstreetmap.org https://cdnjs.cloudflare.com;
   worker-src 'self';
   manifest-src 'self';
@@ -5373,7 +5373,7 @@ function renderTour(){
 const HELP_ARTICLES=[
   // Sourced from the landing FAQ, which was the wrong place for them: these are questions an
   // existing customer asks, and they reuse the same faq.* keys rather than duplicating copy.
-  {id:'kioskreset', tk:'faq.q21', dk:'faq.a21', cat:'fix', icon:'i-refresh', pages:['punch','sites'],
+  {id:'kioskreset', tk:'faq.q21', dk:'faq.a21', cat:'fix', icon:'i-refresh', pages:['punch','sites'], shot:'14-reset-device',
    kw:{en:'device stuck kiosk reset clock page opens instead website locked out admin cannot log in tablet phone',
        fr:'appareil bloqué kiosque réinitialiser page pointage ouvre au lieu site verrouillé admin connecter tablette téléphone'}},
   {id:'alerts', tk:'faq.q22', dk:'faq.a22', cat:'fix', icon:'i-bell', pages:['sites','dashboard'],
@@ -5406,15 +5406,15 @@ const HELP_ARTICLES=[
    kw:{en:'edit punch wrong time forgot clock out missed correct fix delete mistake',fr:'modifier pointage mauvaise heure oublié sortie manqué corriger supprimer erreur'}},
   {id:'audit', tk:'help.s10title', dk:'help.s10desc', cat:'daily', icon:'i-nav-activity', pages:['activity'],
    kw:{en:'audit log history who changed manual entry',fr:'journal audit historique qui modifié saisie manuelle'}},
-  {id:'reports', tk:'help.s8title', dk:'help.s8desc', cat:'payroll', icon:'i-nav-reports', pages:['reports'], shot:'10-reports',
+  {id:'reports', tk:'help.s8title', dk:'help.s8desc', cat:'payroll', icon:'i-nav-reports', pages:['reports'], shot:'13-export-report',
    kw:{en:'report payroll hours export excel csv pdf timesheet period',fr:'rapport paie heures exporter excel csv pdf feuille de temps période'}},
   {id:'autoemail', tk:'help.s9title', dk:'help.s9desc', cat:'payroll', icon:'i-mail', pages:['reports','admin'],
    kw:{en:'automatic email report period summary send employee',fr:'automatique courriel rapport sommaire période envoyer employé'}},
-  {id:'timeoff', tk:'help.toTitle', dk:'help.toDesc', cat:'payroll', icon:'i-calendar', pages:['timeoff'],
+  {id:'timeoff', tk:'help.toTitle', dk:'help.toDesc', cat:'payroll', icon:'i-calendar', pages:['timeoff'], shot:'15-time-off',
    kw:{en:'time off vacation sick leave absence request approve deny holiday',fr:'congé vacances maladie absence demande approuver refuser férié'}},
   {id:'scheduling', tk:'help.schedTitle', dk:'help.schedDesc', cat:'payroll', icon:'i-nav-schedule', pages:['schedule'],
    kw:{en:'schedule shift roster week plan add-on rota',fr:'horaire quart semaine planifier module complémentaire'}},
-  {id:'geofence', tk:'help.s6title', dk:'help.s6desc', cat:'security', icon:'i-map-pin', pages:['sites'],
+  {id:'geofence', tk:'help.s6title', dk:'help.s6desc', cat:'security', icon:'i-map-pin', pages:['sites'], shot:'12-geofence',
    kw:{en:'geofence gps location radius block far away gps gps required gps off',fr:'géorepérage gps localisation rayon bloquer loin position'}},
   {id:'devicetoken', tk:'help.s7title', dk:'help.s7desc', cat:'security', icon:'i-lock', pages:['sites'],
    kw:{en:'device token register lock security only this tablet',fr:'jeton appareil enregistrer verrouiller sécurité tablette'}},
@@ -7245,8 +7245,11 @@ function initGeoMap() {
   const lng  = parseFloat(lngVal) || -73.5673;
   const zoom = latVal ? 16 : 12;
   _geoMap = L.map('geoMapContainer').setView([lat, lng], zoom);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 20
+  // Carto's anonymous basemaps arrive watermarked "API KEY REQUIRED" — a 200 response whose
+  // image says the service is unconfigured, which is what every customer saw here. OSM's own
+  // tiles need no key; their licence asks for the attribution this layer already shows.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
   }).addTo(_geoMap);
   if (latVal) setGeoPin(lat, lng, false);
 }
@@ -13936,9 +13939,9 @@ en:{
 'faq.q20':'How do I invite team members?',
 'faq.a20':'From the Admin panel, go to the Admins tab and click <strong>\'Invite Team Member\'</strong>. Choose Co-Admin for full access (except billing) or Manager for site-specific access. The person receives an email with a secure link to create their account — no join requests needed.',
 'faq.q21':'A device keeps opening the clock-in page instead of the website. How do I reset it?',
-'faq.a21':'That device was set up as a kiosk, so it remembers the site. To reset it: on that device, tap the <strong>\'Not a kiosk? Reset this device\'</strong> link at the bottom of the clock-in page, or open <strong>punchclock.ca/?nokiosk=1</strong> in the browser — the device returns to the normal login page. You can re-create a kiosk shortcut anytime from <strong>Admin → Sites → Kiosk Shortcut</strong>.',
+'faq.a21':'That device was set up as a kiosk, so it opens straight to the clock-in page and remembers the site. There are two ways out, both at the bottom of that page. Tap <strong>Admin sign-in</strong> to log in and use the rest of the app on that device — the kiosk lock lifts as soon as you are signed in, and comes back when you sign out. Or tap <strong>This device isn’t a kiosk? Reset it</strong> to unbind it for good. If you cannot reach either, open <strong>punchclock.ca/?nokiosk=1</strong> on the device itself: the kiosk setting is stored in that device’s browser, so it has to be cleared there. Re-create a kiosk anytime from <strong>Sites → Kiosk Shortcut</strong>.',
 'faq.q22':'I\'m getting alert emails about clock-outs or overtime. Can I turn them off or change how often?',
-'faq.a22':'Yes — manager alerts are fully optional and set per company. Go to <strong>Sites → your company → Edit → Manager Alerts</strong>. Uncheck <strong>"Receive manager alerts by email"</strong> to stop all of them, or keep just the ones you want (forgot-to-clock-out, daily overtime) and adjust the <strong>"Alert after"</strong> hours. Overtime alerts also require overtime tracking to be on. Reports and timesheet emails have their own frequency under <strong>payroll frequency</strong> (weekly / bi-weekly / monthly). Changes take effect right away.',
+'faq.a22':'Yes — manager alerts are fully optional and set per company. Open the <strong>profile menu (top right) → Company Info</strong> and scroll to <strong>Manager Alerts</strong>. Uncheck <strong>"Receive manager alerts by email"</strong> to stop all of them, or keep just the ones you want (forgot-to-clock-out, daily overtime) and adjust the <strong>"Alert after"</strong> hours. Overtime alerts also require overtime tracking to be on. Reports and timesheet emails have their own frequency under <strong>payroll frequency</strong> (weekly / bi-weekly / monthly). Changes take effect right away.',
 'faq.q23':'Do I have to delete employees who have left to stay within my plan limit?',
 'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
@@ -14721,9 +14724,9 @@ fr:{
 'faq.q20':'Comment inviter des membres de l\'équipe?',
 'faq.a20':'Depuis le panneau Admin, allez dans l\'onglet Admins et cliquez sur <strong>\'Inviter un membre\'</strong>. Choisissez Co-Admin pour un accès complet (sauf facturation) ou Gestionnaire pour un accès limité à des sites spécifiques. La personne reçoit un courriel avec un lien sécurisé pour créer son compte.',
 'faq.q21':'Un appareil ouvre toujours la page de pointage au lieu du site. Comment le réinitialiser?',
-'faq.a21':'Cet appareil a été configuré comme kiosque, il se souvient donc du site. Pour le réinitialiser : sur cet appareil, touchez le lien <strong>\'Réinitialiser cet appareil\'</strong> au bas de la page de pointage, ou ouvrez <strong>punchclock.ca/?nokiosk=1</strong> dans le navigateur — l\'appareil revient à la page de connexion normale. Vous pouvez recréer un raccourci kiosque à tout moment depuis <strong>Admin → Sites → Raccourci kiosque</strong>.',
+'faq.a21':'Cet appareil a été configuré comme kiosque : il ouvre directement la page de pointage et se souvient du site. Deux solutions, toutes deux au bas de cette page. Touchez <strong>Connexion admin</strong> pour vous connecter et utiliser le reste de l’application sur cet appareil — le verrouillage kiosque se libère dès que vous êtes connecté, et revient à la déconnexion. Ou touchez <strong>Cet appareil n’est pas un kiosque? Réinitialiser</strong> pour le délier définitivement. Si vous n’arrivez à aucun des deux, ouvrez <strong>punchclock.ca/?nokiosk=1</strong> sur l’appareil lui-même : le réglage kiosque est enregistré dans le navigateur de cet appareil, il doit donc y être effacé. Vous pouvez recréer un kiosque quand vous voulez depuis <strong>Sites → Raccourci kiosque</strong>.',
 'faq.q22':'Je reçois des courriels d\'alerte sur les pointages ou les heures supplémentaires. Puis-je les désactiver ou en changer la fréquence?',
-'faq.a22':'Oui — les alertes gestionnaire sont facultatives et se gèrent par compagnie. Allez dans <strong>Sites → votre compagnie → Modifier → Alertes gestionnaire</strong>. Décochez <strong>« Recevoir les alertes par courriel »</strong> pour toutes les arrêter, ou gardez seulement celles voulues (oubli de sortie, heures supplémentaires) et ajustez le seuil <strong>« Alerter après »</strong>. Les alertes d\'heures supplémentaires exigent aussi le suivi des heures supp. activé. Les rapports et feuilles de temps ont leur propre fréquence sous <strong>fréquence de paie</strong> (hebdo / aux deux semaines / mensuel). Les changements prennent effet immédiatement.',
+'faq.a22':'Oui — les alertes gestionnaire sont facultatives et se gèrent par compagnie. Ouvrez le <strong>menu de profil (en haut à droite) → Infos compagnie</strong> et descendez jusqu’à <strong>Alertes gestionnaire</strong>. Décochez <strong>« Recevoir les alertes par courriel »</strong> pour toutes les arrêter, ou gardez seulement celles voulues (oubli de sortie, heures supplémentaires) et ajustez le seuil <strong>« Alerter après »</strong>. Les alertes d\'heures supplémentaires exigent aussi le suivi des heures supp. activé. Les rapports et feuilles de temps ont leur propre fréquence sous <strong>fréquence de paie</strong> (hebdo / aux deux semaines / mensuel). Les changements prennent effet immédiatement.',
 'faq.q23':'Dois-je supprimer les employés qui ont quitté pour respecter la limite de mon forfait?',
 'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
