@@ -1072,6 +1072,26 @@ border-top:1px solid var(--border);margin:18px 0;}
 .sched-grid tr:last-child td{border-bottom:none;}
 .sched-emp-info{display:flex;align-items:center;gap:8px;}
 .sched-emp-avatar{width:28px;height:28px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+/* Weekly hours per person. A roster is built against a labour budget, so the total belongs
+   beside the row rather than in the reader's head. */
+.sched-grid th.sched-hours,.sched-grid td.sched-hours{text-align:right;white-space:nowrap;
+  font-variant-numeric:tabular-nums;font-weight:600;font-size:13px;padding-right:12px;}
+.sched-grid td.sched-hours{color:var(--accent);}
+.sched-hours-u{font-size:10px;font-weight:500;color:var(--text3);margin-left:1px;}
+.sched-hours-z{color:var(--text3);font-weight:400;}
+/* Locked-feature preview. The grid behind it is real markup, so it inherits every style the
+   paid view has; only the banner, the fade and the call to action are specific to this state. */
+.sched-preview-note{display:flex;align-items:center;background:rgba(245,158,11,.10);
+  border:1px solid rgba(245,158,11,.35);border-radius:var(--r-md);padding:11px 15px;
+  font-size:13px;color:var(--text);margin-bottom:14px;}
+.sched-preview-note .ic{width:16px;height:16px;color:var(--amber);}
+.sched-preview-wrap{position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  opacity:.72;filter:saturate(.85);pointer-events:none;user-select:none;
+  mask-image:linear-gradient(to bottom,#000 82%,transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 82%,transparent 100%);}
+/* The call to action sits below the fade, not on top of it: overlapping put the heading across
+   the last employee's name, which read as a rendering fault rather than a layered design. */
+.sched-preview-cta{text-align:center;position:relative;z-index:1;padding:4px 16px 8px;}
 .sched-emp-name{font-size:13px;font-weight:600;color:var(--text);}
 .sched-emp-site{font-size:10px;color:var(--text3);margin-top:1px;}
 .sched-cell-inner{display:flex;flex-direction:column;gap:4px;min-height:52px;}
@@ -1080,6 +1100,13 @@ border-top:1px solid var(--border);margin:18px 0;}
 .sched-shift .shift-time{font-size:10px;font-weight:500;opacity:.8;margin-top:1px;}
 .sched-shift .shift-delete{position:absolute;top:3px;right:5px;font-size:10px;opacity:0;color:var(--red);transition:opacity .15s;cursor:pointer;font-weight:700;}
 .sched-shift:hover .shift-delete{opacity:1;}
+/* A touch device has no hover, so opacity:0 made deleting a shift not merely awkward but
+   impossible — on exactly the tablets this product is sold to run on. Show it outright wherever
+   hover does not exist, and give it a real touch target rather than a 10px glyph. */
+@media (hover: none), (pointer: coarse){
+  .sched-shift .shift-delete{opacity:.75;top:2px;right:2px;padding:5px;margin:-3px;}
+  .sched-shift{padding-right:20px;}
+}
 .sched-add-btn{width:100%;background:none;border:1.5px dashed var(--border);border-radius:var(--r-sm);color:var(--text3);font-size:18px;padding:6px;cursor:pointer;transition:all .15s;margin-top:2px;}
 .sched-add-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.06);}
 .sched-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -2893,7 +2920,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
 
   <!-- Filters + week nav -->
-  <div class="sched-toolbar">
+  <div class="sched-toolbar" id="schedToolbar">
     <div class="sched-filters">
       <select id="schedCoFilter" onchange="onSchedCoChange()" style="min-width:160px"></select>
       <select id="schedSiteFilter" onchange="renderScheduleGrid()" style="min-width:140px"></select>
@@ -3792,20 +3819,28 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <div class="modal-overlay" id="addPunchModal">
   <div class="modal">
-    <h3>Add Punch Record</h3>
+    <h3 data-i18n="addPunch.title">Add Punch Record</h3>
     <div id="addPunchMsg"></div>
-    <div class="msg info" style="margin-bottom:14px"><svg class="ic" style="margin-right:6px"><use href="#i-edit"/></svg>Manual entry — use for forgotten clock-ins/outs.</div>
-    <div class="form-group"><label>Employee</label><select id="addPunchEmp"></select></div>
+    <div class="msg info" style="margin-bottom:14px"><svg class="ic" style="margin-right:6px"><use href="#i-edit"/></svg><span data-i18n="addPunch.hint">Manual entry — use for forgotten clock-ins/outs.</span></div>
+    <div class="form-group"><label data-i18n="addPunch.employee">Employee</label><select id="addPunchEmp"></select></div>
     <div class="form-row">
-      <div class="form-group"><label>Type</label>
-        <select id="addPunchType"><option value="IN">IN</option><option value="OUT">OUT</option></select>
+      <div class="form-group"><label data-i18n="addPunch.type">Type</label>
+        <select id="addPunchType" onchange="_onAddPunchTypeChange()">
+          <option value="SHIFT" data-i18n="addPunch.typeShift">Full shift (IN + OUT)</option>
+          <option value="IN">IN</option>
+          <option value="OUT">OUT</option>
+        </select>
       </div>
-      <div class="form-group"><label>Date</label><input type="date" id="addPunchDate"></div>
+      <div class="form-group"><label data-i18n="addPunch.date">Date</label><input type="date" id="addPunchDate"></div>
     </div>
-    <div class="form-group"><label>Time (HH:MM:SS)</label><input type="text" id="addPunchTime" placeholder="09:00:00" maxlength="8"></div>
+    <div class="form-row" id="addPunchTimes">
+      <div class="form-group"><label id="addPunchTimeLbl" data-i18n="addPunch.timeIn">In time (HH:MM:SS)</label><input type="text" id="addPunchTime" placeholder="09:00:00" maxlength="8" oninput="_checkAddPunchOvernight()"></div>
+      <div class="form-group" id="addPunchOutWrap"><label data-i18n="addPunch.timeOut">Out time (HH:MM:SS)</label><input type="text" id="addPunchTimeOut" placeholder="17:00:00" maxlength="8" oninput="_checkAddPunchOvernight()"></div>
+    </div>
+    <div class="msg info" id="addPunchOvernight" style="display:none;margin-bottom:14px;font-size:12.5px" data-i18n="addPunch.overnight">The out time is earlier than the in time, so the OUT will be recorded on the following day.</div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('addPunchModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveAddPunch()">Add Punch</button>
+      <button class="btn-secondary" onclick="closeModal('addPunchModal')" data-i18n="common.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveAddPunch()" data-i18n="addPunch.submit">Add Punch</button>
     </div>
   </div>
 </div>
@@ -10745,7 +10780,10 @@ function openAddPunchModal(){
   sel.innerHTML=emps.map(e=>`<option value="${e.id}">${e.name}${e.emp_code?' ('+e.emp_code+')':''}</option>`).join('');
   document.getElementById('addPunchDate').value=new Date().toLocaleDateString('en-CA');
   document.getElementById('addPunchTime').value='';
-  document.getElementById('addPunchType').value='IN';
+  document.getElementById('addPunchTimeOut').value='';
+  // A whole forgotten day is the common repair, so the paired entry is the default.
+  document.getElementById('addPunchType').value='SHIFT';
+  _onAddPunchTypeChange();
   openModal('addPunchModal');
 }
 
@@ -10769,17 +10807,53 @@ async function _punchNeighbours(empId, iso, ignoreId){
   return {prev,next};
 }
 
+// Show the second time field only for a paired entry, and warn when the shift crosses midnight.
+function _onAddPunchTypeChange(){
+  const pair=document.getElementById('addPunchType').value==='SHIFT';
+  document.getElementById('addPunchOutWrap').style.display=pair?'':'none';
+  const lbl=document.getElementById('addPunchTimeLbl');
+  lbl.setAttribute('data-i18n',pair?'addPunch.timeIn':'addPunch.time');
+  lbl.textContent=pair?(t('addPunch.timeIn')||'In time (HH:MM:SS)')
+                      :(t('addPunch.time')||'Time (HH:MM:SS)');
+  _checkAddPunchOvernight();
+}
+function _checkAddPunchOvernight(){
+  const el=document.getElementById('addPunchOvernight');
+  const pair=document.getElementById('addPunchType').value==='SHIFT';
+  const a=document.getElementById('addPunchTime').value.trim();
+  const b=document.getElementById('addPunchTimeOut').value.trim();
+  el.style.display=(pair&&a&&b&&b<=a)?'':'none';
+}
+
 // Rejects anything that would leave two INs or two OUTs in a row for the same employee.
-// Returns an error string, or null when the punch is safe to insert.
+// Returns {error} for a state that must not be written, {warn} for one the admin is allowed to
+// create knowingly, or null when the punch is simply safe.
+//
+// The distinction matters: repairing a day someone forgot entirely takes two punches, and the
+// moment between them necessarily looks wrong. Treating that moment as a hard error made the
+// repair impossible in both directions — the IN was refused because the next day's punch is an
+// IN, and the OUT was refused because no IN existed yet. Only the backward-looking checks
+// actually prevent bad data (double-counted hours); the forward-looking ones describe a state
+// the admin is on their way to fixing, so they warn instead of blocking.
 function _punchSequenceError(type, prev, next){
   const at=p=>`${p.punch_date} ${(p.punch_time||'').slice(0,5)}`;
   if(type==='IN'){
-    if(prev&&prev.type==='IN') return (t('addPunch.errAlreadyIn')||'This employee is already clocked IN since {when}. Add the missing OUT first, or edit that punch.').replace('{when}',at(prev));
-    if(next&&next.type==='IN') return (t('addPunch.errNextIn')||'The next punch ({when}) is also an IN. Adding this would leave two clock-ins in a row.').replace('{when}',at(next));
+    if(prev&&prev.type==='IN') return {error:(t('addPunch.errAlreadyIn')||'This employee is already clocked IN since {when}. Add the missing OUT first, or edit that punch.').replace('{when}',at(prev))};
+    if(next&&next.type==='IN') return {warn:(t('addPunch.warnNextIn')||'The next punch ({when}) is also an IN, so this employee will show as clocked in until you add the matching OUT. Add it anyway?').replace('{when}',at(next))};
   }else{
-    if(!prev||prev.type==='OUT') return (t('addPunch.errNotIn')||'This employee is not clocked IN at that moment, so an OUT would be out of sequence. Add the missing IN first.');
-    if(next&&next.type==='OUT') return (t('addPunch.errNextOut')||'The next punch ({when}) is also an OUT. Adding this would leave two clock-outs in a row.').replace('{when}',at(next));
+    if(!prev||prev.type==='OUT') return {error:(t('addPunch.errNotIn')||'This employee is not clocked IN at that moment, so an OUT would be out of sequence. Add the missing IN first.')};
+    if(next&&next.type==='OUT') return {warn:(t('addPunch.warnNextOut')||'The next punch ({when}) is also an OUT. Adding this leaves two clock-outs in a row. Add it anyway?').replace('{when}',at(next))};
   }
+  return null;
+}
+
+// A whole forgotten day, added as one pair. Validated against the surrounding punches as a unit,
+// which is the only way this reads cleanly: IN-then-OUT slotted before a later IN is a perfectly
+// ordinary sequence, even though the IN on its own momentarily is not.
+function _punchPairError(prev, next){
+  const at=p=>`${p.punch_date} ${(p.punch_time||'').slice(0,5)}`;
+  if(prev&&prev.type==='IN') return {error:(t('addPunch.errAlreadyIn')||'This employee is already clocked IN since {when}. Add the missing OUT first, or edit that punch.').replace('{when}',at(prev))};
+  if(next&&next.type==='OUT') return {warn:(t('addPunch.warnNextOut')||'The next punch ({when}) is also an OUT. Adding this leaves two clock-outs in a row. Add it anyway?').replace('{when}',at(next))};
   return null;
 }
 
@@ -10788,25 +10862,67 @@ async function saveAddPunch(){
   const type=document.getElementById('addPunchType').value;
   const punch_date=document.getElementById('addPunchDate').value;
   const punch_time=document.getElementById('addPunchTime').value.trim();
-  if(!empId||!punch_date||!punch_time){showMsg('addPunchMsg','All fields are required.','error');return;}
-  if(!/^\d{2}:\d{2}(:\d{2})?$/.test(punch_time)){showMsg('addPunchMsg','Time must be HH:MM or HH:MM:SS.','error');return;}
-  const fullTime=punch_time.length===5?punch_time+':00':punch_time;
+  const punch_time_out=document.getElementById('addPunchTimeOut').value.trim();
+  const isPair=type==='SHIFT';
+  const badTime=v=>!/^\d{2}:\d{2}(:\d{2})?$/.test(v);
+  if(!empId||!punch_date||!punch_time||(isPair&&!punch_time_out)){
+    showMsg('addPunchMsg',t('msg.allRequired')||'All fields are required.','error');return;}
+  if(badTime(punch_time)||(isPair&&badTime(punch_time_out))){
+    showMsg('addPunchMsg',t('addPunch.errTimeFormat')||'Time must be HH:MM or HH:MM:SS.','error');return;}
+  const pad=v=>v.length===5?v+':00':v;
+  const fullTime=pad(punch_time);
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const emp=C.employees.find(e=>e.id===empId);
   const ctx=Ctx.get();
   const site=ctx?.site||C.sites.find(s=>s.id===emp?.site_id);
+
+  // An out time at or before the in time means the shift ran past midnight, so the OUT belongs to
+  // the next calendar day. Silently writing it on the same date would produce a negative shift.
+  let outDate=punch_date, fullTimeOut=null, punched_at_out=null;
+  if(isPair){
+    fullTimeOut=pad(punch_time_out);
+    if(fullTimeOut<=fullTime){
+      const d=new Date(`${punch_date}T00:00:00`); d.setDate(d.getDate()+1);
+      outDate=d.toLocaleDateString('en-CA');
+    }
+    punched_at_out=new Date(`${outDate}T${fullTimeOut}`).toISOString();
+  }
+
   // Guard the IN/OUT sequence — without this an admin could add a second IN for someone who was
-  // already clocked in, silently doubling their hours.
+  // already clocked in, silently doubling their hours. A pair is checked as a unit against the
+  // punches on either side of it; a single punch is checked on its own.
   const {prev,next}=await _punchNeighbours(empId,punched_at);
-  const seqErr=_punchSequenceError(type,prev,next);
-  if(seqErr){showMsg('addPunchMsg',seqErr,'error');return;}
+  let seq;
+  if(isPair){
+    // A punch that already sits *inside* the proposed shift is a genuine conflict, not a state
+    // the admin is about to resolve — adding around it would interleave two open shifts.
+    const inner = next && new Date(next.punched_at) < new Date(punched_at_out) ? next : null;
+    if(inner){
+      showMsg('addPunchMsg',(t('addPunch.errOverlap')||'There is already a punch at {when}, inside the shift you are adding. Edit that punch instead.')
+        .replace('{when}',`${inner.punch_date} ${(inner.punch_time||'').slice(0,5)}`),'error');
+      return;
+    }
+    seq=_punchPairError(prev,next);
+  }else{
+    seq=_punchSequenceError(type,prev,next);
+  }
+  if(seq?.error){showMsg('addPunchMsg',seq.error,'error');return;}
+  if(seq?.warn && !(await uiConfirm(seq.warn))) return;
+
+  const mk=(ty,date,time,at)=>{
+    const p={emp_id:empId,emp_name:emp.name,company_id:emp.company_id,type:ty,
+             punch_date:date,punch_time:time,punched_at:at,is_manual:true};
+    if(site){p.site_id=site.id;p.site_name=site.name;}
+    return p;
+  };
   try{
-    const payload={emp_id:empId,emp_name:emp.name,company_id:emp.company_id,type,punch_date,punch_time:fullTime,punched_at,is_manual:true};
-    if(site){payload.site_id=site.id;payload.site_name=site.name;}
-    const r=await DB.insert('punches',payload);
-    if(r?.[0])C.punches.push(r[0]);
+    const rows=isPair
+      ? [mk('IN',punch_date,fullTime,punched_at), mk('OUT',outDate,fullTimeOut,punched_at_out)]
+      : [mk(type,punch_date,fullTime,punched_at)];
+    const r=await DB.insert('punches',rows);
+    if(Array.isArray(r)) r.forEach(row=>{ if(row) C.punches.push(row); });
     closeModal('addPunchModal');loadActivityPage();
-  }catch(e){showMsg('addPunchMsg',e.message,'error');}
+  }catch(e){showMsg('addPunchMsg',friendlyError(e.message),'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -12664,6 +12780,84 @@ function schedGoToday() {
   renderScheduleGrid();
 }
 
+// Show or hide the schedule page's own controls. The preview turns them all off; the real page
+// turns them back on, because a session can move from locked to unlocked without a reload.
+function schedChrome(show){
+  const d = show ? '' : 'none';
+  ['holidaysBtn','notifyTeamBtn','addShiftBtn','schedToolbar'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = d;
+  });
+}
+
+// A read-only sample week, drawn with the account's own employees so the reader is looking at
+// their business rather than a stock illustration. Nothing here is saved: it is generated from
+// a fixed pattern, never written, and every control is inert. The banner says so plainly —
+// showing invented shifts without labelling them would be worse than the empty wall it replaces.
+function renderSchedulePreview(){
+  const host = document.getElementById('schedGridContent');
+  if(!host) return;
+  // Every control above the grid drives a schedule this account does not have: the filters render
+  // empty, the week arrows move a sample that ignores them, and Holidays/Notify would act on real
+  // data. Hide the chrome so the page reads as one offer instead of a half-broken tool.
+  schedChrome(false);
+
+  const mine = (C.employees||[]).filter(e=>e.active!==false).slice(0,5);
+  const names = mine.length ? mine.map(e=>e.name)
+                            : ['Marie Lavoie','David Pham','Sofia Ricci','Jean Tremblay'];
+
+  const weekStart = schedGetWeekStart(0);
+  const days = Array.from({length:7},(_,i)=>{ const d=new Date(weekStart); d.setDate(weekStart.getDate()+i); return d; });
+  const dayLabel = d => d.toLocaleDateString(t('sched.locale')||'en-CA',{weekday:'short'});
+  const dateLabel = d => d.toLocaleDateString(t('sched.locale')||'en-CA',{day:'numeric'});
+
+  // A deliberately ordinary roster: opens, mids, closes, two days off each.
+  const PATTERN = [
+    ['09:00-17:00','09:00-17:00','','13:00-21:00','13:00-21:00','09:00-15:00',''],
+    ['','13:00-21:00','13:00-21:00','09:00-17:00','09:00-17:00','','11:00-19:00'],
+    ['07:00-15:00','','07:00-15:00','07:00-15:00','','11:00-19:00','11:00-19:00'],
+    ['13:00-21:00','07:00-15:00','09:00-17:00','','09:00-13:00','',''],
+    ['','','11:00-19:00','11:00-19:00','13:00-21:00','09:00-17:00',''],
+  ];
+  const hoursOf = row => row.reduce((sum,v)=>{
+    if(!v) return sum;
+    const [a,b]=v.split('-'); const [ah,am]=a.split(':').map(Number), [bh,bm]=b.split(':').map(Number);
+    return sum + ((bh*60+bm)-(ah*60+am))/60;
+  },0);
+
+  let head = `<th>${esc(t('sched.employee')||'Employee')}</th>`;
+  days.forEach(d=>{ head += `<th><div>${esc(dayLabel(d))}</div><div style="font-size:11px;color:var(--text3);font-weight:500">${esc(dateLabel(d))}</div></th>`; });
+  head += `<th class="sched-hours">${esc(t('sched.hoursCol')||'Hours')}</th>`;
+
+  let rows='';
+  names.forEach((name,i)=>{
+    const row = PATTERN[i % PATTERN.length];
+    const ini = String(name).split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+    rows += `<tr><td><div class="sched-emp-info"><div class="sched-emp-avatar">${esc(ini)}</div>
+      <div><div class="sched-emp-name">${esc(name)}</div></div></div></td>`;
+    row.forEach(v=>{
+      rows += '<td><div class="sched-cell-inner">' +
+        (v ? `<div class="sched-shift" style="pointer-events:none"><div class="shift-time">${esc(v.replace('-',' – '))}</div></div>` : '') +
+        '</div></td>';
+    });
+    rows += `<td class="sched-hours">${hoursOf(row).toFixed(1)}<span class="sched-hours-u">h</span></td></tr>`;
+  });
+
+  host.innerHTML = `
+    <div class="sched-preview-note">
+      <svg class="ic" style="margin-right:7px;flex-shrink:0"><use href="#i-warn"/></svg>
+      <span>${esc(t('sched.previewNote')||'Sample week — these shifts are an example, not your real schedule. Nothing here is saved.')}</span>
+    </div>
+    <div class="sched-preview-wrap">
+      <table class="sched-grid"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="sched-preview-cta">
+      <h3 style="margin:0 0 6px;font-size:17px">${esc(t('sched.previewTitle')||'Build this for your team')}</h3>
+      <p style="color:var(--text2);font-size:13.5px;margin:0 auto 16px;max-width:52ch">${esc(t('sched.previewBody')||'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.')}</p>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="startSchedulingAddonCheckout()">${esc(t('addon.addFor')||'Add — $14.95/mo')}</button>
+    </div>`;
+}
+
 async function loadSchedulePage() {
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   await ensureManagerSiteIds();
@@ -12673,17 +12867,14 @@ async function loadSchedulePage() {
   // Check add-on access — scheduling_addon must be explicitly purchased or granted
   const hasAddon = !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin() || isDemo();
   if(!hasAddon) {
-    document.getElementById('schedGridContent').innerHTML = `
-      <div class="sched-empty">
-        <div class="sched-empty-icon"><svg class="ic" style="width:34px;height:34px"><use href="#i-calendar"/></svg></div>
-        <h3 style="margin-bottom:8px">${t('sched.addonRequired')||'Scheduling Add-On Required'}</h3>
-        <p style="color:var(--text2);font-size:14px;margin-bottom:20px">${t('sched.addonRequiredDesc')||'Add the Scheduling Add-On to your plan to build shift schedules for your team.'}</p>
-        <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="startSchedulingAddonCheckout()">${t('addon.addFor')||'Add — $14.95/mo'}</button>
-      </div>`;
-    document.getElementById('addShiftBtn').style.display = 'none';
+    // A locked feature that shows nothing but a price is asking people to buy a description.
+    // Zero customers have ever created a shift, and this wall is the first thing every one of
+    // them saw. Render a real week — their own employees, a plausible roster — behind a clear
+    // "sample" banner, so the decision is about something they can look at.
+    renderSchedulePreview();
     return;
   }
-  document.getElementById('addShiftBtn').style.display = '';
+  schedChrome(true);
 
   // Populate company filter
   const coSel = document.getElementById('schedCoFilter');
@@ -12816,7 +13007,7 @@ async function renderScheduleGrid() {
     html += `<th class="${isToday?'today-col':''}${dayHolidays.length?' sched-holiday-cell':''}">${dayNames[i]}<br><span style="font-weight:400;font-size:10px">${dateLabel}</span>${holidayBadge}</th>`;
   });
 
-  html += `</tr></thead><tbody>`;
+  html += `<th class="sched-hours">${t('sched.hoursCol')||'Hours'}</th></tr></thead><tbody>`;
 
   emps.forEach(emp => {
     const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
@@ -12903,6 +13094,18 @@ async function renderScheduleGrid() {
       html += `<button class="sched-add-btn" onclick="openAddShiftModal('${emp.id}','${dateStr}')" title="${esc(addTitle)}" style="${addStyle}">+</button>
         </div></td>`;
     });
+
+    // Scheduled hours for the week. Someone building a roster is working to a labour budget,
+    // and adding that up by hand across seven cells is the arithmetic the tool should do.
+    const empHours = empShiftsThisWeek.reduce((sum, sh) => {
+      const a = String(sh.start_time||'').slice(0,5), b = String(sh.end_time||'').slice(0,5);
+      if(!a || !b) return sum;
+      const [ah,am] = a.split(':').map(Number), [bh,bm] = b.split(':').map(Number);
+      let mins = (bh*60+bm) - (ah*60+am);
+      if(mins < 0) mins += 24*60;          // a shift that runs past midnight
+      return sum + mins/60;
+    }, 0);
+    html += `<td class="sched-hours">${empHours ? empHours.toFixed(1) + '<span class="sched-hours-u">h</span>' : '<span class="sched-hours-z">—</span>'}</td>`;
 
     html += `</tr>`;
   });
@@ -13315,6 +13518,10 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'sched.previewNote':'Sample week — these shifts are an example, not your real schedule. Nothing here is saved.',
+'sched.previewTitle':'Build this for your team',
+'sched.previewBody':'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.',
+'sched.hoursCol':'Hours',
 'help.catFix':'Fixing things',
 'kiosk.adminLogin':'Admin sign-in','kiosk.notAKiosk':'This device isn’t a kiosk? Reset it',
 'land.costTitle':'Your bill shouldn’t grow every time you hire',
@@ -13495,6 +13702,17 @@ en:{
 'addPunch.errNextIn':'The next punch ({when}) is also an IN. Adding this would leave two clock-ins in a row.',
 'addPunch.errNotIn':'This employee is not clocked IN at that moment, so an OUT would be out of sequence. Add the missing IN first.',
 'addPunch.errNextOut':'The next punch ({when}) is also an OUT. Adding this would leave two clock-outs in a row.',
+'addPunch.type':'Type','addPunch.date':'Date',
+'addPunch.title':'Add Punch Record','addPunch.employee':'Employee','addPunch.submit':'Add Punch',
+'addPunch.hint':'Manual entry — use for forgotten clock-ins/outs.',
+'addPunch.typeShift':'Full shift (IN + OUT)',
+'addPunch.time':'Time (HH:MM:SS)',
+'addPunch.timeIn':'In time (HH:MM:SS)','addPunch.timeOut':'Out time (HH:MM:SS)',
+'addPunch.overnight':'The out time is earlier than the in time, so the OUT will be recorded on the following day.',
+'addPunch.errTimeFormat':'Time must be HH:MM or HH:MM:SS.',
+'addPunch.errOverlap':'There is already a punch at {when}, inside the shift you are adding. Edit that punch instead.',
+'addPunch.warnNextIn':'The next punch ({when}) is also an IN, so this employee will show as clocked in until you add the matching OUT. Add it anyway?',
+'addPunch.warnNextOut':'The next punch ({when}) is also an OUT. Adding this leaves two clock-outs in a row. Add it anyway?',
 'dblPunch.notInMsg':"{name} has no active clock-in. Did you forget to clock in? Use 'Report a Missed Punch' if needed.",
 'dblPunch.report':'Report Missed Punch',
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
@@ -14102,6 +14320,10 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'sched.previewNote':'Semaine d’exemple — ces quarts sont une illustration, pas votre horaire réel. Rien n’est enregistré ici.',
+'sched.previewTitle':'Construisez le vôtre pour votre équipe',
+'sched.previewBody':'Planifiez la semaine, voyez les heures de chacun au fur et à mesure, et envoyez l’horaire à votre équipe en une seule action. 14,95 $/mois sur tout forfait payant.',
+'sched.hoursCol':'Heures',
 'help.catFix':'Résoudre un problème',
 'kiosk.adminLogin':'Connexion admin','kiosk.notAKiosk':'Cet appareil n’est pas un kiosque? Réinitialiser',
 'land.costTitle':'Votre facture ne devrait pas grimper à chaque embauche',
@@ -14282,6 +14504,17 @@ fr:{
 'addPunch.errNextIn':'Le pointage suivant ({when}) est aussi une ENTRÉE. L\'ajout créerait deux entrées consécutives.',
 'addPunch.errNotIn':'Cet employé n\'est pas pointé en ENTRÉE à ce moment; une SORTIE serait hors séquence. Ajoutez d\'abord l\'ENTRÉE manquante.',
 'addPunch.errNextOut':'Le pointage suivant ({when}) est aussi une SORTIE. L\'ajout créerait deux sorties consécutives.',
+'addPunch.type':'Type','addPunch.date':'Date',
+'addPunch.title':'Ajouter un pointage','addPunch.employee':'Employé','addPunch.submit':'Ajouter le pointage',
+'addPunch.hint':'Saisie manuelle — pour les entrées ou sorties oubliées.',
+'addPunch.typeShift':'Quart complet (ENTRÉE + SORTIE)',
+'addPunch.time':'Heure (HH:MM:SS)',
+'addPunch.timeIn':'Heure d\'entrée (HH:MM:SS)','addPunch.timeOut':'Heure de sortie (HH:MM:SS)',
+'addPunch.overnight':'L\'heure de sortie précède l\'heure d\'entrée : la SORTIE sera enregistrée le lendemain.',
+'addPunch.errTimeFormat':'L\'heure doit être au format HH:MM ou HH:MM:SS.',
+'addPunch.errOverlap':'Un pointage existe déjà à {when}, à l\'intérieur du quart que vous ajoutez. Modifiez plutôt ce pointage.',
+'addPunch.warnNextIn':'Le pointage suivant ({when}) est aussi une ENTRÉE : cet employé restera affiché comme pointé en entrée jusqu\'à l\'ajout de la SORTIE correspondante. Ajouter quand même ?',
+'addPunch.warnNextOut':'Le pointage suivant ({when}) est aussi une SORTIE. L\'ajout créerait deux sorties consécutives. Ajouter quand même ?',
 'dblPunch.notInMsg':"{name} n'a pas de pointage d'entrée actif. Avez-vous oublié de pointer en entrée? Utilisez « Signaler un pointage manqué » au besoin.",
 'dblPunch.report':'Signaler un pointage manqué',
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',

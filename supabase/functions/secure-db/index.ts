@@ -148,10 +148,14 @@ async function idList(path: string): Promise<Set<string>> {
 // Every tenant-bearing key present in the payload must resolve to something the caller owns.
 // Keys that are absent are left alone: the database's own NOT NULL and FK constraints still apply.
 //
-// Returns null when the payload is acceptable, or a message naming the offending field.
+// Returns null when the payload is acceptable, or the offending field and why it was refused.
+// The two reasons need different wording: one is "that row is not yours", the other is "that
+// column is not yours to set" -- reporting an entitlement block as a tenant error would send
+// anyone debugging it looking in the wrong place.
+interface WriteViolation { field: string; reason: 'tenant' | 'entitlement' }
 async function validateWritePayload(
   table: string, body: unknown, caller: Caller,
-): Promise<string | null> {
+): Promise<WriteViolation | null> {
   const rows: Record<string, unknown>[] = Array.isArray(body)
     ? body as Record<string, unknown>[]
     : (body && typeof body === 'object' ? [body as Record<string, unknown>] : []);
@@ -195,24 +199,45 @@ async function validateWritePayload(
 
   for (const row of rows) {
     const co = str(row.company_id);
-    if (co && !(await companyIds()).has(co)) return 'company_id';
+    if (co && !(await companyIds()).has(co)) return { field: 'company_id', reason: 'tenant' };
 
     const site = str(row.site_id);
-    if (site && !(await siteIds()).has(site)) return 'site_id';
+    if (site && !(await siteIds()).has(site)) return { field: 'site_id', reason: 'tenant' };
 
     for (const key of ['employee_id', 'emp_id']) {
       const emp = str(row[key]);
-      if (emp && !(await employeeIds()).has(emp)) return key;
+      if (emp && !(await employeeIds()).has(emp)) return { field: key, reason: 'tenant' };
     }
 
     // admin-ish references must stay inside the caller's own account
     for (const key of ['admin_id', 'inviter_admin_id', 'manager_id', 'parent_admin_id', 'reviewed_by']) {
       const a = str(row[key]);
-      if (a && !(await teamIds()).has(a)) return key;
+      if (a && !(await teamIds()).has(a)) return { field: key, reason: 'tenant' };
+    }
+
+    // Entitlements are billing state, not user data. The tenant scope above lets an admin write
+    // to their OWN admins row, which is correct for a name or a co-admin's status -- but it also
+    // meant a session holder could PATCH scheduling_addon or plan and grant themselves paid
+    // features outright. These columns are writable only by Stripe webhooks and server-side
+    // actions running under the service role, both of which bypass this check, and by super
+    // admins, who are exempt from validateWritePayload entirely.
+    if (table === 'admins') {
+      for (const key of ENTITLEMENT_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(row, key)) return { field: key, reason: 'entitlement' };
+      }
+      // ...and nobody promotes themselves to super_admin through the co-admin editor.
+      if (str(row.role) === 'super_admin') return { field: 'role', reason: 'entitlement' };
     }
   }
   return null;
 }
+
+// Columns on `admins` that a client session may never write. Changing any of these is either a
+// billing event (Stripe webhook), a server-side action, or a super-admin operation.
+const ENTITLEMENT_FIELDS = [
+  'plan', 'scheduling_addon', 'scheduling_trial_ends_at', 'extra_seats',
+  'stripe_customer_id', 'stripe_subscription_id', 'verified', 'password', 'unsub_token',
+];
 
 // Tables scoped to a tenant by their company_id column.
 const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients', 'kiosk_devices']);
@@ -423,6 +448,50 @@ Deno.serve(async (req: Request) => {
   const caller = await resolveCaller(sessionToken);
   const authedAdminId = caller?.adminId ?? null;
 
+  // -- Start the 14-day scheduling add-on trial --
+  // The end date is computed here, never accepted from the client, and the trial is offered
+  // exactly once: a non-null scheduling_trial_ends_at (past or future) makes the account
+  // ineligible. The trial belongs to the tenant owner, so a co-admin cannot start a second one
+  // on their own row; only the account owner may start it at all, since it precedes a charge.
+  if (action === 'start_scheduling_trial') {
+    if (!caller) return errResp('Unauthorized', 401);
+    if (caller.adminId !== caller.primaryAdminId) {
+      return errResp('Only the account owner can start the scheduling trial', 403);
+    }
+    const ownerRows = await fetch(
+      `${SUPABASE_URL}/rest/v1/admins?id=eq.${caller.primaryAdminId}&select=scheduling_addon,scheduling_trial_ends_at&limit=1`,
+      { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+    ).then(r => r.ok ? r.json() : null).catch(() => null);
+    const owner = Array.isArray(ownerRows) ? ownerRows[0] : null;
+    if (!owner) return errResp('Account not found', 404);
+    if (owner.scheduling_addon) return errResp('Scheduling is already active on this account', 400);
+    if (owner.scheduling_trial_ends_at) return errResp('The scheduling trial has already been used', 400);
+
+    const endsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    // The is.null filter makes this idempotent under a double-click: the second request matches
+    // no row, and an empty result set means the trial was already started.
+    const upd = await fetch(
+      `${SUPABASE_URL}/rest/v1/admins?id=eq.${caller.primaryAdminId}&scheduling_trial_ends_at=is.null`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`,
+          'Content-Type': 'application/json', 'Prefer': 'return=representation',
+        },
+        body: JSON.stringify({ scheduling_trial_ends_at: endsAt }),
+      }
+    );
+    if (!upd.ok) return errResp('Could not start the trial. Please try again.');
+    const updated = await upd.json().catch(() => null);
+    if (!Array.isArray(updated) || !updated.length) {
+      return errResp('The scheduling trial has already been used', 400);
+    }
+    logAudit(caller.adminId, 'scheduling_trial_started', 'admins', 'PATCH', endsAt);
+    return new Response(JSON.stringify({ ok: true, endsAt }), {
+      status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+    });
+  }
+
   // ── Auth gate: writes (POST/PATCH/DELETE) — deny by default ──
   // Without this, any holder of the public anon key could insert/update/delete arbitrary
   // rows via the service-role forward below. Allow only an authenticated admin, or a
@@ -434,8 +503,12 @@ Deno.serve(async (req: Request) => {
       if (caller && caller.role !== 'super_admin' && (method === 'POST' || method === 'PATCH')) {
         const bad = await validateWritePayload(table, body, caller);
         if (bad) {
-          logAudit(authedAdminId, 'cross_tenant_write_blocked', table, method, bad);
-          return errResp(`Forbidden: ${bad} does not belong to your account`, 403);
+          logAudit(authedAdminId,
+            bad.reason === 'entitlement' ? 'entitlement_write_blocked' : 'cross_tenant_write_blocked',
+            table, method, bad.field);
+          return errResp(bad.reason === 'entitlement'
+            ? `Forbidden: ${bad.field} cannot be changed from the app`
+            : `Forbidden: ${bad.field} does not belong to your account`, 403);
         }
       }
     } else if (
@@ -537,8 +610,10 @@ Deno.serve(async (req: Request) => {
     let data: unknown;
     try { data = JSON.parse(text); } catch { data = text; }
 
-    // Strip sensitive fields from admins GET responses
-    if (method === 'GET' && table === 'admins' && Array.isArray(data)) {
+    // Strip sensitive fields from every admins response, not just GET. PATCH is sent back with
+    // Prefer: return=representation, so renaming a co-admin was handing the caller that person's
+    // bcrypt hash -- the same secret the GET path has always been careful to remove.
+    if (table === 'admins' && Array.isArray(data)) {
       data = stripAdminRows(data, authedAdminId, filter);
     }
 
