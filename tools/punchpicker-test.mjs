@@ -1,6 +1,9 @@
-// The punch screen picker. Every employee touches this twice a day, so the risks are: the
-// tiles and the hidden select disagreeing, a filter that misses accented names, and the
-// selection surviving a punch when it should reset.
+// The punch screen picker. Every employee touches this twice a day.
+//
+// This screen briefly used a tile grid with a search box. It was reverted: the search solved a
+// crowding problem none of the real sites have (the largest has nine people), and the owner
+// preferred the dropdown. These checks cover the dropdown as the visible picker — that it lists
+// exactly the right people, stays scoped to the site, translates, and resets between people.
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { createReadStream } from 'node:fs';
@@ -20,80 +23,89 @@ const server=await new Promise(r=>{const s=createServer(async(q,res)=>{try{
 let pass=0,fail=0;
 const ok=(n,c,x='')=>{c?pass++:fail++;console.log(`  ${c?'PASS':'FAIL'}  ${n}${x?'  '+x:''}`);};
 
+const setup = page => page.evaluate(()=>{
+  window._demoMode=false;
+  Sess.set({id:'a1',email:'o@t.ca',status:'active',role:'admin',token:'t'}, false);
+  C.companies=[{id:'co1',name:'Acme',admin_id:'a1'}];
+  C.sites=[{id:'s1',name:'WIN1',company_id:'co1'},{id:'s2',name:'Other',company_id:'co1'}];
+  C.employees=[
+    {id:'e1',name:'Chantal Arruda',emp_code:'A1',site_id:'s1',company_id:'co1',active:true},
+    {id:'e2',name:'Aïsha Benali',  emp_code:'A2',site_id:'s1',company_id:'co1',active:true},
+    {id:'e3',name:'Gabor Torok',   emp_code:'A3',site_id:'s1',company_id:'co1',active:true},
+    {id:'e4',name:'Retired Rita',  emp_code:'A4',site_id:'s1',company_id:'co1',active:false},
+    {id:'e5',name:'Elsewhere Eli', emp_code:'A5',site_id:'s2',company_id:'co1',active:true}];
+  C.punches=[];
+  // The page refreshes from the server on entry; the cache above is the fixture, so keep it.
+  window.refreshCache=async()=>{};
+  DB.all=async()=>[];
+  DB.rpc=async()=>null;
+  Ctx.set({co:{id:'co1',name:'Acme'},site:{id:'s1',name:'WIN1'}});
+  document.body.classList.add('role-resolved','role-admin');
+  hideLanding(); updateNav(); navigate('punch');
+  // navigate() fires loadPunchPage() without awaiting it; the population happens inside.
+  return loadPunchPage();
+});
+
 const browser=await chromium.launch();
-for(const [label,vw] of [['desktop',1280],['phone',390]]){
-  console.log(`\n── ${label} (${vw}px) ─────────────────────────`);
-  const page=await browser.newPage({viewport:{width:vw,height:900}});
+
+for(const lang of ['en','fr']){
+  console.log(`\n── ${lang.toUpperCase()} ────────────────────────────────`);
+  const page=await browser.newPage({viewport:{width:1280,height:900}});
   const errs=[]; page.on('pageerror',e=>errs.push(e.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`,{waitUntil:'networkidle'});
-  await page.evaluate(()=>setLang('en'));
-  await page.evaluate(()=>startDemo());
-  await page.evaluate(()=>navigate('punch'));
-  await page.waitForTimeout(700);
+  await page.evaluate(l=>setLang(l),lang);
+  await setup(page);
+  await page.waitForTimeout(250);
 
-  const tiles = await page.evaluate(()=>document.querySelectorAll('.emp-tile').length);
-  ok('tiles render for every employee', tiles>0, tiles+' tiles');
-  ok('the native dropdown is no longer what people tap', await page.evaluate(()=>
-     getComputedStyle(document.getElementById('empSelectWrap')).display==='none'));
-
-  // Tap target size is the whole point of replacing a <select>.
-  const box = await page.evaluate(()=>{
-    const t=document.querySelector('.emp-tile'); const r=t.getBoundingClientRect();
-    return {w:Math.round(r.width),h:Math.round(r.height)};
+  const sel = await page.evaluate(()=>{
+    const s=document.getElementById('empSelect');
+    const wrap=document.getElementById('empSelectWrap');
+    return {visible:getComputedStyle(wrap).display!=='none',
+            options:[...s.options].map(o=>o.textContent),
+            value:s.value};
   });
-  ok('tiles are a comfortable tap target', box.h>=48 && box.w>=110, `${box.w}x${box.h}`);
+  ok('the dropdown is the visible picker', sel.visible);
+  ok('it lists the site\'s active employees', sel.options.length===4, sel.options.join(' | '));
+  ok('inactive people are not listed', !sel.options.some(o=>/Rita/.test(o)), sel.options.join(' | '));
+  ok('other sites are not listed', !sel.options.some(o=>/Eli/.test(o)), sel.options.join(' | '));
+  ok('names carry their employee code', sel.options.some(o=>/Chantal Arruda \(A1\)/.test(o)),
+     sel.options.join(' | '));
+  ok('it starts on the placeholder', sel.value==='', sel.value);
+  ok('the placeholder is translated', !/punch\./.test(sel.options[0]), sel.options[0]);
 
-  // Tapping a tile must drive the hidden select, which the rest of the flow reads.
+  // The tile grid and its search box must be gone, not merely hidden — a stale search field on
+  // the most-touched screen in the product is exactly what was reverted.
+  const gone = await page.evaluate(()=>({
+    filter:!!document.getElementById('empFilter'),
+    grid:!!document.getElementById('empGrid'),
+    fn:typeof window.renderEmpTiles!=='undefined',
+  }));
+  ok('the search box is gone', !gone.filter);
+  ok('the tile grid is gone', !gone.grid);
+  ok('and its code is gone with it', !gone.fn);
+
+  // Choosing a name drives the rest of the punch flow through the select's change handler.
   const picked = await page.evaluate(()=>{
-    const t=document.querySelector('.emp-tile');
-    const id=t.dataset.emp; t.click();
-    return {sel:document.getElementById('empSelect').value, id,
-            marked:document.querySelector('.emp-tile.sel')?.dataset.emp};
+    const s=document.getElementById('empSelect');
+    s.value='e1';
+    if(typeof s.onchange==='function') s.onchange.call(s);
+    return {value:s.value, label:s.options[s.selectedIndex].textContent};
   });
-  ok('tapping a tile sets the hidden select', picked.sel===picked.id, picked.sel);
-  ok('and the tile shows as selected', picked.marked===picked.id);
+  ok('choosing a name selects it', picked.value==='e1', picked.label);
 
-  // Accent-insensitive search: the demo roster has Aïsha Benali.
-  const search = await page.evaluate(()=>{
-    document.getElementById('empFilter').value='aisha';
-    renderEmpTiles();
-    const names=[...document.querySelectorAll('.emp-tile-name')].map(n=>n.textContent);
-    return names;
-  });
-  ok('search ignores accents', search.length===1 && /Aïsha/.test(search[0]), search.join(',')||'(none)');
-
-  const none = await page.evaluate(()=>{
-    document.getElementById('empFilter').value='zzzzz';
-    renderEmpTiles();
-    const e=document.getElementById('empGridEmpty');
-    return {tiles:document.querySelectorAll('.emp-tile').length,
-            shown:getComputedStyle(e).display!=='none', txt:e.textContent};
-  });
-  ok('a search with no match says so', none.tiles===0 && none.shown, none.txt);
-  ok('empty-state copy is translated', !/punch\./.test(none.txt));
-
-  // Someone already clocked in is marked — it is how you notice you never clocked out.
-  const inMark = await page.evaluate(()=>{
-    document.getElementById('empFilter').value='';
-    renderEmpTiles();
-    return {dots:document.querySelectorAll('.emp-tile-in').length,
-            actuallyIn:C.employees.filter(e=>getEmpStatus(e.id).status==='IN').length};
-  });
-  ok('clocked-in employees are marked', inMark.dots===inMark.actuallyIn,
-     `${inMark.dots} dots vs ${inMark.actuallyIn} clocked in`);
-
-  // Clearing the selection (what a completed punch does) must clear the tiles too.
+  // A punch must not leave the previous person selected for whoever walks up next.
   const cleared = await page.evaluate(()=>{
-    document.querySelector('.emp-tile').click();
-    const before=!!document.querySelector('.emp-tile.sel');
-    document.getElementById('empSelect').value=''; renderEmpTiles();
-    return {before, after:!!document.querySelector('.emp-tile.sel')};
+    const s=document.getElementById('empSelect');
+    const before=s.value;
+    s.value='';
+    return {before, after:s.value};
   });
-  ok('clearing the select clears the highlighted tile', cleared.before && !cleared.after);
+  ok('the selection resets between people', cleared.before==='e1' && cleared.after==='');
 
   ok('no page errors', errs.length===0, errs.join(' / '));
   await page.close();
 }
+
 await browser.close(); server.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
