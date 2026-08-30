@@ -128,23 +128,8 @@ if (window.top !== window.self) {
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  "inLanguage": "en-CA",
   "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Les employés ont-ils besoin d'un téléphone ou d'une application pour pointer?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Non. Les employés pointent avec un NIP à 4 chiffres sur n'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "PunchClock Pro est-il disponible en français pour les entreprises québécoises?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Oui. PunchClock Pro est entièrement disponible en français canadien et conçu pour répondre aux besoins des entreprises québécoises. L'interface, les rapports et les communications par courriel sont tous disponibles en français. Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des données personnelles."
-      }
-    },
     {
       "@type": "Question",
       "name": "Do employees need smartphones or apps to clock in?",
@@ -155,10 +140,58 @@ if (window.top !== window.self) {
     },
     {
       "@type": "Question",
-      "name": "What is the Scheduling Add-On?",
+      "name": "Can I manage multiple locations?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page. Available on any paid plan."
+        "text": "Yes. You can add as many sites (locations) as your plan allows under your single company account. Each site has its own employees, access code, and optional geofencing. Free: 1 site, Starter: 2 sites, Growth: 6 sites, Business: unlimited."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use PunchClock Pro with my payroll system?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. From the Reports tab you can export any date range to Excel, CSV or PDF, with regular and overtime hours separated per employee. Those formats open in every major payroll and accounting package, or can be sent straight to your bookkeeper. There is nothing to configure — pick the period, export, done."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is overtime tracking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view and in exported reports — so your payroll process is always accurate."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a free plan?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The free plan includes 1 company, 1 site, and up to 10 active employees — no credit card required, free forever. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How secure is my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why use a tablet terminal instead of a GPS mobile app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There's also no app to install, no personal device required, and no battery or connectivity excuses."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Scheduling Add-On and how does it work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. Available on any paid plan (Starter, Growth, or Business)."
       }
     }
   ]
@@ -4194,6 +4227,8 @@ function hideLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
 }
 
+const FAQ_SALES=[1,2,6,7,8,11,12,13,15,16,19];
+
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
   if(!acc)return;
@@ -4204,7 +4239,12 @@ function renderFAQ(){
   // Same accent-insensitive matching as the in-app help centre, so "geofence" and
   // "géorepérage" both find the geofencing answer regardless of page language.
   const terms=_helpNorm(raw).split(/\s+/).filter(Boolean);
-  let qs=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+  // The landing FAQ is read by people deciding whether to buy. Twelve of the twenty-three
+  // entries were how-to and troubleshooting — including "a device keeps opening the clock-in
+  // page, how do I reset it", which is a question only an existing customer asks, and which a
+  // locked-out customer would never think to look for on a sales page. Those moved to the
+  // help centre; FAQ_SALES is what a prospect actually wants to know.
+  let qs=FAQ_SALES.slice();
   if(terms.length){
     qs=qs.filter(i=>{
       const hay=_helpNorm((t('faq.q'+i)||'')+' '+(t('faq.a'+i)||''));
@@ -5331,6 +5371,23 @@ function renderTour(){
 // the reader's language. `kw` carries the words people actually type — including the ones the
 // UI never uses ("tablet", "buddy punching", "timesheet") — since that's what they search for.
 const HELP_ARTICLES=[
+  // Sourced from the landing FAQ, which was the wrong place for them: these are questions an
+  // existing customer asks, and they reuse the same faq.* keys rather than duplicating copy.
+  {id:'kioskreset', tk:'faq.q21', dk:'faq.a21', cat:'fix', icon:'i-refresh', pages:['punch','sites'],
+   kw:{en:'device stuck kiosk reset clock page opens instead website locked out admin cannot log in tablet phone',
+       fr:'appareil bloqué kiosque réinitialiser page pointage ouvre au lieu site verrouillé admin connecter tablette téléphone'}},
+  {id:'alerts', tk:'faq.q22', dk:'faq.a22', cat:'fix', icon:'i-bell', pages:['sites','dashboard'],
+   kw:{en:'alert emails notifications clock out overtime turn off stop disable too many',
+       fr:'alertes courriels notifications sortie heures supplémentaires désactiver arrêter trop'}},
+  {id:'logoutclock', tk:'faq.q5', dk:'faq.a5', cat:'setup', icon:'i-monitor', pages:['punch'],
+   kw:{en:'log out logout clock page stays employees still punch after sign out',
+       fr:'déconnexion page pointage reste employés pointer après déconnecter'}},
+  {id:'bulk', tk:'faq.q10', dk:'faq.a10', cat:'daily', icon:'i-users', pages:['admin'],
+   kw:{en:'bulk multiple employees at once select all deactivate delete send report batch',
+       fr:'en lot plusieurs employés à la fois tout sélectionner désactiver supprimer envoyer rapport'}},
+  {id:'leavers', tk:'faq.q23', dk:'faq.a23', cat:'team', icon:'i-user', pages:['admin'],
+   kw:{en:'delete employees left quit terminated plan limit deactivate keep history former staff',
+       fr:'supprimer employés partis démission limite forfait désactiver conserver historique anciens'}},
   {id:'account', tk:'help.s1title', dk:'help.s1desc', cat:'setup', icon:'i-nav-building', pages:['dashboard'],
    kw:{en:'company account payroll week overtime setup register',fr:'entreprise compte paie semaine heures supplémentaires configuration'}},
   {id:'site', tk:'help.s2title', dk:'help.s2desc', cat:'setup', icon:'i-nav-sites', pages:['sites','dashboard'], shot:'01-add-site',
@@ -5368,7 +5425,7 @@ const HELP_ARTICLES=[
   {id:'billing', tk:'help.billTitle', dk:'help.billDesc', cat:'team', icon:'i-card', pages:[],
    kw:{en:'billing plan upgrade downgrade cancel invoice price subscription seats payment',fr:'facturation forfait améliorer annuler facture prix abonnement sièges paiement'}},
 ];
-const HELP_CATS=[['setup','help.catSetup'],['daily','help.catDaily'],['payroll','help.catPayroll'],
+const HELP_CATS=[['fix','help.catFix'],['setup','help.catSetup'],['daily','help.catDaily'],['payroll','help.catPayroll'],
                  ['security','help.catSecurity'],['team','help.catTeam']];
 
 // Accent- and case-insensitive so "employe"/"employé" and "georepérage"/"geofence" all land.
@@ -5427,8 +5484,12 @@ function clearHelpSearch(){
 // Score an article against the query. Title matches beat keyword matches beat body matches, so
 // searching "pin" surfaces the PIN article rather than every article that mentions a PIN.
 function _helpScore(a, q){
-  const lang = (typeof _appLang!=='undefined'?_appLang:'en');
-  const title=_helpNorm(t(a.tk)), body=_helpNorm(t(a.dk)), kw=_helpNorm((a.kw&&a.kw[lang])||'');
+  // Both keyword sets, not just the interface language. A French-speaking owner searches for
+  // "reset" because that is the word on the device; an English one pastes "réinitialiser" out
+  // of a colleague's message. Scoring only the active language made each of them invisible to
+  // the other half of the catalogue, for no benefit — the keywords exist either way.
+  const title=_helpNorm(t(a.tk)), body=_helpNorm(t(a.dk));
+  const kw=_helpNorm(((a.kw&&a.kw.en)||'')+' '+((a.kw&&a.kw.fr)||''));
   let score=0;
   for(const term of q){
     let s=0;
@@ -13251,6 +13312,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'help.catFix':'Fixing things',
 'kiosk.adminLogin':'Admin sign-in','kiosk.notAKiosk':'This device isn’t a kiosk? Reset it',
 'land.costTitle':'Your bill shouldn’t grow every time you hire',
 'land.costSub':'Most time-tracking tools charge per employee, per month. We charge one flat price for the whole team, so hiring a seasonal crew costs nothing extra.',
@@ -14037,6 +14099,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'help.catFix':'Résoudre un problème',
 'kiosk.adminLogin':'Connexion admin','kiosk.notAKiosk':'Cet appareil n’est pas un kiosque? Réinitialiser',
 'land.costTitle':'Votre facture ne devrait pas grimper à chaque embauche',
 'land.costSub':'La plupart des outils de pointage facturent par employé, par mois. Nous facturons un prix fixe pour toute l’équipe — embaucher une équipe saisonnière ne coûte rien de plus.',
