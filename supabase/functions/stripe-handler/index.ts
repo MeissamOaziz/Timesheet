@@ -9,6 +9,9 @@ const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+// Same inbox as the weekly digest, churn survey and punch alerts — the one place these land.
+const OWNER_INBOX = "meissam.h.p@gmail.com";
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://www.punchclock.ca",
@@ -17,14 +20,14 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400"
 };
 // ── Stripe Price IDs (Sandbox) ────────────────────────────────────────────────
-const PRICE_IDS = {
+const PRICE_IDS: Record<string, string> = {
   starter: "price_1TM5NRIhFqyQNAEWBIazJeAo",
   growth: "price_1TM5NPIhFqyQNAEW2itq6QuX",
   business: "price_1TM5NPIhFqyQNAEWLuYZjimL",
   extra_seat: "price_1TM5NMIhFqyQNAEWRPqJ23ZY",
   scheduling_addon: "price_1TM5NMIhFqyQNAEWo4s8iSpb"
 };
-const KNOWN_PRICE_TO_PLAN = {
+const KNOWN_PRICE_TO_PLAN: Record<string, string> = {
   "price_1TM5NRIhFqyQNAEWBIazJeAo": "starter",
   "price_1TM5NPIhFqyQNAEW2itq6QuX": "growth",
   "price_1TM5NPIhFqyQNAEWLuYZjimL": "business",
@@ -36,6 +39,20 @@ const MAIN_PLAN_PRICES = new Set([
   PRICE_IDS.growth,
   PRICE_IDS.business,
 ]);
+const PLAN_LABELS: Record<string, string> = {
+  starter: "Starter ($19.49/mo)",
+  growth: "Growth ($39.49/mo)",
+  business: "Business ($79.49/mo)",
+  extra_seat: "Extra Seat add-on ($19.49/mo)",
+  scheduling_addon: "Scheduling add-on ($14.95/mo)",
+};
+const BILLING_REASON_LABELS: Record<string, string> = {
+  subscription_create: "New subscription",
+  subscription_cycle: "Renewal payment",
+  subscription_update: "Plan change",
+  subscription_threshold: "Usage threshold reached",
+  manual: "Manual invoice",
+};
 // ── Raw Stripe API helpers ────────────────────────────────────────────────────
 function flattenParams(obj, prefix = "") {
   const parts = [];
@@ -86,6 +103,79 @@ async function getAdminByCustomerId(customerId) {
 async function getAdminById(adminId) {
   const { data } = await supabase.from("admins").select("id, plan, extra_seats, scheduling_addon, stripe_customer_id, stripe_subscription_id").eq("id", adminId).maybeSingle();
   return data;
+}
+async function getAdminContact(adminId: string): Promise<{ name: string; email: string } | null> {
+  const { data } = await supabase.from("admins").select("name, email").eq("id", adminId).maybeSingle();
+  return data;
+}
+async function getCompanyNames(adminId: string): Promise<string[]> {
+  const { data } = await supabase.from("companies").select("name").eq("admin_id", adminId);
+  return ((data ?? []) as Array<{ name: string }>).map((c) => c.name);
+}
+// ── Payment notifications ─────────────────────────────────────────────────────
+// A real-time email every time money actually moves — separate from the weekly digest, which
+// only surfaces MRR once a week. Fires from invoice.payment_succeeded rather than
+// checkout.session.completed: that is the one event Stripe sends for every successful charge,
+// first payment and renewal alike, so one hook covers "just subscribed and paid" and every
+// month after without double-sending for the same charge.
+function escHtml(s: unknown): string {
+  return String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+}
+function resolveInvoicePlan(invoice: any): string | undefined {
+  for (const line of invoice.lines?.data ?? []) {
+    const priceId = line.price?.id ?? line.plan?.id;
+    if (priceId && KNOWN_PRICE_TO_PLAN[priceId]) return KNOWN_PRICE_TO_PLAN[priceId];
+  }
+  return undefined;
+}
+function paymentEmailHtml(opts: {
+  amount: string; currency: string; reason: string; customerLabel: string;
+  email: string; planLabel: string; stripeCustomerId: string;
+}): string {
+  return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 16px"><tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+  <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:20px 28px"><div style="font-size:18px;font-weight:700;color:#22c55e">&#128176; Payment received</div></td></tr>
+  <tr><td style="padding:22px 28px">
+    <div style="font-size:28px;font-weight:700;color:#1e293b;margin-bottom:4px">${escHtml(opts.currency)} ${escHtml(opts.amount)}</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:18px">${escHtml(opts.reason)}</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:#1e293b">
+      <tr><td style="padding:6px 0;border-top:1px solid #e2e8f0;color:#64748b">Customer</td><td style="padding:6px 0;border-top:1px solid #e2e8f0;text-align:right;font-weight:600">${escHtml(opts.customerLabel)}</td></tr>
+      <tr><td style="padding:6px 0;border-top:1px solid #e2e8f0;color:#64748b">Email</td><td style="padding:6px 0;border-top:1px solid #e2e8f0;text-align:right">${escHtml(opts.email || "—")}</td></tr>
+      <tr><td style="padding:6px 0;border-top:1px solid #e2e8f0;color:#64748b">Item</td><td style="padding:6px 0;border-top:1px solid #e2e8f0;text-align:right">${escHtml(opts.planLabel)}</td></tr>
+      <tr><td style="padding:6px 0;border-top:1px solid #e2e8f0;color:#64748b">Stripe customer</td><td style="padding:6px 0;border-top:1px solid #e2e8f0;text-align:right;font-family:monospace;font-size:11px">${escHtml(opts.stripeCustomerId)}</td></tr>
+    </table>
+  </td></tr>
+</table></td></tr></table></body></html>`;
+}
+async function sendOwnerEmail(subject: string, html: string): Promise<void> {
+  if (!RESEND_API_KEY) { console.error("RESEND_API_KEY not set — payment notification not sent"); return; }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "PunchClock Pro <noreply@punchclock.ca>", to: [OWNER_INBOX], subject, html }),
+    });
+    if (!res.ok) console.error(`Resend error: ${await res.text()}`);
+  } catch (e) {
+    console.error("sendOwnerEmail failed:", (e as Error).message);
+  }
+}
+async function notifyPayment(invoice: any, adminId: string): Promise<void> {
+  // A $0 invoice (100%-off coupon, a credit-balance top-up) is not a payment — nothing moved.
+  if (!invoice.amount_paid || invoice.amount_paid <= 0) return;
+  const [contact, companies] = await Promise.all([getAdminContact(adminId), getCompanyNames(adminId)]);
+  const plan = resolveInvoicePlan(invoice);
+  const planLabel = plan ? (PLAN_LABELS[plan] ?? plan) : "Unknown item";
+  const reason = BILLING_REASON_LABELS[invoice.billing_reason as string] ?? (invoice.billing_reason || "Payment");
+  const amount = (invoice.amount_paid / 100).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const currency = String(invoice.currency ?? "cad").toUpperCase();
+  const customerLabel = companies.length ? companies.join(", ") : (contact?.name || contact?.email || "Unknown customer");
+  const html = paymentEmailHtml({
+    amount, currency, reason, customerLabel,
+    email: contact?.email ?? "", planLabel, stripeCustomerId: String(invoice.customer ?? ""),
+  });
+  await sendOwnerEmail(`💰 Payment received — ${currency} ${amount} (${customerLabel})`, html);
 }
 // ── Idempotency helper ───────────────────────────────────────────────────────
 async function isAlreadyProcessed(eventId: string): Promise<boolean> {
@@ -169,47 +259,48 @@ async function handlePortal(body) {
   });
 }
 // ── Webhook signature verification (pure Web Crypto, no SDK) ─────────────────
-async function verifyWebhookSignature(payload, sigHeader, secret) {
+async function verifyWebhookSignature(payload: Uint8Array, sigHeader: string, secret: string): Promise<{valid: boolean; reason: string}> {
   try {
     const parts = sigHeader.split(",");
     const t = parts.find((p)=>p.startsWith("t="))?.slice(2);
     const v1 = parts.find((p)=>p.startsWith("v1="))?.slice(3);
-    if (!t || !v1) return false;
+    if (!t || !v1) return { valid: false, reason: "malformed_header" };
     const enc = new TextEncoder();
     const signed = enc.encode(`${t}.${new TextDecoder().decode(payload)}`);
     const key = await crypto.subtle.importKey("raw", enc.encode(secret), {
       name: "HMAC",
       hash: "SHA-256"
-    }, false, [
-      "sign"
-    ]);
+    }, false, ["sign"]);
     const sigBytes = await crypto.subtle.sign("HMAC", key, signed);
     const computed = Array.from(new Uint8Array(sigBytes)).map((b)=>b.toString(16).padStart(2, "0")).join("");
-    if (computed.length !== v1.length) return false;
+    if (computed.length !== v1.length) return { valid: false, reason: "hmac_mismatch" };
     let diff = 0;
-    for(let i = 0; i < computed.length; i++)diff |= computed.charCodeAt(i) ^ v1.charCodeAt(i);
-    if (diff !== 0) return false;
-    // Reject events older than 300 seconds to prevent replay attacks
+    for(let i = 0; i < computed.length; i++) diff |= computed.charCodeAt(i) ^ v1.charCodeAt(i);
+    if (diff !== 0) return { valid: false, reason: "hmac_mismatch" };
     const ageSeconds = Math.floor(Date.now() / 1000) - Number(t);
-    if (ageSeconds > 300) return false;
-    return true;
-  } catch  {
-    return false;
+    if (ageSeconds > 300) return { valid: false, reason: `too_old_${ageSeconds}s` };
+    return { valid: true, reason: "ok" };
+  } catch(e) {
+    return { valid: false, reason: `exception: ${e.message}` };
   }
 }
 // ── Webhook ───────────────────────────────────────────────────────────────────
-async function handleWebhook(req) {
+async function handleWebhook(req: Request) {
+  if (!STRIPE_WEBHOOK_SECRET) {
+    console.error("FATAL: STRIPE_WEBHOOK_SECRET env var is not set");
+    return new Response("Webhook secret not configured", { status: 500, headers: corsHeaders });
+  }
   const sig = req.headers.get("stripe-signature");
-  if (!sig) return new Response("Missing signature", {
-    status: 400,
-    headers: corsHeaders
-  });
+  if (!sig) {
+    console.error("Webhook rejected: missing stripe-signature header");
+    return new Response("Missing signature", { status: 400, headers: corsHeaders });
+  }
   const rawBody = new Uint8Array(await req.arrayBuffer());
-  const valid = await verifyWebhookSignature(rawBody, sig, STRIPE_WEBHOOK_SECRET);
-  if (!valid) return new Response("Invalid signature", {
-    status: 400,
-    headers: corsHeaders
-  });
+  const { valid, reason } = await verifyWebhookSignature(rawBody, sig, STRIPE_WEBHOOK_SECRET);
+  if (!valid) {
+    console.error(`Webhook signature invalid: ${reason}`);
+    return new Response("Invalid signature", { status: 400, headers: corsHeaders });
+  }
   const event = JSON.parse(new TextDecoder().decode(rawBody));
   console.log("Webhook:", event.type);
 
@@ -305,11 +396,20 @@ async function handleWebhook(req) {
       status: "suspended"
     }).eq("id", admin.id);
   } else if (event.type === "invoice.payment_succeeded") {
-    const admin = await getAdminByCustomerId(event.data.object.customer);
+    const invoice = event.data.object;
+    const admin = await getAdminByCustomerId(invoice.customer);
     if (admin && admin.plan !== "free") {
       await supabase.from("admins").update({
         status: "active"
       }).eq("id", admin.id);
+    }
+    // Every successful charge on any subscription for this customer — main plan or add-on,
+    // first payment or renewal — gets a real-time email. Failures here must never fail the
+    // webhook: Stripe retries a non-2xx response, and re-processing state changes on a retry
+    // would be a correctness bug, not just a missed email.
+    if (admin) {
+      try { await notifyPayment(invoice, admin.id); }
+      catch (e) { console.error("notifyPayment failed:", (e as Error).message); }
     }
   }
 
@@ -331,14 +431,28 @@ serve(async (req)=>{
   const knownActions = [
     "checkout",
     "portal",
-    "webhook"
+    "webhook",
+    "test_payment_email"
   ];
   const action = knownActions.includes(lastSegment) ? lastSegment : url.searchParams.get("action") ?? null;
   if (action === "webhook") return handleWebhook(req);
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     if (action === "checkout") return handleCheckout(body);
     if (action === "portal") return handlePortal(body);
+    if (action === "test_payment_email") {
+      // Sends a sample straight to OWNER_INBOX so the notification can be checked without
+      // waiting for — or faking — a real Stripe charge.
+      await sendOwnerEmail(
+        "💰 Payment received — CAD 19.49 (Test Co) [TEST]",
+        paymentEmailHtml({
+          amount: "19.49", currency: "CAD", reason: "New subscription (test)",
+          customerLabel: "Test Co", email: "test@example.com",
+          planLabel: PLAN_LABELS.starter, stripeCustomerId: "cus_test000000000000",
+        })
+      );
+      return json({ ok: true });
+    }
     return json({
       error: `Unknown action: ${action}`
     }, 400);
