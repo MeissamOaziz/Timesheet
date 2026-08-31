@@ -1,7 +1,8 @@
 // PunchClock Pro — Weekly Digest Email
 // Supabase Edge Function: send-weekly-digest
 // Runs weekly via pg_cron (Mondays 9am UTC). Manually triggerable.
-// Sends a snapshot of new accounts, trial state, paid tier breakdown, MRR, and login alerts.
+// Sends a snapshot of new accounts, the free base, paying customers, comped accounts, MRR
+// (from live Stripe subscriptions only), and login alerts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -11,7 +12,7 @@ const FROM_EMAIL = "PunchClock Pro <noreply@punchclock.ca>";
 const DIGEST_TO = "meissam.h.p@gmail.com";
 
 // Pricing (CAD/month, matches Stripe live mode)
-const PRICE = { starter: 19.49, growth: 39.49, business: 79.49 };
+const PRICE = { starter: 19.49, growth: 39.49, business: 79.49, schedulingAddon: 14.95 };
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
 
@@ -94,6 +95,15 @@ function emptyHint(text: string): string {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { status: 200 });
 
+  // dry_run computes every figure and returns it without sending. Added because verifying a
+  // change to the revenue numbers should not require mailing the owner a digest he did not ask
+  // for, and because the counts are worth being able to check against Stripe at any time.
+  let dryRun = false;
+  try {
+    const p = await req.json();
+    dryRun = p?.dry_run === true;
+  } catch { /* no body: a normal cron invocation */ }
+
   try {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
@@ -113,8 +123,11 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false });
     if (e1) throw e1;
 
-    // 2) ACTIVE TRIALS — free, verified, primary admin, registered < 7d ago
-    const { data: activeTrials = [], error: e2 } = await supabase
+    // 2) NEW FREE ACCOUNTS — free, verified, primary admin, registered < 7d ago.
+    // Previously labelled "Active Trials". There is no trial in the product: no plan has ever
+    // had a trial period, so every one of these is simply someone on the free plan who signed
+    // up this week. The old label made the free tier look like a funnel stage that expires.
+    const { data: newFree = [], error: e2 } = await supabase
       .from("admins")
       .select(SEL)
       .eq("plan", "free")
@@ -125,8 +138,10 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false });
     if (e2) throw e2;
 
-    // 3) EXPIRED TRIALS — free, verified, primary admin, registered >= 7d ago
-    const { data: expiredTrials = [], error: e3 } = await supabase
+    // 3) ESTABLISHED FREE ACCOUNTS — free, verified, primary admin, registered >= 7d ago.
+    // Previously "Expired Trials", which described nothing: nothing expired, and these people
+    // are not lapsed customers. They are the free user base.
+    const { data: olderFree = [], error: e3 } = await supabase
       .from("admins")
       .select(SEL)
       .eq("plan", "free")
@@ -137,40 +152,54 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false });
     if (e3) throw e3;
 
-    // 4) PAID SUBSCRIBERS by tier (primary admins only)
-    const tierFilter = (q: any, plan: string) => q.eq("plan", plan).neq("role", "super_admin").is("parent_admin_id", null);
-
-    const { count: starterCount = 0 } = await tierFilter(
-      supabase.from("admins").select("id", { count: "exact", head: true }), "starter"
-    );
-    const { count: growthCount = 0 } = await tierFilter(
-      supabase.from("admins").select("id", { count: "exact", head: true }), "growth"
-    );
-    const { count: businessCount = 0 } = await tierFilter(
-      supabase.from("admins").select("id", { count: "exact", head: true }), "business"
-    );
-    const { count: schedAddonCount = 0 } = await supabase
+    // 4) PAID SUBSCRIBERS — everyone on a non-free plan, split by whether they are actually
+    // being billed.
+    //
+    // This used to count the `plan` column alone, which is set for three different reasons:
+    // a real Stripe checkout, a grandfathered company (GRANDFATHERED_NAMES in the app), and the
+    // owner's own account. The result was a digest reporting three paid subscribers and
+    // CA$178.47 MRR when Stripe had one subscription totalling $19.49 — a nine-fold overstatement
+    // of revenue, in the one number most likely to be read as fact.
+    //
+    // stripe_subscription_id is the ground truth: it is written only by
+    // checkout.session.completed and cleared on customer.subscription.deleted. Accounts on a paid
+    // plan without one are comped, and are now reported as such instead of as income.
+    const { data: nonFree = [], error: e4 } = await supabase
       .from("admins")
-      .select("id", { count: "exact", head: true })
-      .eq("scheduling_addon", true)
-      .neq("role", "super_admin")
-      .is("parent_admin_id", null);
-
-    // 5) MRR ESTIMATE
-    const mrr = (starterCount ?? 0) * PRICE.starter
-              + (growthCount ?? 0) * PRICE.growth
-              + (businessCount ?? 0) * PRICE.business;
-
-    // 6) LAST LOGIN ALERTS — paid users who haven't logged in for 30+ days (or never)
-    const { data: loginAlerts = [], error: e6 } = await supabase
-      .from("admins")
-      .select(SEL)
+      .select(SEL + ",stripe_subscription_id")
       .neq("plan", "free")
       .neq("role", "super_admin")
       .is("parent_admin_id", null)
-      .or(`last_login.is.null,last_login.lt.${thirtyDaysAgo.toISOString()}`)
-      .order("last_login", { ascending: true, nullsFirst: true });
-    if (e6) throw e6;
+      .order("created_at", { ascending: true });
+    if (e4) throw e4;
+
+    // Built with a concatenated select string, so supabase-js cannot infer the row shape.
+    type BillRow = AdminRow & { stripe_subscription_id: string | null };
+    const nonFreeRows = (nonFree ?? []) as unknown as BillRow[];
+    const billed = nonFreeRows.filter(a => !!a.stripe_subscription_id);
+    const comped = nonFreeRows.filter(a => !a.stripe_subscription_id);
+
+    const tier = (plan: string) => billed.filter(a => a.plan === plan).length;
+    const starterCount = tier("starter");
+    const growthCount  = tier("growth");
+    const businessCount = tier("business");
+
+    // The add-on is only revenue when the account behind it is actually being billed.
+    const schedAddonCount = billed.filter(a => a.scheduling_addon).length;
+
+    // 5) MRR — summed per billed account from its own plan, so a plan with no listed price
+    // contributes nothing rather than silently inheriting another tier's number.
+    const mrr = billed.reduce(
+      (sum, a) => sum + (PRICE[a.plan as keyof typeof PRICE] ?? 0), 0
+    ) + schedAddonCount * PRICE.schedulingAddon;
+
+    // 6) LAST LOGIN ALERTS — billed customers who haven't logged in for 30+ days (or never).
+    // Scoped to billed accounts: the owner's own two accounts were on this list every week,
+    // which is exactly the noise that trains someone to stop reading the section.
+    const thirty = thirtyDaysAgo.getTime();
+    const loginAlerts = billed
+      .filter(a => !a.last_login || new Date(a.last_login).getTime() < thirty)
+      .sort((x, y) => new Date(x.last_login ?? 0).getTime() - new Date(y.last_login ?? 0).getTime());
 
     // 7) TOTAL ACTIVE ACCOUNTS — all primary, non-super admins
     const { count: totalActive = 0 } = await supabase
@@ -180,14 +209,14 @@ Deno.serve(async (req) => {
       .is("parent_admin_id", null);
 
     // ── Build email body ────────────────────────────────────────────────────
-    const totalPaid = (starterCount ?? 0) + (growthCount ?? 0) + (businessCount ?? 0);
+    const totalPaid = billed.length;
 
     const statsRow = `
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
       ${statBox("Total Accounts", String(totalActive), "#4f8ef7")}
       ${statBox("New This Week", String((newUsers ?? []).length), "#4f8ef7")}
-      ${statBox("Active Trials", String((activeTrials ?? []).length), "#f59e0b")}
-      ${statBox("Paid Subscribers", String(totalPaid), "#22c55e")}
+      ${statBox("Free Accounts", String((newFree ?? []).length + (olderFree ?? []).length), "#f59e0b")}
+      ${statBox("Paying Customers", String(totalPaid), "#22c55e")}
       ${statBox("MRR", fmtMoney(mrr), "#22c55e")}
     </div>`;
 
@@ -199,44 +228,79 @@ Deno.serve(async (req) => {
         : emptyHint("No new primary admins registered in the last 7 days.")
     );
 
-    const activeSection = sectionCard(
-      `⏳ Active Trials (${(activeTrials ?? []).length})`,
+    const newFreeSection = sectionCard(
+      `🆕 New Free Accounts &mdash; this week (${(newFree ?? []).length})`,
       "#f59e0b",
-      (activeTrials ?? []).length
-        ? (activeTrials as AdminRow[]).map(userRow).join("")
-        : emptyHint("No active trials currently.")
+      (newFree ?? []).length
+        ? (newFree as AdminRow[]).map(userRow).join("")
+        : emptyHint("No new free accounts in the last 7 days.")
     );
 
-    const expiredSection = sectionCard(
-      `⏰ Expired Trials &mdash; still on free (${(expiredTrials ?? []).length})`,
-      "#ef4444",
-      (expiredTrials ?? []).length
-        ? (expiredTrials as AdminRow[]).map(userRow).join("")
-        : emptyHint("No expired trials.")
+    const olderFreeSection = sectionCard(
+      `👥 Free Accounts &mdash; 7+ days old (${(olderFree ?? []).length})`,
+      "#64748b",
+      (olderFree ?? []).length
+        ? (olderFree as AdminRow[]).map(userRow).join("")
+        : emptyHint("No established free accounts.")
     );
+
+    const tierRow = (label: string, n: number, last = false) =>
+      `<tr><td style="padding:6px 0${last ? "" : ";border-bottom:1px solid #e2e8f0"}">${label}</td>` +
+      `<td style="text-align:right;padding:6px 0${last ? "" : ";border-bottom:1px solid #e2e8f0"};font-weight:700">${n}</td></tr>`;
 
     const paidSection = sectionCard(
-      `💳 Paid Subscribers (${totalPaid}) &middot; MRR ${fmtMoney(mrr)}`,
+      `💳 Paying Customers (${totalPaid}) &middot; MRR ${fmtMoney(mrr)}`,
       "#22c55e",
       `<table style="width:100%;border-collapse:collapse;font-size:13px;color:#1e293b">
-        <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0">Starter ($19.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:700">${starterCount ?? 0}</td></tr>
-        <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0">Growth ($39.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:700">${growthCount ?? 0}</td></tr>
-        <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0">Business ($79.49/mo)</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #e2e8f0;font-weight:700">${businessCount ?? 0}</td></tr>
-        <tr><td style="padding:6px 0">Scheduling add-on</td><td style="text-align:right;padding:6px 0;font-weight:700;color:#7c5cbf">${schedAddonCount ?? 0}</td></tr>
-      </table>`
+        ${tierRow("Starter ($19.49/mo)", starterCount)}
+        ${tierRow("Growth ($39.49/mo)", growthCount)}
+        ${tierRow("Business ($79.49/mo)", businessCount)}
+        ${tierRow(`Scheduling add-on ($${PRICE.schedulingAddon}/mo)`, schedAddonCount, true)}
+      </table>
+      <div style="color:#475569;font-size:11px;margin-top:10px;line-height:1.5">
+        Counts only accounts with a live Stripe subscription, so this figure should match the
+        Stripe dashboard. Comped accounts are listed separately below.
+      </div>
+      ${billed.length ? `<div style="margin-top:10px">${billed.map(userRow).join("")}</div>` : ""}`
+    );
+
+    // Named, not hidden. These accounts really do have paid-tier access; they just are not
+    // revenue, and the previous digest counted them as though they were.
+    const compedSection = sectionCard(
+      `🎁 Comped &mdash; paid plan, no subscription (${comped.length})`,
+      "#7c5cbf",
+      comped.length
+        ? comped.map(userRow).join("") +
+          `<div style="color:#475569;font-size:11px;margin-top:10px;line-height:1.5">
+            Grandfathered or internal accounts. They have paid-tier access but generate no MRR.
+          </div>`
+        : emptyHint("No comped accounts.")
     );
 
     const alertsSection = sectionCard(
-      `⚠️ Login Alerts (${(loginAlerts ?? []).length}) &mdash; paid, no login in 30+ days`,
+      `⚠️ Login Alerts (${loginAlerts.length}) &mdash; paying, no login in 30+ days`,
       "#ef4444",
-      (loginAlerts ?? []).length
-        ? (loginAlerts as AdminRow[]).map(userRow).join("")
-        : emptyHint("All paid users have logged in within the last 30 days. 🎉")
+      loginAlerts.length
+        ? loginAlerts.map(userRow).join("")
+        : emptyHint("Every paying customer has logged in within the last 30 days. 🎉")
     );
 
-    const body = statsRow + newSection + activeSection + expiredSection + paidSection + alertsSection;
+    const body = statsRow + newSection + newFreeSection + olderFreeSection
+               + paidSection + compedSection + alertsSection;
     const html = wrapper(body, `Weekly Digest &middot; ${dateRange}`);
     const subject = `📊 PunchClock Pro — Weekly Digest ${dateRange}`;
+
+    if (dryRun) {
+      return new Response(JSON.stringify({
+        ok: true, dry_run: true, dateRange,
+        mrr: Number(mrr.toFixed(2)),
+        paying: billed.map(a => ({ email: a.email, plan: a.plan, subscription: a.stripe_subscription_id })),
+        comped: comped.map(a => ({ email: a.email, plan: a.plan })),
+        freeAccounts: (newFree ?? []).length + (olderFree ?? []).length,
+        totalAccounts: totalActive ?? 0,
+        loginAlerts: loginAlerts.map(a => a.email),
+      }, null, 2), { headers: { "Content-Type": "application/json" } });
+    }
 
     // ── Send via Resend ─────────────────────────────────────────────────────
     const sendRes = await fetch("https://api.resend.com/emails", {
@@ -258,10 +322,11 @@ Deno.serve(async (req) => {
       dateRange,
       counts: {
         newThisWeek: (newUsers ?? []).length,
-        activeTrials: (activeTrials ?? []).length,
-        expiredTrials: (expiredTrials ?? []).length,
-        paid: { starter: starterCount ?? 0, growth: growthCount ?? 0, business: businessCount ?? 0, schedulingAddon: schedAddonCount ?? 0 },
-        loginAlerts: (loginAlerts ?? []).length,
+        newFree: (newFree ?? []).length,
+        olderFree: (olderFree ?? []).length,
+        paying: { starter: starterCount, growth: growthCount, business: businessCount, schedulingAddon: schedAddonCount },
+        comped: comped.length,
+        loginAlerts: loginAlerts.length,
         totalActive: totalActive ?? 0,
       },
       mrr: Number(mrr.toFixed(2)),
