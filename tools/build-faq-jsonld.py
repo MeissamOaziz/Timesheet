@@ -13,8 +13,10 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 PAGE = os.path.join(ROOT, 'index.html')
 
 # Must match FAQ_SALES in index.html — the pre-sale subset of the FAQ.
-SALES = [1, 2, 6, 7, 8, 11, 12, 13, 15, 16, 19]
-MAX = 8
+SALES = [1, 2, 6, 7, 8, 24, 11, 12, 13, 15, 16, 19]
+# Raised from 8 to 9 to fit q24 (the employee self-service portal) into the rich-result set
+# without demoting any of the eight questions already curated here.
+MAX = 9
 
 
 def read_value(src, key):

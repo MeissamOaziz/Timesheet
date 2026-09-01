@@ -35,7 +35,9 @@ for(const lang of ['en','fr']){
     return {count:document.querySelectorAll('#faqAccordion .faq-item').length,
             text:document.getElementById('faqAccordion').innerText};
   });
-  ok('landing FAQ is trimmed to the pre-sale set', faq.count===11, faq.count+' questions');
+  // 12, not 11: FAQ_SALES gained q24 (the employee self-service portal), added because the
+  // portal existed nowhere in the landing page, the meta tags, or the FAQPage rich-result data.
+  ok('landing FAQ is trimmed to the pre-sale set', faq.count===12, faq.count+' questions');
   ok('troubleshooting is no longer on the sales page',
      !/reset it|réinitialiser/i.test(faq.text) && !/alert emails|courriels d.alerte/i.test(faq.text));
   ok('the buying questions are still there',
@@ -106,7 +108,9 @@ ok('FAQPage JSON is valid', ld && !ld.bad, ld&&ld.bad?ld.bad:'parsed');
 ok('it declares a single language', ld && ld.lang==='en-CA', ld&&ld.lang);
 ok('no French entries in the English block', ld && !ld.names.some(n=>/[àâçéèêëîïôùûü]/.test(n)));
 ok('no duplicate questions', ld && new Set(ld.names).size===ld.names.length);
-ok('it lists the real top questions', ld && ld.n===8, ld&&String(ld.n));
+// 9, not 8: raised by one to fit q24 (employee self-service portal) into the rich-result set
+// without demoting any of the eight questions already curated here.
+ok('it lists the real top questions', ld && ld.n===9, ld&&String(ld.n));
 ok('answers carry no leftover markup', ld && !ld.answers.some(a=>/<[a-z]/i.test(a)));
 await page.close();
 

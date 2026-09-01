@@ -40,8 +40,8 @@ if (window.top !== window.self) {
 
 <!-- Primary EN meta -->
 <title id="metaTitle">PunchClock Pro — Logiciel de pointage pour équipes au Québec &amp; Canada</title>
-<meta name="description" id="metaDesc" content="PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts. Essai gratuit.">
-<meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec">
+<meta name="description" id="metaDesc" content="PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, congés), rapports de paie automatisés, planification des quarts. Essai gratuit.">
+<meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec, portail employé, employee self-service portal, employee portal app, portail libre-service, demande de congé en ligne, consulter son horaire en ligne">
 <meta name="robots" content="index, follow">
 <meta name="author" content="PunchClock Pro">
 <meta name="geo.region" content="CA-QC">
@@ -58,7 +58,7 @@ if (window.top !== window.self) {
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.punchclock.ca/">
 <meta property="og:title" id="ogTitle" content="PunchClock Pro — Logiciel de pointage pour le Québec et le Canada">
-<meta property="og:description" id="ogDesc" content="Logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.">
+<meta property="og:description" id="ogDesc" content="Logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, portail employé libre-service, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.">
 <meta property="og:image" content="https://www.punchclock.ca/og-image.png">
 <meta property="og:locale" content="fr_CA">
 <meta property="og:locale:alternate" content="en_CA">
@@ -67,7 +67,7 @@ if (window.top !== window.self) {
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" id="twTitle" content="PunchClock Pro — Logiciel de pointage Québec &amp; Canada">
-<meta name="twitter:description" id="twDesc" content="Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, rapports automatisés, planification des quarts. Plan gratuit disponible.">
+<meta name="twitter:description" id="twDesc" content="Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit disponible.">
 <meta name="twitter:image" content="https://www.punchclock.ca/og-image.png">
 
 <!-- Structured Data — bilingual SoftwareApplication schema -->
@@ -80,7 +80,7 @@ if (window.top !== window.self) {
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "url": "https://www.punchclock.ca",
-  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, gestion multi-sites, rapports de paie automatisés, planification des quarts de travail.",
+  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, demandes de congé), gestion multi-sites, rapports de paie automatisés, planification des quarts de travail.",
   "inLanguage": ["fr-CA", "en-CA"],
   "availableLanguage": [
     {"@type": "Language", "name": "French", "alternateName": "fr"},
@@ -109,11 +109,13 @@ if (window.top !== window.self) {
   },
   "featureList": [
     "Pointage par NIP sur tablette / PIN clock in on tablet",
+    "Portail employé libre-service / Employee self-service portal",
     "Gestion multi-sites et multi-compagnies / Multi-site and multi-company management",
     "Rapports de paie PDF et Excel / Payroll reports PDF and Excel",
     "Rapports par courriel automatisés / Automated email reports",
     "Suivi des heures supplémentaires / Overtime tracking",
     "Planification des quarts de travail / Shift scheduling",
+    "Demandes de congé en ligne / Online time-off requests",
     "Interface en français et en anglais / French and English interface",
     "Conforme Loi 25 Québec / Quebec Law 25 compliant",
     "Géorepérage par site / Per-site geofencing",
@@ -168,6 +170,14 @@ if (window.top !== window.self) {
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes. The free plan includes 1 company, 1 site, and up to 10 active employees — no credit card required, free forever. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can employees check their own schedule, hours and time off without contacting me?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — every employee gets their own free self-service portal, included on every plan, even Free. From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, and set their availability — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
       }
     },
     {
@@ -1395,6 +1405,11 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="feature-icon"><svg><use href="#i-smartphone"/></svg></div>
         <h3 data-i18n="land.feat11Title">Kiosk Shortcut — One Tap to Punch</h3>
         <p data-i18n="land.feat11Desc">Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-user"/></svg></div>
+        <h3 data-i18n="land.feat12Title">Employee Self-Service Portal</h3>
+        <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.</p>
       </div>
     </div>
   </div>
@@ -4224,7 +4239,7 @@ function hideLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
 }
 
-const FAQ_SALES=[1,2,6,7,8,11,12,13,15,16,19];
+const FAQ_SALES=[1,2,6,7,8,24,11,12,13,15,16,19];
 
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
@@ -14061,6 +14076,8 @@ en:{
 'faq.a22':'Yes — manager alerts are fully optional and set per company. Open the <strong>profile menu (top right) → Company Info</strong> and scroll to <strong>Manager Alerts</strong>. Uncheck <strong>"Receive manager alerts by email"</strong> to stop all of them, or keep just the ones you want (forgot-to-clock-out, daily overtime) and adjust the <strong>"Alert after"</strong> hours. Overtime alerts also require overtime tracking to be on. Reports and timesheet emails have their own frequency under <strong>payroll frequency</strong> (weekly / bi-weekly / monthly). Changes take effect right away.',
 'faq.q23':'Do I have to delete employees who have left to stay within my plan limit?',
 'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
+'faq.q24':'Can employees check their own schedule, hours and time off without contacting me?',
+'faq.a24':'Yes — every employee gets their own free self-service portal, included on every plan, even Free. From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, and set their availability — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -14097,6 +14114,8 @@ en:{
 'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
 'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
 'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
+'land.feat12Title':'Employee Self-Service Portal',
+'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.',
 'land.geoBadge':'Location Security — Built Right In',
 'land.geoTitle':'Employees can only punch where they work.',
 'land.geoSub':'Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.',
@@ -14861,6 +14880,8 @@ fr:{
 'faq.a22':'Oui — les alertes gestionnaire sont facultatives et se gèrent par compagnie. Ouvrez le <strong>menu de profil (en haut à droite) → Infos compagnie</strong> et descendez jusqu’à <strong>Alertes gestionnaire</strong>. Décochez <strong>« Recevoir les alertes par courriel »</strong> pour toutes les arrêter, ou gardez seulement celles voulues (oubli de sortie, heures supplémentaires) et ajustez le seuil <strong>« Alerter après »</strong>. Les alertes d\'heures supplémentaires exigent aussi le suivi des heures supp. activé. Les rapports et feuilles de temps ont leur propre fréquence sous <strong>fréquence de paie</strong> (hebdo / aux deux semaines / mensuel). Les changements prennent effet immédiatement.',
 'faq.q23':'Dois-je supprimer les employés qui ont quitté pour respecter la limite de mon forfait?',
 'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
+'faq.q24':'Les employés peuvent-ils consulter leur horaire, leurs heures et leurs congés sans me contacter?',
+'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service gratuit, inclus sur tous les forfaits, même le forfait Gratuit. Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',
@@ -14901,6 +14922,8 @@ fr:{
 'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
 'land.feat11Title':'Raccourci kiosque — Pointer en un tap',
 'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
+'land.feat12Title':'Portail employé libre-service',
+'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
 'land.geoBadge':'Sécurité de localisation — Intégrée',
 'land.geoTitle':'Les employés ne peuvent pointer que là où ils travaillent.',
 'land.geoSub':'Le géorepérage trace une frontière GPS invisible autour de chacun de vos emplacements. Le pointage ne fonctionne qu\'à l\'intérieur de cette frontière — que l\'employé soit sur un terminal partagé ou utilise un lien raccourci depuis son téléphone.',
@@ -15059,18 +15082,18 @@ function updateMetaTags(lang){
   document.getElementById('htmlRoot').lang=lang;
   if(isFr){
     document.getElementById('metaTitle').textContent='PunchClock Pro — Logiciel de pointage pour équipes au Québec et au Canada';
-    document.getElementById('metaDesc').content='PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, rapports de paie automatisés, planification des quarts de travail. Essai gratuit, aucune carte de crédit requise.';
+    document.getElementById('metaDesc').content='PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, demandes de congé), rapports de paie automatisés, planification des quarts de travail. Essai gratuit, aucune carte de crédit requise.';
     document.getElementById('ogTitle').content='PunchClock Pro — Logiciel de pointage Québec et Canada';
-    document.getElementById('ogDesc').content='Logiciel de pointage pour entreprises québécoises. Pointage par NIP sur tablette, gestion multi-sites, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.';
+    document.getElementById('ogDesc').content='Logiciel de pointage pour entreprises québécoises. Pointage par NIP sur tablette, portail employé libre-service, gestion multi-sites, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.';
     document.getElementById('twTitle').content='PunchClock Pro — Logiciel de pointage Québec & Canada';
-    document.getElementById('twDesc').content='Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, rapports automatisés, planification des quarts. Plan gratuit.';
+    document.getElementById('twDesc').content='Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit.';
   } else {
     document.getElementById('metaTitle').textContent='PunchClock Pro — Time & Attendance Software for Shift Workforces | Canada';
-    document.getElementById('metaDesc').content='PunchClock Pro is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, automated payroll reports, shift scheduling. Free plan available.';
+    document.getElementById('metaDesc').content='PunchClock Pro is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, a free employee self-service portal (schedule, hours, time-off requests), automated payroll reports, shift scheduling. Free plan available.';
     document.getElementById('ogTitle').content='PunchClock Pro — Time & Attendance Software for Canada';
-    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, payroll reports, shift scheduling, and a free plan to get started.';
+    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, a free employee self-service portal, payroll reports, shift scheduling, and a free plan to get started.';
     document.getElementById('twTitle').content='PunchClock Pro — Time & Attendance Software';
-    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, automated reports, shift scheduling. Free plan available.';
+    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, a free employee self-service portal, automated reports, shift scheduling. Free plan available.';
   }
 }
 
