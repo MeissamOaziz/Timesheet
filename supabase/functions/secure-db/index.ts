@@ -25,6 +25,13 @@ const PROTECTED_TABLES = new Set([
   // Which tablets are acting as punch terminals. Admin-visible only; the tablets themselves
   // check in through the kiosk_device_checkin RPC rather than this path.
   'kiosk_devices',
+  // Portal login state per employee — email, status, and (while an invite is outstanding)
+  // invite_token. Was reachable by any caller holding just the public anon key: no admin
+  // session, no company match, nothing. invite_token is the credential that sets that
+  // employee's password, so this wasn't just an email leak — it was an invite-hijack vector
+  // across every tenant. The portal app itself never reads this table; it authenticates
+  // through _resolve_portal_session and its own RPCs, entirely separate from this path.
+  'employee_portal',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -287,6 +294,20 @@ function stripAdminRows(rows: unknown[], sessionId: string | null, filter: strin
       // co-admin reading the team list must not be able to lift their owner's out of the API.
       delete r['unsub_token'];
     }
+    return r;
+  });
+}
+
+// Strip employee_portal fields no admin client ever legitimately reads: password_hash is a
+// bcrypt hash with no use outside portal_login/activate_employee_portal (both direct RPCs, not
+// this path), and invite_token is a bearer credential — the admin re-invites by writing a new
+// one (sendEmpPortalInvite in index.html), never by reading the current one back.
+function stripPortalRows(rows: unknown[]): unknown[] {
+  return rows.map(row => {
+    if (typeof row !== 'object' || row === null) return row;
+    const r = { ...(row as Record<string, unknown>) };
+    delete r['password_hash'];
+    delete r['invite_token'];
     return r;
   });
 }
@@ -560,10 +581,12 @@ Deno.serve(async (req: Request) => {
   // Pre-auth lookups and kiosk paths have no caller and are unaffected.
   if (caller && caller.role !== 'super_admin' &&
       (method === 'GET' || method === 'PATCH' || method === 'DELETE') &&
-      (COMPANY_SCOPED.has(table) || table === 'companies' || table === 'admins' || table === 'availability')) {
-    if (table === 'availability') {
-      // Scope through the caller's employees. An empty list yields a sentinel that matches
-      // nothing, so the failure mode is "no rows" rather than "everyone's rows".
+      (COMPANY_SCOPED.has(table) || table === 'companies' || table === 'admins' ||
+       table === 'availability' || table === 'employee_portal')) {
+    if (table === 'availability' || table === 'employee_portal') {
+      // Neither table has a company_id column — both hang off employee_id — so scope through
+      // the caller's employees. An empty list yields a sentinel that matches nothing, so the
+      // failure mode is "no rows" rather than "everyone's rows".
       const empIds = await ownedEmployeeIds(await ownedCompanyIds(caller.primaryAdminId));
       const scope = `employee_id=in.(${empIds.length ? empIds.join(',') : '00000000-0000-0000-0000-000000000000'})`;
       filter = filter ? `${filter}&${scope}` : scope;
@@ -615,6 +638,9 @@ Deno.serve(async (req: Request) => {
     // bcrypt hash -- the same secret the GET path has always been careful to remove.
     if (table === 'admins' && Array.isArray(data)) {
       data = stripAdminRows(data, authedAdminId, filter);
+    }
+    if (table === 'employee_portal' && Array.isArray(data)) {
+      data = stripPortalRows(data);
     }
 
     return new Response(JSON.stringify(data), {

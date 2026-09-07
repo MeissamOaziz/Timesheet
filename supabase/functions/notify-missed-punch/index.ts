@@ -175,6 +175,25 @@ Deno.serve(async (req: Request) => {
         companyId: mpr.company_id, companyName: co,
         recipients: [to],
       });
+      // Same decision, also pushed to the employee's phone if they have the app registered —
+      // backgrounded so a push failure never affects the email result already computed above.
+      if (mpr.emp_id) {
+        const pushJob = fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_ids: [mpr.emp_id],
+            title: approved ? '✅ Missed punch approved / approuvé' : '❌ Missed punch not approved / refusé',
+            body: approved
+              ? `Recorded ${recorded}. / Enregistré ${recorded}.`
+              : `Your ${label} request was not approved. / Votre demande n'a pas été approuvée.`,
+          }),
+        }).catch(() => {});
+        // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+        if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(pushJob);
+        else await pushJob;
+      }
+
       console.log('notify-missed-punch decision', requestId, mpr.status, sentOk);
       return json({ ok: true, mode: 'decision', status: mpr.status, sent: sentOk });
     }

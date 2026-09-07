@@ -924,6 +924,13 @@ border-top:1px solid var(--border);margin:18px 0;}
 /* Activity log edit row highlight */
 .edited-row td{background:rgba(245,158,11,.05)!important;}
 .manual-badge{font-size:10px;background:rgba(245,158,11,.2);color:var(--amber);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
+/* Kiosk stays the unmarked baseline (it's the overwhelming default) — only the mobile app's own
+   punches get a badge, same convention as MANUAL only appearing for the exceptional case. */
+.mobile-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(79,142,247,.15);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
+.mobile-badge svg{width:9px;height:9px;}
+.punch-map-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:var(--r-sm);background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;margin-left:5px;flex-shrink:0;}
+.punch-map-btn:hover{border-color:var(--accent);color:var(--accent);}
+.punch-map-btn svg{width:12px;height:12px;}
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
@@ -3608,6 +3615,25 @@ border-top:1px solid var(--border);margin:18px 0;}
         <button class="btn-secondary" onclick="closeModal('editPunchModal')">Cancel</button>
         <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="savePunchEdit()">Save Changes</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PUNCH LOCATION MAP — read-only comparison of a punch's own GPS point against the site's
+     registered pin and geofence radius, so an admin can see whether it landed inside or outside
+     the circle and retune the radius accordingly (mobile app punches; the kiosk's own geo
+     capture uses this same view). -->
+<div class="modal-overlay" id="punchMapModal">
+  <div class="modal" style="max-width:520px">
+    <h3 data-i18n="punchMap.title">Punch Location</h3>
+    <div id="punchMapSummary" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
+    <div id="punchMapContainer" style="height:280px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border)"></div>
+    <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--text3)">
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#4f8ef7;margin-right:5px"></span><span data-i18n="punchMap.site">Site (registered)</span></span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:5px"></span><span data-i18n="punchMap.punch">Punch location</span></span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="destroyPunchMap();closeModal('punchMapModal')" data-i18n="common.close">Close</button>
     </div>
   </div>
 </div>
@@ -7258,6 +7284,66 @@ function destroyGeoMap() {
   _geoCircle = null;
 }
 
+// ── Punch location viewer ──────────────────────────────────────────────────────
+// Read-only, separate Leaflet instance from the site-edit map above (own container, own
+// module-level state) — the two are never open at the same time, but sharing _geoMap/_geoMarker
+// would make either editable when it shouldn't be. Plots the site's registered pin+radius next
+// to where a specific punch's own GPS actually was, so an admin can see whether it landed inside
+// the circle and retune the radius from what the map shows rather than guessing.
+let _punchMap = null;
+
+function destroyPunchMap() {
+  if (_punchMap) { _punchMap.remove(); _punchMap = null; }
+}
+
+function openPunchLocationMap(punchId) {
+  const p = C.punches.find(x => x.id === punchId);
+  if (!p || p.geo_lat == null || p.geo_lng == null) return;
+  const site = C.sites.find(s => s.id === p.site_id);
+
+  const statusLabel = {
+    ok: t('punchMap.statusOk') || 'Inside the geofence',
+    outside: t('punchMap.statusOutside') || 'Outside the geofence',
+    unavailable: t('punchMap.statusUnavailable') || 'Location unavailable when punched',
+    skipped: t('punchMap.statusSkipped') || 'No geofence configured for this site',
+  }[p.geo_status] || p.geo_status || '—';
+  const distanceLine = (p.geo_distance_m != null)
+    ? (t('punchMap.distance') || 'Distance from site: {m} m').replace('{m}', Math.round(p.geo_distance_m))
+    : '';
+  document.getElementById('punchMapSummary').innerHTML =
+    `<strong>${esc(p.emp_name || '')}</strong> — ${esc(p.punch_date)} ${esc(String(p.punch_time || '').slice(0, 5))}<br>` +
+    `${esc(statusLabel)}${distanceLine ? ' · ' + esc(distanceLine) : ''}`;
+
+  openModal('punchMapModal');
+  destroyPunchMap();
+  // The modal must already be visible (display:flex) before Leaflet measures the container,
+  // or it initializes at 0×0 and the map never renders — a timeout hands it one paint frame.
+  setTimeout(() => {
+    const container = document.getElementById('punchMapContainer');
+    _punchMap = L.map(container).setView([p.geo_lat, p.geo_lng], 17);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 19,
+    }).addTo(_punchMap);
+
+    const bounds = [[p.geo_lat, p.geo_lng]];
+    if (site && site.geo_lat != null && site.geo_lng != null) {
+      L.circle([site.geo_lat, site.geo_lng], {
+        radius: site.geo_radius_m || 25, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.12, weight: 2,
+      }).addTo(_punchMap);
+      L.circleMarker([site.geo_lat, site.geo_lng], {
+        radius: 6, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 1, weight: 2,
+      }).addTo(_punchMap).bindTooltip(t('punchMap.site') || 'Site (registered)');
+      bounds.push([site.geo_lat, site.geo_lng]);
+    }
+    L.circleMarker([p.geo_lat, p.geo_lng], {
+      radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1, weight: 2,
+    }).addTo(_punchMap).bindTooltip(t('punchMap.punch') || 'Punch location');
+
+    if (bounds.length > 1) _punchMap.fitBounds(bounds, { padding: [30, 30] });
+    _punchMap.invalidateSize();
+  }, 50);
+}
+
 async function searchGeoAddress() {
   const q   = document.getElementById('geoSearchInput').value.trim();
   const res = document.getElementById('geoSearchResults');
@@ -8848,7 +8934,7 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
   try{
     const punchPayload={
       emp_id:req.emp_id,emp_name:req.emp_name,company_id:req.company_id,
-      type:req.type,punch_date,punch_time:fullTime,punched_at,is_manual:true
+      type:req.type,punch_date,punch_time:fullTime,punched_at,is_manual:true,source:'admin'
     };
     if(req.site_id){punchPayload.site_id=req.site_id;punchPayload.site_name=site?.name||null;}
     const punchRes=await DB.insert('punches',punchPayload);
@@ -10364,6 +10450,16 @@ function exportReport(fmt){
 // ═══════════════════════════════════════════════════
 // ACTIVITY LOG
 // ═══════════════════════════════════════════════════
+// A punch with no `source` at all predates this column (or is synthetic demo data) — treat it
+// as kiosk, matching the database default every real row already got via the migration.
+function channelBadge(p){
+  if((p.source||'kiosk')!=='mobile') return '';
+  return `<span class="mobile-badge"><svg><use href="#i-smartphone"/></svg>${t('activity.mobile')||'MOBILE'}</span>`;
+}
+function punchMapBtn(p){
+  if(p.geo_lat==null||p.geo_lng==null) return '';
+  return `<button type="button" class="punch-map-btn" title="${esc(t('activity.viewLocation')||'View location')}" onclick="event.stopPropagation();openPunchLocationMap('${p.id}')"><svg><use href="#i-map-pin"/></svg></button>`;
+}
 async function loadActivityPage(){
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   showSkeleton('activityBody',6,'rows');
@@ -10442,7 +10538,7 @@ async function loadActivityPage(){
     const site=C.sites.find(s2=>s2.id===p.site_id);
     const pill=`<span class="pill ${p.type.toLowerCase()}">${p.type==='IN'?t('punch.in').replace('✓ ',''):t('punch.out').replace('✕ ','')}</span>`;
     return mcard(
-      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">MANUAL</span>':''),
+      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">MANUAL</span>':'') + channelBadge(p) + punchMapBtn(p),
       [[t('admin.col.site')||'Site', esc([pco?.name,site?.name].filter(Boolean).join(' · ')||'—')],
        [t('admin.col.type')||'Type', pill],
        [t('reports.date')||'Date', p.punch_date],
@@ -10458,7 +10554,7 @@ async function loadActivityPage(){
     const coSite=[pco?.name,site?.name].filter(Boolean).join(' · ');
     return`<tr class="${p.is_manual?'edited-row':''}">
       <td><input type="checkbox" class="act-row-check" data-punch-id="${p.id}" onclick="onActivityRowCheckChange()" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer"></td>
-      <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}</td>
+      <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}${channelBadge(p)}${punchMapBtn(p)}</td>
       <td style="font-size:12px">${coSite||'—'}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type==="IN"?t("punch.in").replace("✓ ",""):t("punch.out").replace("✕ ","")}</span></td>
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
@@ -10660,10 +10756,10 @@ async function savePunchEdit(){
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const site=C.sites.find(s=>s.id===site_id);
   try{
-    await DB.update('punches',`id=eq.${id}`,{type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true});
+    await DB.update('punches',`id=eq.${id}`,{type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true,source:'admin'});
     // Update cache
     const idx=C.punches.findIndex(p=>p.id===id);
-    if(idx!==-1)C.punches[idx]={...C.punches[idx],type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true};
+    if(idx!==-1)C.punches[idx]={...C.punches[idx],type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true,source:'admin'};
     closeModal('editPunchModal');loadActivityPage();
   }catch(e){showMsg('editPunchMsg',e.message,'error');}
 }
@@ -10825,7 +10921,7 @@ async function saveAddPunch(){
 
   const mk=(ty,date,time,at)=>{
     const p={emp_id:empId,emp_name:emp.name,company_id:emp.company_id,type:ty,
-             punch_date:date,punch_time:time,punched_at:at,is_manual:true};
+             punch_date:date,punch_time:time,punched_at:at,is_manual:true,source:'admin'};
     if(site){p.site_id=site.id;p.site_name=site.name;}
     return p;
   };
@@ -13531,6 +13627,7 @@ en:{
 'sched.emailSaveNote':'This email will be saved to your profile so your admin can send you reports too.',
 'common.days.day':'Day of week',
 'common.cancel':'Cancel',
+'common.close':'Close',
 'nav.clockInOut':'Clock In/Out','nav.dashboard':'Dashboard','nav.admin':'Admin','nav.reports':'Reports',
 'dash.title':'Dashboard','dash.subtitle':'Your team at a glance','dash.refresh':'↻ Refresh','dash.clockedIn':'Clocked in now','dash.hoursToday':'Hours today','dash.hoursWeek':'Hours this week','dash.activeEmps':'Active employees','dash.currentlyIn':'Currently clocked in','dash.recentActivity':'Recent activity','dash.since':'since','dash.noneIn':'Nobody is clocked in right now.','dash.noActivity':'No recent activity.','dash.noSites':'No sites to show yet. Add a site to see your dashboard.',
 'setup.title':'Finish setting up — you\'re almost there','setup.hide':'Hide','setup.progress':'{done} of {total} done',
@@ -13763,6 +13860,10 @@ en:{
 'activity.employeeFilter':'Employee','common.allEmployees':'All Employees',
 'activity.bulkReassign':'Reassign Site…','activity.bulkDelete':'Delete Selected','activity.bulkClear':'Clear',
 'activity.bulkReassignTitle':'Reassign Site','activity.bulkReassignDesc':'Move the selected punches to a different site.','activity.bulkReassignDescTail':'punches will be updated.','activity.bulkReassignConfirm':'Reassign',
+'activity.mobile':'MOBILE','activity.viewLocation':'View location',
+'punchMap.title':'Punch Location','punchMap.site':'Site (registered)','punchMap.punch':'Punch location',
+'punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
+'punchMap.distance':'Distance from site: {m} m',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
 'sites.title':'Sites','sites.subtitle':'Manage your work locations','sites.noSites':'No sites yet. Add your first site.',
@@ -14337,6 +14438,7 @@ fr:{
 'sched.emailSaveNote':'Ce courriel sera enregistré à votre profil afin que votre administrateur puisse aussi vous envoyer des rapports.',
 'common.days.day':'Jour de la semaine',
 'common.cancel':'Annuler',
+'common.close':'Fermer',
 'nav.clockInOut':'Entrée/Sortie','nav.dashboard':'Tableau de bord','nav.admin':'Admin','nav.reports':'Rapports',
 'dash.title':'Tableau de bord','dash.subtitle':'Votre équipe en un coup d\'œil','dash.refresh':'↻ Actualiser','dash.clockedIn':'Pointés en ce moment','dash.hoursToday':'Heures aujourd\'hui','dash.hoursWeek':'Heures cette semaine','dash.activeEmps':'Employés actifs','dash.currentlyIn':'Actuellement pointés','dash.recentActivity':'Activité récente','dash.since':'depuis','dash.noneIn':'Personne n\'est pointé en ce moment.','dash.noActivity':'Aucune activité récente.','dash.noSites':'Aucun site à afficher. Ajoutez un site pour voir votre tableau de bord.',
 'setup.title':'Terminez la configuration — vous y êtes presque','setup.hide':'Masquer','setup.progress':'{done} sur {total} terminées',
@@ -14569,6 +14671,10 @@ fr:{
 'activity.employeeFilter':'Employé','common.allEmployees':'Tous les employés',
 'activity.bulkReassign':"Réassigner le site…",'activity.bulkDelete':'Supprimer la sélection','activity.bulkClear':'Effacer',
 'activity.bulkReassignTitle':'Réassigner le site','activity.bulkReassignDesc':"Déplacer les pointages sélectionnés vers un autre site.",'activity.bulkReassignDescTail':"pointages seront mis à jour.",'activity.bulkReassignConfirm':"Réassigner",
+'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement',
+'punchMap.title':'Emplacement du pointage','punchMap.site':'Site (enregistré)','punchMap.punch':'Emplacement du pointage',
+'punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
+'punchMap.distance':'Distance du site : {m} m',
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
 'sites.title':'Sites','sites.subtitle':'Gérer vos emplacements','sites.noSites':'Aucun site. Ajoutez votre premier site.',

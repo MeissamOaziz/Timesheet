@@ -174,6 +174,28 @@ Deno.serve(async (req) => {
       if (ins.ok) { const rows = await ins.json(); if (Array.isArray(rows) && rows.length) fresh.push(c); }
     }
 
+    // Forgot-to-clock-out was admin-facing only (an email the employee never sees). The employee
+    // is the one who can actually act on it, so push it to their own phone if they have the app —
+    // overtime alerts stay admin-only, an employee can't do anything about that one. Backgrounded
+    // via waitUntil, same as this file's other post-response work would be — a push failure must
+    // never delay or break the admin-email response above.
+    const pushJob = Promise.all(
+      fresh.filter((c) => c.alert_type === 'forgot_out').map((c) =>
+        fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_ids: [c.emp_id],
+            title: '⏱️ Still clocked in? / Toujours pointé?',
+            body: "You're still clocked in — don't forget to clock out. / Oubli de pointer la sortie?",
+          }),
+        }).catch(() => {})
+      )
+    );
+    // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+    if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(pushJob);
+    else await pushJob;
+
     // Fan out per company: the owner and every co-admin see all of it; a manager sees only the
     // alerts for the sites assigned to them, so nobody gets another site's data.
     const nowMs = Date.now();

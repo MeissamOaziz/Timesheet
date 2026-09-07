@@ -159,6 +159,23 @@ ${headFr}
         companyId: row.company_id, companyName: coName2,
         recipients: [to],
       });
+      // Same decision, also pushed to the employee's phone if they have the app registered —
+      // backgrounded so a push failure never affects the email result already computed above.
+      if (row.emp_id) {
+        const pushJob = fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            employee_ids: [row.emp_id],
+            title: approved ? '✅ Time off approved / congé approuvé' : '❌ Time off not approved / refusé',
+            body: `${dates2}. / ${dates2}.`,
+          }),
+        }).catch(() => {});
+        // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+        if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(pushJob);
+        else await pushJob;
+      }
+
       console.log('notify-time-off decision', requestId, row.status, sentOk);
       return json({ ok: true, mode: 'decision', status: row.status, sent: sentOk });
     }
