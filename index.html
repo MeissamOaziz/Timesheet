@@ -3492,10 +3492,20 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleOvertimeOpt()">
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-alarm"/></svg><span data-i18n="modal.trackOvertime">Track Overtime</span></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.overtimeDesc">Flag daily >8h and weekly >40h in reports</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.overtimeDesc">Flag daily and weekly overtime in reports — thresholds below</div>
       </div>
       <div id="overtimeToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
         <div id="overtimeThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
+    <div id="otThresholdSettings" style="display:flex;gap:14px;padding:10px 14px 0">
+      <div style="flex:1">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.otDailyLabel">Daily threshold</label>
+        <select id="companyOtDailyHours" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px"><option value="4">4 h</option><option value="5">5 h</option><option value="6">6 h</option><option value="7">7 h</option><option value="8">8 h</option><option value="9">9 h</option><option value="10">10 h</option><option value="12">12 h</option></select>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.otWeeklyLabel">Weekly threshold</label>
+        <select id="companyOtWeeklyHours" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px"><option value="35">35 h</option><option value="40">40 h</option><option value="44">44 h</option><option value="48">48 h</option><option value="50">50 h</option></select>
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
@@ -9798,6 +9808,8 @@ function editCompany(id){
   document.getElementById('companyAlertForgotOut').checked=(co.alert_forgot_out!==false);
   document.getElementById('companyAlertOvertime').checked=(co.alert_overtime!==false);
   document.getElementById('companyForgotOutHours').value=String(co.forgot_out_hours||14);
+  document.getElementById('companyOtDailyHours').value=String(co.ot_daily_hours||8);
+  document.getElementById('companyOtWeeklyHours').value=String(co.ot_weekly_hours||40);
   {const _s=document.getElementById('alertSubSettings');const _on=(co.alerts_enabled!==false);if(_s){_s.style.opacity=_on?'1':'.45';_s.style.pointerEvents=_on?'':'none';}}
   document.getElementById('companyAnchorDate').value=co.payroll_anchor_date||'';
   toggleAnchorDateRow();
@@ -9816,10 +9828,18 @@ function toggleOvertimeOpt(){
   const on=document.getElementById('overtimeThumb').style.left!=='20px';
   document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
+  _setOtThresholdRowState(on);
 }
 function setOvertimeToggle(on){
   document.getElementById('overtimeToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('overtimeThumb').style.left=on?'20px':'2px';
+  _setOtThresholdRowState(on);
+}
+function _setOtThresholdRowState(on){
+  const row=document.getElementById('otThresholdSettings');
+  if(!row)return;
+  row.style.opacity=on?'1':'.45';
+  row.style.pointerEvents=on?'':'none';
 }
 
 async function saveCompany(){
@@ -9835,6 +9855,8 @@ async function saveCompany(){
   const alert_forgot_out=document.getElementById('companyAlertForgotOut').checked;
   const alert_overtime=document.getElementById('companyAlertOvertime').checked;
   const forgot_out_hours=parseInt(document.getElementById('companyForgotOutHours').value,10)||14;
+  const ot_daily_hours=parseInt(document.getElementById('companyOtDailyHours').value,10)||8;
+  const ot_weekly_hours=parseInt(document.getElementById('companyOtWeeklyHours').value,10)||40;
   const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
@@ -9853,13 +9875,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,payroll_anchor_date,track_overtime,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,payroll_anchor_date,track_overtime,logo_url});
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,logo_url});
       const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -10206,10 +10228,11 @@ async function generateReport(){
   // that followed was classified as overtime for the rest of the period: two ordinary 40h
   // weeks reported 40h of OT, and a monthly report was worse. Sessions arrive sorted by
   // punch time per employee, which is what makes a running reset correct here.
-  function calcOT(sessions, trackOT, weekStartsSunday) {
+  function calcOT(sessions, trackOT, weekStartsSunday, dailyThreshold, weeklyThreshold) {
     // sessions: [{date, hours}]
     if(!trackOT) return sessions.map(s=>({reg:s.hours,ot:0}));
-    // Daily OT: >8h/day
+    const dailyCap=dailyThreshold||8, weeklyCap=weeklyThreshold||40;
+    // Daily OT: >dailyCap h/day
     const dailyMap={};
     sessions.forEach(s=>{
       if(!dailyMap[s.date]) dailyMap[s.date]=0;
@@ -10224,7 +10247,7 @@ async function generateReport(){
       d.setDate(d.getDate()-(weekStartsSunday?dow:((dow+6)%7)));
       return d.toLocaleDateString('en-CA');
     };
-    // Weekly OT: >40h/week (accumulate reg after daily cap), reset every week.
+    // Weekly OT: >weeklyCap h/week (accumulate reg after daily cap), reset every week.
     let weeklyReg=0, curWeek=null;
     return sessions.map(s=>{
       const wk=weekKey(s.date);
@@ -10232,12 +10255,12 @@ async function generateReport(){
       const dayTotal=dailyMap[s.date];
       const h=s.hours||0;
       // Proportion of this session's daily OT
-      const dailyOT=dayTotal>8?Math.max(0,(h/dayTotal)*Math.max(0,dayTotal-8)):0;
+      const dailyOT=dayTotal>dailyCap?Math.max(0,(h/dayTotal)*Math.max(0,dayTotal-dailyCap)):0;
       const dailyReg=h-dailyOT;
       // Weekly cap
       let reg=dailyReg,ot=dailyOT;
-      if(weeklyReg+reg>40){
-        const over=weeklyReg+reg-40;
+      if(weeklyReg+reg>weeklyCap){
+        const over=weeklyReg+reg-weeklyCap;
         ot+=over;reg-=over;
       }
       weeklyReg+=reg;
@@ -10268,7 +10291,7 @@ async function generateReport(){
       }
       if(rawRows.length){
         // Calculate OT per session
-        const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT,co?.week_start==='sunday');
+        const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT,co?.week_start==='sunday',co?.ot_daily_hours,co?.ot_weekly_hours);
         const empRows=rawRows.map((r,idx)=>({...r,regHours:otResults[idx].reg,otHours:otResults[idx].ot}));
         allRows.push(...empRows);
         const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
@@ -14038,7 +14061,8 @@ en:{
 'modal.companyLogo':'Company Logo','modal.uploadLogo':'Upload Company Logo',
 'modal.logoHint':'PNG, JPG up to 2MB — shown on clock page and email reports',
 'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'Track Overtime',
-'modal.overtimeDesc':'Flag daily >8h and weekly >40h in reports',
+'modal.overtimeDesc':'Flag daily and weekly overtime in reports — thresholds below',
+'modal.otDailyLabel':'Daily threshold','modal.otWeeklyLabel':'Weekly threshold',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
@@ -14847,7 +14871,8 @@ fr:{
 'modal.companyLogo':'Logo de la compagnie','modal.uploadLogo':'Télécharger le logo',
 'modal.logoHint':'PNG, JPG jusqu\'à 2 Mo — affiché sur la page de pointage et les rapports',
 'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'Suivi des heures supp.',
-'modal.overtimeDesc':'Signaler les journées >8h et les semaines >40h dans les rapports',
+'modal.overtimeDesc':'Signaler les heures supp. quotidiennes et hebdomadaires dans les rapports — seuils ci-dessous',
+'modal.otDailyLabel':'Seuil quotidien','modal.otWeeklyLabel':'Seuil hebdomadaire',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',

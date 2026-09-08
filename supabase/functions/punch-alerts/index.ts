@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     const now = Date.now();
     const sinceIso = new Date(now - 3 * 864e5).toISOString();
     const [coRes, empRes, punchRes] = await Promise.all([
-      rest('companies?select=id,name,admin_id,track_overtime,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours'),
+      rest('companies?select=id,name,admin_id,track_overtime,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours'),
       rest('employees?active=eq.true&select=id,name,company_id,site_id'),
       rest(`punches?punched_at=gte.${sinceIso}&select=id,emp_id,company_id,type,punch_date,punched_at&order=punched_at.asc`),
     ]);
@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
 
     const empById: Record<string, { name: string; company_id: string; site_id: string | null }> = {};
     for (const e of employees as Array<{ id: string; name: string; company_id: string; site_id: string | null }>) empById[e.id] = e;
-    const coById: Record<string, { name: string; admin_id: string; track_overtime: boolean; punch_rounding: number; alerts_enabled: boolean; alert_forgot_out: boolean; alert_overtime: boolean; forgot_out_hours: number }> = {};
-    for (const c of companies as Array<{ id: string; name: string; admin_id: string; track_overtime: boolean; punch_rounding: number; alerts_enabled: boolean; alert_forgot_out: boolean; alert_overtime: boolean; forgot_out_hours: number }>) coById[c.id] = c;
+    const coById: Record<string, { name: string; admin_id: string; track_overtime: boolean; punch_rounding: number; alerts_enabled: boolean; alert_forgot_out: boolean; alert_overtime: boolean; forgot_out_hours: number; ot_daily_hours: number }> = {};
+    for (const c of companies as Array<{ id: string; name: string; admin_id: string; track_overtime: boolean; punch_rounding: number; alerts_enabled: boolean; alert_forgot_out: boolean; alert_overtime: boolean; forgot_out_hours: number; ot_daily_hours: number }>) coById[c.id] = c;
 
     // Group punches by employee (ascending)
     const byEmp: Record<string, Array<{ id: string; type: string; punch_date: string; punched_at: string }>> = {};
@@ -154,11 +154,12 @@ Deno.serve(async (req) => {
             if (out) { const hrs = (roundMs(out.punched_at, co.punch_rounding) - roundMs(p.punched_at, co.punch_rounding)) / 3600000; if (hrs > 0) dayHours[p.punch_date] = (dayHours[p.punch_date] || 0) + hrs; i += 2; } else i++;
           } else i++;
         }
+        const dailyThreshold = co.ot_daily_hours || OT_DAILY_HOURS;
         for (const d of Object.keys(dayHours)) {
-          if (dayHours[d] > OT_DAILY_HOURS) {
+          if (dayHours[d] > dailyThreshold) {
             const h = dayHours[d]; const hh = Math.floor(h); const mm = Math.round((h - hh) * 60);
             candidates.push({ alert_type: 'ot_daily', ref_key: `${empId}|${d}`, company_id: emp.company_id, emp_id: empId, site_id: emp.site_id,
-              alert: { type: 'ot_daily', empName: emp.name, detail: `worked ${hh}h ${mm}m on ${d} — over the ${OT_DAILY_HOURS}h daily overtime threshold.`, detailFr: `a travaillé ${hh} h ${mm} le ${d} — au-dessus du seuil de ${OT_DAILY_HOURS} h.` } });
+              alert: { type: 'ot_daily', empName: emp.name, detail: `worked ${hh}h ${mm}m on ${d} — over the ${dailyThreshold}h daily overtime threshold.`, detailFr: `a travaillé ${hh} h ${mm} le ${d} — au-dessus du seuil de ${dailyThreshold} h.` } });
           }
         }
       }
