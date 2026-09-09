@@ -8938,9 +8938,14 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const site=C.sites.find(s=>s.id===req.site_id);
   // Approving inserts a real punch, so it needs the same sequence guard as adding one by hand.
+  // _punchSequenceError returns {error} for a state that must not be written, {warn} for one the
+  // admin can approve knowingly, or null — never a bare string, so it must be unpacked the same
+  // way the Add Punch modal does, or the toast renders "[object Object]" and the approval always
+  // aborts silently, even for the warn case a real admin should be able to confirm past.
   const nb=await _punchNeighbours(req.emp_id,punched_at);
-  const seqErr=_punchSequenceError(req.type,nb.prev,nb.next);
-  if(seqErr){showToast(seqErr,'error');return;}
+  const seq=_punchSequenceError(req.type,nb.prev,nb.next);
+  if(seq?.error){showToast(seq.error,'error');return;}
+  if(seq?.warn && !(await uiConfirm(seq.warn))) return;
   try{
     const punchPayload={
       emp_id:req.emp_id,emp_name:req.emp_name,company_id:req.company_id,
