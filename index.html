@@ -4642,7 +4642,7 @@ function closePicker(){
 }
 
 function handleContextClick(){
-  if(!isLoggedIn())return;
+  if(!isLoggedIn()&&!isDemo())return;
   if(C.companies.length===1){onCompanyPicked(C.companies[0].id);return;}
   showCompanyPicker();
 }
@@ -4653,7 +4653,7 @@ function updateContextPill(){
   if(ctx){
     const txt=ctx.site?`${ctx.co.name} · ${ctx.site.name}`:ctx.co.name;
     document.getElementById('contextPillText').textContent=txt;
-    pill.style.display=isLoggedIn()?'flex':'none';
+    pill.style.display=(isLoggedIn()||isDemo())?'flex':'none';
   } else {
     pill.style.display='none';
   }
@@ -6916,6 +6916,15 @@ async function loadPunchPage(){
     if(C.companies.length===1){onCompanyPicked(C.companies[0].id);return;}
     showCompanyPicker();
     return;
+  }
+  // A company context with no site only makes sense when the company has 0 or 1 sites — those
+  // are auto-resolved by onCompanyPicked/onSitePicked, which never leave a multi-site company on
+  // "no site selected". If it somehow does (the live demo used to bootstrap straight into this
+  // state), send them through the same site picker a real multi-site kiosk setup goes through,
+  // instead of silently combining every site's staff into one list with no way to scope it.
+  if(!ctx.site){
+    const coSites=C.sites.filter(s=>s.company_id===ctx.co.id);
+    if(coSites.length>1){ showSitePicker(ctx.co,coSites); return; }
   }
   const coId=ctx.co.id;
   const siteId=ctx.site?.id||null;
