@@ -928,6 +928,8 @@ border-top:1px solid var(--border);margin:18px 0;}
    punches get a badge, same convention as MANUAL only appearing for the exceptional case. */
 .mobile-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(79,142,247,.15);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
 .mobile-badge svg{width:9px;height:9px;}
+.break-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(245,158,11,.15);color:var(--amber);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
+.break-badge svg{width:9px;height:9px;}
 .punch-map-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:var(--r-sm);background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;margin-left:5px;flex-shrink:0;}
 .punch-map-btn:hover{border-color:var(--accent);color:var(--accent);}
 .punch-map-btn svg{width:12px;height:12px;}
@@ -2073,6 +2075,9 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="punch-btns">
         <button class="punch-btn btn-in" onclick="requestPunch('IN')">&#10003; IN</button>
         <button class="punch-btn btn-out" onclick="requestPunch('OUT')">&#10005; OUT</button>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:10px" id="breakBtnWrap">
+        <button class="btn-secondary" id="breakBtn" style="width:auto;padding:7px 16px;font-size:12px;display:none;color:var(--amber);border-color:var(--amber)" onclick="requestBreak()"><svg class="ic" id="breakBtnIcon" style="margin-right:5px"><use href="#i-pause"/></svg><span id="breakBtnLabel" data-i18n="punch.startBreak">Start Break</span></button>
       </div>
       <div style="display:flex;justify-content:center;margin-top:10px">
         <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openMissedPunchModal()"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg><span data-i18n="missed.button">Report a Missed Punch</span></button>
@@ -3509,6 +3514,17 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.lunchSettings">Lunch Breaks</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleLunchOpt()">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-pause"/></svg><span data-i18n="modal.trackLunch">Track Lunch Breaks</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.lunchDesc">Adds a dedicated Break button on the clock-in screen, separate from clocking out</div>
+      </div>
+      <div id="lunchToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="lunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
+    <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.punchRounding">Punch Rounding</p>
     <div class="form-group">
       <label data-i18n="modal.punchRoundingLabel">Round punch times to</label>
@@ -4453,7 +4469,7 @@ async function refreshCache(opts={}){
 let currentPage='punch';
 let reportData=[];
 let pendingVerify=null;
-let pinState={empId:null,punchType:null,entered:'',purpose:'punch'};
+let pinState={empId:null,punchType:null,entered:'',purpose:'punch',isBreak:false};
 let _pendingMissedPunchReport=null;
 const _punchInFlight = new Set();
 const _actSelectedIds = new Set();
@@ -6952,6 +6968,13 @@ async function loadPunchPage(){
   }
   if(nameEl) nameEl.textContent=ctx.co.name;
 
+  // Break button only exists at all when the company opted into lunch tracking — otherwise
+  // punching stays exactly the plain IN/OUT flow it always was.
+  const co=C.companies.find(co=>co.id===coId)||ctx.co;
+  window._lunchTrackingOn=!!co.track_lunch_breaks;
+  const breakWrap=document.getElementById('breakBtnWrap');
+  if(breakWrap) breakWrap.style.display=window._lunchTrackingOn?'':'none';
+
   // Employees scoped to site (if site selected) or company
   const sel=document.getElementById('empSelect');
   let emps=C.employees.filter(e=>e.active&&e.company_id===coId);
@@ -6971,9 +6994,28 @@ async function loadPunchPage(){
     const panel = document.getElementById('myShiftsPanel');
     if(!empId) { if(panel) panel.style.display='none'; return; }
     loadMyShifts(empId);
+    updateBreakButton(empId);
   };
+  updateBreakButton(sel.value);
   refreshClockedIn();
   applyPunchTranslations();
+}
+
+// The break button only makes sense once someone is selected and actually clocked in — you
+// can't start a break from nothing, and once on break the same button flips to end it. Hidden
+// entirely for anyone not currently working, rather than shown disabled with no explanation.
+function updateBreakButton(empId){
+  const btn=document.getElementById('breakBtn');
+  if(!btn) return;
+  if(!window._lunchTrackingOn || !empId){ btn.style.display='none'; return; }
+  const {status,last}=getEmpStatus(empId);
+  const onBreak = status==='OUT' && last && last.is_break;
+  if(status==='OUT' && !onBreak){ btn.style.display='none'; return; }
+  btn.style.display='';
+  document.getElementById('breakBtnIcon').innerHTML=`<use href="#${onBreak?'i-play':'i-pause'}"/>`;
+  const label=document.getElementById('breakBtnLabel');
+  label.setAttribute('data-i18n', onBreak?'punch.endBreak':'punch.startBreak');
+  label.textContent = onBreak ? (t('punch.endBreak')||'End Break') : (t('punch.startBreak')||'Start Break');
 }
 
 function refreshClockedIn(){
@@ -7040,12 +7082,39 @@ function requestPunch(type){
   const{status}=getEmpStatus(empId);
   if(type==='IN'&&status==='IN'){ showDoublePunchWarning(empId,'IN'); return; }
   if(type==='OUT'&&status==='OUT'){ showDoublePunchWarning(empId,'OUT'); return; }
-  pinState={empId,punchType:type,entered:'',purpose:'punch'};
+  pinState={empId,punchType:type,entered:'',purpose:'punch',isBreak:false};
   document.getElementById('pinEmpName').textContent=emp.name;
   document.getElementById('pinActionLabel').textContent=
     (type==='IN' ? (t('pin.toClockIn')||'Enter PIN to clock IN')
                  : (t('pin.toClockOut')||'Enter PIN to clock OUT'));
   document.getElementById('pinActionLabel').style.color=type==='IN'?'var(--green)':'var(--red)';
+  document.getElementById('pinErrorMsg').textContent='';
+  resetPinDots();openModal('pinModal');
+}
+
+// Break shares the same PIN + insert machinery as a regular punch — it's still just an IN or an
+// OUT, only tagged is_break so Activity/reports can tell it apart from an end-of-day departure.
+// Which type to send is derived from the employee's current state, never chosen by the caller:
+// still clocked in -> starting a break (OUT); on break already -> ending it (IN).
+function requestBreak(){
+  const ctx=Ctx.get();if(!ctx){showCompanyPicker();return;}
+  const empId=document.getElementById('empSelect').value;
+  if(!empId){showPunchMsg(t('msg.selectName'),'error');return;}
+  const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
+  if(!emp.pin){showPunchMsg(t('msg.noPin'),'error');return;}
+  const{status,last}=getEmpStatus(empId);
+  const onBreak = status==='OUT' && last && last.is_break;
+  if(status==='OUT' && !onBreak){
+    showPunchMsg(`${emp.name} ${t('punch.notClockedIn')||'needs to be clocked IN before starting a break.'}`,'error');
+    return;
+  }
+  const type = onBreak ? 'IN' : 'OUT';
+  pinState={empId,punchType:type,entered:'',purpose:'punch',isBreak:true};
+  document.getElementById('pinEmpName').textContent=emp.name;
+  document.getElementById('pinActionLabel').textContent=
+    onBreak ? (t('pin.toEndBreak')||'Enter PIN to end break')
+            : (t('pin.toStartBreak')||'Enter PIN to start break');
+  document.getElementById('pinActionLabel').style.color='var(--amber)';
   document.getElementById('pinErrorMsg').textContent='';
   resetPinDots();openModal('pinModal');
 }
@@ -7062,12 +7131,12 @@ function validatePin(){
     document.getElementById('pinErrorMsg').textContent=t('pin.incorrect')||'Incorrect PIN. Try again.';
     setTimeout(()=>{pinState.entered='';resetPinDots();},900);return;
   }
-  const{empId,punchType,purpose}=pinState;
+  const{empId,punchType,purpose,isBreak}=pinState;
   closeModal('pinModal');resetPin();
   if(purpose==='missedPunchReport'){ _finalizeMissedPunchReport(); }
-  else{ executePunch(empId,punchType); }
+  else{ executePunch(empId,punchType,isBreak); }
 }
-function resetPin(){pinState={empId:null,punchType:null,entered:'',purpose:'punch'};resetPinDots();document.getElementById('pinErrorMsg').textContent='';}
+function resetPin(){pinState={empId:null,punchType:null,entered:'',purpose:'punch',isBreak:false};resetPinDots();document.getElementById('pinErrorMsg').textContent='';}
 
 // Cancelling PIN entry for a missed-punch report should return the person to their
 // in-progress report instead of just dropping them with nothing open.
@@ -7412,7 +7481,7 @@ async function useMyGeoLocation() {
   }
 }
 
-async function executePunch(empId,type){
+async function executePunch(empId,type,isBreak){
   if(_punchInFlight.has(empId)) return;
   _punchInFlight.add(empId);
   try {
@@ -7477,6 +7546,7 @@ async function executePunch(empId,type){
     const punch_time=now.toLocaleTimeString('en-US',{hour12:false});
     try{
       const payload={emp_id:empId,emp_name:emp.name,company_id:ctx.co.id,type,punch_date,punch_time};
+      if(isBreak)payload.is_break=true;
       if(ctx.site){payload.site_id=ctx.site.id;payload.site_name=ctx.site.name;}
       // Store geo audit data with punch
       if(geoResult.lat !== null) payload.geo_lat = geoResult.lat;
@@ -7489,7 +7559,10 @@ async function executePunch(empId,type){
       if(typeof _dcOnPunch==='function')_dcOnPunch();
       const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
       const geoNote = geoResult.status==='ok' ? ` · ${geoResult.distance}m` : '';
-      showPunchMsg(`&#10003; ${emp.name} clocked ${type} at ${timeStr}${geoNote}`,'success');
+      const msg = isBreak
+        ? (type==='OUT' ? `&#10003; ${emp.name} ${t('punch.breakStarted')||'started their break'} ${timeStr}` : `&#10003; ${emp.name} ${t('punch.breakEnded')||'ended their break'} ${timeStr}`)
+        : `&#10003; ${emp.name} clocked ${type} at ${timeStr}${geoNote}`;
+      showPunchMsg(msg,'success');
       document.getElementById('empSelect').value='';
       refreshClockedIn();
     }catch(e){showPunchMsg(t('msg.errorSaving')+': '+e.message,'error');}
@@ -9798,6 +9871,7 @@ function openAddCompanyModal(){
   toggleAnchorDateRow();
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
+  setLunchToggle(false);
   resetLogoUpload(null);
   openModal('addCompanyModal');
 }
@@ -9830,6 +9904,7 @@ function editCompany(id){
   document.getElementById('editCompanyUid').value=co.id;
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(!!co.track_overtime);
+  setLunchToggle(!!co.track_lunch_breaks);
   resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
 }
@@ -9856,6 +9931,16 @@ function _setOtThresholdRowState(on){
   row.style.pointerEvents=on?'':'none';
 }
 
+function toggleLunchOpt(){
+  const on=document.getElementById('lunchThumb').style.left!=='20px';
+  document.getElementById('lunchToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('lunchThumb').style.left=on?'20px':'2px';
+}
+function setLunchToggle(on){
+  document.getElementById('lunchToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('lunchThumb').style.left=on?'20px':'2px';
+}
+
 async function saveCompany(){
   const name=document.getElementById('companyName').value.trim();
   const address=document.getElementById('companyAddress').value.trim();
@@ -9873,6 +9958,7 @@ async function saveCompany(){
   const ot_weekly_hours=parseInt(document.getElementById('companyOtWeeklyHours').value,10)||40;
   const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
+  const track_lunch_breaks=document.getElementById('lunchThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   // Hard enforce plan limit on new company creation
@@ -9889,13 +9975,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -10283,7 +10369,7 @@ async function generateReport(){
   }
 
   const allRows=[];
-  let grandTotal=0, grandOT=0;
+  let grandTotal=0, grandOT=0, grandBreakMin=0;
 
   siteGroups.forEach(({site,emps})=>{
     if(siteGroups.length>1||site){
@@ -10303,6 +10389,17 @@ async function generateReport(){
           rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT});
         }else i++;
       }
+      // Break time: a break is a same-employee OUT(is_break) immediately followed by an
+      // IN(is_break) — the gap between them, wherever it falls in the punch sequence, however
+      // many breaks happened that day. Computed as its own pass over the raw punches rather than
+      // folded into the IN/OUT session pairing above, so it's purely additive: it can't change a
+      // single worked-hours number that's already correct today (the gap was always excluded).
+      let breakMin=0;
+      for(let bi=0;bi<eps.length-1;bi++){
+        if(eps[bi].type==='OUT'&&eps[bi].is_break&&eps[bi+1].type==='IN'&&eps[bi+1].is_break){
+          breakMin+=(new Date(eps[bi+1].punched_at)-new Date(eps[bi].punched_at))/60000;
+        }
+      }
       if(rawRows.length){
         // Calculate OT per session
         const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT,co?.week_start==='sunday',co?.ot_daily_hours,co?.ot_weekly_hours);
@@ -10310,15 +10407,17 @@ async function generateReport(){
         allRows.push(...empRows);
         const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
         const totOT=empRows.reduce((s,r)=>s+(r.otHours||0),0);
-        grandTotal+=tot; grandOT+=totOT;
-        allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total`,hours:tot,otHours:totOT,trackOT,isSubtotal:true,isSiteHeader:false});
+        grandTotal+=tot; grandOT+=totOT; grandBreakMin+=breakMin;
+        const breakNote=breakMin>0?` (${t('reports.breakTime')||'Break Time'}: ${(breakMin/60).toFixed(2)}h)`:'';
+        allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total${breakNote}`,hours:tot,otHours:totOT,breakMin,trackOT,isSubtotal:true,isSiteHeader:false});
       }
     });
     if(siteGroups.length>1||site){
       const siteRows=allRows.filter(r=>!r.isSiteHeader&&r.isSubtotal&&emps.some(e=>e.name===r.empName));
       const siteTot=siteRows.reduce((s,r)=>s+(r.hours??0),0);
       const siteOT=siteRows.reduce((s,r)=>s+(r.otHours||0),0);
-      allRows.push({isSiteTotal:true,siteName:site?site.name:'No Site Assigned',hours:siteTot,otHours:siteOT});
+      const siteBreakMin=siteRows.reduce((s,r)=>s+(r.breakMin||0),0);
+      allRows.push({isSiteTotal:true,siteName:site?site.name:'No Site Assigned',hours:siteTot,otHours:siteOT,breakMin:siteBreakMin});
     }
   });
 
@@ -10328,6 +10427,7 @@ async function generateReport(){
     allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
   const doneRows=dataRows.filter(r=>r.hours!==null);
   const hasOT=allRows.some(r=>r.trackOT);
+  const hasBreaks=grandBreakMin>0;
 
   // Paid absence inside the period, per selected employee. Counted separately from worked hours
   // so payroll can see both without either distorting the other.
@@ -10346,6 +10446,7 @@ async function generateReport(){
     <div class="stat-card"><div class="lbl">Total Sessions</div><div class="val blue">${dataRows.length}</div></div>
     <div class="stat-card"><div class="lbl">Total Hours</div><div class="val green">${totalH.toFixed(2)}</div></div>
     ${hasOT?`<div class="stat-card"><div class="lbl">Overtime Hours</div><div class="val amber">${grandOT.toFixed(2)}</div></div>`:''}
+    ${hasBreaks?`<div class="stat-card"><div class="lbl">${t('reports.breakTime')||'Break Time'}</div><div class="val amber">${(grandBreakMin/60).toFixed(2)}</div></div>`:''}
     ${offDays?`<div class="stat-card"><div class="lbl">${t('to.paidLeaveHours')||'Paid Leave Hours'}</div><div class="val amber">${offHours.toFixed(2)}</div></div>`:''}
     <div class="stat-card"><div class="lbl">Employees</div><div class="val purple">${selEmps.length}</div></div>
     <div class="stat-card"><div class="lbl">Avg Hrs / Session</div><div class="val">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
@@ -10493,6 +10594,10 @@ function channelBadge(p){
   if((p.source||'kiosk')!=='mobile') return '';
   return `<span class="mobile-badge"><svg><use href="#i-smartphone"/></svg>${t('activity.mobile')||'MOBILE'}</span>`;
 }
+function breakBadge(p){
+  if(!p.is_break) return '';
+  return `<span class="break-badge"><svg><use href="#i-pause"/></svg>${t('activity.break')||'BREAK'}</span>`;
+}
 function punchMapBtn(p){
   if(p.geo_lat==null||p.geo_lng==null) return '';
   return `<button type="button" class="punch-map-btn" title="${esc(t('activity.viewLocation')||'View location')}" onclick="event.stopPropagation();openPunchLocationMap('${p.id}')"><svg><use href="#i-map-pin"/></svg></button>`;
@@ -10575,7 +10680,7 @@ async function loadActivityPage(){
     const site=C.sites.find(s2=>s2.id===p.site_id);
     const pill=`<span class="pill ${p.type.toLowerCase()}">${p.type==='IN'?t('punch.in').replace('✓ ',''):t('punch.out').replace('✕ ','')}</span>`;
     return mcard(
-      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">MANUAL</span>':'') + channelBadge(p) + punchMapBtn(p),
+      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">MANUAL</span>':'') + channelBadge(p) + breakBadge(p) + punchMapBtn(p),
       [[t('admin.col.site')||'Site', esc([pco?.name,site?.name].filter(Boolean).join(' · ')||'—')],
        [t('admin.col.type')||'Type', pill],
        [t('reports.date')||'Date', p.punch_date],
@@ -10591,7 +10696,7 @@ async function loadActivityPage(){
     const coSite=[pco?.name,site?.name].filter(Boolean).join(' · ');
     return`<tr class="${p.is_manual?'edited-row':''}">
       <td><input type="checkbox" class="act-row-check" data-punch-id="${p.id}" onclick="onActivityRowCheckChange()" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer"></td>
-      <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}${channelBadge(p)}${punchMapBtn(p)}</td>
+      <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}${channelBadge(p)}${breakBadge(p)}${punchMapBtn(p)}</td>
       <td style="font-size:12px">${coSite||'—'}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type==="IN"?t("punch.in").replace("✓ ",""):t("punch.out").replace("✕ ","")}</span></td>
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
@@ -13592,7 +13697,7 @@ en:{
 'admin.joinTarget':'Requesting access to','admin.col.requested':'Requested','admin.col.type':'Type',
 'common.approve':'Approve','common.deny':'Deny',
 'activity.none':'No punch records found for the selected filters.',
-'reports.siteTotal':'Site total','reports.hours':'Hours','reports.ot':'Overtime',
+'reports.siteTotal':'Site total','reports.hours':'Hours','reports.ot':'Overtime','reports.breakTime':'Break Time',
 'reports.date':'Date','reports.time':'Time','reports.stillIn':'Still in',
 'dc.step':'Step {n} of {total}','dc.hide':'Hide',
 'dc.s1t':'Clock someone in','dc.s1c':'Open clock-in',
@@ -13732,6 +13837,9 @@ en:{
 'reg.goToLogin':'Go to Login',
 'punch.selectName':'Select Your Name','punch.chooseEmployee':'-- Choose employee --',
 'punch.in':'✓ IN','punch.out':'✕ OUT',
+'punch.startBreak':'Start Break','punch.endBreak':'End Break',
+'punch.breakStarted':'started their break','punch.breakEnded':'ended their break',
+'punch.notClockedIn':'needs to be clocked IN before starting a break.',
 'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
 'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.','punch.kioskMode':'Set up for employees (stay on this page)','punch.logoutHome':'↩ Logout & go to PunchClock.ca','punch.kioskActive':'Kiosk mode active. Employees can now clock in and out.',
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
@@ -13838,7 +13946,7 @@ en:{
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
 'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
-'pin.toClockIn':'Enter PIN to clock IN','pin.toClockOut':'Enter PIN to clock OUT','pin.incorrect':'Incorrect PIN. Try again.','pin.confirmReport':'Enter your PIN to confirm this report',
+'pin.toClockIn':'Enter PIN to clock IN','pin.toClockOut':'Enter PIN to clock OUT','pin.toStartBreak':'Enter PIN to start break','pin.toEndBreak':'Enter PIN to end break','pin.incorrect':'Incorrect PIN. Try again.','pin.confirmReport':'Enter your PIN to confirm this report',
 'val.nameRequired':'Name is required.','val.pinDigits':'PIN must be exactly 4 digits.','val.pinRequired':'A 4-digit PIN is required for new employees.','val.siteNameRequired':'Site name is required.','val.noCompany':'No active company.','val.emailForReport':'Please enter an email address for the report, or turn off the email report toggle.','val.emailInvalid':'Please enter a valid email address.',
 'demo.readOnly':'This is a demo — changes are not saved. Create a free account to set up your own team.',
 'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
@@ -13897,7 +14005,7 @@ en:{
 'activity.employeeFilter':'Employee','common.allEmployees':'All Employees',
 'activity.bulkReassign':'Reassign Site…','activity.bulkDelete':'Delete Selected','activity.bulkClear':'Clear',
 'activity.bulkReassignTitle':'Reassign Site','activity.bulkReassignDesc':'Move the selected punches to a different site.','activity.bulkReassignDescTail':'punches will be updated.','activity.bulkReassignConfirm':'Reassign',
-'activity.mobile':'MOBILE','activity.viewLocation':'View location',
+'activity.mobile':'MOBILE','activity.viewLocation':'View location','activity.break':'BREAK',
 'punchMap.title':'Punch Location','punchMap.site':'Site (registered)','punchMap.punch':'Punch location',
 'punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
 'punchMap.distance':'Distance from site: {m} m',
@@ -14077,6 +14185,8 @@ en:{
 'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'Track Overtime',
 'modal.overtimeDesc':'Flag daily and weekly overtime in reports — thresholds below',
 'modal.otDailyLabel':'Daily threshold','modal.otWeeklyLabel':'Weekly threshold',
+'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
+'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
@@ -14404,7 +14514,7 @@ fr:{
 'admin.joinTarget':'Demande d’accès à','admin.col.requested':'Demandé le','admin.col.type':'Type',
 'common.approve':'Approuver','common.deny':'Refuser',
 'activity.none':'Aucun pointage trouvé pour les filtres sélectionnés.',
-'reports.siteTotal':'Total du site','reports.hours':'Heures','reports.ot':'Heures supp.',
+'reports.siteTotal':'Total du site','reports.hours':'Heures','reports.ot':'Heures supp.','reports.breakTime':'Temps de pause',
 'reports.date':'Date','reports.time':'Heure','reports.stillIn':'En cours',
 'dc.step':'Étape {n} sur {total}','dc.hide':'Masquer',
 'dc.s1t':'Faites pointer quelqu’un','dc.s1c':'Ouvrir le pointage',
@@ -14544,6 +14654,9 @@ fr:{
 'reg.goToLogin':'Aller à la connexion',
 'punch.selectName':'Sélectionnez votre nom','punch.chooseEmployee':'-- Choisir un employé --',
 'punch.in':'✓ ENTRÉE','punch.out':'✕ SORTIE',
+'punch.startBreak':'Débuter la pause','punch.endBreak':'Terminer la pause',
+'punch.breakStarted':'a débuté sa pause','punch.breakEnded':'a terminé sa pause',
+'punch.notClockedIn':'doit être pointé EN avant de débuter une pause.',
 'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
 'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",'punch.kioskMode':'Configurer pour les employés (rester sur cette page)','punch.logoutHome':'↩ Se déconnecter et aller sur PunchClock.ca','punch.kioskActive':'Mode kiosque actif. Les employés peuvent maintenant pointer.',
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
@@ -14650,7 +14763,7 @@ fr:{
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
 'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
-'pin.toClockIn':'Entrez le NIP pour pointer l\'ENTRÉE','pin.toClockOut':'Entrez le NIP pour pointer la SORTIE','pin.incorrect':'NIP incorrect. Réessayez.','pin.confirmReport':'Entrez votre NIP pour confirmer ce signalement',
+'pin.toClockIn':'Entrez le NIP pour pointer l\'ENTRÉE','pin.toClockOut':'Entrez le NIP pour pointer la SORTIE','pin.toStartBreak':'Entrez le NIP pour débuter la pause','pin.toEndBreak':'Entrez le NIP pour terminer la pause','pin.incorrect':'NIP incorrect. Réessayez.','pin.confirmReport':'Entrez votre NIP pour confirmer ce signalement',
 'val.nameRequired':'Le nom est obligatoire.','val.pinDigits':'Le NIP doit contenir exactement 4 chiffres.','val.pinRequired':'Un NIP à 4 chiffres est obligatoire pour un nouvel employé.','val.siteNameRequired':'Le nom du site est obligatoire.','val.noCompany':'Aucune compagnie active.','val.emailForReport':'Veuillez entrer une adresse courriel pour le rapport, ou désactiver l\'envoi par courriel.','val.emailInvalid':'Veuillez entrer une adresse courriel valide.',
 'demo.readOnly':'Ceci est une démo — les changements ne sont pas enregistrés. Créez un compte gratuit pour configurer votre propre équipe.',
 'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',
@@ -14709,7 +14822,7 @@ fr:{
 'activity.employeeFilter':'Employé','common.allEmployees':'Tous les employés',
 'activity.bulkReassign':"Réassigner le site…",'activity.bulkDelete':'Supprimer la sélection','activity.bulkClear':'Effacer',
 'activity.bulkReassignTitle':'Réassigner le site','activity.bulkReassignDesc':"Déplacer les pointages sélectionnés vers un autre site.",'activity.bulkReassignDescTail':"pointages seront mis à jour.",'activity.bulkReassignConfirm':"Réassigner",
-'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement',
+'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement','activity.break':'PAUSE',
 'punchMap.title':'Emplacement du pointage','punchMap.site':'Site (enregistré)','punchMap.punch':'Emplacement du pointage',
 'punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
 'punchMap.distance':'Distance du site : {m} m',
@@ -14887,6 +15000,8 @@ fr:{
 'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'Suivi des heures supp.',
 'modal.overtimeDesc':'Signaler les heures supp. quotidiennes et hebdomadaires dans les rapports — seuils ci-dessous',
 'modal.otDailyLabel':'Seuil quotidien','modal.otWeeklyLabel':'Seuil hebdomadaire',
+'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
+'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
