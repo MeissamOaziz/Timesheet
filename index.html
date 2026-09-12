@@ -40,8 +40,8 @@ if (window.top !== window.self) {
 
 <!-- Primary EN meta -->
 <title id="metaTitle">PunchClock Pro — Logiciel de pointage pour équipes au Québec &amp; Canada</title>
-<meta name="description" id="metaDesc" content="PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, congés), rapports de paie automatisés, planification des quarts. Essai gratuit.">
-<meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec, portail employé, employee self-service portal, employee portal app, portail libre-service, demande de congé en ligne, consulter son horaire en ligne">
+<meta name="description" id="metaDesc" content="PunchClock Pro est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, congés), suivi des pauses repas, pointage visiteur, rapports de paie automatisés, planification des quarts. Essai gratuit.">
+<meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec, portail employé, employee self-service portal, employee portal app, portail libre-service, demande de congé en ligne, consulter son horaire en ligne, suivi des pauses repas, lunch break tracking, pointage visiteur, visitor check-in, visitor sign in software, who is in the building">
 <meta name="robots" content="index, follow">
 <meta name="author" content="PunchClock Pro">
 <meta name="geo.region" content="CA-QC">
@@ -80,7 +80,7 @@ if (window.top !== window.self) {
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "url": "https://www.punchclock.ca",
-  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, demandes de congé), gestion multi-sites, rapports de paie automatisés, planification des quarts de travail.",
+  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, demandes de congé), gestion multi-sites, rapports de paie automatisés, planification des quarts de travail, suivi des pauses repas, pointage visiteur.",
   "inLanguage": ["fr-CA", "en-CA"],
   "availableLanguage": [
     {"@type": "Language", "name": "French", "alternateName": "fr"},
@@ -120,7 +120,9 @@ if (window.top !== window.self) {
     "Conforme Loi 25 Québec / Quebec Law 25 compliant",
     "Géorepérage par site / Per-site geofencing",
     "Raccourci kiosque PWA / PWA kiosk shortcut",
-    "Jeton d'appareil / Device token security"
+    "Jeton d'appareil / Device token security",
+    "Suivi des pauses repas / Lunch break tracking",
+    "Pointage visiteur / Visitor check-in"
   ]
 }
 </script>
@@ -202,6 +204,22 @@ if (window.top !== window.self) {
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. Available on any paid plan (Starter, Growth, or Business)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I track lunch breaks separately from clocking out?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Turn on Track Lunch Breaks per company in Company Info settings, and a dedicated Break button appears on the clock-in screen, separate from the regular clock-in/out buttons. Break time is excluded from worked hours automatically, and shows up as its own line in reports and as a BREAK badge in the activity log."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can visitors sign in and out, not just employees?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Every clock-in screen has a Visitor Check In button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a list of who's currently in the building. Useful for front-desk sign-in and for emergency preparedness, alongside staff attendance."
       }
     }
   ]
@@ -1419,6 +1437,16 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="feature-icon"><svg><use href="#i-user"/></svg></div>
         <h3 data-i18n="land.feat12Title">Employee Self-Service Portal</h3>
         <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-pause"/></svg></div>
+        <h3 data-i18n="land.feat13Title">Lunch &amp; Break Tracking</h3>
+        <p data-i18n="land.feat13Desc">A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-users"/></svg></div>
+        <h3 data-i18n="land.feat14Title">Visitor Check-In</h3>
+        <p data-i18n="land.feat14Desc">A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who's in the building alongside your staff, for emergency preparedness and front-desk sign-in alike.</p>
       </div>
     </div>
   </div>
@@ -4316,7 +4344,7 @@ function hideLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
 }
 
-const FAQ_SALES=[1,2,6,7,8,24,11,12,13,15,16,19];
+const FAQ_SALES=[1,2,6,7,8,24,11,12,13,15,16,19,25,26];
 
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
@@ -5531,6 +5559,10 @@ const HELP_ARTICLES=[
    kw:{en:'employee portal invite login self serve schedule own hours',fr:'portail employé invitation connexion horaire propres heures'}},
   {id:'billing', tk:'help.billTitle', dk:'help.billDesc', cat:'team', icon:'i-card', pages:[],
    kw:{en:'billing plan upgrade downgrade cancel invoice price subscription seats payment',fr:'facturation forfait améliorer annuler facture prix abonnement sièges paiement'}},
+  {id:'lunchbreaks', tk:'help.lunchTitle', dk:'help.lunchDesc', cat:'setup', icon:'i-pause', pages:['dashboard','punch'],
+   kw:{en:'lunch break tracking dedicated button separate clock out',fr:'pause repas dîner suivi bouton dédié séparé sortie'}},
+  {id:'visitorcheckin', tk:'help.visitorTitle', dk:'help.visitorDesc', cat:'daily', icon:'i-users', pages:['punch'],
+   kw:{en:'visitor check in guest sign in front desk who is in the building emergency',fr:'visiteur pointage invité accueil qui est dans l\'immeuble urgence'}},
 ];
 const HELP_CATS=[['fix','help.catFix'],['setup','help.catSetup'],['daily','help.catDaily'],['payroll','help.catPayroll'],
                  ['security','help.catSecurity'],['team','help.catTeam']];
@@ -14355,6 +14387,10 @@ en:{
 'help.portalDesc':'The employee portal lets staff check their own punches, hours and schedule, and request time off — without an admin doing it for them. Open <strong>Admin → Employees</strong>, edit the employee, turn on email and enter their address, then use <em>Send Invitation</em>. They set their own password from the emailed link. You can resend or revoke access from the same place at any time.',
 'help.billTitle':'Plans, billing and adding seats',
 'help.billDesc':'Your plan sets how many employees, sites and admins you can have. Open the menu under your name and choose <strong>Manage Billing</strong> to change plan, update your card or download invoices. If you only need a little more room, extra employee or admin seats can be added to your current plan rather than upgrading it outright.',
+'help.lunchTitle':'Track Lunch Breaks',
+'help.lunchDesc':'In <strong>your profile menu → Company Info → Lunch Breaks</strong>, turn on <strong>Track Lunch Breaks</strong>. A dedicated Break button then appears on the clock-in screen for every employee, separate from the regular IN/OUT buttons — tap it once to start a break, again to end it. Break time was already excluded from worked hours before this was on; now it also shows as a BREAK badge in the Activity log and as its own line in Reports.',
+'help.visitorTitle':'Visitor Check-In',
+'help.visitorDesc':'Every clock-in screen has a <strong>Visitor Check In</strong> button — no PIN or employee record required. A visitor taps it, enters their full name, company, phone and email, and checks in. To leave, they tap the same button and pick their name off the <strong>Currently in the building</strong> list — no need to fill out the form again. Useful for front-desk sign-in and knowing exactly who\'s on-site alongside your staff.',
 'help.s1title':'Set Up Your Account',
 'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
@@ -14452,6 +14488,10 @@ en:{
 'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
 'faq.q24':'Can employees check their own schedule, hours and time off without contacting me?',
 'faq.a24':'Yes — every employee gets their own free self-service portal, included on every plan, even Free. From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, and set their availability — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
+'faq.q25':'Can I track lunch breaks separately from clocking out?',
+'faq.a25':'Yes. Turn on <strong>Track Lunch Breaks</strong> in Company Info → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap.',
+'faq.q26':'Can visitors sign in and out, not just employees?',
+'faq.a26':'Yes. Every clock-in screen has a <strong>Visitor Check In</strong> button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a "currently in the building" list. It\'s useful for front-desk sign-in and for knowing exactly who\'s on-site in an emergency, alongside your staff.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -14490,6 +14530,10 @@ en:{
 'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
 'land.feat12Title':'Employee Self-Service Portal',
 'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.',
+'land.feat13Title':'Lunch & Break Tracking',
+'land.feat13Desc':'A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports.',
+'land.feat14Title':'Visitor Check-In',
+'land.feat14Desc':'A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who\'s in the building alongside your staff, for emergency preparedness and front-desk sign-in alike.',
 'land.geoBadge':'Location Security — Built Right In',
 'land.geoTitle':'Employees can only punch where they work.',
 'land.geoSub':'Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.',
@@ -15175,6 +15219,10 @@ fr:{
 'help.portalDesc':'Le portail employé permet à votre personnel de consulter ses pointages, ses heures et son horaire, et de demander des congés — sans passer par un administrateur. Ouvrez <strong>Admin → Employés</strong>, modifiez l\'employé, activez le courriel et saisissez son adresse, puis utilisez <em>Envoyer l\'invitation</em>. Il choisit son mot de passe à partir du lien reçu. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès au même endroit.',
 'help.billTitle':'Forfaits, facturation et sièges supplémentaires',
 'help.billDesc':'Votre forfait détermine le nombre d\'employés, de sites et d\'administrateurs permis. Ouvrez le menu sous votre nom et choisissez <strong>Gérer la facturation</strong> pour changer de forfait, mettre à jour votre carte ou télécharger vos factures. S\'il vous manque seulement un peu d\'espace, vous pouvez ajouter des sièges employé ou admin à votre forfait actuel au lieu de passer au forfait supérieur.',
+'help.lunchTitle':'Suivi des pauses repas',
+'help.lunchDesc':'Dans <strong>votre menu de profil → Info compagnie → Pauses repas</strong>, activez <strong>Suivi des pauses repas</strong>. Un bouton Pause dédié apparaît alors sur l\'écran de pointage pour chaque employé, distinct des boutons ENTRÉE/SORTIE — un tap pour débuter la pause, un autre pour la terminer. Le temps de pause était déjà exclu des heures travaillées avant même d\'activer ceci; maintenant il apparaît aussi comme un badge PAUSE dans le journal d\'activité et comme une ligne distincte dans les rapports.',
+'help.visitorTitle':'Pointage visiteur',
+'help.visitorDesc':'Chaque écran de pointage a un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur appuie dessus, inscrit son nom complet, son entreprise, son téléphone et son courriel, puis pointe son arrivée. Pour partir, il appuie sur le même bouton et choisit son nom dans la liste <strong>Actuellement dans l\'immeuble</strong> — pas besoin de remplir le formulaire à nouveau. Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en plus de votre personnel.',
 'help.s1title':'Configurez votre compte',
 'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',
@@ -15272,6 +15320,10 @@ fr:{
 'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
 'faq.q24':'Les employés peuvent-ils consulter leur horaire, leurs heures et leurs congés sans me contacter?',
 'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service gratuit, inclus sur tous les forfaits, même le forfait Gratuit. Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
+'faq.q25':'Puis-je suivre les pauses repas séparément de la sortie?',
+'faq.a25':'Oui. Activez <strong>Suivi des pauses repas</strong> dans Info compagnie → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart.',
+'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
+'faq.a26':'Oui. Chaque écran de pointage a un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur inscrit son nom complet, son entreprise, son téléphone et son courriel une seule fois, puis pointe sa sortie plus tard en choisissant son nom dans une liste des personnes « actuellement dans l\'immeuble ». Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en cas d\'urgence, en plus de votre personnel.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',
@@ -15314,6 +15366,10 @@ fr:{
 'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
 'land.feat12Title':'Portail employé libre-service',
 'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
+'land.feat13Title':'Suivi des pauses repas',
+'land.feat13Desc':'Un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie — pour que le personnel ne confonde jamais une pause repas avec un départ pour la journée. Activable par compagnie; le temps de pause apparaît comme une ligne distincte dans les rapports.',
+'land.feat14Title':'Pointage visiteur',
+'land.feat14Desc':'Un bouton Pointage visiteur directement sur le kiosque — sans NIP, sans dossier employé. Les visiteurs inscrivent leur nom, entreprise, téléphone et courriel, puis pointent leur sortie eux-mêmes. Sachez exactement qui se trouve dans l\'immeuble en plus de votre personnel, pour la préparation aux urgences comme pour l\'accueil.',
 'land.geoBadge':'Sécurité de localisation — Intégrée',
 'land.geoTitle':'Les employés ne peuvent pointer que là où ils travaillent.',
 'land.geoSub':'Le géorepérage trace une frontière GPS invisible autour de chacun de vos emplacements. Le pointage ne fonctionne qu\'à l\'intérieur de cette frontière — que l\'employé soit sur un terminal partagé ou utilise un lien raccourci depuis son téléphone.',
