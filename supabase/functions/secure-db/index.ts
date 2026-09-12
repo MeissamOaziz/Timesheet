@@ -32,6 +32,9 @@ const PROTECTED_TABLES = new Set([
   // across every tenant. The portal app itself never reads this table; it authenticates
   // through _resolve_portal_session and its own RPCs, entirely separate from this path.
   'employee_portal',
+  // Visitor check-in log (name/company/phone/email + timestamps). Same tenant-data sensitivity
+  // as employees/punches — PII tied to a specific company and site.
+  'visitors',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -247,7 +250,11 @@ const ENTITLEMENT_FIELDS = [
 ];
 
 // Tables scoped to a tenant by their company_id column.
-const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients', 'kiosk_devices']);
+const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients', 'kiosk_devices', 'visitors']);
+
+// Fields a kiosk (no admin session) may set when checking a visitor out. Nothing else — a kiosk
+// checking someone out must never be able to rewrite who they are, only that they've left.
+const VISITOR_CHECKOUT_FIELDS = new Set(['checked_out_at']);
 
 // Ownership constraint to AND onto a read/update/delete filter for `table`. '' = not scoped here.
 function tenantScopeFilter(table: string, caller: Caller, owned: string[]): string {
@@ -535,11 +542,26 @@ Deno.serve(async (req: Request) => {
     } else if (
       kioskSiteId &&
       method === 'POST' &&
-      (table === 'punches' || table === 'missed_punch_requests') &&
+      (table === 'punches' || table === 'missed_punch_requests' || table === 'visitors') &&
       !!body && typeof body === 'object' &&
       (body as Record<string, unknown>).site_id === kioskSiteId
     ) {
-      // Kiosk clock-punch / missed-punch insert, scoped to the kiosk's own site.
+      // Kiosk clock-punch / missed-punch / visitor check-in insert, scoped to the kiosk's own site.
+      if (!(await verifySite(kioskSiteId))) return errResp('Unauthorized', 401);
+
+    } else if (
+      kioskSiteId &&
+      method === 'PATCH' &&
+      table === 'visitors' &&
+      filter.split('&').includes(`site_id=eq.${kioskSiteId}`) &&
+      !!body && typeof body === 'object' &&
+      Object.keys(body as Record<string, unknown>).every(k => VISITOR_CHECKOUT_FIELDS.has(k))
+    ) {
+      // Kiosk visitor check-OUT. The filter must itself carry site_id=eq.<this kiosk's site> as
+      // one of its clauses — PostgREST ANDs it with whatever else is filtered on (id=eq.<visit>),
+      // so even a spoofed kioskSiteId can only ever match rows that are actually at that site;
+      // it can't move a checkout onto a different site's visit. The field allowlist above is the
+      // other half: this path may flip checked_out_at and nothing else about who the visitor is.
       if (!(await verifySite(kioskSiteId))) return errResp('Unauthorized', 401);
 
     } else {
@@ -555,11 +577,12 @@ Deno.serve(async (req: Request) => {
     if (authedAdminId) {
       // Path 1 — authenticated admin (token or, during transition, legacy admin id)
 
-    } else if (kioskSiteId && (table === 'employees' || table === 'punches' || table === 'shifts')) {
+    } else if (kioskSiteId && (table === 'employees' || table === 'punches' || table === 'shifts' || table === 'visitors')) {
       // Path 2 — kiosk: verify site exists, then force site_id filter so the kiosk can only
       // read its own site's employees and punches (the latter drives the clocked-in board).
       // 'shifts' is included because an employee at the terminal can PIN in to have their own
-      // schedule emailed; the forced filter keeps that to the terminal's own site.
+      // schedule emailed; the forced filter keeps that to the terminal's own site. 'visitors' is
+      // included so the terminal can show who from this site is currently checked in.
       const validSite = await verifySite(kioskSiteId);
       if (!validSite) return errResp('Unauthorized', 401);
       filter = `site_id=eq.${kioskSiteId}`;

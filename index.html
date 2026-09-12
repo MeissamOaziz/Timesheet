@@ -2079,8 +2079,9 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div style="display:flex;justify-content:center;margin-top:10px" id="breakBtnWrap">
         <button class="btn-secondary" id="breakBtn" style="width:auto;padding:7px 16px;font-size:12px;display:none;color:var(--amber);border-color:var(--amber)" onclick="requestBreak()"><svg class="ic" id="breakBtnIcon" style="margin-right:5px"><use href="#i-pause"/></svg><span id="breakBtnLabel" data-i18n="punch.startBreak">Start Break</span></button>
       </div>
-      <div style="display:flex;justify-content:center;margin-top:10px">
+      <div style="display:flex;justify-content:center;margin-top:10px;gap:8px;flex-wrap:wrap">
         <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openMissedPunchModal()"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg><span data-i18n="missed.button">Report a Missed Punch</span></button>
+        <button class="btn-secondary" id="visitorCheckInBtn" style="width:auto;padding:7px 16px;font-size:12px;display:none" onclick="openVisitorModal()"><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg><span data-i18n="visitor.checkInBtn">Visitor Check In</span></button>
       </div>
       <div class="punch-feedback" id="punchFeedback"></div>
     </div>
@@ -3846,6 +3847,30 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
 </div>
 
+<!-- VISITOR CHECK-IN — no PIN, no employee record: a visitor identifies themselves by filling
+     the form once, and checks out later by picking their own name off the "currently in the
+     building" list, mirroring how staff pick their name to punch. -->
+<div class="modal-overlay" id="visitorModal">
+  <div class="modal" style="max-width:460px">
+    <h3><svg class="ic" style="margin-right:6px"><use href="#i-users"/></svg><span data-i18n="visitor.modalTitle">Visitor Check In</span></h3>
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 8px" data-i18n="visitor.currentlyIn">Currently in the building</p>
+    <div id="visitorCurrentList" style="margin-bottom:16px"></div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px" data-i18n="visitor.newVisitor">New Visitor</p>
+    <div id="visitorFormMsg"></div>
+    <div class="form-group"><label data-i18n="visitor.fullName">Full Name</label><input type="text" id="visitorFullName" autocomplete="off"></div>
+    <div class="form-group"><label data-i18n="visitor.companyName">Company Name</label><input type="text" id="visitorCompanyName" autocomplete="off"></div>
+    <div class="form-row">
+      <div class="form-group"><label data-i18n="visitor.phone">Phone Number</label><input type="tel" id="visitorPhone" autocomplete="off"></div>
+      <div class="form-group"><label data-i18n="visitor.email">Email Address</label><input type="email" id="visitorEmail" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('visitorModal')" data-i18n="common.close">Close</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="submitVisitorCheckin()" data-i18n="visitor.checkInBtn">Visitor Check In</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="addPunchModal">
   <div class="modal">
     <h3 data-i18n="addPunch.title">Add Punch Record</h3>
@@ -4929,6 +4954,11 @@ function _renderDemoBanner(){
     <button onclick="exitDemo()" style="background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:var(--r-sm);padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit">${t('demo.exit')||'Exit demo'}</button>`;
   document.body.insertBefore(bar,document.body.firstChild);
 }
+// Visitor check-in's own tiny in-memory store for the demo — self-contained rather than routed
+// through C.* (nothing else reads visitors globally), since every caller re-fetches the current
+// list after each mutation instead of relying on a shared cache.
+let _demoVisitors=[];
+
 // Sandbox every DB call while in demo mode. Reads return empty (the cache is pre-seeded);
 // a punch insert is synthesized locally so the clock-in flow works end to end.
 function _demoFetch(method,table,opts){
@@ -4941,12 +4971,25 @@ function _demoFetch(method,table,opts){
       punch_time:now.toLocaleTimeString('en-US',{hour12:false}),
     },opts.body)]);
   }
+  if(method==='POST'&&table==='visitors'&&opts&&opts.body){
+    const row=Object.assign({id:'demo-v'+Date.now(),checked_in_at:new Date().toISOString(),checked_out_at:null},opts.body);
+    _demoVisitors.unshift(row);
+    return Promise.resolve([row]);
+  }
+  if(method==='PATCH'&&table==='visitors'&&opts&&opts.body){
+    const m=/id=eq\.([^&]+)/.exec(opts.filter||'');
+    const id=m&&m[1];
+    const row=_demoVisitors.find(v=>v.id===id);
+    if(row) Object.assign(row,opts.body);
+    return Promise.resolve(row?[row]:[]);
+  }
   if(method==='GET'){
     if(table==='shifts')   return Promise.resolve((window._demoShifts||[]).slice());
     if(table==='employees')return Promise.resolve((C.employees||[]).slice());
     if(table==='sites')    return Promise.resolve((C.sites||[]).slice());
     if(table==='companies')return Promise.resolve((C.companies||[]).slice());
     if(table==='punches')  return Promise.resolve((C.punches||[]).slice());
+    if(table==='visitors') return Promise.resolve(_demoVisitors.slice());
     return Promise.resolve([]);
   }
   // Any other write. This used to resolve(null), so "Add Site"/"Add Employee" in the demo
@@ -6975,6 +7018,11 @@ async function loadPunchPage(){
   const breakWrap=document.getElementById('breakBtnWrap');
   if(breakWrap) breakWrap.style.display=window._lunchTrackingOn?'':'none';
 
+  // Visitor check-in is site-scoped (a visit belongs to one site), so it only shows once a
+  // site is actually selected — same rule the geofence/device-token checks already follow.
+  const visitorBtn=document.getElementById('visitorCheckInBtn');
+  if(visitorBtn) visitorBtn.style.display=siteId?'':'none';
+
   // Employees scoped to site (if site selected) or company
   const sel=document.getElementById('empSelect');
   let emps=C.employees.filter(e=>e.active&&e.company_id===coId);
@@ -7117,6 +7165,78 @@ function requestBreak(){
   document.getElementById('pinActionLabel').style.color='var(--amber)';
   document.getElementById('pinErrorMsg').textContent='';
   resetPinDots();openModal('pinModal');
+}
+
+// ═══════════════════════════════════════════════════
+// VISITOR CHECK-IN — no PIN, no employee record. A visitor identifies themselves once on
+// check-in; checking out is picking their own name off the "currently in" list, never
+// re-entering the form. Site-scoped like everything else on this page.
+// ═══════════════════════════════════════════════════
+async function openVisitorModal(){
+  const ctx=Ctx.get();if(!ctx||!ctx.site)return;
+  document.getElementById('visitorFullName').value='';
+  document.getElementById('visitorCompanyName').value='';
+  document.getElementById('visitorPhone').value='';
+  document.getElementById('visitorEmail').value='';
+  document.getElementById('visitorFormMsg').innerHTML='';
+  openModal('visitorModal');
+  await loadVisitorCurrentList();
+}
+
+async function loadVisitorCurrentList(){
+  const ctx=Ctx.get();if(!ctx||!ctx.site)return;
+  const list=document.getElementById('visitorCurrentList');
+  if(!list)return;
+  list.innerHTML=`<div style="color:var(--text3);font-size:13px;padding:8px 0">${t('visitor.loading')||'Loading...'}</div>`;
+  let rows=[];
+  try{
+    rows=await DB.all('visitors',`checked_out_at=is.null&site_id=eq.${ctx.site.id}&order=checked_in_at.asc`);
+  }catch(e){ list.innerHTML=`<div style="color:var(--red);font-size:13px">${esc(e.message)}</div>`; return; }
+  // The kiosk read path forces its own site_id filter server-side and can return every visit
+  // at this site regardless of status, so "still checked in" is always re-checked here too.
+  rows=(rows||[]).filter(v=>v.site_id===ctx.site.id && !v.checked_out_at);
+  if(!rows.length){
+    list.innerHTML=`<div style="color:var(--text3);font-size:13px;padding:8px 0">${t('visitor.noneIn')||'No visitors currently checked in.'}</div>`;
+    return;
+  }
+  list.innerHTML=rows.map(v=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:6px">
+      <div>
+        <div style="font-weight:600;font-size:13px">${esc(v.full_name)}</div>
+        ${v.company_name?`<div style="font-size:11px;color:var(--text3)">${esc(v.company_name)}</div>`:''}
+      </div>
+      <button class="btn-secondary" style="width:auto;padding:5px 12px;font-size:11px" onclick="checkoutVisitor('${v.id}')">${esc(t('visitor.checkOut')||'Check Out')}</button>
+    </div>`).join('');
+}
+
+async function checkoutVisitor(id){
+  const ctx=Ctx.get();if(!ctx||!ctx.site)return;
+  try{
+    await DB.update('visitors',`id=eq.${id}&site_id=eq.${ctx.site.id}`,{checked_out_at:new Date().toISOString()});
+    await loadVisitorCurrentList();
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+async function submitVisitorCheckin(){
+  const ctx=Ctx.get();if(!ctx||!ctx.site)return;
+  const fullName=document.getElementById('visitorFullName').value.trim();
+  const companyName=document.getElementById('visitorCompanyName').value.trim();
+  const phone=document.getElementById('visitorPhone').value.trim();
+  const email=document.getElementById('visitorEmail').value.trim();
+  if(!fullName){ showMsg('visitorFormMsg', t('visitor.nameRequired')||'Full name is required.','error'); return; }
+  try{
+    await DB.insert('visitors',{
+      company_id:ctx.co.id, site_id:ctx.site.id,
+      full_name:fullName, company_name:companyName||null, phone:phone||null, email:email||null
+    });
+    document.getElementById('visitorFullName').value='';
+    document.getElementById('visitorCompanyName').value='';
+    document.getElementById('visitorPhone').value='';
+    document.getElementById('visitorEmail').value='';
+    document.getElementById('visitorFormMsg').innerHTML='';
+    showToast(`✓ ${fullName} ${t('visitor.checkedInMsg')||'checked in'}`,'success');
+    await loadVisitorCurrentList();
+  }catch(e){ showMsg('visitorFormMsg', e.message,'error'); }
 }
 
 function pinKey(d){if(pinState.entered.length>=4)return;pinState.entered+=d;updatePinDots();if(pinState.entered.length===4)setTimeout(validatePin,120);}
@@ -13840,6 +13960,11 @@ en:{
 'punch.startBreak':'Start Break','punch.endBreak':'End Break',
 'punch.breakStarted':'started their break','punch.breakEnded':'ended their break',
 'punch.notClockedIn':'needs to be clocked IN before starting a break.',
+'visitor.checkInBtn':'Visitor Check In','visitor.modalTitle':'Visitor Check In',
+'visitor.currentlyIn':'Currently in the building','visitor.newVisitor':'New Visitor',
+'visitor.fullName':'Full Name','visitor.companyName':'Company Name','visitor.phone':'Phone Number','visitor.email':'Email Address',
+'visitor.loading':'Loading...','visitor.noneIn':'No visitors currently checked in.','visitor.checkOut':'Check Out',
+'visitor.nameRequired':'Full name is required.','visitor.checkedInMsg':'checked in',
 'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
 'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.','punch.kioskMode':'Set up for employees (stay on this page)','punch.logoutHome':'↩ Logout & go to PunchClock.ca','punch.kioskActive':'Kiosk mode active. Employees can now clock in and out.',
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
@@ -14657,6 +14782,11 @@ fr:{
 'punch.startBreak':'Débuter la pause','punch.endBreak':'Terminer la pause',
 'punch.breakStarted':'a débuté sa pause','punch.breakEnded':'a terminé sa pause',
 'punch.notClockedIn':'doit être pointé EN avant de débuter une pause.',
+'visitor.checkInBtn':'Pointage visiteur','visitor.modalTitle':'Pointage visiteur',
+'visitor.currentlyIn':'Actuellement dans l\'immeuble','visitor.newVisitor':'Nouveau visiteur',
+'visitor.fullName':'Nom complet','visitor.companyName':'Nom de l\'entreprise','visitor.phone':'Numéro de téléphone','visitor.email':'Adresse courriel',
+'visitor.loading':'Chargement...','visitor.noneIn':'Aucun visiteur présentement.','visitor.checkOut':'Sortie',
+'visitor.nameRequired':'Le nom complet est requis.','visitor.checkedInMsg':'a pointé son arrivée',
 'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
 'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",'punch.kioskMode':'Configurer pour les employés (rester sur cette page)','punch.logoutHome':'↩ Se déconnecter et aller sur PunchClock.ca','punch.kioskActive':'Mode kiosque actif. Les employés peuvent maintenant pointer.',
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
