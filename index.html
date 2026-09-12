@@ -80,7 +80,7 @@ if (window.top !== window.self) {
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "url": "https://www.punchclock.ca",
-  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, demandes de congé), gestion multi-sites, rapports de paie automatisés, planification des quarts de travail, suivi des pauses repas, pointage visiteur.",
+  "description": "Logiciel de pointage simple et abordable pour les entreprises québécoises et canadiennes. Pointage par NIP sur tablette, portail employé libre-service (horaire, heures, demandes de congé), gestion multi-sites, rapports de paie automatisés, planification des quarts de travail, suivi des pauses repas et pointage visiteur (à partir du plan Croissance / Growth plan and above).",
   "inLanguage": ["fr-CA", "en-CA"],
   "availableLanguage": [
     {"@type": "Language", "name": "French", "alternateName": "fr"},
@@ -121,8 +121,8 @@ if (window.top !== window.self) {
     "Géorepérage par site / Per-site geofencing",
     "Raccourci kiosque PWA / PWA kiosk shortcut",
     "Jeton d'appareil / Device token security",
-    "Suivi des pauses repas / Lunch break tracking",
-    "Pointage visiteur / Visitor check-in"
+    "Suivi des pauses repas / Lunch break tracking (plan Croissance et plus / Growth plan and above)",
+    "Pointage visiteur / Visitor check-in (plan Croissance et plus / Growth plan and above)"
   ]
 }
 </script>
@@ -211,7 +211,7 @@ if (window.top !== window.self) {
       "name": "Can I track lunch breaks separately from clocking out?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Turn on Track Lunch Breaks per company in Company Info settings, and a dedicated Break button appears on the clock-in screen, separate from the regular clock-in/out buttons. Break time is excluded from worked hours automatically, and shows up as its own line in reports and as a BREAK badge in the activity log."
+        "text": "Yes, on the Growth plan and above. Turn on Track Lunch Breaks per company in Company Info settings, and a dedicated Break button appears on the clock-in screen, separate from the regular clock-in/out buttons. Break time is excluded from worked hours automatically, and shows up as its own line in reports and as a BREAK badge in the activity log."
       }
     },
     {
@@ -219,7 +219,7 @@ if (window.top !== window.self) {
       "name": "Can visitors sign in and out, not just employees?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Every clock-in screen has a Visitor Check In button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a list of who's currently in the building. Useful for front-desk sign-in and for emergency preparedness, alongside staff attendance."
+        "text": "Yes, on the Growth plan and above. Turn on Enable Visitor Check-In per company in Company Info settings, and every clock-in screen gets a Visitor Check In button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a list of who's currently in the building. Useful for front-desk sign-in and for emergency preparedness, alongside staff attendance."
       }
     }
   ]
@@ -1438,15 +1438,15 @@ border-top:1px solid var(--border);margin:18px 0;}
         <h3 data-i18n="land.feat12Title">Employee Self-Service Portal</h3>
         <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-pause"/></svg></div>
-        <h3 data-i18n="land.feat13Title">Lunch &amp; Break Tracking</h3>
-        <p data-i18n="land.feat13Desc">A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports.</p>
+      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
+        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-pause"/></svg></div>
+        <h3><span data-i18n="land.feat13Title">Lunch &amp; Break Tracking</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
+        <p data-i18n="land.feat13Desc">A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports. Included on the Growth plan and above.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-users"/></svg></div>
-        <h3 data-i18n="land.feat14Title">Visitor Check-In</h3>
-        <p data-i18n="land.feat14Desc">A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who's in the building alongside your staff, for emergency preparedness and front-desk sign-in alike.</p>
+      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
+        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-users"/></svg></div>
+        <h3><span data-i18n="land.feat14Title">Visitor Check-In</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
+        <p data-i18n="land.feat14Desc">A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who's in the building alongside your staff, for emergency preparedness and front-desk sign-in alike. Included on the Growth plan and above.</p>
       </div>
     </div>
   </div>
@@ -1556,6 +1556,8 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
           <li class="dim" data-i18n="land.f.free9">Excel &amp; CSV export</li>
           <li class="dim" data-i18n="land.f.free7">Overtime tracking</li>
+          <li class="dim" data-i18n="land.f.free10">Lunch break tracking (Growth+)</li>
+          <li class="dim" data-i18n="land.f.free11">Visitor check-in (Growth+)</li>
         </ul>
         <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.getStartedFree">Get started free</button>
       </div>
@@ -1572,6 +1574,8 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.start5">Overtime tracking</li>
           <li data-i18n="land.f.start6">Excel, CSV &amp; PDF export</li>
           <li data-i18n="land.f.start8">1 co-admin included</li>
+          <li class="dim" data-i18n="land.f.start9">Lunch break tracking (Growth+)</li>
+          <li class="dim" data-i18n="land.f.start10">Visitor check-in (Growth+)</li>
         </ul>
         <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
       </div>
@@ -1588,6 +1592,8 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.grow4">All Starter features</li>
           <li data-i18n="land.f.grow5">Priority support</li>
           <li data-i18n="land.f.grow6">Up to 4 admins per account</li>
+          <li data-i18n="land.f.grow7">Lunch break tracking</li>
+          <li data-i18n="land.f.grow8">Visitor check-in</li>
         </ul>
         <button class="price-cta accent" onclick="isLoggedIn()?startCheckout('growth'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial2">Get Growth</button>
       </div>
@@ -3543,8 +3549,8 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
-    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.lunchSettings">Lunch Breaks</p>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleLunchOpt()">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><span data-i18n="modal.lunchSettings">Lunch Breaks</span><span style="font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:1px 6px;border-radius:var(--r-xl);vertical-align:middle;margin-left:8px;text-transform:none;letter-spacing:normal" data-i18n="modal.growthPlanBadge">GROWTH+</span></p>
+    <div id="lunchToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleLunchOpt()">
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-pause"/></svg><span data-i18n="modal.trackLunch">Track Lunch Breaks</span></div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.lunchDesc">Adds a dedicated Break button on the clock-in screen, separate from clocking out</div>
@@ -3553,6 +3559,22 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div id="lunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
       </div>
     </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><span data-i18n="modal.visitorSettings">Visitor Check-In</span><span style="font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:1px 6px;border-radius:var(--r-xl);vertical-align:middle;margin-left:8px;text-transform:none;letter-spacing:normal" data-i18n="modal.growthPlanBadge">GROWTH+</span></p>
+    <div id="visitorCheckinToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleVisitorCheckinOpt()">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-users"/></svg><span data-i18n="modal.enableVisitorCheckin">Enable Visitor Check-In</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.visitorCheckinDesc">Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out</div>
+      </div>
+      <div id="visitorCheckinToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="visitorCheckinThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
+    <p id="growthAddonLockNote" style="display:none;font-size:11px;color:var(--accent);margin:8px 2px 0;line-height:1.5">
+      <svg class="ic" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px"><use href="#i-lock"/></svg>
+      <span data-i18n="modal.growthAddonLock">Lunch break tracking and visitor check-in are included on the Growth plan and above.</span>
+      <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addCompanyModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
+    </p>
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.punchRounding">Punch Rounding</p>
     <div class="form-group">
@@ -4191,6 +4213,15 @@ const PLANS = {
 // Grandfathered companies — always unlimited regardless of plan
 const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
 
+// Growth-and-up gated add-ons (lunch/break tracking, visitor check-in): these are plan-tier
+// inclusions, not a separate purchase like scheduling, so the check is a simple tier compare
+// against the logged-in admin's plan — only ever evaluated inside admin-session screens (the
+// Company Info modal), never at an unauthenticated kiosk, which has no session to check.
+const PLAN_TIER_ORDER = ['Free','Starter','Growth','Business','Unlimited'];
+function hasGrowthOrAbove() {
+  return PLAN_TIER_ORDER.indexOf(getAdminPlan().name) >= PLAN_TIER_ORDER.indexOf('Growth');
+}
+
 function getCompanyPlan(co) {
   if(co && GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
   if(isSuperAdmin()) return PLANS.unlimited;
@@ -4823,7 +4854,7 @@ function _roundPunchMs(iso, mins){
 // ═══════════════════════════════════════════════════
 function isDemo(){ return !!window._demoMode; }
 function _demoBuildData(){
-  const CO={id:'demo-co',name:'Café Rivière (démo)',admin_id:'demo-admin',week_start:'monday',payroll_frequency:'biweekly',track_overtime:true,punch_rounding:0,alerts_enabled:false};
+  const CO={id:'demo-co',name:'Café Rivière (démo)',admin_id:'demo-admin',week_start:'monday',payroll_frequency:'biweekly',track_overtime:true,track_lunch_breaks:true,visitor_checkin_enabled:true,punch_rounding:0,alerts_enabled:false};
   const SITES=[{id:'demo-s1',company_id:CO.id,name:'Plateau',description:'Rue Saint-Denis'},
                {id:'demo-s2',company_id:CO.id,name:'Vieux-Port',description:'Rue de la Commune'}];
   const NAMES=[['Marie Lavoie','demo-s1'],['David Pham','demo-s1'],['Sofia Ricci','demo-s1'],
@@ -7050,10 +7081,11 @@ async function loadPunchPage(){
   const breakWrap=document.getElementById('breakBtnWrap');
   if(breakWrap) breakWrap.style.display=window._lunchTrackingOn?'':'none';
 
-  // Visitor check-in is site-scoped (a visit belongs to one site), so it only shows once a
-  // site is actually selected — same rule the geofence/device-token checks already follow.
+  // Visitor check-in is site-scoped (a visit belongs to one site) AND a Growth-plan-and-up
+  // company setting — same admin-toggle pattern as track_lunch_breaks above, so the kiosk (which
+  // has no session of its own) trusts the cached company row rather than checking the plan live.
   const visitorBtn=document.getElementById('visitorCheckInBtn');
-  if(visitorBtn) visitorBtn.style.display=siteId?'':'none';
+  if(visitorBtn) visitorBtn.style.display=(siteId&&co.visitor_checkin_enabled)?'':'none';
 
   // Employees scoped to site (if site selected) or company
   const sel=document.getElementById('empSelect');
@@ -10024,6 +10056,8 @@ function openAddCompanyModal(){
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
   setLunchToggle(false);
+  setVisitorCheckinToggle(false);
+  _setGrowthAddonLockState();
   resetLogoUpload(null);
   openModal('addCompanyModal');
 }
@@ -10057,6 +10091,8 @@ function editCompany(id){
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(!!co.track_overtime);
   setLunchToggle(!!co.track_lunch_breaks);
+  setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
+  _setGrowthAddonLockState();
   resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
 }
@@ -10092,6 +10128,29 @@ function setLunchToggle(on){
   document.getElementById('lunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('lunchThumb').style.left=on?'20px':'2px';
 }
+function toggleVisitorCheckinOpt(){
+  const on=document.getElementById('visitorCheckinThumb').style.left!=='20px';
+  document.getElementById('visitorCheckinToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('visitorCheckinThumb').style.left=on?'20px':'2px';
+}
+function setVisitorCheckinToggle(on){
+  document.getElementById('visitorCheckinToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('visitorCheckinThumb').style.left=on?'20px':'2px';
+}
+// Lunch breaks and visitor check-in are Growth-plan-and-up inclusions. Below Growth, force both
+// toggles off and lock the row (opacity + no pointer events) rather than letting an admin flip
+// them on and then silently lose the setting on save — the lock is visible and explained instead.
+function _setGrowthAddonLockState(){
+  const ok=hasGrowthOrAbove();
+  const note=document.getElementById('growthAddonLockNote');
+  if(note) note.style.display=ok?'none':'';
+  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow')].forEach(row=>{
+    if(!row)return;
+    row.style.opacity=ok?'1':'.5';
+    row.style.pointerEvents=ok?'':'none';
+  });
+  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); }
+}
 
 async function saveCompany(){
   const name=document.getElementById('companyName').value.trim();
@@ -10110,7 +10169,11 @@ async function saveCompany(){
   const ot_weekly_hours=parseInt(document.getElementById('companyOtWeeklyHours').value,10)||40;
   const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
   const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
-  const track_lunch_breaks=document.getElementById('lunchThumb').style.left==='20px';
+  // Re-check plan eligibility at save time too — the row lock only guards the UI; a plan
+  // downgrade between opening the modal and saving must not let either setting slip through.
+  const growthOk=hasGrowthOrAbove();
+  const track_lunch_breaks=growthOk&&document.getElementById('lunchThumb').style.left==='20px';
+  const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   // Hard enforce plan limit on new company creation
@@ -10127,13 +10190,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -14277,6 +14340,9 @@ en:{
 'land.f.free1':'1 company','land.f.free2':'1 site · geofencing & kiosk included','land.f.free3':'Up to 10 employees',
 'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Manual punch editing',
 'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free9':'Excel & CSV export',
+'land.f.free10':'Lunch break tracking (Growth+)','land.f.free11':'Visitor check-in (Growth+)',
+'land.f.start9':'Lunch break tracking (Growth+)','land.f.start10':'Visitor check-in (Growth+)',
+'land.f.grow7':'Lunch break tracking','land.f.grow8':'Visitor check-in',
 'land.f.start1':'1 company, 2 sites, 2 admins','land.f.start2':'Up to 25 employees','land.f.start3':'All Free features + Excel & CSV exports',
 'land.f.start4':'Automated period email reports','land.f.start5':'Overtime tracking',
 'land.f.start6':'Excel, CSV & PDF export',
@@ -14344,6 +14410,11 @@ en:{
 'modal.otDailyLabel':'Daily threshold','modal.otWeeklyLabel':'Weekly threshold',
 'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
+'modal.visitorSettings':'Visitor Check-In','modal.enableVisitorCheckin':'Enable Visitor Check-In',
+'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
+'modal.growthPlanBadge':'GROWTH+',
+'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
+'modal.upgradeLink':'Upgrade now',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
@@ -14388,9 +14459,9 @@ en:{
 'help.billTitle':'Plans, billing and adding seats',
 'help.billDesc':'Your plan sets how many employees, sites and admins you can have. Open the menu under your name and choose <strong>Manage Billing</strong> to change plan, update your card or download invoices. If you only need a little more room, extra employee or admin seats can be added to your current plan rather than upgrading it outright.',
 'help.lunchTitle':'Track Lunch Breaks',
-'help.lunchDesc':'In <strong>your profile menu → Company Info → Lunch Breaks</strong>, turn on <strong>Track Lunch Breaks</strong>. A dedicated Break button then appears on the clock-in screen for every employee, separate from the regular IN/OUT buttons — tap it once to start a break, again to end it. Break time was already excluded from worked hours before this was on; now it also shows as a BREAK badge in the Activity log and as its own line in Reports.',
+'help.lunchDesc':'Available on the <strong>Growth plan and above</strong>. In <strong>your profile menu → Company Info → Lunch Breaks</strong>, turn on <strong>Track Lunch Breaks</strong>. A dedicated Break button then appears on the clock-in screen for every employee, separate from the regular IN/OUT buttons — tap it once to start a break, again to end it. Break time was already excluded from worked hours before this was on; now it also shows as a BREAK badge in the Activity log and as its own line in Reports. On the Free or Starter plan? Upgrade to Growth from your profile menu to unlock this.',
 'help.visitorTitle':'Visitor Check-In',
-'help.visitorDesc':'Every clock-in screen has a <strong>Visitor Check In</strong> button — no PIN or employee record required. A visitor taps it, enters their full name, company, phone and email, and checks in. To leave, they tap the same button and pick their name off the <strong>Currently in the building</strong> list — no need to fill out the form again. Useful for front-desk sign-in and knowing exactly who\'s on-site alongside your staff.',
+'help.visitorDesc':'Available on the <strong>Growth plan and above</strong>. In <strong>your profile menu → Company Info → Visitor Check-In</strong>, turn on <strong>Enable Visitor Check-In</strong> — every clock-in screen then gets a <strong>Visitor Check In</strong> button, no PIN or employee record required. A visitor taps it, enters their full name, company, phone and email, and checks in. To leave, they tap the same button and pick their name off the <strong>Currently in the building</strong> list — no need to fill out the form again. Useful for front-desk sign-in and knowing exactly who\'s on-site alongside your staff.',
 'help.s1title':'Set Up Your Account',
 'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
@@ -14489,9 +14560,9 @@ en:{
 'faq.q24':'Can employees check their own schedule, hours and time off without contacting me?',
 'faq.a24':'Yes — every employee gets their own free self-service portal, included on every plan, even Free. From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, and set their availability — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
 'faq.q25':'Can I track lunch breaks separately from clocking out?',
-'faq.a25':'Yes. Turn on <strong>Track Lunch Breaks</strong> in Company Info → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap.',
+'faq.a25':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Track Lunch Breaks</strong> in Company Info → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap.',
 'faq.q26':'Can visitors sign in and out, not just employees?',
-'faq.a26':'Yes. Every clock-in screen has a <strong>Visitor Check In</strong> button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a "currently in the building" list. It\'s useful for front-desk sign-in and for knowing exactly who\'s on-site in an emergency, alongside your staff.',
+'faq.a26':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Enable Visitor Check-In</strong> in Company Info, and every clock-in screen gets a <strong>Visitor Check In</strong> button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a "currently in the building" list. It\'s useful for front-desk sign-in and for knowing exactly who\'s on-site in an emergency, alongside your staff.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -14522,7 +14593,7 @@ en:{
 'land.tablet4Desc':'Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.',
 'land.feat1Title':'Tablet Terminal — No GPS Needed',
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
-'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON',
+'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
 'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
 'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
@@ -14531,9 +14602,9 @@ en:{
 'land.feat12Title':'Employee Self-Service Portal',
 'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.',
 'land.feat13Title':'Lunch & Break Tracking',
-'land.feat13Desc':'A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports.',
+'land.feat13Desc':'A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports. Included on the Growth plan and above.',
 'land.feat14Title':'Visitor Check-In',
-'land.feat14Desc':'A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who\'s in the building alongside your staff, for emergency preparedness and front-desk sign-in alike.',
+'land.feat14Desc':'A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who\'s in the building alongside your staff, for emergency preparedness and front-desk sign-in alike. Included on the Growth plan and above.',
 'land.geoBadge':'Location Security — Built Right In',
 'land.geoTitle':'Employees can only punch where they work.',
 'land.geoSub':'Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.',
@@ -15109,6 +15180,9 @@ fr:{
 'land.f.free1':'1 compagnie','land.f.free2':'1 site · géorepérage et kiosque inclus','land.f.free3':'Jusqu\'à 10 employés',
 'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Modification manuelle des pointages',
 'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free9':'Export Excel et CSV',
+'land.f.free10':'Suivi des pauses repas (Croissance+)','land.f.free11':'Pointage visiteur (Croissance+)',
+'land.f.start9':'Suivi des pauses repas (Croissance+)','land.f.start10':'Pointage visiteur (Croissance+)',
+'land.f.grow7':'Suivi des pauses repas','land.f.grow8':'Pointage visiteur',
 'land.f.start1':'1 compagnie, 2 sites, 2 admins','land.f.start2':'Jusqu\'à 25 employés','land.f.start3':'Toutes les fonctions Gratuit + exports Excel et CSV',
 'land.f.start4':'Rapports de période automatisés','land.f.start5':'Suivi des heures supp.',
 'land.f.start6':'Export Excel, CSV et PDF',
@@ -15176,6 +15250,11 @@ fr:{
 'modal.otDailyLabel':'Seuil quotidien','modal.otWeeklyLabel':'Seuil hebdomadaire',
 'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
+'modal.visitorSettings':'Pointage visiteur','modal.enableVisitorCheckin':'Activer le pointage visiteur',
+'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
+'modal.growthPlanBadge':'CROISSANCE+',
+'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
+'modal.upgradeLink':'Mettre à niveau',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
@@ -15220,9 +15299,9 @@ fr:{
 'help.billTitle':'Forfaits, facturation et sièges supplémentaires',
 'help.billDesc':'Votre forfait détermine le nombre d\'employés, de sites et d\'administrateurs permis. Ouvrez le menu sous votre nom et choisissez <strong>Gérer la facturation</strong> pour changer de forfait, mettre à jour votre carte ou télécharger vos factures. S\'il vous manque seulement un peu d\'espace, vous pouvez ajouter des sièges employé ou admin à votre forfait actuel au lieu de passer au forfait supérieur.',
 'help.lunchTitle':'Suivi des pauses repas',
-'help.lunchDesc':'Dans <strong>votre menu de profil → Info compagnie → Pauses repas</strong>, activez <strong>Suivi des pauses repas</strong>. Un bouton Pause dédié apparaît alors sur l\'écran de pointage pour chaque employé, distinct des boutons ENTRÉE/SORTIE — un tap pour débuter la pause, un autre pour la terminer. Le temps de pause était déjà exclu des heures travaillées avant même d\'activer ceci; maintenant il apparaît aussi comme un badge PAUSE dans le journal d\'activité et comme une ligne distincte dans les rapports.',
+'help.lunchDesc':'Disponible à partir du <strong>plan Croissance</strong>. Dans <strong>votre menu de profil → Info compagnie → Pauses repas</strong>, activez <strong>Suivi des pauses repas</strong>. Un bouton Pause dédié apparaît alors sur l\'écran de pointage pour chaque employé, distinct des boutons ENTRÉE/SORTIE — un tap pour débuter la pause, un autre pour la terminer. Le temps de pause était déjà exclu des heures travaillées avant même d\'activer ceci; maintenant il apparaît aussi comme un badge PAUSE dans le journal d\'activité et comme une ligne distincte dans les rapports. Sur le plan Gratuit ou Débutant? Mettez à niveau vers Croissance depuis votre menu de profil pour débloquer cette fonction.',
 'help.visitorTitle':'Pointage visiteur',
-'help.visitorDesc':'Chaque écran de pointage a un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur appuie dessus, inscrit son nom complet, son entreprise, son téléphone et son courriel, puis pointe son arrivée. Pour partir, il appuie sur le même bouton et choisit son nom dans la liste <strong>Actuellement dans l\'immeuble</strong> — pas besoin de remplir le formulaire à nouveau. Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en plus de votre personnel.',
+'help.visitorDesc':'Disponible à partir du <strong>plan Croissance</strong>. Dans <strong>votre menu de profil → Info compagnie → Pointage visiteur</strong>, activez <strong>Activer le pointage visiteur</strong> — chaque écran de pointage obtient alors un bouton <strong>Pointage visiteur</strong>, sans NIP ni dossier employé requis. Un visiteur appuie dessus, inscrit son nom complet, son entreprise, son téléphone et son courriel, puis pointe son arrivée. Pour partir, il appuie sur le même bouton et choisit son nom dans la liste <strong>Actuellement dans l\'immeuble</strong> — pas besoin de remplir le formulaire à nouveau. Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en plus de votre personnel.',
 'help.s1title':'Configurez votre compte',
 'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',
@@ -15321,9 +15400,9 @@ fr:{
 'faq.q24':'Les employés peuvent-ils consulter leur horaire, leurs heures et leurs congés sans me contacter?',
 'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service gratuit, inclus sur tous les forfaits, même le forfait Gratuit. Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
 'faq.q25':'Puis-je suivre les pauses repas séparément de la sortie?',
-'faq.a25':'Oui. Activez <strong>Suivi des pauses repas</strong> dans Info compagnie → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart.',
+'faq.a25':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Suivi des pauses repas</strong> dans Info compagnie → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart.',
 'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
-'faq.a26':'Oui. Chaque écran de pointage a un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur inscrit son nom complet, son entreprise, son téléphone et son courriel une seule fois, puis pointe sa sortie plus tard en choisissant son nom dans une liste des personnes « actuellement dans l\'immeuble ». Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en cas d\'urgence, en plus de votre personnel.',
+'faq.a26':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Activer le pointage visiteur</strong> dans Info compagnie, et chaque écran de pointage obtient un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur inscrit son nom complet, son entreprise, son téléphone et son courriel une seule fois, puis pointe sa sortie plus tard en choisissant son nom dans une liste des personnes « actuellement dans l\'immeuble ». Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en cas d\'urgence, en plus de votre personnel.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',
@@ -15358,7 +15437,7 @@ fr:{
 'land.tablet4Desc':'Chaque employé a un NIP unique, et pointer pour quelqu\'un d\'autre exige une présence physique au terminal — bien plus difficile à contourner qu\'une appli mobile partagée par texto.',
 'land.feat1Title':'Terminal tablette — Sans GPS',
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
-'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT',
+'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
 'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts aux employés par site, et permettez à votre équipe de voir ses prochains quarts — directement dans PunchClock. Disponible en complément à 14,95 $/mois sur tout plan payant.',
 'land.feat10Title':'Géorepérage — Pointage verrouillé par localisation',
 'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
@@ -15367,9 +15446,9 @@ fr:{
 'land.feat12Title':'Portail employé libre-service',
 'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
 'land.feat13Title':'Suivi des pauses repas',
-'land.feat13Desc':'Un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie — pour que le personnel ne confonde jamais une pause repas avec un départ pour la journée. Activable par compagnie; le temps de pause apparaît comme une ligne distincte dans les rapports.',
+'land.feat13Desc':'Un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie — pour que le personnel ne confonde jamais une pause repas avec un départ pour la journée. Activable par compagnie; le temps de pause apparaît comme une ligne distincte dans les rapports. Inclus à partir du plan Croissance.',
 'land.feat14Title':'Pointage visiteur',
-'land.feat14Desc':'Un bouton Pointage visiteur directement sur le kiosque — sans NIP, sans dossier employé. Les visiteurs inscrivent leur nom, entreprise, téléphone et courriel, puis pointent leur sortie eux-mêmes. Sachez exactement qui se trouve dans l\'immeuble en plus de votre personnel, pour la préparation aux urgences comme pour l\'accueil.',
+'land.feat14Desc':'Un bouton Pointage visiteur directement sur le kiosque — sans NIP, sans dossier employé. Les visiteurs inscrivent leur nom, entreprise, téléphone et courriel, puis pointent leur sortie eux-mêmes. Sachez exactement qui se trouve dans l\'immeuble en plus de votre personnel, pour la préparation aux urgences comme pour l\'accueil. Inclus à partir du plan Croissance.',
 'land.geoBadge':'Sécurité de localisation — Intégrée',
 'land.geoTitle':'Les employés ne peuvent pointer que là où ils travaillent.',
 'land.geoSub':'Le géorepérage trace une frontière GPS invisible autour de chacun de vos emplacements. Le pointage ne fonctionne qu\'à l\'intérieur de cette frontière — que l\'employé soit sur un terminal partagé ou utilise un lien raccourci depuis son téléphone.',
