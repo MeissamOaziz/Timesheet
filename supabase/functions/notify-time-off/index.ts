@@ -203,17 +203,18 @@ ${headFr}
 
     // ---- Approvers: account owner + active co-admins + managers of that site ----
     const approvers = new Set<string>();
+    const addApprovers = (rows: any[]) => rows.forEach(a => a.email && !a.mute_approval_emails && approvers.add(a.email.toLowerCase()));
     if (row.company_id) {
       const adminId = (await rest(`companies?id=eq.${row.company_id}&select=admin_id`))[0]?.admin_id;
       if (adminId) {
-        (await rest(`admins?id=eq.${adminId}&select=email`)).forEach(a => a.email && approvers.add(a.email.toLowerCase()));
-        (await rest(`admins?parent_admin_id=eq.${adminId}&status=eq.active&select=email`)).forEach(a => a.email && approvers.add(a.email.toLowerCase()));
+        addApprovers(await rest(`admins?id=eq.${adminId}&select=email,mute_approval_emails`));
+        addApprovers(await rest(`admins?parent_admin_id=eq.${adminId}&status=eq.active&select=email,mute_approval_emails`));
       }
     }
     if (row.site_id) {
       const mgrIds = (await rest(`manager_sites?site_id=eq.${row.site_id}&select=manager_id`)).map(m => m.manager_id).filter(Boolean);
       if (mgrIds.length) {
-        (await rest(`admins?id=in.(${mgrIds.join(',')})&status=eq.active&select=email`)).forEach(a => a.email && approvers.add(a.email.toLowerCase()));
+        addApprovers(await rest(`admins?id=in.(${mgrIds.join(',')})&status=eq.active&select=email,mute_approval_emails`));
       }
     }
 

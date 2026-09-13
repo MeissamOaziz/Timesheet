@@ -93,11 +93,11 @@ Deno.serve(async (req) => {
     // co-admins and managers never learned about a missed punch on a site they run.
     const teamRes = adminIds.length
       ? await Promise.all([
-        rest(`admins?id=in.(${adminIds.join(',')})&select=id,email,name,role,status,expires_at,parent_admin_id`),
-        rest(`admins?parent_admin_id=in.(${adminIds.join(',')})&status=eq.active&select=id,email,name,role,status,expires_at,parent_admin_id`),
+        rest(`admins?id=in.(${adminIds.join(',')})&select=id,email,name,role,status,expires_at,parent_admin_id,mute_manager_alerts`),
+        rest(`admins?parent_admin_id=in.(${adminIds.join(',')})&status=eq.active&select=id,email,name,role,status,expires_at,parent_admin_id,mute_manager_alerts`),
       ])
       : [];
-    type AdminRow = { id: string; email: string; name: string; role: string; status: string; expires_at: string | null; parent_admin_id: string | null };
+    type AdminRow = { id: string; email: string; name: string; role: string; status: string; expires_at: string | null; parent_admin_id: string | null; mute_manager_alerts?: boolean };
     const owners: AdminRow[] = teamRes.length && teamRes[0].ok ? await teamRes[0].json() : [];
     const delegates: AdminRow[] = teamRes.length && teamRes[1].ok ? await teamRes[1].json() : [];
     const adminById: Record<string, { email: string; name: string }> = {};
@@ -216,9 +216,9 @@ Deno.serve(async (req) => {
 
       const team: AdminRow[] = [];
       const owner = owners.find((o) => o.id === co.admin_id);
-      if (owner && active(owner)) team.push(owner);
+      if (owner && active(owner) && !owner.mute_manager_alerts) team.push(owner);
       for (const d of delegates) {
-        if (d.parent_admin_id === co.admin_id && active(d) && (d.role === 'co_admin' || d.role === 'manager')) team.push(d);
+        if (d.parent_admin_id === co.admin_id && active(d) && !d.mute_manager_alerts && (d.role === 'co_admin' || d.role === 'manager')) team.push(d);
       }
 
       const seen = new Set<string>();

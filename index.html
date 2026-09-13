@@ -3175,6 +3175,24 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
 
+    <hr class="divider" style="margin:16px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px" data-i18n="profile.emailNotifTitle">Email Notifications</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px" data-i18n="profile.emailNotifHint">Personal to your login — turning these off never changes what other admins or managers receive.</p>
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer">
+      <input type="checkbox" id="profileNotifyAlerts" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0">
+      <span style="font-size:13px;color:var(--text)" data-i18n="profile.notifyAlerts">Manager alerts (forgot to clock out, overtime)</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer">
+      <input type="checkbox" id="profileNotifyApprovals" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0">
+      <span style="font-size:13px;color:var(--text)" data-i18n="profile.notifyApprovals">Approval requests (missed punch, time off)</span>
+    </label>
+    <div id="profileNotifyDigestRow">
+      <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer">
+        <input type="checkbox" id="profileNotifyDigest" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0">
+        <span style="font-size:13px;color:var(--text)" data-i18n="profile.notifyDigest">Company activity report</span>
+      </label>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn-primary" onclick="saveProfile()" data-i18n="profile.save">Save Changes</button>
       <button class="btn-secondary" onclick="closeModal('profileModal')" data-i18n="profile.cancel">Cancel</button>
@@ -3608,6 +3626,59 @@ border-top:1px solid var(--border);margin:18px 0;}
         <input type="checkbox" id="companyAlertOvertime" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0">
         <span style="font-size:13px;color:var(--text)" data-i18n="modal.alertOvertime">Daily overtime reached</span>
       </label>
+    </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px" data-i18n="modal.digestSettings">Owner Email Report</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="modal.digestSettingsHint">A recap of hours worked, who's on the clock, and anything waiting on your approval — sent to the account owner on the schedule below. Unsubscribe anytime from the link in the email.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <div class="form-group" style="flex:1 1 150px;margin-bottom:0">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.digestFrequency">Frequency</label>
+        <select id="companyDigestFrequency" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px" onchange="_setDigestRowState()">
+          <option value="daily" data-i18n="modal.digestDaily">Daily</option>
+          <option value="weekly" data-i18n="modal.digestWeekly">Weekly</option>
+          <option value="per_period" data-i18n="modal.digestPerPeriod">Per pay period</option>
+          <option value="monthly" data-i18n="modal.digestMonthly">Monthly</option>
+        </select>
+      </div>
+      <div class="form-group" id="digestHourRow" style="flex:1 1 110px;margin-bottom:0">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.digestTime">Time</label>
+        <select id="companyDigestHour" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px">
+          <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option><option value="3">03:00</option>
+          <option value="4">04:00</option><option value="5">05:00</option><option value="6">06:00</option><option value="7">07:00</option>
+          <option value="8">08:00</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+          <option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option>
+          <option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option>
+          <option value="20">20:00</option><option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+        </select>
+      </div>
+      <div class="form-group" id="digestDowRow" style="flex:1 1 130px;margin-bottom:0">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.digestDayOfWeek">Day</label>
+        <select id="companyDigestDow" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px">
+          <option value="0" data-i18n="modal.dowSun">Sunday</option>
+          <option value="1" data-i18n="modal.dowMon">Monday</option>
+          <option value="2" data-i18n="modal.dowTue">Tuesday</option>
+          <option value="3" data-i18n="modal.dowWed">Wednesday</option>
+          <option value="4" data-i18n="modal.dowThu">Thursday</option>
+          <option value="5" data-i18n="modal.dowFri">Friday</option>
+          <option value="6" data-i18n="modal.dowSat">Saturday</option>
+        </select>
+      </div>
+      <div class="form-group" id="digestDomRow" style="flex:1 1 110px;margin-bottom:0">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.digestDayOfMonth">Day of month</label>
+        <select id="companyDigestDom" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px"></select>
+      </div>
+    </div>
+    <p id="digestPerPeriodNote" style="display:none;font-size:11px;color:var(--text3);margin:-2px 0 10px" data-i18n="modal.digestPerPeriodNote">Sent once per pay period, aligned to your Payroll Frequency setting above.</p>
+    <div class="form-group">
+      <label style="font-size:11px;color:var(--text3)" data-i18n="modal.digestTimezone">Timezone</label>
+      <select id="companyDigestTimezone" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px">
+        <option value="America/St_Johns" data-i18n="modal.tzNewfoundland">Newfoundland</option>
+        <option value="America/Halifax" data-i18n="modal.tzAtlantic">Atlantic</option>
+        <option value="America/Toronto" data-i18n="modal.tzEastern">Eastern</option>
+        <option value="America/Winnipeg" data-i18n="modal.tzCentral">Central</option>
+        <option value="America/Edmonton" data-i18n="modal.tzMountain">Mountain</option>
+        <option value="America/Vancouver" data-i18n="modal.tzPacific">Pacific</option>
+      </select>
     </div>
     </div>
     <input type="hidden" id="editCompanyUid">
@@ -5039,6 +5110,17 @@ function _demoFetch(method,table,opts){
     const m=/id=eq\.([^&]+)/.exec(opts.filter||'');
     const id=m&&m[1];
     const row=_demoVisitors.find(v=>v.id===id);
+    if(row) Object.assign(row,opts.body);
+    return Promise.resolve(row?[row]:[]);
+  }
+  // Company Info edits (overtime/lunch/visitor toggles, owner report schedule, etc.) — merge into
+  // the cached row so the modal's own re-read of C.companies reflects what was just saved, same
+  // as a real PATCH would. Editing the demo company was previously unhandled (fell through to the
+  // "read-only" toast below), so Save silently did nothing in a screen prospects actually try.
+  if(method==='PATCH'&&table==='companies'&&opts&&opts.body){
+    const m=/id=eq\.([^&]+)/.exec(opts.filter||'');
+    const id=m&&m[1];
+    const row=(C.companies||[]).find(c=>c.id===id);
     if(row) Object.assign(row,opts.body);
     return Promise.resolve(row?[row]:[]);
   }
@@ -6886,6 +6968,16 @@ function openProfile(){
   av.textContent=(s.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   // Plan — co-admins inherit primary admin's plan
   const isCoAdmin=!!(s.parent_admin_id);
+  // Email notification mutes — personal to this login, never affect anyone else's inbox.
+  document.getElementById('profileNotifyAlerts').checked=!(s.mute_manager_alerts===true);
+  document.getElementById('profileNotifyApprovals').checked=!(s.mute_approval_emails===true);
+  // The company activity report only ever goes to the true account owner (send-owner-digest
+  // mails companies.admin_id, never a co-admin or manager), so the toggle is meaningless for them.
+  const digestRow=document.getElementById('profileNotifyDigestRow');
+  if(digestRow){
+    digestRow.style.display=isCoAdmin?'none':'';
+    if(!isCoAdmin)document.getElementById('profileNotifyDigest').checked=!(s.weekly_digest===false);
+  }
   const plan=isCoAdmin?(C.primaryAdmin?.plan||'free'):(s.plan||'free');
   const planEl=document.getElementById('profilePlanName');
   const planColors_={'free':'var(--text2)','starter':'#4f8ef7','growth':'#22c55e','business':'#a78bfa','unlimited':'#f59e0b'};
@@ -6984,9 +7076,14 @@ async function saveProfile(){
     if(newPw.length<6){msg(t('profile.pwTooShort')||'Password must be at least 6 characters.','error');return;}
   }
 
+  const mute_manager_alerts=!document.getElementById('profileNotifyAlerts').checked;
+  const mute_approval_emails=!document.getElementById('profileNotifyApprovals').checked;
+  const isCoAdmin=!!(s.parent_admin_id);
+  const digestPatch=isCoAdmin?{}:{weekly_digest:document.getElementById('profileNotifyDigest').checked};
+
   try{
-    // Update name
-    await DB.update('admins',`id=eq.${s.id}`,{name:newName});
+    // Update name + personal notification preferences
+    await DB.update('admins',`id=eq.${s.id}`,{name:newName,mute_manager_alerts,mute_approval_emails,...digestPatch});
     // Update password if requested
     if(changingPw){
       const cp=await DB.rpc('change_own_password',{p_session_id:s.id,p_curpass:curPw,p_newpass:newPw});
@@ -6997,7 +7094,7 @@ async function saveProfile(){
       }
     }
     // Update session
-    const updated={...s,name:newName};
+    const updated={...s,name:newName,mute_manager_alerts,mute_approval_emails,...digestPatch};
     Sess.set(updated);
     updateNav();
     msg(t('profile.saved')||'✓ Profile updated successfully.','success');
@@ -10052,6 +10149,12 @@ function openAddCompanyModal(){
   document.getElementById('companyAlertOvertime').checked=true;
   document.getElementById('companyForgotOutHours').value='14';
   {const _s=document.getElementById('alertSubSettings');if(_s){_s.style.opacity='1';_s.style.pointerEvents='';}}
+  document.getElementById('companyDigestFrequency').value='weekly';
+  document.getElementById('companyDigestHour').value='8';
+  document.getElementById('companyDigestDow').value='1';
+  document.getElementById('companyDigestDom').value='1';
+  document.getElementById('companyDigestTimezone').value='America/Toronto';
+  _setDigestRowState();
   toggleAnchorDateRow();
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
@@ -10085,6 +10188,12 @@ function editCompany(id){
   document.getElementById('companyOtDailyHours').value=String(co.ot_daily_hours||8);
   document.getElementById('companyOtWeeklyHours').value=String(co.ot_weekly_hours||40);
   {const _s=document.getElementById('alertSubSettings');const _on=(co.alerts_enabled!==false);if(_s){_s.style.opacity=_on?'1':'.45';_s.style.pointerEvents=_on?'':'none';}}
+  document.getElementById('companyDigestFrequency').value=co.digest_frequency||'weekly';
+  document.getElementById('companyDigestHour').value=String(co.digest_hour??8);
+  document.getElementById('companyDigestDow').value=String(co.digest_day_of_week??1);
+  document.getElementById('companyDigestDom').value=String(co.digest_day_of_month??1);
+  document.getElementById('companyDigestTimezone').value=co.digest_timezone||'America/Toronto';
+  _setDigestRowState();
   document.getElementById('companyAnchorDate').value=co.payroll_anchor_date||'';
   toggleAnchorDateRow();
   document.getElementById('editCompanyUid').value=co.id;
@@ -10152,6 +10261,18 @@ function _setGrowthAddonLockState(){
   if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); }
 }
 
+// Owner Email Report — only the row(s) relevant to the chosen frequency are shown; "per pay
+// period" has no day/time picker of its own since it rides on the Payroll Frequency setting
+// above (and its own anchor date), it only needs the hour to send at.
+function _setDigestRowState(){
+  const freq=document.getElementById('companyDigestFrequency').value;
+  const show=(id,on)=>{const el=document.getElementById(id);if(el)el.style.display=on?'':'none';};
+  show('digestHourRow', true);
+  show('digestDowRow', freq==='weekly');
+  show('digestDomRow', freq==='monthly');
+  show('digestPerPeriodNote', freq==='per_period');
+}
+
 async function saveCompany(){
   const name=document.getElementById('companyName').value.trim();
   const address=document.getElementById('companyAddress').value.trim();
@@ -10174,6 +10295,11 @@ async function saveCompany(){
   const growthOk=hasGrowthOrAbove();
   const track_lunch_breaks=growthOk&&document.getElementById('lunchThumb').style.left==='20px';
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
+  const digest_frequency=document.getElementById('companyDigestFrequency').value;
+  const digest_hour=parseInt(document.getElementById('companyDigestHour').value,10)||0;
+  const digest_day_of_week=parseInt(document.getElementById('companyDigestDow').value,10)||0;
+  const digest_day_of_month=parseInt(document.getElementById('companyDigestDom').value,10)||1;
+  const digest_timezone=document.getElementById('companyDigestTimezone').value||'America/Toronto';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   // Hard enforce plan limit on new company creation
@@ -10190,13 +10316,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,digest_frequency,digest_hour,digest_day_of_week,digest_day_of_month,digest_timezone,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,digest_frequency,digest_hour,digest_day_of_week,digest_day_of_month,digest_timezone,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,digest_frequency,digest_hour,digest_day_of_week,digest_day_of_month,digest_timezone,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,digest_frequency,digest_hour,digest_day_of_week,digest_day_of_month,digest_timezone,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -12675,6 +12801,12 @@ async function init(){
   // Register the service worker first so the auto-heal (update check + controllerchange reload)
   // is armed on every load, regardless of auth state.
   registerServiceWorker();
+  // Day-of-month options for the owner-report digest (capped at 28 — see the migration comment
+  // on companies.digest_day_of_month for why short months are sidestepped rather than handled).
+  const domSel=document.getElementById('companyDigestDom');
+  if(domSel && !domSel.options.length){
+    for(let d=1; d<=28; d++){ const o=document.createElement('option'); o.value=String(d); o.textContent=String(d); domSel.appendChild(o); }
+  }
   // Demo context must never leak into a real session. sessionStorage dies with the tab but the
   // stored Ctx doesn't, so drop any leftover demo context before the normal flow reads it.
   let _wasDemo=false;
@@ -14312,6 +14444,11 @@ en:{
 'msg.chooseSite':'Choose your work site',
 'msg.noCompanyYet':'You have no companies yet. Please create a company to access the Clock In/Out page.',
 'profile.title':'My Profile','profile.plan':'Subscription Plan','profile.upgrade':'Upgrade',
+'profile.emailNotifTitle':'Email Notifications',
+'profile.emailNotifHint':'Personal to your login — turning these off never changes what other admins or managers receive.',
+'profile.notifyAlerts':'Manager alerts (forgot to clock out, overtime)',
+'profile.notifyApprovals':'Approval requests (missed punch, time off)',
+'profile.notifyDigest':'Company activity report',
 'nav.dd.profileSub':'Account settings & password',
 'nav.dd.companyInfo':'Company Info','nav.dd.companyInfoSub':'Edit company details & payroll',
 'nav.dd.upgrade':'Upgrade Plan','nav.dd.upgradeSub':'Change your subscription',
@@ -14415,6 +14552,14 @@ en:{
 'modal.growthPlanBadge':'GROWTH+',
 'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
 'modal.upgradeLink':'Upgrade now',
+'modal.digestSettings':'Owner Email Report',
+'modal.digestSettingsHint':'A recap of hours worked, who\'s on the clock, and anything waiting on your approval — sent to the account owner on the schedule below. Unsubscribe anytime from the link in the email.',
+'modal.digestFrequency':'Frequency','modal.digestDaily':'Daily','modal.digestWeekly':'Weekly','modal.digestPerPeriod':'Per pay period','modal.digestMonthly':'Monthly',
+'modal.digestTime':'Time','modal.digestDayOfWeek':'Day','modal.digestDayOfMonth':'Day of month',
+'modal.digestPerPeriodNote':'Sent once per pay period, aligned to your Payroll Frequency setting above.',
+'modal.digestTimezone':'Timezone',
+'modal.dowSun':'Sunday','modal.dowMon':'Monday','modal.dowTue':'Tuesday','modal.dowWed':'Wednesday','modal.dowThu':'Thursday','modal.dowFri':'Friday','modal.dowSat':'Saturday',
+'modal.tzNewfoundland':'Newfoundland','modal.tzAtlantic':'Atlantic','modal.tzEastern':'Eastern','modal.tzCentral':'Central','modal.tzMountain':'Mountain','modal.tzPacific':'Pacific',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
 'modal.cancel':'Cancel','modal.save':'Save','modal.saveChanges':'Save Changes',
@@ -15154,6 +15299,11 @@ fr:{
 'msg.chooseSite':'Choisissez votre site de travail',
 'msg.noCompanyYet':'Vous n\'avez pas encore de compagnies. Veuillez créer une compagnie pour accéder à la page Pointage.',
 'profile.title':'Mon profil','profile.plan':'Abonnement','profile.upgrade':'Mettre à niveau',
+'profile.emailNotifTitle':'Notifications par courriel',
+'profile.emailNotifHint':'Personnel à votre compte — désactiver ceci ne change rien pour les autres admins ou gestionnaires.',
+'profile.notifyAlerts':'Alertes de gestion (oubli de sortie, heures supp.)',
+'profile.notifyApprovals':'Demandes d\'approbation (pointage manquant, congé)',
+'profile.notifyDigest':'Rapport d\'activité de l\'entreprise',
 'nav.dd.profileSub':'Paramètres du compte et mot de passe',
 'nav.dd.companyInfo':'Info compagnie','nav.dd.companyInfoSub':'Modifier les détails et paramètres de paie',
 'nav.dd.upgrade':'Mettre à niveau','nav.dd.upgradeSub':'Changer votre abonnement',
@@ -15255,6 +15405,14 @@ fr:{
 'modal.growthPlanBadge':'CROISSANCE+',
 'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
 'modal.upgradeLink':'Mettre à niveau',
+'modal.digestSettings':'Rapport courriel du propriétaire',
+'modal.digestSettingsHint':'Un résumé des heures travaillées, des personnes pointées et de ce qui attend votre approbation — envoyé au propriétaire du compte selon l\'horaire ci-dessous. Désabonnez-vous en tout temps depuis le lien dans le courriel.',
+'modal.digestFrequency':'Fréquence','modal.digestDaily':'Quotidien','modal.digestWeekly':'Hebdomadaire','modal.digestPerPeriod':'Par période de paie','modal.digestMonthly':'Mensuel',
+'modal.digestTime':'Heure','modal.digestDayOfWeek':'Jour','modal.digestDayOfMonth':'Jour du mois',
+'modal.digestPerPeriodNote':'Envoyé une fois par période de paie, aligné sur votre réglage de fréquence de paie ci-dessus.',
+'modal.digestTimezone':'Fuseau horaire',
+'modal.dowSun':'Dimanche','modal.dowMon':'Lundi','modal.dowTue':'Mardi','modal.dowWed':'Mercredi','modal.dowThu':'Jeudi','modal.dowFri':'Vendredi','modal.dowSat':'Samedi',
+'modal.tzNewfoundland':'Terre-Neuve','modal.tzAtlantic':'Atlantique','modal.tzEastern':'Est','modal.tzCentral':'Centre','modal.tzMountain':'Rocheuses','modal.tzPacific':'Pacifique',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
 'modal.cancel':'Annuler','modal.save':'Sauvegarder','modal.saveChanges':'Sauvegarder les modifications',
