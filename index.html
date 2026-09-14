@@ -2463,10 +2463,19 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div id="joinReqCardsContainer" class="mcards"></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">All Admin Accounts</h3>
+        <h3 style="font-size:14px;font-weight:600" data-i18n="admin.accountsOverview">Accounts Overview</h3>
+      </div>
+      <div id="adminStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-bottom:22px"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">Customer Accounts</h3>
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="adminAttentionOnly" onchange="renderAdmins()" style="width:14px;height:14px;accent-color:var(--accent)">
+          <span data-i18n="admin.attentionOnly">Needs attention only</span>
+        </label>
       </div>
       <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1000px">
-        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.plan">Plan</th><th>Trial</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Registered</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
+        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="admin.col.billing">Billing</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Signed up</th><th data-i18n="admin.col.activeWeek">Active this week</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
         <tbody id="adminsTableBody"></tbody>
       </table></div>
       <div id="adminCardsContainer"></div>
@@ -5405,6 +5414,27 @@ function renderDashboard(){
   // Sites the user can access (managers are scoped to their assigned sites)
   let sites=(C.sites||[]).slice();
   if(typeof managerSiteIds!=='undefined' && managerSiteIds!==null) sites=sites.filter(s=>managerSiteIds.includes(s.id));
+  // A super admin's C.sites is every tenant's sites (see refreshCache) — without this, the
+  // Dashboard used to dump every company's hours on one screen. Scope to whichever company they
+  // last "switched to" (Companies page); with none selected, point them at the account-level
+  // Accounts Overview instead of flooding this page with every customer's data.
+  if(isSuperAdmin()){
+    const ctxCo=Ctx.get()?.co;
+    if(ctxCo){
+      sites=sites.filter(s=>s.company_id===ctxCo.id);
+    } else {
+      host.innerHTML=`<div style="background:var(--surface);border:1px dashed var(--border);border-radius:var(--r-lg);padding:38px 24px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:var(--r-lg);background:rgba(79,142,247,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--accent)"><svg style="width:26px;height:26px"><use href="#i-nav-admin"/></svg></div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">${t('dash.saNoCoTitle')||'No company selected'}</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:420px;margin:0 auto 16px">${t('dash.saNoCoDesc')||'Pick a company to see its live activity here, or check account-level metrics (subscriptions, signups, who has gone quiet) in the Accounts Overview.'}</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn-primary" style="width:auto;padding:9px 20px;font-size:13px" onclick="goAdminTab('admins')">${t('dash.saOpenOverview')||'Open Accounts Overview'}</button>
+          <button class="btn-secondary" style="width:auto;padding:9px 20px;font-size:13px" onclick="navigate('companies')">${t('dash.saBrowseCos')||'Browse companies'}</button>
+        </div>
+      </div>`;
+      return;
+    }
+  }
   sites.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
 
   const card=(label,val,color)=>`<div class="card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600">${label}</div><div style="font-size:24px;font-weight:700;margin-top:5px;color:${color||'var(--text)'}">${val}</div></div>`;
@@ -8963,13 +8993,32 @@ function relativeTime(dateStr){
   if(days<30)return `${days}d ago`;
   return `${Math.floor(days/30)}mo ago`;
 }
-function trialBadge(a){
-  if((a.plan||'free')!=='free')return '';
-  const days=Math.floor((Date.now()-new Date(a.created_at).getTime())/86400000)+1;
-  if(days>7)return '<span style="display:inline-block;padding:2px 8px;border-radius:var(--r-xs);font-size:11px;font-weight:600;background:rgba(239,68,68,0.15);color:#ef4444">Expired</span>';
-  const color=days<=4?'#22c55e':days<=6?'#f59e0b':'#ef4444';
-  const bg=days<=4?'rgba(34,197,94,0.15)':days<=6?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.15)';
-  return `<span style="display:inline-block;padding:2px 8px;border-radius:var(--r-xs);font-size:11px;font-weight:600;background:${bg};color:${color}">Day ${days} / 7</span>`;
+// Billing truth mirrors send-owner-digest/send-weekly-digest's convention: a non-free plan with
+// no stripe_subscription_id is comped/grandfathered, not revenue — plan alone overstates paying
+// customers by counting every manually-granted account as if it were billed.
+function billingClass(a){
+  const plan=a.plan||'free';
+  if(plan==='free') return 'free';
+  return a.stripe_subscription_id ? 'paying' : 'comped';
+}
+function billingBadge(a){
+  const cls=billingClass(a);
+  const plan=a.plan||'free';
+  if(cls==='paying'){
+    const price=(PLANS[plan]||{}).price;
+    return `<span class="plan-badge plan-${plan==='unlimited'?'unlimited':plan}">${plan.charAt(0).toUpperCase()+plan.slice(1)}${price?' · $'+price+'/mo':''}</span>`;
+  }
+  if(cls==='comped'){
+    return `<span class="plan-badge plan-unlimited" title="${t('admin.compedHint')||'Non-free plan with no active Stripe subscription — granted, not billed.'}">${t('admin.comped')||'Comped'}</span>`;
+  }
+  return `<span class="plan-badge plan-free">${t('plan.free')||'Free'}</span>`;
+}
+function tenureStr(createdAt){
+  const days=Math.floor((Date.now()-new Date(createdAt).getTime())/86400000);
+  if(days<1)return t('admin.tenureToday')||'today';
+  if(days<30)return days+(t('admin.tenureD')||'d');
+  if(days<365)return Math.floor(days/30)+(t('admin.tenureMo')||'mo');
+  return (days/365).toFixed(1)+(t('admin.tenureY')||'y');
 }
 function toggleAdminDetail(id){
   const row=document.getElementById('adminDetail_'+id);
@@ -8984,72 +9033,133 @@ async function renderAdmins(){
   loadSurveyFeedback();
 
   const tbody=document.getElementById('adminsTableBody');
-  const planColors = {free:'plan-free',starter:'plan-starter',growth:'plan-growth',business:'plan-business',unlimited:'plan-unlimited'};
+  const statsGrid=document.getElementById('adminStatsGrid');
+  const attentionOnly = !!document.getElementById('adminAttentionOnly')?.checked;
 
   try{
     const admins=await DB.all('admins','order=created_at.asc');
     const sess = Sess.get();
-    if(!admins.length){tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;return;}
-    const adminRows = admins.map(a=>{
+    if(!admins.length){
+      tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;
+      if(statsGrid) statsGrid.innerHTML='';
+      return;
+    }
+    // "Active this week" is its own date-bounded query rather than a read of the shared punch
+    // cache (which for a super admin is an unfiltered "most recent 5000 punches system-wide") -
+    // a quiet company must never be masked by other tenants pushing it out of a row-count window.
+    // Mirrors the "any punch in the window = active" rule send-owner-digest already uses per company.
+    const weekAgoIso = new Date(Date.now()-7*86400000).toISOString();
+    const recentCoIds = new Set();
+    try{
+      const recent = await DB.all('punches', `punched_at=gte.${weekAgoIso}&select=company_id&limit=5000`);
+      (recent||[]).forEach(p=>recentCoIds.add(p.company_id));
+    }catch(e){ console.warn('renderAdmins: recent-activity fetch failed:', e); }
+
+    // Accounts, not logins: a co-admin or manager isn't a separate subscription, so counts and
+    // rows below are per primary owner. Their teammates still show once a row is expanded.
+    const accounts = admins.filter(a=>!a.parent_admin_id && a.role!=='super_admin');
+
+    const rows = accounts.map(a=>{
       const isMe = a.id === sess.id;
-      const isSA = a.role==='super_admin' || a.email===SUPER_ADMIN_EMAIL;
-      const planKey = a.plan||'free';
       const status = a.status||'active';
       const ini = a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-      const effectiveAdminId=a.parent_admin_id||a.id;
-      const cos=C.companies.filter(c=>c.admin_id===effectiveAdminId);
+      const cos=C.companies.filter(c=>c.admin_id===a.id);
       const coIds=new Set(cos.map(c=>c.id));
       const siteCount=C.sites.filter(s=>coIds.has(s.company_id)).length;
       const empCount=C.employees.filter(e=>coIds.has(e.company_id)).length;
-      return {a, isMe, isSA, planKey, status, ini, coCount:cos.length, siteCount, empCount, cos};
+      const cls=billingClass(a);
+      const activeThisWeek = cos.some(c=>recentCoIds.has(c.id));
+      // The thing worth catching: someone who is (or was) paying and has gone quiet.
+      const needsAttention = cls!=='free' && !activeThisWeek && status==='active';
+      const teammates = admins.filter(x=>x.parent_admin_id===a.id);
+      return {a, isMe, status, ini, coCount:cos.length, siteCount, empCount, cos, cls, activeThisWeek, needsAttention, teammates};
     });
 
+    if(statsGrid){
+      const totalAccounts=rows.length;
+      const payingCount=rows.filter(r=>r.cls==='paying').length;
+      const freeCount=rows.filter(r=>r.cls==='free').length;
+      const compedCount=rows.filter(r=>r.cls==='comped').length;
+      const mrr=rows.filter(r=>r.cls==='paying').reduce((sum,r)=>{
+        const base=(PLANS[r.a.plan]||{}).price||0;
+        const seats=Number(r.a.extra_seats||0)*4.90;
+        const sched=r.a.scheduling_addon?14.95:0;
+        return sum+base+seats+sched;
+      },0);
+      const attentionCount=rows.filter(r=>r.needsAttention).length;
+      const tile=(label,val,color)=>`<div class="card"><div style="font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600">${label}</div><div style="font-size:22px;font-weight:700;margin-top:5px;color:${color||'var(--text)'}">${val}</div></div>`;
+      statsGrid.innerHTML =
+        tile(t('admin.stat.total')||'Total accounts', totalAccounts) +
+        tile(t('admin.stat.paying')||'Paying', payingCount, 'var(--green)') +
+        tile(t('admin.stat.free')||'Free', freeCount) +
+        tile(t('admin.stat.comped')||'Comped', compedCount, 'var(--accent)') +
+        tile(t('admin.stat.mrr')||'Est. MRR', '$'+mrr.toFixed(2), 'var(--green)') +
+        tile(t('admin.stat.attention')||'Needs attention', attentionCount, attentionCount?'var(--red)':'var(--text)');
+    }
+
+    const visibleRows = (attentionOnly ? rows.filter(r=>r.needsAttention) : rows)
+      .sort((x,y)=> x.needsAttention!==y.needsAttention ? (x.needsAttention?-1:1) : x.a.name.localeCompare(y.a.name));
+
+    const cards = document.getElementById('adminCardsContainer');
+
+    if(!visibleRows.length){
+      tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:28px">${attentionOnly?(t('admin.noneNeedAttention')||'Nothing needs attention right now.'):(t('admin.noAdmins')||'No admins yet.')}</td></tr>`;
+      if(cards) cards.innerHTML='';
+      await renderJoinRequests();
+      return;
+    }
+
     // Desktop table rows
-    tbody.innerHTML=adminRows.map(({a,isMe,isSA,planKey,status,ini,coCount,siteCount,empCount,cos})=>{
-      const coIds=new Set(cos.map(c=>c.id));
+    tbody.innerHTML=visibleRows.map(({a,isMe,status,ini,coCount,siteCount,empCount,cos,activeThisWeek,needsAttention,teammates})=>{
       const detailRows=cos.map(c=>{
         const cSites=C.sites.filter(s=>s.company_id===c.id);
-        return `<div style="margin-bottom:8px"><strong style="color:var(--text1)">${c.name}</strong><div style="margin-left:16px;color:var(--text2);font-size:12px">${cSites.length?cSites.map(s=>'• '+s.name).join('<br>'):'<em>No sites</em>'}</div></div>`;
+        return `<div style="margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+          <div><strong style="color:var(--text1)">${esc(c.name)}</strong><div style="margin-left:16px;color:var(--text2);font-size:12px">${cSites.length?cSites.map(s=>'• '+esc(s.name)).join('<br>'):'<em>No sites</em>'}</div></div>
+          <button class="btn-secondary" style="padding:4px 10px;font-size:11px;flex-shrink:0" onclick="selectCtxFromCompany('${c.id}')">${t('admin.manage')||'Manage'}</button>
+        </div>`;
       }).join('');
-      return `<tr>
+      const teamLine = teammates.length
+        ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">${t('admin.team')||'Team'}: ${teammates.map(m=>esc(m.name)+' ('+(m.role==='manager'?(t('role.manager')||'manager'):(t('role.coAdmin')||'co-admin'))+')').join(', ')}</div>`
+        : '';
+      return `<tr${needsAttention?' style="background:rgba(239,68,68,.06)"':''}>
         <td style="min-width:120px;max-width:150px"><div class="emp-row" style="cursor:pointer" onclick="toggleAdminDetail('${a.id}')">
           <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf);width:28px;height:28px;min-width:28px;font-size:10px">${ini}</div>
-          <div><span style="font-weight:500">${a.name}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">▸</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
+          <div><span style="font-weight:500">${esc(a.name)}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">▸</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
         </div></td>
         <td style="font-size:13px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.email}">${a.email}</td>
-        <td style="white-space:nowrap"><span class="pill ${isSA?'admin':'site'}">${isSA?'\u2b50 Super Admin':'Admin'}</span></td>
-        <td style="white-space:nowrap"><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></td>
-        <td style="text-align:center">${trialBadge(a)}</td>
-        <td style="white-space:nowrap"><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></td>
-        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${new Date(a.created_at).toLocaleDateString()}</td>
-        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${a.last_login?relativeTime(a.last_login):'Never'}</td>
+        <td style="white-space:nowrap">${billingBadge(a)}</td>
+        <td style="white-space:nowrap"><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?(t('status.active')||'Active'):status==='pending_approval'?(t('status.pending')||'Pending'):(t('status.suspended')||'Suspended')}</span></td>
+        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${new Date(a.created_at).toLocaleDateString()}<div style="font-size:10.5px;color:var(--text3)">${tenureStr(a.created_at)}</div></td>
+        <td style="text-align:center;white-space:nowrap">${activeThisWeek
+          ? `<span class="pill in">${t('admin.active')||'✓ Active'}</span>`
+          : `<span class="pill ${needsAttention?'out':'site'}">${t('admin.quiet')||'⚠ Quiet'}</span>`}</td>
+        <td style="color:var(--text2);font-size:12px;white-space:nowrap">${a.last_login?relativeTime(a.last_login):(t('admin.never')||'Never')}</td>
         <td style="text-align:center;font-size:13px">${coCount}</td>
         <td style="text-align:center;font-size:13px">${siteCount}</td>
         <td style="text-align:center;font-size:13px">${empCount}</td>
         <td style="white-space:nowrap;min-width:120px;display:flex;gap:6px;align-items:center">${isMe
-          ? '<span style="font-size:11px;color:var(--text3)">\u2014</span>'
-          : '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">Edit</button>'
-          + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">Delete</button>'
+          ? '<span style="font-size:11px;color:var(--text3)">—</span>'
+          : '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">' + (t('common.edit')||'Edit') + '</button>'
+          + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">' + (t('common.delete')||'Delete') + '</button>'
         }</td>
       </tr>
-      <tr id="adminDetail_${a.id}" style="display:none"><td colspan="12" style="background:var(--surface2);padding:12px 20px;font-size:13px">${detailRows||'<em style="color:var(--text3)">No companies</em>'}</td></tr>`;
+      <tr id="adminDetail_${a.id}" style="display:none"><td colspan="11" style="background:var(--surface2);padding:12px 20px;font-size:13px">${detailRows||'<em style="color:var(--text3)">No companies</em>'}${teamLine}</td></tr>`;
     }).join('');
 
     // Mobile cards
-    const cards = document.getElementById('adminCardsContainer');
-    if(cards) cards.innerHTML = adminRows.map(({a,isMe,isSA,planKey,status,ini,coCount,siteCount,empCount})=>`
-      <div class="mobile-card-row">
+    if(cards) cards.innerHTML = visibleRows.map(({a,isMe,status,ini,coCount,siteCount,empCount,activeThisWeek,needsAttention})=>`
+      <div class="mobile-card-row"${needsAttention?' style="background:rgba(239,68,68,.06)"':''}>
         <div class="mc-name">
           <div style="display:flex;align-items:center;gap:8px">
             <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${ini}</div>
-            <span>${a.name}${isMe?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span>
+            <span>${esc(a.name)}${isMe?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span>
           </div>
-          <span class="pill ${isSA?'admin':'site'}">${isSA?'\u2b50 Super':'Admin'}</span>
+          ${activeThisWeek?`<span class="pill in">${t('admin.active')||'✓ Active'}</span>`:`<span class="pill ${needsAttention?'out':'site'}">${t('admin.quiet')||'⚠ Quiet'}</span>`}
         </div>
         <div class="mc-row"><span>Email</span><span style="font-size:12px">${a.email}</span></div>
-        <div class="mc-row"><span>Plan</span><span class="plan-badge ${planColors[planKey]||'plan-free'}">${planKey.charAt(0).toUpperCase()+planKey.slice(1)}</span></div>
-        <div class="mc-row"><span>Trial</span><span>${trialBadge(a)||'—'}</span></div>
+        <div class="mc-row"><span>Billing</span><span>${billingBadge(a)}</span></div>
         <div class="mc-row"><span>Status</span><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></div>
+        <div class="mc-row"><span>Signed up</span><span style="font-size:12px">${new Date(a.created_at).toLocaleDateString()} (${tenureStr(a.created_at)})</span></div>
         <div class="mc-row"><span>Last Login</span><span style="font-size:12px">${a.last_login?relativeTime(a.last_login):'Never'}</span></div>
         <div class="mc-row"><span>Companies / Sites / Emp.</span><span style="font-size:12px">${coCount} / ${siteCount} / ${empCount}</span></div>
         ${!isMe ? '<div class="mc-actions">'
@@ -9061,7 +9171,7 @@ async function renderAdmins(){
     // Load join requests
     await renderJoinRequests();
 
-  }catch(e){tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
 }
 
 async function deleteAdmin(id, name){
@@ -14271,6 +14381,9 @@ en:{
 'setup.s3':'Add your employees','setup.s3d':'Each one gets a 4-digit PIN to clock in with. You can print the PINs as cut-out cards to hand out.','setup.s3c':'Add employees',
 'setup.s4':'Try your first clock-in','setup.s4d':'Open the punch page and clock someone in — it appears here instantly.','setup.s4c':'Open punch page','ob.later':'I\'ll do this later',
 'dash.emptyTitle':'Your dashboard lights up once your team clocks in','dash.emptyDesc':'Add a site and a few employees, and you\'ll see live clock-ins, hours, and activity right here.',
+'dash.saNoCoTitle':'No company selected',
+'dash.saNoCoDesc':'Pick a company to see its live activity here, or check account-level metrics (subscriptions, signups, who has gone quiet) in the Accounts Overview.',
+'dash.saOpenOverview':'Open Accounts Overview','dash.saBrowseCos':'Browse companies',
 'land.ctaDemo':'▶ See a live demo — no signup','demo.banner':'Demo mode — sample data, nothing is saved.','demo.cta':'Create my free account','demo.exit':'Exit demo','demo.started':'Demo mode — this is sample data. Nothing is saved.',
 'land.previewNote':'This is the real dashboard — click it to explore the live demo with sample data.',
 'land.cmpTitle':'How we compare','land.cmpSub':'The differences that actually show up on your invoice.','land.cmpOthers':'Typical alternatives',
@@ -14372,7 +14485,18 @@ en:{
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
 'admin.managing':'Managing employees and sites for',
 'admin.noEmployeesFor':'No employees for','admin.noEmployees':'No employees found.',
-'admin.addSite':'+ Add Site','admin.allAdminAccounts':'All Admin Accounts','admin.createAdmin':'+ Create Admin',
+'admin.addSite':'+ Add Site','admin.allAdminAccounts':'Customer Accounts','admin.createAdmin':'+ Create Admin',
+'admin.accountsOverview':'Accounts Overview','admin.attentionOnly':'Needs attention only',
+'admin.col.billing':'Billing','admin.col.activeWeek':'Active this week',
+'admin.stat.total':'Total accounts','admin.stat.paying':'Paying','admin.stat.free':'Free',
+'admin.stat.comped':'Comped','admin.stat.mrr':'Est. MRR','admin.stat.attention':'Needs attention',
+'admin.noneNeedAttention':'Nothing needs attention right now.','admin.noAdmins':'No admins yet.',
+'admin.manage':'Manage','admin.team':'Team',
+'admin.active':'✓ Active','admin.quiet':'⚠ Quiet','admin.never':'Never',
+'admin.comped':'Comped','admin.compedHint':'Non-free plan with no active Stripe subscription — granted, not billed.',
+'admin.tenureToday':'today','admin.tenureD':'d','admin.tenureMo':'mo','admin.tenureY':'y',
+'status.active':'Active','status.pending':'Pending','status.suspended':'Suspended',
+'role.manager':'manager','role.coAdmin':'co-admin',
 'admin.inviteMember':'+ Invite Admin or Manager',
 'inv.title':'Invite Admin or Manager','inv.email':'Email address','inv.role':'Role',
 'inv.coAdmin':'Co-Admin','inv.coAdminDesc':'Full access except billing',
@@ -15137,6 +15261,9 @@ fr:{
 'setup.s3':'Ajoutez vos employés','setup.s3d':'Chacun reçoit un NIP à 4 chiffres pour pointer. Vous pouvez imprimer les NIP en cartes à découper.','setup.s3c':'Ajouter des employés',
 'setup.s4':'Essayez un premier pointage','setup.s4d':'Ouvrez la page de pointage et pointez quelqu\'un — ça s\'affiche ici instantanément.','setup.s4c':'Page de pointage','ob.later':'Je le ferai plus tard',
 'dash.emptyTitle':'Votre tableau de bord s\'anime dès que votre équipe pointe','dash.emptyDesc':'Ajoutez un site et quelques employés, et vous verrez les pointages en direct, les heures et l\'activité ici même.',
+'dash.saNoCoTitle':'Aucune compagnie sélectionnée',
+'dash.saNoCoDesc':'Choisissez une compagnie pour voir son activité en direct ici, ou consultez les métriques de compte (abonnements, inscriptions, comptes silencieux) dans l\'Aperçu des comptes.',
+'dash.saOpenOverview':'Ouvrir l\'aperçu des comptes','dash.saBrowseCos':'Parcourir les compagnies',
 'land.ctaDemo':'▶ Voir une démo — sans inscription','demo.banner':'Mode démo — données d\'exemple, rien n\'est enregistré.','demo.cta':'Créer mon compte gratuit','demo.exit':'Quitter la démo','demo.started':'Mode démo — ce sont des données d\'exemple. Rien n\'est enregistré.',
 'land.previewNote':'C\'est le vrai tableau de bord — cliquez pour explorer la démo avec des données d\'exemple.',
 'land.cmpTitle':'Comment on se compare','land.cmpSub':'Les différences qui paraissent vraiment sur votre facture.','land.cmpOthers':'Alternatives courantes',
@@ -15238,7 +15365,18 @@ fr:{
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',
 'admin.managing':'Gestion des employés et sites pour',
 'admin.noEmployeesFor':'Aucun employé pour','admin.noEmployees':'Aucun employé trouvé.',
-'admin.addSite':'+ Ajouter un site','admin.allAdminAccounts':'Tous les comptes admin','admin.createAdmin':'+ Créer un admin',
+'admin.addSite':'+ Ajouter un site','admin.allAdminAccounts':'Comptes clients','admin.createAdmin':'+ Créer un admin',
+'admin.accountsOverview':'Aperçu des comptes','admin.attentionOnly':'Nécessite attention seulement',
+'admin.col.billing':'Facturation','admin.col.activeWeek':'Actif cette semaine',
+'admin.stat.total':'Comptes au total','admin.stat.paying':'Payants','admin.stat.free':'Gratuits',
+'admin.stat.comped':'Offerts','admin.stat.mrr':'RMR estimés','admin.stat.attention':'Nécessite attention',
+'admin.noneNeedAttention':'Rien ne nécessite votre attention en ce moment.','admin.noAdmins':'Aucun admin pour le moment.',
+'admin.manage':'Gérer','admin.team':'Équipe',
+'admin.active':'✓ Actif','admin.quiet':'⚠ Silencieux','admin.never':'Jamais',
+'admin.comped':'Offert','admin.compedHint':'Plan payant sans abonnement Stripe actif — accordé, non facturé.',
+'admin.tenureToday':'aujourd\'hui','admin.tenureD':'j','admin.tenureMo':'mo','admin.tenureY':'a',
+'status.active':'Actif','status.pending':'En attente','status.suspended':'Suspendu',
+'role.manager':'gestionnaire','role.coAdmin':'co-admin',
 'admin.inviteMember':'+ Inviter un admin ou gestionnaire',
 'inv.title':'Inviter un admin ou gestionnaire','inv.email':'Adresse courriel','inv.role':'Rôle',
 'inv.coAdmin':'Co-admin','inv.coAdminDesc':'Accès complet, sauf la facturation',
