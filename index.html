@@ -1139,6 +1139,8 @@ border-top:1px solid var(--border);margin:18px 0;}
 .btn-sched-email:hover{background:rgba(79,142,247,.22);}
 .btn-sched-add-email{font-size:10px;font-weight:600;padding:3px 9px;border-radius:var(--r-xs);border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.1);color:var(--amber);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .btn-sched-add-email:hover{background:rgba(245,158,11,.22);}
+.btn-sched-copy{font-size:10px;font-weight:600;padding:3px 9px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-sched-copy:hover{background:var(--surface3,var(--border));color:var(--text);}
 /* ── HOLIDAYS ── */
 .holiday-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:var(--amber);border-radius:5px;padding:2px 6px;white-space:nowrap;}
 .sched-holiday-cell{background:rgba(245,158,11,.06);}
@@ -2930,6 +2932,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="openHolidaysModal()" id="holidaysBtn"><svg class="ic" style="margin-right:5px"><use href="#i-star"/></svg><span data-i18n="sched.manageHolidays">Holidays</span></button>
+      <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="copyLastWeekAll()" id="copyWeekBtn"><svg class="ic" style="margin-right:5px"><use href="#i-refresh"/></svg><span data-i18n="sched.copyLastWeekAll">Copy last week (all)</span></button>
       <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="notifyTeamSchedule()" id="notifyTeamBtn"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg><span data-i18n="sched.notifyTeam">Notify team</span></button>
       <button class="btn-primary" style="width:auto;padding:8px 18px;margin-top:0" onclick="openAddShiftModal()" id="addShiftBtn" data-i18n="sched.addShift">+ Add Shift</button>
     </div>
@@ -5112,6 +5115,27 @@ function _demoFetch(method,table,opts){
     const row=_demoVisitors.find(v=>v.id===id);
     if(row) Object.assign(row,opts.body);
     return Promise.resolve(row?[row]:[]);
+  }
+  // Scheduling: add/edit/copy/delete shifts all need to actually land in window._demoShifts —
+  // otherwise "Add Shift" and "Copy last/full week" look like they work (no error) but silently
+  // save nothing, which is worse than an obvious failure on a screen prospects try live.
+  if(method==='POST'&&table==='shifts'&&opts&&opts.body){
+    const row=Object.assign({id:'demo-sh'+Date.now()+Math.random().toString(36).slice(2,7)},opts.body);
+    (window._demoShifts||(window._demoShifts=[])).push(row);
+    return Promise.resolve([row]);
+  }
+  if(method==='PATCH'&&table==='shifts'&&opts&&opts.body){
+    const m=/id=eq\.([^&]+)/.exec(opts.filter||'');
+    const id=m&&m[1];
+    const row=(window._demoShifts||[]).find(sh=>sh.id===id);
+    if(row) Object.assign(row,opts.body);
+    return Promise.resolve(row?[row]:[]);
+  }
+  if(method==='DELETE'&&table==='shifts'){
+    const m=/id=eq\.([^&]+)/.exec(opts&&opts.filter||'');
+    const id=m&&m[1];
+    window._demoShifts=(window._demoShifts||[]).filter(sh=>sh.id!==id);
+    return Promise.resolve([]);
   }
   // Company Info edits (overtime/lunch/visitor toggles, owner report schedule, etc.) — merge into
   // the cached row so the modal's own re-read of C.companies reflects what was just saved, same
@@ -13283,7 +13307,7 @@ function schedGoToday() {
 // turns them back on, because a session can move from locked to unlocked without a reload.
 function schedChrome(show){
   const d = show ? '' : 'none';
-  ['holidaysBtn','notifyTeamBtn','addShiftBtn','schedToolbar'].forEach(id=>{
+  ['holidaysBtn','copyWeekBtn','notifyTeamBtn','addShiftBtn','schedToolbar'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display = d;
   });
@@ -13516,6 +13540,7 @@ async function renderScheduleGrid() {
     const emailBtn = hasEmail
       ? `<button class="btn-sched-email" onclick="sendScheduleEmail('${emp.id}')" title="${emp.email}">${t('sched.sendEmail')||'Send schedule'}</button>`
       : `<button class="btn-sched-add-email" onclick="openEmpForEmail('${emp.id}')">${t('sched.addEmail')||'+ Add email'}</button>`;
+    const copyBtn = `<button class="btn-sched-copy" onclick="copyLastWeekForEmployee('${emp.id}')" title="${t('sched.copyLastWeekTitle')||"Copy this employee's shifts from last week into this week"}">${t('sched.copyLastWeek')||'↺ Copy last week'}</button>`;
 
     html += `<tr><td>
       <div class="sched-emp-info">
@@ -13523,7 +13548,7 @@ async function renderScheduleGrid() {
         <div>
           <div class="sched-emp-name">${emp.name}</div>
           ${site ? `<div class="sched-emp-site"><svg class="ic" style="width:11px;height:11px;margin-right:4px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${site.name}</div>` : ''}
-          <div class="sched-emp-actions">${empShiftsThisWeek.length > 0 ? emailBtn : ''}</div>
+          <div class="sched-emp-actions">${copyBtn}${empShiftsThisWeek.length > 0 ? emailBtn : ''}</div>
         </div>
       </div>
     </td>`;
@@ -13611,6 +13636,127 @@ async function renderScheduleGrid() {
 
   html += `</tbody></table>`;
   wrap.innerHTML = html;
+}
+
+// Copies one employee's shifts from the week immediately before the one currently displayed,
+// mapped day-for-day (last Monday → this Monday, etc.) into the visible week. Building a new
+// week from scratch is the single most repetitive part of scheduling for a roster that mostly
+// repeats — this is a per-employee starting point, not a whole-week clone, so a manager can
+// still hand-adjust the one person whose hours changed without re-entering everyone else.
+// Days that already have a shift for this employee are left alone rather than duplicated.
+async function copyLastWeekForEmployee(empId) {
+  const emp = C.employees.find(e => e.id === empId);
+  if(!emp) return;
+  const s = Sess.get();
+  const adminId = s?.parent_admin_id || s?.id;
+
+  const weekStart = schedGetWeekStart(_schedWeek);
+  const prevWeekStart = new Date(weekStart);
+  prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+  const prevStartStr = schedDateStr(prevWeekStart);
+  const prevEndStr = schedDateStr(new Date(prevWeekStart.getTime() + 6*86400000));
+
+  let prevShifts = [];
+  try {
+    prevShifts = await DB.all('shifts',
+      `admin_id=eq.${adminId}&employee_id=eq.${empId}&shift_date=gte.${prevStartStr}&shift_date=lte.${prevEndStr}`) || [];
+  } catch(e) { console.warn('copyLastWeekForEmployee fetch error:', e); }
+
+  if(!prevShifts.length) {
+    showToast((t('sched.copyNone')||'{name} had no shifts last week to copy.').replace('{name}', emp.name), 'info');
+    return;
+  }
+
+  const existingDates = new Set(_schedShifts.filter(sh => sh.employee_id === empId).map(sh => sh.shift_date));
+  let copied = 0, skipped = 0;
+  for(const sh of prevShifts) {
+    const offsetDays = Math.round((new Date(sh.shift_date+'T00:00:00') - prevWeekStart) / 86400000);
+    if(offsetDays < 0 || offsetDays > 6) continue; // defensive: ignore anything outside the fetched week
+    const newDate = new Date(weekStart);
+    newDate.setDate(newDate.getDate() + offsetDays);
+    const newDateStr = schedDateStr(newDate);
+    if(existingDates.has(newDateStr)) { skipped++; continue; }
+    try {
+      await DB.insert('shifts', {
+        admin_id: adminId, company_id: sh.company_id, site_id: sh.site_id, employee_id: empId,
+        shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
+      });
+      existingDates.add(newDateStr);
+      copied++;
+    } catch(e) { console.warn('copyLastWeekForEmployee insert error:', e); }
+  }
+
+  await renderScheduleGrid();
+  if(copied && skipped) {
+    showToast((t('sched.copyMixed')||'Copied {n} shift(s) for {name}; {k} day(s) already had one and were left as-is.').replace('{n}',copied).replace('{name}',emp.name).replace('{k}',skipped), 'success');
+  } else if(copied) {
+    showToast((t('sched.copyDone')||'Copied {n} shift(s) for {name} from last week.').replace('{n}',copied).replace('{name}',emp.name), 'success');
+  } else {
+    showToast((t('sched.copyAllExist')||'{name} already has a shift on every day that had one last week.').replace('{name}', emp.name), 'info');
+  }
+}
+
+// Same idea as copyLastWeekForEmployee, but for the whole roster currently in view (respecting
+// the company/site filter) in one click — fetches last week's shifts once instead of once per
+// employee, then applies the same day-for-day, skip-if-already-there rule to every row.
+async function copyLastWeekAll() {
+  const coId = document.getElementById('schedCoFilter')?.value;
+  const siteId = document.getElementById('schedSiteFilter')?.value;
+  if(!coId) return;
+  let emps = C.employees.filter(e => e.company_id === coId && e.active);
+  if(siteId && siteId !== 'all') emps = emps.filter(e => e.site_id === siteId);
+  if(!emps.length) return;
+
+  const s = Sess.get();
+  const adminId = s?.parent_admin_id || s?.id;
+  const weekStart = schedGetWeekStart(_schedWeek);
+  const prevWeekStart = new Date(weekStart);
+  prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+  const prevStartStr = schedDateStr(prevWeekStart);
+  const prevEndStr = schedDateStr(new Date(prevWeekStart.getTime() + 6*86400000));
+
+  let filter = `admin_id=eq.${adminId}&shift_date=gte.${prevStartStr}&shift_date=lte.${prevEndStr}`;
+  if(siteId && siteId !== 'all') filter += `&site_id=eq.${siteId}`; else filter += `&company_id=eq.${coId}`;
+  let prevShifts = [];
+  try { prevShifts = await DB.all('shifts', filter) || []; } catch(e) { console.warn('copyLastWeekAll fetch error:', e); }
+
+  if(!prevShifts.length) {
+    showToast(t('sched.copyWeekNone')||'No shifts found last week to copy.', 'info');
+    return;
+  }
+
+  const empIds = new Set(emps.map(e => e.id));
+  const existingByEmp = {};
+  emps.forEach(e => { existingByEmp[e.id] = new Set(_schedShifts.filter(sh => sh.employee_id === e.id).map(sh => sh.shift_date)); });
+
+  let copied = 0, skipped = 0;
+  const touched = new Set();
+  for(const sh of prevShifts) {
+    if(!empIds.has(sh.employee_id)) continue; // outside the current roster/filter
+    const offsetDays = Math.round((new Date(sh.shift_date+'T00:00:00') - prevWeekStart) / 86400000);
+    if(offsetDays < 0 || offsetDays > 6) continue;
+    const newDate = new Date(weekStart);
+    newDate.setDate(newDate.getDate() + offsetDays);
+    const newDateStr = schedDateStr(newDate);
+    if(existingByEmp[sh.employee_id].has(newDateStr)) { skipped++; continue; }
+    try {
+      await DB.insert('shifts', {
+        admin_id: adminId, company_id: sh.company_id, site_id: sh.site_id, employee_id: sh.employee_id,
+        shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
+      });
+      existingByEmp[sh.employee_id].add(newDateStr);
+      copied++; touched.add(sh.employee_id);
+    } catch(e) { console.warn('copyLastWeekAll insert error:', e); }
+  }
+
+  await renderScheduleGrid();
+  if(copied && skipped) {
+    showToast((t('sched.copyWeekMixed')||'Copied {n} shift(s) for {e} employee(s); {k} day(s) already had one and were left as-is.').replace('{n}',copied).replace('{e}',touched.size).replace('{k}',skipped), 'success');
+  } else if(copied) {
+    showToast((t('sched.copyWeekDone')||'Copied {n} shift(s) for {e} employee(s) from last week.').replace('{n}',copied).replace('{e}',touched.size), 'success');
+  } else {
+    showToast(t('sched.copyWeekAllExist')||'Everyone already has a shift on every day that had one last week.', 'info');
+  }
 }
 
 function openAddShiftModal(empId = '', dateStr = '') {
@@ -14836,6 +14982,17 @@ en:{
 'common.dismiss':'Dismiss',
 'sched.sendEmail':'Send schedule',
 'sched.addEmail':'+ Add email',
+'sched.copyLastWeek':'↺ Copy last week',
+'sched.copyLastWeekTitle':'Copy this person\'s shifts from last week into this week',
+'sched.copyNone':'{name} had no shifts last week to copy.',
+'sched.copyMixed':'Copied {n} shift(s) for {name}; {k} day(s) already had one and were left as-is.',
+'sched.copyDone':'Copied {n} shift(s) for {name} from last week.',
+'sched.copyAllExist':'{name} already has a shift on every day that had one last week.',
+'sched.copyLastWeekAll':'Copy last week (all)',
+'sched.copyWeekNone':'No shifts found last week to copy.',
+'sched.copyWeekMixed':'Copied {n} shift(s) for {e} employee(s); {k} day(s) already had one and were left as-is.',
+'sched.copyWeekDone':'Copied {n} shift(s) for {e} employee(s) from last week.',
+'sched.copyWeekAllExist':'Everyone already has a shift on every day that had one last week.',
 'sched.unavailable':'Unavailable',
 'sched.shiftOverAvail':'Shift overlaps unavailability',
 'sched.overlapWarning':'Overlap',
@@ -15693,6 +15850,17 @@ fr:{
 'common.dismiss':'Ignorer',
 'sched.sendEmail':'Envoyer l\'horaire',
 'sched.addEmail':'+ Ajouter courriel',
+'sched.copyLastWeek':'↺ Copier la semaine dernière',
+'sched.copyLastWeekTitle':'Copier les quarts de cette personne de la semaine dernière vers cette semaine',
+'sched.copyNone':'{name} n\'avait aucun quart la semaine dernière à copier.',
+'sched.copyMixed':'{n} quart(s) copié(s) pour {name}; {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
+'sched.copyDone':'{n} quart(s) copié(s) pour {name} depuis la semaine dernière.',
+'sched.copyAllExist':'{name} a déjà un quart chaque jour où il y en avait un la semaine dernière.',
+'sched.copyLastWeekAll':'Copier la semaine dernière (tous)',
+'sched.copyWeekNone':'Aucun quart trouvé la semaine dernière à copier.',
+'sched.copyWeekMixed':'{n} quart(s) copié(s) pour {e} employé(s); {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
+'sched.copyWeekDone':'{n} quart(s) copié(s) pour {e} employé(s) depuis la semaine dernière.',
+'sched.copyWeekAllExist':'Tout le monde a déjà un quart chaque jour où il y en avait un la semaine dernière.',
 'sched.unavailable':'Indisponible',
 'sched.shiftOverAvail':'Le quart chevauche une indisponibilité',
 'sched.overlapWarning':'Chevauchement',
