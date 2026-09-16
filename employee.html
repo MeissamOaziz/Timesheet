@@ -67,6 +67,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-logout{background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text2);padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
 .btn-logout:hover{border-color:var(--red);color:var(--red);}
 
+/* PUNCH CARD — persistent across tabs, mirrors the kiosk's IN/OUT prominence but sized for a
+   phone screen instead of a wall tablet. */
+.punch-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.punch-status{display:flex;align-items:center;gap:10px;}
+.punch-dot{width:10px;height:10px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.punch-dot.in{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+.punch-status-text{font-size:13px;font-weight:600;}
+.punch-status-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.btn-punch{border:none;border-radius:var(--r-md);padding:11px 22px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;color:#fff;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}
+.btn-punch:disabled{opacity:.5;cursor:not-allowed;}
+.btn-punch:not(:disabled):hover{opacity:.88;}
+.btn-punch.in{background:var(--green);}
+.btn-punch.out{background:var(--red);}
+.punch-msg{width:100%;font-size:12px;}
+
 /* TABS */
 .tabs-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:2px;}
 .tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:14px 16px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
@@ -218,6 +233,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
 <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
 </defs></svg>
 <style>.ic{width:15px;height:15px;flex-shrink:0;vertical-align:-2px;}</style>
 <div id="empToast"></div>
@@ -359,6 +376,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn-logout" onclick="doEmpLogout()" id="logoutBtn">Sign Out</button>
     </div>
   </nav>
+
+  <div class="punch-bar" id="punchBar" style="display:none">
+    <div class="punch-status">
+      <div class="punch-dot" id="punchDot"></div>
+      <div>
+        <div class="punch-status-text" id="punchStatusText">—</div>
+        <div class="punch-status-sub" id="punchStatusSub"></div>
+      </div>
+    </div>
+    <button class="btn-punch in" id="punchBtn" onclick="doPunch()" disabled>
+      <svg class="ic" style="width:16px;height:16px"><use href="#i-clock"/></svg>
+      <span id="punchBtnLabel">…</span>
+    </button>
+    <div class="punch-msg" id="punchMsg"></div>
+  </div>
 
   <div class="tabs-bar">
     <button class="tab-btn active" onclick="showTab('schedule')" id="tabSchedule"><svg class="ic"><use href="#i-calendar"/></svg> <span id="tabSchedLabel">Schedule</span></button>
@@ -583,6 +615,19 @@ const T = {
     fromDate: 'From', toDate: 'To (leave blank for single day)',
     days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
     today: 'Today',
+    punchClockedIn: 'Clocked in', punchClockedOut: 'Clocked out', punchSince: 'since',
+    punchAt: 'Site', punchIn: 'Clock In', punchOut: 'Clock Out', punchWorking: '…',
+    punchNoSite: 'No site assigned — ask your admin to assign you one.',
+    punchErr_too_far: 'You need to be closer to the site to clock in/out.',
+    punchErr_location_required: 'This site requires location access. Please allow it and try again.',
+    punchErr_already_in: 'You are already clocked in.',
+    punchErr_not_in: 'You are not clocked in yet.',
+    punchErr_invalid_site: 'Your assigned site is not valid. Contact your admin.',
+    punchErr_remote_punch_disabled: 'Remote clock-in is not enabled for your company.',
+    punchErr_unauthorized: 'Your session expired. Please sign in again.',
+    punchErr_generic: 'Could not record punch. Please try again.',
+    punchOk_in: 'Clocked in.', punchOk_out: 'Clocked out.',
+    punchLocDenied: '(location not shared)',
   },
   fr: {
     loading: 'Chargement...', loginTitle: 'Portail employé', loginSub: 'Connectez-vous pour voir votre horaire et vos heures.',
@@ -640,6 +685,19 @@ const T = {
     fromDate: 'Du', toDate: 'Au (laisser vide pour un seul jour)',
     days: ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
     today: "Aujourd'hui",
+    punchClockedIn: 'Entré', punchClockedOut: 'Sorti', punchSince: 'depuis',
+    punchAt: 'Site', punchIn: 'Entrée', punchOut: 'Sortie', punchWorking: '…',
+    punchNoSite: 'Aucun site assigné — demandez à votre admin de vous en assigner un.',
+    punchErr_too_far: 'Vous devez être plus près du site pour pointer.',
+    punchErr_location_required: 'Ce site exige l\'accès à la localisation. Veuillez l\'autoriser et réessayer.',
+    punchErr_already_in: 'Vous êtes déjà entré.',
+    punchErr_not_in: 'Vous n\'êtes pas encore entré.',
+    punchErr_invalid_site: 'Votre site assigné n\'est pas valide. Contactez votre admin.',
+    punchErr_remote_punch_disabled: 'Le pointage à distance n\'est pas activé pour votre compagnie.',
+    punchErr_unauthorized: 'Votre session a expiré. Veuillez vous reconnecter.',
+    punchErr_generic: 'Impossible d\'enregistrer le pointage. Veuillez réessayer.',
+    punchOk_in: 'Entrée enregistrée.', punchOk_out: 'Sortie enregistrée.',
+    punchLocDenied: '(localisation non partagée)',
   }
 };
 function t(key) { return (T[_empLang] || T.en)[key] || key; }
@@ -701,6 +759,7 @@ function applyTranslations() {
   if (toReason) toReason.placeholder = t('toReasonPh');
   // The type dropdown is built in the active language, so rebuild it on a language switch.
   if (document.getElementById('tabContentTimeOff')?.style.display === '') renderTimeOff();
+  if (_remotePunchEnabled) renderPunchStatus();
 }
 
 // ══════════════════════════════════════════════════════
@@ -969,6 +1028,117 @@ function showPortal() {
   showScreen('screenApp');
   showTab('schedule');
   loadAvailability();
+  initPunchBar();
+}
+
+// ══════════════════════════════════════════════════════
+// PUNCH BAR — remote clock-in/out, per-company opt-in (companies.remote_punch_enabled).
+// Calls the same portal_punch RPC the (future) mobile app will use; geofencing, session-only
+// identity and sequence checks are all enforced server-side, not here.
+// ══════════════════════════════════════════════════════
+let _remotePunchEnabled = false;
+let _lastPunchType = null;   // 'IN' | 'OUT' | null (never punched)
+let _lastPunchAt = null;     // Date | null
+let _punching = false;
+
+async function initPunchBar() {
+  try {
+    const rows = asRows(await rpc('portal_get_company_payroll', { p_session: _session.token }));
+    _remotePunchEnabled = !!(rows.length && rows[0].remote_punch_enabled);
+  } catch(e) { _remotePunchEnabled = false; }
+  const bar = document.getElementById('punchBar');
+  if (!_remotePunchEnabled) { bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  await refreshPunchStatus();
+}
+
+async function refreshPunchStatus() {
+  try {
+    const to = dateStr(new Date());
+    const from = dateStr(new Date(Date.now() - 2*24*60*60*1000));
+    const punches = asRows(await rpc('portal_get_punches', { p_session: _session.token, p_from: from, p_to: to }));
+    const last = punches.length ? punches[punches.length - 1] : null;
+    _lastPunchType = last ? last.type : null;
+    _lastPunchAt = last ? new Date(last.punched_at) : null;
+  } catch(e) { _lastPunchType = null; _lastPunchAt = null; }
+  renderPunchStatus();
+}
+
+function renderPunchStatus() {
+  const dot = document.getElementById('punchDot');
+  const text = document.getElementById('punchStatusText');
+  const sub = document.getElementById('punchStatusSub');
+  const btn = document.getElementById('punchBtn');
+  const label = document.getElementById('punchBtnLabel');
+  const isIn = _lastPunchType === 'IN';
+  dot.classList.toggle('in', isIn);
+  text.textContent = isIn ? t('punchClockedIn') : t('punchClockedOut');
+  sub.textContent = _lastPunchAt
+    ? `${t('punchSince')} ${_lastPunchAt.toLocaleTimeString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { hour: 'numeric', minute: '2-digit' })}`
+    : '';
+  btn.classList.toggle('in', !isIn);
+  btn.classList.toggle('out', isIn);
+  label.textContent = isIn ? t('punchOut') : t('punchIn');
+  const hasSite = !!_session.siteId;
+  btn.disabled = _punching || !hasSite;
+  document.getElementById('punchMsg').innerHTML = hasSite ? '' : `<span style="color:var(--red)">${t('punchNoSite')}</span>`;
+}
+
+function getGeolocation() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  });
+}
+
+async function doPunch() {
+  if (_punching || !_session.siteId) return;
+  _punching = true;
+  const btn = document.getElementById('punchBtn');
+  const label = document.getElementById('punchBtnLabel');
+  const prevLabel = label.textContent;
+  btn.disabled = true;
+  label.textContent = t('punchWorking');
+  document.getElementById('punchMsg').textContent = '';
+
+  const type = _lastPunchType === 'IN' ? 'OUT' : 'IN';
+  const now = new Date();
+  const geo = await getGeolocation();
+
+  try {
+    const rows = asRows(await rpc('portal_punch', {
+      p_session: _session.token,
+      p_type: type,
+      p_site_id: _session.siteId,
+      // Local calendar date/time, matching the kiosk's own convention (executePunch in
+      // index.html) -- dateStr()'s toISOString() is UTC and would misdate a punch made in the
+      // evening in any Canadian timezone.
+      p_punch_date: now.toLocaleDateString('en-CA'),
+      p_punch_time: now.toLocaleTimeString('en-US', { hour12: false }),
+      p_client_time: now.toISOString(),
+      p_lat: geo ? geo.lat : null,
+      p_lng: geo ? geo.lng : null,
+      p_accuracy_m: geo ? geo.acc : null,
+    }));
+    const res = rows.length ? rows[0] : null;
+    if (res && res.ok) {
+      showToast(type === 'IN' ? t('punchOk_in') : t('punchOk_out'), 'success');
+      await refreshPunchStatus();
+      if (document.getElementById('tabContentReports')?.style.display === '') renderReports();
+    } else {
+      const code = res?.error_code || 'generic';
+      const dict = T[_empLang] || T.en;
+      showToast(dict['punchErr_' + code] || dict.punchErr_generic, 'error');
+    }
+  } catch(e) {
+    showToast(t('punchErr_generic'), 'error');
+  }
+  _punching = false;
+  renderPunchStatus();
 }
 
 // ══════════════════════════════════════════════════════

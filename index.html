@@ -3636,6 +3636,17 @@ border-top:1px solid var(--border);margin:18px 0;}
       <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addCompanyModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
     </p>
     <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.remoteAccessSettings">Remote Access</p>
+    <div id="remotePunchToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleRemotePunchOpt()">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-clock"/></svg><span data-i18n="modal.enableRemotePunch">Allow Remote Clock-In</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.remotePunchDesc">Lets employees clock in and out from their own phone or computer in the Employee Portal, instead of only from a shared kiosk</div>
+      </div>
+      <div id="remotePunchToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="remotePunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
+    <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.punchRounding">Punch Rounding</p>
     <div class="form-group">
       <label data-i18n="modal.punchRoundingLabel">Round punch times to</label>
@@ -4914,7 +4925,7 @@ function _roundPunchMs(iso, mins){
 // ═══════════════════════════════════════════════════
 function isDemo(){ return !!window._demoMode; }
 function _demoBuildData(){
-  const CO={id:'demo-co',name:'Café Rivière (démo)',admin_id:'demo-admin',week_start:'monday',payroll_frequency:'biweekly',track_overtime:true,track_lunch_breaks:true,visitor_checkin_enabled:true,punch_rounding:0,alerts_enabled:false};
+  const CO={id:'demo-co',name:'Café Rivière (démo)',admin_id:'demo-admin',week_start:'monday',payroll_frequency:'biweekly',track_overtime:true,track_lunch_breaks:true,visitor_checkin_enabled:true,remote_punch_enabled:true,punch_rounding:0,alerts_enabled:false};
   const SITES=[{id:'demo-s1',company_id:CO.id,name:'Plateau',description:'Rue Saint-Denis'},
                {id:'demo-s2',company_id:CO.id,name:'Vieux-Port',description:'Rue de la Commune'}];
   const NAMES=[['Marie Lavoie','demo-s1'],['David Pham','demo-s1'],['Sofia Ricci','demo-s1'],
@@ -10256,6 +10267,7 @@ function openAddCompanyModal(){
   setOvertimeToggle(false);
   setLunchToggle(false);
   setVisitorCheckinToggle(false);
+  setRemotePunchToggle(false);
   _setGrowthAddonLockState();
   resetLogoUpload(null);
   openModal('addCompanyModal');
@@ -10291,6 +10303,7 @@ function editCompany(id){
   setOvertimeToggle(!!co.track_overtime);
   setLunchToggle(!!co.track_lunch_breaks);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
+  setRemotePunchToggle(!!co.remote_punch_enabled);
   _setGrowthAddonLockState();
   resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
@@ -10336,6 +10349,18 @@ function setVisitorCheckinToggle(on){
   document.getElementById('visitorCheckinToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('visitorCheckinThumb').style.left=on?'20px':'2px';
 }
+// Unlike lunch/visitor tracking, remote clock-in is available on every plan — it shipped for a
+// Starter-plan customer (fully remote team, no shared kiosk possible), so gating it behind
+// Growth+ would defeat the point.
+function toggleRemotePunchOpt(){
+  const on=document.getElementById('remotePunchThumb').style.left!=='20px';
+  document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('remotePunchThumb').style.left=on?'20px':'2px';
+}
+function setRemotePunchToggle(on){
+  document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('remotePunchThumb').style.left=on?'20px':'2px';
+}
 // Lunch breaks and visitor check-in are Growth-plan-and-up inclusions. Below Growth, force both
 // toggles off and lock the row (opacity + no pointer events) rather than letting an admin flip
 // them on and then silently lose the setting on save — the lock is visible and explained instead.
@@ -10373,6 +10398,7 @@ async function saveCompany(){
   const growthOk=hasGrowthOrAbove();
   const track_lunch_breaks=growthOk&&document.getElementById('lunchThumb').style.left==='20px';
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
+  const remote_punch_enabled=document.getElementById('remotePunchThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   // Hard enforce plan limit on new company creation
@@ -10389,13 +10415,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -14791,6 +14817,8 @@ en:{
 'modal.growthPlanBadge':'GROWTH+',
 'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
 'modal.upgradeLink':'Upgrade now',
+'modal.remoteAccessSettings':'Remote Access','modal.enableRemotePunch':'Allow Remote Clock-In',
+'modal.remotePunchDesc':'Lets employees clock in and out from their own phone or computer in the Employee Portal, instead of only from a shared kiosk',
 'modal.tzNewfoundland':'Newfoundland','modal.tzAtlantic':'Atlantic','modal.tzEastern':'Eastern','modal.tzCentral':'Central','modal.tzMountain':'Mountain','modal.tzPacific':'Pacific',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
@@ -15665,6 +15693,8 @@ fr:{
 'modal.growthPlanBadge':'CROISSANCE+',
 'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
 'modal.upgradeLink':'Mettre à niveau',
+'modal.remoteAccessSettings':'Accès à distance','modal.enableRemotePunch':'Permettre le pointage à distance',
+'modal.remotePunchDesc':'Permet aux employés de pointer l\'entrée et la sortie depuis leur propre téléphone ou ordinateur dans le portail employé, au lieu d\'un pointeau partagé seulement',
 'modal.tzNewfoundland':'Terre-Neuve','modal.tzAtlantic':'Atlantique','modal.tzEastern':'Est','modal.tzCentral':'Centre','modal.tzMountain':'Rocheuses','modal.tzPacific':'Pacifique',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
