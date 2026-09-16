@@ -10682,10 +10682,15 @@ function setReportPeriod(val){
 function updateDateRange(co){
   const p=document.getElementById('reportPeriod').value;
   if(p==='custom')return;
-  // Auto-infer co from the company dropdown when not passed
+  // Auto-infer co from the company dropdown when not passed. "All Companies" has no single
+  // payroll setting to read, but getPayrollPeriods()/week_start below silently default to
+  // biweekly/Monday when co is undefined — so leaving co unresolved here doesn't show "no
+  // setting", it shows the WRONG setting. Fall back to the first company as a representative,
+  // same as the Dashboard already does for its own single-company assumptions (co0).
   if(!co){
     const coId=document.getElementById('reportCompany').value;
     if(coId&&coId!=='all')co=C.companies.find(c=>c.id===coId);
+    else co=C.companies[0];
   }
   if(p==='last_period'||p==='current_period'){
     const periods=getPayrollPeriods(co);
