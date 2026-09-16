@@ -1,5 +1,16 @@
 // PunchClock Pro — Period Summary Email
 // Supabase Edge Function: send-period-summary
+//
+// Two audiences share one "period just closed" event: each employee gets their own hours
+// (sendToEmployee), and whoever runs payroll gets everyone's hours in one sheet with a CSV
+// (sendPayrollSummaries, to report_recipients). Admin-configurable delivery timing (2026-09-16):
+// payroll_report_delay_days lets an admin push delivery back up to a week after the period
+// actually closes (e.g. period closes Saturday, delay 3 -> sent Tuesday, once a manager has had
+// the weekend + Monday to correct punches), at payroll_report_hour in the company's own
+// timezone (digest_timezone — reused from the now-retired owner-digest feature rather than
+// adding a duplicate per-company timezone column). Both audiences move together: splitting them
+// into two settings wasn't asked for and would let an employee and their accountant see two
+// different "final" numbers for the same period.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -13,28 +24,75 @@ function addDays(d, n) {
   r.setDate(r.getDate() + n);
   return r;
 }
-function getPeriodInfo(today, weekStart, frequency) {
+
+// Company-local calendar parts for `date`, via ICU. Deno's timezone database is complete, so this
+// needs no dependency — just Intl configured with the company's IANA zone. Mirrors the same
+// helper in send-owner-digest.
+function localParts(date, timeZone) {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone, hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', weekday: 'short',
+  });
+  const parts = {};
+  for (const p of fmt.formatToParts(date)) parts[p.type] = p.value;
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    year: Number(parts.year), month: Number(parts.month), day: Number(parts.day),
+    hour: Number(parts.hour), weekday: weekdayMap[parts.weekday] ?? 0,
+  };
+}
+
+// Shifts a {year,month,day} local calendar date by N days and recomputes its weekday — used to
+// find "what day was `delayDays` days before this one", since a delayed boundary check needs the
+// weekday of the shifted date, not today's.
+function shiftLocalDay(p, deltaDays) {
+  const d = new Date(Date.UTC(p.year, p.month - 1, p.day));
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(), weekday: d.getUTCDay() };
+}
+
+// Is the local calendar day `p` the first day of a new payroll period? Anchor-aware for
+// biweekly — a fresh weekly/monthly boundary is unambiguous from the weekday/day-of-month alone,
+// but biweekly genuinely needs payroll_anchor_date to know which of the two weeks is the start
+// (previously this function ignored the anchor entirely — a real inconsistency with the app's own
+// getPayrollPeriods, fixed here as this logic was being touched anyway).
+function isPeriodBoundaryDay(p, weekStart, frequency, anchorDate) {
+  if (frequency === 'monthly') return p.day === 1;
   const startDow = weekStart === 'sunday' ? 0 : 1;
-  const todayDow = today.getDay();
-  if (frequency === 'monthly') {
-    if (today.getDate() !== 1) return null;
-    const periodEnd = addDays(today, -1);
-    const periodStart = new Date(periodEnd.getFullYear(), periodEnd.getMonth(), 1);
-    return {
-      isFirstDay: true,
-      periodStart,
-      periodEnd
-    };
+  if (frequency === 'weekly') return p.weekday === startDow;
+  // biweekly
+  if (anchorDate) {
+    const anchor = new Date(anchorDate + 'T00:00:00Z');
+    const dayUtc = Date.UTC(p.year, p.month - 1, p.day);
+    const anchorUtc = Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), anchor.getUTCDate());
+    const daysSince = Math.round((dayUtc - anchorUtc) / 86400000);
+    return daysSince >= 0 && daysSince % 14 === 0;
   }
-  if (todayDow !== startDow) return null;
-  const periodEnd = addDays(today, -1);
+  return p.weekday === startDow; // no anchor set — fall back to a plain weekly cadence
+}
+
+// Given a local calendar day that IS a period-boundary day, returns the {periodStart, periodEnd}
+// Date objects for the period that just closed (periodEnd = the day before).
+function periodBoundsForLocalDay(p, frequency) {
+  const dayUtc = new Date(Date.UTC(p.year, p.month - 1, p.day));
+  const periodEnd = addDays(dayUtc, -1);
+  if (frequency === 'monthly') {
+    const periodStart = new Date(Date.UTC(periodEnd.getUTCFullYear(), periodEnd.getUTCMonth(), 1));
+    return { periodStart, periodEnd };
+  }
   const days = frequency === 'weekly' ? 7 : 14;
   const periodStart = addDays(periodEnd, -(days - 1));
-  return {
-    isFirstDay: true,
-    periodStart,
-    periodEnd
-  };
+  return { periodStart, periodEnd };
+}
+
+// Used only by the POST test/manual fallback paths, which run "as if today, no delay" — the
+// cron path below uses isPeriodBoundaryDay/periodBoundsForLocalDay directly with the configured
+// delay and the company's local calendar day.
+function getPeriodInfo(today, weekStart, frequency, anchorDate) {
+  const p = { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate(), weekday: today.getDay() };
+  if (!isPeriodBoundaryDay(p, weekStart, frequency, anchorDate)) return null;
+  const { periodStart, periodEnd } = periodBoundsForLocalDay(p, frequency);
+  return { isFirstDay: true, periodStart, periodEnd };
 }
 function formatTime(t) {
   const [hStr, mStr] = t.split(':');
@@ -484,13 +542,15 @@ Deno.serve(async (req)=>{
     if (req.method === 'POST') {
       const body = await req.json().catch(()=>({}));
       // "Send a test now" from the recipients panel: same email the cron would send, for the
-      // period the admin picked, so a typo'd address gets caught before payroll day.
+      // period the admin picked, so a typo'd address gets caught before payroll day. Runs as if
+      // today with no delay — a test should show the most recently closed period regardless of
+      // the company's configured delay/hour, so a typo is caught immediately rather than waiting.
       if (body.test_recipients && body.company_id) {
         const { data: co, error: cErr } = await supabase.from('companies').select('*').eq('id', body.company_id).single();
         if (cErr || !co) throw new Error('Company not found');
-        const info = getPeriodInfo(addDays(new Date(new Date().setHours(0, 0, 0, 0)), 0), co.week_start || 'monday', co.payroll_frequency || 'biweekly');
-        // The cron only fires on the first day of a period; a test can run any day, so fall back
-        // to the period that ended yesterday.
+        const info = getPeriodInfo(addDays(new Date(new Date().setHours(0, 0, 0, 0)), 0), co.week_start || 'monday', co.payroll_frequency || 'biweekly', co.payroll_anchor_date);
+        // The cron only fires on the (delayed) first day of a period; a test can run any day, so
+        // fall back to the period that ended yesterday.
         const endStr = body.end_date || toDateStr(info ? info.periodEnd : addDays(today, -1));
         const startStr = body.start_date || toDateStr(info ? info.periodStart
           : addDays(addDays(today, -1), -((co.payroll_frequency === 'weekly' ? 7 : 14) - 1)));
@@ -523,6 +583,7 @@ Deno.serve(async (req)=>{
         });
       }
     }
+    const now = new Date();
     const results = [];
     const { data: companies, error: coErr } = await supabase.from('companies').select('*');
     if (coErr) throw coErr;
@@ -533,15 +594,43 @@ Deno.serve(async (req)=>{
         skipped: 0,
         errors: []
       };
-      const periodInfo = getPeriodInfo(today, company.week_start || 'monday', company.payroll_frequency || 'biweekly');
-      if (!periodInfo) {
+
+      const tz = company.digest_timezone || 'America/Toronto';
+      const delayDays = company.payroll_report_delay_days ?? 0;
+      const reportHour = company.payroll_report_hour ?? 8;
+      const nowLocal = localParts(now, tz);
+
+      // Only the one local hour the admin configured — everything else about this company is
+      // skipped without even checking the period boundary, so a company due at 8am doesn't get
+      // re-evaluated (and doesn't risk a duplicate) on every other hourly run.
+      if (nowLocal.hour !== reportHour) {
         companyResult.skipped++;
         results.push(companyResult);
         continue;
       }
-      const { periodStart, periodEnd } = periodInfo;
+
+      const candidateDay = delayDays ? shiftLocalDay(nowLocal, -delayDays) : nowLocal;
+      const isBoundary = isPeriodBoundaryDay(candidateDay, company.week_start || 'monday', company.payroll_frequency || 'biweekly', company.payroll_anchor_date);
+      if (!isBoundary) {
+        companyResult.skipped++;
+        results.push(companyResult);
+        continue;
+      }
+
+      const { periodStart, periodEnd } = periodBoundsForLocalDay(candidateDay, company.payroll_frequency || 'biweekly');
       const startStr = toDateStr(periodStart);
       const endStr = toDateStr(periodEnd);
+
+      // Dedup: the hourly cron must only process a given closed period once, even if it fires
+      // more than once during the matching hour (a retry, or a run a few minutes either side of
+      // the top of the hour).
+      if (company.payroll_report_last_sent_end === endStr) {
+        companyResult.skipped++;
+        results.push(companyResult);
+        continue;
+      }
+      await supabase.from('companies').update({ payroll_report_last_sent_end: endStr }).eq('id', company.id);
+
       const { data: employees, error: empErr } = await supabase.from('employees').select('*').eq('company_id', company.id).eq('active', true).eq('send_report', true).not('email', 'is', null);
       if (empErr) throw empErr;
       for (const emp of employees || []){
