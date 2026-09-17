@@ -195,7 +195,15 @@ if (window.top !== window.self) {
       "name": "Why use a tablet terminal instead of a GPS mobile app?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There's also no app to install, no personal device required, and no battery or connectivity excuses."
+        "text": "For a team with a shared physical location, a fixed tablet terminal is more accurate and harder to abuse than a GPS-based mobile app: employees must physically be at your site to punch in, there's no app to install, and no personal device required. If your team is fully remote or field-based with no shared location, PunchClock Pro also supports individually-authorized remote clock-in from each employee's own phone or computer — see the next question."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "We have remote or field staff with no shared location — can they still punch in?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, on every plan. Turn on Allow Remote Clock-In in Company Info, then grant it to specific employees (or a whole site's roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee clocks in and out from their own phone or computer through their Employee Portal login, with no shared kiosk required."
       }
     },
     {
@@ -1440,6 +1448,11 @@ border-top:1px solid var(--border);margin:18px 0;}
         <h3 data-i18n="land.feat12Title">Employee Self-Service Portal</h3>
         <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.</p>
       </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
+        <h3 data-i18n="land.feat15Title">Remote Clock-In — For Distributed Teams</h3>
+        <p data-i18n="land.feat15Desc">No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site's roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk required. Included free on every plan.</p>
+      </div>
       <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
         <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-pause"/></svg></div>
         <h3><span data-i18n="land.feat13Title">Lunch &amp; Break Tracking</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
@@ -1483,6 +1496,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet4Desc">Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.</p>
         </div>
       </div>
+      <p style="text-align:center;font-size:13px;color:var(--text3);margin-top:32px;max-width:560px;margin-left:auto;margin-right:auto" data-i18n-html="land.tabletRemoteNote">No shared location to put a terminal at? PunchClock also supports individually-authorized <strong>remote clock-in</strong> from each employee's own device — see Remote Clock-In below.</p>
     </div>
   </div>
 
@@ -2425,6 +2439,8 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="btn-amber" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkSendReport()"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg><span data-i18n="bulk.sendReport">Send Report</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="bulkToggleActive(false)"><svg class="ic" style="margin-right:5px"><use href="#i-pause"/></svg><span data-i18n="admin.deactivate">Deactivate</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="bulkToggleActive(true)"><svg class="ic" style="margin-right:5px"><use href="#i-play"/></svg><span data-i18n="admin.activate">Activate</span></button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkToggleRemotePunch(true)"><svg class="ic" style="margin-right:5px"><use href="#i-clock"/></svg><span data-i18n="bulk.enableRemote">Enable Remote Clock-In</span></button>
+      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkToggleRemotePunch(false)"><svg class="ic" style="margin-right:5px"><use href="#i-clock"/></svg><span data-i18n="bulk.disableRemote">Disable Remote Clock-In</span></button>
       <button class="btn-danger" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkDelete()"><svg class="ic" style="margin-right:5px"><use href="#i-trash"/></svg><span data-i18n="bulk.delete">Delete</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="clearEmpSelection()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg><span data-i18n="bulk.clear">Clear</span></button>
     </div>
@@ -3401,6 +3417,21 @@ border-top:1px solid var(--border);margin:18px 0;}
         </div>
         <div id="empPortalInviteMsg" style="margin-top:8px"></div>
       </div>
+      <!-- Remote clock-in: per-employee, only ever meaningful once the company-wide switch in
+           Company Info is on -- this row is the actual grant, since "has portal access" and
+           "can punch from anywhere" must stay two separate decisions. -->
+      <div id="empRemotePunchRow" style="display:none;margin-top:12px;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleEmpRemotePunchOpt()">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-clock"/></svg><span data-i18n="emp.remotePunchTitle">Remote Clock-In</span></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="emp.remotePunchDesc">Lets this employee clock in/out from their own phone or computer in the Employee Portal, instead of only the physical kiosk</div>
+          </div>
+          <div id="empRemotePunchToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+            <div id="empRemotePunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+          </div>
+        </div>
+      </div>
+      <div id="empRemotePunchOffHint" style="display:none;margin-top:6px;padding:9px 12px;font-size:11.5px;color:var(--text3);background:var(--surface2);border-radius:var(--r-sm)" data-i18n="emp.remotePunchNeedsCompany">Turn on "Allow Remote Clock-In" in Company Info first to make this available.</div>
     </div>
     <input type="hidden" id="editEmpUid">
     <div class="modal-footer">
@@ -4446,7 +4477,7 @@ function hideLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
 }
 
-const FAQ_SALES=[1,2,6,7,8,24,11,12,13,15,16,19,25,26];
+const FAQ_SALES=[1,2,6,7,8,24,11,12,13,15,16,19,25,26,27];
 
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
@@ -5718,6 +5749,9 @@ const HELP_ARTICLES=[
    kw:{en:'lunch break tracking dedicated button separate clock out',fr:'pause repas dîner suivi bouton dédié séparé sortie'}},
   {id:'visitorcheckin', tk:'help.visitorTitle', dk:'help.visitorDesc', cat:'daily', icon:'i-users', pages:['punch'],
    kw:{en:'visitor check in guest sign in front desk who is in the building emergency',fr:'visiteur pointage invité accueil qui est dans l\'immeuble urgence'}},
+  {id:'remotepunch', tk:'help.remoteTitle', dk:'help.remoteDesc', cat:'setup', icon:'i-clock', pages:['admin','dashboard'],
+   kw:{en:'remote clock in punch phone mobile no kiosk work from home field staff distributed team portal',
+       fr:'pointage distance téléphone mobile aucun pointeau télétravail terrain équipe distribuée portail'}},
 ];
 const HELP_CATS=[['fix','help.catFix'],['setup','help.catSetup'],['daily','help.catDaily'],['payroll','help.catPayroll'],
                  ['security','help.catSecurity'],['team','help.catTeam']];
@@ -8329,6 +8363,33 @@ async function bulkToggleActive(activate){
   }catch(e){showToast(e.message,'error');}
 }
 
+// "A general toggle on/off for all employees on a specific site" — done by filtering the
+// Employees list to that site (empSiteFilter), selecting everyone, then bulk-enabling here,
+// rather than a separate per-site setting that could disagree with individual employee grants.
+async function bulkToggleRemotePunch(on){
+  if(!_selectedEmps.size) return;
+  const ctx=Ctx.get();
+  if(on && !ctx?.co?.remote_punch_enabled){
+    showToast(t('bulk.remoteNeedsCompany')||'Turn on "Allow Remote Clock-In" in Company Info first.','error');
+    return;
+  }
+  const msg=on
+    ? (t('bulk.enableRemoteConfirm')||'These {n} employee(s) will get access to the clock in/out page from their own account, and will be able to clock in and out from anywhere, on any device they have. Continue?').replace('{n}',_selectedEmps.size)
+    : (t('bulk.disableRemoteConfirm')||'Remove remote clock-in access from {n} employee(s)? They will go back to clocking in only at the physical kiosk.').replace('{n}',_selectedEmps.size);
+  if(!(await uiConfirm(msg,{danger:!on,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
+  const ids=[..._selectedEmps];
+  try{
+    for(const id of ids){
+      await DB.update('employees',`id=eq.${id}`,{remote_punch_enabled:on});
+      const e=C.employees.find(e=>e.id===id);
+      if(e) e.remote_punch_enabled=on;
+    }
+    clearEmpSelection();
+    renderEmployees();
+    showToast((on?(t('bulk.enableRemoteDone')||'Remote clock-in enabled for {n} employee(s).'):(t('bulk.disableRemoteDone')||'Remote clock-in disabled for {n} employee(s).')).replace('{n}',ids.length),'success');
+  }catch(e){showToast(e.message,'error');}
+}
+
 async function bulkDelete(){
   if(isManager()){showToast(t('msg.noPermission')||'You do not have permission to do that.','error');return;}
   if(!_selectedEmps.size) return;
@@ -9617,6 +9678,34 @@ function setEmailToggle(on){
   if(hint) hint.style.display = on ? 'none' : 'flex';
 }
 
+// Remote clock-in per employee. The row itself is only ever shown when the company-wide switch
+// (Company Info → Remote Access) is on; _refreshEmpRemotePunchRowState hides it (with an
+// explanatory hint) otherwise, so there's nothing to toggle before that prerequisite is met.
+function _refreshEmpRemotePunchRowState(companyId){
+  const row=document.getElementById('empRemotePunchRow');
+  const hint=document.getElementById('empRemotePunchOffHint');
+  if(!row) return;
+  const co=C.companies.find(c=>c.id===companyId);
+  const companyOk=!!co?.remote_punch_enabled;
+  row.style.display=companyOk?'':'none';
+  if(hint) hint.style.display=companyOk?'none':'';
+}
+function setEmpRemotePunchToggle(on){
+  document.getElementById('empRemotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('empRemotePunchThumb').style.left=on?'20px':'2px';
+}
+// Turning it OFF needs no confirmation (it only ever removes access); turning it ON grants an
+// employee the ability to punch from any device anywhere, so it gets the same explicit,
+// re-readable confirmation Meissam asked for rather than a silent flip.
+async function toggleEmpRemotePunchOpt(){
+  const on=document.getElementById('empRemotePunchThumb').style.left!=='20px';
+  if(on){
+    const msg=t('emp.remotePunchConfirm')||'This employee will get access to the clock in/out page from their own account, and will be able to clock in and out from anywhere, on any device they have. If this is intended, press Confirm — otherwise cancel, and this employee will keep clocking in only at the physical kiosk at their site.';
+    if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
+  }
+  setEmpRemotePunchToggle(on);
+}
+
 function openAddEmpModal(){
   const ctx=Ctx.get();if(!ctx){if(needsOnboarding()){showOnboardStep1();return;}else{showCompanyPicker();}return;}
 
@@ -9658,6 +9747,8 @@ function openAddEmpModal(){
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
   setEmailToggle(false);
+  setEmpRemotePunchToggle(false);
+  _refreshEmpRemotePunchRowState(ctx.co.id);
   // Hide availability + promote buttons in add mode
   const manageAvailBtnAdd = document.getElementById('manageAvailBtn');
   if(manageAvailBtnAdd) manageAvailBtnAdd.style.display='none';
@@ -9774,6 +9865,8 @@ function editEmployee(id){
   document.getElementById('editEmpUid').value=e.id;
   document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">No PIN set — employee can't clock in/out until one is assigned.</div>`;
   setEmailToggle(!!(e.send_report&&e.email));
+  setEmpRemotePunchToggle(!!e.remote_punch_enabled);
+  _refreshEmpRemotePunchRowState(e.company_id||ctx?.co?.id);
   populateSiteDropdown('empSiteSelect',e.company_id||ctx?.co?.id,e.site_id);
   // Show manage availability button only in edit mode
   const manageAvailBtn = document.getElementById('manageAvailBtn');
@@ -9980,6 +10073,7 @@ async function saveEmployee(opts){
   const site_id=document.getElementById('empSiteSelect').value||null;
   const send_report=document.getElementById('emailReportSection').style.display!=='none';
   const email=document.getElementById('empEmail').value.trim()||null;
+  const remote_punch_enabled=document.getElementById('empRemotePunchThumb').style.left==='20px';
   const editId=document.getElementById('editEmpUid').value;
   if(!name){showMsg('empModalMsg',t('val.nameRequired')||'Name is required.','error');return null;}
   if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg',t('val.pinDigits')||'PIN must be exactly 4 digits.','error');return null;}
@@ -9994,7 +10088,7 @@ async function saveEmployee(opts){
 
     let savedRow=null;
     if(editId){
-      const upd={name,dept,emp_code,site_id,email,send_report,photo_url};if(pin)upd.pin=pin;
+      const upd={name,dept,emp_code,site_id,email,send_report,remote_punch_enabled,photo_url};if(pin)upd.pin=pin;
       await DB.update('employees',`id=eq.${editId}`,upd);
       const idx=C.employees.findIndex(e=>e.id===editId);
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd};
@@ -10008,7 +10102,7 @@ async function saveEmployee(opts){
         showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
         return null;
       }
-      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,photo_url});
+      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,remote_punch_enabled,photo_url});
       if(r?.[0]){C.employees.push(r[0]);savedRow=r[0];}
     }
     renderEmployees();renderSitesAdmin();
@@ -14678,6 +14772,11 @@ en:{
 'msg.deleteEmpHint':'To free a seat under your plan without losing history, deactivate them instead.',
 'msg.bulkDeleteConfirm':'Permanently delete {n} employee(s)? This also deletes their {p} punch records — payroll history you may be required to keep. To free a seat under your plan without losing history, deactivate them instead.',
 'bulk.selected':'{n} selected','bulk.sendReport':'Send Report','bulk.delete':'Delete','bulk.clear':'Clear',
+'bulk.enableRemote':'Enable Remote Clock-In','bulk.disableRemote':'Disable Remote Clock-In',
+'bulk.remoteNeedsCompany':'Turn on "Allow Remote Clock-In" in Company Info first.',
+'bulk.enableRemoteConfirm':'These {n} employee(s) will get access to the clock in/out page from their own account, and will be able to clock in and out from anywhere, on any device they have. Continue?',
+'bulk.disableRemoteConfirm':'Remove remote clock-in access from {n} employee(s)? They will go back to clocking in only at the physical kiosk.',
+'bulk.enableRemoteDone':'Remote clock-in enabled for {n} employee(s).','bulk.disableRemoteDone':'Remote clock-in disabled for {n} employee(s).',
 'reports.inclInactive':'Include inactive employees',
 'msg.deletePunch':'Delete this punch record? This is permanent and will affect reports.',
 'msg.deleteAdmin1':'Permanently delete','msg.deleteAdmin2':'This will delete their account, all their companies, and all associated sites. Their employees will be flagged as "Admin Deleted" and deactivated. This cannot be undone.',
@@ -14818,7 +14917,7 @@ en:{
 'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
 'modal.upgradeLink':'Upgrade now',
 'modal.remoteAccessSettings':'Remote Access','modal.enableRemotePunch':'Allow Remote Clock-In',
-'modal.remotePunchDesc':'Lets employees clock in and out from their own phone or computer in the Employee Portal, instead of only from a shared kiosk',
+'modal.remotePunchDesc':'Makes remote clock-in available for this account. Nobody gets it automatically — grant it to specific employees (or all employees at a site) from the Employees page.',
 'modal.tzNewfoundland':'Newfoundland','modal.tzAtlantic':'Atlantic','modal.tzEastern':'Eastern','modal.tzCentral':'Central','modal.tzMountain':'Mountain','modal.tzPacific':'Pacific',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
 'modal.alertSettings':'Manager Alerts','modal.alertSettingsHint':'Email the account owner when something needs attention. Turn any of these off anytime.','modal.alertsEnabled':'Receive manager alerts by email','modal.alertForgotOut':'Forgot to clock out','modal.alertAfter':'Alert after','modal.alertOvertime':'Daily overtime reached',
@@ -14858,7 +14957,7 @@ en:{
 'help.toTitle':'Time off requests',
 'help.toDesc':'The <strong>Time Off</strong> page lists vacation, sick days and other absences. Employees with portal access request time off themselves and it lands here as <em>Pending</em>; you can also add an absence directly. Approved time off shows on the schedule and is listed at the bottom of payroll reports, so hours and absences line up for the same period.',
 'help.schedTitle':'Build a schedule',
-'help.schedDesc':'<strong>Schedule</strong> shows one week at a time, employees down the side and days across the top. Click a <em>+</em> in any cell to add a shift, or click a shift to edit it. The grid flags conflicts for you — it marks days an employee said they are unavailable, and shows approved time off before you assign anything. Scheduling is a paid add-on ($14.95/mo on any paid plan).',
+'help.schedDesc':'<strong>Schedule</strong> shows one week at a time, employees down the side and days across the top. Click a <em>+</em> in any cell to add a shift, or click a shift to edit it. The grid flags conflicts for you — it marks days an employee said they are unavailable, and shows approved time off before you assign anything. Most weeks repeat: use <strong>↺ Copy last week</strong> next to a single employee\'s row to copy just their shifts forward, or the toolbar\'s <strong>Copy last week (all)</strong> to copy the whole roster\'s shifts into the current week in one click — days that already have a shift are left untouched. Scheduling is a paid add-on ($14.95/mo on any paid plan).',
 'help.portalTitle':'Give an employee access to their own hours',
 'help.portalDesc':'The employee portal lets staff check their own punches, hours and schedule, and request time off — without an admin doing it for them. Open <strong>Admin → Employees</strong>, edit the employee, turn on email and enter their address, then use <em>Send Invitation</em>. They set their own password from the emailed link. You can resend or revoke access from the same place at any time.',
 'help.billTitle':'Plans, billing and adding seats',
@@ -14867,6 +14966,8 @@ en:{
 'help.lunchDesc':'Available on the <strong>Growth plan and above</strong>. In <strong>your profile menu → Company Info → Lunch Breaks</strong>, turn on <strong>Track Lunch Breaks</strong>. A dedicated Break button then appears on the clock-in screen for every employee, separate from the regular IN/OUT buttons — tap it once to start a break, again to end it. Break time was already excluded from worked hours before this was on; now it also shows as a BREAK badge in the Activity log and as its own line in Reports. On the Free or Starter plan? Upgrade to Growth from your profile menu to unlock this.',
 'help.visitorTitle':'Visitor Check-In',
 'help.visitorDesc':'Available on the <strong>Growth plan and above</strong>. In <strong>your profile menu → Company Info → Visitor Check-In</strong>, turn on <strong>Enable Visitor Check-In</strong> — every clock-in screen then gets a <strong>Visitor Check In</strong> button, no PIN or employee record required. A visitor taps it, enters their full name, company, phone and email, and checks in. To leave, they tap the same button and pick their name off the <strong>Currently in the building</strong> list — no need to fill out the form again. Useful for front-desk sign-in and knowing exactly who\'s on-site alongside your staff.',
+'help.remoteTitle':'Remote Clock-In',
+'help.remoteDesc':'Available on <strong>every plan</strong>. It\'s a two-step grant, on purpose: nobody gets remote access just because they have a portal login. Step 1 — in <strong>your profile menu → Company Info → Remote Access</strong>, turn on <strong>Allow Remote Clock-In</strong>; this only makes the feature available for your account, it doesn\'t turn it on for anyone yet. Step 2 — in <strong>Employees</strong>, open an employee and turn on their <strong>Remote Clock-In</strong> toggle (you\'ll see a confirmation explaining what it grants), or select several employees — e.g. filter to one site first — and use the bulk <strong>Enable Remote Clock-In</strong> button. Once granted, that employee sees a Clock In/Out bar at the top of their Employee Portal and can punch from their own phone or computer; punches are logged the same way a kiosk punch is, and show a mobile badge in the Activity log so you can tell them apart. No GPS setup is required — if a site does have geofencing configured, remote punches from that site are still checked against it.',
 'help.s1title':'Set Up Your Account',
 'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
@@ -14968,6 +15069,8 @@ en:{
 'faq.a25':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Track Lunch Breaks</strong> in Company Info → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap.',
 'faq.q26':'Can visitors sign in and out, not just employees?',
 'faq.a26':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Enable Visitor Check-In</strong> in Company Info, and every clock-in screen gets a <strong>Visitor Check In</strong> button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a "currently in the building" list. It\'s useful for front-desk sign-in and for knowing exactly who\'s on-site in an emergency, alongside your staff.',
+'faq.q27':'We have remote or field staff with no shared location — can they still punch in?',
+'faq.a27':'Yes, on <strong>every plan</strong>. Turn on <strong>Allow Remote Clock-In</strong> in Company Info, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. It works with no GPS setup at all; if you later add a geofenced site, remote punches from that site are still checked against it.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -14996,6 +15099,7 @@ en:{
 'land.tablet3Desc':'No app to install, update, or troubleshoot. No "my GPS was off" excuses. Employees enter their PIN and go. Admins get clean, reliable punch data every time.',
 'land.tablet4Title':'Buddy Punching Protection',
 'land.tablet4Desc':'Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.',
+'land.tabletRemoteNote':'No shared location to put a terminal at? PunchClock also supports individually-authorized <strong>remote clock-in</strong> from each employee\'s own device — see Remote Clock-In below.',
 'land.feat1Title':'Tablet Terminal — No GPS Needed',
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
 'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
@@ -15006,6 +15110,8 @@ en:{
 'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
 'land.feat12Title':'Employee Self-Service Portal',
 'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.',
+'land.feat15Title':'Remote Clock-In — For Distributed Teams',
+'land.feat15Desc':'No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site\'s roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk required. Included free on every plan.',
 'land.feat13Title':'Lunch & Break Tracking',
 'land.feat13Desc':'A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports. Included on the Growth plan and above.',
 'land.feat14Title':'Visitor Check-In',
@@ -15112,6 +15218,9 @@ en:{
 'sched.overlapWarning':'Overlap',
 'sched.unavailableHint':'Employee unavailable — add shift anyway?',
 'emp.portalInviteTitle':'Employee Portal Access',
+'emp.remotePunchTitle':'Remote Clock-In','emp.remotePunchDesc':'Lets this employee clock in/out from their own phone or computer in the Employee Portal, instead of only the physical kiosk',
+'emp.remotePunchNeedsCompany':'Turn on "Allow Remote Clock-In" in Company Info first to make this available.',
+'emp.remotePunchConfirm':'This employee will get access to the clock in/out page from their own account, and will be able to clock in and out from anywhere, on any device they have. If this is intended, press Confirm — otherwise cancel, and this employee will keep clocking in only at the physical kiosk at their site.',
 'emp.portalLoading':'Checking...',
 'emp.portalNotInvited':'No portal access yet',
 'emp.portalSendInvite':'Send Invitation',
@@ -15556,6 +15665,11 @@ fr:{
 'msg.deleteEmpHint':'Pour libérer une place dans votre forfait sans perdre l\'historique, désactivez-le plutôt.',
 'msg.bulkDeleteConfirm':'Supprimer définitivement {n} employé(s)? Cela supprime aussi leurs {p} pointages — un historique de paie que vous devez possiblement conserver. Pour libérer des places dans votre forfait sans perdre l\'historique, désactivez-les plutôt.',
 'bulk.selected':'{n} sélectionné(s)','bulk.sendReport':'Envoyer rapport','bulk.delete':'Supprimer','bulk.clear':'Effacer',
+'bulk.enableRemote':'Activer le pointage à distance','bulk.disableRemote':'Désactiver le pointage à distance',
+'bulk.remoteNeedsCompany':'Activez d\'abord « Permettre le pointage à distance » dans les infos de la compagnie.',
+'bulk.enableRemoteConfirm':'Ces {n} employé(s) obtiendront l\'accès à la page de pointage depuis leur propre compte, et pourront pointer l\'entrée et la sortie de n\'importe où, sur n\'importe quel appareil. Continuer?',
+'bulk.disableRemoteConfirm':'Retirer l\'accès au pointage à distance de {n} employé(s)? Ils devront de nouveau pointer uniquement au pointeau physique.',
+'bulk.enableRemoteDone':'Pointage à distance activé pour {n} employé(s).','bulk.disableRemoteDone':'Pointage à distance désactivé pour {n} employé(s).',
 'reports.inclInactive':'Inclure les employés inactifs',
 'msg.deletePunch':'Supprimer ce pointage? Cette action est permanente et affectera les rapports.',
 'msg.deleteAdmin1':'Supprimer définitivement','msg.deleteAdmin2':'Cela supprimera leur compte, toutes leurs compagnies et tous les sites associés. Leurs employés seront marqués "Admin supprimé" et désactivés. Cette action est irréversible.',
@@ -15694,7 +15808,7 @@ fr:{
 'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
 'modal.upgradeLink':'Mettre à niveau',
 'modal.remoteAccessSettings':'Accès à distance','modal.enableRemotePunch':'Permettre le pointage à distance',
-'modal.remotePunchDesc':'Permet aux employés de pointer l\'entrée et la sortie depuis leur propre téléphone ou ordinateur dans le portail employé, au lieu d\'un pointeau partagé seulement',
+'modal.remotePunchDesc':'Rend le pointage à distance disponible pour ce compte. Personne ne l\'obtient automatiquement — accordez-le à des employés spécifiques (ou à tous les employés d\'un site) depuis la page Employés.',
 'modal.tzNewfoundland':'Terre-Neuve','modal.tzAtlantic':'Atlantique','modal.tzEastern':'Est','modal.tzCentral':'Centre','modal.tzMountain':'Rocheuses','modal.tzPacific':'Pacifique',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
 'modal.alertSettings':'Alertes gestionnaire','modal.alertSettingsHint':'Envoie un courriel au propriétaire du compte lorsqu\'une attention est requise. Désactivez à tout moment.','modal.alertsEnabled':'Recevoir les alertes par courriel','modal.alertForgotOut':'Oubli de pointer la sortie','modal.alertAfter':'Alerter après','modal.alertOvertime':'Heures supplémentaires quotidiennes atteintes',
@@ -15734,7 +15848,7 @@ fr:{
 'help.toTitle':'Demandes de congé',
 'help.toDesc':'La page <strong>Congés</strong> regroupe les vacances, les congés de maladie et autres absences. Les employés ayant accès au portail font leurs demandes eux-mêmes et celles-ci arrivent ici avec le statut <em>En attente</em>; vous pouvez aussi ajouter une absence directement. Les congés approuvés apparaissent dans l\'horaire et au bas des rapports de paie, pour que les heures et les absences concordent sur la même période.',
 'help.schedTitle':'Créer un horaire',
-'help.schedDesc':'<strong>Horaires</strong> affiche une semaine à la fois : les employés en colonne, les jours en rangée. Cliquez sur un <em>+</em> dans une case pour ajouter un quart, ou sur un quart pour le modifier. La grille signale les conflits : elle indique les jours où un employé s\'est déclaré non disponible et affiche les congés approuvés avant que vous n\'assigniez quoi que ce soit. Les horaires sont un module complémentaire (14,95 $/mois sur tout forfait payant).',
+'help.schedDesc':'<strong>Horaires</strong> affiche une semaine à la fois : les employés en colonne, les jours en rangée. Cliquez sur un <em>+</em> dans une case pour ajouter un quart, ou sur un quart pour le modifier. La grille signale les conflits : elle indique les jours où un employé s\'est déclaré non disponible et affiche les congés approuvés avant que vous n\'assigniez quoi que ce soit. La plupart des semaines se répètent : utilisez <strong>↺ Copier la semaine dernière</strong> à côté de la rangée d\'un employé pour copier seulement ses quarts, ou <strong>Copier la semaine dernière (tous)</strong> dans la barre d\'outils pour copier les quarts de toute l\'équipe dans la semaine actuelle en un clic — les jours qui ont déjà un quart ne sont pas touchés. Les horaires sont un module complémentaire (14,95 $/mois sur tout forfait payant).',
 'help.portalTitle':'Donner à un employé l\'accès à ses heures',
 'help.portalDesc':'Le portail employé permet à votre personnel de consulter ses pointages, ses heures et son horaire, et de demander des congés — sans passer par un administrateur. Ouvrez <strong>Admin → Employés</strong>, modifiez l\'employé, activez le courriel et saisissez son adresse, puis utilisez <em>Envoyer l\'invitation</em>. Il choisit son mot de passe à partir du lien reçu. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès au même endroit.',
 'help.billTitle':'Forfaits, facturation et sièges supplémentaires',
@@ -15743,6 +15857,8 @@ fr:{
 'help.lunchDesc':'Disponible à partir du <strong>plan Croissance</strong>. Dans <strong>votre menu de profil → Info compagnie → Pauses repas</strong>, activez <strong>Suivi des pauses repas</strong>. Un bouton Pause dédié apparaît alors sur l\'écran de pointage pour chaque employé, distinct des boutons ENTRÉE/SORTIE — un tap pour débuter la pause, un autre pour la terminer. Le temps de pause était déjà exclu des heures travaillées avant même d\'activer ceci; maintenant il apparaît aussi comme un badge PAUSE dans le journal d\'activité et comme une ligne distincte dans les rapports. Sur le plan Gratuit ou Débutant? Mettez à niveau vers Croissance depuis votre menu de profil pour débloquer cette fonction.',
 'help.visitorTitle':'Pointage visiteur',
 'help.visitorDesc':'Disponible à partir du <strong>plan Croissance</strong>. Dans <strong>votre menu de profil → Info compagnie → Pointage visiteur</strong>, activez <strong>Activer le pointage visiteur</strong> — chaque écran de pointage obtient alors un bouton <strong>Pointage visiteur</strong>, sans NIP ni dossier employé requis. Un visiteur appuie dessus, inscrit son nom complet, son entreprise, son téléphone et son courriel, puis pointe son arrivée. Pour partir, il appuie sur le même bouton et choisit son nom dans la liste <strong>Actuellement dans l\'immeuble</strong> — pas besoin de remplir le formulaire à nouveau. Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en plus de votre personnel.',
+'help.remoteTitle':'Pointage à distance',
+'help.remoteDesc':'Disponible sur <strong>tous les forfaits</strong>. C\'est un octroi en deux étapes, volontairement : personne n\'obtient l\'accès à distance juste parce qu\'il a un accès au portail. Étape 1 — dans <strong>votre menu de profil → Info compagnie → Accès à distance</strong>, activez <strong>Permettre le pointage à distance</strong>; ceci rend seulement la fonction disponible pour votre compte, ça ne l\'active pour personne encore. Étape 2 — dans <strong>Employés</strong>, ouvrez un employé et activez son bouton <strong>Pointage à distance</strong> (une confirmation vous explique ce que ça accorde), ou sélectionnez plusieurs employés — par exemple en filtrant par site d\'abord — et utilisez le bouton en lot <strong>Activer le pointage à distance</strong>. Une fois accordé, cet employé voit une barre Entrée/Sortie en haut de son portail employé et peut pointer depuis son propre téléphone ou ordinateur; les pointages sont enregistrés de la même façon qu\'un pointage au pointeau, et affichent un badge mobile dans le journal d\'activité pour les distinguer. Aucune configuration GPS n\'est requise — si un site a un géorepérage configuré, les pointages à distance de ce site y sont quand même vérifiés.',
 'help.s1title':'Configurez votre compte',
 'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',
@@ -15844,6 +15960,8 @@ fr:{
 'faq.a25':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Suivi des pauses repas</strong> dans Info compagnie → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart.',
 'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
 'faq.a26':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Activer le pointage visiteur</strong> dans Info compagnie, et chaque écran de pointage obtient un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur inscrit son nom complet, son entreprise, son téléphone et son courriel une seule fois, puis pointe sa sortie plus tard en choisissant son nom dans une liste des personnes « actuellement dans l\'immeuble ». Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en cas d\'urgence, en plus de votre personnel.',
+'faq.q27':'Nos employés travaillent à distance et n\'ont pas de lieu commun — peuvent-ils quand même pointer?',
+'faq.a27':'Oui, sur <strong>tous les forfaits</strong>. Activez <strong>Permettre le pointage à distance</strong> dans Info compagnie, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Ça fonctionne sans aucune configuration GPS; si vous ajoutez plus tard un site géorepéré, les pointages à distance de ce site sont quand même vérifiés par rapport à celui-ci.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',
@@ -15876,6 +15994,7 @@ fr:{
 'land.tablet3Desc':'Aucune appli à installer, mettre à jour ou dépanner. Plus d\'excuse "mon GPS était désactivé". L\'employé entre son NIP et c\'est fait. L\'admin obtient des données propres et fiables à chaque fois.',
 'land.tablet4Title':'Protection contre la fraude de pointage',
 'land.tablet4Desc':'Chaque employé a un NIP unique, et pointer pour quelqu\'un d\'autre exige une présence physique au terminal — bien plus difficile à contourner qu\'une appli mobile partagée par texto.',
+'land.tabletRemoteNote':'Aucun lieu commun où installer un terminal? PunchClock permet aussi le <strong>pointage à distance</strong> autorisé individuellement depuis l\'appareil de chaque employé — voir Pointage à distance ci-dessous.',
 'land.feat1Title':'Terminal tablette — Sans GPS',
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
 'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
@@ -15886,6 +16005,8 @@ fr:{
 'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
 'land.feat12Title':'Portail employé libre-service',
 'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
+'land.feat15Title':'Pointage à distance — Pour équipes distribuées',
+'land.feat15Desc':'Aucun site commun où installer une tablette? Activez le pointage à distance et autorisez des employés spécifiques (ou tout le personnel d\'un site d\'un coup) à pointer l\'entrée et la sortie depuis leur propre téléphone ou ordinateur via leur portail employé — sans pointeau partagé requis. Inclus gratuitement sur tous les forfaits.',
 'land.feat13Title':'Suivi des pauses repas',
 'land.feat13Desc':'Un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie — pour que le personnel ne confonde jamais une pause repas avec un départ pour la journée. Activable par compagnie; le temps de pause apparaît comme une ligne distincte dans les rapports. Inclus à partir du plan Croissance.',
 'land.feat14Title':'Pointage visiteur',
@@ -15992,6 +16113,9 @@ fr:{
 'sched.overlapWarning':'Chevauchement',
 'sched.unavailableHint':'Employé indisponible — ajouter quand même?',
 'emp.portalInviteTitle':'Accès portail employé',
+'emp.remotePunchTitle':'Pointage à distance','emp.remotePunchDesc':'Permet à cet employé de pointer l\'entrée/sortie depuis son propre téléphone ou ordinateur dans le portail employé, au lieu du pointeau physique seulement',
+'emp.remotePunchNeedsCompany':'Activez d\'abord « Permettre le pointage à distance » dans les infos de la compagnie pour rendre ceci disponible.',
+'emp.remotePunchConfirm':'Cet employé obtiendra l\'accès à la page de pointage depuis son propre compte, et pourra pointer l\'entrée et la sortie de n\'importe où, sur n\'importe quel appareil. Si c\'est voulu, appuyez sur Confirmer — sinon annulez, et cet employé continuera de pointer uniquement au pointeau physique de son site.',
 'emp.portalLoading':'Vérification...',
 'emp.portalNotInvited':'Aucun accès portail',
 'emp.portalSendInvite':'Envoyer l\'invitation',

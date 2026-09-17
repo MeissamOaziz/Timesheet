@@ -624,6 +624,7 @@ const T = {
     punchErr_not_in: 'You are not clocked in yet.',
     punchErr_invalid_site: 'Your assigned site is not valid. Contact your admin.',
     punchErr_remote_punch_disabled: 'Remote clock-in is not enabled for your company.',
+    punchErr_employee_not_authorized: 'Remote clock-in isn\'t turned on for your account yet — ask your admin to enable it for you.',
     punchErr_unauthorized: 'Your session expired. Please sign in again.',
     punchErr_generic: 'Could not record punch. Please try again.',
     punchOk_in: 'Clocked in.', punchOk_out: 'Clocked out.',
@@ -694,6 +695,7 @@ const T = {
     punchErr_not_in: 'Vous n\'êtes pas encore entré.',
     punchErr_invalid_site: 'Votre site assigné n\'est pas valide. Contactez votre admin.',
     punchErr_remote_punch_disabled: 'Le pointage à distance n\'est pas activé pour votre compagnie.',
+    punchErr_employee_not_authorized: 'Le pointage à distance n\'est pas encore activé pour votre compte — demandez à votre admin de l\'activer pour vous.',
     punchErr_unauthorized: 'Votre session a expiré. Veuillez vous reconnecter.',
     punchErr_generic: 'Impossible d\'enregistrer le pointage. Veuillez réessayer.',
     punchOk_in: 'Entrée enregistrée.', punchOk_out: 'Sortie enregistrée.',
@@ -1042,9 +1044,13 @@ let _lastPunchAt = null;     // Date | null
 let _punching = false;
 
 async function initPunchBar() {
+  // Two gates, both required: the company must have the feature on at all, AND this specific
+  // employee must be individually authorized (employees.remote_punch_enabled) -- an admin grants
+  // that per person (or in bulk for a site's roster) from the Employees page. Having portal
+  // access is not, by itself, a grant to punch from anywhere.
   try {
     const rows = asRows(await rpc('portal_get_company_payroll', { p_session: _session.token }));
-    _remotePunchEnabled = !!(rows.length && rows[0].remote_punch_enabled);
+    _remotePunchEnabled = !!(rows.length && rows[0].remote_punch_enabled) && !!_employee?.remote_punch_enabled;
   } catch(e) { _remotePunchEnabled = false; }
   const bar = document.getElementById('punchBar');
   if (!_remotePunchEnabled) { bar.style.display = 'none'; return; }
