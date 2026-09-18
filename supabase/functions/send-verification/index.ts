@@ -5,20 +5,39 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
+// Table-based layout with bgcolor attributes, not just inline CSS -- plain divs with
+// background/border-radius get their styling stripped by some webmail clients (Outlook.com
+// among them), which flattens the card into unstyled text and turns styled <a> buttons into
+// bare underlined links. Tables + bgcolor survive that stripping in every client that matters.
 function wrapper(body) {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
-<div style="max-width:520px;margin:0 auto;padding:40px 20px;">
-  <div style="text-align:center;margin-bottom:32px;">
-    <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
-  </div>
-  <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;">
-    ${body}
-  </div>
-  <div style="text-align:center;margin-top:28px;">
-    <p style="color:#94a3b8;font-size:12px;">PunchClock Pro &mdash; Time &amp; Attendance Software<br>This is an automated message, please do not reply.</p>
-  </div>
-</div></body></html>`;
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9" style="background:#f1f5f9;">
+<tr><td align="center" style="padding:40px 20px;">
+<table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+<tr><td align="center" style="padding-bottom:32px;font-family:Arial,sans-serif;">
+<span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+</td></tr>
+<tr><td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;">
+${body}
+</td></tr>
+<tr><td align="center" style="padding-top:28px;font-family:Arial,sans-serif;">
+<p style="color:#94a3b8;font-size:12px;margin:0;">PunchClock Pro &mdash; Time &amp; Attendance Software<br>This is an automated message, please do not reply.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+// Bulletproof CTA button: a table cell carrying the background via the bgcolor attribute (not
+// just style="background:..."), so the button keeps its color and shape even in clients that
+// strip inline styles off <a> tags. Reused by every builder below that has a primary action link.
+function ctaButton(href, label, color) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;">
+<tr><td align="center" bgcolor="${color}" style="background:${color};border-radius:10px;">
+<a href="${href}" target="_blank" style="display:block;color:#ffffff;text-decoration:none;padding:14px 32px;font-weight:600;font-size:15px;font-family:Arial,sans-serif;">${label}</a>
+</td></tr>
+</table>`;
 }
 function buildVerificationHtml(name, code) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">Verify your email address</h1>
@@ -198,12 +217,10 @@ function buildEmployeeInviteHtml(empName, portalUrl, lang) {
   const ignore = isFr ? `Si vous n'attendiez pas cette invitation, vous pouvez ignorer ce message.` : `If you weren't expecting this invitation, you can safely ignore this email.`;
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">🔗 ${title}</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">${greeting}<br><br>${intro}</p>
-    <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:8px;">
-      ${features.map((f)=>`<li style="color:#475569;font-size:14px;padding:8px 14px;background:#f1f5f9;border-radius:8px;border:1px solid #e2e8f0">${f}</li>`).join('')}
-    </ul>
-    <a href="${portalUrl}" style="display:inline-block;background:#7c5cbf;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;width:100%;text-align:center;box-sizing:border-box;">
-      ${cta}
-    </a>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+      ${features.map((f)=>`<tr><td bgcolor="#f1f5f9" style="background:#f1f5f9;border-radius:8px;border:1px solid #e2e8f0;padding:8px 14px;color:#475569;font-size:14px;font-family:Arial,sans-serif;">${f}</td></tr><tr><td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr>`).join('')}
+    </table>
+    ${ctaButton(portalUrl, cta, '#7c5cbf')}
     <p style="color:#94a3b8;font-size:12px;margin-top:20px;text-align:center">${expiry}</p>
     <p style="color:#94a3b8;font-size:12px;margin-top:8px;">${ignore}</p>`);
 }
