@@ -81,6 +81,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-punch.in{background:var(--green);}
 .btn-punch.out{background:var(--red);}
 .punch-msg{width:100%;font-size:12px;}
+/* Errors used to only flash as the generic bottom toast, which faded in 3s while the employee
+   was naturally looking at the button up top, not the bottom of the screen -- easy to miss
+   entirely. This sits right in the punch bar, under the button, and stays until the next attempt. */
+.punch-error{width:100%;display:flex;align-items:center;gap:8px;background:rgba(239,68,68,.12);border:1.5px solid rgba(239,68,68,.35);color:var(--red);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;font-weight:600;line-height:1.4;}
+.punch-error svg{width:16px;height:16px;flex-shrink:0;}
 
 /* TABS */
 .tabs-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:2px;}
@@ -235,6 +240,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
 <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
 </defs></svg>
 <style>.ic{width:15px;height:15px;flex-shrink:0;vertical-align:-2px;}</style>
 <div id="empToast"></div>
@@ -390,6 +396,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <span id="punchBtnLabel">…</span>
     </button>
     <div class="punch-msg" id="punchMsg"></div>
+    <div class="punch-error" id="punchError" style="display:none" role="alert"></div>
   </div>
 
   <div class="tabs-bar">
@@ -1101,6 +1108,17 @@ function getGeolocation() {
   });
 }
 
+function showPunchError(msg) {
+  const el = document.getElementById('punchError');
+  el.innerHTML = `<svg class="ic"><use href="#i-warn"/></svg><span>${escHtml(msg)}</span>`;
+  el.style.display = 'flex';
+}
+function clearPunchError() {
+  const el = document.getElementById('punchError');
+  el.style.display = 'none';
+  el.innerHTML = '';
+}
+
 async function doPunch() {
   if (_punching || !_session.siteId) return;
   _punching = true;
@@ -1110,6 +1128,7 @@ async function doPunch() {
   btn.disabled = true;
   label.textContent = t('punchWorking');
   document.getElementById('punchMsg').textContent = '';
+  clearPunchError();
 
   const type = _lastPunchType === 'IN' ? 'OUT' : 'IN';
   const now = new Date();
@@ -1138,10 +1157,10 @@ async function doPunch() {
     } else {
       const code = res?.error_code || 'generic';
       const dict = T[_empLang] || T.en;
-      showToast(dict['punchErr_' + code] || dict.punchErr_generic, 'error');
+      showPunchError(dict['punchErr_' + code] || dict.punchErr_generic);
     }
   } catch(e) {
-    showToast(t('punchErr_generic'), 'error');
+    showPunchError(t('punchErr_generic'));
   }
   _punching = false;
   renderPunchStatus();
