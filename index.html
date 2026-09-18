@@ -13863,6 +13863,10 @@ async function copyLastWeekForEmployee(empId) {
     return;
   }
 
+  // Snapshot of days that ALREADY had a shift before this copy ran -- the only thing that should
+  // ever block a copy. This must not be mutated inside the loop: a source day can carry more than
+  // one shift (a split shift), and adding newDateStr here after the first insert made every day
+  // look "already taken" for its own second shift, silently dropping half of every split day.
   const existingDates = new Set(_schedShifts.filter(sh => sh.employee_id === empId).map(sh => sh.shift_date));
   let copied = 0, skipped = 0;
   for(const sh of prevShifts) {
@@ -13877,7 +13881,6 @@ async function copyLastWeekForEmployee(empId) {
         admin_id: adminId, company_id: sh.company_id, site_id: sh.site_id, employee_id: empId,
         shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
       });
-      existingDates.add(newDateStr);
       copied++;
     } catch(e) { console.warn('copyLastWeekForEmployee insert error:', e); }
   }
@@ -13922,6 +13925,8 @@ async function copyLastWeekAll() {
   }
 
   const empIds = new Set(emps.map(e => e.id));
+  // Snapshot per employee, taken once before the loop -- see copyLastWeekForEmployee for why this
+  // must never be mutated as shifts get inserted (a split-shift day would drop its second shift).
   const existingByEmp = {};
   emps.forEach(e => { existingByEmp[e.id] = new Set(_schedShifts.filter(sh => sh.employee_id === e.id).map(sh => sh.shift_date)); });
 
@@ -13940,7 +13945,6 @@ async function copyLastWeekAll() {
         admin_id: adminId, company_id: sh.company_id, site_id: sh.site_id, employee_id: sh.employee_id,
         shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
       });
-      existingByEmp[sh.employee_id].add(newDateStr);
       copied++; touched.add(sh.employee_id);
     } catch(e) { console.warn('copyLastWeekAll insert error:', e); }
   }
