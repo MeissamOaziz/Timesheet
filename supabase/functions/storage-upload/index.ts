@@ -50,7 +50,10 @@ Deno.serve(async (req: Request) => {
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   } catch { return err('Invalid file encoding'); }
 
-  // Upload with service key
+  // Upload with service key. Logos and avatars almost never change once set -- a week-long
+  // cache means most repeat views (across kiosks, dashboards, every admin session) never
+  // re-download the file at all, which was otherwise the single largest source of Supabase
+  // egress on this project.
   const upRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${fileName}`, {
     method: 'POST',
     headers: {
@@ -58,6 +61,7 @@ Deno.serve(async (req: Request) => {
       'Authorization': `Bearer ${SERVICE_KEY}`,
       'Content-Type': contentType,
       'x-upsert': 'true',
+      'cache-control': 'max-age=604800',
     },
     body: bytes,
   });

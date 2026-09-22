@@ -4209,22 +4209,64 @@ function previewUpload(inputId, previewId, areaId, isRound=false) {
   reader.readAsDataURL(file);
 }
 
-async function uploadImage(file, bucket, pathPrefix) {
-  if(!file) return null;
-  const ext = (file.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const safePrefix = String(pathPrefix).replace(/[^A-Za-z0-9._-]/g,'-');
-  const fileName = `${safePrefix}-${Date.now()}.${ext}`;
-  // read file as base64 (strip data: prefix)
-  const dataB64 = await new Promise((resolve,reject)=>{
+// Downscales + recompresses an image in the browser before upload. A logo or avatar photo
+// straight off a phone can be several MB at full camera resolution, but every place we display
+// one is a small icon (a kiosk logo, a 45px avatar) -- and that same file gets re-fetched on
+// every admin/kiosk page load, by every viewer, so its size is the single biggest lever on
+// Supabase egress. Falls back to the original file if it isn't a decodable raster image.
+async function resizeImageFile(file, maxDim, quality) {
+  const srcDataUrl = await new Promise((resolve,reject)=>{
     const r=new FileReader();
-    r.onload=()=>{ const s=String(r.result); resolve(s.slice(s.indexOf(',')+1)); };
+    r.onload=()=>resolve(String(r.result));
     r.onerror=()=>reject(new Error('Could not read file'));
     r.readAsDataURL(file);
   });
+  const img = await new Promise((resolve,reject)=>{
+    const im=new Image();
+    im.onload=()=>resolve(im);
+    im.onerror=()=>reject(new Error('Could not decode image'));
+    im.src=srcDataUrl;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.max(1, Math.round(img.width * scale));
+  const h = Math.max(1, Math.round(img.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+  // PNG only when the source was PNG, so a logo with real transparency (shown on the kiosk's
+  // dark background) doesn't get flattened onto an opaque white square. Everything else --
+  // camera photos, one-off GIFs used as a still avatar -- becomes JPEG, which compresses far
+  // better than PNG/GIF at these pixel counts.
+  const keepPng = file.type === 'image/png';
+  const contentType = keepPng ? 'image/png' : 'image/jpeg';
+  const ext = keepPng ? 'png' : 'jpg';
+  const dataUrl = canvas.toDataURL(contentType, keepPng ? undefined : quality);
+  return { dataUrl, contentType, ext };
+}
+
+async function uploadImage(file, bucket, pathPrefix) {
+  if(!file) return null;
+  const maxDim = bucket === 'avatars' ? 300 : 500;
+  let dataUrl, contentType, ext;
+  try {
+    ({ dataUrl, contentType, ext } = await resizeImageFile(file, maxDim, 0.82));
+  } catch(e) {
+    contentType = file.type;
+    ext = (file.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'');
+    dataUrl = await new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(String(r.result));
+      r.onerror=()=>reject(new Error('Could not read file'));
+      r.readAsDataURL(file);
+    });
+  }
+  const safePrefix = String(pathPrefix).replace(/[^A-Za-z0-9._-]/g,'-');
+  const fileName = `${safePrefix}-${Date.now()}.${ext}`;
+  const dataB64 = dataUrl.slice(dataUrl.indexOf(',')+1);
   const res = await fetch(`${SUPA_URL}/functions/v1/storage-upload`, {
     method: 'POST',
     headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-    body: JSON.stringify({ bucket, fileName, contentType: file.type, data: dataB64 }),
+    body: JSON.stringify({ bucket, fileName, contentType, data: dataB64 }),
   });
   if(!res.ok){ const e=await res.text(); throw new Error('Upload failed: '+e); }
   const j = await res.json();
