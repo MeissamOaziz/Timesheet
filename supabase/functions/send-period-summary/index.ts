@@ -107,13 +107,10 @@ function formatHours(h) {
   return `${hrs}h ${mins}m`;
 }
 function buildEmailHtml(params) {
-  const { empName, companyName, siteName, periodStart, periodEnd, frequency, punches, punchRounding, lunchPaid } = params;
+  const { empName, companyName, siteName, periodStart, periodEnd, frequency, punches, punchRounding, breakCapMinutes } = params;
   const _rMs = (iso) => { const ms = new Date(iso).getTime(); if (!punchRounding) return ms; const step = punchRounding * 60000; return Math.round(ms / step) * step; };
-  // A paid break stays on the clock -- drop it here so its gap merges into one continuous
-  // session instead of being excluded, matching the admin report and the portal's own rule.
-  const sourcePunches = lunchPaid ? punches.filter((p) => !p.is_break) : punches;
   const sorted = [
-    ...sourcePunches
+    ...punches
   ].sort((a, b)=>new Date(a.punched_at).getTime() - new Date(b.punched_at).getTime());
   const byDate = {};
   sorted.forEach((p)=>{
@@ -137,6 +134,9 @@ function buildEmailHtml(params) {
       month: 'short',
       day: 'numeric'
     });
+    // Naive IN/OUT pairing already excludes every break gap by construction (a break is a
+    // work-OUT/work-IN pair that straddles a break-IN/break-OUT pair, so the break time simply
+    // never gets paired into a session) -- no filtering needed for the unpaid baseline.
     const sessions = [];
     let i = 0;
     while(i < dayPunches.length){
@@ -147,18 +147,34 @@ function buildEmailHtml(params) {
         sessions.push({
           inTime: p.punch_time,
           outTime: next?.punch_time || null,
-          hours
+          hours,
+          _ts: p.punched_at
         });
         if (next) i += 2;
         else i++;
       } else i++;
+    }
+    // Companies can pay part of a break rather than all-or-nothing (e.g. 30 of a 60-minute
+    // break); the paid portion of each break -- capped at breakCapMinutes, and never more than
+    // the break actually taken -- is added back as its own session row.
+    const breakCapMs = (breakCapMinutes || 0) * 60000;
+    if (breakCapMs > 0) {
+      for (let bi = 0; bi < dayPunches.length - 1; bi++) {
+        const a = dayPunches[bi], b = dayPunches[bi + 1];
+        if (a.type === 'OUT' && a.is_break && b.type === 'IN' && b.is_break) {
+          const gapMs = _rMs(b.punched_at) - _rMs(a.punched_at);
+          const hours = Math.min(gapMs, breakCapMs) / 3600000;
+          if (hours > 0) sessions.push({ inTime: a.punch_time, outTime: b.punch_time, hours, isBreak: true, _ts: a.punched_at });
+        }
+      }
+      sessions.sort((s1, s2) => new Date(s1._ts).getTime() - new Date(s2._ts).getTime());
     }
     const dayTotal = sessions.reduce((s, r)=>s + (r.hours ?? 0), 0);
     grandTotalHours += dayTotal;
     grandTotalSessions += sessions.length;
     const sessionRows = sessions.map((s)=>`
       <tr>
-        <td style="padding:6px 12px;font-size:13px;color:#64748b;padding-left:28px">↳</td>
+        <td style="padding:6px 12px;font-size:13px;color:#64748b;padding-left:28px">${s.isBreak ? '<span style="font-size:9.5px;font-weight:700;background:rgba(124,92,191,.15);color:#7c5cbf;padding:1px 6px;border-radius:4px">PAID BREAK</span>' : '↳'}</td>
         <td style="padding:6px 12px;font-size:13px;color:#22c55e;font-family:monospace">${formatTime(s.inTime)}</td>
         <td style="padding:6px 12px;font-size:13px;color:#ef4444;font-family:monospace">${s.outTime ? formatTime(s.outTime) : '<span style="color:#94a3b8">Still in</span>'}</td>
         <td style="padding:6px 12px;font-size:13px;font-family:monospace;color:#334155">${s.hours !== null ? formatHours(s.hours) : '—'}</td>
@@ -323,22 +339,23 @@ async function sendEmail(to, subject, html, attachments) {
 // split on the exact email their accountant runs payroll from. Two-stage rule, same as the
 // admin report and the employee portal: daily overtime first, then a weekly cap on top.
 function totalsForPunches(punches, opts) {
-  const { roundMin = 0, dailyCap = 8, weeklyCap = 40, weekStartsSunday = false, lunchPaid = false } = opts || {};
+  const { roundMin = 0, dailyCap = 8, weeklyCap = 40, weekStartsSunday = false, breakCapMinutes = 0 } = opts || {};
   const round = (iso) => {
     const ms = new Date(iso).getTime();
     if (!roundMin) return ms;
     const step = roundMin * 60000;
     return Math.round(ms / step) * step;
   };
-  // A paid break stays on the clock -- see buildEmailHtml for the same rule.
-  const list = lunchPaid ? punches.filter((p) => !p.is_break) : punches;
   const byDay = {};
-  for (const p of list) (byDay[p.punch_date] = byDay[p.punch_date] || []).push(p);
+  for (const p of punches) (byDay[p.punch_date] = byDay[p.punch_date] || []).push(p);
 
+  const breakCapMs = (breakCapMinutes || 0) * 60000;
   let openPunches = 0, days = 0;
   const dayHoursMap = {};
   for (const date of Object.keys(byDay)) {
     const dayList = byDay[date].slice().sort((a, b) => new Date(a.punched_at) - new Date(b.punched_at));
+    // Naive IN/OUT pairing already excludes every break gap by construction -- no filtering
+    // needed for the unpaid baseline.
     let dayHours = 0, openIn = null;
     for (const p of dayList) {
       if (p.type === 'IN') openIn = p;
@@ -348,6 +365,18 @@ function totalsForPunches(punches, opts) {
       }
     }
     if (openIn) openPunches++;
+    // Companies can pay part of a break rather than all-or-nothing; the paid portion of each
+    // break -- capped at breakCapMinutes, never more than the break actually taken -- is added
+    // back on top, same rule as buildEmailHtml.
+    if (breakCapMs > 0) {
+      for (let bi = 0; bi < dayList.length - 1; bi++) {
+        const a = dayList[bi], b = dayList[bi + 1];
+        if (a.type === 'OUT' && a.is_break && b.type === 'IN' && b.is_break) {
+          const gapMs = round(b.punched_at) - round(a.punched_at);
+          dayHours += Math.min(gapMs, breakCapMs) / 3600000;
+        }
+      }
+    }
     if (dayHours > 0) days++;
     dayHoursMap[date] = dayHours;
   }
@@ -450,7 +479,7 @@ function buildPayrollSummaryHtml(params) {
   <tr><td style="padding:18px 26px 26px">
     <p style="margin:0;font-size:12.5px;color:#64748b;line-height:1.65">
       The attached CSV has the same figures, ready to import or copy into payroll.
-      Hours are paired clock-in to clock-out${params.roundMin ? `, rounded to the nearest ${params.roundMin} minutes` : ''}${trackOvertime ? `, with anything past ${params.dailyCap || 8}h in a day or ${params.weeklyCap || 40}h in a week counted as overtime` : ''}.
+      Hours are paired clock-in to clock-out${params.roundMin ? `, rounded to the nearest ${params.roundMin} minutes` : ''}${trackOvertime ? `, with anything past ${params.dailyCap || 8}h in a day or ${params.weeklyCap || 40}h in a week counted as overtime` : ''}${params.breakCapMinutes ? `, with up to ${params.breakCapMinutes} minutes of each break counted as paid time` : ''}.
     </p>
   </td></tr>
   <tr><td style="padding:14px 26px;border-top:1px solid #e2e8f0;background:#f8fafc">
@@ -484,7 +513,7 @@ async function buildSummaryRows(company, siteId, startStr, endStr) {
       dailyCap: company.ot_daily_hours || 8,
       weeklyCap: company.ot_weekly_hours || 40,
       weekStartsSunday: company.week_start === 'sunday',
-      lunchPaid: !!company.lunch_break_paid,
+      breakCapMinutes: company.lunch_break_paid_minutes || 0,
     });
     // Someone with no punches at all in the period is noise on a payroll sheet; someone with an
     // unclosed punch still needs to be seen, so they stay in.
@@ -519,7 +548,8 @@ async function sendPayrollSummaries(company, startStr, endStr, result) {
     const html = buildPayrollSummaryHtml({
       companyName: company.name, scopeLabel, periodStart: startStr, periodEnd: endStr,
       freqLabel, rows, trackOvertime: company.track_overtime !== false, roundMin: company.punch_rounding || 0,
-      dailyCap: company.ot_daily_hours || 8, weeklyCap: company.ot_weekly_hours || 40
+      dailyCap: company.ot_daily_hours || 8, weeklyCap: company.ot_weekly_hours || 40,
+      breakCapMinutes: company.lunch_break_paid_minutes || 0
     });
     const csv = buildPayrollCsv(rows, startStr, endStr);
     const attachments = [{
@@ -538,7 +568,7 @@ async function sendPayrollSummaries(company, startStr, endStr, result) {
   }
 }
 
-async function sendToEmployee(emp, startStr, endStr, frequency, companyName, roundMin, lunchPaid) {
+async function sendToEmployee(emp, startStr, endStr, frequency, companyName, roundMin, breakCapMinutes) {
   const { data: punches, error: pErr } = await supabase.from('punches').select('type,punch_date,punch_time,punched_at,site_name,is_break').eq('emp_id', emp.id).gte('punch_date', startStr).lte('punch_date', endStr).order('punched_at', {
     ascending: true
   });
@@ -563,7 +593,7 @@ async function sendToEmployee(emp, startStr, endStr, frequency, companyName, rou
     frequency,
     punches: punches || [],
     punchRounding: roundMin || 0,
-    lunchPaid: !!lunchPaid
+    breakCapMinutes: breakCapMinutes || 0
   });
   await sendEmail(emp.email, subject, html);
 }
@@ -612,7 +642,7 @@ Deno.serve(async (req)=>{
         if (empErr || !emp) throw new Error('Employee not found');
         if (!emp.email) throw new Error('Employee has no email address');
         const { data: co } = await supabase.from('companies').select('*').eq('id', emp.company_id).single();
-        await sendToEmployee(emp, body.start_date, body.end_date, co?.payroll_frequency || 'biweekly', co?.name || 'Your Company', co?.punch_rounding || 0, co?.lunch_break_paid);
+        await sendToEmployee(emp, body.start_date, body.end_date, co?.payroll_frequency || 'biweekly', co?.name || 'Your Company', co?.punch_rounding || 0, co?.lunch_break_paid_minutes);
         return new Response(JSON.stringify({
           success: true,
           manual_sent: true,
@@ -681,7 +711,7 @@ Deno.serve(async (req)=>{
           continue;
         }
         try {
-          await sendToEmployee(emp, startStr, endStr, company.payroll_frequency || 'biweekly', company.name, company.punch_rounding || 0, company.lunch_break_paid);
+          await sendToEmployee(emp, startStr, endStr, company.payroll_frequency || 'biweekly', company.name, company.punch_rounding || 0, company.lunch_break_paid_minutes);
           companyResult.sent++;
         } catch (e) {
           companyResult.errors.push(`${emp.name}: ${e.message}`);

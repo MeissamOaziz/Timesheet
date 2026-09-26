@@ -950,6 +950,7 @@ border-top:1px solid var(--border);margin:18px 0;}
 /* Activity log edit row highlight */
 .edited-row td{background:rgba(245,158,11,.05)!important;}
 .manual-badge{font-size:10px;background:rgba(245,158,11,.2);color:var(--amber);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
+.break-badge{font-size:10px;background:rgba(124,92,191,.18);color:#7c5cbf;border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
 /* Kiosk stays the unmarked baseline (it's the overwhelming default) — only the mobile app's own
    punches get a badge, same convention as MANUAL only appearing for the exceptional case. */
 .mobile-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:rgba(79,142,247,.15);color:var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px;font-weight:600;}
@@ -3661,13 +3662,14 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div id="lunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
       </div>
     </div>
-    <div id="paidBreakRow" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-top:6px;margin-left:20px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="togglePaidBreakOpt()">
+    <div id="paidBreakRow" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-top:6px;margin-left:20px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md)">
       <div>
-        <div style="font-size:12.5px;font-weight:600;color:var(--text)" data-i18n="modal.paidBreak">Paid Break</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.paidBreakDesc">Break time counts as worked hours instead of being deducted</div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--text)" data-i18n="modal.paidBreak">Paid Break Minutes</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.paidBreakDesc">Minutes of each break counted as worked hours (0 = fully unpaid). A shorter break only pays for its actual length.</div>
       </div>
-      <div id="paidBreakToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
-        <div id="paidBreakThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:14px">
+        <input type="number" id="companyLunchPaidMinutes" min="0" step="5" value="0" style="width:60px;padding:6px 8px;font-size:12px;text-align:right">
+        <span style="font-size:12px;color:var(--text3)" data-i18n="modal.minutesAbbrev">min</span>
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
@@ -5524,7 +5526,7 @@ function renderDashboard(){
   function sectionFor(site){
     const co=(C.companies||[]).find(c=>c.id===site.company_id);
     const roundMin=co?.punch_rounding||0;
-    const lunchPaid=!!(co?.track_lunch_breaks && co?.lunch_break_paid);
+    const breakCapMs=(co?.track_lunch_breaks?(co?.lunch_break_paid_minutes||0):0)*60000;
     const emps=allEmps.filter(e=>e.site_id===site.id);
     const empIds=new Set(emps.map(e=>e.id));
     const punches=allPunches.filter(p=>empIds.has(p.emp_id)); // desc order preserved
@@ -5535,12 +5537,24 @@ function renderDashboard(){
     const byEmp={}; for(const p of punches){ (byEmp[p.emp_id]||(byEmp[p.emp_id]=[])).push(p); }
     let hToday=0,hWeek=0;
     for(const e of emps){
-      const epsRaw=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
-      const eps=lunchPaid?epsRaw.filter(p=>!p.is_break):epsRaw;
+      const eps=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
       let i=0;
       while(i<eps.length){ const p=eps[i];
         if(p.type==='IN'){ const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null; const hrs=out?(_roundPunchMs(out.punched_at,roundMin)-_roundPunchMs(p.punched_at,roundMin))/3600000:0; if(out)i+=2;else i++;
           if(hrs>0){ if(p.punch_date===todayStr)hToday+=hrs; if(p.punch_date>=weekStartStr)hWeek+=hrs; } } else i++; }
+      // Part of a break can be paid (companies vary — some pay a set number of minutes of a
+      // break, some pay none, some pay all of it); the paid portion counts toward hours the same
+      // way a work session does, added back on top of the naive pairing above.
+      if(breakCapMs>0){
+        for(let bi=0;bi<eps.length-1;bi++){
+          const a=eps[bi],b=eps[bi+1];
+          if(a.type==='OUT'&&a.is_break&&b.type==='IN'&&b.is_break){
+            const gapMs=_roundPunchMs(b.punched_at,roundMin)-_roundPunchMs(a.punched_at,roundMin);
+            const paidHrs=Math.min(gapMs,breakCapMs)/3600000;
+            if(paidHrs>0){ if(a.punch_date===todayStr)hToday+=paidHrs; if(a.punch_date>=weekStartStr)hWeek+=paidHrs; }
+          }
+        }
+      }
     }
     const cards=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
       ${card(t('dash.clockedIn')||'Clocked in now', clockedIn.length, clockedIn.length?'var(--green)':'var(--text)')}
@@ -10424,7 +10438,7 @@ function openAddCompanyModal(){
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
   setLunchToggle(false);
-  setPaidBreakToggle(false);
+  document.getElementById('companyLunchPaidMinutes').value='0';
   setVisitorCheckinToggle(false);
   setRemotePunchToggle(false);
   _setGrowthAddonLockState();
@@ -10461,7 +10475,7 @@ function editCompany(id){
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(!!co.track_overtime);
   setLunchToggle(!!co.track_lunch_breaks);
-  setPaidBreakToggle(!!co.lunch_break_paid);
+  document.getElementById('companyLunchPaidMinutes').value=String(co.lunch_break_paid_minutes||0);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
   setRemotePunchToggle(!!co.remote_punch_enabled);
   _setGrowthAddonLockState();
@@ -10508,15 +10522,6 @@ function _setPaidBreakRowVisibility(lunchOn){
   const row=document.getElementById('paidBreakRow');
   if(row) row.style.display=lunchOn?'':'none';
 }
-function togglePaidBreakOpt(){
-  const on=document.getElementById('paidBreakThumb').style.left!=='20px';
-  document.getElementById('paidBreakToggle').style.background=on?'var(--accent)':'var(--border)';
-  document.getElementById('paidBreakThumb').style.left=on?'20px':'2px';
-}
-function setPaidBreakToggle(on){
-  document.getElementById('paidBreakToggle').style.background=on?'var(--accent)':'var(--border)';
-  document.getElementById('paidBreakThumb').style.left=on?'20px':'2px';
-}
 function toggleVisitorCheckinOpt(){
   const on=document.getElementById('visitorCheckinThumb').style.left!=='20px';
   document.getElementById('visitorCheckinToggle').style.background=on?'var(--accent)':'var(--border)';
@@ -10545,12 +10550,12 @@ function _setGrowthAddonLockState(){
   const ok=hasGrowthOrAbove();
   const note=document.getElementById('growthAddonLockNote');
   if(note) note.style.display=ok?'none':'';
-  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow')].forEach(row=>{
+  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow'),document.getElementById('paidBreakRow')].forEach(row=>{
     if(!row)return;
     row.style.opacity=ok?'1':'.5';
     row.style.pointerEvents=ok?'':'none';
   });
-  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); setPaidBreakToggle(false); }
+  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); document.getElementById('companyLunchPaidMinutes').value='0'; }
 }
 
 async function saveCompany(){
@@ -10574,7 +10579,7 @@ async function saveCompany(){
   // downgrade between opening the modal and saving must not let either setting slip through.
   const growthOk=hasGrowthOrAbove();
   const track_lunch_breaks=growthOk&&document.getElementById('lunchThumb').style.left==='20px';
-  const lunch_break_paid=track_lunch_breaks&&document.getElementById('paidBreakThumb').style.left==='20px';
+  const lunch_break_paid_minutes=track_lunch_breaks?(parseInt(document.getElementById('companyLunchPaidMinutes').value,10)||0):0;
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
   const remote_punch_enabled=document.getElementById('remotePunchThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
@@ -10593,13 +10598,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -11030,33 +11035,42 @@ async function generateReport(){
       const co=C.companies.find(c=>c.id===emp.company_id);
       const trackOT=!!(co?.track_overtime);
       const epsAll=(punches||[]).filter(p=>p.emp_id===emp.id).sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
-      // A paid break stays on the clock: drop the break IN/OUT pair from what session-pairing
-      // sees, so the gap merges into one continuous worked session instead of being excluded.
-      // The separate break-minutes tally below still reads the full punch list either way — a
-      // paid break is still worth showing on the badge, it just isn't deducted from hours.
-      const lunchPaid=!!(co?.track_lunch_breaks && co?.lunch_break_paid);
-      const eps=lunchPaid?epsAll.filter(p=>!p.is_break):epsAll;
+      // Naive IN/OUT pairing already excludes every break gap by construction (a break is a
+      // work-OUT/work-IN pair that straddles a break-IN/break-OUT pair, so the break time simply
+      // never gets paired into a session) — no filtering needed for the unpaid baseline.
       const rawRows=[];let i=0;
-      while(i<eps.length){
-        const p=eps[i];
+      while(i<epsAll.length){
+        const p=epsAll[i];
         if(p.type==='IN'){
-          const out=eps[i+1]?.type==='OUT'?eps[i+1]:null;
+          const out=epsAll[i+1]?.type==='OUT'?epsAll[i+1]:null;
           const hrs=out?(_roundPunchMs(out.punched_at,co?.punch_rounding||0)-_roundPunchMs(p.punched_at,co?.punch_rounding||0))/3600000:null;
           if(out)i+=2;else i++;
-          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT});
+          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT,_ts:p.punched_at});
         }else i++;
       }
       // Break time: a break is a same-employee OUT(is_break) immediately followed by an
       // IN(is_break) — the gap between them, wherever it falls in the punch sequence, however
-      // many breaks happened that day. Computed as its own pass over the raw punches rather than
-      // folded into the IN/OUT session pairing above, so it's purely additive: it can't change a
-      // single worked-hours number that's already correct today (the gap was always excluded).
+      // many breaks happened that day. Companies can pay part of a break (e.g. 30 of a 60-minute
+      // break) rather than all-or-nothing, so each break's paid portion is capped at
+      // lunch_break_paid_minutes and added back as its own row — feeding it into calcOT below the
+      // same way a work session would, since paid break time counts toward daily/weekly OT same
+      // as worked time. The unpaid remainder (if any) stays excluded, as it always has been.
       let breakMin=0;
+      const breakCapMs=(co?.track_lunch_breaks?(co?.lunch_break_paid_minutes||0):0)*60000;
       for(let bi=0;bi<epsAll.length-1;bi++){
-        if(epsAll[bi].type==='OUT'&&epsAll[bi].is_break&&epsAll[bi+1].type==='IN'&&epsAll[bi+1].is_break){
-          breakMin+=(new Date(epsAll[bi+1].punched_at)-new Date(epsAll[bi].punched_at))/60000;
+        const a=epsAll[bi],b=epsAll[bi+1];
+        if(a.type==='OUT'&&a.is_break&&b.type==='IN'&&b.is_break){
+          const gapMs=(new Date(b.punched_at)-new Date(a.punched_at));
+          breakMin+=gapMs/60000;
+          if(breakCapMs>0){
+            const paidHrs=Math.min(gapMs,breakCapMs)/3600000;
+            if(paidHrs>0){
+              rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:a.punch_date,punchIn:a.punch_time,punchOut:b.punch_time,hours:paidHrs,isManual:false,isPaidBreak:true,isSubtotal:false,isSiteHeader:false,trackOT,_ts:a.punched_at});
+            }
+          }
         }
       }
+      rawRows.sort((r1,r2)=>new Date(r1._ts)-new Date(r2._ts));
       if(rawRows.length){
         // Calculate OT per session
         const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT,co?.week_start==='sunday',co?.ot_daily_hours,co?.ot_weekly_hours);
@@ -11132,7 +11146,7 @@ async function generateReport(){
       [[t('reports.hours')||'Hours', r.hours.toFixed(2)],
        r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
     return mcard(
-      esc(r.empName||'') + (r.isManual?' <span class="manual-badge">MANUAL</span>':''),
+      esc(r.empName||'') + (r.isManual?' <span class="manual-badge">MANUAL</span>':'') + (r.isPaidBreak?' <span class="break-badge">PAID BREAK</span>':''),
       [r.siteName!=='—' ? [t('admin.col.site')||'Site', esc(r.siteName)] : null,
        [t('reports.date')||'Date', r.date],
        [t('punch.in')||'In', `<span style="color:var(--green)">${r.punchIn}</span>`],
@@ -11165,7 +11179,7 @@ async function generateReport(){
       ?`<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:600">${r.otHours.toFixed(2)}</span>`
       :`<span style="color:var(--text3)">—</span>`;
     return`<tr ${r.trackOT&&r.otHours>0?'style="background:rgba(245,158,11,.04)"':''}>
-      <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${r.empCode}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}</td>
+      <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${r.empCode}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}${r.isPaidBreak?`<span class="break-badge">PAID BREAK</span>`:''}</td>
       <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}</span>`:''}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${r.punchIn}</td>
@@ -11189,7 +11203,7 @@ function exportReport(fmt){
     if(r.isSiteTotal)return[`${r.siteName} — SITE TOTAL`,'','','','','',r.hours.toFixed(2),r.otHours>0?r.otHours.toFixed(2):''];
     if(r.isSubtotal)return[r.subtotalLabel,'','','','','',r.hours.toFixed(2),r.otHours>0?r.otHours.toFixed(2):''];
     const reg=r.regHours!=null?r.regHours:r.hours;
-    return[r.empName+(r.isManual?' [MANUAL]':''),r.empCode,r.siteName,r.date,r.punchIn,r.punchOut,reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
+    return[r.empName+(r.isManual?' [MANUAL]':'')+(r.isPaidBreak?' [PAID BREAK]':''),r.empCode,r.siteName,r.date,r.punchIn,r.punchOut,reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
   });
   // Append approved absences so an exported timesheet is the whole picture, not just worked time.
   if(_reportTimeOff.length){
@@ -11231,7 +11245,7 @@ function exportReport(fmt){
         if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2),styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{fillColor:[238,242,255],textColor:[200,140,0]}}];
         if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2),styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{textColor:[200,140,0]}}];
         const reg=r.regHours!=null?r.regHours:r.hours;
-        return[r.empName+(r.isManual?' [M]':''),r.siteName!=='—'?r.siteName:'',r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
+        return[r.empName+(r.isManual?' [M]':'')+(r.isPaidBreak?' [Break]':''),r.siteName!=='—'?r.siteName:'',r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
       }),
       startY:27,styles:{fontSize:8,cellPadding:3},
       headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
@@ -15031,7 +15045,7 @@ en:{
 'modal.otDailyLabel':'Daily threshold','modal.otWeeklyLabel':'Weekly threshold',
 'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
-'modal.paidBreak':'Paid Break','modal.paidBreakDesc':'Break time counts as worked hours instead of being deducted',
+'modal.paidBreak':'Paid Break Minutes','modal.paidBreakDesc':'Minutes of each break counted as worked hours (0 = fully unpaid). A shorter break only pays for its actual length.','modal.minutesAbbrev':'min',
 'modal.visitorSettings':'Visitor Check-In','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
@@ -15923,7 +15937,7 @@ fr:{
 'modal.otDailyLabel':'Seuil quotidien','modal.otWeeklyLabel':'Seuil hebdomadaire',
 'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
-'modal.paidBreak':'Pause payée','modal.paidBreakDesc':'Le temps de pause compte comme temps travaillé plutôt que d\'être déduit',
+'modal.paidBreak':'Minutes de pause payées','modal.paidBreakDesc':'Minutes de chaque pause comptées comme temps travaillé (0 = non payée). Une pause plus courte ne paie que sa durée réelle.','modal.minutesAbbrev':'min',
 'modal.visitorSettings':'Pointage visiteur','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',

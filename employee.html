@@ -1260,10 +1260,13 @@ async function loadPeriodData(period) {
     // so an employee's own "hours worked" could disagree with what they're actually paid.
     const roundMin = co?.punch_rounding || 0;
     const rMs = (iso) => { const ms = new Date(iso).getTime(); if (!roundMin) return ms; const step = roundMin * 60000; return Math.round(ms / step) * step; };
-    // A paid break stays on the clock -- drop it from pairing so its gap merges into one
-    // continuous session instead of being excluded, matching the admin report's same rule.
-    const lunchPaid = !!co?.lunch_break_paid;
-    const punches = lunchPaid ? punchesRaw.filter(p => !p.is_break) : punchesRaw;
+    // Naive IN/OUT pairing already excludes every break gap by construction, so the unpaid
+    // baseline needs no filtering. Companies can pay part of a break rather than all-or-nothing
+    // (e.g. 30 of a 60-minute break), so the paid portion of each break -- capped at
+    // lunch_break_paid_minutes, and never more than the break actually taken -- is added back as
+    // its own row, matching the admin report's same rule.
+    const punches = punchesRaw;
+    const breakCapMs = (co?.lunch_break_paid_minutes || 0) * 60000;
 
     // Calculate pairs
     let totalHours = 0, pairCount = 0;
@@ -1274,10 +1277,24 @@ async function loadPeriodData(period) {
       if (p.type === 'IN') {
         const out = punches[i+1]?.type === 'OUT' ? punches[i+1] : null;
         const hrs = out ? (rMs(out.punched_at) - rMs(p.punched_at)) / 3600000 : null;
-        pairs.push({ date: p.punch_date, in: p.punch_time, out: out?.punch_time || '—', hours: hrs });
+        pairs.push({ date: p.punch_date, in: p.punch_time, out: out?.punch_time || '—', hours: hrs, _ts: p.punched_at });
         if (hrs) { totalHours += hrs; pairCount++; }
         i += out ? 2 : 1;
       } else i++;
+    }
+    if (breakCapMs > 0) {
+      for (let bi = 0; bi < punches.length - 1; bi++) {
+        const a = punches[bi], b = punches[bi+1];
+        if (a.type === 'OUT' && a.is_break && b.type === 'IN' && b.is_break) {
+          const gapMs = rMs(b.punched_at) - rMs(a.punched_at);
+          const paidHrs = Math.min(gapMs, breakCapMs) / 3600000;
+          if (paidHrs > 0) {
+            pairs.push({ date: a.punch_date, in: a.punch_time, out: b.punch_time, hours: paidHrs, isBreak: true, _ts: a.punched_at });
+            totalHours += paidHrs; pairCount++;
+          }
+        }
+      }
+      pairs.sort((p1, p2) => new Date(p1._ts) - new Date(p2._ts));
     }
 
     // Overtime has to match what payroll will actually pay, because this is the screen an
@@ -1323,10 +1340,11 @@ async function loadPeriodData(period) {
       return;
     }
 
+    const breakTag = `<span style="font-size:9.5px;font-weight:700;background:rgba(124,92,191,.18);color:#7c5cbf;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle">${t('paidBreak')||'PAID BREAK'}</span>`;
     const cardsEl = document.getElementById('punchCards');
     if(cardsEl) cardsEl.innerHTML = pairs.map(p => `
       <div class="pcard">
-        <div class="pcard-date">${fmtDate(p.date)}</div>
+        <div class="pcard-date">${fmtDate(p.date)}${p.isBreak?breakTag:''}</div>
         <div class="pcard-row"><span>${t('thIn')||'Clock In'}</span><span class="punch-type-in">${p.in}</span></div>
         <div class="pcard-row"><span>${t('thOut')||'Clock Out'}</span><span>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '—'}</span></div>
         <div class="pcard-row"><span>${t('thHours')||'Hours'}</span><span style="font-family:'DM Mono',monospace">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</span></div>
@@ -1334,7 +1352,7 @@ async function loadPeriodData(period) {
 
     bodyEl.innerHTML = pairs.map(p => `
       <tr>
-        <td style="font-weight:500">${fmtDate(p.date)}</td>
+        <td style="font-weight:500">${fmtDate(p.date)}${p.isBreak?breakTag:''}</td>
         <td><span class="punch-type-in">${p.in}</span></td>
         <td>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
         <td style="font-family:\'DM Mono\',monospace;font-size:12px">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</td>
