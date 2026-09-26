@@ -2067,6 +2067,10 @@ border-top:1px solid var(--border);margin:18px 0;}
     <span id="adminBadge" style="display:none"></span>
     <button class="btn-secondary" id="loginBtn" onclick="navigate('login')" data-i18n="nav.login" style="font-size:12px;padding:0 13px;">Admin Login</button>
     <button class="btn-secondary" id="logoutBtn" onclick="logout()" data-i18n="nav.logout" style="display:none;font-size:12px;padding:6px 13px;">Logout</button>
+    <button class="theme-toggle-btn" id="navAnnounceBtn" onclick="openAnnouncementsModal()" aria-label="Announcements" title="Announcements" style="display:none;position:relative">
+      <svg class="tt-icon"><use href="#i-bell"/></svg>
+      <span id="navAnnounceBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:var(--r-sm);font-size:10px;font-weight:700;padding:0 5px;min-width:16px;height:16px;line-height:16px;text-align:center"></span>
+    </button>
     <!-- Always in the same spot, but the content follows the page you are on (showPageHelp). -->
     <button class="theme-toggle-btn" id="navHelpBtn" onclick="showPageHelp()" aria-label="Help" title="Help" style="display:none"><svg class="tt-icon"><use href="#i-nav-help"/></svg></button>
     <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
@@ -3339,6 +3343,16 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="btn-secondary" onclick="closeModal('helpModal');showSupportModal()" id="helpContactBtn" style="width:auto;padding:7px 16px;font-size:12.5px"></button>
       <button class="btn-primary" onclick="closeModal('helpModal')" id="helpCloseBtn" style="width:auto;padding:8px 22px;margin-left:auto">Got it</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="announcementsModal" style="z-index:9900">
+  <div class="modal help-modal">
+    <div class="help-head">
+      <h3><svg style="width:18px;height:18px"><use href="#i-bell"/></svg><span data-i18n="announce.title">What's New</span></h3>
+      <button onclick="closeModal('announcementsModal')" aria-label="Close" class="help-x"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
+    </div>
+    <div id="announcementsBody" class="help-body" style="padding:4px 22px 22px"></div>
   </div>
 </div>
 
@@ -4654,6 +4668,11 @@ async function refreshCache(opts={}){
     C.punches=punches||[];
     return;
   }
+  // Global broadcast feed, not tenant data — every logged-in admin sees the same list regardless
+  // of which company they're scoped to, so it's fetched unconditionally here rather than inside
+  // any of the company-scoped branches below.
+  DB.all('announcements','order=created_at.desc').then(rows=>{C.announcements=rows||[];refreshAnnouncementsBadge();}).catch(()=>{});
+
   // STEP 1: Fetch companies first — IDs are needed to scope all subsequent queries
   let companiesFilter='order=name.asc';
   if(!sess&&ctx){companiesFilter+=`&id=eq.${ctx.co.id}`;}
@@ -5863,6 +5882,90 @@ function _helpExpand(term){
 }
 function _helpHit(hay, term){ return _helpExpand(term).some(w=>hay.indexOf(w)>-1); }
 
+// ═══════════════════════════════════════════════════
+// MESSAGE CENTRE — product-update announcements
+// A single global feed every logged-in admin sees, so a payroll-accuracy fix or a new feature
+// can be posted once instead of emailed to every paying customer individually. Read-tracking
+// reuses admins.last_seen_announcement_at (one timestamp) rather than a per-item reads table —
+// "unread" is simply "posted after I last opened the panel".
+// ═══════════════════════════════════════════════════
+function refreshAnnouncementsBadge(){
+  const btn=document.getElementById('navAnnounceBtn');
+  const badge=document.getElementById('navAnnounceBadge');
+  if(!btn||!badge)return;
+  const sess=Sess.get();
+  if(!sess&&!isDemo()){btn.style.display='none';return;}
+  btn.style.display='';
+  const list=C.announcements||[];
+  const lastSeen=sess?.last_seen_announcement_at?new Date(sess.last_seen_announcement_at):null;
+  const unread=lastSeen?list.filter(a=>new Date(a.created_at)>lastSeen).length:list.length;
+  if(unread>0){badge.textContent=unread>9?'9+':String(unread);badge.style.display='';}
+  else badge.style.display='none';
+}
+
+function openAnnouncementsModal(){
+  renderAnnouncementsList();
+  openModal('announcementsModal');
+  // Mark read immediately — the point is "have you had a chance to see this", not tracking
+  // exactly how long the panel stayed open.
+  const badge=document.getElementById('navAnnounceBadge');
+  if(badge)badge.style.display='none';
+  if(isDemo())return;
+  const sess=Sess.get();
+  if(!sess)return;
+  const now=new Date().toISOString();
+  DB.update('admins',`id=eq.${sess.id}`,{last_seen_announcement_at:now}).then(()=>{
+    sess.last_seen_announcement_at=now;Sess.set(sess);
+  }).catch(()=>{});
+}
+
+function renderAnnouncementsList(){
+  const body=document.getElementById('announcementsBody');
+  if(!body)return;
+  const list=C.announcements||[];
+  const authorRow=isSuperAdmin()?`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:16px">
+      <input id="announceNewTitle" type="text" placeholder="${t('announce.titlePh')||'Title'}" style="margin-bottom:8px">
+      <textarea id="announceNewBody" rows="3" placeholder="${t('announce.bodyPh')||"What's new…"}" style="width:100%;resize:vertical"></textarea>
+      <button class="btn-primary" style="width:auto;padding:7px 18px;font-size:12.5px;margin-top:8px" onclick="postAnnouncement()">${t('announce.post')||'Post'}</button>
+    </div>`:'';
+  if(!list.length){
+    body.innerHTML=authorRow+`<div style="text-align:center;color:var(--text3);padding:24px">${t('announce.empty')||'No announcements yet.'}</div>`;
+    return;
+  }
+  const fmtDate=(iso)=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+  body.innerHTML=authorRow+list.map(a=>`
+    <div style="border-bottom:1px solid var(--border);padding:16px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="font-weight:700;font-size:14.5px">${esc(a.title)}</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <div style="font-size:11.5px;color:var(--text3)">${fmtDate(a.created_at)}</div>
+          ${isSuperAdmin()?`<button onclick="deleteAnnouncement('${a.id}')" aria-label="Delete" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:2px"><svg style="width:14px;height:14px"><use href="#i-trash"/></svg></button>`:''}
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6;white-space:pre-wrap">${esc(a.body)}</div>
+    </div>`).join('');
+}
+
+async function postAnnouncement(){
+  const title=document.getElementById('announceNewTitle').value.trim();
+  const bodyText=document.getElementById('announceNewBody').value.trim();
+  if(!title||!bodyText)return;
+  try{
+    const r=await DB.insert('announcements',{title,body:bodyText});
+    if(r?.[0]){C.announcements=[r[0],...(C.announcements||[])];renderAnnouncementsList();}
+  }catch(e){uiAlert(e.message);}
+}
+
+async function deleteAnnouncement(id){
+  if(!confirm(t('announce.confirmDelete')||'Delete this announcement?'))return;
+  try{
+    await DB.del('announcements',`id=eq.${id}`);
+    C.announcements=(C.announcements||[]).filter(a=>a.id!==id);
+    renderAnnouncementsList();
+  }catch(e){uiAlert(e.message);}
+}
+
 function showPageHelp(){ showHelpModal(typeof currentPage!=='undefined'?currentPage:null); }
 
 function showHelpModal(page){
@@ -6043,6 +6146,7 @@ function updateNav(){
   document.body.classList.toggle('nav-authed', ok);
   const _hBtn=document.getElementById('navHelpBtn');
   if(_hBtn){ _hBtn.style.display=ok?'':'none'; _hBtn.title=t('nav.dd.help')||'Help'; }
+  refreshAnnouncementsBadge();
   const isKiosk=!!Ctx.get();
   document.getElementById('loginBtn').style.display=ok?'none':'';
   document.getElementById('logoutBtn').style.display=ok?'':'none';
@@ -15046,6 +15150,7 @@ en:{
 'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
 'modal.paidBreak':'Paid Break Minutes','modal.paidBreakDesc':'Minutes of each break counted as worked hours (0 = fully unpaid). A shorter break only pays for its actual length.','modal.minutesAbbrev':'min',
+'announce.title':"What's New",'announce.titlePh':'Title','announce.bodyPh':"What's new…",'announce.post':'Post','announce.empty':'No announcements yet.','announce.confirmDelete':'Delete this announcement?',
 'modal.visitorSettings':'Visitor Check-In','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
@@ -15938,6 +16043,7 @@ fr:{
 'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
 'modal.paidBreak':'Minutes de pause payées','modal.paidBreakDesc':'Minutes de chaque pause comptées comme temps travaillé (0 = non payée). Une pause plus courte ne paie que sa durée réelle.','modal.minutesAbbrev':'min',
+'announce.title':'Nouveautés','announce.titlePh':'Titre','announce.bodyPh':'Quoi de neuf…','announce.post':'Publier','announce.empty':'Aucune annonce pour le moment.','announce.confirmDelete':'Supprimer cette annonce ?',
 'modal.visitorSettings':'Pointage visiteur','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',

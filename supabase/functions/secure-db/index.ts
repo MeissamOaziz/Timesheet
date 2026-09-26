@@ -525,6 +525,12 @@ Deno.serve(async (req: Request) => {
   // rows via the service-role forward below. Allow only an authenticated admin, or a
   // narrowly-scoped kiosk insert. (Action requests are handled earlier and never reach here.)
   if (method === 'POST' || method === 'PATCH' || method === 'DELETE') {
+    // Announcements are a global broadcast feed (not tenant data) -- read by every admin, but
+    // authored only by Meissam. Checked first since the tenant-payload validation below has
+    // nothing to say about a table with no company/site/employee columns.
+    if (table === 'announcements' && (!caller || caller.role !== 'super_admin')) {
+      return errResp('Unauthorized', 401);
+    }
     if (authedAdminId) {
       // Authenticated admin — allowed, but the payload must not point at another tenant.
       // Super admins are deliberately unscoped, matching the read path.
