@@ -1111,9 +1111,15 @@ border-top:1px solid var(--border);margin:18px 0;}
 .sched-emp-name{font-size:13px;font-weight:600;color:var(--text);}
 .sched-emp-site{font-size:10px;color:var(--text3);margin-top:1px;}
 .sched-cell-inner{display:flex;flex-direction:column;gap:4px;min-height:52px;}
-.sched-shift{background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);border-radius:var(--r-sm);padding:5px 8px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;transition:all .15s;position:relative;}
-.sched-shift:hover{background:rgba(79,142,247,.25);}
-.sched-shift .shift-time{font-size:10px;font-weight:500;opacity:.8;margin-top:1px;}
+/* Card, not a flat pill: a neutral surface with a colored left-edge accent carrying the
+   employee's department/role (see deptColor()) — Agendrix's shift cards use the same idea
+   (colored edge + white body) to make a role readable at a glance across a crowded week without
+   tinting the whole card. Own spin: our surface tokens instead of their white, our radius/spacing
+   scale, and a hover lift instead of their static shadow. */
+.sched-shift{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--sched-dept-color, var(--accent));border-radius:var(--r-sm);padding:5px 8px;font-size:11px;font-weight:600;color:var(--text);cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s;position:relative;}
+.sched-shift:hover{background:var(--surface);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.16);}
+.sched-shift .shift-time{font-size:10px;font-weight:500;opacity:.8;margin-top:1px;color:var(--text);}
+.sched-shift .shift-dept{font-size:9.5px;font-weight:600;color:var(--sched-dept-color, var(--text3));text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sched-shift .shift-delete{position:absolute;top:3px;right:5px;font-size:10px;opacity:0;color:var(--red);transition:opacity .15s;cursor:pointer;font-weight:700;}
 .sched-shift:hover .shift-delete{opacity:1;}
 /* A touch device has no hover, so opacity:0 made deleting a shift not merely awkward but
@@ -1123,6 +1129,11 @@ border-top:1px solid var(--border);margin:18px 0;}
   .sched-shift .shift-delete{opacity:.75;top:2px;right:2px;padding:5px;margin:-3px;}
   .sched-shift{padding-right:20px;}
 }
+/* Legend: only worth showing once departments actually vary — a single-department shop (most
+   of PunchClock's customers) would just see one dot and a redundant label. */
+.sched-dept-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);}
+.sched-dept-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);font-weight:500;}
+.sched-dept-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;background:var(--dot-color);}
 .sched-add-btn{width:100%;background:none;border:1.5px dashed var(--border);border-radius:var(--r-sm);color:var(--text3);font-size:18px;padding:6px;cursor:pointer;transition:all .15s;margin-top:2px;}
 .sched-add-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.06);}
 .sched-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
@@ -13661,6 +13672,19 @@ function onSchedCoChange() {
   renderScheduleGrid();
 }
 
+// Deterministic color per department/role, so "Cashier" is always the same hue everywhere in
+// the grid without a schema change or an admin having to configure anything — it's derived from
+// employees.dept, which most companies already fill in. Picked to avoid the two hues that
+// already carry a fixed meaning elsewhere on this grid (red = unavailable, amber = holiday/time
+// off), so a role tag never reads as a warning by accident.
+const SCHED_DEPT_PALETTE = ['#4f8ef7','#7c5cbf','#14b8a6','#ec4899','#6366f1','#06b6d4','#84cc16','#d946ef'];
+function deptColor(dept){
+  if(!dept) return null;
+  let hash=0;
+  for(let i=0;i<dept.length;i++) hash=(hash*31+dept.charCodeAt(i))>>>0;
+  return SCHED_DEPT_PALETTE[hash % SCHED_DEPT_PALETTE.length];
+}
+
 async function renderScheduleGrid() {
   const wrap = document.getElementById('schedGridContent');
   if(!wrap) return;
@@ -13746,10 +13770,18 @@ async function renderScheduleGrid() {
   const totalShifts = _schedShifts.length;
   const todayShifts = _schedShifts.filter(sh => sh.shift_date === todayStr).length;
 
+  // Only worth a legend once departments actually vary across the visible roster — a
+  // single-department shop (the common case) would just see one redundant dot.
+  const deptsInView = [...new Set(emps.map(e=>e.dept).filter(Boolean))].sort();
+  const legendHtml = deptsInView.length > 1
+    ? `<div class="sched-dept-legend">${deptsInView.map(d=>`<div class="sched-dept-legend-item"><span class="sched-dept-legend-dot" style="--dot-color:${deptColor(d)}"></span>${esc(d)}</div>`).join('')}</div>`
+    : '';
+
   let html = `<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
     <div style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">${totalShifts}</strong> ${t('sched.shiftsThisWeek')||'shifts this week'}</div>
     ${todayShifts ? `<div style="font-size:12px;color:var(--accent)"><svg class="ic" style="margin-right:5px"><use href="#i-alarm"/></svg><strong>${todayShifts}</strong> ${t('sched.today')||'today'}</div>` : ''}
   </div>
+  ${legendHtml}
   <table class="sched-grid">
     <thead><tr>
       <th>${t('sched.employee')||'Employee'}</th>`;
@@ -13836,11 +13868,16 @@ async function renderScheduleGrid() {
         html += `<div title="${esc(unavailEntry.note||t('sched.unavailable')||'Unavailable')}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--red);background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-xs);padding:3px 7px;margin-bottom:2px">${t('sched.unavailable')||'Unavailable'}${unavailEntry.note?` · ${esc(unavailEntry.note)}`:''}</div>`;
       }
 
+      const empDeptColor = deptColor(emp.dept);
       dayShifts.forEach(sh => {
         const startFmt = sh.start_time.slice(0,5);
         const endFmt   = sh.end_time.slice(0,5);
-        html += `<div class="sched-shift${isUnavail?' sched-shift-warning':''}" onclick="openEditShiftModal('${sh.id}')" ${isUnavail?`style="border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.12)" title="${t('sched.shiftOverAvail')||'Shift overlaps unavailability'}"`:''}> 
+        // The overlap warning is a real conflict, not a role — let it override the department
+        // accent visually the same way it already overrode the plain blue before this change.
+        const deptStyle = (!isUnavail && empDeptColor) ? `style="--sched-dept-color:${empDeptColor}"` : (isUnavail ? `style="border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.12)" title="${t('sched.shiftOverAvail')||'Shift overlaps unavailability'}"` : '');
+        html += `<div class="sched-shift${isUnavail?' sched-shift-warning':''}" onclick="openEditShiftModal('${sh.id}')" ${deptStyle}>
           ${isUnavail?`<div style="font-size:9px;color:var(--amber);margin-bottom:2px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>${t('sched.overlapWarning')||'Overlap'}</div>`:''}
+          ${(!isUnavail && emp.dept) ? `<div class="shift-dept">${esc(emp.dept)}</div>` : ''}
           ${sh.note ? `<div style="font-size:11px;font-weight:600">${sh.note}</div>` : ''}
           <div class="shift-time">${startFmt} – ${endFmt}</div>
           <span class="shift-delete" onclick="event.stopPropagation();deleteShiftById('${sh.id}')"><svg style="width:11px;height:11px"><use href="#i-x"/></svg></span>
