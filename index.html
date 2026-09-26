@@ -3661,6 +3661,15 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div id="lunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
       </div>
     </div>
+    <div id="paidBreakRow" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-top:6px;margin-left:20px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="togglePaidBreakOpt()">
+      <div>
+        <div style="font-size:12.5px;font-weight:600;color:var(--text)" data-i18n="modal.paidBreak">Paid Break</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.paidBreakDesc">Break time counts as worked hours instead of being deducted</div>
+      </div>
+      <div id="paidBreakToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="paidBreakThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><span data-i18n="modal.visitorSettings">Visitor Check-In</span><span style="font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:1px 6px;border-radius:var(--r-xl);vertical-align:middle;margin-left:8px;text-transform:none;letter-spacing:normal" data-i18n="modal.growthPlanBadge">GROWTH+</span></p>
     <div id="visitorCheckinToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleVisitorCheckinOpt()">
@@ -5513,7 +5522,9 @@ function renderDashboard(){
   const panel=(title,inner)=>`<div class="card"><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px">${title}</div>${inner}</div>`;
 
   function sectionFor(site){
-    const roundMin=((C.companies||[]).find(c=>c.id===site.company_id)||{}).punch_rounding||0;
+    const co=(C.companies||[]).find(c=>c.id===site.company_id);
+    const roundMin=co?.punch_rounding||0;
+    const lunchPaid=!!(co?.track_lunch_breaks && co?.lunch_break_paid);
     const emps=allEmps.filter(e=>e.site_id===site.id);
     const empIds=new Set(emps.map(e=>e.id));
     const punches=allPunches.filter(p=>empIds.has(p.emp_id)); // desc order preserved
@@ -5524,13 +5535,13 @@ function renderDashboard(){
     const byEmp={}; for(const p of punches){ (byEmp[p.emp_id]||(byEmp[p.emp_id]=[])).push(p); }
     let hToday=0,hWeek=0;
     for(const e of emps){
-      const eps=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+      const epsRaw=(byEmp[e.id]||[]).slice().sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+      const eps=lunchPaid?epsRaw.filter(p=>!p.is_break):epsRaw;
       let i=0;
       while(i<eps.length){ const p=eps[i];
         if(p.type==='IN'){ const out=eps[i+1]&&eps[i+1].type==='OUT'?eps[i+1]:null; const hrs=out?(_roundPunchMs(out.punched_at,roundMin)-_roundPunchMs(p.punched_at,roundMin))/3600000:0; if(out)i+=2;else i++;
           if(hrs>0){ if(p.punch_date===todayStr)hToday+=hrs; if(p.punch_date>=weekStartStr)hWeek+=hrs; } } else i++; }
     }
-    const co=(C.companies||[]).find(c=>c.id===site.company_id);
     const cards=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px">
       ${card(t('dash.clockedIn')||'Clocked in now', clockedIn.length, clockedIn.length?'var(--green)':'var(--text)')}
       ${card(t('dash.hoursToday')||'Hours today', fmtH(hToday))}
@@ -10413,6 +10424,7 @@ function openAddCompanyModal(){
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(false);
   setLunchToggle(false);
+  setPaidBreakToggle(false);
   setVisitorCheckinToggle(false);
   setRemotePunchToggle(false);
   _setGrowthAddonLockState();
@@ -10449,6 +10461,7 @@ function editCompany(id){
   document.getElementById('companyModalMsg').innerHTML='';
   setOvertimeToggle(!!co.track_overtime);
   setLunchToggle(!!co.track_lunch_breaks);
+  setPaidBreakToggle(!!co.lunch_break_paid);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
   setRemotePunchToggle(!!co.remote_punch_enabled);
   _setGrowthAddonLockState();
@@ -10482,10 +10495,27 @@ function toggleLunchOpt(){
   const on=document.getElementById('lunchThumb').style.left!=='20px';
   document.getElementById('lunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('lunchThumb').style.left=on?'20px':'2px';
+  _setPaidBreakRowVisibility(on);
 }
 function setLunchToggle(on){
   document.getElementById('lunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('lunchThumb').style.left=on?'20px':'2px';
+  _setPaidBreakRowVisibility(on);
+}
+// Only meaningful once break tracking itself is on — hidden rather than just disabled, since an
+// admin who hasn't turned on lunch tracking yet has no reason to see a setting for it.
+function _setPaidBreakRowVisibility(lunchOn){
+  const row=document.getElementById('paidBreakRow');
+  if(row) row.style.display=lunchOn?'':'none';
+}
+function togglePaidBreakOpt(){
+  const on=document.getElementById('paidBreakThumb').style.left!=='20px';
+  document.getElementById('paidBreakToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('paidBreakThumb').style.left=on?'20px':'2px';
+}
+function setPaidBreakToggle(on){
+  document.getElementById('paidBreakToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('paidBreakThumb').style.left=on?'20px':'2px';
 }
 function toggleVisitorCheckinOpt(){
   const on=document.getElementById('visitorCheckinThumb').style.left!=='20px';
@@ -10520,7 +10550,7 @@ function _setGrowthAddonLockState(){
     row.style.opacity=ok?'1':'.5';
     row.style.pointerEvents=ok?'':'none';
   });
-  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); }
+  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); setPaidBreakToggle(false); }
 }
 
 async function saveCompany(){
@@ -10544,6 +10574,7 @@ async function saveCompany(){
   // downgrade between opening the modal and saving must not let either setting slip through.
   const growthOk=hasGrowthOrAbove();
   const track_lunch_breaks=growthOk&&document.getElementById('lunchThumb').style.left==='20px';
+  const lunch_break_paid=track_lunch_breaks&&document.getElementById('paidBreakThumb').style.left==='20px';
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
   const remote_punch_enabled=document.getElementById('remotePunchThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
@@ -10562,13 +10593,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,visitor_checkin_enabled,remote_punch_enabled,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid,visitor_checkin_enabled,remote_punch_enabled,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -10998,7 +11029,13 @@ async function generateReport(){
     emps.forEach(emp=>{
       const co=C.companies.find(c=>c.id===emp.company_id);
       const trackOT=!!(co?.track_overtime);
-      const eps=(punches||[]).filter(p=>p.emp_id===emp.id).sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+      const epsAll=(punches||[]).filter(p=>p.emp_id===emp.id).sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+      // A paid break stays on the clock: drop the break IN/OUT pair from what session-pairing
+      // sees, so the gap merges into one continuous worked session instead of being excluded.
+      // The separate break-minutes tally below still reads the full punch list either way — a
+      // paid break is still worth showing on the badge, it just isn't deducted from hours.
+      const lunchPaid=!!(co?.track_lunch_breaks && co?.lunch_break_paid);
+      const eps=lunchPaid?epsAll.filter(p=>!p.is_break):epsAll;
       const rawRows=[];let i=0;
       while(i<eps.length){
         const p=eps[i];
@@ -11015,9 +11052,9 @@ async function generateReport(){
       // folded into the IN/OUT session pairing above, so it's purely additive: it can't change a
       // single worked-hours number that's already correct today (the gap was always excluded).
       let breakMin=0;
-      for(let bi=0;bi<eps.length-1;bi++){
-        if(eps[bi].type==='OUT'&&eps[bi].is_break&&eps[bi+1].type==='IN'&&eps[bi+1].is_break){
-          breakMin+=(new Date(eps[bi+1].punched_at)-new Date(eps[bi].punched_at))/60000;
+      for(let bi=0;bi<epsAll.length-1;bi++){
+        if(epsAll[bi].type==='OUT'&&epsAll[bi].is_break&&epsAll[bi+1].type==='IN'&&epsAll[bi+1].is_break){
+          breakMin+=(new Date(epsAll[bi+1].punched_at)-new Date(epsAll[bi].punched_at))/60000;
         }
       }
       if(rawRows.length){
@@ -14994,6 +15031,7 @@ en:{
 'modal.otDailyLabel':'Daily threshold','modal.otWeeklyLabel':'Weekly threshold',
 'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
+'modal.paidBreak':'Paid Break','modal.paidBreakDesc':'Break time counts as worked hours instead of being deducted',
 'modal.visitorSettings':'Visitor Check-In','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
@@ -15885,6 +15923,7 @@ fr:{
 'modal.otDailyLabel':'Seuil quotidien','modal.otWeeklyLabel':'Seuil hebdomadaire',
 'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
+'modal.paidBreak':'Pause payée','modal.paidBreakDesc':'Le temps de pause compte comme temps travaillé plutôt que d\'être déduit',
 'modal.visitorSettings':'Pointage visiteur','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',

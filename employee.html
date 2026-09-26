@@ -1220,6 +1220,10 @@ async function renderReports() {
   // Build period buttons based on company payroll frequency
   const payrollRows = asRows(await rpc('portal_get_company_payroll', { p_session: _session.token }));
   const co = payrollRows.length ? payrollRows[0] : null;
+  // Cached for loadPeriodData/selectPeriod, called later from a click handler with no company
+  // context of their own -- rounding and OT thresholds must match what the admin/payroll email
+  // actually use, not a guess made without them.
+  window._empCoPayroll = co;
   const freq = (co && co.payroll_frequency) || 'biweekly'; // weekly | biweekly | monthly
   // week_start stored as text ('monday'/'sunday') → convert to integer (0=Sun, 1=Mon)
   const weekStart = (co && co.week_start === 'sunday') ? 0 : 1;
@@ -1250,7 +1254,16 @@ async function loadPeriodData(period) {
   bodyEl.innerHTML = '';
 
   try {
-    const punches = asRows(await rpc('portal_get_punches', { p_session: _session.token, p_from: period.start, p_to: period.end }));
+    const punchesRaw = asRows(await rpc('portal_get_punches', { p_session: _session.token, p_from: period.start, p_to: period.end }));
+    const co = window._empCoPayroll;
+    // Same rounding the admin report and the payroll email apply -- shown here unrounded before,
+    // so an employee's own "hours worked" could disagree with what they're actually paid.
+    const roundMin = co?.punch_rounding || 0;
+    const rMs = (iso) => { const ms = new Date(iso).getTime(); if (!roundMin) return ms; const step = roundMin * 60000; return Math.round(ms / step) * step; };
+    // A paid break stays on the clock -- drop it from pairing so its gap merges into one
+    // continuous session instead of being excluded, matching the admin report's same rule.
+    const lunchPaid = !!co?.lunch_break_paid;
+    const punches = lunchPaid ? punchesRaw.filter(p => !p.is_break) : punchesRaw;
 
     // Calculate pairs
     let totalHours = 0, pairCount = 0;
@@ -1260,7 +1273,7 @@ async function loadPeriodData(period) {
       const p = punches[i];
       if (p.type === 'IN') {
         const out = punches[i+1]?.type === 'OUT' ? punches[i+1] : null;
-        const hrs = out ? (new Date(out.punched_at) - new Date(p.punched_at)) / 3600000 : null;
+        const hrs = out ? (rMs(out.punched_at) - rMs(p.punched_at)) / 3600000 : null;
         pairs.push({ date: p.punch_date, in: p.punch_time, out: out?.punch_time || '—', hours: hrs });
         if (hrs) { totalHours += hrs; pairCount++; }
         i += out ? 2 : 1;
@@ -1268,10 +1281,12 @@ async function loadPeriodData(period) {
     }
 
     // Overtime has to match what payroll will actually pay, because this is the screen an
-    // employee checks to see whether they were paid correctly. The old line subtracted 40 from
-    // the WHOLE selected period, so on a biweekly period two ordinary 38h weeks showed 36h of
-    // overtime that nobody worked. Same rule as the admin report now: >8h in a day, >40h in a
-    // week, with the weekly bucket reset at each week boundary.
+    // employee checks to see whether they were paid correctly. Thresholds come from the
+    // company's own settings (companies.ot_daily_hours/ot_weekly_hours) -- hardcoding 8/40 here
+    // showed the wrong overtime for any company that configured different thresholds (e.g.
+    // Thrive Medical runs 7h/35h, not the 8/40 default). Same weekly-bucket-reset rule as the
+    // admin report.
+    const dailyCap = co?.ot_daily_hours || 8, weeklyCap = co?.ot_weekly_hours || 40;
     const dailyMap = {};
     pairs.forEach(p => { if (p.hours) dailyMap[p.date] = (dailyMap[p.date] || 0) + p.hours; });
     const weekKey = dateStr => {
@@ -1286,9 +1301,9 @@ async function loadPeriodData(period) {
       const wk = weekKey(p.date);
       if (wk !== curWeek) { curWeek = wk; weeklyReg = 0; }
       const dayTotal = dailyMap[p.date];
-      const dailyOT = dayTotal > 8 ? Math.max(0, (p.hours / dayTotal) * (dayTotal - 8)) : 0;
+      const dailyOT = dayTotal > dailyCap ? Math.max(0, (p.hours / dayTotal) * (dayTotal - dailyCap)) : 0;
       let reg = p.hours - dailyOT, ot = dailyOT;
-      if (weeklyReg + reg > 40) { const over = weeklyReg + reg - 40; ot += over; reg -= over; }
+      if (weeklyReg + reg > weeklyCap) { const over = weeklyReg + reg - weeklyCap; ot += over; reg -= over; }
       weeklyReg += reg;
       otHours += Math.max(0, ot);
     });
