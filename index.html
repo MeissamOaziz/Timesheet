@@ -1065,6 +1065,8 @@ border-top:1px solid var(--border);margin:18px 0;}
 .lang-switcher{display:flex;align-items:center;gap:2px;height:var(--h-md);box-sizing:border-box;background:var(--surface2);border-radius:var(--r-pill);padding:0 3px;border:1px solid var(--border);flex-shrink:0}
 .lang-btn{display:inline-flex;align-items:center;height:28px;padding:0 11px;border:none;border-radius:var(--r-xl);background:none;color:var(--text3);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.5px}
 .lang-btn.active{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(79,142,247,.35)}
+.sched-copy-day-chip{display:inline-flex;align-items:center;height:28px;padding:0 11px;border:1.5px solid var(--border);border-radius:var(--r-xl);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.sched-copy-day-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(79,142,247,.35)}
 .lang-btn:not(.active):hover{color:var(--text);background:var(--surface2)}
 /* ── TOAST ── */
 /* white-space:nowrap with a max-width meant a long toast was simply cut off mid-sentence —
@@ -3069,6 +3071,13 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="form-group">
       <label data-i18n="sched.note">Note <span style="color:var(--text3);font-weight:400">(optional)</span></label>
       <input type="text" id="shiftNote" placeholder="e.g. Opening shift" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+    </div>
+    <div class="form-group" id="shiftCopyRow" style="display:none">
+      <label data-i18n="sched.copyToOtherDays">Copy this shift to other days this week</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px">
+        <div id="shiftCopyDayChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        <button class="btn-secondary" style="width:auto;padding:5px 12px;font-size:12px" onclick="copyShiftToSelectedDays()" data-i18n="sched.copySelected">Copy</button>
+      </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn-primary" onclick="saveShift()" data-i18n="modal.save">Save</button>
@@ -14009,11 +14018,17 @@ async function renderScheduleGrid() {
       html += `<td class="${isToday&&!isUnavail&&!isHoliday&&!dayOff?'today-col':''}" style="${tdStyle}">
         <div class="sched-cell-inner">`;
 
+      // Hours per day is how much of that day is actually off (an admin sets it to less than a
+      // full day for a half-day/appointment-style absence) — surfaced on the pill and the Add
+      // Shift hint below so "can I still put this person on a shift that day?" is answerable at a
+      // glance, not something you have to open the Time Off tab to check.
+      const dayOffHrs = dayOff ? Number(dayOff.hours_per_day || 0) : 0;
+      const dayOffHrsLabel = dayOffHrs ? `${dayOffHrs % 1 === 0 ? dayOffHrs : dayOffHrs.toFixed(1)}h` : '';
       if(dayOff) {
         const multi = dayOff.end_date !== dayOff.start_date;
-        const tip = `${_toKindLabel(dayOff.kind)}${multi?` · ${dayOff.start_date} → ${dayOff.end_date}`:''}${dayOff.reason?` · ${dayOff.reason}`:''}`;
+        const tip = `${_toKindLabel(dayOff.kind)}${dayOffHrsLabel?` · ${dayOffHrsLabel}${t('to.perDay')||'/day'}`:''}${multi?` · ${dayOff.start_date} → ${dayOff.end_date}`:''}${dayOff.reason?` · ${dayOff.reason}`:''}`;
         html += `<div title="${esc(tip)}" style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#b45309;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.4);border-radius:var(--r-xs);padding:3px 7px;margin-bottom:2px">
-          <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${(TO_KINDS[dayOff.kind]||{}).c||'#f59e0b'}"></span>${esc(_toKindLabel(dayOff.kind))}</div>`;
+          <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${(TO_KINDS[dayOff.kind]||{}).c||'#f59e0b'}"></span>${esc(_toKindLabel(dayOff.kind))}${dayOffHrsLabel?` · ${dayOffHrsLabel}`:''}</div>`;
       }
 
       if(isHoliday) {
@@ -14043,7 +14058,7 @@ async function renderScheduleGrid() {
       });
 
       const addTitle = dayOff
-        ? (t('to.schedConflict')||'{name} is off that day ({kind}).').replace('{name}',emp.name).replace('{kind}',_toKindLabel(dayOff.kind))
+        ? (t('to.schedConflict')||'{name} is off that day ({kind}).').replace('{name}',emp.name).replace('{kind}',_toKindLabel(dayOff.kind)) + (dayOffHrsLabel?` (${dayOffHrsLabel}${t('to.perDay')||'/day'})`:'')
         : isUnavail ? (t('sched.unavailableHint')||'Employee unavailable — add shift anyway?')
         : (t('sched.addShift')||'Add Shift');
       const addStyle = dayOff ? 'border-color:rgba(245,158,11,.45);color:#b45309;opacity:.6'
@@ -14212,6 +14227,7 @@ function openAddShiftModal(empId = '', dateStr = '') {
   document.getElementById('shiftStart').value = '09:00';
   document.getElementById('shiftEnd').value = '17:00';
   document.getElementById('shiftNote').value = '';
+  document.getElementById('shiftCopyRow').style.display = 'none';
   openModal('shiftModal');
 }
 
@@ -14234,7 +14250,68 @@ function openEditShiftModal(shiftId) {
   document.getElementById('shiftStart').value = sh.start_time.slice(0,5);
   document.getElementById('shiftEnd').value = sh.end_time.slice(0,5);
   document.getElementById('shiftNote').value = sh.note || '';
+  _renderShiftCopyDayChips(sh.shift_date);
   openModal('shiftModal');
+}
+
+// Quick way to apply one already-saved shift's exact hours to other days in the same week,
+// without re-typing them in Add Shift for each day — e.g. the same 09:00-17:00 production shift
+// on Mon, Wed and Fri. Scoped to the week currently in view; the day chips exclude the shift's
+// own day since copying a shift onto itself is meaningless.
+let _shiftCopyDays = new Set();
+function _renderShiftCopyDayChips(shiftDateStr){
+  const row = document.getElementById('shiftCopyRow');
+  const host = document.getElementById('shiftCopyDayChips');
+  if(!row || !host) return;
+  _shiftCopyDays = new Set();
+  const weekStart = schedGetWeekStart(_schedWeek);
+  const dayNames = [t('sched.mon')||'Mon', t('sched.tue')||'Tue', t('sched.wed')||'Wed',
+    t('sched.thu')||'Thu', t('sched.fri')||'Fri', t('sched.sat')||'Sat', t('sched.sun')||'Sun'];
+  let html = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(weekStart); d.setDate(d.getDate()+i);
+    const ds = schedDateStr(d);
+    if(ds === shiftDateStr) continue;
+    html += `<button type="button" class="sched-copy-day-chip" onclick="toggleShiftCopyDay('${ds}',this)">${dayNames[i]}</button>`;
+  }
+  host.innerHTML = html;
+  row.style.display = '';
+}
+
+function toggleShiftCopyDay(dateStr, btn){
+  if(_shiftCopyDays.has(dateStr)){ _shiftCopyDays.delete(dateStr); btn.classList.remove('active'); }
+  else { _shiftCopyDays.add(dateStr); btn.classList.add('active'); }
+}
+
+async function copyShiftToSelectedDays(){
+  const shiftId = document.getElementById('shiftModalId').value;
+  const sh = _schedShifts.find(s => s.id === shiftId);
+  if(!sh) return;
+  if(!_shiftCopyDays.size){ showToast(t('sched.copySelectDays')||'Select at least one day to copy to.','info'); return; }
+
+  // Same skip-if-already-there rule as Copy Last Week, snapshotted once before the loop.
+  const existingDates = new Set(_schedShifts.filter(s2 => s2.employee_id === sh.employee_id).map(s2 => s2.shift_date));
+  let copied = 0, skipped = 0;
+  for(const dateStr of _shiftCopyDays){
+    if(existingDates.has(dateStr)){ skipped++; continue; }
+    try{
+      await DB.insert('shifts', {
+        admin_id: sh.admin_id, company_id: sh.company_id, site_id: sh.site_id, employee_id: sh.employee_id,
+        shift_date: dateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
+      });
+      copied++;
+    }catch(e){ console.warn('copyShiftToSelectedDays insert error:', e); }
+  }
+
+  closeModal('shiftModal');
+  await renderScheduleGrid();
+  if(copied && skipped){
+    showToast((t('sched.copyShiftMixed')||'Copied to {n} day(s); {k} already had a shift and were left as-is.').replace('{n}',copied).replace('{k}',skipped),'success');
+  } else if(copied){
+    showToast((t('sched.copyShiftDone')||'Copied to {n} day(s).').replace('{n}',copied),'success');
+  } else {
+    showToast(t('sched.copyShiftAllExist')||'Every selected day already has a shift.','info');
+  }
 }
 
 async function saveShift() {
@@ -14425,6 +14502,8 @@ async function sendScheduleEmail(empId) {
   const weekDays = Array.from({length:7}, (_,i) => { const d=new Date(weekStart); d.setDate(weekStart.getDate()+i); return d; });
   const empShifts = _schedShifts.filter(sh => sh.employee_id === empId);
   if(!empShifts.length) { showToast(t('sched.noShiftsToSend')||'No shifts this week to send.','info'); return; }
+  const confirmMsg = (t('sched.sendConfirm')||'Send {name}\'s schedule for this week to {email}?').replace('{name}',emp.name).replace('{email}',emp.email);
+  if(!(await uiConfirm(confirmMsg, {confirmLabel: t('sched.sendEmail')||'Send schedule', danger: false}))) return;
   showToast(t('sched.sending')||'Sending...','info');
   await sendScheduleEmailCore(emp.email, emp.name, weekDays, empShifts);
 }
@@ -14909,7 +14988,7 @@ en:{
 'admin.pinShow':'Show','admin.pinNone':'None',
 'to.title':'Time Off','to.subtitle':'Vacation, sick days and absences','to.add':'+ Add time off','to.edit':'Edit time off',
 'to.pending':'Pending requests','to.approve':'Approve','to.deny':'Deny','to.employee':'Employee',
-'to.start':'First day off','to.end':'Last day off','to.kind':'Type','to.hours':'Hours per day',
+'to.start':'First day off','to.end':'Last day off','to.kind':'Type','to.hours':'Hours per day','to.perDay':'/day',
 'to.note':'Note (optional)','to.notePlaceholder':'Booked in advance','to.save':'Save','to.dates':'Dates','to.days':'Days',
 'to.k.vacation':'Vacation','to.k.sick':'Sick','to.k.personal':'Personal','to.k.unpaid':'Unpaid','to.k.other':'Other',
 'to.filterWhen':'Period','to.filterKind':'Type','to.fUpcoming':'Upcoming & current','to.fYear':'This year','to.fPast':'Past','to.fAll':'All',
@@ -15446,6 +15525,7 @@ en:{
 'sched.dateRange':'Date range',
 'common.dismiss':'Dismiss',
 'sched.sendEmail':'Send schedule',
+'sched.sendConfirm':'Send {name}\'s schedule for this week to {email}?',
 'sched.addEmail':'+ Add email',
 'sched.copyLastWeek':'↺ Copy last week',
 'sched.copyLastWeekTitle':'Copy this person\'s shifts from last week into this week',
@@ -15458,6 +15538,12 @@ en:{
 'sched.copyWeekMixed':'Copied {n} shift(s) for {e} employee(s); {k} day(s) already had one and were left as-is.',
 'sched.copyWeekDone':'Copied {n} shift(s) for {e} employee(s) from last week.',
 'sched.copyWeekAllExist':'Everyone already has a shift on every day that had one last week.',
+'sched.copyToOtherDays':'Copy this shift to other days this week',
+'sched.copySelected':'Copy',
+'sched.copySelectDays':'Select at least one day to copy to.',
+'sched.copyShiftMixed':'Copied to {n} day(s); {k} already had a shift and were left as-is.',
+'sched.copyShiftDone':'Copied to {n} day(s).',
+'sched.copyShiftAllExist':'Every selected day already has a shift.',
 'sched.unavailable':'Unavailable',
 'sched.shiftOverAvail':'Shift overlaps unavailability',
 'sched.overlapWarning':'Overlap',
@@ -15806,7 +15892,7 @@ fr:{
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
 'to.title':'Congés','to.subtitle':'Vacances, congés maladie et absences','to.add':'+ Ajouter un congé','to.edit':'Modifier le congé',
 'to.pending':'Demandes en attente','to.approve':'Approuver','to.deny':'Refuser','to.employee':'Employé',
-'to.start':'Premier jour d\'absence','to.end':'Dernier jour d\'absence','to.kind':'Type','to.hours':'Heures par jour',
+'to.start':'Premier jour d\'absence','to.end':'Dernier jour d\'absence','to.kind':'Type','to.hours':'Heures par jour','to.perDay':'/jour',
 'to.note':'Note (optionnel)','to.notePlaceholder':'Réservé à l\'avance','to.save':'Sauvegarder','to.dates':'Dates','to.days':'Jours',
 'to.k.vacation':'Vacances','to.k.sick':'Maladie','to.k.personal':'Personnel','to.k.unpaid':'Sans solde','to.k.other':'Autre',
 'to.filterWhen':'Période','to.filterKind':'Type','to.fUpcoming':'À venir et en cours','to.fYear':'Cette année','to.fPast':'Passés','to.fAll':'Tous',
@@ -16345,6 +16431,7 @@ fr:{
 'sched.dateRange':'Plage de dates',
 'common.dismiss':'Ignorer',
 'sched.sendEmail':'Envoyer l\'horaire',
+'sched.sendConfirm':'Envoyer l\'horaire de {name} pour cette semaine à {email}?',
 'sched.addEmail':'+ Ajouter courriel',
 'sched.copyLastWeek':'↺ Copier la semaine dernière',
 'sched.copyLastWeekTitle':'Copier les quarts de cette personne de la semaine dernière vers cette semaine',
@@ -16357,6 +16444,12 @@ fr:{
 'sched.copyWeekMixed':'{n} quart(s) copié(s) pour {e} employé(s); {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
 'sched.copyWeekDone':'{n} quart(s) copié(s) pour {e} employé(s) depuis la semaine dernière.',
 'sched.copyWeekAllExist':'Tout le monde a déjà un quart chaque jour où il y en avait un la semaine dernière.',
+'sched.copyToOtherDays':'Copier ce quart vers d\'autres jours cette semaine',
+'sched.copySelected':'Copier',
+'sched.copySelectDays':'Sélectionnez au moins un jour vers lequel copier.',
+'sched.copyShiftMixed':'Copié vers {n} jour(s); {k} avaient déjà un quart et n\'ont pas été modifiés.',
+'sched.copyShiftDone':'Copié vers {n} jour(s).',
+'sched.copyShiftAllExist':'Chaque jour sélectionné a déjà un quart.',
 'sched.unavailable':'Indisponible',
 'sched.shiftOverAvail':'Le quart chevauche une indisponibilité',
 'sched.overlapWarning':'Chevauchement',
