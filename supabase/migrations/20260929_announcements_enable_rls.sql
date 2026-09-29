@@ -1,0 +1,14 @@
+-- Security fix: `announcements` was created (20260926_announcements.sql) without RLS, on the
+-- reasoning that its content is public-broadcast copy, not sensitive tenant data. That reasoning
+-- covered reads but missed writes: with RLS off, Postgres' default grants let the anon and
+-- authenticated roles INSERT/UPDATE/DELETE directly against PostgREST, completely bypassing the
+-- super-admin-only check in supabase/functions/secure-db/index.ts -- proven live via a direct
+-- curl POST with the public anon key (the same key embedded in index.html's own JS) before this
+-- fix, which defaced the announcements feed shown to every admin. Confirmed by Supabase's own
+-- security advisor (rls_disabled_in_public) and its automated email alert.
+--
+-- Every other table in this schema already has RLS enabled with zero policies -- a deliberate,
+-- safe pattern for this app: service_role (used exclusively by secure-db, server-side) always
+-- bypasses RLS regardless of policies, so this is a pure deny-all for anon/authenticated with no
+-- effect on the app's actual read/write path. announcements now matches that pattern.
+alter table announcements enable row level security;
