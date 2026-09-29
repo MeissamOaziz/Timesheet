@@ -241,6 +241,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
 <symbol id="i-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
 </defs></svg>
 <style>.ic{width:15px;height:15px;flex-shrink:0;vertical-align:-2px;}</style>
 <div id="empToast"></div>
@@ -401,6 +403,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
   <div class="tabs-bar">
     <button class="tab-btn active" onclick="showTab('schedule')" id="tabSchedule"><svg class="ic"><use href="#i-calendar"/></svg> <span id="tabSchedLabel">Schedule</span></button>
+    <button class="tab-btn" onclick="showTab('team')" id="tabTeam"><svg class="ic"><use href="#i-users"/></svg> <span id="tabTeamLabel">Team Schedule</span></button>
     <button class="tab-btn" onclick="showTab('reports')" id="tabReports"><svg class="ic"><use href="#i-bar-chart"/></svg> <span id="tabReportsLabel">My Hours</span></button>
     <button class="tab-btn" onclick="showTab('availability')" id="tabAvail"><svg class="ic"><use href="#i-ban"/></svg> <span id="tabAvailLabel">Availability</span></button>
     <button class="tab-btn" onclick="showTab('timeoff')" id="tabTimeOff"><svg class="ic"><use href="#i-sun"/></svg> <span id="tabTimeOffLabel">Time Off</span></button>
@@ -413,6 +416,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <h1 class="page-title" id="schedTitle">My Schedule</h1>
       <p class="page-sub" id="schedSub">Your upcoming shifts for the next 2 weeks</p>
       <div id="schedContent"></div>
+    </div>
+
+    <!-- TEAM SCHEDULE TAB -->
+    <div id="tabContentTeam" style="display:none">
+      <h1 class="page-title" id="teamTitle">Team Schedule</h1>
+      <p class="page-sub" id="teamSub">Everyone's shifts at your site, grouped by day</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px">
+        <button class="tab-btn" style="padding:6px 14px" onclick="teamWeekOffset(-1)">&larr; <span id="teamPrevLabel">Previous</span></button>
+        <div id="teamWeekLabel" style="font-weight:700;font-size:13px;text-align:center"></div>
+        <button class="tab-btn" style="padding:6px 14px" onclick="teamWeekOffset(1)"><span id="teamNextLabel">Next</span> &rarr;</button>
+      </div>
+      <div id="teamContent"></div>
     </div>
 
     <!-- REPORTS TAB -->
@@ -608,6 +623,10 @@ const T = {
     toErr_no_company: 'Your account is not linked to a company. Contact your manager.',
     schedTitle: 'My Schedule', schedSub: 'Your upcoming shifts for the next 2 weeks',
     noShifts: 'No shifts scheduled in the next 2 weeks.',
+    tabTeam: 'Team Schedule', teamTitle: 'Team Schedule', teamSub: "Everyone's shifts at your site, grouped by day",
+    teamPrev: 'Previous', teamNext: 'Next',
+    noTeamShifts: 'No shifts scheduled at your site this week.',
+    teamNoAddon: 'Scheduling isn\'t turned on for your company yet. Ask your admin to add it to see the team schedule here.',
     reportsTitle: 'My Hours', reportsSub: 'View your punch records and hours worked',
     periodCurrent: 'Current Period', periodLast: 'Last Period', periodLast2: '2 Periods Ago',
     totalHours: 'Total Hours', regularHours: 'Regular', overtimeHours: 'Overtime', totalPunches: 'Punches',
@@ -679,6 +698,10 @@ const T = {
     toErr_no_company: 'Votre compte n\'est lié à aucune compagnie. Contactez votre gestionnaire.',
     schedTitle: 'Mon horaire', schedSub: 'Vos prochains quarts de travail pour les 2 prochaines semaines',
     noShifts: 'Aucun quart prévu dans les 2 prochaines semaines.',
+    tabTeam: 'Horaire d\'équipe', teamTitle: 'Horaire d\'équipe', teamSub: 'Les quarts de tout le monde à votre site, groupés par jour',
+    teamPrev: 'Précédent', teamNext: 'Suivant',
+    noTeamShifts: 'Aucun quart prévu à votre site cette semaine.',
+    teamNoAddon: 'La planification n\'est pas encore activée pour votre compagnie. Demandez à votre administrateur de l\'ajouter pour voir l\'horaire d\'équipe ici.',
     reportsTitle: 'Mes heures', reportsSub: 'Consultez vos pointages et vos heures travaillées',
     periodCurrent: 'Période actuelle', periodLast: 'Période précédente', periodLast2: 'Il y a 2 périodes',
     totalHours: 'Heures totales', regularHours: 'Régulières', overtimeHours: 'Supplémentaires', totalPunches: 'Pointages',
@@ -721,6 +744,7 @@ function setEmpLang(lang) {
   if (_session) {
     const activeTab = document.querySelector('.tab-btn.active')?.id?.replace('tab','').toLowerCase();
     if (activeTab === 'schedule') renderSchedule();
+    else if (activeTab === 'team') renderTeamSchedule();
     else if (activeTab === 'reports') renderReports();
     else if (activeTab === 'availability') renderAvailability();
   }
@@ -736,11 +760,12 @@ function applyTranslations() {
     setPassTitle:'setPassTitle', setPassSub:'setPassSub', setPassLabel:'setPassLabel',
     setPassConfirmLabel:'setPassConfirmLabel', setPassBtn:'setPassBtn',
     logoutBtn:'logoutBtn', navSub:'navEmpSub',
-    tabSched:'tabSchedLabel', tabReports:'tabReportsLabel', tabAvail:'tabAvailLabel',
+    tabSched:'tabSchedLabel', tabTeam:'tabTeamLabel', tabReports:'tabReportsLabel', tabAvail:'tabAvailLabel',
     tabTimeOff:'tabTimeOffLabel', toTitle:'toTitle', toSub:'toSub',
     toNewLabel:'toNewLabel', toListLabel:'toListLabel',
     toFromLabel:'toFromLabel', toToLabel:'toToLabel', toSubmitBtn:'toSubmitBtn',
     schedTitle:'schedTitle', schedSub:'schedSub',
+    teamTitle:'teamTitle', teamSub:'teamSub', teamPrev:'teamPrevLabel', teamNext:'teamNextLabel',
     reportsTitle:'reportsTitle', reportsSub:'reportsSub',
     availTitle:'availTitle', availSub:'availSub',
     recurringLabel:'recurringLabel', recurringDesc:'recurringDesc',
@@ -812,15 +837,16 @@ function togglePw(inputId, btn) {
 }
 function showTab(name) {
   // Explicit id maps — button ids and content-div ids are NOT a simple capitalization of the name
-  const contentIds = { schedule:'tabContentSchedule', reports:'tabContentReports', availability:'tabContentAvailability', timeoff:'tabContentTimeOff' };
-  const buttonIds  = { schedule:'tabSchedule',        reports:'tabReports',        availability:'tabAvail',              timeoff:'tabTimeOff' };
-  ['schedule','reports','availability','timeoff'].forEach(tab => {
+  const contentIds = { schedule:'tabContentSchedule', team:'tabContentTeam', reports:'tabContentReports', availability:'tabContentAvailability', timeoff:'tabContentTimeOff' };
+  const buttonIds  = { schedule:'tabSchedule',        team:'tabTeam',        reports:'tabReports',        availability:'tabAvail',              timeoff:'tabTimeOff' };
+  ['schedule','team','reports','availability','timeoff'].forEach(tab => {
     const content = document.getElementById(contentIds[tab]);
     if (content) content.style.display = (tab === name) ? '' : 'none';
     const btn = document.getElementById(buttonIds[tab]);
     if (btn) btn.classList.toggle('active', tab === name);
   });
   if (name === 'schedule') renderSchedule();
+  else if (name === 'team') renderTeamSchedule();
   else if (name === 'reports') renderReports();
   else if (name === 'availability') renderAvailability();
   else if (name === 'timeoff') renderTimeOff();
@@ -1211,6 +1237,82 @@ function calcDuration(start, end) {
   if (mins <= 0) return '';
   const h = Math.floor(mins/60), m = mins%60;
   return h + 'h' + (m ? m + 'min' : '');
+}
+
+// ══════════════════════════════════════════════════════
+// TEAM SCHEDULE TAB — everyone at the employee's own site, not just their own shifts (requested
+// by a customer so staff can see who else is working a given day without asking their manager).
+// Scoped to site rather than the whole company, matching how kiosk/punch data is already scoped
+// elsewhere in the portal — an employee at one site has no reason to see another site's roster.
+// ══════════════════════════════════════════════════════
+let _teamWeekOffset = 0;
+
+function teamGetWeekStart(offset) {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun..6=Sat
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
+  monday.setHours(0,0,0,0);
+  return monday;
+}
+
+function teamWeekOffset(delta) {
+  _teamWeekOffset += delta;
+  renderTeamSchedule();
+}
+
+async function renderTeamSchedule() {
+  const wrap = document.getElementById('teamContent');
+  const weekLabelEl = document.getElementById('teamWeekLabel');
+  wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)"><span class="mini-spin"></span></div>';
+  const weekStart = teamGetWeekStart(_teamWeekOffset);
+  const weekDays = Array.from({length:7}, (_,i) => { const d = new Date(weekStart); d.setDate(weekStart.getDate()+i); return d; });
+  const fromStr = dateStr(weekDays[0]), toStr = dateStr(weekDays[6]);
+  const fmtShort = (d) => d.toLocaleDateString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { month:'short', day:'numeric' });
+  if (weekLabelEl) weekLabelEl.textContent = `${fmtShort(weekDays[0])} – ${fmtShort(weekDays[6])}, ${weekDays[0].getFullYear()}`;
+
+  try {
+    // Scheduling is a paid add-on — an employee whose company hasn't bought it sees a clear
+    // explanation instead of an empty grid that looks broken.
+    const statusRows = asRows(await rpc('portal_get_schedule_status', { p_session: _session.token }));
+    const hasAddon = statusRows.length ? !!statusRows[0].scheduling_addon : false;
+    if (!hasAddon) {
+      wrap.innerHTML = `<div class="empty-state"><div class="icon"><svg style="width:30px;height:30px"><use href="#i-lock"/></svg></div><p>${t('teamNoAddon')}</p></div>`;
+      return;
+    }
+    const shifts = asRows(await rpc('portal_get_team_shifts', { p_session: _session.token, p_from: fromStr, p_to: toStr }));
+    const byDate = {};
+    shifts.forEach(sh => { (byDate[sh.shift_date] = byDate[sh.shift_date] || []).push(sh); });
+    const todayStr = dateStr(new Date());
+
+    const dayBlocks = [];
+    weekDays.forEach(d => {
+      const ds = dateStr(d);
+      const dayShifts = byDate[ds];
+      if (!dayShifts || !dayShifts.length) return;
+      const isToday = ds === todayStr;
+      const dayLabel = isToday ? t('today') : d.toLocaleDateString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
+      const rows = dayShifts.slice().sort((a,b) => a.start_time.localeCompare(b.start_time)).map(sh => {
+        const isMine = sh.employee_id === _session.employeeId;
+        return `<div style="background:var(--surface);border:1.5px solid ${isMine ? 'rgba(79,142,247,.4)' : 'var(--border)'};border-radius:var(--r-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;${isMine ? 'background:rgba(79,142,247,.06)' : ''}">
+          <div style="font-weight:600;font-size:13.5px;${isMine ? 'color:var(--accent)' : ''}">${escHtml(sh.employee_name || '')}${sh.note ? `<div style="font-size:12px;color:var(--text2);font-weight:400;margin-top:2px">${escHtml(sh.note)}</div>` : ''}</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);flex-shrink:0">${sh.start_time.slice(0,5)} – ${sh.end_time.slice(0,5)}</div>
+        </div>`;
+      }).join('');
+      dayBlocks.push(`<div>
+        <div style="font-weight:700;font-size:13px;color:${isToday ? 'var(--accent)' : 'var(--text2)'};text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${dayLabel}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
+      </div>`);
+    });
+
+    if (!dayBlocks.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="icon"><svg style="width:30px;height:30px"><use href="#i-calendar"/></svg></div><p>${t('noTeamShifts')}</p></div>`;
+      return;
+    }
+    wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">${dayBlocks.join('')}</div>`;
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">Error: ${escHtml(e.message)}</p></div>`;
+  }
 }
 
 // ══════════════════════════════════════════════════════
