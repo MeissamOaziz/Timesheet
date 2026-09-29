@@ -3056,7 +3056,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <div class="form-group">
       <label data-i18n="sched.date">Date</label>
-      <input type="date" id="shiftDate" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+      <input type="date" id="shiftDate" onchange="_renderShiftCopyDayChips(this.value)" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
     </div>
     <div class="shift-time-row">
       <div class="form-group">
@@ -3072,12 +3072,9 @@ border-top:1px solid var(--border);margin:18px 0;}
       <label data-i18n="sched.note">Note <span style="color:var(--text3);font-weight:400">(optional)</span></label>
       <input type="text" id="shiftNote" placeholder="e.g. Opening shift" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
     </div>
-    <div class="form-group" id="shiftCopyRow" style="display:none">
-      <label data-i18n="sched.copyToOtherDays">Copy this shift to other days this week</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px">
-        <div id="shiftCopyDayChips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-        <button class="btn-secondary" style="width:auto;padding:5px 12px;font-size:12px" onclick="copyShiftToSelectedDays()" data-i18n="sched.copySelected">Copy</button>
-      </div>
+    <div class="form-group" id="shiftCopyRow">
+      <label data-i18n="sched.copyToOtherDays">Also apply this shift to</label>
+      <div id="shiftCopyDayChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn-primary" onclick="saveShift()" data-i18n="modal.save">Save</button>
@@ -14236,7 +14233,7 @@ function openAddShiftModal(empId = '', dateStr = '') {
   document.getElementById('shiftStart').value = '09:00';
   document.getElementById('shiftEnd').value = '17:00';
   document.getElementById('shiftNote').value = '';
-  document.getElementById('shiftCopyRow').style.display = 'none';
+  _renderShiftCopyDayChips(document.getElementById('shiftDate').value);
   openModal('shiftModal');
 }
 
@@ -14263,15 +14260,15 @@ function openEditShiftModal(shiftId) {
   openModal('shiftModal');
 }
 
-// Quick way to apply one already-saved shift's exact hours to other days in the same week,
-// without re-typing them in Add Shift for each day — e.g. the same 09:00-17:00 production shift
-// on Mon, Wed and Fri. Scoped to the week currently in view; the day chips exclude the shift's
-// own day since copying a shift onto itself is meaningless.
+// Lets Add/Edit Shift apply the same hours to other days in the same week in one save, instead
+// of creating the shift first and then going back into it to copy (the original design, revised
+// after a customer pointed out the extra round-trip). Scoped to the week currently in view; the
+// day chips exclude whichever day is currently in the Date field, since copying a shift onto
+// itself is meaningless — re-rendered on every date change so that stays true if it's edited.
 let _shiftCopyDays = new Set();
 function _renderShiftCopyDayChips(shiftDateStr){
-  const row = document.getElementById('shiftCopyRow');
   const host = document.getElementById('shiftCopyDayChips');
-  if(!row || !host) return;
+  if(!host) return;
   _shiftCopyDays = new Set();
   const weekStart = schedGetWeekStart(_schedWeek);
   const dayNames = [t('sched.mon')||'Mon', t('sched.tue')||'Tue', t('sched.wed')||'Wed',
@@ -14284,43 +14281,11 @@ function _renderShiftCopyDayChips(shiftDateStr){
     html += `<button type="button" class="sched-copy-day-chip" onclick="toggleShiftCopyDay('${ds}',this)">${dayNames[i]}</button>`;
   }
   host.innerHTML = html;
-  row.style.display = '';
 }
 
 function toggleShiftCopyDay(dateStr, btn){
   if(_shiftCopyDays.has(dateStr)){ _shiftCopyDays.delete(dateStr); btn.classList.remove('active'); }
   else { _shiftCopyDays.add(dateStr); btn.classList.add('active'); }
-}
-
-async function copyShiftToSelectedDays(){
-  const shiftId = document.getElementById('shiftModalId').value;
-  const sh = _schedShifts.find(s => s.id === shiftId);
-  if(!sh) return;
-  if(!_shiftCopyDays.size){ showToast(t('sched.copySelectDays')||'Select at least one day to copy to.','info'); return; }
-
-  // Same skip-if-already-there rule as Copy Last Week, snapshotted once before the loop.
-  const existingDates = new Set(_schedShifts.filter(s2 => s2.employee_id === sh.employee_id).map(s2 => s2.shift_date));
-  let copied = 0, skipped = 0;
-  for(const dateStr of _shiftCopyDays){
-    if(existingDates.has(dateStr)){ skipped++; continue; }
-    try{
-      await DB.insert('shifts', {
-        admin_id: sh.admin_id, company_id: sh.company_id, site_id: sh.site_id, employee_id: sh.employee_id,
-        shift_date: dateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
-      });
-      copied++;
-    }catch(e){ console.warn('copyShiftToSelectedDays insert error:', e); }
-  }
-
-  closeModal('shiftModal');
-  await renderScheduleGrid();
-  if(copied && skipped){
-    showToast((t('sched.copyShiftMixed')||'Copied to {n} day(s); {k} already had a shift and were left as-is.').replace('{n}',copied).replace('{k}',skipped),'success');
-  } else if(copied){
-    showToast((t('sched.copyShiftDone')||'Copied to {n} day(s).').replace('{n}',copied),'success');
-  } else {
-    showToast(t('sched.copyShiftAllExist')||'Every selected day already has a shift.','info');
-  }
 }
 
 async function saveShift() {
@@ -14377,9 +14342,34 @@ async function saveShift() {
     } else {
       await DB.insert('shifts', payload);
     }
+
+    // Also apply the same hours to any other days picked in the chips row — same skip-if-
+    // already-there rule as Copy Last Week, snapshotted before the loop (the shift just saved
+    // above isn't in this snapshot yet, but its own date was already excluded from the chips).
+    let copied = 0, skipped = 0;
+    if(_shiftCopyDays.size){
+      const existingDates = new Set(_schedShifts.filter(s2 => s2.employee_id === empId).map(s2 => s2.shift_date));
+      for(const dateStr of _shiftCopyDays){
+        if(existingDates.has(dateStr)){ skipped++; continue; }
+        try{
+          await DB.insert('shifts', { ...payload, shift_date: dateStr });
+          copied++;
+        }catch(e){ console.warn('shift copy-to-days insert error:', e); }
+      }
+    }
+
     closeModal('shiftModal');
     await renderScheduleGrid();
-    showToast(shiftId ? (t('sched.shiftUpdated')||'Shift updated.') : (t('sched.shiftAdded')||'Shift added.'),'success');
+    const savedMsg = shiftId ? (t('sched.shiftUpdated')||'Shift updated.') : (t('sched.shiftAdded')||'Shift added.');
+    if(copied && skipped){
+      showToast(savedMsg+' '+(t('sched.copyShiftMixed')||'Copied to {n} day(s); {k} already had a shift and were left as-is.').replace('{n}',copied).replace('{k}',skipped),'success');
+    } else if(copied){
+      showToast(savedMsg+' '+(t('sched.copyShiftDone')||'Copied to {n} day(s).').replace('{n}',copied),'success');
+    } else if(skipped){
+      showToast(savedMsg+' '+(t('sched.copyShiftAllExist')||'Every selected day already has a shift.'),'info');
+    } else {
+      showToast(savedMsg,'success');
+    }
   } catch(e) {
     msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
   }
@@ -15547,9 +15537,7 @@ en:{
 'sched.copyWeekMixed':'Copied {n} shift(s) for {e} employee(s); {k} day(s) already had one and were left as-is.',
 'sched.copyWeekDone':'Copied {n} shift(s) for {e} employee(s) from last week.',
 'sched.copyWeekAllExist':'Everyone already has a shift on every day that had one last week.',
-'sched.copyToOtherDays':'Copy this shift to other days this week',
-'sched.copySelected':'Copy',
-'sched.copySelectDays':'Select at least one day to copy to.',
+'sched.copyToOtherDays':'Also apply this shift to',
 'sched.copyShiftMixed':'Copied to {n} day(s); {k} already had a shift and were left as-is.',
 'sched.copyShiftDone':'Copied to {n} day(s).',
 'sched.copyShiftAllExist':'Every selected day already has a shift.',
@@ -16453,9 +16441,7 @@ fr:{
 'sched.copyWeekMixed':'{n} quart(s) copié(s) pour {e} employé(s); {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
 'sched.copyWeekDone':'{n} quart(s) copié(s) pour {e} employé(s) depuis la semaine dernière.',
 'sched.copyWeekAllExist':'Tout le monde a déjà un quart chaque jour où il y en avait un la semaine dernière.',
-'sched.copyToOtherDays':'Copier ce quart vers d\'autres jours cette semaine',
-'sched.copySelected':'Copier',
-'sched.copySelectDays':'Sélectionnez au moins un jour vers lequel copier.',
+'sched.copyToOtherDays':'Appliquer aussi ce quart à',
 'sched.copyShiftMixed':'Copié vers {n} jour(s); {k} avaient déjà un quart et n\'ont pas été modifiés.',
 'sched.copyShiftDone':'Copié vers {n} jour(s).',
 'sched.copyShiftAllExist':'Chaque jour sélectionné a déjà un quart.',
