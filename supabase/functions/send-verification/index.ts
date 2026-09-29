@@ -198,11 +198,16 @@ function buildScheduleHtml(empName, weekLabel, shifts, lang) {
     </table>
     <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:20px 0 0">${footer}</p>`);
 }
-function buildEmployeeInviteHtml(empName, portalUrl, lang) {
+function buildEmployeeInviteHtml(empName, portalUrl, lang, companyName, logoUrl) {
   const isFr = lang === 'fr';
   const title = isFr ? `Vous avez accès au portail employé` : `You've been invited to the Employee Portal`;
   const greeting = isFr ? `Bonjour ${empName},` : `Hi ${empName},`;
-  const intro = isFr ? `Votre employeur vous a donné accès au <strong style="color:#1e293b">portail employé PunchClock Pro</strong>. Depuis ce portail, vous pouvez :` : `Your employer has given you access to the <strong style="color:#1e293b">PunchClock Pro Employee Portal</strong>. From the portal, you can:`;
+  // Falls back to the generic "your employer" wording when a company has no name on file (should
+  // not happen in practice, but the email must still read correctly rather than show "undefined").
+  const employerLabel = companyName
+    ? `<strong style="color:#1e293b">${companyName}</strong>`
+    : (isFr ? `Votre employeur` : `Your employer`);
+  const intro = isFr ? `${employerLabel} vous a donné accès au <strong style="color:#1e293b">portail employé PunchClock Pro</strong>. Depuis ce portail, vous pouvez :` : `${employerLabel} has given you access to the <strong style="color:#1e293b">PunchClock Pro Employee Portal</strong>. From the portal, you can:`;
   const features = isFr ? [
     `🗓️ Consulter votre horaire de quarts à venir`,
     `📊 Voir vos rapports d'heures et pointages`,
@@ -215,7 +220,14 @@ function buildEmployeeInviteHtml(empName, portalUrl, lang) {
   const cta = isFr ? `Activer mon compte →` : `Activate my account →`;
   const expiry = isFr ? `Ce lien expire dans 48 heures.` : `This link expires in 48 hours.`;
   const ignore = isFr ? `Si vous n'attendiez pas cette invitation, vous pouvez ignorer ce message.` : `If you weren't expecting this invitation, you can safely ignore this email.`;
+  // Table cell, not a bare <img>, so it survives the same webmail clients the rest of this file
+  // is built to survive (see the note on `wrapper` above) -- centered, capped height so a huge
+  // source logo can't blow out the card.
+  const logo = logoUrl ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+      <tr><td align="center"><img src="${logoUrl}" alt="${companyName || ''}" height="40" style="height:40px;max-width:220px;width:auto;object-fit:contain;"></td></tr>
+    </table>` : '';
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">🔗 ${title}</h1>
+    ${logo}
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">${greeting}<br><br>${intro}</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
       ${features.map((f)=>`<tr><td bgcolor="#f1f5f9" style="background:#f1f5f9;border-radius:8px;border:1px solid #e2e8f0;padding:8px 14px;color:#475569;font-size:14px;font-family:Arial,sans-serif;">${f}</td></tr><tr><td style="height:8px;line-height:8px;font-size:0;">&nbsp;</td></tr>`).join('')}
@@ -378,9 +390,9 @@ serve(async (req)=>{
       subject = lang === 'fr' ? `🗓️ Votre horaire — ${weekLabel}` : `🗓️ Your schedule — ${weekLabel}`;
       html = buildScheduleHtml(name, weekLabel || '', shifts || [], lang || 'en');
     } else if (type === "employee_invite") {
-      const { portalUrl, lang } = body;
+      const { portalUrl, lang, logoUrl } = body;
       subject = lang === 'fr' ? `🔗 Accès à votre portail employé PunchClock Pro` : `🔗 You've been invited to the PunchClock Pro Employee Portal`;
-      html = buildEmployeeInviteHtml(name, portalUrl || 'https://www.punchclock.ca/employee.html', lang || 'en');
+      html = buildEmployeeInviteHtml(name, portalUrl || 'https://www.punchclock.ca/employee.html', lang || 'en', companyName || '', logoUrl || '');
     } else if (type === "join_request_denied") {
       subject = "Your access request — PunchClock Pro | Votre demande d'accès";
       html = buildJoinDeniedHtml(name, companyName || '');

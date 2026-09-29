@@ -10209,6 +10209,8 @@ async function sendEmpPortalInvite(empId, email, empName) {
     // Send invite email
     const portalUrl = `https://www.punchclock.ca/employee.html?token=${token}`;
     const lang = _appLang || 'en';
+    const invEmp = C.employees.find(e=>e.id===empId);
+    const invCo = invEmp ? C.companies.find(c=>c.id===invEmp.company_id) : null;
     await fetch(`${SUPA_URL}/functions/v1/send-verification`,{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
@@ -10216,6 +10218,8 @@ async function sendEmpPortalInvite(empId, email, empName) {
         type:'employee_invite',
         email, name:empName,
         portalUrl, lang,
+        companyName: invCo?.name || '',
+        logoUrl: invCo?.logo_url || '',
       })
     });
 
