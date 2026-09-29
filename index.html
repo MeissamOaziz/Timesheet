@@ -11436,6 +11436,11 @@ async function loadActivityPage(){
   const _actCoIds=new Set(C.companies.map(c=>c.id));
   let all=isSuperAdmin()?C.punches:C.punches.filter(p=>_actCoIds.has(p.company_id));
   if(managerSiteIds!==null)all=all.filter(p=>managerSiteIds.includes(p.site_id));
+  // The Site dropdown's value was already read into `siteId` and even threaded through to
+  // refreshCache (which deliberately ignores it — punches are always fetched by company, never
+  // by site, since other views need an employee's full cross-site history) — but nothing ever
+  // applied it client-side, so selecting a site here had no effect on what was shown at all.
+  if(siteId!=='all')all=all.filter(p=>p.site_id===siteId);
   if(empId!=='all')all=all.filter(p=>p.emp_id===empId);
   const today=new Date().toLocaleDateString('en-CA');
   const todayN=all.filter(p=>p.punch_date===today).length;
