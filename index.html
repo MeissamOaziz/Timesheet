@@ -2147,13 +2147,23 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div style="display:flex;justify-content:center;margin-top:10px" id="breakBtnWrap">
         <button class="btn-secondary" id="breakBtn" style="width:auto;padding:7px 16px;font-size:12px;display:none;color:var(--amber);border-color:var(--amber)" onclick="requestBreak()"><svg class="ic" id="breakBtnIcon" style="margin-right:5px"><use href="#i-pause"/></svg><span id="breakBtnLabel" data-i18n="punch.startBreak">Start Break</span></button>
       </div>
-      <div style="display:flex;justify-content:center;margin-top:10px;gap:8px;flex-wrap:wrap">
-        <button class="btn-secondary" style="width:auto;padding:7px 16px;font-size:12px" onclick="openMissedPunchModal()"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg><span data-i18n="missed.button">Report a Missed Punch</span></button>
-        <button class="btn-secondary" id="visitorCheckInBtn" style="width:auto;padding:7px 16px;font-size:12px;display:none" onclick="openVisitorModal()"><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg><span data-i18n="visitor.checkInBtn">Visitor Check In</span></button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 6px;margin-top:10px" id="punchSecondaryBtns">
+        <button class="btn-secondary" style="width:100%;height:var(--h-lg);font-size:13px" onclick="openMissedPunchModal()"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg><span data-i18n="missed.button">Report a Missed Punch</span></button>
+        <button class="btn-secondary" id="visitorCheckInBtn" style="width:100%;height:var(--h-lg);font-size:13px;display:none;background:#7c5cbf;border-color:#7c5cbf;color:#fff" onclick="openVisitorModal()"><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg><span data-i18n="visitor.checkInBtn">Visitor Check In</span></button>
       </div>
       <div class="punch-feedback" id="punchFeedback"></div>
     </div>
-    <div class="currently-in">
+    <!-- Visitors currently checked in — shown above staff, only when the site has visitor
+         check-in enabled, so a front-desk kiosk can check a guest out in one tap without opening
+         the full Visitor Check In form. -->
+    <div class="currently-in" id="ciVisitorSection" style="display:none">
+      <div class="ci-header">
+        <h3><span class="live-dot" style="background:#7c5cbf"></span> <span data-i18n="visitor.sectionTitle">Visitors</span></h3>
+        <span class="ci-count" id="ciVisitorCount" style="background:rgba(124,92,191,.15);color:#7c5cbf">0</span>
+      </div>
+      <div class="ci-list" id="ciVisitorList"><div class="ci-empty">Loading...</div></div>
+    </div>
+    <div class="currently-in" id="ciClockedInSection">
       <div class="ci-header">
         <h3><span class="live-dot"></span> Currently Clocked In</h3>
         <span class="ci-count" id="ciCount">0</span>
@@ -2812,6 +2822,29 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div id="reportTimeOffWrap" style="display:none"></div>
   <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
 
+  <!-- VISITOR CHECK-INS REPORT — generated alongside the hours report above, same company/site/
+       date filters, its own export set. Hidden entirely for companies without the feature. -->
+  <div class="card" id="visitorReportSection" style="display:none;margin-top:var(--s5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin:0" data-i18n="visitor.activityTitle">Visitor Check-Ins</p>
+      <div class="export-btns">
+        <button class="btn-export" onclick="guardedExportVisitors('excel')"><svg class="ic" style="margin-right:5px"><use href="#i-download"/></svg>Excel</button>
+        <button class="btn-export" onclick="guardedExportVisitors('csv')"><svg class="ic" style="margin-right:5px"><use href="#i-file"/></svg>CSV</button>
+        <button class="btn-export" onclick="exportVisitorReport('pdf')"><svg class="ic" style="margin-right:5px"><use href="#i-clipboard"/></svg>PDF</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th data-i18n="visitor.colName">Name</th><th data-i18n="visitor.colCompany">Company</th>
+        <th data-i18n="visitor.colPhone">Phone</th><th data-i18n="visitor.colEmail">Email</th>
+        <th data-i18n="activity.companySite">Company / Site</th>
+        <th data-i18n="visitor.colCheckIn">Check In</th><th data-i18n="visitor.colCheckOut">Check Out</th>
+      </tr></thead>
+      <tbody id="visitorReportBody"></tbody></table>
+    </div>
+    <div id="visitorReportCardsContainer" class="mcards"></div>
+  </div>
+
   <!-- Who automatically receives the payroll summary when a period closes. Lives on the Reports
        page because that's where an admin is already thinking about reports; the recipients
        themselves need no PunchClock login. -->
@@ -3000,6 +3033,68 @@ border-top:1px solid var(--border);margin:18px 0;}
     <tbody id="activityBody"></tbody>
   </table></div>
   <div id="activityCardsContainer" class="mcards"></div>
+
+  <!-- VISITOR CHECK-INS — same company/site/date filters as the punch table above, since a
+       visit isn't a punch (start+end pair, not a single timestamped event) and can't share rows
+       with it, but an admin auditing a period wants both without leaving the page. -->
+  <div id="activityVisitorsSection" style="display:none">
+    <div class="page-header" style="margin-top:32px">
+      <div><h2 style="font-size:17px" data-i18n="visitor.activityTitle">Visitor Check-Ins</h2></div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th data-i18n="visitor.colName">Name</th><th data-i18n="visitor.colCompany">Company</th>
+        <th data-i18n="visitor.colPhone">Phone</th><th data-i18n="visitor.colEmail">Email</th>
+        <th data-i18n="activity.companySite">Company / Site</th>
+        <th data-i18n="visitor.colCheckIn">Check In</th><th data-i18n="visitor.colCheckOut">Check Out</th>
+        <th data-i18n="activity.actions">Actions</th>
+      </tr></thead>
+      <tbody id="activityVisitorsBody"></tbody>
+    </table></div>
+    <div id="activityVisitorsCardsContainer" class="mcards"></div>
+  </div>
+</div>
+
+<!-- EDIT VISITOR MODAL -->
+<div class="modal-overlay" id="editVisitorModal" style="z-index:9600">
+  <div class="modal" style="max-width:420px">
+    <h3 style="margin-bottom:20px" data-i18n="visitor.editTitle">Edit Visitor</h3>
+    <div id="editVisitorMsg"></div>
+    <input type="hidden" id="editVisitorId">
+    <div class="form-group">
+      <label data-i18n="visitor.colName">Name</label>
+      <input type="text" id="editVisitorName" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+    </div>
+    <div class="form-group">
+      <label data-i18n="visitor.colCompany">Company</label>
+      <input type="text" id="editVisitorCompany" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+    </div>
+    <div class="shift-time-row">
+      <div class="form-group">
+        <label data-i18n="visitor.colPhone">Phone</label>
+        <input type="text" id="editVisitorPhone" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+      </div>
+      <div class="form-group">
+        <label data-i18n="visitor.colEmail">Email</label>
+        <input type="text" id="editVisitorEmail" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+      </div>
+    </div>
+    <div class="shift-time-row">
+      <div class="form-group">
+        <label data-i18n="visitor.colCheckIn">Check In</label>
+        <input type="datetime-local" id="editVisitorCheckIn" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+      </div>
+      <div class="form-group">
+        <label data-i18n="visitor.colCheckOut">Check Out</label>
+        <input type="datetime-local" id="editVisitorCheckOut" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn-primary" onclick="saveVisitorEdit()" data-i18n="modal.save">Save</button>
+      <button class="btn-secondary" onclick="closeModal('editVisitorModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-secondary" onclick="deleteVisitorRecord()" style="color:var(--red);margin-left:auto" data-i18n="common.delete">Delete</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════ SCHEDULE PAGE ══════════════ -->
@@ -7440,7 +7535,13 @@ async function loadPunchPage(){
   // company setting — same admin-toggle pattern as track_lunch_breaks above, so the kiosk (which
   // has no session of its own) trusts the cached company row rather than checking the plan live.
   const visitorBtn=document.getElementById('visitorCheckInBtn');
-  if(visitorBtn) visitorBtn.style.display=(siteId&&co.visitor_checkin_enabled)?'':'none';
+  const visitorOn=!!(siteId&&co.visitor_checkin_enabled);
+  if(visitorBtn) visitorBtn.style.display=visitorOn?'':'none';
+  // Without this, a hidden visitor button still reserves its grid column and Report a Missed
+  // Punch sits stranded in the left half instead of centered — true for most companies, since
+  // visitor check-in is off by default and Growth-plan-and-up only.
+  const secBtns=document.getElementById('punchSecondaryBtns');
+  if(secBtns) secBtns.style.gridTemplateColumns=visitorOn?'1fr 1fr':'1fr';
 
   // Employees scoped to site (if site selected) or company
   const sel=document.getElementById('empSelect');
@@ -7486,6 +7587,7 @@ function updateBreakButton(empId){
 }
 
 function refreshClockedIn(){
+  refreshCheckedInVisitors();
   const ctx=Ctx.get();
   const today=new Date().toLocaleDateString('en-CA');
   let emps=ctx
@@ -7521,6 +7623,45 @@ function refreshClockedIn(){
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div class="ci-time">&#8593;${last.punch_time}</div>
+        <div class="ci-dur">${dur}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Same idea as refreshClockedIn but for visitors, and shown above it — a front-desk kiosk's most
+// common visitor action is checking someone out, so that has to be reachable without opening the
+// full Visitor Check In form. Site-scoped like the modal's own list.
+async function refreshCheckedInVisitors(){
+  const ctx=Ctx.get();
+  const section=document.getElementById('ciVisitorSection');
+  if(!section)return;
+  const co=ctx?C.companies.find(c=>c.id===ctx.co.id):null;
+  const visitorOn=!!(ctx&&ctx.site&&co&&co.visitor_checkin_enabled);
+  section.style.display=visitorOn?'':'none';
+  if(!visitorOn)return;
+
+  const list=document.getElementById('ciVisitorList');
+  const countEl=document.getElementById('ciVisitorCount');
+  if(!list||!countEl)return;
+  let rows=[];
+  try{
+    rows=await DB.all('visitors',`checked_out_at=is.null&site_id=eq.${ctx.site.id}&order=checked_in_at.asc`);
+  }catch(e){ list.innerHTML=`<div class="ci-empty" style="color:var(--red)">${esc(e.message)}</div>`; return; }
+  rows=(rows||[]).filter(v=>v.site_id===ctx.site.id && !v.checked_out_at);
+  countEl.textContent=rows.length;
+  if(!rows.length){ list.innerHTML=`<div class="ci-empty">${t('visitor.noneIn')||'No visitors currently checked in.'}</div>`; return; }
+
+  list.innerHTML=rows.map(v=>{
+    const ini=(v.full_name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const dur=elapsed(v.checked_in_at);
+    return `<div class="ci-row">
+      <div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0;background:#7c5cbf">${ini}</div>
+      <div style="flex:1;min-width:0"><div class="ci-name">${esc(v.full_name||'')}</div>
+        ${v.company_name?`<div class="ci-dur">${esc(v.company_name)}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;margin-bottom:3px" onclick="checkoutVisitor('${v.id}')">${esc(t('visitor.checkOut')||'Check Out')}</button>
         <div class="ci-dur">${dur}</div>
       </div>
     </div>`;
@@ -7632,7 +7773,9 @@ async function checkoutVisitor(id){
   const ctx=Ctx.get();if(!ctx||!ctx.site)return;
   try{
     await DB.update('visitors',`id=eq.${id}&site_id=eq.${ctx.site.id}`,{checked_out_at:new Date().toISOString()});
-    await loadVisitorCurrentList();
+    // Checking someone out can happen from either list (the modal's, or the punch page's own
+    // Visitors section) — refresh both; each guards on its own element existing.
+    await Promise.all([loadVisitorCurrentList(), refreshCheckedInVisitors()]);
   }catch(e){ showToast(e.message,'error'); }
 }
 
@@ -11058,6 +11201,8 @@ async function generateReport(){
   if(!start||!end){uiAlert('Please select a date range.');return;}
   if(!selEmps.length){uiAlert('Please select at least one employee.');return;}
 
+  generateVisitorReport(coId, siteId, start, end);
+
   let punches;
   try{
     // Scope to this admin's companies — never fetch cross-tenant punches
@@ -11373,6 +11518,118 @@ function exportReport(fmt){
   }
 }
 
+// ── Visitor Check-Ins report ── generated alongside the hours report above, same filters, its
+// own export set — a visit isn't a punch (start+end pair vs a single event) so it can't ride
+// along inside the existing time-report rows/columns.
+let visitorReportData=[];
+async function generateVisitorReport(coId, siteId, startDate, endDate){
+  const section=document.getElementById('visitorReportSection');
+  if(!section)return;
+  const relevantCos=coId==='all'?C.companies:C.companies.filter(c=>c.id===coId);
+  if(!relevantCos.some(c=>c.visitor_checkin_enabled)){ section.style.display='none'; visitorReportData=[]; return; }
+  section.style.display='';
+
+  let filter='order=checked_in_at.desc';
+  if(coId!=='all') filter+=`&company_id=eq.${coId}`;
+  if(siteId!=='all') filter+=`&site_id=eq.${siteId}`;
+  if(startDate) filter+=`&checked_in_at=gte.${startDate}`;
+  if(endDate) filter+=`&checked_in_at=lte.${endDate}T23:59:59`;
+
+  let rows=[];
+  try{ rows=await DB.all('visitors',filter)||[]; }catch(e){ console.warn('visitor report fetch error:',e); }
+  if(managerSiteIds!==null) rows=rows.filter(v=>v.site_id&&managerSiteIds.includes(v.site_id));
+  visitorReportData=rows;
+
+  const tbody=document.getElementById('visitorReportBody');
+  const cards=document.getElementById('visitorReportCardsContainer');
+  if(!tbody)return;
+  const fmtDt=(iso)=>iso?new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+  if(!rows.length){
+    const none=t('visitor.activityNone')||'No visitor check-ins found for the selected filters.';
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">${none}</td></tr>`;
+    if(cards) cards.innerHTML=mcardEmpty(none);
+    return;
+  }
+  tbody.innerHTML=rows.map(v=>{
+    const co=C.companies.find(c=>c.id===v.company_id);
+    const site=C.sites.find(s=>s.id===v.site_id);
+    return `<tr>
+      <td style="font-weight:500">${esc(v.full_name||'')}</td>
+      <td>${esc(v.company_name||'—')}</td>
+      <td style="font-size:12px">${esc(v.phone||'—')}</td>
+      <td style="font-size:12px">${esc(v.email||'—')}</td>
+      <td style="font-size:12px">${esc([co?.name,site?.name].filter(Boolean).join(' · ')||'—')}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${fmtDt(v.checked_in_at)}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${v.checked_out_at?fmtDt(v.checked_out_at):`<span class="pill in">${t('visitor.stillIn')||'Still in'}</span>`}</td>
+    </tr>`;
+  }).join('');
+  if(cards) cards.innerHTML=rows.map(v=>{
+    const co=C.companies.find(c=>c.id===v.company_id);
+    const site=C.sites.find(s=>s.id===v.site_id);
+    return mcard(
+      esc(v.full_name||''),
+      [[t('visitor.colCompany')||'Company', esc(v.company_name||'—')],
+       [t('activity.companySite')||'Company / Site', esc([co?.name,site?.name].filter(Boolean).join(' · ')||'—')],
+       [t('visitor.colCheckIn')||'Check In', fmtDt(v.checked_in_at)],
+       [t('visitor.colCheckOut')||'Check Out', v.checked_out_at?fmtDt(v.checked_out_at):(t('visitor.stillIn')||'Still in')]]
+    );
+  }).join('');
+}
+
+function guardedExportVisitors(fmt){
+  if(fmt==='pdf'){ exportVisitorReport(fmt); return; }
+  if(!isCurrentCompanyPaid()){
+    showPlanGate(t('gate.exports')||'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','visitor-report-upgrade-hint');
+    return;
+  }
+  exportVisitorReport(fmt);
+}
+
+function exportVisitorReport(fmt){
+  if(!visitorReportData.length){uiAlert(t('visitor.activityNone')||'No visitor check-ins found for the selected filters.');return;}
+  const coLabel=document.getElementById('reportCompany').options[document.getElementById('reportCompany').selectedIndex].text;
+  const siteLabel=document.getElementById('reportSite').options[document.getElementById('reportSite').selectedIndex].text;
+  const startD=document.getElementById('reportStart').value;
+  const endD=document.getElementById('reportEnd').value;
+  const fmtDt=(iso)=>iso?new Date(iso).toLocaleString():'';
+
+  const headers=['Name','Company','Phone','Email','Company/Site','Check In','Check Out'];
+  const rows=visitorReportData.map(v=>{
+    const co=C.companies.find(c=>c.id===v.company_id);
+    const site=C.sites.find(s=>s.id===v.site_id);
+    return[v.full_name||'',v.company_name||'',v.phone||'',v.email||'',[co?.name,site?.name].filter(Boolean).join(' · '),fmtDt(v.checked_in_at),v.checked_out_at?fmtDt(v.checked_out_at):'Still in'];
+  });
+
+  if(fmt==='excel'){
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+    ws['!cols']=headers.map((_,i)=>({wch:i===0?22:16}));
+    XLSX.utils.book_append_sheet(wb,ws,'Visitor Check-Ins');
+    XLSX.writeFile(wb,`visitor-report-${new Date().toLocaleDateString('en-CA')}.xlsx`);
+  }else if(fmt==='csv'){
+    const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download=`visitor-report-${new Date().toLocaleDateString('en-CA')}.csv`;a.click();
+  }else{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape'});
+    doc.setFontSize(15);doc.setFont('helvetica','bold');
+    doc.text('PunchClock Pro — Visitor Check-Ins',14,15);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(120);
+    doc.text(`Company: ${coLabel}  |  Site: ${siteLabel}  |  ${startD} → ${endD}  |  ${new Date().toLocaleString()}`,14,22);
+    doc.setTextColor(0);
+    doc.autoTable({
+      head:[headers],
+      body:rows,
+      startY:27,styles:{fontSize:8,cellPadding:3},
+      headStyles:{fillColor:[124,92,191],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[245,245,250]},
+    });
+    doc.save(`visitor-report-${new Date().toLocaleDateString('en-CA')}.pdf`);
+  }
+}
+
 // ═══════════════════════════════════════════════════
 // ACTIVITY LOG
 // ═══════════════════════════════════════════════════
@@ -11428,6 +11685,11 @@ async function loadActivityPage(){
 
   // Populate site filter
   updateActSiteFilter(coId);
+
+  // Runs independently of the punches table below (which can legitimately be empty and returns
+  // early) — a visit is a start+end pair, not a single timestamped event, so it can't share rows
+  // with punches and is loaded as its own section using the same filters.
+  loadActivityVisitors(coId, siteId, startDate, endDate);
 
   // Belt-and-suspenders: strip any punch not belonging to this admin's companies
   const _actCoIds=new Set(C.companies.map(c=>c.id));
@@ -11642,6 +11904,128 @@ function onActCoChange(){
   const aef=document.getElementById('actEmpFilter');
   if(aef)aef.value='all';
   loadActivityPage();
+}
+
+// ---- Visitor check-ins (Activity log) ----
+async function loadActivityVisitors(coId, siteId, startDate, endDate){
+  const section=document.getElementById('activityVisitorsSection');
+  if(!section)return;
+  // Most companies never turn this on (Growth+ only) — hide the whole section rather than show
+  // an admin an always-empty table for a feature their plan doesn't include.
+  const relevantCos=coId==='all'?C.companies:C.companies.filter(c=>c.id===coId);
+  if(!relevantCos.some(c=>c.visitor_checkin_enabled)){ section.style.display='none'; return; }
+  section.style.display='';
+
+  let filter='order=checked_in_at.desc';
+  if(coId!=='all') filter+=`&company_id=eq.${coId}`;
+  if(siteId!=='all') filter+=`&site_id=eq.${siteId}`;
+  if(startDate) filter+=`&checked_in_at=gte.${startDate}`;
+  if(endDate) filter+=`&checked_in_at=lte.${endDate}T23:59:59`;
+
+  let rows=[];
+  try{ rows=await DB.all('visitors',filter)||[]; }catch(e){ console.warn('visitors fetch error:',e); }
+  if(managerSiteIds!==null) rows=rows.filter(v=>v.site_id&&managerSiteIds.includes(v.site_id));
+  window._actVisitors=rows; // looked up by id when the edit modal opens
+
+  const tbody=document.getElementById('activityVisitorsBody');
+  const cards=document.getElementById('activityVisitorsCardsContainer');
+  if(!tbody)return;
+  const fmtDt=(iso)=>iso?new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+  if(!rows.length){
+    const none=t('visitor.activityNone')||'No visitor check-ins found for the selected filters.';
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px">${none}</td></tr>`;
+    if(cards) cards.innerHTML=mcardEmpty(none);
+    return;
+  }
+
+  tbody.innerHTML=rows.map(v=>{
+    const co=C.companies.find(c=>c.id===v.company_id);
+    const site=C.sites.find(s=>s.id===v.site_id);
+    return `<tr>
+      <td style="font-weight:500">${esc(v.full_name||'')}</td>
+      <td>${esc(v.company_name||'—')}</td>
+      <td style="font-size:12px">${esc(v.phone||'—')}</td>
+      <td style="font-size:12px">${esc(v.email||'—')}</td>
+      <td style="font-size:12px">${esc([co?.name,site?.name].filter(Boolean).join(' · ')||'—')}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${fmtDt(v.checked_in_at)}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${v.checked_out_at?fmtDt(v.checked_out_at):`<span class="pill in">${t('visitor.stillIn')||'Still in'}</span>`}</td>
+      <td><button class="btn-secondary" style="font-size:12px" onclick="openEditVisitor('${v.id}')">${t('common.edit')||'Edit'}</button></td>
+    </tr>`;
+  }).join('');
+
+  if(cards) cards.innerHTML=rows.map(v=>{
+    const co=C.companies.find(c=>c.id===v.company_id);
+    const site=C.sites.find(s=>s.id===v.site_id);
+    return mcard(
+      esc(v.full_name||''),
+      [[t('visitor.colCompany')||'Company', esc(v.company_name||'—')],
+       [t('activity.companySite')||'Company / Site', esc([co?.name,site?.name].filter(Boolean).join(' · ')||'—')],
+       [t('visitor.colCheckIn')||'Check In', fmtDt(v.checked_in_at)],
+       [t('visitor.colCheckOut')||'Check Out', v.checked_out_at?fmtDt(v.checked_out_at):(t('visitor.stillIn')||'Still in')]],
+      `<button class="btn-secondary" style="font-size:12px" onclick="openEditVisitor('${v.id}')">${t('common.edit')||'Edit'}</button>`
+    );
+  }).join('');
+}
+
+// datetime-local inputs need "YYYY-MM-DDTHH:MM" in the viewer's own local time — handing them a
+// raw ISO string (seconds, timezone offset) is silently rejected by some browsers.
+function _toDatetimeLocal(iso){
+  const d=new Date(iso);
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openEditVisitor(id){
+  const v=(window._actVisitors||[]).find(x=>x.id===id);
+  if(!v)return;
+  document.getElementById('editVisitorId').value=v.id;
+  document.getElementById('editVisitorMsg').innerHTML='';
+  document.getElementById('editVisitorName').value=v.full_name||'';
+  document.getElementById('editVisitorCompany').value=v.company_name||'';
+  document.getElementById('editVisitorPhone').value=v.phone||'';
+  document.getElementById('editVisitorEmail').value=v.email||'';
+  document.getElementById('editVisitorCheckIn').value=v.checked_in_at?_toDatetimeLocal(v.checked_in_at):'';
+  document.getElementById('editVisitorCheckOut').value=v.checked_out_at?_toDatetimeLocal(v.checked_out_at):'';
+  openModal('editVisitorModal');
+}
+
+async function saveVisitorEdit(){
+  const id=document.getElementById('editVisitorId').value;
+  const name=document.getElementById('editVisitorName').value.trim();
+  const company=document.getElementById('editVisitorCompany').value.trim();
+  const phone=document.getElementById('editVisitorPhone').value.trim();
+  const email=document.getElementById('editVisitorEmail').value.trim();
+  const checkInVal=document.getElementById('editVisitorCheckIn').value;
+  const checkOutVal=document.getElementById('editVisitorCheckOut').value;
+  const msgEl=document.getElementById('editVisitorMsg');
+  if(!name||!checkInVal){ msgEl.innerHTML=`<div class="msg error">${t('msg.allRequired')||'All fields required.'}</div>`; return; }
+  const checkIn=new Date(checkInVal).toISOString();
+  const checkOut=checkOutVal?new Date(checkOutVal).toISOString():null;
+  if(checkOut && checkOut<=checkIn){
+    msgEl.innerHTML=`<div class="msg error">${t('sched.endAfterStart')||'End time must be after start time.'}</div>`;
+    return;
+  }
+  try{
+    await DB.update('visitors',`id=eq.${id}`,{
+      full_name:name, company_name:company||null, phone:phone||null, email:email||null,
+      checked_in_at:checkIn, checked_out_at:checkOut,
+    });
+    closeModal('editVisitorModal');
+    await loadActivityPage();
+    showToast(t('visitor.updated')||'Visitor record updated.','success');
+  }catch(e){ msgEl.innerHTML=`<div class="msg error">Error: ${e.message}</div>`; }
+}
+
+async function deleteVisitorRecord(){
+  const id=document.getElementById('editVisitorId').value;
+  if(!id)return;
+  if(!(await uiConfirm(t('visitor.deleteConfirm')||'Delete this visitor record?')))return;
+  try{
+    await DB.del('visitors',`id=eq.${id}`);
+    closeModal('editVisitorModal');
+    await loadActivityPage();
+    showToast(t('visitor.deleted')||'Visitor record deleted.','success');
+  }catch(e){ showToast(e.message,'error'); }
 }
 
 // ---- Edit punch ----
@@ -14860,6 +15244,12 @@ en:{
 'visitor.fullName':'Full Name','visitor.companyName':'Company Name','visitor.phone':'Phone Number','visitor.email':'Email Address',
 'visitor.loading':'Loading...','visitor.noneIn':'No visitors currently checked in.','visitor.checkOut':'Check Out',
 'visitor.nameRequired':'Full name is required.','visitor.checkedInMsg':'checked in',
+'visitor.sectionTitle':'Visitors',
+'visitor.activityTitle':'Visitor Check-Ins','visitor.activityNone':'No visitor check-ins found for the selected filters.',
+'visitor.colName':'Name','visitor.colCompany':'Company','visitor.colPhone':'Phone','visitor.colEmail':'Email',
+'visitor.colCheckIn':'Check In','visitor.colCheckOut':'Check Out','visitor.stillIn':'Still in',
+'visitor.editTitle':'Edit Visitor','visitor.updated':'Visitor record updated.','visitor.deleted':'Visitor record deleted.',
+'visitor.deleteConfirm':'Delete this visitor record?',
 'punch.currentlyIn':'Currently Clocked In','punch.noOneIn':'No one is clocked in right now.',
 'punch.alreadyIn':'already clocked IN','punch.notIn':'is not clocked in.','punch.kioskMode':'Set up for employees (stay on this page)','punch.logoutHome':'↩ Logout & go to PunchClock.ca','punch.kioskActive':'Kiosk mode active. Employees can now clock in and out.',
 'punch.successIn':'clocked IN at','punch.successOut':'clocked OUT at',
@@ -15762,6 +16152,12 @@ fr:{
 'visitor.fullName':'Nom complet','visitor.companyName':'Nom de l\'entreprise','visitor.phone':'Numéro de téléphone','visitor.email':'Adresse courriel',
 'visitor.loading':'Chargement...','visitor.noneIn':'Aucun visiteur présentement.','visitor.checkOut':'Sortie',
 'visitor.nameRequired':'Le nom complet est requis.','visitor.checkedInMsg':'a pointé son arrivée',
+'visitor.sectionTitle':'Visiteurs',
+'visitor.activityTitle':'Pointages visiteurs','visitor.activityNone':'Aucun pointage visiteur trouvé pour les filtres sélectionnés.',
+'visitor.colName':'Nom','visitor.colCompany':'Entreprise','visitor.colPhone':'Téléphone','visitor.colEmail':'Courriel',
+'visitor.colCheckIn':'Arrivée','visitor.colCheckOut':'Départ','visitor.stillIn':'Toujours présent',
+'visitor.editTitle':'Modifier le visiteur','visitor.updated':'Dossier visiteur mis à jour.','visitor.deleted':'Dossier visiteur supprimé.',
+'visitor.deleteConfirm':'Supprimer ce dossier visiteur?',
 'punch.currentlyIn':'Actuellement pointés','punch.noOneIn':'Personne de pointé en ce moment.',
 'punch.alreadyIn':'est déjà pointé EN','punch.notIn':"n'est pas pointé.",'punch.kioskMode':'Configurer pour les employés (rester sur cette page)','punch.logoutHome':'↩ Se déconnecter et aller sur PunchClock.ca','punch.kioskActive':'Mode kiosque actif. Les employés peuvent maintenant pointer.',
 'punch.successIn':'pointé ENTRÉE à','punch.successOut':'pointé SORTIE à',
@@ -16643,7 +17039,7 @@ function applyPunchTranslations(){
   var btnOut=document.querySelector('.btn-out');
   if(btnIn)btnIn.textContent=tp('punch.in');
   if(btnOut)btnOut.textContent=tp('punch.out');
-  var ciHeader=document.querySelector('.ci-header h3');
+  var ciHeader=document.querySelector('#ciClockedInSection .ci-header h3');
   if(ciHeader)ciHeader.innerHTML='<span class="live-dot"></span>'+tp('punch.currentlyIn');
   document.querySelectorAll('.punch-lang-btn[data-lang]').forEach(function(btn){
     btn.classList.toggle('active',btn.dataset.lang===_punchLang);
