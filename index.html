@@ -12203,7 +12203,11 @@ async function saveAddPunch(){
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const emp=C.employees.find(e=>e.id===empId);
   const ctx=Ctx.get();
-  const site=ctx?.site||C.sites.find(s=>s.id===emp?.site_id);
+  // Always the selected employee's own site, never the admin's current site filter — a punch
+  // belongs where the employee actually works, regardless of which site the admin dashboard
+  // happens to be scoped to when they open this modal (a mismatch here hid a punch from the
+  // employee's own kiosk, since the kiosk's punch reads are server-forced to its own site).
+  const site=C.sites.find(s=>s.id===emp?.site_id)||ctx?.site;
 
   // An out time at or before the in time means the shift ran past midnight, so the OUT belongs to
   // the next calendar day. Silently writing it on the same date would produce a negative shift.
