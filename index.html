@@ -12074,6 +12074,20 @@ async function savePunchEdit(){
   const fullTime=punch_time.length===5?punch_time+':00':punch_time;
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const site=C.sites.find(s=>s.id===site_id);
+
+  // The site dropdown lets an admin pick any of the company's sites, but a punch filed under
+  // the wrong one is invisible to that employee's own kiosk (punch reads there are server-forced
+  // to its own site) — silently leaving them looking permanently clocked in. Warn before letting
+  // a choice that doesn't match the employee's own site through.
+  const punchRow=C.punches.find(p=>p.id===id);
+  const emp=C.employees.find(e=>e.id===punchRow?.emp_id);
+  if(emp?.site_id && site_id && site_id!==emp.site_id){
+    const home=C.sites.find(s=>s.id===emp.site_id);
+    const warnMsg=(t('editPunch.warnWrongSite')||"{name}'s usual site is {home}. You're about to save this punch at {chosen} instead — the employee's own kiosk won't be able to see or correct it there. Save it anyway?")
+      .replace('{name}',emp.name).replace('{home}',home?.name||'—').replace('{chosen}',site?.name||'—');
+    if(!(await uiConfirm(warnMsg))) return;
+  }
+
   try{
     await DB.update('punches',`id=eq.${id}`,{type,punch_date,punch_time:fullTime,punched_at,site_id,site_name:site?.name||null,is_manual:true,source:'admin'});
     // Update cache
@@ -15283,6 +15297,7 @@ en:{
 'addPunch.errOverlap':'There is already a punch at {when}, inside the shift you are adding. Edit that punch instead.',
 'addPunch.warnNextIn':'The next punch ({when}) is also an IN, so this employee will show as clocked in until you add the matching OUT. Add it anyway?',
 'addPunch.warnNextOut':'The next punch ({when}) is also an OUT. Adding this leaves two clock-outs in a row. Add it anyway?',
+'editPunch.warnWrongSite':"{name}'s usual site is {home}. You're about to save this punch at {chosen} instead — the employee's own kiosk won't be able to see or correct it there. Save it anyway?",
 'dblPunch.notInMsg':"{name} has no active clock-in. Did you forget to clock in? Use 'Report a Missed Punch' if needed.",
 'dblPunch.report':'Report Missed Punch',
 'admin.title':'Admin Panel','admin.subtitle':'Manage employees and sites',
@@ -16191,6 +16206,7 @@ fr:{
 'addPunch.errOverlap':'Un pointage existe déjà à {when}, à l\'intérieur du quart que vous ajoutez. Modifiez plutôt ce pointage.',
 'addPunch.warnNextIn':'Le pointage suivant ({when}) est aussi une ENTRÉE : cet employé restera affiché comme pointé en entrée jusqu\'à l\'ajout de la SORTIE correspondante. Ajouter quand même ?',
 'addPunch.warnNextOut':'Le pointage suivant ({when}) est aussi une SORTIE. L\'ajout créerait deux sorties consécutives. Ajouter quand même ?',
+'editPunch.warnWrongSite':"Le site habituel de {name} est {home}. Vous êtes sur le point d'enregistrer ce pointage à {chosen} à la place — la borne de l'employé ne pourra pas le voir ni le corriger là-bas. Enregistrer quand même ?",
 'dblPunch.notInMsg':"{name} n'a pas de pointage d'entrée actif. Avez-vous oublié de pointer en entrée? Utilisez « Signaler un pointage manqué » au besoin.",
 'dblPunch.report':'Signaler un pointage manqué',
 'admin.title':'Panneau Admin','admin.subtitle':'Gérer les employés et les sites',
