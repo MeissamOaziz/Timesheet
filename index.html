@@ -4763,7 +4763,12 @@ async function refreshCache(opts={}){
     C.sites = ctx.site ? [ctx.site] : [];
     const [emps,punches]=await Promise.all([
       DB.all('employees','order=name.asc').catch(()=>C.employees||[]),
-      DB.all('punches','order=punched_at.desc&limit=2000').catch(()=>C.punches||[]),
+      // An unattended kiosk can run for weeks with nobody around to notice a silently-failing
+      // refresh — a run that was showing the same person "currently clocked in" since a date a
+      // week prior turned out to be exactly this: fetches had been failing ever since and the
+      // catch below kept quietly re-serving the last good cache, forever, with no visible sign
+      // anything was wrong. _kioskLastFreshPunches lets the poll below detect that and recover.
+      DB.all('punches','order=punched_at.desc&limit=2000').then(r=>{_kioskLastFreshPunches=Date.now();return r;}).catch(()=>C.punches||[]),
     ]);
     C.employees=(emps||[]).filter(e=>(e.active!==false)&&(!ctx.site||e.site_id===ctx.site.id));
     C.punches=punches||[];
@@ -4837,6 +4842,7 @@ async function refreshCache(opts={}){
 // STATE
 // ═══════════════════════════════════════════════════
 let currentPage='punch';
+let _kioskLastFreshPunches=Date.now();
 let reportData=[];
 let pendingVerify=null;
 let pinState={empId:null,punchType:null,entered:'',purpose:'punch',isBreak:false};
@@ -7675,7 +7681,21 @@ function elapsed(iso){
 }
 
 setInterval(async()=>{
-  if(currentPage==='punch'){const ctx=Ctx.get();await refreshCache({coId:ctx?.co?.id,siteId:ctx?.site?.id});refreshClockedIn();}
+  if(currentPage==='punch'){
+    const ctx=Ctx.get();
+    const sess=Sess.get();
+    // Kiosk watchdog: a tablet left running for weeks has nobody around to notice if its refresh
+    // has been silently failing (expired auth, a network blip, a stale cached app bundle) — after
+    // 5 minutes with no successful punches fetch, reload rather than keep showing whatever was
+    // last fetched. Also check for a newer app version on every tick, the same self-heal already
+    // used for an admin's expired session, but unconditionally since a kiosk never hits that path.
+    if(!sess&&ctx?.site){
+      _healStaleClient();
+      if(Date.now()-_kioskLastFreshPunches>5*60*1000){ location.reload(); return; }
+    }
+    await refreshCache({coId:ctx?.co?.id,siteId:ctx?.site?.id});
+    refreshClockedIn();
+  }
 },30000);
 
 // ═══════════════════════════════════════════════════
