@@ -4750,6 +4750,29 @@ async function getEffectiveAdminId(){
   return s.id;
 }
 
+// Punches for a date range of ANY size. secure-db pages large reads itself but refuses (413,
+// "Too many records") past 50,000 rows rather than ever truncating, so a very large range -- e.g. a
+// big Business-plan account's full 18 months -- is split in half and fetched as two smaller ones.
+// `base` is the filter without date clauses (company, order, ...); start/end are YYYY-MM-DD,
+// inclusive, either may be empty for an open-ended range. `asc` must match the order in `base`.
+async function fetchPunchRange(base,start,end,asc){
+  const filt=base+(start?`&punch_date=gte.${start}`:'')+(end?`&punch_date=lte.${end}`:'');
+  try{
+    return await DB.all('punches',filt)||[];
+  }catch(e){
+    const raw=(e&&e._raw)||(e&&e.message)||'';
+    if(!/Too many records/i.test(raw)) throw e;
+    const lo=start||'2000-01-01', hi=end||'2100-12-31';
+    if(lo>=hi) throw e;                       // a single day over the cap: nothing left to split
+    const day=86400000, t0=Date.parse(lo+'T00:00:00Z'), t1=Date.parse(hi+'T00:00:00Z');
+    const mid=new Date(Math.floor((t0+t1)/2/day)*day).toISOString().slice(0,10);
+    const next=new Date(Date.parse(mid+'T00:00:00Z')+day).toISOString().slice(0,10);
+    const a=await fetchPunchRange(base,lo,mid,asc);
+    const b=await fetchPunchRange(base,next,hi,asc);
+    return asc?a.concat(b):b.concat(a);
+  }
+}
+
 async function refreshCache(opts={}){
   if(window._demoMode) return;   // demo cache is pre-seeded; never overwrite it
   const sess=Sess.get();
@@ -4804,13 +4827,12 @@ async function refreshCache(opts={}){
   }else if(!superAdmin){
     parts.push(`company_id=in.(${coIdList})`);
   }
-  if(opts.startDate)parts.push(`punch_date=gte.${opts.startDate}`);
-  if(opts.endDate)parts.push(`punch_date=lte.${opts.endDate}`);
-  if(!opts.startDate&&!opts.endDate)parts.push('limit=5000');
+  const ranged=!!(opts.startDate||opts.endDate);
+  if(!ranged)parts.push('limit=5000');
   const[sites,employees,punches,timeOff]=await Promise.all([
     DB.all('sites',sitesFilter),
     DB.all('employees',empsFilter),
-    DB.all('punches',parts.join('&')),
+    ranged?fetchPunchRange(parts.join('&'),opts.startDate,opts.endDate,false):DB.all('punches',parts.join('&')),
     // Loaded with the rest so the dashboard, schedule and reports can all read absences without
     // each having to fetch. Failure is non-fatal — the rest of the app must still work.
     DB.all('time_off','order=start_date.desc').catch(()=>[]),
@@ -11256,9 +11278,12 @@ async function generateReport(){
     // Scope to this admin's companies — never fetch cross-tenant punches
     const _rptCoIds=C.companies.map(c=>c.id);
     if(!isSuperAdmin()&&!_rptCoIds.length){punches=[];}else{
-      let pf=`punch_date=gte.${start}&punch_date=lte.${end}&order=punched_at.asc`;
-      if(!isSuperAdmin()&&_rptCoIds.length)pf+=`&company_id=in.(${_rptCoIds.join(',')})`;
-      punches=await DB.all('punches',pf);
+      // Narrow to the selected company at the database (the employee/site grouping below still
+      // applies): an admin with several companies used to pull all of them for every report.
+      let pf='order=punched_at.asc';
+      if(coId&&coId!=='all')pf+=`&company_id=eq.${coId}`;
+      else if(!isSuperAdmin()&&_rptCoIds.length)pf+=`&company_id=in.(${_rptCoIds.join(',')})`;
+      punches=await fetchPunchRange(pf,start,end,true);
       // Client-side guard in case DB returns unexpected rows
       if(!isSuperAdmin())punches=(punches||[]).filter(p=>_rptCoIds.includes(p.company_id));
     }
