@@ -60,6 +60,6 @@ $function$;
 revoke all on function public.archive_old_records(int) from public, anon, authenticated;
 grant execute on function public.archive_old_records(int) to service_role;
 
--- Scheduling (monthly, 03:15 UTC on the 1st) is applied separately once the archiver has been
--- tested against a synthetic row:
---   select cron.schedule('archive-old-records', '15 3 1 * *', $$select public.archive_old_records(18)$$);
+-- Scheduled monthly, 03:15 UTC on the 1st, after the archiver was tested end to end against a
+-- synthetic 2020 punch with a linked missed-punch request (moved, FK cleared, test rows removed).
+select cron.schedule('archive-old-records', '15 3 1 * *', $$select public.archive_old_records(18)$$);
