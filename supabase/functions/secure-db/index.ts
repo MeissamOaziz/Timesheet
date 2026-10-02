@@ -592,6 +592,13 @@ Deno.serve(async (req: Request) => {
       const validSite = await verifySite(kioskSiteId);
       if (!validSite) return errResp('Unauthorized', 401);
       filter = `site_id=eq.${kioskSiteId}`;
+      // The forced filter above replaces whatever the kiosk asked for, including its ordering.
+      // PostgREST caps a response at 1000 rows, so once a site passed ~1000 punches an unordered
+      // read returned an arbitrary 1000 in table order — admin-added OUTs (inserted later) fell
+      // past the cut and the board showed people clocked in who had long since left. Newest
+      // first guarantees every employee's latest punch is inside the window.
+      if (table === 'punches') filter += '&order=punched_at.desc&limit=1000';
+      else if (table === 'visitors') filter += '&order=checked_in_at.desc&limit=500';
 
     } else if (isPreAuthAllowed(table, filter)) {
       // Path 3 — pre-auth single-row lookup (login, invite, password reset)

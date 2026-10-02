@@ -7917,12 +7917,38 @@ function getDeviceId(){
   }catch(_){ return null; }
 }
 
+// What the browser will tell us about the hardware, so an owner can tell their devices apart. The
+// user-agent alone can't: an Android tablet in "desktop site" mode reports plain "X11; Linux x86_64".
+// `model` only exists on Chromium for Android in mobile mode, so it is a bonus, not something to rely on.
+async function _kioskDeviceInfo(){
+  const info = {
+    platform: navigator.platform || null,
+    touch: navigator.maxTouchPoints || 0,
+    screen: (screen&&screen.width) ? `${screen.width}x${screen.height}` : null,
+    dpr: window.devicePixelRatio || null,
+    lang: navigator.language || null,
+    tz: (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(_){ return null; } })()
+  };
+  const uad = navigator.userAgentData;
+  if(uad){
+    info.mobile = !!uad.mobile;
+    info.uaPlatform = uad.platform || null;
+    try{
+      const h = await uad.getHighEntropyValues(['model','platformVersion']);
+      info.model = h.model || null;
+      info.osVersion = h.platformVersion || null;
+    }catch(_){}
+  }
+  return info;
+}
+
 async function kioskCheckIn(siteId){
   const deviceId = getDeviceId();
   if(!siteId || !deviceId || window._demoMode) return;
   try{
     await DB.rpc('kiosk_device_checkin',{
-      p_site_id: siteId, p_device_id: deviceId, p_user_agent: navigator.userAgent.slice(0,200)
+      p_site_id: siteId, p_device_id: deviceId, p_user_agent: navigator.userAgent.slice(0,200),
+      p_info: await _kioskDeviceInfo()
     });
   }catch(_){ /* visibility only — never block clocking in */ }
 }
@@ -13196,12 +13222,57 @@ function deviceLabel(d){
   if(!d) return t('kw.aDevice')||'A tablet';
   if(d.label) return d.label;
   const ua = d.user_agent||'';
+  const info = d.device_info||{};
   if(/iPad/i.test(ua)) return 'iPad';
   if(/iPhone/i.test(ua)) return 'iPhone';
   if(/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'Android phone' : 'Android tablet';
-  if(/Macintosh/i.test(ua)) return 'Mac';
+  if(/CrOS/i.test(ua)) return 'Chromebook';
+  // Chrome's "Request desktop site" on an Android tablet reports a Linux desktop UA; a touchscreen
+  // is the only tell. A real Linux PC with a touchscreen would be misread, but that is rare.
+  if(/X11; Linux/i.test(ua)) return (info.touch>0) ? 'Android tablet (desktop mode)' : 'Linux PC';
+  if(/Macintosh/i.test(ua)) return (info.touch>1) ? 'iPad (desktop mode)' : 'Mac';
   if(/Windows/i.test(ua)) return 'Windows PC';
   return t('kw.aDevice')||'A tablet';
+}
+
+// Browser + OS read out of a user-agent string, e.g. "Chrome 154 on Windows 10/11".
+function deviceBrowserOs(d){
+  const ua = (d&&d.user_agent)||'';
+  let browser = '';
+  let m;
+  if((m=ua.match(/Edg\/(\d+)/))) browser='Edge '+m[1];
+  else if((m=ua.match(/OPR\/(\d+)/))) browser='Opera '+m[1];
+  else if((m=ua.match(/SamsungBrowser\/(\d+)/))) browser='Samsung Internet '+m[1];
+  else if((m=ua.match(/Firefox\/(\d+)/))) browser='Firefox '+m[1];
+  else if((m=ua.match(/(?:Chrome|CriOS)\/(\d+)/))) browser='Chrome '+m[1];
+  else if((m=ua.match(/Version\/(\d+).*Safari/))) browser='Safari '+m[1];
+  let os = '';
+  if((m=ua.match(/Android (\d+(?:\.\d+)?)/))) os='Android '+m[1];
+  else if(/Windows NT 10/.test(ua)) os='Windows 10/11';
+  else if(/Windows NT/.test(ua)) os='Windows';
+  else if((m=ua.match(/iPhone OS (\d+)/))||(m=ua.match(/CPU OS (\d+)/))) os='iOS '+m[1];
+  else if(/Mac OS X/.test(ua)) os='macOS';
+  else if(/CrOS/.test(ua)) os='ChromeOS';
+  else if(/Linux/.test(ua)) os='Linux';
+  return [browser,os].filter(Boolean).join(' · ');
+}
+
+// Everything we know about a device that helps an owner pick it out of a list, as display lines.
+function deviceDetailLines(d){
+  const info = d.device_info||{};
+  const hw = [];
+  if(info.model) hw.push(info.model);
+  if(info.screen) hw.push(info.screen.replace('x','×'));
+  if(info.touch>0) hw.push(t('kw.touchscreen')||'touchscreen');
+  const lines = [];
+  const sw = deviceBrowserOs(d);
+  if(sw) lines.push(sw);
+  if(hw.length) lines.push(hw.join(' · '));
+  const net = [];
+  if(d.ip_address) net.push('IP '+d.ip_address);
+  if(d.first_seen) net.push((t('kw.firstSeen')||'first seen {when}').replace('{when}', new Date(d.first_seen).toLocaleDateString()));
+  if(net.length) lines.push(net.join(' · '));
+  return lines;
 }
 
 function sinceLabel(iso){
@@ -13221,7 +13292,8 @@ function renderKioskDevices(devs, siteId){
     + (t('kw.connectedTablets')||'Connected tablets') + '</div>'
     + devs.map(d=>`<div class="kw-dev">
         <svg style="width:15px;height:15px;color:var(--green);flex-shrink:0"><use href="#i-monitor"/></svg>
-        <div><div>${esc(deviceLabel(d))}</div>
+        <div style="min-width:0"><div>${esc(deviceLabel(d))}</div>
+          ${deviceDetailLines(d).map(l=>`<div class="kw-dev-meta">${esc(l)}</div>`).join('')}
           <div class="kw-dev-meta">${(t('kw.lastSeen')||'last active {when}').replace('{when}', sinceLabel(d.last_seen))}</div></div>
         <button class="btn-danger" style="margin-left:auto;padding:4px 10px;font-size:11px" data-kw-revoke="${d.id}">${t('kw.unlink')||'Unlink'}</button>
       </div>`).join('');
@@ -15162,7 +15234,7 @@ en:{
 'kw.waiting':'Waiting for the tablet to open the link…',
 'kw.justConnected':'{device} just connected — you’re all set.',
 'kw.connected':'{device} is set up and ready.',
-'kw.aDevice':'A tablet','kw.connectedTablets':'Connected tablets','kw.lastSeen':'last active {when}',
+'kw.aDevice':'A tablet','kw.connectedTablets':'Connected tablets','kw.lastSeen':'last active {when}','kw.touchscreen':'touchscreen','kw.firstSeen':'first seen {when}',
 'kw.unlink':'Unlink','kw.confirmUnlink':'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.',
 'kw.justNow':'just now','kw.minsAgo':'{n} min ago','kw.hrsAgo':'{n}h ago','kw.daysAgo':'{n}d ago',
 'kw.s4':'Authorise this device.',
@@ -16071,7 +16143,7 @@ fr:{
 'kw.waiting':'En attente que la tablette ouvre le lien…',
 'kw.justConnected':'{device} vient de se connecter — tout est prêt.',
 'kw.connected':'{device} est configuré et prêt.',
-'kw.aDevice':'Une tablette','kw.connectedTablets':'Tablettes connectées','kw.lastSeen':'dernière activité {when}',
+'kw.aDevice':'Une tablette','kw.connectedTablets':'Tablettes connectées','kw.lastSeen':'dernière activité {when}','kw.touchscreen':'écran tactile','kw.firstSeen':'vue pour la première fois le {when}',
 'kw.unlink':'Délier','kw.confirmUnlink':'Délier cette tablette? Elle disparaîtra d’ici jusqu’à ce qu’elle rouvre le lien du kiosque.',
 'kw.justNow':'à l’instant','kw.minsAgo':'il y a {n} min','kw.hrsAgo':'il y a {n} h','kw.daysAgo':'il y a {n} j',
 'kw.s4':'Autoriser cet appareil.',
