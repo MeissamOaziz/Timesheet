@@ -319,6 +319,86 @@ function stripPortalRows(rows: unknown[]): unknown[] {
   });
 }
 
+// ── Paged reads ───────────────────────────────────────────────────────────────
+
+// PostgREST returns at most 1000 rows per request however large a limit the caller asks for, and
+// does so silently. Every screen that reads a growing table (punches above all) was therefore one
+// busy site away from quietly showing a truncated list. GETs are paged here instead, so no caller
+// can be cut short: they get everything they asked for, or an explicit error -- never a quiet subset.
+const PAGE_SIZE = 1000;
+// Upper bound on what one request may pull back (~25 MB of JSON). Past it we refuse rather than
+// truncate; the caller should narrow the date range.
+const MAX_ROWS = 50000;
+
+interface PagedResult { status: number; text: string }
+
+async function getAllRows(table: string, filter: string, hdrs: Record<string, string>): Promise<PagedResult> {
+  const rest: string[] = [];
+  let wanted = Infinity, base = 0;
+  for (const p of (filter ? filter.split('&') : []).filter(Boolean)) {
+    if (p.startsWith('limit='))       { const n = parseInt(p.slice(6), 10);  if (n > 0) wanted = Math.min(wanted, n); }
+    else if (p.startsWith('offset=')) { const n = parseInt(p.slice(7), 10);  if (n > 0) base = n; }
+    else rest.push(p);
+  }
+  const build = (extra: string[]) =>
+    `${SUPABASE_URL}/rest/v1/${table}?${[...rest, ...extra, 'select=*'].join('&')}`;
+  const offsetQ = (o: number) => (o > 0 ? [`offset=${o}`] : []);
+
+  // Small, bounded reads (single-row lookups, kiosk windows) need no paging and no count.
+  if (wanted <= PAGE_SIZE) {
+    const r = await fetch(build(Number.isFinite(wanted) ? [`limit=${wanted}`, ...offsetQ(base)] : offsetQ(base)), { headers: hdrs });
+    return { status: r.status, text: await r.text() };
+  }
+
+  // Multi-page read. Paging only works on a stable order, so fall back to the primary key when the
+  // caller specified none.
+  // A caller's own order (e.g. punched_at.desc) can tie -- two people punching in the same second --
+  // and ties straddling a page boundary would duplicate or drop rows, so the primary key is
+  // always the final tiebreaker.
+  const ordAt = rest.findIndex(p => p.startsWith('order='));
+  let order: string[];
+  if (ordAt === -1) order = ['order=id.asc'];
+  else {
+    const o = rest.splice(ordAt, 1)[0];
+    order = [/(^order=|,)id\./.test(o) ? o : `${o},id.asc`];
+  }
+  const first = await fetch(
+    build([...order, `limit=${PAGE_SIZE}`, ...offsetQ(base)]),
+    { headers: { ...hdrs, 'Prefer': 'count=exact' } },
+  );
+  const firstText = await first.text();
+  if (!first.ok) return { status: first.status, text: firstText };
+  const rows = JSON.parse(firstText);
+  if (!Array.isArray(rows)) return { status: first.status, text: firstText };
+
+  const total = parseInt((first.headers.get('content-range') || '').split('/')[1], 10);
+  if (!Number.isFinite(total)) return { status: 200, text: firstText };
+  const target = Math.min(wanted, total - base);
+  if (target > MAX_ROWS) {
+    return { status: 413, text: JSON.stringify({ error: `Too many records (${target}) for one request. Narrow the date range.` }) };
+  }
+  if (rows.length >= target || rows.length === 0) return { status: 200, text: firstText };
+
+  // Use the page size the server actually honoured, in case its cap is below ours.
+  const size = rows.length;
+  const jobs: { offset: number; limit: number }[] = [];
+  for (let got = size; got < target; got += size) {
+    jobs.push({ offset: base + got, limit: Math.min(size, target - got) });
+  }
+  const all: unknown[] = rows;
+  for (let i = 0; i < jobs.length; i += 6) {
+    const batch = await Promise.all(jobs.slice(i, i + 6).map(async j => {
+      const r = await fetch(build([...order, `limit=${j.limit}`, `offset=${j.offset}`]), { headers: hdrs });
+      return { ok: r.ok, status: r.status, text: await r.text() };
+    }));
+    for (const b of batch) {
+      if (!b.ok) return { status: b.status, text: b.text };
+      all.push(...JSON.parse(b.text));
+    }
+  }
+  return { status: 200, text: JSON.stringify(all) };
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -650,18 +730,26 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const upstream = await fetch(url, {
-      method,
-      headers: upstreamHeaders,
-      body: body != null ? JSON.stringify(body) : undefined,
-    });
-
-    const text = await upstream.text();
+    let upstreamStatus: number;
+    let text: string;
+    if (method === 'GET') {
+      const paged = await getAllRows(table, filter, upstreamHeaders);
+      upstreamStatus = paged.status;
+      text = paged.text;
+    } else {
+      const upstream = await fetch(url, {
+        method,
+        headers: upstreamHeaders,
+        body: body != null ? JSON.stringify(body) : undefined,
+      });
+      upstreamStatus = upstream.status;
+      text = await upstream.text();
+    }
 
     // 204 No Content — must not have a body (HTTP spec)
-    if (upstream.status === 204 || !text) {
+    if (upstreamStatus === 204 || !text) {
       return new Response(null, {
-        status: upstream.status,
+        status: upstreamStatus,
         headers: CORS,
       });
     }
@@ -680,7 +768,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(JSON.stringify(data), {
-      status: upstream.status,
+      status: upstreamStatus,
       headers: { ...CORS, 'Content-Type': 'application/json' },
     });
   } catch {

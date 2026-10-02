@@ -1850,7 +1850,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="legal-content">
     <button class="legal-back" onclick="hideLegal('tos')" data-i18n="legal.back">← Back</button>
     <h1 data-i18n="tos.title">Terms of Service</h1>
-    <p class="meta" data-i18n="tos.updated">Last updated: January 1, 2026</p>
+    <p class="meta" data-i18n="tos.updated">Last updated: October 2, 2026</p>
     <h2 data-i18n="tos.h1">1. Acceptance of Terms</h2>
     <p data-i18n="tos.p1">By accessing or using PunchClock Pro ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
     <h2 data-i18n="tos.h2">2. Description of Service</h2>
@@ -1866,6 +1866,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p data-i18n="tos.p6">You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) interfere with or disrupt the integrity of the Service; (d) upload or transmit malicious code; (e) resell or sublicense the Service without our written consent.</p>
     <h2 data-i18n="tos.h7">7. Data Retention and Deletion</h2>
     <p data-i18n="tos.p7">Your data is retained for the duration of your subscription. Upon account cancellation, your data will be retained for 30 days to allow for export, after which it will be permanently deleted. Free tier accounts inactive for 12 months may have their data deleted after notice.</p>
+    <p data-i18n="tos.p7b">Time and attendance records are kept in the live application for 18 months. Punch records and visitor check-ins older than 18 months are automatically moved to a secure archive each month. Archived records no longer appear in the Activity log or in reports and exports, but they are not deleted: they are kept for as long as the rest of your account data and can be provided to you on request. You are responsible for exporting and keeping any reports you need for payroll, tax or employment-law record-keeping purposes before your records reach 18 months of age.</p>
     <h2 data-i18n="tos.h8">8. Limitation of Liability</h2>
     <p data-i18n="tos.p8">To the maximum extent permitted by law, PunchClock Pro shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service, including but not limited to lost profits, lost data, or business interruption, even if advised of the possibility of such damages.</p>
     <h2 data-i18n="tos.h9">9. Service Availability</h2>
@@ -1884,7 +1885,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="legal-content">
     <button class="legal-back" onclick="hideLegal('privacy')" data-i18n="legal.back">← Back</button>
     <h1 data-i18n="priv.title">Privacy Policy</h1>
-    <p class="meta" data-i18n="priv.updated">Last updated: January 1, 2026</p>
+    <p class="meta" data-i18n="priv.updated">Last updated: October 2, 2026</p>
     <h2 data-i18n="priv.h1">1. Information We Collect</h2>
     <p data-i18n="priv.p1">We collect information you provide directly to us, including:</p>
     <ul>
@@ -1905,6 +1906,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p data-i18n="priv.p6">We do not sell, trade, or rent your personal information to third parties. We may share data with: (a) Supabase for data storage and hosting; (b) Resend for email delivery; (c) law enforcement when required by law. All third-party providers are bound by confidentiality agreements.</p>
     <h2 data-i18n="priv.h7">7. Data Retention</h2>
     <p data-i18n="priv.p7">We retain your data for as long as your account is active. Upon cancellation, data is retained for 30 days before permanent deletion. You may request immediate deletion by contacting us.</p>
+    <p data-i18n="priv.p7b">Punch records and visitor check-ins older than 18 months are automatically moved to a secure archive. They are no longer shown in the application, but remain stored until your account is deleted, and can be provided to you on request.</p>
     <h2 data-i18n="priv.h8">8. Your Rights (PIPEDA / Quebec Law 25)</h2>
     <p data-i18n="priv.p8">Under Canadian privacy law, you have the right to: access the personal information we hold about you; correct inaccurate information; withdraw consent for certain processing; request deletion of your data; and file a complaint with the Office of the Privacy Commissioner of Canada.</p>
     <h2 data-i18n="priv.h9">9. Cookies</h2>
@@ -2765,7 +2767,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="missedPunchCardsContainer"></div>
   </div>
   <div class="page-header">
-    <div><h1 data-i18n="reports.title">Reports</h1><p data-i18n="reports.subtitle">Generate time &amp; attendance reports</p></div>
+    <div><h1 data-i18n="reports.title">Reports</h1><p data-i18n="reports.subtitle">Generate time &amp; attendance reports</p><p data-i18n="reports.retention" style="font-size:12px;color:var(--text3);margin-top:3px">Punch records are kept for 18 months. Older records are archived and won't appear here.</p></div>
     <div class="export-btns">
       <button class="btn-export" onclick="guardedExport('excel')"><svg class="ic" style="margin-right:5px"><use href="#i-download"/></svg>Excel</button>
       <button class="btn-export" onclick="guardedExport('csv')"><svg class="ic" style="margin-right:5px"><use href="#i-file"/></svg>CSV</button>
@@ -15521,7 +15523,7 @@ en:{
 'tour.s4b':'Trying it yourself? You need the employee PIN. Go to Team → Employees and click Show next to any PIN to reveal it. This is the step most people get stuck on.',
 'tour.s5t':'Hours add up on their own',
 'tour.s5b':'Every punch feeds Reports. Pick a date range and export to Excel, CSV or PDF when you run payroll. Nothing to tally by hand.',
-'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports',
+'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports','reports.retention':'Punch records are kept for 18 months. Older records are archived and won\'t appear here.',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All','reports.col.reg':'Reg Hours','reports.col.ot':'OT Hours',
 'reports.period':'Period','reports.lastPeriod':'Last Payroll Period','reports.currentPeriod':'Current Period',
 'reports.btnLastPeriod':'← Last Period','reports.btnCurrentPeriod':'Current Period →',
@@ -15672,7 +15674,7 @@ en:{
 'land.f.biz1':'Unlimited companies','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
 'land.f.biz4':'All Growth features','land.f.biz5':'Up to 6 admins per account','land.f.biz6':'Dedicated support','land.f.biz7':'Early access to new features','land.f.start8':'1 co-admin included','land.f.grow6':'Up to 4 admins per account',
 'legal.back':'← Back',
-'tos.title':'Terms of Service','tos.updated':'Last updated: January 1, 2026',
+'tos.title':'Terms of Service','tos.updated':'Last updated: October 2, 2026',
 'tos.h1':'1. Acceptance of Terms','tos.p1':'By accessing or using PunchClock Pro ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.',
 'tos.h2':'2. Description of Service','tos.p2':'PunchClock Pro is a time and attendance tracking software-as-a-service ("SaaS") platform that allows businesses to track employee work hours, manage multiple locations, generate reports, and integrate with payroll software.',
 'tos.h3':'3. Account Registration','tos.p3':'You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.',
@@ -15680,20 +15682,20 @@ en:{
 'tos.p4b':'Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan\'s included limit.',
 'tos.h5':'5. Employee Data','tos.p5':'You are responsible for obtaining any necessary consent from your employees to collect and store their time and attendance data. You represent that you have the legal authority to use the Service on behalf of your organization and to submit employee data through the platform.',
 'tos.h6':'6. Acceptable Use','tos.p6':'You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) interfere with or disrupt the integrity of the Service; (d) upload or transmit malicious code; (e) resell or sublicense the Service without our written consent.',
-'tos.h7':'7. Data Retention and Deletion','tos.p7':'Your data is retained for the duration of your subscription. Upon account cancellation, your data will be retained for 30 days to allow for export, after which it will be permanently deleted. Free tier accounts inactive for 12 months may have their data deleted after notice.',
+'tos.h7':'7. Data Retention and Deletion','tos.p7':'Your data is retained for the duration of your subscription. Upon account cancellation, your data will be retained for 30 days to allow for export, after which it will be permanently deleted. Free tier accounts inactive for 12 months may have their data deleted after notice.','tos.p7b':'Time and attendance records are kept in the live application for 18 months. Punch records and visitor check-ins older than 18 months are automatically moved to a secure archive each month. Archived records no longer appear in the Activity log or in reports and exports, but they are not deleted: they are kept for as long as the rest of your account data and can be provided to you on request. You are responsible for exporting and keeping any reports you need for payroll, tax or employment-law record-keeping purposes before your records reach 18 months of age.',
 'tos.h8':'8. Limitation of Liability','tos.p8':'To the maximum extent permitted by law, PunchClock Pro shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service, including but not limited to lost profits, lost data, or business interruption, even if advised of the possibility of such damages.',
 'tos.h9':'9. Service Availability','tos.p9':'We strive for 99.9% uptime but do not guarantee uninterrupted access to the Service. Scheduled maintenance will be communicated in advance where possible. We are not liable for damages resulting from service interruptions.',
 'tos.h10':'10. Modifications to Terms','tos.p10':'We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms. We will provide notice of material changes via email or in-app notification.',
 'tos.h11':'11. Governing Law','tos.p11':'These Terms are governed by the laws of the Province of Quebec, Canada, without regard to conflict of law principles.',
 'tos.h12':'12. Contact','tos.p12':'For questions about these Terms, contact us through the app or at the email address on file with your account.',
-'priv.title':'Privacy Policy','priv.updated':'Last updated: January 1, 2026',
+'priv.title':'Privacy Policy','priv.updated':'Last updated: October 2, 2026',
 'priv.h1':'1. Information We Collect','priv.p1':'We collect information you provide directly to us, including:',
 'priv.h2':'2. How We Use Your Information','priv.p2':'We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.',
 'priv.h3':'3. Data Storage and Security','priv.p3':'Your data is stored in Supabase, a secure cloud database platform hosted on AWS infrastructure. We implement industry-standard security measures including encrypted connections (TLS/SSL) for all data in transit. However, no method of transmission over the internet is 100% secure.',
 'priv.h4':'4. Employee PIN Security','priv.p4':'Employee PINs are stored in the database and used solely for clock-in/out authentication. Admins should treat PINs as confidential and share them only with the respective employee. We recommend changing PINs if an employee leaves the organization.',
 'priv.h5':'5. Email Communications','priv.p5':'When the automated email report feature is enabled for an employee, we will send periodic hours summary emails to the email address on file. These emails are sent via Resend, our email delivery provider. Employees can be removed from automated emails at any time by an admin.',
 'priv.h6':'6. Data Sharing','priv.p6':'We do not sell, trade, or rent your personal information to third parties. We may share data with: (a) Supabase for data storage and hosting; (b) Resend for email delivery; (c) law enforcement when required by law. All third-party providers are bound by confidentiality agreements.',
-'priv.h7':'7. Data Retention','priv.p7':'We retain your data for as long as your account is active. Upon cancellation, data is retained for 30 days before permanent deletion. You may request immediate deletion by contacting us.',
+'priv.h7':'7. Data Retention','priv.p7':'We retain your data for as long as your account is active. Upon cancellation, data is retained for 30 days before permanent deletion. You may request immediate deletion by contacting us.','priv.p7b':'Punch records and visitor check-ins older than 18 months are automatically moved to a secure archive. They are no longer shown in the application, but remain stored until your account is deleted, and can be provided to you on request.',
 'priv.h8':'8. Your Rights (PIPEDA / Quebec Law 25)','priv.p8':'Under Canadian privacy law, you have the right to: access the personal information we hold about you; correct inaccurate information; withdraw consent for certain processing; request deletion of your data; and file a complaint with the Office of the Privacy Commissioner of Canada.',
 'priv.h9':'9. Cookies','priv.p9':'PunchClock Pro uses localStorage in your browser to maintain your session and remember your selected company/site context. No third-party tracking cookies are used.',
 "priv.h10":"10. Children's Privacy",'priv.p10':'The Service is not directed to individuals under 16 years of age. We do not knowingly collect personal information from children.',
@@ -16430,7 +16432,7 @@ fr:{
 'tour.s4b':'Vous faites un essai? Il vous faut le NIP de l\'employé. Allez dans Équipe → Employés et cliquez Voir à côté du NIP pour l\'afficher. C\'est l\'étape où la plupart des gens bloquent.',
 'tour.s5t':'Les heures se calculent seules',
 'tour.s5b':'Chaque pointage alimente les Rapports. Choisissez une période et exportez vers Excel, CSV ou PDF au moment de la paie. Aucun calcul à la main.',
-'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence',
+'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence','reports.retention':'Les pointages sont conservés 18 mois. Les registres plus anciens sont archivés et n\'apparaissent plus ici.',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner','reports.col.reg':'Heures rég.','reports.col.ot':'Heures supp.',
 'reports.period':'Période','reports.lastPeriod':'Dernière période de paie','reports.currentPeriod':'Période en cours',
 'reports.btnLastPeriod':'← Dernière période','reports.btnCurrentPeriod':'Période en cours →',
@@ -16579,7 +16581,7 @@ fr:{
 'land.f.biz1':'Compagnies illimitées','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
 'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Jusqu\'à 6 admins par compte','land.f.biz6':'Assistance dédiée','land.f.biz7':'Accès anticipé aux nouvelles fonctionnalités',
 'legal.back':'← Retour',
-'tos.title':'Conditions d\'utilisation','tos.updated':'Dernière mise à jour : 1er janvier 2026',
+'tos.title':'Conditions d\'utilisation','tos.updated':'Dernière mise à jour : 2 octobre 2026',
 'tos.h1':'1. Acceptation des conditions','tos.p1':'En accédant au service PunchClock Pro (« le Service »), vous acceptez d\'être lié par ces Conditions d\'utilisation. Si vous n\'acceptez pas ces conditions, veuillez ne pas utiliser le Service.',
 'tos.h2':'2. Description du service','tos.p2':'PunchClock Pro est une plateforme logicielle de suivi du temps et des présences (SaaS) permettant aux entreprises de suivre les heures de travail des employés, gérer plusieurs sites, générer des rapports et s\'intégrer à un logiciel de paie.',
 'tos.h3':'3. Inscription au compte','tos.p3':'Vous devez fournir des informations exactes, actuelles et complètes lors de l\'inscription. Vous êtes responsable de la confidentialité de vos identifiants et de toutes les activités effectuées sous votre compte.',
@@ -16587,20 +16589,20 @@ fr:{
 'tos.p4b':'Des sièges supplémentaires pour les forfaits Débutant et Croissance sont facturés à 4,90 $/mois par employé au-delà de la limite incluse.',
 'tos.h5':'5. Données des employés','tos.p5':'Vous êtes responsable d\'obtenir le consentement nécessaire de vos employés pour collecter et stocker leurs données de présence. Vous déclarez avoir l\'autorité légale pour utiliser le Service au nom de votre organisation.',
 'tos.h6':'6. Utilisation acceptable','tos.p6':'Vous acceptez de ne pas : (a) utiliser le Service à des fins illégales; (b) tenter d\'accéder sans autorisation à une partie du Service; (c) perturber l\'intégrité du Service; (d) transmettre du code malveillant; (e) revendre ou sous-licencier le Service sans notre consentement écrit.',
-'tos.h7':'7. Conservation et suppression des données','tos.p7':'Vos données sont conservées pendant la durée de votre abonnement. À l\'annulation, elles sont conservées 30 jours pour permettre l\'exportation, puis supprimées définitivement. Les comptes gratuits inactifs depuis 12 mois peuvent être supprimés après avis.',
+'tos.h7':'7. Conservation et suppression des données','tos.p7':'Vos données sont conservées pendant la durée de votre abonnement. À l\'annulation, elles sont conservées 30 jours pour permettre l\'exportation, puis supprimées définitivement. Les comptes gratuits inactifs depuis 12 mois peuvent être supprimés après avis.','tos.p7b':'Les registres de présence sont conservés 18 mois dans l\'application. Les pointages et les enregistrements de visiteurs de plus de 18 mois sont automatiquement déplacés chaque mois vers une archive sécurisée. Les registres archivés n\'apparaissent plus dans le journal d\'activité ni dans les rapports et exportations, mais ils ne sont pas supprimés : ils sont conservés aussi longtemps que le reste des données de votre compte et peuvent vous être fournis sur demande. Il vous incombe d\'exporter et de conserver les rapports dont vous avez besoin à des fins de paie, de fiscalité ou de tenue de registres en vertu du droit du travail avant que vos registres atteignent 18 mois.',
 'tos.h8':'8. Limitation de responsabilité','tos.p8':'Dans toute la mesure permise par la loi, PunchClock Pro ne saurait être tenu responsable de dommages indirects, accessoires, spéciaux ou consécutifs découlant de votre utilisation du Service.',
 'tos.h9':'9. Disponibilité du service','tos.p9':'Nous visons une disponibilité de 99,9 % mais ne garantissons pas un accès ininterrompu. La maintenance planifiée sera communiquée à l\'avance. Nous ne sommes pas responsables des dommages résultant d\'interruptions.',
 'tos.h10':'10. Modifications des conditions','tos.p10':'Nous nous réservons le droit de modifier ces Conditions à tout moment. L\'utilisation continue du Service après des modifications constitue l\'acceptation des nouvelles Conditions.',
 'tos.h11':'11. Droit applicable','tos.p11':'Ces Conditions sont régies par les lois de la province de Québec, Canada, sans égard aux principes de conflit de lois.',
 'tos.h12':'12. Contact','tos.p12':'Pour toute question concernant ces Conditions, contactez-nous via l\'application ou à l\'adresse courriel associée à votre compte.',
-'priv.title':'Politique de confidentialité','priv.updated':'Dernière mise à jour : 1er janvier 2026',
+'priv.title':'Politique de confidentialité','priv.updated':'Dernière mise à jour : 2 octobre 2026',
 'priv.h1':'1. Informations collectées','priv.p1':'Nous collectons les informations que vous nous fournissez directement, notamment :',
 'priv.h2':'2. Utilisation de vos informations','priv.p2':'Nous utilisons les informations collectées pour : fournir et maintenir le Service; envoyer des courriels de résumé de période automatisés aux employés (si activé); générer des rapports de présence; améliorer et développer le Service; et respecter les obligations légales.',
 'priv.h3':'3. Stockage et sécurité des données','priv.p3':'Vos données sont stockées dans Supabase, une plateforme de base de données sécurisée hébergée sur l\'infrastructure AWS. Nous appliquons des mesures de sécurité standard de l\'industrie, notamment des connexions chiffrées (TLS/SSL).',
 'priv.h4':'4. Sécurité des NIP des employés','priv.p4':'Les NIP des employés sont stockés dans la base de données et utilisés uniquement pour l\'authentification de pointage. Les admins doivent traiter les NIP comme confidentiels. Nous recommandons de les modifier si un employé quitte l\'organisation.',
 'priv.h5':'5. Communications par courriel','priv.p5':'Lorsque la fonction de rapport automatisé est activée, nous envoyons des courriels de résumé d\'heures à l\'adresse enregistrée. Ces courriels sont envoyés via Resend. Les employés peuvent être retirés des envois automatiques à tout moment par un admin.',
 'priv.h6':'6. Partage des données','priv.p6':'Nous ne vendons, n\'échangeons ni ne louons vos informations personnelles à des tiers. Nous pouvons partager des données avec : (a) Supabase pour l\'hébergement; (b) Resend pour la livraison des courriels; (c) les autorités si requis par la loi.',
-'priv.h7':'7. Conservation des données','priv.p7':'Nous conservons vos données aussi longtemps que votre compte est actif. À l\'annulation, elles sont conservées 30 jours avant suppression définitive. Vous pouvez demander une suppression immédiate en nous contactant.',
+'priv.h7':'7. Conservation des données','priv.p7':'Nous conservons vos données aussi longtemps que votre compte est actif. À l\'annulation, elles sont conservées 30 jours avant suppression définitive. Vous pouvez demander une suppression immédiate en nous contactant.','priv.p7b':'Les pointages et les enregistrements de visiteurs de plus de 18 mois sont automatiquement déplacés vers une archive sécurisée. Ils ne sont plus affichés dans l\'application, mais restent conservés jusqu\'à la suppression de votre compte et peuvent vous être fournis sur demande.',
 'priv.h8':'8. Vos droits (LPRPDE / Loi 25 du Québec)','priv.p8':'En vertu de la loi canadienne sur la protection de la vie privée, vous avez le droit d\'accéder à vos informations personnelles, de les corriger, de retirer votre consentement, de demander leur suppression et de déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada.',
 'priv.h9':'9. Témoins (cookies)','priv.p9':'PunchClock Pro utilise le stockage local (localStorage) de votre navigateur pour maintenir votre session et mémoriser le contexte compagnie/site sélectionné. Aucun témoin de suivi tiers n\'est utilisé.',
 "priv.h10":"10. Confidentialité des mineurs",'priv.p10':'Le Service n\'est pas destiné aux personnes de moins de 16 ans. Nous ne collectons pas sciemment d\'informations personnelles auprès d\'enfants.',
