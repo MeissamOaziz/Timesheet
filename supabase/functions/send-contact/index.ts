@@ -23,8 +23,11 @@ const SUBJECT_LABELS: Record<string, string> = {
   account: 'Account help'
 };
 
-// Types that are internal notifications — never send a customer ack for these
-const INTERNAL_TYPES = new Set(['new_account_notification', 'missed_punch']);
+// Types that are internal notifications — never send a customer ack for these.
+// time_off was missing: notify-time-off sends through here with the placeholder address
+// noreply@punchclock.ca, so every request produced a "We received your message" ack addressed to
+// the employee's name but delivered to the support inbox (two per request).
+const INTERNAL_TYPES = new Set(['new_account_notification', 'missed_punch', 'time_off']);
 
 function isValidEmail(e: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
