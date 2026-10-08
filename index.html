@@ -4802,7 +4802,21 @@ async function refreshCache(opts={}){
   // Global broadcast feed, not tenant data — every logged-in admin sees the same list regardless
   // of which company they're scoped to, so it's fetched unconditionally here rather than inside
   // any of the company-scoped branches below.
-  DB.all('announcements','order=created_at.desc').then(rows=>{C.announcements=rows||[];refreshAnnouncementsBadge();}).catch(()=>{});
+  // verify_admin_login doesn't return last_seen_announcement_at, so a fresh login always started
+  // with it blank and every update showed as unread again. Read the real value from the database
+  // once per page load per user, alongside the announcements, so the badge is correct from the start.
+  const _annSess=Sess.get();
+  const _annSeenSync=(_annSess&&_annSeenSyncedFor!==_annSess.id)
+    ? DB.all('admins',`id=eq.${_annSess.id}`).then(rows=>{
+        const me=rows&&rows[0];
+        if(!me)return;
+        const s=Sess.get();
+        if(s&&s.id===_annSess.id){s.last_seen_announcement_at=me.last_seen_announcement_at||null;Sess.set(s);}
+        _annSeenSyncedFor=_annSess.id;
+      }).catch(()=>{})
+    : Promise.resolve();
+  Promise.all([DB.all('announcements','order=created_at.desc'),_annSeenSync])
+    .then(([rows])=>{C.announcements=rows||[];refreshAnnouncementsBadge();}).catch(()=>{});
 
   // STEP 1: Fetch companies first — IDs are needed to scope all subsequent queries
   let companiesFilter='order=name.asc';
@@ -4867,6 +4881,7 @@ async function refreshCache(opts={}){
 // ═══════════════════════════════════════════════════
 let currentPage='punch';
 let _kioskLastFreshPunches=Date.now();
+let _annSeenSyncedFor=null;
 let reportData=[];
 let pendingVerify=null;
 let pinState={empId:null,punchType:null,entered:'',purpose:'punch',isBreak:false};
@@ -6068,10 +6083,16 @@ function renderAnnouncementsList(){
     return;
   }
   const fmtDate=(iso)=>new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-  body.innerHTML=authorRow+list.map(a=>`
+  // The last 5 stay readable after being seen (someone who clicked past too fast can still come
+  // back to it); unread ones are tagged. The super admin sees everything, to be able to manage it.
+  const sessR=Sess.get();
+  const lastSeenR=sessR?.last_seen_announcement_at?new Date(sessR.last_seen_announcement_at):null;
+  const isNewR=a=>!lastSeenR||new Date(a.created_at)>lastSeenR;
+  const shown=isSuperAdmin()?list:list.slice(0,5);
+  body.innerHTML=authorRow+shown.map(a=>`
     <div style="border-bottom:1px solid var(--border);padding:16px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <div style="font-weight:700;font-size:14.5px">${esc(a.title)}</div>
+        <div style="font-weight:700;font-size:14.5px">${isNewR(a)?`<span style="display:inline-block;background:var(--accent,#4f8ef7);color:#fff;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:99px;margin-right:8px;vertical-align:2px">${esc(t('announce.new')||'New')}</span>`:''}${esc(a.title)}</div>
         <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
           <div style="font-size:11.5px;color:var(--text3)">${fmtDate(a.created_at)}</div>
           ${isSuperAdmin()?`<button onclick="deleteAnnouncement('${a.id}')" aria-label="Delete" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:2px"><svg style="width:14px;height:14px"><use href="#i-trash"/></svg></button>`:''}
@@ -15759,7 +15780,7 @@ en:{
 'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
 'modal.paidBreak':'Paid Break Minutes','modal.paidBreakDesc':'Minutes of each break counted as worked hours (0 = fully unpaid). A shorter break only pays for its actual length.','modal.minutesAbbrev':'min',
-'announce.title':"What's New",'announce.titlePh':'Title','announce.bodyPh':"What's new…",'announce.post':'Post','announce.empty':'No announcements yet.','announce.confirmDelete':'Delete this announcement?',
+'announce.title':"What's New",'announce.titlePh':'Title','announce.bodyPh':"What's new…",'announce.post':'Post','announce.empty':'No announcements yet.','announce.new':'New','announce.confirmDelete':'Delete this announcement?',
 'modal.visitorSettings':'Visitor Check-In','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
@@ -16666,7 +16687,7 @@ fr:{
 'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
 'modal.paidBreak':'Minutes de pause payées','modal.paidBreakDesc':'Minutes de chaque pause comptées comme temps travaillé (0 = non payée). Une pause plus courte ne paie que sa durée réelle.','modal.minutesAbbrev':'min',
-'announce.title':'Nouveautés','announce.titlePh':'Titre','announce.bodyPh':'Quoi de neuf…','announce.post':'Publier','announce.empty':'Aucune annonce pour le moment.','announce.confirmDelete':'Supprimer cette annonce ?',
+'announce.title':'Nouveautés','announce.titlePh':'Titre','announce.bodyPh':'Quoi de neuf…','announce.post':'Publier','announce.empty':'Aucune annonce pour le moment.','announce.new':'Nouveau','announce.confirmDelete':'Supprimer cette annonce ?',
 'modal.visitorSettings':'Pointage visiteur','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',
