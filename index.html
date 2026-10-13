@@ -3828,6 +3828,17 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.scheduleSettings">Schedule</p>
+    <div id="mgrAllSitesToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleMgrAllSitesOpt()">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-users"/></svg><span data-i18n="modal.mgrAllSites">Managers can schedule staff from all sites</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.mgrAllSitesDesc">Off: a site manager only sees and schedules the staff at the sites they manage. On: they see everyone in the company, for locations that share staff.</div>
+      </div>
+      <div id="mgrAllSitesToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+        <div id="mgrAllSitesThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+      </div>
+    </div>
+    <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.punchRounding">Punch Rounding</p>
     <div class="form-group">
       <label data-i18n="modal.punchRoundingLabel">Round punch times to</label>
@@ -10803,6 +10814,7 @@ function openAddCompanyModal(){
   document.getElementById('companyLunchPaidMinutes').value='0';
   setVisitorCheckinToggle(false);
   setRemotePunchToggle(false);
+  setMgrAllSitesToggle(false);
   _setGrowthAddonLockState();
   resetLogoUpload(null);
   openModal('addCompanyModal');
@@ -10840,6 +10852,7 @@ function editCompany(id){
   document.getElementById('companyLunchPaidMinutes').value=String(co.lunch_break_paid_minutes||0);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
   setRemotePunchToggle(!!co.remote_punch_enabled);
+  setMgrAllSitesToggle(!!co.managers_see_all_sites);
   _setGrowthAddonLockState();
   resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
@@ -10901,6 +10914,13 @@ function toggleRemotePunchOpt(){
   document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('remotePunchThumb').style.left=on?'20px':'2px';
 }
+function toggleMgrAllSitesOpt(){
+  setMgrAllSitesToggle(document.getElementById('mgrAllSitesThumb').style.left!=='20px');
+}
+function setMgrAllSitesToggle(on){
+  document.getElementById('mgrAllSitesToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('mgrAllSitesThumb').style.left=on?'20px':'2px';
+}
 function setRemotePunchToggle(on){
   document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('remotePunchThumb').style.left=on?'20px':'2px';
@@ -10944,6 +10964,7 @@ async function saveCompany(){
   const lunch_break_paid_minutes=track_lunch_breaks?(parseInt(document.getElementById('companyLunchPaidMinutes').value,10)||0):0;
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
   const remote_punch_enabled=document.getElementById('remotePunchThumb').style.left==='20px';
+  const managers_see_all_sites=document.getElementById('mgrAllSitesThumb').style.left==='20px';
   const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   // Hard enforce plan limit on new company creation
@@ -10960,13 +10981,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -14461,6 +14482,7 @@ async function loadSchedulePage() {
     return;
   }
   schedChrome(true);
+  await ensureManagerSiteIds();
 
   // Populate company filter
   const coSel = document.getElementById('schedCoFilter');
@@ -14476,11 +14498,25 @@ async function loadSchedulePage() {
   await renderScheduleGrid();
 }
 
+// Who a schedule screen may list for a company: every active employee, except that a site manager is
+// limited to the sites they manage unless the company has switched on cross-site visibility. This
+// matches how Activity, Reports and Employees already scope managers; the schedule used to be the
+// one place a Windsor manager could plan Hawkesbury's staff. (Display scoping, like those screens.)
+function schedRoster(coId) {
+  let emps = C.employees.filter(e => e.company_id === coId && e.active);
+  const co = C.companies.find(c => c.id === coId);
+  if(managerSiteIds !== null && !(co && co.managers_see_all_sites)) {
+    emps = emps.filter(e => managerSiteIds.includes(e.site_id));
+  }
+  return emps;
+}
+
 function onSchedCoChange() {
   const coId = document.getElementById('schedCoFilter').value;
   const siteSel = document.getElementById('schedSiteFilter');
   let sites = C.sites.filter(s => s.company_id === coId);
-  if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
+  const _schedCo = C.companies.find(c => c.id === coId);
+  if(managerSiteIds!==null && !(_schedCo && _schedCo.managers_see_all_sites))sites=sites.filter(s=>managerSiteIds.includes(s.id));
   siteSel.innerHTML = `<option value="all">${t('admin.allSites')||'All Sites'}</option>` +
     sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   renderScheduleGrid();
@@ -14557,7 +14593,7 @@ async function renderScheduleGrid() {
   // Fetch availability for all employees in this view
   let _availability = {};
   try {
-    const empIds = C.employees.filter(e => e.company_id === coId && e.active).map(e=>e.id);
+    const empIds = schedRoster(coId).map(e=>e.id);
     if(empIds.length) {
       const avRows = await DB.all('availability',
         `employee_id=in.(${empIds.join(',')})`) || [];
@@ -14569,8 +14605,10 @@ async function renderScheduleGrid() {
   } catch(e) { console.warn('Availability fetch error:', e); }
 
   // Get employees for this company/site
-  let emps = C.employees.filter(e => e.company_id === coId && e.active);
+  let emps = schedRoster(coId);
   if(siteId && siteId !== 'all') emps = emps.filter(e => e.site_id === siteId);
+  // Shifts of people this view may not list shouldn't inflate the "shifts this week" counts either.
+  { const _vis = new Set(emps.map(e => e.id)); _schedShifts = _schedShifts.filter(sh => _vis.has(sh.employee_id)); }
 
   if(!emps.length) {
     wrap.innerHTML = `<div class="sched-empty"><div class="sched-empty-icon"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div><p style="color:var(--text2)">${t('sched.noEmployees')||'No active employees found for this company/site.'}</p></div>`;
@@ -14801,7 +14839,7 @@ async function copyLastWeekAll() {
   const coId = document.getElementById('schedCoFilter')?.value;
   const siteId = document.getElementById('schedSiteFilter')?.value;
   if(!coId) return;
-  let emps = C.employees.filter(e => e.company_id === coId && e.active);
+  let emps = schedRoster(coId);
   if(siteId && siteId !== 'all') emps = emps.filter(e => e.site_id === siteId);
   if(!emps.length) return;
 
@@ -14867,7 +14905,7 @@ function openAddShiftModal(empId = '', dateStr = '') {
 
   const coId = document.getElementById('schedCoFilter')?.value;
   const empSel = document.getElementById('shiftEmpSelect');
-  const emps = C.employees.filter(e => e.company_id === coId && e.active);
+  const emps = schedRoster(coId);
   empSel.innerHTML = emps.map(e=>`<option value="${e.id}" ${e.id===empId?'selected':''}>${e.name}</option>`).join('');
 
   document.getElementById('shiftDate').value = dateStr || schedDateStr(new Date());
@@ -14890,7 +14928,7 @@ function openEditShiftModal(shiftId) {
 
   const coId = document.getElementById('schedCoFilter')?.value;
   const empSel = document.getElementById('shiftEmpSelect');
-  const emps = C.employees.filter(e => e.company_id === coId && e.active);
+  const emps = schedRoster(coId);
   empSel.innerHTML = emps.map(e=>`<option value="${e.id}" ${e.id===sh.employee_id?'selected':''}>${e.name}</option>`).join('');
 
   document.getElementById('shiftDate').value = sh.shift_date;
@@ -15902,7 +15940,7 @@ en:{
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
 'modal.paidBreak':'Paid Break Minutes','modal.paidBreakDesc':'Minutes of each break counted as worked hours (0 = fully unpaid). A shorter break only pays for its actual length.','modal.minutesAbbrev':'min',
 'announce.title':"What's New",'announce.titlePh':'Title','announce.bodyPh':"What's new…",'announce.post':'Post','announce.empty':'No announcements yet.','announce.new':'New','announce.confirmDelete':'Delete this announcement?',
-'modal.visitorSettings':'Visitor Check-In','modal.enableVisitorCheckin':'Enable Visitor Check-In',
+'modal.visitorSettings':'Visitor Check-In','modal.scheduleSettings':'Schedule','modal.mgrAllSites':'Managers can schedule staff from all sites','modal.mgrAllSitesDesc':'Off: a site manager only sees and schedules the staff at the sites they manage. On: they see everyone in the company, for locations that share staff.','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
 'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
@@ -16809,7 +16847,7 @@ fr:{
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
 'modal.paidBreak':'Minutes de pause payées','modal.paidBreakDesc':'Minutes de chaque pause comptées comme temps travaillé (0 = non payée). Une pause plus courte ne paie que sa durée réelle.','modal.minutesAbbrev':'min',
 'announce.title':'Nouveautés','announce.titlePh':'Titre','announce.bodyPh':'Quoi de neuf…','announce.post':'Publier','announce.empty':'Aucune annonce pour le moment.','announce.new':'Nouveau','announce.confirmDelete':'Supprimer cette annonce ?',
-'modal.visitorSettings':'Pointage visiteur','modal.enableVisitorCheckin':'Activer le pointage visiteur',
+'modal.visitorSettings':'Pointage visiteur','modal.scheduleSettings':'Horaire','modal.mgrAllSites':'Les gestionnaires peuvent planifier le personnel de tous les sites','modal.mgrAllSitesDesc':'Désactivé : un gestionnaire de site ne voit et ne planifie que le personnel des sites qu\'il gère. Activé : il voit tout le monde dans l\'entreprise, pour les emplacements qui partagent leur personnel.','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',
 'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
