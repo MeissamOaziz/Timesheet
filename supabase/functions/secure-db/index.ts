@@ -334,6 +334,63 @@ function stripPortalRows(rows: unknown[]): unknown[] {
   });
 }
 
+// ── Kiosk helpers ─────────────────────────────────────────────────────────────
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// A kiosk read is forced onto its own site, which REPLACES whatever the terminal asked for. That
+// meant "this employee's shifts this week" came back as every shift at the site, any week, and the
+// terminal's My Shifts panel showed other people's schedules. Keep the terminal's own narrowing
+// clauses when they are a short list of well-formed ones: they can only shrink the result, never
+// widen it beyond the site, so honouring them is strictly safer than ignoring them.
+function kioskNarrowing(table: string, clientFilter: string): string {
+  const keep: string[] = [];
+  for (const part of clientFilter.split('&')) {
+    const eq = part.indexOf('=');
+    if (eq < 1) continue;
+    const key = part.slice(0, eq), val = part.slice(eq + 1);
+    if (table === 'shifts') {
+      if (key === 'employee_id' && val.startsWith('eq.') && UUID_RE.test(val.slice(3))) keep.push(part);
+      else if (key === 'shift_date') {
+        const m = /^(eq|gte|lte)\.(.+)$/.exec(val);
+        if (m && DATE_RE.test(m[2])) keep.push(part);
+      } else if (key === 'order' && val === 'shift_date.asc,start_time.asc') keep.push(part);
+    } else if (table === 'visitors') {
+      if (key === 'checked_out_at' && val === 'is.null') keep.push(part);
+    }
+  }
+  return keep.join('&');
+}
+
+async function restJson(path: string): Promise<any[] | null> {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
+  });
+  if (!r.ok) return null;
+  const j = await r.json();
+  return Array.isArray(j) ? j : null;
+}
+
+// What a kiosk may know about work labels: its own company's, and only when that account has the
+// Scheduling add-on. `mode` is the company's "labels at clock-in" setting (off / optional / required).
+async function kioskLabelContext(siteId: string): Promise<{ companyId: string; addon: boolean; mode: string } | null> {
+  const site = (await restJson(`sites?id=eq.${siteId}&select=company_id&limit=1`))?.[0];
+  if (!site) return null;
+  const co = (await restJson(`companies?id=eq.${site.company_id}&select=admin_id,punch_label_mode&limit=1`))?.[0];
+  if (!co) return null;
+  const owner = co.admin_id ? (await restJson(`admins?id=eq.${co.admin_id}&select=scheduling_addon&limit=1`))?.[0] : null;
+  return { companyId: site.company_id as string, addon: !!owner?.scheduling_addon, mode: (co.punch_label_mode as string) || 'off' };
+}
+
+async function kioskLabelBelongs(siteId: string, labelId: string): Promise<boolean> {
+  if (!UUID_RE.test(labelId)) return false;
+  const lc = await kioskLabelContext(siteId);
+  if (!lc) return false;
+  const rows = await restJson(`work_labels?id=eq.${labelId}&company_id=eq.${lc.companyId}&select=id&limit=1`);
+  return !!(rows && rows.length);
+}
+
 // ── Paged reads ───────────────────────────────────────────────────────────────
 
 // PostgREST returns at most 1000 rows per request however large a limit the caller asks for, and
@@ -660,6 +717,11 @@ Deno.serve(async (req: Request) => {
     ) {
       // Kiosk clock-punch / missed-punch / visitor check-in insert, scoped to the kiosk's own site.
       if (!(await verifySite(kioskSiteId))) return errResp('Unauthorized', 401);
+      // A punch may only carry a label from the site's own company.
+      const punchLabel = (body as Record<string, unknown>).label_id;
+      if (table === 'punches' && punchLabel != null && !(await kioskLabelBelongs(kioskSiteId, String(punchLabel)))) {
+        return errResp("Forbidden: that label does not belong to this site's company", 403);
+      }
 
     } else if (
       kioskSiteId &&
@@ -684,6 +746,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── Auth gate: GET on protected tables requires one of three valid paths ──
+  let kioskLabelMode = 'off';
   if (method === 'GET' && PROTECTED_TABLES.has(table)) {
 
     if (authedAdminId) {
@@ -697,6 +760,7 @@ Deno.serve(async (req: Request) => {
       // included so the terminal can show who from this site is currently checked in.
       const validSite = await verifySite(kioskSiteId);
       if (!validSite) return errResp('Unauthorized', 401);
+      const clientFilter = filter;
       filter = `site_id=eq.${kioskSiteId}`;
       // The forced filter above replaces whatever the kiosk asked for, including its ordering.
       // PostgREST caps a response at 1000 rows, so once a site passed ~1000 punches an unordered
@@ -705,6 +769,20 @@ Deno.serve(async (req: Request) => {
       // first guarantees every employee's latest punch is inside the window.
       if (table === 'punches') filter += '&order=punched_at.desc&limit=1000';
       else if (table === 'visitors') filter += '&order=checked_in_at.desc&limit=500';
+      const narrowing = kioskNarrowing(table, clientFilter);
+      if (narrowing) filter += '&' + narrowing;
+
+    } else if (kioskSiteId && table === 'work_labels') {
+      // A terminal may see its own company's active labels, and only when the account has the
+      // Scheduling add-on AND the company has switched labels on at clock-in. Otherwise an empty
+      // list, so a terminal that isn't using labels behaves exactly as it always has.
+      const lc = await kioskLabelContext(kioskSiteId);
+      if (!lc) return errResp('Unauthorized', 401);
+      if (!lc.addon || lc.mode === 'off') {
+        return new Response('[]', { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      }
+      kioskLabelMode = lc.mode;
+      filter = `company_id=eq.${lc.companyId}&active=eq.true&order=sort_order.asc,name.asc`;
 
     } else if (isPreAuthAllowed(table, filter)) {
       // Path 3 — pre-auth single-row lookup (login, invite, password reset)
@@ -791,6 +869,11 @@ Deno.serve(async (req: Request) => {
     }
     if (table === 'employee_portal' && Array.isArray(data)) {
       data = stripPortalRows(data);
+    }
+    // A terminal has no other way to learn the company's "labels at clock-in" setting, so it rides
+    // along on each label it is allowed to see.
+    if (table === 'work_labels' && kioskSiteId && !authedAdminId && Array.isArray(data)) {
+      data = data.map((l: any) => ({ ...l, punch_label_mode: kioskLabelMode }));
     }
 
     return new Response(JSON.stringify(data), {
