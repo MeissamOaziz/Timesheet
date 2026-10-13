@@ -1163,6 +1163,8 @@ border-top:1px solid var(--border);margin:18px 0;}
 .btn-sched-add-email:hover{background:rgba(245,158,11,.22);}
 .btn-sched-copy{font-size:10px;font-weight:600;padding:3px 9px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .btn-sched-copy:hover{background:var(--surface3,var(--border));color:var(--text);}
+.btn-sched-clear{font-size:10px;font-weight:600;padding:3px 9px;border-radius:var(--r-xs);border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:var(--red);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-sched-clear:hover{background:rgba(239,68,68,.18);}
 /* ── HOLIDAYS ── */
 .holiday-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:var(--amber);border-radius:5px;padding:2px 6px;white-space:nowrap;}
 .sched-holiday-cell{background:rgba(245,158,11,.06);}
@@ -14630,7 +14632,7 @@ async function renderScheduleGrid() {
         <div>
           <div class="sched-emp-name">${emp.name}</div>
           ${site ? `<div class="sched-emp-site"><svg class="ic" style="width:11px;height:11px;margin-right:4px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${site.name}</div>` : ''}
-          <div class="sched-emp-actions">${copyBtn}${empShiftsThisWeek.length > 0 ? emailBtn : ''}</div>
+          <div class="sched-emp-actions">${copyBtn}${empShiftsThisWeek.length > 0 ? emailBtn : ''}${empShiftsThisWeek.length > 0 ? `<button class="btn-sched-clear" onclick="clearWeekForEmployee('${emp.id}')" title="${esc(t('sched.clearWeekTitle')||"Remove all of this employee's shifts this week")}">${t('sched.clearWeek')||'Clear week'}</button>` : ''}</div>
         </div>
       </div>
     </td>`;
@@ -15011,6 +15013,28 @@ async function saveShift() {
     }
   } catch(e) {
     msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
+  }
+}
+
+// Remove one employee's shifts for the week on screen in a single step, instead of deleting them day
+// by day. Bounded to that employee and that week, and confirmed first with the count.
+async function clearWeekForEmployee(empId) {
+  const emp = C.employees.find(e => e.id === empId);
+  if(!emp) return;
+  const mine = _schedShifts.filter(sh => sh.employee_id === empId);
+  if(!mine.length) { showToast(t('sched.clearWeekNone')||'No shifts to clear this week.','info'); return; }
+  const weekStart = schedGetWeekStart(_schedWeek);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  const startStr = schedDateStr(weekStart), endStr = schedDateStr(weekEnd);
+  const msg = (t('sched.clearWeekConfirm')||'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.')
+    .replace('{n}', mine.length).replace('{name}', emp.name).replace('{start}', startStr).replace('{end}', endStr);
+  if(!(await uiConfirm(msg, {confirmLabel: t('sched.clearWeek')||'Clear week', danger: true}))) return;
+  try {
+    await DB.del('shifts', `employee_id=eq.${empId}&shift_date=gte.${startStr}&shift_date=lte.${endStr}`);
+    await renderScheduleGrid();
+    showToast((t('sched.clearWeekDone')||'Cleared {n} shift(s) for {name}.').replace('{n}', mine.length).replace('{name}', emp.name),'success');
+  } catch(e) {
+    showToast(e.message,'error');
   }
 }
 
@@ -16172,7 +16196,7 @@ en:{
 'sched.sendEmail':'Send schedule',
 'sched.sendConfirm':'Send {name}\'s schedule for this week to {email}?',
 'sched.addEmail':'+ Add email',
-'sched.copyLastWeek':'↺ Copy last week',
+'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.',
 'sched.copyLastWeekTitle':'Copy this person\'s shifts from last week into this week',
 'sched.copyNone':'{name} had no shifts last week to copy.',
 'sched.copyMixed':'Copied {n} shift(s) for {name}; {k} day(s) already had one and were left as-is.',
@@ -17083,7 +17107,7 @@ fr:{
 'sched.sendEmail':'Envoyer l\'horaire',
 'sched.sendConfirm':'Envoyer l\'horaire de {name} pour cette semaine à {email}?',
 'sched.addEmail':'+ Ajouter courriel',
-'sched.copyLastWeek':'↺ Copier la semaine dernière',
+'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.',
 'sched.copyLastWeekTitle':'Copier les quarts de cette personne de la semaine dernière vers cette semaine',
 'sched.copyNone':'{name} n\'avait aucun quart la semaine dernière à copier.',
 'sched.copyMixed':'{n} quart(s) copié(s) pour {name}; {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
