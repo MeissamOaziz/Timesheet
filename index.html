@@ -2809,6 +2809,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="filter-bar">
     <div><label data-i18n="common.company">Company</label><select id="reportCompany" onchange="onReportCompanyChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
     <div><label data-i18n="admin.site">Site</label><select id="reportSite" onchange="loadReportEmps()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
+    <div id="reportLabelWrap" style="display:none"><label data-i18n="labels.shiftField">Label</label><select id="reportLabel"></select></div>
     <div><label data-i18n="reports.period">Period</label>
       <select id="reportPeriod" onchange="updateDateRange()">
         <option value="last_period" selected data-i18n="reports.lastPeriod">Last Payroll Period</option>
@@ -2850,8 +2851,9 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="emp-list-check" id="empCheckList"></div>
   </div>
   <div class="stats-grid" id="reportStats" style="display:none"></div>
+  <div id="reportLabelSummary" style="display:none"></div>
   <div class="table-wrap" id="reportTableWrap" style="display:none">
-    <table><thead><tr><th>Employee</th><th>Site</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th class="num" data-i18n="reports.col.reg">Reg Hours</th><th class="num" data-i18n="reports.col.ot">OT Hours</th></tr></thead>
+    <table><thead><tr id="reportHeadRow"><th>Employee</th><th>Site</th><th>Date</th><th>Punch In</th><th>Punch Out</th><th class="num" data-i18n="reports.col.reg">Reg Hours</th><th class="num" data-i18n="reports.col.ot">OT Hours</th></tr></thead>
     <tbody id="reportTableBody"></tbody></table>
   </div>
   <div id="reportCardsContainer" class="mcards"></div>
@@ -5295,17 +5297,17 @@ function _demoBuildData(){
                ['Jean Tremblay','demo-s2'],['Aïsha Benali','demo-s2'],['Liam O\'Connor','demo-s2']];
   const EMPS=NAMES.map((n,i)=>({id:'demo-e'+i,name:n[0],site_id:n[1],company_id:CO.id,active:true,pin:String(1000+i*7),dept:'',emp_code:'E'+(100+i),email:null,send_report:false,photo_url:null}));
   const punches=[]; let pid=0;
-  const mk=(emp,d,h,m,type)=>{const dt=new Date(d);dt.setHours(h,m,0,0);
+  const mk=(emp,d,h,m,type,lb)=>{const dt=new Date(d);dt.setHours(h,m,0,0);
     punches.push({id:'demo-p'+(pid++),emp_id:emp.id,emp_name:emp.name,company_id:CO.id,site_id:emp.site_id,
       site_name:(SITES.find(s=>s.id===emp.site_id)||{}).name,type,
       punch_date:dt.toLocaleDateString('en-CA'),punch_time:dt.toLocaleTimeString('en-US',{hour12:false}),
-      punched_at:dt.toISOString(),is_manual:false});};
+      punched_at:dt.toISOString(),is_manual:false,label_id:(type==='IN'&&lb)?lb:null});};
   const today=new Date(); today.setHours(0,0,0,0);
   for(let back=6;back>=1;back--){                       // completed shifts, last 6 days
     const d=new Date(today); d.setDate(today.getDate()-back);
     if(d.getDay()===0) continue;                        // closed Sundays
     EMPS.forEach((e,i)=>{ if((i+back)%5===0) return;    // occasional day off
-      mk(e,d,8+(i%2),(i*7)%60,'IN'); mk(e,d,16+(i%3),(i*11)%60,'OUT'); });
+      mk(e,d,8+(i%2),(i*7)%60,'IN','demo-lb'+(1+((i+back)%3))); mk(e,d,16+(i%3),(i*11)%60,'OUT'); });
   }
   // Today: some finished, some still on the clock — but deliberately at BOTH sites. Employees
   // 0-2 are Plateau and 3-5 are Vieux-Port, so a plain "first four are still in" split leaves
@@ -5313,8 +5315,8 @@ function _demoBuildData(){
   // first number a prospect sees in the live demo, and it's in the landing-page screenshot.
   const finishedToday=new Set([0,4,5]);                  // one at Plateau, two at Vieux-Port
   EMPS.forEach((e,i)=>{
-    if(finishedToday.has(i)){ mk(e,today,6+(i%2),(i*5)%60,'IN'); mk(e,today,14,(i*13)%60,'OUT'); }
-    else { mk(e,today,8+(i%2),(i*9)%60,'IN'); }
+    if(finishedToday.has(i)){ mk(e,today,6+(i%2),(i*5)%60,'IN','demo-lb'+(1+(i%3))); mk(e,today,14,(i*13)%60,'OUT'); }
+    else { mk(e,today,8+(i%2),(i*9)%60,'IN','demo-lb'+(1+(i%3))); }
   });
   punches.sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
   // Upcoming shifts so the Schedule page has something to show
@@ -6146,7 +6148,7 @@ const HELP_ARTICLES=[
   {id:'remotepunch', tk:'help.remoteTitle', dk:'help.remoteDesc', cat:'setup', icon:'i-clock', pages:['admin','dashboard'],
    kw:{en:'remote clock in punch phone mobile no kiosk work from home field staff distributed team portal',
        fr:'pointage distance téléphone mobile aucun pointeau télétravail terrain équipe distribuée portail'}},
-  {id:'labels', tk:'help.labelsTitle', dk:'help.labelsDesc', cat:'payroll', icon:'i-star', pages:['schedule','punch'],
+  {id:'labels', tk:'help.labelsTitle', dk:'help.labelsDesc', cat:'payroll', icon:'i-star', pages:['schedule','punch','reports'],
    kw:{en:'label labels task tasks job jobs project client tag category work type schedule filter department snow removal switch task clock in what are you working on',
        fr:'etiquette etiquettes tache taches chantier projet client categorie type de travail horaire filtrer departement deneigement changer de tache pointage sur quoi travaillez-vous'}},
   {id:'announcements', tk:'help.announceTitle', dk:'help.announceDesc', cat:'daily', icon:'i-bell', pages:[],
@@ -11468,6 +11470,7 @@ async function loadReportsPage(){
   let _repCos=C.companies;
   if(managerSiteIds!==null)_repCos=_repCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
   rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_repCos.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
+  await loadAllWorkLabels();
   onReportCompanyChange();
   renderRecipients();
   ['reportStats','reportTableWrap','reportEmpty'].forEach(id=>document.getElementById(id).style.display='none');
@@ -11489,6 +11492,7 @@ function onReportCompanyChange(){
   const rs=document.getElementById('reportSite');
   rs.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   loadReportEmps();
+  fillReportLabelFilter();
   // Auto-load payroll settings for date range
   if(coId!=='all'){
     const co=C.companies.find(c=>c.id===coId);
@@ -11496,6 +11500,20 @@ function onReportCompanyChange(){
   }else{
     updateDateRange();
   }
+}
+
+// The label filter only exists for an account that has labels (Scheduling add-on). Archived labels
+// stay selectable: the hours worked under them are still in the history.
+function fillReportLabelFilter(){
+  const wrap=document.getElementById('reportLabelWrap'), sel=document.getElementById('reportLabel');
+  if(!wrap||!sel)return;
+  const coId=document.getElementById('reportCompany').value;
+  const labels=_allLabels.filter(l=>coId==='all'||l.company_id===coId);
+  wrap.style.display=labels.length?'':'none';
+  const cur=sel.value||'all';
+  sel.innerHTML=`<option value="all">${esc(t('labels.allLabels')||'All labels')}</option><option value="__none__">${esc(t('labels.none')||'No label')}</option>`
+    +labels.map(l=>`<option value="${l.id}">${esc(l.name)}${l.active?'':' '+esc(t('labels.archivedTag')||'(archived)')}</option>`).join('');
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all';
 }
 
 function loadReportEmps(){
@@ -11589,6 +11607,8 @@ function getPayrollPeriodAt(co,offset){
 // further back (and forward again, never past the current period) and parks the dropdown on
 // "Pay period" once it is neither.
 let _repPeriodOffset=-1;
+let _repShowLabel=false;          // does the report on screen carry labels
+let _reportLabelSummary=[];       // [{id,name,hours,emps:{name:hours}}] behind the Hours by label table
 let _repStepTimer=null;
 function stepReportPeriod(dir){
   _repPeriodOffset=dir===0?0:Math.min(0,_repPeriodOffset+dir);
@@ -11746,6 +11766,10 @@ async function generateReport(){
 
   const allRows=[];
   let grandTotal=0, grandOT=0, grandBreakMin=0;
+  // Label filter. Applied AFTER overtime is worked out (below), so filtering to one label never
+  // changes which hours count as overtime: OT depends on everything the person worked that week.
+  const labelF=(document.getElementById('reportLabelWrap')?.style.display!=='none'&&document.getElementById('reportLabel')?.value)||'all';
+  const labelMatch=lid=>labelF==='all'||(labelF==='__none__'?!lid:lid===labelF);
 
   siteGroups.forEach(({site,emps})=>{
     if(siteGroups.length>1||site){
@@ -11765,7 +11789,7 @@ async function generateReport(){
           const out=epsAll[i+1]?.type==='OUT'?epsAll[i+1]:null;
           const hrs=out?(_roundPunchMs(out.punched_at,co?.punch_rounding||0)-_roundPunchMs(p.punched_at,co?.punch_rounding||0))/3600000:null;
           if(out)i+=2;else i++;
-          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT,_ts:p.punched_at});
+          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT,labelId:p.label_id||null,_ts:p.punched_at});
         }else i++;
       }
       // Break time: a break is a same-employee OUT(is_break) immediately followed by an
@@ -11780,12 +11804,16 @@ async function generateReport(){
       for(let bi=0;bi<epsAll.length-1;bi++){
         const a=epsAll[bi],b=epsAll[bi+1];
         if(a.type==='OUT'&&a.is_break&&b.type==='IN'&&b.is_break){
+          // A break belongs to the work it interrupted: the label of the IN that preceded it.
+          let brLabel=null;
+          for(let k=bi-1;k>=0;k--){ if(epsAll[k].type==='IN'){ brLabel=epsAll[k].label_id||null; break; } }
+          if(!labelMatch(brLabel)) continue;
           const gapMs=(new Date(b.punched_at)-new Date(a.punched_at));
           breakMin+=gapMs/60000;
           if(breakCapMs>0){
             const paidHrs=Math.min(gapMs,breakCapMs)/3600000;
             if(paidHrs>0){
-              rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:a.punch_date,punchIn:a.punch_time,punchOut:b.punch_time,hours:paidHrs,isManual:false,isPaidBreak:true,isSubtotal:false,isSiteHeader:false,trackOT,_ts:a.punched_at});
+              rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:a.punch_date,punchIn:a.punch_time,punchOut:b.punch_time,hours:paidHrs,isManual:false,isPaidBreak:true,isSubtotal:false,isSiteHeader:false,trackOT,labelId:brLabel,_ts:a.punched_at});
             }
           }
         }
@@ -11794,7 +11822,8 @@ async function generateReport(){
       if(rawRows.length){
         // Calculate OT per session
         const otResults=calcOT(rawRows.map(r=>({date:r.date,hours:r.hours})),trackOT,co?.week_start==='sunday',co?.ot_daily_hours,co?.ot_weekly_hours);
-        const empRows=rawRows.map((r,idx)=>({...r,regHours:otResults[idx].reg,otHours:otResults[idx].ot}));
+        const empRows=rawRows.map((r,idx)=>({...r,regHours:otResults[idx].reg,otHours:otResults[idx].ot})).filter(r=>labelMatch(r.labelId));
+        if(!empRows.length) return;
         allRows.push(...empRows);
         const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
         const totOT=empRows.reduce((s,r)=>s+(r.otHours||0),0);
@@ -11814,6 +11843,49 @@ async function generateReport(){
 
   reportData=allRows;
   const dataRows=allRows.filter(r=>!r.isSubtotal&&!r.isSiteHeader&&!r.isSiteTotal);
+  // Label column and "Hours by label" only appear when some hours in this report carry a label, so
+  // a report for a company that doesn't use labels is exactly what it always was.
+  _repShowLabel=dataRows.some(r=>r.labelId);
+  const LC=_repShowLabel?1:0;
+  const lblName=id=>{const l=id?labelByIdAny(id):null;return l?l.name:(id?(t('labels.deleted')||'(deleted label)'):(t('labels.none')||'No label'));};
+  _reportLabelSummary=[];
+  if(_repShowLabel){
+    const byL={};
+    dataRows.forEach(r=>{
+      if(r.hours==null) return;                      // still clocked in: no hours to attribute yet
+      const k=r.labelId||'';
+      const g=byL[k]||(byL[k]={id:r.labelId||null,name:lblName(r.labelId),hours:0,reg:0,ot:0,emps:{},empsRO:{}});
+      const rg=r.regHours!=null?r.regHours:r.hours, ov=r.otHours||0;
+      g.hours+=r.hours; g.reg+=rg; g.ot+=ov;
+      g.emps[r.empName]=(g.emps[r.empName]||0)+r.hours;
+      const ro=g.empsRO[r.empName]||(g.empsRO[r.empName]={reg:0,ot:0}); ro.reg+=rg; ro.ot+=ov;
+    });
+    _reportLabelSummary=Object.values(byL).sort((a,b)=>(a.id?0:1)-(b.id?0:1)||b.hours-a.hours);
+  }
+  const lsEl=document.getElementById('reportLabelSummary');
+  if(lsEl){
+    if(_reportLabelSummary.length){
+      const tot=_reportLabelSummary.reduce((n,g)=>n+g.hours,0);
+      lsEl.style.display='';
+      lsEl.innerHTML=`<div class="card" style="margin-bottom:var(--s5)">
+        <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px">${esc(t('reports.hoursByLabel')||'Hours by label')}</p>
+        <div class="table-wrap" style="border:0"><table><thead><tr><th>${esc(t('labels.shiftField')||'Label')}</th><th class="num">${esc(t('reports.hours')||'Hours')}</th><th>${esc(t('reports.employeesCol')||'Employees')}</th></tr></thead><tbody>`
+        +_reportLabelSummary.map(g=>{
+          const lb=g.id?labelByIdAny(g.id):null;
+          const chip=lb?`<span class="act-label" style="--lb:${esc(lb.color)};margin-left:0"><i></i>${esc(lb.name)}</span>`:`<span style="color:var(--text2)">${esc(g.name)}</span>`;
+          const emps=Object.entries(g.emps).sort((a,b)=>b[1]-a[1]).map(([n,h])=>`${esc(n)} <span style="font-family:'DM Mono',monospace;color:var(--text2)">${h.toFixed(2)}</span>`).join(' &middot; ');
+          return `<tr><td>${chip}</td><td class="num" style="font-family:'DM Mono',monospace;font-weight:600">${g.hours.toFixed(2)}</td><td style="font-size:12px;line-height:1.7">${emps}</td></tr>`;
+        }).join('')
+        +`<tr style="border-top:2px solid var(--border)"><td style="font-weight:700">${esc(t('reports.total')||'Total')}</td><td class="num" style="font-family:'DM Mono',monospace;font-weight:700">${tot.toFixed(2)}</td><td></td></tr>`
+        +`</tbody></table></div></div>`;
+    }else{ lsEl.style.display='none'; lsEl.innerHTML=''; }
+  }
+  const headRow=document.getElementById('reportHeadRow');
+  if(headRow){
+    headRow.innerHTML=`<th>${esc(t('reports.col.employee')||'Employee')}</th><th>${esc(t('admin.col.site')||'Site')}</th>`
+      +(LC?`<th>${esc(t('labels.shiftField')||'Label')}</th>`:'')
+      +`<th>${esc(t('reports.date')||'Date')}</th><th>${esc(t('reports.col.in')||'Punch In')}</th><th>${esc(t('reports.col.out')||'Punch Out')}</th><th class="num">${esc(t('reports.col.reg')||'Reg Hours')}</th><th class="num">${esc(t('reports.col.ot')||'OT Hours')}</th>`;
+  }
   const totalH=allRows.filter(r=>r.isSiteTotal).reduce((s,r)=>s+(r.hours??0),0)||
     allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
   const doneRows=dataRows.filter(r=>r.hours!==null);
@@ -11868,6 +11940,7 @@ async function generateReport(){
     return mcard(
       esc(r.empName||'') + (r.isManual?' <span class="manual-badge">MANUAL</span>':'') + (r.isPaidBreak?' <span class="break-badge">PAID BREAK</span>':''),
       [r.siteName!=='—' ? [t('admin.col.site')||'Site', esc(r.siteName)] : null,
+       r.labelId ? [t('labels.shiftField')||'Label', labelBadge({label_id:r.labelId})] : null,
        [t('reports.date')||'Date', r.date],
        [t('punch.in')||'In', `<span style="color:var(--green)">${r.punchIn}</span>`],
        [t('punch.out')||'Out', r.punchOut!=='—' ? `<span style="color:var(--red)">${r.punchOut}</span>` : '—'],
@@ -11879,18 +11952,18 @@ async function generateReport(){
 
   document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if(r.isSiteHeader)return`<tr style="background:rgba(79,142,247,.1)">
-      <td colspan="7" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
+      <td colspan="${7+LC}" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
         <svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}
       </td>
     </tr>`;
     if(r.isSiteTotal)return`<tr style="background:rgba(79,142,247,.04);border-top:2px solid rgba(79,142,247,.3)">
-      <td colspan="4" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px"><svg class="ic" style="margin-right:5px"><use href="#i-nav-reports"/></svg>${r.siteName} — Site Total</td>
+      <td colspan="${4+LC}" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px"><svg class="ic" style="margin-right:5px"><use href="#i-nav-reports"/></svg>${r.siteName} — Site Total</td>
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--accent)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.otHours>0?r.otHours.toFixed(2):''}</td>
     </tr>`;
     if(r.isSubtotal)return`<tr style="background:rgba(255,255,255,.02)">
-      <td colspan="4" style="font-weight:600;color:var(--text2);font-size:12px;padding:8px 15px;padding-left:28px">&#8627; ${r.subtotalLabel}</td>
+      <td colspan="${4+LC}" style="font-weight:600;color:var(--text2);font-size:12px;padding:8px 15px;padding-left:28px">&#8627; ${r.subtotalLabel}</td>
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px;color:var(--text2)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.trackOT&&r.otHours>0?r.otHours.toFixed(2):''}</td>
@@ -11901,6 +11974,7 @@ async function generateReport(){
     return`<tr ${r.trackOT&&r.otHours>0?'style="background:rgba(245,158,11,.04)"':''}>
       <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${r.empCode}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}${r.isPaidBreak?`<span class="break-badge">PAID BREAK</span>`:''}</td>
       <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}</span>`:''}</td>
+      ${LC?`<td>${labelBadge({label_id:r.labelId}).replace('margin-left:6px','')||''}</td>`:''}
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${r.punchIn}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">${r.punchOut!=='—'?r.punchOut:'<span style="color:var(--text3)">—</span>'}</td>
@@ -11939,6 +12013,20 @@ function exportReport(fmt){
     }
   }
 
+  // Labels: one extra column after Site, plus an "Hours by label" section, only when the report has labels.
+  const exLabel=id=>{const l=id?labelByIdAny(id):null;return l?l.name:'';};
+  if(_repShowLabel){
+    rows.forEach((row,i)=>row.splice(3,0,i<reportData.length&&!reportData[i].isSiteHeader&&!reportData[i].isSiteTotal&&!reportData[i].isSubtotal?exLabel(reportData[i].labelId):''));
+    headers.splice(3,0,'Label');
+    const blank=()=>new Array(headers.length).fill('');
+    rows.push(blank());
+    const hh=blank(); hh[0]=`=== ${(t('reports.hoursByLabel')||'Hours by label').toUpperCase()} ===`; rows.push(hh);
+    _reportLabelSummary.forEach(g=>{
+      const gr=blank(); gr[0]=g.name; gr[headers.length-2]=g.reg.toFixed(2); gr[headers.length-1]=g.ot>0?g.ot.toFixed(2):''; rows.push(gr);
+      Object.entries(g.emps).sort((a,b)=>b[1]-a[1]).forEach(([n])=>{ const ro=g.empsRO[n]; const er=blank(); er[0]='   '+n; er[headers.length-2]=ro.reg.toFixed(2); er[headers.length-1]=ro.ot>0?ro.ot.toFixed(2):''; rows.push(er); });
+    });
+  }
+
   if(fmt==='excel'){
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
@@ -11958,20 +12046,34 @@ function exportReport(fmt){
     doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(120);
     doc.text(`Company: ${coLabel}  |  Site: ${siteLabel}  |  ${startD} → ${endD}  |  ${new Date().toLocaleString()}`,14,22);
     doc.setTextColor(0);
+    const PL=_repShowLabel?1:0;
     doc.autoTable({
-      head:[['Employee','Site','Date','In','Out','Reg Hrs','OT Hrs']],
+      head:[['Employee','Site',...(PL?['Label']:[]),'Date','In','Out','Reg Hrs','OT Hrs']],
       body:reportData.map(r=>{
-        if(r.isSiteHeader)return[{content:`SITE: ${r.siteName}`,colSpan:7,styles:{fontStyle:'bold',fillColor:[30,50,100],textColor:[150,190,255]}}];
-        if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2),styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{fillColor:[238,242,255],textColor:[200,140,0]}}];
-        if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2),styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{textColor:[200,140,0]}}];
+        if(r.isSiteHeader)return[{content:`SITE: ${r.siteName}`,colSpan:7+PL,styles:{fontStyle:'bold',fillColor:[30,50,100],textColor:[150,190,255]}}];
+        if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5+PL,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2),styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{fillColor:[238,242,255],textColor:[200,140,0]}}];
+        if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5+PL,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2),styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{textColor:[200,140,0]}}];
         const reg=r.regHours!=null?r.regHours:r.hours;
-        return[r.empName+(r.isManual?' [M]':'')+(r.isPaidBreak?' [Break]':''),r.siteName!=='—'?r.siteName:'',r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
+        return[r.empName+(r.isManual?' [M]':'')+(r.isPaidBreak?' [Break]':''),r.siteName!=='—'?r.siteName:'',...(PL?[exLabel(r.labelId)]:[]),r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
       }),
       startY:27,styles:{fontSize:8,cellPadding:3},
       headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
       alternateRowStyles:{fillColor:[245,245,250]},
-      columnStyles:{5:{halign:'right'},6:{halign:'right'}},
+      columnStyles:{[5+PL]:{halign:'right'},[6+PL]:{halign:'right'}},
     });
+    if(PL&&_reportLabelSummary.length){
+      const lbBody=[];
+      _reportLabelSummary.forEach(g=>{
+        lbBody.push([{content:g.name,styles:{fontStyle:'bold'}},'',{content:g.reg.toFixed(2),styles:{fontStyle:'bold',halign:'right'}},{content:g.ot>0?g.ot.toFixed(2):'',styles:{fontStyle:'bold',halign:'right'}}]);
+        Object.entries(g.emps).sort((a,b)=>b[1]-a[1]).forEach(([n])=>{ const ro=g.empsRO[n]; lbBody.push(['','   '+n,{content:ro.reg.toFixed(2),styles:{halign:'right'}},{content:ro.ot>0?ro.ot.toFixed(2):'',styles:{halign:'right'}}]); });
+      });
+      doc.autoTable({
+        head:[[t('reports.hoursByLabel')||'Hours by label',t('reports.employeesCol')||'Employee','Reg Hrs','OT Hrs']],
+        body:lbBody,startY:doc.lastAutoTable.finalY+8,styles:{fontSize:8,cellPadding:3},
+        headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
+        columnStyles:{2:{halign:'right'},3:{halign:'right'}},
+      });
+    }
     doc.save(`time-report-${new Date().toLocaleDateString('en-CA')}.pdf`);
   }
 }
@@ -16557,7 +16659,7 @@ en:{
 'help.fixDesc':'Go to <strong>Activity</strong>, find the punch and click <em>Edit</em> to correct the time, or <em>Delete</em> to remove it. To add one that was never recorded, use <strong>+ Add Punch</strong>. If an employee reported the problem themselves, their request appears at the top of the page with <em>Approve</em>, <em>Edit + Approve</em> and <em>Deny</em> buttons. Every correction is written to the audit log with your name on it.',
 'help.toTitle':'Time off requests',
 'help.toDesc':'The <strong>Time Off</strong> page lists vacation, sick days and other absences. Employees with portal access request time off themselves and it lands here as <em>Pending</em>; you can also add an absence directly. Approved time off shows on the schedule and is listed at the bottom of payroll reports, so hours and absences line up for the same period.',
-'help.schedTitle':'Build a schedule','help.labelsTitle':"Work labels: schedule people for specific tasks, jobs or projects",'help.labelsDesc':"<strong>Work labels</strong> let you say <em>what</em> a shift is for: snow removal, a client job, a project, a task your business tracks. They are part of the Scheduling add-on, and the names are entirely yours.<br><br><strong>Set up</strong><ol><li>Open <strong>Schedule</strong> and click <strong>Create labels</strong> (or <strong>Manage labels</strong> once you have some) above the grid.</li><li>Type a name (for example <em>Snow removal</em>), pick a colour and click <strong>Add label</strong>. Repeat for each kind of work.</li></ol><strong>Use it</strong><ol><li>Click <em>+</em> in a cell, or click an existing shift, and choose the <strong>Label</strong>.</li><li>A day with two kinds of work? Add a second shift for the same person and day with a different label (8:00 to 12:00 Snow removal, 13:00 to 17:00 Transport).</li><li>Use <strong>Also apply this shift to</strong> (other days) and <strong>Also assign this shift to</strong> (other employees) to give the same labelled shift to several days and people in one save.</li><li>Click a label above the grid to see only those shifts. The Hours column then shows the scheduled hours for that label alone. Click <strong>All</strong> to come back.</li></ol><strong>At clock-in (optional)</strong><ol><li>Open <strong>Sites</strong>, edit your company and set <strong>Work labels at clock-in</strong> to <em>Ask, but allow skipping</em> or <em>Required</em>. It is <em>Off</em> by default.</li><li>From then on, after entering their PIN to clock IN, employees pick what they are working on. If they have a shift today with a label, that label is highlighted as <em>Scheduled</em>.</li><li>Changing tasks mid-shift? They select their name and tap <strong>Switch task</strong>, enter their PIN and pick the new task. Their hours carry on without a gap and the Activity page shows a <em>Switch</em> tag.</li><li>Coming back from a break returns them to the same task automatically.</li><li>On the <strong>Activity</strong> page each IN shows its label, and you can filter by label. Editing a punch or adding a missed one lets you set the label too.</li></ol><strong>Good to know</strong><ul><li>The clock-in picker only appears on a kiosk when the setting above is on, and only shows your active labels.</li><li>Employees see the label on their shifts in the Employee Portal and in the schedule email.</li><li><strong>Archive</strong> a label you no longer use: it leaves the picker but stays on past shifts. <strong>Delete</strong> removes it; shifts that used it keep their hours but lose the label.</li><li>A label is not the same as an employee's <em>Department</em>. A department says who someone is (one per person). A label says what a particular shift is for, so one person can do different work on different days or hours.</li><li>Owners and admins create and edit labels. Site managers can use them when scheduling.</li></ul>",
+'help.schedTitle':'Build a schedule','help.labelsTitle':"Work labels: schedule people for specific tasks, jobs or projects",'help.labelsDesc':"<strong>Work labels</strong> let you say <em>what</em> a shift is for: snow removal, a client job, a project, a task your business tracks. They are part of the Scheduling add-on, and the names are entirely yours.<br><br><strong>Set up</strong><ol><li>Open <strong>Schedule</strong> and click <strong>Create labels</strong> (or <strong>Manage labels</strong> once you have some) above the grid.</li><li>Type a name (for example <em>Snow removal</em>), pick a colour and click <strong>Add label</strong>. Repeat for each kind of work.</li></ol><strong>Use it</strong><ol><li>Click <em>+</em> in a cell, or click an existing shift, and choose the <strong>Label</strong>.</li><li>A day with two kinds of work? Add a second shift for the same person and day with a different label (8:00 to 12:00 Snow removal, 13:00 to 17:00 Transport).</li><li>Use <strong>Also apply this shift to</strong> (other days) and <strong>Also assign this shift to</strong> (other employees) to give the same labelled shift to several days and people in one save.</li><li>Click a label above the grid to see only those shifts. The Hours column then shows the scheduled hours for that label alone. Click <strong>All</strong> to come back.</li></ol><strong>At clock-in (optional)</strong><ol><li>Open <strong>Sites</strong>, edit your company and set <strong>Work labels at clock-in</strong> to <em>Ask, but allow skipping</em> or <em>Required</em>. It is <em>Off</em> by default.</li><li>From then on, after entering their PIN to clock IN, employees pick what they are working on. If they have a shift today with a label, that label is highlighted as <em>Scheduled</em>.</li><li>Changing tasks mid-shift? They select their name and tap <strong>Switch task</strong>, enter their PIN and pick the new task. Their hours carry on without a gap and the Activity page shows a <em>Switch</em> tag.</li><li>Coming back from a break returns them to the same task automatically.</li><li>On the <strong>Activity</strong> page each IN shows its label, and you can filter by label. Editing a punch or adding a missed one lets you set the label too.</li></ol><strong>In Reports</strong><ul><li>Once punches carry labels, <strong>Reports</strong> gets a <strong>Label</strong> filter, a Label column, and an <strong>Hours by label</strong> table showing the hours each label received and who worked them. Export to PDF, Excel or CSV includes both.</li><li>Hours are counted from the IN punch that started the work. Filtering by a label never changes which hours count as overtime: overtime is still worked out from everything the person worked that week.</li><li>Time worked before you turned labels on shows as <em>No label</em>.</li></ul><strong>Good to know</strong><ul><li>The clock-in picker only appears on a kiosk when the setting above is on, and only shows your active labels.</li><li>Employees see the label on their shifts in the Employee Portal and in the schedule email.</li><li><strong>Archive</strong> a label you no longer use: it leaves the picker but stays on past shifts. <strong>Delete</strong> removes it; shifts that used it keep their hours but lose the label.</li><li>A label is not the same as an employee's <em>Department</em>. A department says who someone is (one per person). A label says what a particular shift is for, so one person can do different work on different days or hours.</li><li>Owners and admins create and edit labels. Site managers can use them when scheduling.</li></ul>",
 'help.schedDesc':"<strong>Schedule</strong> shows one week at a time, employees down the side and days across the top. Click a <em>+</em> in any cell to add a shift, or click a shift to edit it. The grid flags conflicts for you — it marks days an employee said they are unavailable, and shows approved time off before you assign anything. Most weeks repeat: use <strong>↺ Copy last week</strong> next to a single employee's row to copy just their shifts forward, or the toolbar's <strong>Copy last week (all)</strong> to copy the whole roster's shifts into the current week in one click — days that already have a shift are left untouched. When adding a shift you can also give it to other days and other employees in the same save (<strong>Also apply this shift to</strong> and <strong>Also assign this shift to</strong>); anyone already scheduled or off that day is skipped. <strong>Clear week</strong> on an employee's row removes all of their shifts for the week on screen, after a confirmation. If you have site managers, they only see and schedule the staff at their own sites; to let them plan staff from every site, turn on <strong>Managers can schedule staff from all sites</strong> in the company's settings. To say what each shift is for (a task, job or project), see <strong>Work labels</strong>. Scheduling is a paid add-on ($14.95/mo on any paid plan).",
 'help.portalTitle':'Give an employee access to their own hours',
 'help.portalDesc':'The employee portal lets staff check their own punches, hours and schedule, and request time off — without an admin doing it for them. Open <strong>Admin → Employees</strong>, edit the employee, turn on email and enter their address, then use <em>Send Invitation</em>. They set their own password from the emailed link. You can resend or revoke access from the same place at any time.',
@@ -16673,7 +16775,7 @@ en:{
 'faq.q26':'Can visitors sign in and out, not just employees?',
 'faq.a26':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Enable Visitor Check-In</strong> in Company Info, and every clock-in screen gets a <strong>Visitor Check In</strong> button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a "currently in the building" list. It\'s useful for front-desk sign-in and for knowing exactly who\'s on-site in an emergency, alongside your staff.',
 'faq.q28':"Can I schedule my team for specific tasks, jobs or projects?",
-'faq.a28':"Yes. With the Scheduling add-on you create your own labels — a task, a job, a project, a client, whatever you track — and put one on each shift. Filter the schedule by label to see who is doing what and how many hours are planned for each. One person can have several shifts in a day with different labels (for example snow removal in the morning, transport in the afternoon). Employees see the label on their shifts in their portal and in the schedule email. You can also have employees pick what they are working on when they clock in, switch tasks during a shift, and filter the Activity page by label. Labels are available on paid plans with the Scheduling add-on ($14.95/month).",
+'faq.a28':"Yes. With the Scheduling add-on you create your own labels — a task, a job, a project, a client, whatever you track — and put one on each shift. Filter the schedule by label to see who is doing what and how many hours are planned for each. One person can have several shifts in a day with different labels (for example snow removal in the morning, transport in the afternoon). Employees see the label on their shifts in their portal and in the schedule email. You can also have employees pick what they are working on when they clock in, switch tasks during a shift, filter the Activity page by label, and get hours per label in Reports. Labels are available on paid plans with the Scheduling add-on ($14.95/month).",
 'faq.q27':'We have remote or field staff with no shared location — can they still punch in?',
 'faq.a27':'Yes, on <strong>every plan</strong>. Turn on <strong>Allow Remote Clock-In</strong> in Company Info, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. It works with no GPS setup at all; if you later add a geofenced site, remote punches from that site are still checked against it.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
@@ -16808,7 +16910,7 @@ en:{
 'sched.sendEmail':'Send schedule',
 'sched.sendConfirm':'Send {name}\'s schedule for this week to {email}?',
 'sched.addEmail':'+ Add email',
-'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.','labels.title':"Work labels",'labels.intro':"Labels say what kind of work a shift is for: a task, a job, a project, a client. Create the ones your business uses, then pick one when you add a shift. You can filter the schedule by label to see who is doing what.",'labels.namePh':"e.g. Snow removal",'labels.add':"Add label",'labels.empty':"No labels yet. Add your first one below.",'labels.archive':"Archive",'labels.restore':"Restore",'labels.delete':"Delete",'labels.deleteConfirm':"Delete the label \"{name}\"? Shifts that use it keep their hours but lose the label. To keep it on past shifts and just stop using it, archive it instead.",'labels.dupName':"You already have a label with that name.",'labels.nameRequired':"Give the label a name.",'labels.needAddon':"Work labels are part of the Scheduling add-on.",'labels.manage':"Manage labels",'labels.barHint':"Labels let you schedule people for specific tasks, jobs or projects.",'labels.createFirst':"Create labels",'labels.all':"All",'labels.none':"No label",'labels.shiftField':"Label",'labels.optional':"(optional)",'labels.noneOption':"— No label —",'labels.noMatch':"No shifts with this label this week.",'labels.archivedTag':"(archived)",'plabel.title':"What are you working on?",'plabel.switchTitle':"Switch to which task?",'plabel.skip':"Skip",'plabel.scheduled':"Scheduled",'plabel.cancelled':"Clock-in cancelled. Please try again.",'plabel.switchCancelled':"Task not switched.",'plabel.notIn':"needs to be clocked IN to switch task.",'plabel.switchBtn':"Switch task",'plabel.pinSwitch':"Enter PIN to switch task",'plabel.switchedTo':"switched to",'plabel.switchFailed':"The switch did not finish and {name} is now clocked OUT. Please clock IN again.",'activity.switch':"SWITCH",'labels.allLabels':"All labels",'modal.labelsAtPunch':"Work labels at clock-in",'modal.labelsOff':"Off",'modal.labelsOptional':"Ask, but allow skipping",'modal.labelsRequired':"Required",'modal.labelsAtPunchDesc':"When on, employees pick what they are working on after entering their PIN, and a Switch task button lets them change tasks mid-shift. Create the labels from the Schedule page.",'sched.assignToEmployees':"Also assign this shift to",'sched.allEmployees':"Everyone",'sched.copyEmpDone':"Also scheduled {n} shift(s) for {e} other employee(s).",'sched.copyEmpSkipped':"{k} skipped (already scheduled or off that day).",
+'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.','labels.title':"Work labels",'labels.intro':"Labels say what kind of work a shift is for: a task, a job, a project, a client. Create the ones your business uses, then pick one when you add a shift. You can filter the schedule by label to see who is doing what.",'labels.namePh':"e.g. Snow removal",'labels.add':"Add label",'labels.empty':"No labels yet. Add your first one below.",'labels.archive':"Archive",'labels.restore':"Restore",'labels.delete':"Delete",'labels.deleteConfirm':"Delete the label \"{name}\"? Shifts that use it keep their hours but lose the label. To keep it on past shifts and just stop using it, archive it instead.",'labels.dupName':"You already have a label with that name.",'labels.nameRequired':"Give the label a name.",'labels.needAddon':"Work labels are part of the Scheduling add-on.",'labels.manage':"Manage labels",'labels.barHint':"Labels let you schedule people for specific tasks, jobs or projects.",'labels.createFirst':"Create labels",'labels.all':"All",'labels.none':"No label",'labels.shiftField':"Label",'labels.optional':"(optional)",'labels.noneOption':"— No label —",'labels.noMatch':"No shifts with this label this week.",'labels.archivedTag':"(archived)",'reports.hoursByLabel':"Hours by label",'reports.employeesCol':"Employees",'reports.col.employee':"Employee",'reports.col.in':"Punch In",'reports.col.out':"Punch Out",'reports.total':"Total",'labels.deleted':"(deleted label)",'plabel.title':"What are you working on?",'plabel.switchTitle':"Switch to which task?",'plabel.skip':"Skip",'plabel.scheduled':"Scheduled",'plabel.cancelled':"Clock-in cancelled. Please try again.",'plabel.switchCancelled':"Task not switched.",'plabel.notIn':"needs to be clocked IN to switch task.",'plabel.switchBtn':"Switch task",'plabel.pinSwitch':"Enter PIN to switch task",'plabel.switchedTo':"switched to",'plabel.switchFailed':"The switch did not finish and {name} is now clocked OUT. Please clock IN again.",'activity.switch':"SWITCH",'labels.allLabels':"All labels",'modal.labelsAtPunch':"Work labels at clock-in",'modal.labelsOff':"Off",'modal.labelsOptional':"Ask, but allow skipping",'modal.labelsRequired':"Required",'modal.labelsAtPunchDesc':"When on, employees pick what they are working on after entering their PIN, and a Switch task button lets them change tasks mid-shift. Create the labels from the Schedule page.",'sched.assignToEmployees':"Also assign this shift to",'sched.allEmployees':"Everyone",'sched.copyEmpDone':"Also scheduled {n} shift(s) for {e} other employee(s).",'sched.copyEmpSkipped':"{k} skipped (already scheduled or off that day).",
 'sched.copyLastWeekTitle':'Copy this person\'s shifts from last week into this week',
 'sched.copyNone':'{name} had no shifts last week to copy.',
 'sched.copyMixed':'Copied {n} shift(s) for {name}; {k} day(s) already had one and were left as-is.',
@@ -17466,7 +17568,7 @@ fr:{
 'help.fixDesc':'Allez dans <strong>Activité</strong>, trouvez le pointage et cliquez sur <em>Modifier</em> pour corriger l\'heure, ou <em>Supprimer</em> pour l\'effacer. Pour en ajouter un qui n\'a jamais été enregistré, utilisez <strong>+ Ajouter un pointage</strong>. Si l\'employé a signalé le problème lui-même, sa demande apparaît en haut de la page avec les boutons <em>Approuver</em>, <em>Modifier + Approuver</em> et <em>Refuser</em>. Chaque correction est inscrite au journal d\'audit à votre nom.',
 'help.toTitle':'Demandes de congé',
 'help.toDesc':'La page <strong>Congés</strong> regroupe les vacances, les congés de maladie et autres absences. Les employés ayant accès au portail font leurs demandes eux-mêmes et celles-ci arrivent ici avec le statut <em>En attente</em>; vous pouvez aussi ajouter une absence directement. Les congés approuvés apparaissent dans l\'horaire et au bas des rapports de paie, pour que les heures et les absences concordent sur la même période.',
-'help.schedTitle':'Créer un horaire','help.labelsTitle':"Étiquettes de travail : planifier des personnes pour des tâches, chantiers ou projets précis",'help.labelsDesc':"Les <strong>étiquettes de travail</strong> indiquent <em>à quoi sert</em> un quart : déneigement, un chantier client, un projet, une tâche que votre entreprise veut suivre. Elles font partie du module complémentaire Horaires, et les noms sont entièrement les vôtres.<br><br><strong>Configuration</strong><ol><li>Ouvrez <strong>Horaires</strong> et cliquez sur <strong>Créer des étiquettes</strong> (ou <strong>Gérer les étiquettes</strong> une fois que vous en avez) au-dessus de la grille.</li><li>Saisissez un nom (par exemple <em>Déneigement</em>), choisissez une couleur et cliquez sur <strong>Ajouter une étiquette</strong>. Répétez pour chaque type de travail.</li></ol><strong>Utilisation</strong><ol><li>Cliquez sur <em>+</em> dans une case, ou sur un quart existant, et choisissez l'<strong>Étiquette</strong>.</li><li>Une journée avec deux types de travail? Ajoutez un deuxième quart pour la même personne et le même jour avec une autre étiquette (8 h à 12 h Déneigement, 13 h à 17 h Transport).</li><li>Servez-vous de <strong>Appliquer aussi ce quart à</strong> (autres jours) et <strong>Assigner aussi ce quart à</strong> (autres employés) pour donner le même quart étiqueté à plusieurs jours et personnes en un seul enregistrement.</li><li>Cliquez sur une étiquette au-dessus de la grille pour n'afficher que ces quarts. La colonne Heures montre alors seulement les heures planifiées pour cette étiquette. Cliquez sur <strong>Toutes</strong> pour revenir.</li></ol><strong>Au pointage (facultatif)</strong><ol><li>Ouvrez <strong>Sites</strong>, modifiez votre entreprise et réglez <strong>Étiquettes de travail au pointage</strong> à <em>Demander, mais permettre de passer</em> ou <em>Obligatoire</em>. C'est <em>Désactivé</em> par défaut.</li><li>Dès lors, après avoir entré leur NIP pour pointer leur entrée, les employés choisissent sur quoi ils travaillent. S'ils ont un quart étiqueté aujourd'hui, cette étiquette est mise en évidence comme <em>Prévu</em>.</li><li>Changement de tâche en cours de quart? Ils sélectionnent leur nom et touchent <strong>Changer de tâche</strong>, entrent leur NIP et choisissent la nouvelle tâche. Leurs heures se poursuivent sans interruption et la page Activité affiche une pastille <em>Changement</em>.</li><li>Au retour d'une pause, ils reprennent automatiquement la même tâche.</li><li>Sur la page <strong>Activité</strong>, chaque entrée affiche son étiquette et vous pouvez filtrer par étiquette. En modifiant un pointage ou en ajoutant un pointage oublié, vous pouvez aussi définir l'étiquette.</li></ol><strong>Bon à savoir</strong><ul><li>Le choix au pointage n'apparaît sur une borne que si le réglage ci-dessus est activé, et il n'affiche que vos étiquettes actives.</li><li>Les employés voient l'étiquette sur leurs quarts dans le portail employé et dans le courriel d'horaire.</li><li><strong>Archivez</strong> une étiquette que vous n'utilisez plus : elle disparaît du choix mais reste sur les quarts passés. <strong>Supprimer</strong> la retire; les quarts qui l'utilisaient conservent leurs heures mais perdent l'étiquette.</li><li>Une étiquette n'est pas la même chose que le <em>Département</em> d'un employé. Un département dit qui est la personne (un seul par personne). Une étiquette dit à quoi sert un quart précis, donc une même personne peut faire un travail différent selon les jours ou les heures.</li><li>Les propriétaires et les administrateurs créent et modifient les étiquettes. Les gestionnaires de site peuvent les utiliser en planifiant.</li></ul>",
+'help.schedTitle':'Créer un horaire','help.labelsTitle':"Étiquettes de travail : planifier des personnes pour des tâches, chantiers ou projets précis",'help.labelsDesc':"Les <strong>étiquettes de travail</strong> indiquent <em>à quoi sert</em> un quart : déneigement, un chantier client, un projet, une tâche que votre entreprise veut suivre. Elles font partie du module complémentaire Horaires, et les noms sont entièrement les vôtres.<br><br><strong>Configuration</strong><ol><li>Ouvrez <strong>Horaires</strong> et cliquez sur <strong>Créer des étiquettes</strong> (ou <strong>Gérer les étiquettes</strong> une fois que vous en avez) au-dessus de la grille.</li><li>Saisissez un nom (par exemple <em>Déneigement</em>), choisissez une couleur et cliquez sur <strong>Ajouter une étiquette</strong>. Répétez pour chaque type de travail.</li></ol><strong>Utilisation</strong><ol><li>Cliquez sur <em>+</em> dans une case, ou sur un quart existant, et choisissez l'<strong>Étiquette</strong>.</li><li>Une journée avec deux types de travail? Ajoutez un deuxième quart pour la même personne et le même jour avec une autre étiquette (8 h à 12 h Déneigement, 13 h à 17 h Transport).</li><li>Servez-vous de <strong>Appliquer aussi ce quart à</strong> (autres jours) et <strong>Assigner aussi ce quart à</strong> (autres employés) pour donner le même quart étiqueté à plusieurs jours et personnes en un seul enregistrement.</li><li>Cliquez sur une étiquette au-dessus de la grille pour n'afficher que ces quarts. La colonne Heures montre alors seulement les heures planifiées pour cette étiquette. Cliquez sur <strong>Toutes</strong> pour revenir.</li></ol><strong>Au pointage (facultatif)</strong><ol><li>Ouvrez <strong>Sites</strong>, modifiez votre entreprise et réglez <strong>Étiquettes de travail au pointage</strong> à <em>Demander, mais permettre de passer</em> ou <em>Obligatoire</em>. C'est <em>Désactivé</em> par défaut.</li><li>Dès lors, après avoir entré leur NIP pour pointer leur entrée, les employés choisissent sur quoi ils travaillent. S'ils ont un quart étiqueté aujourd'hui, cette étiquette est mise en évidence comme <em>Prévu</em>.</li><li>Changement de tâche en cours de quart? Ils sélectionnent leur nom et touchent <strong>Changer de tâche</strong>, entrent leur NIP et choisissent la nouvelle tâche. Leurs heures se poursuivent sans interruption et la page Activité affiche une pastille <em>Changement</em>.</li><li>Au retour d'une pause, ils reprennent automatiquement la même tâche.</li><li>Sur la page <strong>Activité</strong>, chaque entrée affiche son étiquette et vous pouvez filtrer par étiquette. En modifiant un pointage ou en ajoutant un pointage oublié, vous pouvez aussi définir l'étiquette.</li></ol><strong>Dans les rapports</strong><ul><li>Une fois que des pointages portent des étiquettes, <strong>Rapports</strong> offre un filtre <strong>Étiquette</strong>, une colonne Étiquette et un tableau <strong>Heures par étiquette</strong> qui montre les heures de chaque étiquette et qui les a travaillées. L'exportation PDF, Excel ou CSV inclut les deux.</li><li>Les heures sont comptées à partir du pointage d'entrée qui a commencé le travail. Filtrer par étiquette ne change jamais quelles heures comptent comme du temps supplémentaire : celui-ci est toujours calculé à partir de tout ce que la personne a travaillé dans la semaine.</li><li>Le temps travaillé avant l'activation des étiquettes apparaît comme <em>Sans étiquette</em>.</li></ul><strong>Bon à savoir</strong><ul><li>Le choix au pointage n'apparaît sur une borne que si le réglage ci-dessus est activé, et il n'affiche que vos étiquettes actives.</li><li>Les employés voient l'étiquette sur leurs quarts dans le portail employé et dans le courriel d'horaire.</li><li><strong>Archivez</strong> une étiquette que vous n'utilisez plus : elle disparaît du choix mais reste sur les quarts passés. <strong>Supprimer</strong> la retire; les quarts qui l'utilisaient conservent leurs heures mais perdent l'étiquette.</li><li>Une étiquette n'est pas la même chose que le <em>Département</em> d'un employé. Un département dit qui est la personne (un seul par personne). Une étiquette dit à quoi sert un quart précis, donc une même personne peut faire un travail différent selon les jours ou les heures.</li><li>Les propriétaires et les administrateurs créent et modifient les étiquettes. Les gestionnaires de site peuvent les utiliser en planifiant.</li></ul>",
 'help.schedDesc':"<strong>Horaires</strong> affiche une semaine à la fois : les employés en colonne, les jours en rangée. Cliquez sur un <em>+</em> dans une case pour ajouter un quart, ou sur un quart pour le modifier. La grille signale les conflits : elle indique les jours où un employé s'est déclaré non disponible et affiche les congés approuvés avant que vous n'assigniez quoi que ce soit. La plupart des semaines se répètent : utilisez <strong>↺ Copier la semaine dernière</strong> à côté de la rangée d'un employé pour copier seulement ses quarts, ou <strong>Copier la semaine dernière (tous)</strong> dans la barre d'outils pour copier les quarts de toute l'équipe dans la semaine actuelle en un clic — les jours qui ont déjà un quart ne sont pas touchés. En ajoutant un quart, vous pouvez aussi le donner à d'autres jours et à d'autres employés dans le même enregistrement (<strong>Appliquer aussi ce quart à</strong> et <strong>Assigner aussi ce quart à</strong>); toute personne déjà planifiée ou absente ce jour-là est ignorée. <strong>Vider la semaine</strong>, sur la rangée d'un employé, retire tous ses quarts de la semaine affichée, après confirmation. Si vous avez des gestionnaires de site, ils ne voient et ne planifient que le personnel de leurs propres sites; pour leur permettre de planifier le personnel de tous les sites, activez <strong>Les gestionnaires peuvent planifier le personnel de tous les sites</strong> dans les paramètres de l'entreprise. Pour indiquer à quoi sert chaque quart (une tâche, un chantier ou un projet), consultez les <strong>Étiquettes de travail</strong>. Les horaires sont un module complémentaire (14,95 $/mois sur tout forfait payant).",
 'help.portalTitle':'Donner à un employé l\'accès à ses heures',
 'help.portalDesc':'Le portail employé permet à votre personnel de consulter ses pointages, ses heures et son horaire, et de demander des congés — sans passer par un administrateur. Ouvrez <strong>Admin → Employés</strong>, modifiez l\'employé, activez le courriel et saisissez son adresse, puis utilisez <em>Envoyer l\'invitation</em>. Il choisit son mot de passe à partir du lien reçu. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès au même endroit.',
@@ -17582,7 +17684,7 @@ fr:{
 'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
 'faq.a26':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Activer le pointage visiteur</strong> dans Info compagnie, et chaque écran de pointage obtient un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur inscrit son nom complet, son entreprise, son téléphone et son courriel une seule fois, puis pointe sa sortie plus tard en choisissant son nom dans une liste des personnes « actuellement dans l\'immeuble ». Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en cas d\'urgence, en plus de votre personnel.',
 'faq.q28':"Puis-je planifier mon équipe pour des tâches, chantiers ou projets précis?",
-'faq.a28':"Oui. Avec le module complémentaire Horaires, vous créez vos propres étiquettes — une tâche, un chantier, un projet, un client, tout ce que vous suivez — et vous en mettez une sur chaque quart. Filtrez l'horaire par étiquette pour voir qui fait quoi et combien d'heures sont prévues pour chacune. Une même personne peut avoir plusieurs quarts dans une journée avec des étiquettes différentes (par exemple déneigement le matin, transport l'après-midi). Les employés voient l'étiquette sur leurs quarts dans leur portail et dans le courriel d'horaire. Vous pouvez aussi demander aux employés de choisir sur quoi ils travaillent en pointant leur entrée, de changer de tâche en cours de quart, et filtrer la page Activité par étiquette. Les étiquettes sont offertes avec les forfaits payants qui incluent le module Horaires (14,95 $/mois).",
+'faq.a28':"Oui. Avec le module complémentaire Horaires, vous créez vos propres étiquettes — une tâche, un chantier, un projet, un client, tout ce que vous suivez — et vous en mettez une sur chaque quart. Filtrez l'horaire par étiquette pour voir qui fait quoi et combien d'heures sont prévues pour chacune. Une même personne peut avoir plusieurs quarts dans une journée avec des étiquettes différentes (par exemple déneigement le matin, transport l'après-midi). Les employés voient l'étiquette sur leurs quarts dans leur portail et dans le courriel d'horaire. Vous pouvez aussi demander aux employés de choisir sur quoi ils travaillent en pointant leur entrée, de changer de tâche en cours de quart, filtrer la page Activité par étiquette et obtenir les heures par étiquette dans les rapports. Les étiquettes sont offertes avec les forfaits payants qui incluent le module Horaires (14,95 $/mois).",
 'faq.q27':'Nos employés travaillent à distance et n\'ont pas de lieu commun — peuvent-ils quand même pointer?',
 'faq.a27':'Oui, sur <strong>tous les forfaits</strong>. Activez <strong>Permettre le pointage à distance</strong> dans Info compagnie, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Ça fonctionne sans aucune configuration GPS; si vous ajoutez plus tard un site géorepéré, les pointages à distance de ce site sont quand même vérifiés par rapport à celui-ci.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
@@ -17721,7 +17823,7 @@ fr:{
 'sched.sendEmail':'Envoyer l\'horaire',
 'sched.sendConfirm':'Envoyer l\'horaire de {name} pour cette semaine à {email}?',
 'sched.addEmail':'+ Ajouter courriel',
-'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.','labels.title':"Étiquettes de travail",'labels.intro':"Les étiquettes précisent le type de travail d'un quart : une tâche, un chantier, un projet, un client. Créez celles qu'utilise votre entreprise, puis choisissez-en une en ajoutant un quart. Vous pouvez filtrer l'horaire par étiquette pour voir qui fait quoi.",'labels.namePh':"p. ex. Déneigement",'labels.add':"Ajouter une étiquette",'labels.empty':"Aucune étiquette pour l'instant. Ajoutez la première ci-dessous.",'labels.archive':"Archiver",'labels.restore':"Restaurer",'labels.delete':"Supprimer",'labels.deleteConfirm':"Supprimer l'étiquette « {name} » ? Les quarts qui l'utilisent conservent leurs heures mais perdent l'étiquette. Pour la garder sur les quarts passés sans l'utiliser davantage, archivez-la plutôt.",'labels.dupName':"Vous avez déjà une étiquette portant ce nom.",'labels.nameRequired':"Donnez un nom à l'étiquette.",'labels.needAddon':"Les étiquettes de travail font partie de l'option Horaire.",'labels.manage':"Gérer les étiquettes",'labels.barHint':"Les étiquettes permettent de planifier des personnes pour des tâches, chantiers ou projets précis.",'labels.createFirst':"Créer des étiquettes",'labels.all':"Toutes",'labels.none':"Sans étiquette",'labels.shiftField':"Étiquette",'labels.optional':"(facultatif)",'labels.noneOption':"— Aucune étiquette —",'labels.noMatch':"Aucun quart avec cette étiquette cette semaine.",'labels.archivedTag':"(archivée)",'plabel.title':"Sur quoi travaillez-vous?",'plabel.switchTitle':"Passer à quelle tâche?",'plabel.skip':"Passer",'plabel.scheduled':"Prévu",'plabel.cancelled':"Pointage annulé. Veuillez réessayer.",'plabel.switchCancelled':"Tâche non changée.",'plabel.notIn':"doit être pointé(e) en entrée pour changer de tâche.",'plabel.switchBtn':"Changer de tâche",'plabel.pinSwitch':"Entrez votre NIP pour changer de tâche",'plabel.switchedTo':"est passé(e) à",'plabel.switchFailed':"Le changement n'a pas abouti et {name} est maintenant pointé(e) en sortie. Veuillez pointer l'entrée de nouveau.",'activity.switch':"CHANGEMENT",'labels.allLabels':"Toutes les étiquettes",'modal.labelsAtPunch':"Étiquettes de travail au pointage",'modal.labelsOff':"Désactivé",'modal.labelsOptional':"Demander, mais permettre de passer",'modal.labelsRequired':"Obligatoire",'modal.labelsAtPunchDesc':"Lorsque activé, les employés choisissent sur quoi ils travaillent après avoir entré leur NIP, et un bouton Changer de tâche leur permet de changer de tâche en cours de quart. Créez les étiquettes depuis la page Horaires.",'sched.assignToEmployees':"Assigner aussi ce quart à",'sched.allEmployees':"Tout le monde",'sched.copyEmpDone':"{n} quart(s) aussi planifié(s) pour {e} autre(s) employé(s).",'sched.copyEmpSkipped':"{k} ignoré(s) (déjà planifié ou absent ce jour-là).",
+'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.','labels.title':"Étiquettes de travail",'labels.intro':"Les étiquettes précisent le type de travail d'un quart : une tâche, un chantier, un projet, un client. Créez celles qu'utilise votre entreprise, puis choisissez-en une en ajoutant un quart. Vous pouvez filtrer l'horaire par étiquette pour voir qui fait quoi.",'labels.namePh':"p. ex. Déneigement",'labels.add':"Ajouter une étiquette",'labels.empty':"Aucune étiquette pour l'instant. Ajoutez la première ci-dessous.",'labels.archive':"Archiver",'labels.restore':"Restaurer",'labels.delete':"Supprimer",'labels.deleteConfirm':"Supprimer l'étiquette « {name} » ? Les quarts qui l'utilisent conservent leurs heures mais perdent l'étiquette. Pour la garder sur les quarts passés sans l'utiliser davantage, archivez-la plutôt.",'labels.dupName':"Vous avez déjà une étiquette portant ce nom.",'labels.nameRequired':"Donnez un nom à l'étiquette.",'labels.needAddon':"Les étiquettes de travail font partie de l'option Horaire.",'labels.manage':"Gérer les étiquettes",'labels.barHint':"Les étiquettes permettent de planifier des personnes pour des tâches, chantiers ou projets précis.",'labels.createFirst':"Créer des étiquettes",'labels.all':"Toutes",'labels.none':"Sans étiquette",'labels.shiftField':"Étiquette",'labels.optional':"(facultatif)",'labels.noneOption':"— Aucune étiquette —",'labels.noMatch':"Aucun quart avec cette étiquette cette semaine.",'labels.archivedTag':"(archivée)",'reports.hoursByLabel':"Heures par étiquette",'reports.employeesCol':"Employés",'reports.col.employee':"Employé",'reports.col.in':"Entrée",'reports.col.out':"Sortie",'reports.total':"Total",'labels.deleted':"(étiquette supprimée)",'plabel.title':"Sur quoi travaillez-vous?",'plabel.switchTitle':"Passer à quelle tâche?",'plabel.skip':"Passer",'plabel.scheduled':"Prévu",'plabel.cancelled':"Pointage annulé. Veuillez réessayer.",'plabel.switchCancelled':"Tâche non changée.",'plabel.notIn':"doit être pointé(e) en entrée pour changer de tâche.",'plabel.switchBtn':"Changer de tâche",'plabel.pinSwitch':"Entrez votre NIP pour changer de tâche",'plabel.switchedTo':"est passé(e) à",'plabel.switchFailed':"Le changement n'a pas abouti et {name} est maintenant pointé(e) en sortie. Veuillez pointer l'entrée de nouveau.",'activity.switch':"CHANGEMENT",'labels.allLabels':"Toutes les étiquettes",'modal.labelsAtPunch':"Étiquettes de travail au pointage",'modal.labelsOff':"Désactivé",'modal.labelsOptional':"Demander, mais permettre de passer",'modal.labelsRequired':"Obligatoire",'modal.labelsAtPunchDesc':"Lorsque activé, les employés choisissent sur quoi ils travaillent après avoir entré leur NIP, et un bouton Changer de tâche leur permet de changer de tâche en cours de quart. Créez les étiquettes depuis la page Horaires.",'sched.assignToEmployees':"Assigner aussi ce quart à",'sched.allEmployees':"Tout le monde",'sched.copyEmpDone':"{n} quart(s) aussi planifié(s) pour {e} autre(s) employé(s).",'sched.copyEmpSkipped':"{k} ignoré(s) (déjà planifié ou absent ce jour-là).",
 'sched.copyLastWeekTitle':'Copier les quarts de cette personne de la semaine dernière vers cette semaine',
 'sched.copyNone':'{name} n\'avait aucun quart la semaine dernière à copier.',
 'sched.copyMixed':'{n} quart(s) copié(s) pour {name}; {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
