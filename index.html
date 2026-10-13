@@ -2781,6 +2781,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <select id="reportPeriod" onchange="updateDateRange()">
         <option value="last_period" selected data-i18n="reports.lastPeriod">Last Payroll Period</option>
         <option value="current_period" data-i18n="reports.currentPeriod">Current Period</option>
+        <option value="pay_period" hidden data-i18n="reports.payPeriod">Pay period</option>
         <option value="week" data-i18n="reports.thisWeek">This Week</option>
         <option value="biweek" data-i18n="reports.biweekly">Bi-Weekly</option>
         <option value="month" data-i18n="reports.thisMonth">This Month</option>
@@ -2796,9 +2797,10 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="btn-primary" onclick="withBusy(this,generateReport)" data-i18n="reports.generate">Generate</button>
     </div>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="setReportPeriod('last_period')" data-i18n="reports.btnLastPeriod">← Last Period</button>
-    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="setReportPeriod('current_period')" data-i18n="reports.btnCurrentPeriod">Current Period →</button>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="stepReportPeriod(-1)" data-i18n="reports.btnPrevPeriod">← Previous Period</button>
+    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="stepReportPeriod(1)" data-i18n="reports.btnNextPeriod">Next Period →</button>
+    <button class="btn-secondary" style="font-size:12px;padding:6px 14px" onclick="stepReportPeriod(0)" data-i18n="reports.btnCurPeriod">Current Period</button>
   </div>
   <div class="card" style="margin-bottom:var(--s5)">
     <p style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px" data-i18n="reports.selectEmployees">Select Employees</p>
@@ -3012,8 +3014,15 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><label data-i18n="common.company">Company</label><select id="actCoFilter" onchange="onActCoChange()"><option value="all" data-i18n="common.allCompanies">All Companies</option></select></div>
     <div><label data-i18n="admin.site">Site</label><select id="actSiteFilter" onchange="loadActivityPage()"><option value="all" data-i18n="admin.allSites">All Sites</option></select></div>
     <div><label data-i18n="activity.employeeFilter">Employee</label><select id="actEmpFilter" onchange="loadActivityPage()"><option value="all" data-i18n="common.allEmployees">All Employees</option></select></div>
-    <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="actStart"></div>
-    <div><label data-i18n="common.endDate">End Date</label><input type="date" id="actEnd"></div>
+    <div><label data-i18n="reports.payPeriod">Pay period</label>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button type="button" class="btn-secondary" style="width:auto;padding:8px 11px" onclick="stepActPeriod(-1)" data-i18n-title="activity.prevPeriod" title="Previous period">&lsaquo;</button>
+        <select id="actPeriod" onchange="onActPeriodChange()" style="min-width:175px;flex:1"></select>
+        <button type="button" class="btn-secondary" style="width:auto;padding:8px 11px" onclick="stepActPeriod(1)" data-i18n-title="activity.nextPeriod" title="Next period">&rsaquo;</button>
+      </div>
+    </div>
+    <div><label data-i18n="common.startDate">Start Date</label><input type="date" id="actStart" onchange="actDatesEdited()"></div>
+    <div><label data-i18n="common.endDate">End Date</label><input type="date" id="actEnd" onchange="actDatesEdited()"></div>
     <div class="filter-action">
       <button class="btn-primary" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
     </div>
@@ -11157,7 +11166,7 @@ async function loadReportsPage(){
   applyAllTranslations();
   // Re-translate period dropdown options (browser ignores data-i18n on <option> in some cases)
   var pOpts=[
-    ['last_period','reports.lastPeriod'],['current_period','reports.currentPeriod'],
+    ['last_period','reports.lastPeriod'],['current_period','reports.currentPeriod'],['pay_period','reports.payPeriod'],
     ['week','reports.thisWeek'],['biweek','reports.biweekly'],['month','reports.thisMonth'],
     ['quarter','reports.thisQuarter'],['6months','reports.last6'],['year','reports.thisYear'],['custom','reports.custom']
   ];
@@ -11234,9 +11243,56 @@ function getPayrollPeriods(co){
   return{lastStart:new Date(curStart2.getTime()-14*ms),lastEnd:new Date(curStart2.getTime()-ms),curStart:curStart2,curEnd:new Date(today)};
 }
 
-function setReportPeriod(val){
-  document.getElementById('reportPeriod').value=val;
+// The payroll period `offset` periods from the current one: 0 = current, -1 = previous, -2 = the one
+// before that, and so on. The current period is cut off at today; earlier ones run their full
+// length. Dates are built with calendar arithmetic (not milliseconds) so a daylight-saving change
+// can't shift a boundary by a day. Mirrors getPayrollPeriods for the same company settings.
+function getPayrollPeriodAt(co,offset){
+  const today=new Date();today.setHours(0,0,0,0);
+  const freq=co?.payroll_frequency||'biweekly';
+  const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+  let start,end;
+  if(freq==='monthly'){
+    const y=today.getFullYear(),m=today.getMonth()+offset;
+    start=new Date(y,m,1);end=new Date(y,m+1,0);
+  }else{
+    let len,curStart;
+    if(freq==='weekly'){
+      len=7;
+      const sd=co?.week_start==='sunday'?0:1;
+      curStart=addDays(today,-((today.getDay()-sd+7)%7));
+    }else if(co?.payroll_anchor_date){
+      len=14;
+      const anchor=new Date(co.payroll_anchor_date+'T00:00:00');
+      const days=Math.round((today-anchor)/86400000);
+      curStart=addDays(anchor,Math.floor(days/14)*14);
+    }else{
+      len=14;
+      const sd=co?.week_start==='sunday'?0:1;
+      curStart=addDays(today,-((today.getDay()-sd+7)%7));
+    }
+    start=addDays(curStart,offset*len);end=addDays(start,len-1);
+  }
+  if(offset===0)end=new Date(today);
+  return{start,end};
+}
+
+// Reports: the dropdown's "Last"/"Current" are offsets -1/0; stepping with the arrow buttons moves
+// further back (and forward again, never past the current period) and parks the dropdown on
+// "Pay period" once it is neither.
+let _repPeriodOffset=-1;
+let _repStepTimer=null;
+function stepReportPeriod(dir){
+  _repPeriodOffset=dir===0?0:Math.min(0,_repPeriodOffset+dir);
+  document.getElementById('reportPeriod').value=_repPeriodOffset===0?'current_period':_repPeriodOffset===-1?'last_period':'pay_period';
   updateDateRange();
+  // If a report is already on screen, flip to the new period's report too, so repeated presses
+  // really do page through periods. Debounced so a quick run of clicks renders once.
+  const shown=document.getElementById('reportTableWrap');
+  if(shown&&shown.style.display!=='none'){
+    clearTimeout(_repStepTimer);
+    _repStepTimer=setTimeout(()=>generateReport(),350);
+  }
 }
 
 function updateDateRange(co){
@@ -11252,11 +11308,11 @@ function updateDateRange(co){
     if(coId&&coId!=='all')co=C.companies.find(c=>c.id===coId);
     else co=C.companies[0];
   }
-  if(p==='last_period'||p==='current_period'){
-    const periods=getPayrollPeriods(co);
-    const d=p==='last_period'?{s:periods.lastStart,e:periods.lastEnd}:{s:periods.curStart,e:periods.curEnd};
-    document.getElementById('reportStart').value=d.s.toLocaleDateString('en-CA');
-    document.getElementById('reportEnd').value=d.e.toLocaleDateString('en-CA');
+  if(p==='last_period'||p==='current_period'||p==='pay_period'){
+    _repPeriodOffset=p==='last_period'?-1:p==='current_period'?0:_repPeriodOffset;
+    const d=getPayrollPeriodAt(co,_repPeriodOffset);
+    document.getElementById('reportStart').value=d.start.toLocaleDateString('en-CA');
+    document.getElementById('reportEnd').value=d.end.toLocaleDateString('en-CA');
     return;
   }
   const now=new Date();
@@ -11741,11 +11797,51 @@ function punchMapBtn(p){
   if(p.geo_lat==null||p.geo_lng==null) return '';
   return `<button type="button" class="punch-map-btn" title="${esc(t('activity.viewLocation')||'View location')}" onclick="event.stopPropagation();openPunchLocationMap('${p.id}')"><svg><use href="#i-map-pin"/></svg></button>`;
 }
+// Activity log pay-period filter. Shares getPayrollPeriodAt with Reports, so both screens agree on
+// where a period starts and ends. "All companies" has no single payroll setting, so it falls back
+// to the first company, as Reports does.
+let _actPeriodOffset=0;
+function _actPayrollCompany(){
+  const coId=document.getElementById('actCoFilter')?.value;
+  return (coId&&coId!=='all')?C.companies.find(c=>c.id===coId):C.companies[0];
+}
+function initActPeriodSelect(){
+  const sel=document.getElementById('actPeriod');
+  if(!sel)return;
+  const cur=sel.value||'custom';
+  sel.innerHTML=`<option value="custom">${t('activity.periodCustom')||'Custom dates'}</option>`
+    +`<option value="current">${t('activity.periodCurrent')||'Current pay period'}</option>`
+    +`<option value="last">${t('activity.periodLast')||'Previous pay period'}</option>`
+    +`<option value="pay" hidden>${t('reports.payPeriod')||'Pay period'}</option>`;
+  sel.value=cur;
+}
+function applyActPeriod(offset){
+  const co=_actPayrollCompany();
+  if(!co)return false;
+  _actPeriodOffset=Math.min(0,offset);
+  const d=getPayrollPeriodAt(co,_actPeriodOffset);
+  document.getElementById('actStart').value=d.start.toLocaleDateString('en-CA');
+  document.getElementById('actEnd').value=d.end.toLocaleDateString('en-CA');
+  document.getElementById('actPeriod').value=_actPeriodOffset===0?'current':_actPeriodOffset===-1?'last':'pay';
+  return true;
+}
+function onActPeriodChange(){
+  const v=document.getElementById('actPeriod').value;
+  if(v==='custom')return;
+  if(applyActPeriod(v==='current'?0:-1))loadActivityPage();
+}
+function stepActPeriod(dir){
+  const custom=document.getElementById('actPeriod').value==='custom';
+  if(applyActPeriod((custom?0:_actPeriodOffset)+dir))loadActivityPage();
+}
+function actDatesEdited(){document.getElementById('actPeriod').value='custom';}
+
 async function loadActivityPage(){
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
   showSkeleton('activityBody',6,'rows');
   showSkeleton('activityCardsContainer',3);
   await ensureManagerSiteIds();
+  initActPeriodSelect();
   const coId=document.getElementById('actCoFilter').value;
   const siteId=document.getElementById('actSiteFilter').value;
   const empId=document.getElementById('actEmpFilter').value;
@@ -11997,6 +12093,7 @@ function onActCoChange(){
   // Reset employee filter — different company means different employee list
   const aef=document.getElementById('actEmpFilter');
   if(aef)aef.value='all';
+  if(document.getElementById('actPeriod').value!=='custom')applyActPeriod(_actPeriodOffset);
   loadActivityPage();
 }
 
@@ -15572,14 +15669,14 @@ en:{
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports','reports.retention':'Punch records are kept for 18 months. Older records are archived and won\'t appear here.',
 'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All','reports.col.reg':'Reg Hours','reports.col.ot':'OT Hours',
 'reports.period':'Period','reports.lastPeriod':'Last Payroll Period','reports.currentPeriod':'Current Period',
-'reports.btnLastPeriod':'← Last Period','reports.btnCurrentPeriod':'Current Period →',
+'reports.btnPrevPeriod':'← Previous Period','reports.btnNextPeriod':'Next Period →','reports.btnCurPeriod':'Current Period','reports.payPeriod':'Pay period',
 'reports.thisWeek':'This Week','reports.biweekly':'Bi-Weekly',
 'reports.thisMonth':'This Month','reports.thisQuarter':'This Quarter',
 'reports.last6':'Last 6 Months','reports.thisYear':'This Year','reports.custom':'Custom Range',
 'activity.title':'Activity Log','activity.subtitle':'Punch records with manual edit capability',
 'activity.addPunch':'+ Add Punch','activity.refresh':'↻ Refresh',
 'activity.recordsShown':'Records Shown','activity.todayPunches':"Today's Punches",
-'activity.currentlyIn':'Currently In','activity.manualEntries':'Manual Entries',
+'activity.currentlyIn':'Currently In','activity.periodCustom':'Custom dates','activity.periodCurrent':'Current pay period','activity.periodLast':'Previous pay period','activity.prevPeriod':'Previous period','activity.nextPeriod':'Next period','activity.manualEntries':'Manual Entries',
 'activity.employee':'EMPLOYEE','activity.companySite':'COMPANY / SITE',
 'activity.type':'TYPE','activity.date':'DATE','activity.time':'TIME','activity.actions':'ACTIONS',
 'activity.employeeFilter':'Employee','common.allEmployees':'All Employees',
@@ -16481,14 +16578,14 @@ fr:{
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence','reports.retention':'Les pointages sont conservés 18 mois. Les registres plus anciens sont archivés et n\'apparaissent plus ici.',
 'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner','reports.col.reg':'Heures rég.','reports.col.ot':'Heures supp.',
 'reports.period':'Période','reports.lastPeriod':'Dernière période de paie','reports.currentPeriod':'Période en cours',
-'reports.btnLastPeriod':'← Dernière période','reports.btnCurrentPeriod':'Période en cours →',
+'reports.btnPrevPeriod':'← Période précédente','reports.btnNextPeriod':'Période suivante →','reports.btnCurPeriod':'Période en cours','reports.payPeriod':'Période de paie',
 'reports.thisWeek':'Cette semaine','reports.biweekly':'Aux deux semaines',
 'reports.thisMonth':'Ce mois','reports.thisQuarter':'Ce trimestre',
 'reports.last6':'6 derniers mois','reports.thisYear':'Cette année','reports.custom':'Plage personnalisée',
 "activity.title":"Journal d'activité",'activity.subtitle':'Registre des pointages avec modification manuelle',
 'activity.addPunch':'+ Ajouter pointage','activity.refresh':'↻ Actualiser',
 'activity.recordsShown':'Entrées affichées','activity.todayPunches':"Pointages aujourd'hui",
-'activity.currentlyIn':'Actuellement pointés','activity.manualEntries':'Entrées manuelles',
+'activity.currentlyIn':'Actuellement pointés','activity.periodCustom':'Dates personnalisées','activity.periodCurrent':'Période de paie en cours','activity.periodLast':'Période de paie précédente','activity.prevPeriod':'Période précédente','activity.nextPeriod':'Période suivante','activity.manualEntries':'Entrées manuelles',
 'activity.employee':'EMPLOYÉ','activity.companySite':'COMPAGNIE / SITE',
 'activity.type':'TYPE','activity.date':'DATE','activity.time':'HEURE','activity.actions':'ACTIONS',
 'activity.employeeFilter':'Employé','common.allEmployees':'Tous les employés',
