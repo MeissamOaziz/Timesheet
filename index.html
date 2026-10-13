@@ -7920,9 +7920,15 @@ function punchLabelMode() {
   const co = ctx && (C.companies.find(c => c.id === ctx.co.id) || ctx.co);
   return _punchLabels[0].punch_label_mode || (co && co.punch_label_mode) || 'off';
 }
+let _punchLabelsAt = 0, _punchLabelsCo = null;
 async function refreshPunchLabels() {
   const ctx = Ctx.get();
   if(!ctx) { _punchLabels = []; return; }
+  // Most companies never use labels. When the last answer was "none", ask again only every few
+  // minutes (still quick enough for a newly switched-on setting to reach a running terminal).
+  if(_punchLabelsCo !== ctx.co.id) { _punchLabelsCo = ctx.co.id; _punchLabels = []; _punchLabelsAt = 0; }
+  if(!_punchLabels.length && Date.now() - _punchLabelsAt < 5 * 60 * 1000) return;
+  _punchLabelsAt = Date.now();
   try {
     // A terminal (no session) is scoped by the server; a signed-in admin names their company.
     const rows = await DB.all('work_labels', Sess.get() ? `company_id=eq.${ctx.co.id}&active=eq.true&order=sort_order.asc,name.asc` : '');
