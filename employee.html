@@ -1195,6 +1195,13 @@ async function doPunch() {
 // ══════════════════════════════════════════════════════
 // SCHEDULE TAB
 // ══════════════════════════════════════════════════════
+// What a shift is for (the company's work label), as a small coloured tag. Empty when unlabelled.
+function labelChip(sh) {
+  if (!sh.label_name) return '';
+  const c = /^#[0-9a-fA-F]{6}$/.test(sh.label_color || '') ? sh.label_color : '#4f8ef7';
+  return `<span style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:1px 9px 1px 7px;border-radius:99px;font-size:11px;font-weight:700;color:var(--text);background:color-mix(in srgb,${c} 16%,transparent);border:1px solid color-mix(in srgb,${c} 45%,transparent)"><i style="width:7px;height:7px;border-radius:50%;background:${c};flex-shrink:0"></i>${escHtml(sh.label_name)}</span>`;
+}
+
 async function renderSchedule() {
   const wrap = document.getElementById('schedContent');
   wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)"><span class="mini-spin"></span></div>';
@@ -1216,6 +1223,7 @@ async function renderSchedule() {
         <div>
           <div style="font-weight:700;font-size:14px;${isToday ? 'color:var(--accent)' : ''}">${dayLabel}</div>
           ${sh.note ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${escHtml(sh.note)}</div>` : ''}
+          ${labelChip(sh)}
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)">${sh.start_time.slice(0,5)} – ${sh.end_time.slice(0,5)}</div>
@@ -1295,7 +1303,7 @@ async function renderTeamSchedule() {
       const rows = dayShifts.slice().sort((a,b) => a.start_time.localeCompare(b.start_time)).map(sh => {
         const isMine = sh.employee_id === _session.employeeId;
         return `<div style="background:var(--surface);border:1.5px solid ${isMine ? 'rgba(79,142,247,.4)' : 'var(--border)'};border-radius:var(--r-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;${isMine ? 'background:rgba(79,142,247,.06)' : ''}">
-          <div style="font-weight:600;font-size:13.5px;${isMine ? 'color:var(--accent)' : ''}">${escHtml(sh.employee_name || '')}${sh.note ? `<div style="font-size:12px;color:var(--text2);font-weight:400;margin-top:2px">${escHtml(sh.note)}</div>` : ''}</div>
+          <div style="font-weight:600;font-size:13.5px;${isMine ? 'color:var(--accent)' : ''}">${escHtml(sh.employee_name || '')}${sh.note ? `<div style="font-size:12px;color:var(--text2);font-weight:400;margin-top:2px">${escHtml(sh.note)}</div>` : ''}${labelChip(sh) ? `<div>${labelChip(sh)}</div>` : ''}</div>
           <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);flex-shrink:0">${sh.start_time.slice(0,5)} – ${sh.end_time.slice(0,5)}</div>
         </div>`;
       }).join('');

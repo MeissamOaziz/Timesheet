@@ -173,6 +173,14 @@ function buildJoinApprovedHtml(coAdminName, primaryAdminName) {
 }
 function buildScheduleHtml(empName, weekLabel, shifts, lang) {
   const isFr = lang === 'fr';
+  const eh = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // A shift's work label (what it is for), as a small tag ahead of the note. The colour comes from
+  // the database but is checked here before it goes into a style attribute.
+  const labelTag = (s) => {
+    if (!s.label) return '';
+    const c = /^#[0-9a-fA-F]{6}$/.test(s.labelColor || '') ? s.labelColor : '#4f8ef7';
+    return `<span style="display:inline-block;margin:0 6px 2px 0;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;color:#1e293b;background:#ffffff;border:1px solid ${c}"><span style="color:${c}">&#9679;</span> ${eh(s.label)}</span>`;
+  };
   const title = isFr ? `Votre horaire — ${weekLabel}` : `Your Schedule — ${weekLabel}`;
   const greeting = isFr ? `Bonjour ${empName},` : `Hi ${empName},`;
   const intro = isFr ? `Voici votre horaire de travail pour la semaine du <strong style="color:#1e293b">${weekLabel}</strong>.` : `Here is your work schedule for the week of <strong style="color:#1e293b">${weekLabel}</strong>.`;
@@ -182,7 +190,7 @@ function buildScheduleHtml(empName, weekLabel, shifts, lang) {
       <tr>
         <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#1e293b;white-space:nowrap">${s.day}</td>
         <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;color:#4f8ef7;font-weight:600;white-space:nowrap">${s.startTime} – ${s.endTime}</td>
-        <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">${s.note || '—'}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px">${labelTag(s)}${s.note || (s.label ? '' : '—')}</td>
       </tr>`).join('');
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 6px;">🗓️ ${title}</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px;">${greeting}<br>${intro}</p>

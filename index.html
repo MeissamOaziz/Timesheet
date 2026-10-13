@@ -1165,6 +1165,22 @@ border-top:1px solid var(--border);margin:18px 0;}
 .btn-sched-copy:hover{background:var(--surface3,var(--border));color:var(--text);}
 .btn-sched-clear{font-size:10px;font-weight:600;padding:3px 9px;border-radius:var(--r-xs);border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:var(--red);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .btn-sched-clear:hover{background:rgba(239,68,68,.18);}
+/* ── WORK LABELS ── */
+.shift-label{display:inline-flex;align-items:center;gap:5px;max-width:100%;margin-bottom:3px;padding:1px 8px 1px 6px;border-radius:99px;font-size:10px;font-weight:700;color:var(--text);background:color-mix(in srgb,var(--lb) 16%,transparent);border:1px solid color-mix(in srgb,var(--lb) 45%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shift-label i{width:7px;height:7px;border-radius:50%;background:var(--lb);flex-shrink:0;}
+.sched-label-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.sched-label-hint{font-size:12px;color:var(--text2);}
+.sched-label-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border:1.5px solid var(--border);border-radius:var(--r-xl);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.sched-label-chip i{width:8px;height:8px;border-radius:50%;background:var(--lb,var(--text3));flex-shrink:0;}
+.sched-label-chip:hover{color:var(--text);}
+.sched-label-chip.active{border-color:var(--lb,var(--accent));background:color-mix(in srgb,var(--lb,var(--accent)) 14%,transparent);color:var(--text);}
+.sched-label-chip.archived{opacity:.6;font-style:italic;}
+.label-row{display:flex;align-items:center;gap:8px;}
+.label-row input[type=color]{width:40px;height:36px;padding:2px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;flex-shrink:0;}
+.label-row input[type=text]{flex:1;min-width:0;}
+.label-row.archived input[type=text]{opacity:.55;text-decoration:line-through;}
+.label-btn{width:auto;padding:6px 11px;font-size:11.5px;margin:0;}
+.label-btn.label-del{color:var(--red);}
 /* ── HOLIDAYS ── */
 .holiday-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:var(--amber);border-radius:5px;padding:2px 6px;white-space:nowrap;}
 .sched-holiday-cell{background:rgba(245,158,11,.06);}
@@ -3160,7 +3176,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="shiftModalId">
     <div class="form-group">
       <label data-i18n="sched.employee">Employee</label>
-      <select id="shiftEmpSelect" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none"></select>
+      <select id="shiftEmpSelect" onchange="_renderShiftCopyEmpChips()" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none"></select>
     </div>
     <div class="form-group">
       <label data-i18n="sched.date">Date</label>
@@ -3176,6 +3192,10 @@ border-top:1px solid var(--border);margin:18px 0;}
         <input type="time" id="shiftEnd" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
       </div>
     </div>
+    <div class="form-group" id="shiftLabelRow" style="display:none">
+      <label><span data-i18n="labels.shiftField">Label</span> <span style="color:var(--text3);font-weight:400" data-i18n="labels.optional">(optional)</span></label>
+      <select id="shiftLabel" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none"></select>
+    </div>
     <div class="form-group">
       <label data-i18n="sched.note">Note <span style="color:var(--text3);font-weight:400">(optional)</span></label>
       <input type="text" id="shiftNote" placeholder="e.g. Opening shift" style="width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:inherit;font-size:13px;outline:none">
@@ -3184,10 +3204,32 @@ border-top:1px solid var(--border);margin:18px 0;}
       <label data-i18n="sched.copyToOtherDays">Also apply this shift to</label>
       <div id="shiftCopyDayChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px"></div>
     </div>
+    <div class="form-group" id="shiftCopyEmpRow">
+      <label data-i18n="sched.assignToEmployees">Also assign this shift to</label>
+      <div id="shiftCopyEmpChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;max-height:112px;overflow-y:auto"></div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button class="btn-primary" onclick="saveShift()" data-i18n="modal.save">Save</button>
       <button class="btn-secondary" onclick="closeModal('shiftModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-secondary" id="shiftDeleteBtn" onclick="deleteShift()" style="display:none;color:var(--red);margin-left:auto" data-i18n="common.delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- WORK LABELS MODAL -->
+<div class="modal-overlay" id="labelsModal" style="z-index:9640">
+  <div class="modal" style="max-width:520px">
+    <h3 style="margin-bottom:6px" data-i18n="labels.title">Work labels</h3>
+    <p style="font-size:12.5px;color:var(--text2);line-height:1.55;margin:0 0 16px" data-i18n="labels.intro">Labels say what kind of work a shift is for: a task, a job, a project, a client. Create the ones your business uses, then pick one when you add a shift. You can filter the schedule by label to see who is doing what.</p>
+    <div id="labelsMsg"></div>
+    <div id="labelsList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
+    <div class="label-row">
+      <input type="color" id="labelNewColor" value="#4f8ef7" aria-label="Color">
+      <input type="text" id="labelNewName" maxlength="60" onkeydown="if(event.key==='Enter'){event.preventDefault();addWorkLabel();}">
+      <button class="btn-primary label-btn" style="padding:9px 16px;font-size:12.5px" onclick="addWorkLabel()" data-i18n="labels.add">Add label</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:18px">
+      <button class="btn-secondary" style="width:auto" onclick="closeModal('labelsModal')" data-i18n="common.close">Close</button>
     </div>
   </div>
 </div>
@@ -5237,6 +5279,12 @@ function _demoBuildData(){
   });
   punches.sort((a,b)=>new Date(b.punched_at)-new Date(a.punched_at));
   // Upcoming shifts so the Schedule page has something to show
+  const iso0=new Date().toISOString();
+  const LABELS=[
+    {id:'demo-lb1',company_id:CO.id,name:'Counter',color:'#4f8ef7',active:true,sort_order:0,created_at:iso0},
+    {id:'demo-lb2',company_id:CO.id,name:'Kitchen',color:'#14b8a6',active:true,sort_order:1,created_at:iso0},
+    {id:'demo-lb3',company_id:CO.id,name:'Delivery',color:'#ec4899',active:true,sort_order:2,created_at:iso0},
+  ];
   const shifts=[]; let sid=0;
   const wk=new Date(today); wk.setDate(today.getDate()-((today.getDay()+6)%7)); // Monday of this week
   for(let d=0;d<7;d++){
@@ -5245,15 +5293,17 @@ function _demoBuildData(){
     EMPS.forEach((e,i)=>{ if((i+d)%4===0) return;
       shifts.push({id:'demo-sh'+(sid++),admin_id:'demo-admin',company_id:CO.id,site_id:e.site_id,
         employee_id:e.id,shift_date:day.toLocaleDateString('en-CA'),
-        start_time:(8+(i%2))+':00',end_time:(16+(i%3))+':00',note:null});
+        start_time:(8+(i%2))+':00',end_time:(16+(i%3))+':00',note:null,
+        label_id:((i+d)%5===0)?null:LABELS[(i+d)%LABELS.length].id});
     });
   }
-  return {CO,SITES,EMPS,punches,shifts};
+  return {CO,SITES,EMPS,punches,shifts,LABELS};
 }
 function startDemo(){
-  const {CO,SITES,EMPS,punches,shifts}=_demoBuildData();
+  const {CO,SITES,EMPS,punches,shifts,LABELS}=_demoBuildData();
   window._demoMode=true;
   window._demoShifts=shifts;
+  window._demoLabels=LABELS;
   try{ sessionStorage.setItem('pc_demo','1'); }catch(_){}
   Sess.clear();
   C.companies=[CO]; C.sites=SITES; C.employees=EMPS; C.punches=punches; C.coAdmins=[]; C.primaryAdmin=null;
@@ -5411,10 +5461,47 @@ function _demoFetch(method,table,opts){
     return Promise.resolve(row?[row]:[]);
   }
   if(method==='DELETE'&&table==='shifts'){
-    const m=/id=eq\.([^&]+)/.exec(opts&&opts.filter||'');
-    const id=m&&m[1];
-    window._demoShifts=(window._demoShifts||[]).filter(sh=>sh.id!==id);
+    // Filters arrive as PostgREST clauses (id=eq.x, employee_id=eq.x, shift_date=gte.d, ...). A shift
+    // is removed only if it matches EVERY clause given; no clauses at all removes nothing.
+    const clauses={};
+    String(opts&&opts.filter||'').split('&').forEach(c=>{const i=c.indexOf('=');if(i>0)(clauses[c.slice(0,i)]=clauses[c.slice(0,i)]||[]).push(c.slice(i+1));});
+    const val=(k,op)=>{const hit=(clauses[k]||[]).find(v=>v.startsWith(op+'.'));return hit?hit.slice(op.length+1):null;};
+    const byId=val('id','eq'), byEmp=val('employee_id','eq'), from=val('shift_date','gte'), to=val('shift_date','lte');
+    window._demoShifts=(window._demoShifts||[]).filter(sh=>{
+      if(!byId&&!byEmp&&!from&&!to) return true;
+      if(byId&&sh.id!==byId) return true;
+      if(byEmp&&sh.employee_id!==byEmp) return true;
+      if(from&&sh.shift_date<from) return true;
+      if(to&&sh.shift_date>to) return true;
+      return false;
+    });
     return Promise.resolve([]);
+  }
+  // Work labels live in memory so a visitor can create, rename and archive them and watch the
+  // schedule respond, the way a real account would.
+  if(table==='work_labels'){
+    const L=window._demoLabels||(window._demoLabels=[]);
+    const idOf=f=>{const hit=String(f||'').split('&').find(x=>x.startsWith('id=eq.'));return hit?hit.slice(6):null;};
+    if(method==='GET') return Promise.resolve(L.map(x=>Object.assign({},x)));
+    if(method==='POST'&&opts&&opts.body){
+      const name=String(opts.body.name||'').trim();
+      if(L.some(x=>x.name.toLowerCase()===name.toLowerCase())){
+        const e=new Error('duplicate key value violates unique constraint');e._raw='23505 duplicate key';return Promise.reject(e);
+      }
+      const row=Object.assign({id:'demo-lb'+Date.now()+Math.random().toString(36).slice(2,6),color:'#4f8ef7',active:true,sort_order:L.length,created_at:new Date().toISOString()},opts.body,{name});
+      L.push(row);return Promise.resolve([row]);
+    }
+    if(method==='PATCH'&&opts&&opts.body){
+      const row=L.find(x=>x.id===idOf(opts.filter));
+      if(row)Object.assign(row,opts.body);
+      return Promise.resolve(row?[row]:[]);
+    }
+    if(method==='DELETE'){
+      const id=idOf(opts&&opts.filter);
+      window._demoLabels=L.filter(x=>x.id!==id);
+      (window._demoShifts||[]).forEach(sh=>{if(sh.label_id===id)sh.label_id=null;});
+      return Promise.resolve([]);
+    }
   }
   // Company Info edits (overtime/lunch/visitor toggles, owner report schedule, etc.) — merge into
   // the cached row so the modal's own re-read of C.companies reflects what was just saved, same
@@ -14498,6 +14585,125 @@ async function loadSchedulePage() {
   await renderScheduleGrid();
 }
 
+// ═══ Work labels ═══════════════════════════════════════════════════════════════
+// A company-defined name (a task, a job, a project...) that a shift can be scheduled under. Part of
+// the Scheduling add-on: owners/admins manage them, managers can use them. Distinct from
+// employees.dept, which says who a person is (one value each); a label says what a particular
+// shift is for, so one employee can do different work on different days or hours.
+let _workLabels = [];
+let _schedLabelFilter = '';          // '' = all, '__none__' = unlabelled, otherwise a label id
+function hasSchedulingAddon() {
+  const s = Sess.get();
+  return !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin() || isDemo();
+}
+function labelById(id) { return _workLabels.find(l => l.id === id) || null; }
+async function loadWorkLabels(coId) {
+  try { _workLabels = await DB.all('work_labels', `company_id=eq.${coId}&order=sort_order.asc,name.asc`) || []; }
+  catch(e) { _workLabels = []; console.warn('Labels fetch error:', e); }
+}
+function _labelErr(e) {
+  const raw = (e && (e._raw || e.message)) || '';
+  if(/23505|duplicate|unique/i.test(raw)) return t('labels.dupName')||'You already have a label with that name.';
+  if(/Scheduling add-on|Forbidden/i.test(raw)) return t('labels.needAddon')||'Work labels are part of the Scheduling add-on.';
+  return (e && e.message) || 'Error';
+}
+function setSchedLabelFilter(v) {
+  _schedLabelFilter = (v && _schedLabelFilter === v) ? '' : (v || '');
+  renderScheduleGrid();
+}
+// The strip above the grid: filter chips once labels exist, or a nudge to create the first one.
+function schedLabelBarHtml(weekShifts) {
+  if(!hasSchedulingAddon()) return '';
+  const canManage = !isManager();
+  const manageBtn = canManage ? `<button class="btn-sched-copy" onclick="openLabelsModal()">${esc(t('labels.manage')||'Manage labels')}</button>` : '';
+  const used = new Set(weekShifts.map(s => s.label_id).filter(Boolean));
+  const shown = _workLabels.filter(l => l.active || used.has(l.id));
+  if(!shown.length) {
+    if(!canManage) return '';
+    return `<div class="sched-label-bar"><span class="sched-label-hint">${esc(t('labels.barHint')||'Labels let you schedule people for specific tasks, jobs or projects.')}</span><button class="btn-sched-copy" onclick="openLabelsModal()">${esc(t('labels.createFirst')||'Create labels')}</button></div>`;
+  }
+  const chip = (id, name, color, extra) => `<button class="sched-label-chip${_schedLabelFilter === id ? ' active' : ''}${extra||''}" ${color ? `style="--lb:${color}"` : ''} onclick="setSchedLabelFilter('${id}')">${color ? '<i></i>' : ''}${esc(name)}</button>`;
+  return `<div class="sched-label-bar">
+    <button class="sched-label-chip${_schedLabelFilter === '' ? ' active' : ''}" onclick="setSchedLabelFilter('')">${esc(t('labels.all')||'All')}</button>
+    ${shown.map(l => chip(l.id, l.name + (l.active ? '' : ' ' + (t('labels.archivedTag')||'(archived)')), l.color, l.active ? '' : ' archived')).join('')}
+    ${chip('__none__', t('labels.none')||'No label', '', '')}
+    ${manageBtn}
+  </div>`;
+}
+
+async function openLabelsModal() {
+  if(isManager()) return;
+  const coId = document.getElementById('schedCoFilter')?.value;
+  if(!coId) return;
+  window._labelsCoId = coId;
+  document.getElementById('labelNewName').placeholder = t('labels.namePh')||'e.g. Snow removal';
+  document.getElementById('labelsMsg').innerHTML = '';
+  await loadWorkLabels(coId);
+  _resetNewLabelColor();
+  renderLabelsList();
+  openModal('labelsModal');
+}
+function _resetNewLabelColor() {
+  document.getElementById('labelNewColor').value = SCHED_DEPT_PALETTE[_workLabels.length % SCHED_DEPT_PALETTE.length];
+}
+function renderLabelsList() {
+  const host = document.getElementById('labelsList');
+  if(!host) return;
+  if(!_workLabels.length) {
+    host.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:12.5px;padding:14px 0">${esc(t('labels.empty')||'No labels yet. Add your first one below.')}</div>`;
+    return;
+  }
+  host.innerHTML = _workLabels.map(l => `<div class="label-row${l.active ? '' : ' archived'}">
+    <input type="color" value="${esc(l.color)}" aria-label="Color" onchange="updateWorkLabel('${l.id}',{color:this.value})">
+    <input type="text" value="${esc(l.name)}" maxlength="60" ${l.active ? '' : 'disabled'} onchange="updateWorkLabel('${l.id}',{name:this.value.trim()})">
+    <button class="btn-secondary label-btn" onclick="toggleWorkLabel('${l.id}')">${esc(l.active ? (t('labels.archive')||'Archive') : (t('labels.restore')||'Restore'))}</button>
+    <button class="btn-secondary label-btn label-del" onclick="deleteWorkLabel('${l.id}')">${esc(t('labels.delete')||'Delete')}</button>
+  </div>`).join('');
+}
+async function addWorkLabel() {
+  const nameEl = document.getElementById('labelNewName');
+  const name = nameEl.value.trim();
+  if(!name) { showMsg('labelsMsg', esc(t('labels.nameRequired')||'Give the label a name.'), 'error'); return; }
+  try {
+    const r = await DB.insert('work_labels', { company_id: window._labelsCoId, name, color: document.getElementById('labelNewColor').value, sort_order: _workLabels.length });
+    if(r && r[0]) _workLabels.push(r[0]);
+    nameEl.value = '';
+    document.getElementById('labelsMsg').innerHTML = '';
+    _resetNewLabelColor();
+    renderLabelsList();
+    renderScheduleGrid();
+  } catch(e) { showMsg('labelsMsg', esc(_labelErr(e)), 'error'); }
+}
+async function updateWorkLabel(id, fields) {
+  if('name' in fields && !fields.name) { renderLabelsList(); return; }   // a label can't be nameless
+  try {
+    await DB.update('work_labels', `id=eq.${id}`, fields);
+    const l = labelById(id); if(l) Object.assign(l, fields);
+    document.getElementById('labelsMsg').innerHTML = '';
+    renderScheduleGrid();
+  } catch(e) {
+    showMsg('labelsMsg', esc(_labelErr(e)), 'error');
+    await loadWorkLabels(window._labelsCoId);
+    renderLabelsList();
+  }
+}
+async function toggleWorkLabel(id) {
+  const l = labelById(id); if(!l) return;
+  await updateWorkLabel(id, { active: !l.active });
+  renderLabelsList();
+}
+async function deleteWorkLabel(id) {
+  const l = labelById(id); if(!l) return;
+  const msg = (t('labels.deleteConfirm')||'Delete the label "{name}"? Shifts that use it keep their hours but lose the label. To keep it on past shifts and just stop using it, archive it instead.').replace('{name}', l.name);
+  if(!(await uiConfirm(msg, { confirmLabel: t('labels.delete')||'Delete', danger: true }))) return;
+  try {
+    await DB.del('work_labels', `id=eq.${id}`);
+    _workLabels = _workLabels.filter(x => x.id !== id);
+    renderLabelsList();
+    renderScheduleGrid();
+  } catch(e) { showMsg('labelsMsg', esc(_labelErr(e)), 'error'); }
+}
+
 // Who a schedule screen may list for a company: every active employee, except that a site manager is
 // limited to the sites they manage unless the company has switched on cross-site visibility. This
 // matches how Activity, Reports and Employees already scope managers; the schedule used to be the
@@ -14574,6 +14780,7 @@ async function renderScheduleGrid() {
     _schedShifts = [];
     console.warn('Shifts fetch error:', e);
   }
+  await loadWorkLabels(coId);
 
   // Fetch holidays for this week
   let _weekHolidays = {}; // dateStr → holiday object
@@ -14610,6 +14817,13 @@ async function renderScheduleGrid() {
   // Shifts of people this view may not list shouldn't inflate the "shifts this week" counts either.
   { const _vis = new Set(emps.map(e => e.id)); _schedShifts = _schedShifts.filter(sh => _vis.has(sh.employee_id)); }
 
+  // The label filter is a view over the shifts, never a change to them: "Send schedule" and Clear
+  // week act on the whole week, so _schedShifts must stay complete.
+  if(_schedLabelFilter && _schedLabelFilter !== '__none__' && !labelById(_schedLabelFilter)) _schedLabelFilter = '';
+  const labelMatch = sh => !_schedLabelFilter || (_schedLabelFilter === '__none__' ? !sh.label_id : sh.label_id === _schedLabelFilter);
+  const viewShifts = _schedShifts.filter(labelMatch);
+  const labelBarHtml = schedLabelBarHtml(_schedShifts);
+
   if(!emps.length) {
     wrap.innerHTML = `<div class="sched-empty"><div class="sched-empty-icon"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div><p style="color:var(--text2)">${t('sched.noEmployees')||'No active employees found for this company/site.'}</p></div>`;
     return;
@@ -14619,17 +14833,18 @@ async function renderScheduleGrid() {
     t('sched.thu')||'Thu', t('sched.fri')||'Fri', t('sched.sat')||'Sat', t('sched.sun')||'Sun'];
 
   // Shift count badge
-  const totalShifts = _schedShifts.length;
-  const todayShifts = _schedShifts.filter(sh => sh.shift_date === todayStr).length;
+  const empsShown = _schedLabelFilter ? emps.filter(e => viewShifts.some(sh => sh.employee_id === e.id)) : emps;
+  const totalShifts = viewShifts.length;
+  const todayShifts = viewShifts.filter(sh => sh.shift_date === todayStr).length;
 
   // Only worth a legend once departments actually vary across the visible roster — a
   // single-department shop (the common case) would just see one redundant dot.
-  const deptsInView = [...new Set(emps.map(e=>e.dept).filter(Boolean))].sort();
+  const deptsInView = [...new Set(empsShown.map(e=>e.dept).filter(Boolean))].sort();
   const legendHtml = deptsInView.length > 1
     ? `<div class="sched-dept-legend">${deptsInView.map(d=>`<div class="sched-dept-legend-item"><span class="sched-dept-legend-dot" style="--dot-color:${deptColor(d)}"></span>${esc(d)}</div>`).join('')}</div>`
     : '';
 
-  let html = `<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+  let html = `${labelBarHtml}<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
     <div style="font-size:12px;color:var(--text2)"><strong style="color:var(--text)">${totalShifts}</strong> ${t('sched.shiftsThisWeek')||'shifts this week'}</div>
     ${todayShifts ? `<div style="font-size:12px;color:var(--accent)"><svg class="ic" style="margin-right:5px"><use href="#i-alarm"/></svg><strong>${todayShifts}</strong> ${t('sched.today')||'today'}</div>` : ''}
   </div>
@@ -14654,10 +14869,11 @@ async function renderScheduleGrid() {
 
   html += `<th class="sched-hours">${t('sched.hoursCol')||'Hours'}</th></tr></thead><tbody>`;
 
-  emps.forEach(emp => {
+  empsShown.forEach(emp => {
     const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     const site = C.sites.find(s=>s.id===emp.site_id);
-    const empShiftsThisWeek = _schedShifts.filter(sh=>sh.employee_id===emp.id);
+    const allEmpShifts = _schedShifts.filter(sh=>sh.employee_id===emp.id);
+    const empShiftsThisWeek = viewShifts.filter(sh=>sh.employee_id===emp.id);
     const hasEmail = !!(emp.email);
     const emailBtn = hasEmail
       ? `<button class="btn-sched-email" onclick="sendScheduleEmail('${emp.id}')" title="${emp.email}">${t('sched.sendEmail')||'Send schedule'}</button>`
@@ -14670,7 +14886,7 @@ async function renderScheduleGrid() {
         <div>
           <div class="sched-emp-name">${emp.name}</div>
           ${site ? `<div class="sched-emp-site"><svg class="ic" style="width:11px;height:11px;margin-right:4px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${site.name}</div>` : ''}
-          <div class="sched-emp-actions">${copyBtn}${empShiftsThisWeek.length > 0 ? emailBtn : ''}${empShiftsThisWeek.length > 0 ? `<button class="btn-sched-clear" onclick="clearWeekForEmployee('${emp.id}')" title="${esc(t('sched.clearWeekTitle')||"Remove all of this employee's shifts this week")}">${t('sched.clearWeek')||'Clear week'}</button>` : ''}</div>
+          <div class="sched-emp-actions">${copyBtn}${allEmpShifts.length > 0 ? emailBtn : ''}${(allEmpShifts.length > 0 && !_schedLabelFilter) ? `<button class="btn-sched-clear" onclick="clearWeekForEmployee('${emp.id}')" title="${esc(t('sched.clearWeekTitle')||"Remove all of this employee's shifts this week")}">${t('sched.clearWeek')||'Clear week'}</button>` : ''}</div>
         </div>
       </div>
     </td>`;
@@ -14678,7 +14894,7 @@ async function renderScheduleGrid() {
     weekDays.forEach(d => {
       const dateStr = schedDateStr(d);
       const isToday = dateStr === todayStr;
-      const dayShifts = _schedShifts.filter(sh => sh.employee_id === emp.id && sh.shift_date === dateStr);
+      const dayShifts = viewShifts.filter(sh => sh.employee_id === emp.id && sh.shift_date === dateStr);
 
       // Check availability: Mon=0..Sun=6 (our convention)
       const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
@@ -14736,6 +14952,7 @@ async function renderScheduleGrid() {
         html += `<div class="sched-shift${isUnavail?' sched-shift-warning':''}" onclick="openEditShiftModal('${sh.id}')" ${deptStyle}>
           ${isUnavail?`<div style="font-size:9px;color:var(--amber);margin-bottom:2px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>${t('sched.overlapWarning')||'Overlap'}</div>`:''}
           ${(!isUnavail && emp.dept) ? `<div class="shift-dept">${esc(emp.dept)}</div>` : ''}
+          ${(() => { const lb = sh.label_id ? labelById(sh.label_id) : null; return lb ? `<div class="shift-label" style="--lb:${esc(lb.color)}" title="${esc(lb.name)}"><i></i>${esc(lb.name)}</div>` : ''; })()}
           ${sh.note ? `<div style="font-size:11px;font-weight:600">${sh.note}</div>` : ''}
           <div class="shift-time">${startFmt} – ${endFmt}</div>
           <span class="shift-delete" onclick="event.stopPropagation();deleteShiftById('${sh.id}')"><svg style="width:11px;height:11px"><use href="#i-x"/></svg></span>
@@ -14767,6 +14984,9 @@ async function renderScheduleGrid() {
     html += `</tr>`;
   });
 
+  if(_schedLabelFilter && !empsShown.length) {
+    html += `<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:26px">${esc(t('labels.noMatch')||'No shifts with this label this week.')}</td></tr>`;
+  }
   html += `</tbody></table>`;
   wrap.innerHTML = html;
 }
@@ -14816,7 +15036,7 @@ async function copyLastWeekForEmployee(empId) {
     try {
       await DB.insert('shifts', {
         admin_id: adminId, company_id: sh.company_id, site_id: sh.site_id, employee_id: empId,
-        shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
+        shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '', label_id: sh.label_id || null,
       });
       copied++;
     } catch(e) { console.warn('copyLastWeekForEmployee insert error:', e); }
@@ -14880,7 +15100,7 @@ async function copyLastWeekAll() {
     try {
       await DB.insert('shifts', {
         admin_id: adminId, company_id: sh.company_id, site_id: sh.site_id, employee_id: sh.employee_id,
-        shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '',
+        shift_date: newDateStr, start_time: sh.start_time, end_time: sh.end_time, note: sh.note || '', label_id: sh.label_id || null,
       });
       copied++; touched.add(sh.employee_id);
     } catch(e) { console.warn('copyLastWeekAll insert error:', e); }
@@ -14912,6 +15132,8 @@ function openAddShiftModal(empId = '', dateStr = '') {
   document.getElementById('shiftStart').value = '09:00';
   document.getElementById('shiftEnd').value = '17:00';
   document.getElementById('shiftNote').value = '';
+  _fillShiftLabelSelect('');
+  _renderShiftCopyEmpChips();
   _renderShiftCopyDayChips(document.getElementById('shiftDate').value);
   openModal('shiftModal');
 }
@@ -14935,6 +15157,8 @@ function openEditShiftModal(shiftId) {
   document.getElementById('shiftStart').value = sh.start_time.slice(0,5);
   document.getElementById('shiftEnd').value = sh.end_time.slice(0,5);
   document.getElementById('shiftNote').value = sh.note || '';
+  _fillShiftLabelSelect(sh.label_id || '');
+  _renderShiftCopyEmpChips();
   _renderShiftCopyDayChips(sh.shift_date);
   openModal('shiftModal');
 }
@@ -14965,6 +15189,49 @@ function _renderShiftCopyDayChips(shiftDateStr){
 function toggleShiftCopyDay(dateStr, btn){
   if(_shiftCopyDays.has(dateStr)){ _shiftCopyDays.delete(dateStr); btn.classList.remove('active'); }
   else { _shiftCopyDays.add(dateStr); btn.classList.add('active'); }
+}
+
+// The label picker only appears once the company has labels. An archived label stays selectable on
+// a shift that already uses it (so editing that shift doesn't silently drop its label).
+function _fillShiftLabelSelect(selectedId) {
+  const row = document.getElementById('shiftLabelRow');
+  const sel = document.getElementById('shiftLabel');
+  if(!row || !sel) return;
+  const opts = _workLabels.filter(l => l.active || l.id === selectedId);
+  row.style.display = opts.length ? '' : 'none';
+  sel.innerHTML = `<option value="">${esc(t('labels.noneOption')||'— No label —')}</option>` +
+    opts.map(l => `<option value="${l.id}">${esc(l.name)}${l.active ? '' : ' ' + esc(t('labels.archivedTag')||'(archived)')}</option>`).join('');
+  sel.value = selectedId || '';
+}
+
+// "Also assign this shift to": other employees who get the same shift (same date, plus any days
+// picked above) in the same save, instead of re-entering it for each person.
+let _shiftCopyEmps = new Set();
+function _renderShiftCopyEmpChips() {
+  const host = document.getElementById('shiftCopyEmpChips');
+  const row = document.getElementById('shiftCopyEmpRow');
+  if(!host) return;
+  _shiftCopyEmps = new Set();
+  const coId = document.getElementById('schedCoFilter')?.value;
+  const current = document.getElementById('shiftEmpSelect')?.value;
+  const others = schedRoster(coId).filter(e => e.id !== current);
+  if(row) row.style.display = others.length ? '' : 'none';
+  host.innerHTML = (others.length > 1 ? `<button type="button" class="sched-copy-day-chip" id="shiftCopyEmpAll" onclick="toggleShiftCopyAllEmps(this)">${esc(t('sched.allEmployees')||'Everyone')}</button>` : '') +
+    others.map(e => `<button type="button" class="sched-copy-day-chip" data-emp="${e.id}" onclick="toggleShiftCopyEmp('${e.id}',this)">${esc(e.name)}</button>`).join('');
+}
+function toggleShiftCopyEmp(empId, btn) {
+  if(_shiftCopyEmps.has(empId)) { _shiftCopyEmps.delete(empId); btn.classList.remove('active'); }
+  else { _shiftCopyEmps.add(empId); btn.classList.add('active'); }
+  const all = document.getElementById('shiftCopyEmpAll');
+  const total = document.querySelectorAll('#shiftCopyEmpChips [data-emp]').length;
+  if(all) all.classList.toggle('active', total > 0 && _shiftCopyEmps.size === total);
+}
+function toggleShiftCopyAllEmps(btn) {
+  const chips = [...document.querySelectorAll('#shiftCopyEmpChips [data-emp]')];
+  const turnOn = _shiftCopyEmps.size < chips.length;
+  _shiftCopyEmps = new Set();
+  chips.forEach(c => { c.classList.toggle('active', turnOn); if(turnOn) _shiftCopyEmps.add(c.dataset.emp); });
+  btn.classList.toggle('active', turnOn);
 }
 
 async function saveShift() {
@@ -15014,6 +15281,11 @@ async function saveShift() {
     end_time:    end,
     note,
   };
+  // Only touch the label when the picker is on screen. If the labels didn't load, leaving it out
+  // keeps whatever the shift already has instead of wiping it on an unrelated edit.
+  if(document.getElementById('shiftLabelRow')?.style.display !== 'none') {
+    payload.label_id = document.getElementById('shiftLabel')?.value || null;
+  }
 
   try {
     if(shiftId) {
@@ -15037,18 +15309,40 @@ async function saveShift() {
       }
     }
 
+    // Also give the same shift to the other employees picked, on this date and on any copied days.
+    // Same rules as copying days: someone who already has a shift that day, or is booked off, is
+    // skipped rather than doubled up or scheduled through an approved absence.
+    let empCopied = 0, empSkipped = 0;
+    const empTouched = new Set();
+    if(_shiftCopyEmps.size){
+      const dates = [date, ..._shiftCopyDays];
+      for(const otherId of _shiftCopyEmps){
+        const other = C.employees.find(e => e.id === otherId);
+        if(!other) continue;
+        const busy = new Set(_schedShifts.filter(s2 => s2.employee_id === otherId).map(s2 => s2.shift_date));
+        for(const ds of dates){
+          if(busy.has(ds) || timeOffOn(ds, otherId).length){ empSkipped++; continue; }
+          try{
+            await DB.insert('shifts', { ...payload, company_id: other.company_id, site_id: other.site_id, employee_id: otherId, shift_date: ds });
+            empCopied++; empTouched.add(otherId);
+          }catch(e){ console.warn('shift copy-to-employee insert error:', e); }
+        }
+      }
+    }
+
     closeModal('shiftModal');
     await renderScheduleGrid();
-    const savedMsg = shiftId ? (t('sched.shiftUpdated')||'Shift updated.') : (t('sched.shiftAdded')||'Shift added.');
+    const parts = [shiftId ? (t('sched.shiftUpdated')||'Shift updated.') : (t('sched.shiftAdded')||'Shift added.')];
     if(copied && skipped){
-      showToast(savedMsg+' '+(t('sched.copyShiftMixed')||'Copied to {n} day(s); {k} already had a shift and were left as-is.').replace('{n}',copied).replace('{k}',skipped),'success');
+      parts.push((t('sched.copyShiftMixed')||'Copied to {n} day(s); {k} already had a shift and were left as-is.').replace('{n}',copied).replace('{k}',skipped));
     } else if(copied){
-      showToast(savedMsg+' '+(t('sched.copyShiftDone')||'Copied to {n} day(s).').replace('{n}',copied),'success');
+      parts.push((t('sched.copyShiftDone')||'Copied to {n} day(s).').replace('{n}',copied));
     } else if(skipped){
-      showToast(savedMsg+' '+(t('sched.copyShiftAllExist')||'Every selected day already has a shift.'),'info');
-    } else {
-      showToast(savedMsg,'success');
+      parts.push(t('sched.copyShiftAllExist')||'Every selected day already has a shift.');
     }
+    if(empCopied) parts.push((t('sched.copyEmpDone')||'Also scheduled {n} shift(s) for {e} other employee(s).').replace('{n}',empCopied).replace('{e}',empTouched.size));
+    if(empSkipped) parts.push((t('sched.copyEmpSkipped')||'{k} skipped (already scheduled or off that day).').replace('{k}',empSkipped));
+    showToast(parts.join(' '), (copied || empCopied || (!skipped && !empSkipped)) ? 'success' : 'info');
   } catch(e) {
     msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
   }
@@ -15347,6 +15641,8 @@ async function sendScheduleEmailCore(email, empName, weekDays, shifts, quiet) {
       startTime: sh.start_time.slice(0,5),
       endTime: sh.end_time.slice(0,5),
       note: sh.note || '',
+      label: (sh.label_id && labelById(sh.label_id)) ? labelById(sh.label_id).name : '',
+      labelColor: (sh.label_id && labelById(sh.label_id)) ? labelById(sh.label_id).color : '',
     };
   });
 
@@ -16234,7 +16530,7 @@ en:{
 'sched.sendEmail':'Send schedule',
 'sched.sendConfirm':'Send {name}\'s schedule for this week to {email}?',
 'sched.addEmail':'+ Add email',
-'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.',
+'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.','labels.title':"Work labels",'labels.intro':"Labels say what kind of work a shift is for: a task, a job, a project, a client. Create the ones your business uses, then pick one when you add a shift. You can filter the schedule by label to see who is doing what.",'labels.namePh':"e.g. Snow removal",'labels.add':"Add label",'labels.empty':"No labels yet. Add your first one below.",'labels.archive':"Archive",'labels.restore':"Restore",'labels.delete':"Delete",'labels.deleteConfirm':"Delete the label \"{name}\"? Shifts that use it keep their hours but lose the label. To keep it on past shifts and just stop using it, archive it instead.",'labels.dupName':"You already have a label with that name.",'labels.nameRequired':"Give the label a name.",'labels.needAddon':"Work labels are part of the Scheduling add-on.",'labels.manage':"Manage labels",'labels.barHint':"Labels let you schedule people for specific tasks, jobs or projects.",'labels.createFirst':"Create labels",'labels.all':"All",'labels.none':"No label",'labels.shiftField':"Label",'labels.optional':"(optional)",'labels.noneOption':"— No label —",'labels.noMatch':"No shifts with this label this week.",'labels.archivedTag':"(archived)",'sched.assignToEmployees':"Also assign this shift to",'sched.allEmployees':"Everyone",'sched.copyEmpDone':"Also scheduled {n} shift(s) for {e} other employee(s).",'sched.copyEmpSkipped':"{k} skipped (already scheduled or off that day).",
 'sched.copyLastWeekTitle':'Copy this person\'s shifts from last week into this week',
 'sched.copyNone':'{name} had no shifts last week to copy.',
 'sched.copyMixed':'Copied {n} shift(s) for {name}; {k} day(s) already had one and were left as-is.',
@@ -17145,7 +17441,7 @@ fr:{
 'sched.sendEmail':'Envoyer l\'horaire',
 'sched.sendConfirm':'Envoyer l\'horaire de {name} pour cette semaine à {email}?',
 'sched.addEmail':'+ Ajouter courriel',
-'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.',
+'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.','labels.title':"Étiquettes de travail",'labels.intro':"Les étiquettes précisent le type de travail d'un quart : une tâche, un chantier, un projet, un client. Créez celles qu'utilise votre entreprise, puis choisissez-en une en ajoutant un quart. Vous pouvez filtrer l'horaire par étiquette pour voir qui fait quoi.",'labels.namePh':"p. ex. Déneigement",'labels.add':"Ajouter une étiquette",'labels.empty':"Aucune étiquette pour l'instant. Ajoutez la première ci-dessous.",'labels.archive':"Archiver",'labels.restore':"Restaurer",'labels.delete':"Supprimer",'labels.deleteConfirm':"Supprimer l'étiquette « {name} » ? Les quarts qui l'utilisent conservent leurs heures mais perdent l'étiquette. Pour la garder sur les quarts passés sans l'utiliser davantage, archivez-la plutôt.",'labels.dupName':"Vous avez déjà une étiquette portant ce nom.",'labels.nameRequired':"Donnez un nom à l'étiquette.",'labels.needAddon':"Les étiquettes de travail font partie de l'option Horaire.",'labels.manage':"Gérer les étiquettes",'labels.barHint':"Les étiquettes permettent de planifier des personnes pour des tâches, chantiers ou projets précis.",'labels.createFirst':"Créer des étiquettes",'labels.all':"Toutes",'labels.none':"Sans étiquette",'labels.shiftField':"Étiquette",'labels.optional':"(facultatif)",'labels.noneOption':"— Aucune étiquette —",'labels.noMatch':"Aucun quart avec cette étiquette cette semaine.",'labels.archivedTag':"(archivée)",'sched.assignToEmployees':"Assigner aussi ce quart à",'sched.allEmployees':"Tout le monde",'sched.copyEmpDone':"{n} quart(s) aussi planifié(s) pour {e} autre(s) employé(s).",'sched.copyEmpSkipped':"{k} ignoré(s) (déjà planifié ou absent ce jour-là).",
 'sched.copyLastWeekTitle':'Copier les quarts de cette personne de la semaine dernière vers cette semaine',
 'sched.copyNone':'{name} n\'avait aucun quart la semaine dernière à copier.',
 'sched.copyMixed':'{n} quart(s) copié(s) pour {name}; {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',

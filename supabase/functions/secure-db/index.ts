@@ -35,6 +35,9 @@ const PROTECTED_TABLES = new Set([
   // Visitor check-in log (name/company/phone/email + timestamps). Same tenant-data sensitivity
   // as employees/punches — PII tied to a specific company and site.
   'visitors',
+  // Company-defined work labels (task / job / project names). Tenant data; managed only by owners
+  // and admins on an account with the Scheduling add-on (enforced below).
+  'work_labels',
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -176,6 +179,7 @@ async function validateWritePayload(
   let sites: Set<string> | null = null;
   let employees: Set<string> | null = null;
   let adminIds: Set<string> | null = null;
+  let labels: Set<string> | null = null;
 
   const companyIds = async () => {
     if (!companies) companies = new Set(await ownedCompanyIds(caller.primaryAdminId));
@@ -194,6 +198,13 @@ async function validateWritePayload(
       employees = cs.length ? await idList(`employees?company_id=in.(${cs.join(',')})&select=id`) : new Set();
     }
     return employees;
+  };
+  const labelIds = async () => {
+    if (!labels) {
+      const cs = [...(await companyIds())];
+      labels = cs.length ? await idList(`work_labels?company_id=in.(${cs.join(',')})&select=id`) : new Set();
+    }
+    return labels;
   };
   // The caller, the account owner, and everyone delegated under that owner.
   const teamIds = async () => {
@@ -218,6 +229,10 @@ async function validateWritePayload(
       const emp = str(row[key]);
       if (emp && !(await employeeIds()).has(emp)) return { field: key, reason: 'tenant' };
     }
+
+    // A shift/punch may only be tagged with one of the caller's own labels.
+    const lab = str(row.label_id);
+    if (lab && !(await labelIds()).has(lab)) return { field: 'label_id', reason: 'tenant' };
 
     // admin-ish references must stay inside the caller's own account
     for (const key of ['admin_id', 'inviter_admin_id', 'manager_id', 'parent_admin_id', 'reviewed_by']) {
@@ -250,7 +265,7 @@ const ENTITLEMENT_FIELDS = [
 ];
 
 // Tables scoped to a tenant by their company_id column.
-const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients', 'kiosk_devices', 'visitors']);
+const COMPANY_SCOPED = new Set(['sites', 'employees', 'punches', 'missed_punch_requests', 'invitations', 'holidays', 'shifts', 'time_off', 'report_recipients', 'kiosk_devices', 'visitors', 'work_labels']);
 
 // Fields a kiosk (no admin session) may set when checking a visitor out. Nothing else — a kiosk
 // checking someone out must never be able to rewrite who they are, only that they've left.
@@ -610,6 +625,17 @@ Deno.serve(async (req: Request) => {
     // nothing to say about a table with no company/site/employee columns.
     if (table === 'announcements' && (!caller || caller.role !== 'super_admin')) {
       return errResp('Unauthorized', 401);
+    }
+    if (table === 'work_labels' && caller && caller.role !== 'super_admin') {
+      // Managing labels is an owner/admin task, and the feature belongs to the Scheduling add-on.
+      if (caller.role === 'manager') return errResp('Forbidden: managers cannot manage work labels', 403);
+      const own = await fetch(
+        `${SUPABASE_URL}/rest/v1/admins?id=eq.${caller.primaryAdminId}&select=scheduling_addon&limit=1`,
+        { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
+      ).then(r => r.ok ? r.json() : null).catch(() => null);
+      if (!Array.isArray(own) || !own[0]?.scheduling_addon) {
+        return errResp('Forbidden: work labels are part of the Scheduling add-on', 403);
+      }
     }
     if (authedAdminId) {
       // Authenticated admin — allowed, but the payload must not point at another tenant.
