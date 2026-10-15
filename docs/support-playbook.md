@@ -1,0 +1,88 @@
+# PunchClock Pro support playbook
+
+Read this before answering any support ticket. It records what the product does today, how past
+tickets were diagnosed, and the traps already hit. Keep it current: whenever a customer-visible
+feature ships or a ticket teaches something, add it here in the same change.
+
+## Ground rules
+
+- Never send email. Draft only, no signature (the Gmail alias appends one). Meissam reviews and sends.
+- Reply in the customer's language (French or English).
+- Before trusting a triage summary, check whether a draft or reply already exists in that thread and
+  when it was written. A concurrent session may already have changed the facts (the Marie-Pier
+  "not a feature yet" reply went out the day the feature shipped).
+- Check recent commits and the live product before saying a feature does not exist. Features land
+  often, and this document may lag a day.
+- Prefer the in-app Message centre (the bell) for announcing updates over emailing every customer.
+- Database fixes to a customer's punches are made deliberately and only after the cause is understood.
+  State in the draft what was changed.
+
+## How punching works (the usual source of confusion)
+
+- The kiosk is a shared tablet, phone or PC set up per site (Sites, Kiosk Shortcut). Staff tap their
+  name and enter their PIN. No login.
+- The employee portal (employee.html) shows schedule, hours and time off. It can also clock in and
+  out remotely, but only when BOTH are on: the company's "Remote Access" switch and that employee's
+  own "Remote Clock-In" grant (Employees, edit). "Can't find a punch button" is usually no kiosk set
+  up, or one of those two switches being off.
+- The native phone app also punches through the same function and tags punches MOBILE in Activity.
+
+## Wrong hours on a phone punch (Thrive Medical, 2026-10-14)
+
+- Symptom: a day shows about 23 hours instead of about 1 hour.
+- Cause: the phone had no signal at clock-out, held the punch, and sent it when the app was next
+  opened (22 hours later). The server only trusted the phone's time for 16 hours, so it stamped the
+  sync time while keeping the real date and time for display. Hours use the stamped time.
+- Fixed 2026-10-15: the phone's time is now trusted for 48 hours. Activity shows a grey LATE SYNC tag
+  on phone punches synced late, and a red CHECK TIME tag if the stamped and displayed times differ by
+  12 hours or more.
+- Past 48 hours offline, the stamped time is still the sync time. Fix: Activity, Edit on the punch,
+  re-save the date and time. Employees should open the app once they are back online.
+- Diagnosis query: compare punches.punched_at with punch_date + punch_time (company time zone), and
+  check synced_late and source.
+
+## Features and how to explain them
+
+Work labels (Scheduling add-on, $14.95/month, paid plans). Customers define their own labels (a task,
+a job, a project, a client) with a colour.
+- Setup: Schedule, Create/Manage labels. Owners and admins only; managers can use labels, not edit them.
+- Scheduling: pick a Label on each shift. A day with two kinds of work is two shifts. Use "Also apply
+  this shift to" (other days) and "Also assign this shift to" (other employees).
+- At clock-in (optional): Sites, edit company, "Work labels at clock-in": Off (default), Ask but allow
+  skipping, or Required. The employee picks the task after their PIN; today's scheduled label is
+  highlighted. "Switch task" (name, PIN, new task) records an OUT then an IN at the same moment, so
+  totals and overtime are unaffected. Returning from a break keeps the same task.
+- Reporting: Activity shows a label badge and filter; Edit/Add Punch can set a label. Reports has a
+  Label filter, a Label column and an "Hours by label" table (also in PDF/Excel/CSV). Hours are
+  attributed from the IN punch. Filtering never changes overtime. Not shown: dollar labour cost
+  (planned, not built).
+- Not supported yet: choosing a task when clocking in from the employee portal.
+- A label is not the employee's Department. Department says who a person is; a label says what a
+  shift or stretch of work is for.
+- Granting a 7-day trial is manual: set admins.scheduling_addon = true and scheduling_trial_ends_at,
+  and schedule a guarded one-off pg_cron job to switch it off. Nothing expires it automatically.
+
+Other recent changes
+- Reports and Activity: Previous / Next / Current period buttons that step through pay periods.
+- Schedule: "Clear week" for one employee; copy a shift to other employees; a company setting lets
+  site managers see and schedule staff from all sites (off means only their own sites).
+- Retention: records older than 18 months are archived monthly. Every company can always pull reports
+  for the last 18 months. Older data is available on request. This is stated in the Terms
+  and the Privacy Policy.
+- Kiosk device list (site settings) shows IP, model and OS, which helps identify a tablet.
+- Kiosks reload themselves when they detect stale data (the Windsor ghost clock-in issue).
+
+## Diagnostic recipes
+
+- "Someone shows clocked in who wasn't there": check the kiosk's site and device list, and whether the
+  punch came from MOBILE (location map in Activity). A stale kiosk screen was a past cause.
+- "Report or Activity missing punches": the data layer pages through results and reports split large
+  ranges; very large ranges ask the user to narrow the dates.
+- "Hours look wrong": compare punched_at, punch_date and punch_time, then look for is_manual,
+  synced_late, break rows (is_break) and task switches (is_switch pairs with no gap).
+
+## Style of a good reply
+
+State what happened in plain words, say what was fixed and for whom, say what changes from now on,
+and give one concrete step the customer can take themselves, using the exact on-screen names (they
+are in the app's French and English dictionaries). Do not blame the employee unless it was their action.
