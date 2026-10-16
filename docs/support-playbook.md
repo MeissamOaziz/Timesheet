@@ -6,7 +6,9 @@ feature ships or a ticket teaches something, add it here in the same change.
 
 ## Ground rules
 
-- Never send email. Draft only, no signature (the Gmail alias appends one). Meissam reviews and sends.
+- Drafts carry no signature (the Gmail alias appends one). Interactive sessions never send customer email:
+  they draft and Meissam reviews and sends. The triage routine follows its own prompt: it may send a
+  reply itself only for a Lane A or B fix it has verified, and everything else it drafts.
 - Reply in the customer's language (French or English).
 - Before trusting a triage summary, check whether a draft or reply already exists in that thread and
   when it was written. A concurrent session may already have changed the facts (the Marie-Pier
@@ -14,8 +16,11 @@ feature ships or a ticket teaches something, add it here in the same change.
 - Check recent commits and the live product before saying a feature does not exist. Features land
   often, and this document may lag a day.
 - Prefer the in-app Message centre (the bell) for announcing updates over emailing every customer.
-- Database fixes to a customer's punches are made deliberately and only after the cause is understood.
-  State in the draft what was changed.
+- Editing a customer's punch rows is never a routine fix. Find the cause, then draft the reply and
+  put the exact row and the correction in the summary email for Meissam to approve. If a fix is made
+  in an interactive session, say in the draft what was changed.
+- If a ticket reveals something this playbook does not cover (a new cause, a feature question, a
+  trap), add a short "Playbook suggestion:" line to the summary email so it can be added.
 
 ## How punching works (the usual source of confusion)
 
