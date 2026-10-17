@@ -16030,6 +16030,12 @@ async function sendScheduleEmailCore(email, empName, weekDays, shifts, quiet) {
     ? `${weekDays[0].toLocaleDateString(t('sched.locale')||'en-CA',{month:'short',day:'numeric'})} – ${weekDays[6].toLocaleDateString(t('sched.locale')||'en-CA',{month:'short',day:'numeric'})}`
     : '';
 
+  // The emailed week reads top to bottom by date. Callers hand over shifts straight from the
+  // schedule grid's cache, which is loaded by start time (the grid places them by date itself), so
+  // without this sort a week came out as Saturday, Friday, Sunday, Tuesday, Thursday.
+  shifts = (shifts || []).slice().sort((a, b) =>
+    (a.shift_date || '').localeCompare(b.shift_date || '') || (a.start_time || '').localeCompare(b.start_time || ''));
+
   // Build shift rows with day labels
   const shiftRows = shifts.map(sh => {
     const d = new Date(sh.shift_date + 'T12:00:00');
