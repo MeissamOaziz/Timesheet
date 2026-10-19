@@ -688,6 +688,7 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .lnb-ghost{background:var(--surface2);border:1px solid var(--border);color:var(--text)!important;}
 .lnb-ghost:hover{border-color:var(--accent);color:var(--accent)!important;}
 .lnb-cta{background:var(--accent);color:#fff!important;}
+@media(max-width:1100px){.land-nav-actions .lnb-portal{display:none!important;}}
 .lnb-cta:hover{opacity:.88;background:var(--accent)!important;color:#fff!important;}
 .land-hero{text-align:center;padding:90px 24px 70px;max-width:780px;margin:0 auto;}
 .land-hero h1{font-size:clamp(32px,5vw,58px);font-weight:700;line-height:1.1;letter-spacing:-1.5px;margin-bottom:22px;}
@@ -1326,6 +1327,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="land-nav-actions">
         <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
         <div class="lang-switcher"><button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div>
+        <a class="lnb lnb-ghost lnb-portal" href="employee.html" data-i18n="land.portalLogin">Employee Portal</a>
         <a class="lnb lnb-ghost" onclick="hideLanding();navigate('login')" data-i18n="nav.login">Login</a>
         <a class="lnb lnb-cta" onclick="hideLanding();navigate('register')" data-i18n="land.getStarted">Get Started Free</a>
       </div>
@@ -1352,6 +1354,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <!-- Sign in lives in the nav; a third hero CTA only competed with the two that matter. -->
     </div>
     <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · geofencing &amp; kiosk included</p>
+    <p style="font-size:13px;margin-top:10px"><a href="employee.html" style="color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px" data-i18n="land.portalHint">Employee? Open the employee portal &rarr;</a></p>
   </div>
 
   <!-- PRODUCT PREVIEW — an actual screenshot of the running app, captured by
@@ -1870,6 +1873,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <a onclick="showLegal('tos')" data-i18n="land.tos">Terms of Service</a>
         <a onclick="showLegal('privacy')" data-i18n="land.privacyPolicy">Privacy Policy</a>
         <a onclick="hideLanding();navigate('login')" data-i18n="land.adminLogin">Admin Login</a>
+        <a href="employee.html" data-i18n="land.portalLogin">Employee Portal</a>
       </div>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:8px" data-i18n="land.copyright">© 2026 PunchClock Pro. All rights reserved.</p>
@@ -16492,7 +16496,7 @@ en:{
 'land.mostPopular':'Most Popular','land.unlimitedSub':'Unlimited everything','land.contactUs':'Contact us',
 'land.trialNote':'Start on the Free plan — free forever, no credit card. Upgrade only when you outgrow it.',
 'land.footerTagline':'Time & attendance software for modern shift workforces.',
-'land.tos':'Terms of Service','land.privacyPolicy':'Privacy Policy','land.adminLogin':'Admin Login',
+'land.tos':'Terms of Service','land.privacyPolicy':'Privacy Policy','land.adminLogin':'Admin Login','land.portalLogin':"Employee Portal",'land.portalHint':"Employee? Open the employee portal →",
 'land.copyright':'© 2026 PunchClock Pro. All rights reserved.',
 'msg.deleteConfirm1':'Are you sure you want to delete','msg.deleteConfirm2':'This cannot be undone.',
 'msg.deleteEmpPunches':'This also permanently deletes their {n} punch records — payroll history you may be required to keep.',
@@ -17403,7 +17407,7 @@ fr:{
 'land.mostPopular':'Le plus populaire','land.unlimitedSub':'1 compagnie · Sites et employés illimités','land.contactUs':'Nous contacter',
 'land.trialNote':'Commencez avec le forfait Gratuit — gratuit pour toujours, sans carte de crédit. Passez à un forfait payant seulement quand vous en aurez besoin.',
 'land.footerTagline':'Logiciel de pointage pour les équipes de travail modernes.',
-'land.tos':'Conditions d\'utilisation','land.privacyPolicy':'Politique de confidentialité','land.adminLogin':'Connexion Admin',
+'land.tos':'Conditions d\'utilisation','land.privacyPolicy':'Politique de confidentialité','land.adminLogin':'Connexion Admin','land.portalLogin':"Portail employé",'land.portalHint':"Employé? Ouvrez le portail employé →",
 'land.copyright':'© 2026 PunchClock Pro. Tous droits réservés.',
 'msg.deleteConfirm1':'Voulez-vous vraiment supprimer','msg.deleteConfirm2':'Cette action est irréversible.',
 'msg.deleteEmpPunches':'Cela supprime aussi définitivement ses {n} pointages — un historique de paie que vous devez possiblement conserver.',
