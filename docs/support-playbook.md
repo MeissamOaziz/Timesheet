@@ -30,18 +30,24 @@ feature ships or a ticket teaches something, add it here in the same change.
   out remotely, but only when BOTH are on: the company's "Remote Access" switch and that employee's
   own "Remote Clock-In" grant (Employees, edit). "Can't find a punch button" is usually no kiosk set
   up, or one of those two switches being off.
-- The native phone app also punches through the same function and tags punches MOBILE in Activity.
+- There is no native phone app yet (an Expo app is planned and not released). A punch made from the
+  employee portal on a phone is tagged MOBILE in Activity. Portal punches always use the employee's
+  assigned site: there is no site picker, so geofence distance is measured against that one site.
 
 ## Wrong hours on a phone punch (Thrive Medical, 2026-10-14)
 
 - Symptom: a day shows about 23 hours instead of about 1 hour.
-- Cause: the phone had no signal at clock-out, held the punch, and sent it when the app was next
-  opened (22 hours later). The server only trusted the phone's time for 16 hours, so it stamped the
-  sync time while keeping the real date and time for display. Hours use the stamped time.
+- Cause: the portal page did not finish sending the clock-out until it was reopened the next morning
+  (22 hours later); the portal has no offline queue, so the likely reason is the phone suspending the
+  page in the background right after the tap. The portal sends the tap time along with the punch,
+  but the server only trusted that time for 16 hours, so it stamped the sync time while keeping the
+  real date and time for display. Hours use the stamped time. The GPS pin on such a punch is likely
+  from when the page woke up, not from the tap (Stephanie's late OUT and her next IN had identical
+  coordinates). This was first described as an offline app queue; that was an inference, not a fact.
 - Fixed 2026-10-15: the phone's time is now trusted for 48 hours. Activity shows a grey LATE SYNC tag
   on phone punches synced late, and a red CHECK TIME tag if the stamped and displayed times differ by
   12 hours or more.
-- Past 48 hours offline, the stamped time is still the sync time. Fix: Activity, Edit on the punch,
+- Past 48 hours late, the stamped time is still the sync time. Fix: Activity, Edit on the punch,
   re-save the date and time. Employees should open the app once they are back online.
 - Diagnosis query: compare punches.punched_at with punch_date + punch_time (company time zone), and
   check synced_late and source.
@@ -61,6 +67,24 @@ feature ships or a ticket teaches something, add it here in the same change.
   list for that address. A reset sends an email titled "NNNNNN - Your PunchClock Pro verification
   code". If none exists there, no code was generated for that address.
 - Admin workaround when someone is locked out: Admin, Employees, resend the portal invitation.
+
+## GPS and geofencing (sales questions come up often)
+
+- Phone punches (employee portal, "Remote clock-in") record GPS latitude/longitude, accuracy and, when the
+  employee's site has a location, the distance from it. Admins see a map pin per punch in Activity.
+- Remote clock-in needs BOTH the company's Remote Access switch and a per-employee Remote Clock-In
+  grant (set individually or in bulk from Employees). Employees activate the portal from an email
+  invitation. Nothing to install: it runs in the phone's browser and can be saved to the home screen.
+  The phone must allow location access.
+- Geofence: each site can have a location and a radius of 25 to 500 m, in Lenient mode (the punch goes
+  through with a warning if GPS is unavailable) or Strict mode (blocked outside the radius or without
+  GPS). The kiosk blocks a punch outside the radius. Portal punches only block in Strict mode.
+- Caveat for crews that move between job sites: a portal punch always counts against the employee's
+  assigned site, so Strict mode would block them anywhere else. For roaming crews, do not enable Strict
+  mode; the recorded GPS pin per punch is the proof of where they started and finished.
+- Plans: Free (1 site, 10 employees), Starter $19.49/month CAD (2 sites, 25 employees), Growth $39.49
+  (6 sites, 60 employees), Business $79.49 (unlimited). Flat price per account, not per employee. Remote
+  clock-in and geofencing are not plan-gated.
 
 ## Features and how to explain them
 
