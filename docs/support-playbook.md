@@ -46,6 +46,22 @@ feature ships or a ticket teaches something, add it here in the same change.
 - Diagnosis query: compare punches.punched_at with punch_date + punch_time (company time zone), and
   check synced_late and source.
 
+## Employee can't sign in to the portal (Thrive Medical, 2026-10-19)
+
+- Symptom: "invalid credentials or account not verified" although the employee is sure the password is
+  right, and "Forgot password" seems to send nothing.
+- Cause found: portal login compared the stored email with the lowercased typed one, so an account
+  stored with a capital letter (Kennedy@...) could never match. Fixed 2026-10-19: stored emails are
+  lowercased, a trigger keeps them lowercase, and both login functions ignore case. A password
+  reset would NOT have fixed this, because login failed the same way afterwards.
+- Forgot password only sends a code to the exact email the account is registered under, and says
+  nothing either way (so addresses cannot be probed). If no code arrives, ask which address the
+  employee typed and compare with employee_portal.email.
+- Diagnosis: check employee_portal (status = active, password set, last_login), then Resend's sent
+  list for that address. A reset sends an email titled "NNNNNN - Your PunchClock Pro verification
+  code". If none exists there, no code was generated for that address.
+- Admin workaround when someone is locked out: Admin, Employees, resend the portal invitation.
+
 ## Features and how to explain them
 
 Work labels (Scheduling add-on, $14.95/month, paid plans). Customers define their own labels (a task,
