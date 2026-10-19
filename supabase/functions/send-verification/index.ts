@@ -51,6 +51,29 @@ function buildVerificationHtml(name, code) {
     </div>
     <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;">If you did not request this code, you can safely ignore this email.</p>`);
 }
+// Password reset code (admin and employee portal). It used to reuse the registration template,
+// which told people to "complete your registration" and quoted a 10-minute expiry when the code
+// actually lasts 15. Bilingual, like the other emails that can reach French-speaking staff.
+function buildPasswordResetHtml(name, code) {
+  const box = `<div style="background:#f1f5f9;border:2px solid #4f8ef7;border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
+      <div style="font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Reset code / Code de r&eacute;initialisation</div>
+      <div style="font-family:monospace;font-size:42px;font-weight:700;color:#4f8ef7;letter-spacing:12px;">${code}</div>
+    </div>`;
+  return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">Reset your password</h1>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 28px;">
+      Hi ${name}, enter the code below on the PunchClock Pro sign-in page to choose a new password.
+      This code expires in <strong style="color:#1e293b;">15 minutes</strong>.
+    </p>
+    ${box}
+    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 28px;">If you did not ask to reset your password, you can safely ignore this email. Your password has not changed.</p>
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 28px;">
+    <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px;">R&eacute;initialisez votre mot de passe</h2>
+    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Bonjour ${name}, entrez le code ci-dessus sur la page de connexion PunchClock Pro pour choisir un nouveau mot de passe.
+      Ce code expire dans <strong style="color:#1e293b;">15 minutes</strong>.
+    </p>
+    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;">Si vous n'avez pas demand&eacute; cette r&eacute;initialisation, vous pouvez ignorer ce courriel. Votre mot de passe n'a pas chang&eacute;.</p>`);
+}
 function buildJoinRequestHtml(adminName, requesterName, requesterEmail) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">New co-admin access request</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
@@ -352,7 +375,7 @@ serve(async (req)=>{
   }
   try {
     const body = await req.json();
-    const { email, name, code, type, requesterName, requesterEmail, adminName, companyName } = body;
+    const { email, name, code, type, requesterName, requesterEmail, adminName, companyName, purpose } = body;
     if (!email || !name) {
       return new Response(JSON.stringify({
         success: false,
@@ -427,8 +450,13 @@ serve(async (req)=>{
           }
         });
       }
-      subject = `${code} — Your PunchClock Pro verification code`;
-      html = buildVerificationHtml(name, code);
+      if (purpose === 'password_reset') {
+        subject = `${code} — Reset your PunchClock password | Réinitialisez votre mot de passe`;
+        html = buildPasswordResetHtml(name, code);
+      } else {
+        subject = `${code} — Your PunchClock Pro verification code`;
+        html = buildVerificationHtml(name, code);
+      }
     }
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
