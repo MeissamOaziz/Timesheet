@@ -1134,6 +1134,16 @@ function getGeolocation() {
   });
 }
 
+// A GPS pin only proves where someone was if it was taken when they tapped. The fix is requested
+// AFTER the tap, and a phone can suspend the page right then: the request then finishes when the
+// page is reopened, hours later, and the pin shows where they were at that moment (a late clock-out
+// recorded the next morning's location). Anything older than this window is dropped, so a punch
+// carries either an honest location or none.
+const GEO_FRESH_MS = 30000;
+function geoIfFresh(geo, tapMs, nowMs) {
+  return geo && (nowMs - tapMs) <= GEO_FRESH_MS ? geo : null;
+}
+
 function showPunchError(msg) {
   const el = document.getElementById('punchError');
   el.innerHTML = `<svg class="ic"><use href="#i-warn"/></svg><span>${escHtml(msg)}</span>`;
@@ -1158,7 +1168,7 @@ async function doPunch() {
 
   const type = _lastPunchType === 'IN' ? 'OUT' : 'IN';
   const now = new Date();
-  const geo = await getGeolocation();
+  const geo = geoIfFresh(await getGeolocation(), now.getTime(), Date.now());
 
   try {
     const rows = asRows(await rpc('portal_punch', {

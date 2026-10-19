@@ -44,6 +44,8 @@ feature ships or a ticket teaches something, add it here in the same change.
   real date and time for display. Hours use the stamped time. The GPS pin on such a punch is likely
   from when the page woke up, not from the tap (Stephanie's late OUT and her next IN had identical
   coordinates). This was first described as an offline app queue; that was an inference, not a fact.
+  Since 2026-10-19 the portal drops a GPS fix taken more than 30 seconds after the tap, so a delayed
+  punch carries no location instead of a wrong one. Older delayed punches may still show a wrong pin.
 - Fixed 2026-10-15: the phone's time is now trusted for 48 hours. Activity shows a grey LATE SYNC tag
   on phone punches synced late, and a red CHECK TIME tag if the stamped and displayed times differ by
   12 hours or more.
