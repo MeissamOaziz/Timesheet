@@ -14424,6 +14424,20 @@ async function init(){
   document.getElementById('actEnd').value=today.toLocaleDateString('en-CA');
   document.getElementById('actStart').value=new Date(today-6*86400000).toLocaleDateString('en-CA');
 
+  // Direct demo link (?demo=1), so a sales email can open the live demo in one click. Only for a
+  // visitor who is not signed in and whose device is not a bound kiosk: starting the demo clears
+  // the session, and it must never do that to a real admin or take over a tablet.
+  try{
+    const _dq=new URLSearchParams(window.location.search);
+    if(_dq.get('demo')==='1' && !isLoggedIn() && !_dq.has('kiosk') && !localStorage.getItem('pc_kiosk_device')){
+      const _dl=getUrlLang();
+      window.history.replaceState({},'',window.location.pathname+(_dl?'?lang='+_dl:''));
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      startDemo();
+      return;
+    }
+  }catch(_){}
+
   // ── KIOSK URL HANDLER (?kiosk=SITE_ID or saved device binding) ──
   // URL param takes priority so visiting a new kiosk URL re-binds the device.
   // If no URL param, fall back to the site saved in localStorage by a prior visit.
