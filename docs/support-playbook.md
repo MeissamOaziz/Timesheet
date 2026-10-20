@@ -135,6 +135,13 @@ Other recent changes
 - "Hours look wrong": compare punched_at, punch_date and punch_time, then look for is_manual,
   synced_late, break rows (is_break) and task switches (is_switch pairs with no gap).
 
+- "Company settings / company information will not save, nothing happens when I press Save": from
+  2026-10-13 to 2026-10-20 the company edit form threw an error on every account WITHOUT the Scheduling
+  add-on (a variable used before it was declared in saveCompany), so nothing reached the server and no
+  error showed. Fixed 2026-10-20. If it is reported again, first check audit_log for a `companies` PATCH
+  by that admin (none = the click never reached the server, so it is a browser-side error), ask for a
+  hard reload (Ctrl+Shift+R, or fully close and reopen the app) and a screenshot of the console.
+
 ## Style of a good reply
 
 State what happened in plain words, say what was fixed and for whom, say what changes from now on,
