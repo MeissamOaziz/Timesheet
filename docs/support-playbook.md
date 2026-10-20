@@ -142,6 +142,21 @@ Other recent changes
   by that admin (none = the click never reached the server, so it is a browser-side error), ask for a
   hard reload (Ctrl+Shift+R, or fully close and reopen the app) and a screenshot of the console.
 
+- "An employee cannot sign in" / "Invalid credentials or account not verified": that exact wording only
+  exists on the ADMIN sign-in screen (punchclock.ca, "Admin Login"). The employee portal at
+  https://www.punchclock.ca/employee.html says "Invalid email or password." instead. So the employee is
+  almost certainly typing their email on the wrong page: employees have a portal account, not an admin
+  account, so the admin screen can never accept them, and its "Forgot password?" sends nothing (it only
+  looks up admins), which looks like "the reset email never arrives". Check this FIRST (Thrive Medical /
+  Kennedy Watson, Oct 16-20, took three rounds because it was missed). Since 2026-10-20 the admin
+  sign-in card, its error message and its forgot-password page link to the employee portal.
+- Employee wants a new password: in the portal, tap "Change password" at the bottom of the page (or the
+  circle with their initial, top right); it needs the current password. If they forgot it, "Forgot your
+  password?" on the portal sign-in page emails a 6-digit code (15 minutes). Support can also set a
+  temporary password directly in employee_portal.password_hash with
+  `extensions.crypt('<temp>', extensions.gen_salt('bf', 10))` and then ask them to change it at once.
+  Emails are matched case-insensitively. Portal account emails are stored in lowercase.
+
 ## Style of a good reply
 
 State what happened in plain words, say what was fixed and for whom, say what changes from now on,
