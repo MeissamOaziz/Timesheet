@@ -11226,11 +11226,13 @@ async function saveCompany(){
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
   const remote_punch_enabled=document.getElementById('remotePunchThumb').style.left==='20px';
   const managers_see_all_sites=document.getElementById('mgrAllSitesThumb').style.left==='20px';
+  // Declared before first use: reading it below while it was still unset threw for every account without
+  // the Scheduling add-on, so their company settings silently never saved.
+  const editId=document.getElementById('editCompanyUid').value;
   // Only an account with the Scheduling add-on sees this setting; for anyone else keep what is stored.
   const punch_label_mode=(document.getElementById('punchLabelModeRow').style.display!=='none')
     ? document.getElementById('companyPunchLabelMode').value
     : ((editId && (C.companies.find(c=>c.id===editId)||{}).punch_label_mode) || 'off');
-  const editId=document.getElementById('editCompanyUid').value;
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
   // Hard enforce plan limit on new company creation
   if(!editId){
