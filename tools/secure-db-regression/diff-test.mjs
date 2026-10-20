@@ -26,14 +26,15 @@ const companiesOf = { a1: ['c1'], b1: ['c9'] };
 const sitesOf = { c1: ['s1', 's2'], c9: ['s9'] };
 const employeesOf = { c1: ['e1', 'e2'], c9: ['e9'] };
 const bigPunches = Array.from({ length: 2500 }, (_, i) => ({ id: 'p' + String(i).padStart(5, '0'), emp_id: 'e1', type: i % 2 ? 'OUT' : 'IN', punched_at: new Date(2026, 9, 1, 0, 0, i).toISOString(), site_id: 's1' }));
-const E_OWN = '00000000-0000-4000-8000-0000000000e1', E_NOMAIL = '00000000-0000-4000-8000-0000000000e2', E_OTHER = '00000000-0000-4000-8000-0000000000e9';
+const E_OWN = '00000000-0000-4000-8000-0000000000e1', E_NOMAIL = '00000000-0000-4000-8000-0000000000e2', E_OTHER = '00000000-0000-4000-8000-0000000000e9', E_THROTTLED = '00000000-0000-4000-8000-0000000000e3';
 const T_OK = '11111111-1111-4111-8111-111111111111', T_OTHER = '11111111-1111-4111-8111-111111111112', T_EXPIRED = '11111111-1111-4111-8111-111111111113', T_USED = '11111111-1111-4111-8111-111111111114';
 const J_OK = '22222222-2222-4222-8222-222222222221', J_PENDING = '22222222-2222-4222-8222-222222222222', J_OTHER = '22222222-2222-4222-8222-222222222223', J_DENIED = '22222222-2222-4222-8222-222222222224';
 const PAST = new Date(Date.now() - 864e5).toISOString();
 const empRows = {
-  [E_OWN]: { id: E_OWN, name: 'Ann Lee', email: 'Ann@x.ca', company_id: 'c1' },
-  [E_NOMAIL]: { id: E_NOMAIL, name: 'No Mail', email: null, company_id: 'c1' },
-  [E_OTHER]: { id: E_OTHER, name: 'Other Tenant', email: 'o@other.ca', company_id: 'c9' },
+  [E_OWN]: { id: E_OWN, name: 'Ann Lee', email: 'Ann@x.ca', company_id: 'c1', site_id: 's1', pin: '1234' },
+  [E_NOMAIL]: { id: E_NOMAIL, name: 'No Mail', email: null, company_id: 'c1', site_id: 's1', pin: '2222' },
+  [E_THROTTLED]: { id: E_THROTTLED, name: 'Busy Bee', email: null, company_id: 'c1', site_id: 's1', pin: '3333' },
+  [E_OTHER]: { id: E_OTHER, name: 'Other Tenant', email: 'o@other.ca', company_id: 'c9', site_id: 's9', pin: '9999' },
 };
 const invRows = {
   [T_OK]: { token: T_OK, email: 'inv@x.ca', role: 'manager', company_id: 'c1', status: 'pending', expires_at: FUTURE },
@@ -119,6 +120,7 @@ function makeFetch() {
     if (t === 'employees' && method === 'GET' && p.q.has('id') && p.q.get('select') !== 'id') return j(pick(empRows, eq('id')));
     if (t === 'companies' && method === 'GET' && p.q.has('id') && !p.q.has('admin_id')) return j([{ id: eq('id'), name: 'Acme Fence', logo_url: 'https://uziwymrwaeojhqaagqcm.supabase.co/storage/v1/object/public/logos/c1.png' }]);
     if (t === 'admins' && method === 'GET' && p.q.has('id') && /^name/.test(p.q.get('select') || '')) return j(pick(adminProfile, eq('id')));
+    if (t === 'audit_log' && method === 'GET' && p.q.has('event')) return j((p.q.get('filter') || '').includes(E_THROTTLED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }] : []);
     if (method === 'GET' && tables[t]) {
       let rows = tables[t]; const off = parseInt(p.q.get('offset') || '0', 10); const lim = parseInt(p.q.get('limit') || String(rows.length), 10);
       const total = rows.length; rows = rows.slice(off, off + lim);
@@ -246,6 +248,32 @@ const cases = [
     r => r.status === 200 && r.fn[0].body.email === 'meissam.h.p@gmail.com' && r.fn[0].body.userEmail === 'new-account@x.ca' && r.fn[0].body.plan === 'Free'),
   R('send_email', 'new account notice: an old account cannot replay it', { action: 'send_email', body: { type: 'new_account_notification' }, ...own }, r => r.status === 403 && r.fn.length === 0),
   R('send_email', 'new account notice: recipient cannot be chosen', { action: 'send_email', body: { type: 'new_account_notification', email: 'attacker@evil.example' }, sessionToken: 'tokNew' }, r => r.status === 200 && r.fn[0].body.email === 'meissam.h.p@gmail.com'),
+
+  // send_email from a kiosk (no admin session): the one thing a person at a terminal may ask for.
+  R('send_email', 'kiosk: schedule to the address on file, PIN correct', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', email: 'attacker@evil.example', weekLabel: 'w', shifts: [] } },
+    r => r.status === 200 && r.fn.length === 1 && r.fn[0].body.email === 'ann@x.ca' && !JSON.stringify(r.fn[0].body).includes('evil.example')),
+  R('send_email', 'kiosk: no address on file, they type one (sent once)', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_NOMAIL, pin: '2222', email: 'Typed@Me.ca', weekLabel: 'w', shifts: [] } },
+    r => r.status === 200 && r.fn[0].body.email === 'typed@me.ca'),
+  R('send_email', 'kiosk: no address anywhere', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_NOMAIL, pin: '2222', weekLabel: 'w', shifts: [] } }, r => r.status === 400 && r.fn.length === 0),
+  R('send_email', 'kiosk: typed address is not an address', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_NOMAIL, pin: '2222', email: 'a@b.c<script>alert(1)</script>', weekLabel: 'w', shifts: [] } }, r => r.status === 400 && r.fn.length === 0),
+  R('send_email', 'kiosk: wrong PIN', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, pin: '0000', weekLabel: 'w', shifts: [] } }, r => r.status === 403 && r.fn.length === 0),
+  R('send_email', 'kiosk: missing PIN', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, weekLabel: 'w', shifts: [] } }, r => r.status === 400 && r.fn.length === 0),
+  R('send_email', 'kiosk: employee from another site', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OTHER, pin: '9999', weekLabel: 'w', shifts: [] } }, r => r.status === 403 && r.fn.length === 0),
+  R('send_email', 'kiosk: unknown site', { action: 'send_email', kioskSiteId: 'nope', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', weekLabel: 'w', shifts: [] } }, r => r.status === 401 && r.fn.length === 0),
+
+  // demote_manager: the caller comes from the session, never from the request body.
+  R('demote_manager', 'no session', { action: 'demote_manager', body: { manager_id: E_OWN } }, r => r.status === 401 && r.calls.length === 0),
+  R('demote_manager', 'a manager may not demote', { action: 'demote_manager', body: { manager_id: E_OWN }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /rpc\/demote/.test(c))),
+  R('demote_manager', 'malformed manager id', { action: 'demote_manager', body: { manager_id: "x' or '1'='1" }, ...own }, r => r.status === 400 && !r.calls.some(c => /rpc\/demote/.test(c))),
+  R('demote_manager', 'missing manager id', { action: 'demote_manager', body: {}, ...own }, r => r.status === 400 && !r.calls.some(c => /rpc\/demote/.test(c))),
+  R('demote_manager', 'owner: caller id is the session, a forged one is ignored', { action: 'demote_manager', body: { manager_id: E_OTHER, p_caller_id: 'b1', caller_id: 'b1' }, ...own },
+    r => { const c = r.calls.filter(x => /rpc\/demote/.test(x)); if (r.status !== 200 || c.length !== 1) return false; const b = JSON.parse(c[0].split('demote_manager_to_employee ')[1]); return b.p_caller_id === 'a1' && b.p_manager_id === E_OTHER && Object.keys(b).length === 2; }),
+  R('send_email', 'kiosk: rate limited after 5 in an hour', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_THROTTLED, pin: '3333', email: 't@x.ca', weekLabel: 'w', shifts: [] } }, r => r.status === 429 && r.fn.length === 0),
+  R('send_email', 'kiosk: cannot send any other kind of email', { action: 'send_email', kioskSiteId: 's1', body: { type: 'invitation', token: T_OK, pin: '1234' } }, r => r.status === 401 && r.fn.length === 0),
+  R('send_email', 'kiosk: cannot ask for a dry run', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', dry_run: true, weekLabel: 'w', shifts: [] } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].dry === false && !r.obj.html),
+  R('send_email', 'kiosk: shifts are bounded like the admin path', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', weekLabel: 'x'.repeat(300), shifts: Array.from({ length: 100 }, () => ({ day: 'd'.repeat(300), startTime: '25:99', endTime: '<b>', note: 'n'.repeat(500) })) } },
+    r => r.status === 200 && r.fn[0].body.shifts.length === 60 && r.fn[0].body.weekLabel.length === 60 && r.fn[0].body.shifts.every(x => x.startTime === '' && x.endTime === '' && x.note.length <= 200)),
+  R('send_email', 'kiosk: nothing at all (no site, no session)', { action: 'send_email', body: { type: 'schedule', employee_id: E_OWN, pin: '1234' } }, r => r.status === 401 && r.fn.length === 0),
   // tables the app does not use (these are the ones allowed to differ: they were open, they must now be closed)
   R('unlisted-tables', 'anon reads admin_sessions', { table: 'admin_sessions', method: 'GET', filter: 'limit=1' }),
   R('unlisted-tables', 'anon reads email_codes', { table: 'email_codes', method: 'GET', filter: 'limit=1' }),

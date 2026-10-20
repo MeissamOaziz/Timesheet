@@ -6641,7 +6641,7 @@ async function doLogin(){
     if(admin.status === 'suspended'){showMsg('loginMsg',t('msg.suspended'),'error');return;}
     if(admin.status === 'pending_invite'){
       // First login for co-admin — redirect to set password
-      pendingInviteAdmin = admin;
+      pendingInviteAdmin = {...admin, _tmp: pass}; // temp password stays in memory; activating needs it again
       navigate('setpassword');
       return;
     }
@@ -6693,7 +6693,7 @@ async function doSetInvitePassword(){
   if(pw!==pw2){showMsg('setpassMsg',t('msg.passMismatch')||'Passwords do not match.','error');return;}
   try{
     showMsg('setpassMsg','Saving...','info');
-    const act=await DB.rpc('activate_invited_admin',{p_id:pendingInviteAdmin.id,p_newpass:pw});
+    const act=await DB.rpc('activate_invited_admin',{p_id:pendingInviteAdmin.id,p_curpass:pendingInviteAdmin._tmp||'',p_newpass:pw});
     if(!act||!act.ok){
       const map={weak_password:t('msg.passShort')||'Password must be at least 6 characters.',not_pending:'This invitation is no longer valid. Please log in.',not_found:'Account not found.'};
       showMsg('setpassMsg', map[act&&act.error] || 'Could not set password. Please try again.','error');
@@ -10534,6 +10534,12 @@ async function refreshRoleButton(empId){
   }
 }
 
+// The server takes the caller from the signed-in session; the browser only says which manager.
+async function demoteManager(managerId){
+  if(window._demoMode) return {ok:true,demo:true};
+  return await supaFetch('POST','email_codes',{action:'demote_manager',body:{manager_id:managerId}});
+}
+
 async function handlePromoteButtonClick(){
   const btn = document.getElementById('promoteToManagerBtn');
   const state = btn ? btn.dataset.roleState : 'employee';
@@ -10545,7 +10551,7 @@ async function handlePromoteButtonClick(){
       ? `Rétrograder ${empName} en employé? Cette personne perdra l'accès gestionnaire et ses sites assignés, mais conservera ses pointages. Réversible.`
       : `Demote ${empName} to employee? They'll lose manager access and site assignments but keep their punch records. This can be reversed.`)) return;
     try{
-      const r = await DB.rpc('demote_manager_to_employee', {p_caller_id: sess.id, p_manager_id: mgrId});
+      const r = await demoteManager(mgrId);
       if(r && r.ok){
         showToast(_appLang==='fr'?'✓ Rétrogradé en employé':'✓ Demoted to employee','success');
         await loadCoAdmins();
@@ -13305,7 +13311,7 @@ async function confirmDelete(type,id,name){
         if(doMgrRemoval){
           try{
             const sess=Sess.get();
-            const r=await DB.rpc('demote_manager_to_employee',{p_caller_id:sess.id,p_manager_id:linkedMgr.id});
+            const r=await demoteManager(linkedMgr.id);
             if(r&&r.ok){ await loadCoAdmins(); }
             showToast(_appLang==='fr'?'✓ Compte gestionnaire suspendu.':'✓ Manager account suspended.','success');
           }catch(err){ showToast('Manager removal error: '+err.message,'error'); }

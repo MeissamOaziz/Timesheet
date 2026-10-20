@@ -491,6 +491,64 @@ const strOf = (v: unknown, max = 200): string => (typeof v === 'string' ? v.trim
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
+// Bounded, well-formed shifts only: whatever the browser sent, the email gets at most 60 rows of
+// short text, real clock times and a real colour.
+function cleanShifts(raw: unknown) {
+  const rows = Array.isArray(raw) ? (raw as unknown[]).slice(0, 60) : [];
+  return rows.map((r) => {
+    const x = (r && typeof r === 'object' ? r : {}) as Record<string, unknown>;
+    const st = strOf(x.startTime, 5), en = strOf(x.endTime, 5);
+    const col = strOf(x.labelColor, 7);
+    return { day: strOf(x.day, 60), startTime: HHMM_RE.test(st) ? st : '', endTime: HHMM_RE.test(en) ? en : '',
+      note: strOf(x.note, 200), label: strOf(x.label, 60), labelColor: HEX_RE.test(col) ? col : '' };
+  });
+}
+
+// The one email a person at a kiosk can ask for without an admin session: "email me my schedule".
+// It is tied to that kiosk's own site, needs the employee's PIN (checked here, not in the browser),
+// sends to the address on file (or, when none is on file, the address they typed, once), and is
+// rate-limited so it cannot be used as a mail cannon.
+const KIOSK_EMAIL_PER_EMPLOYEE_HOUR = 5;
+const KIOSK_EMAIL_PER_SITE_HOUR = 60;
+const EMAIL_SHAPE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
+async function sendKioskScheduleEmail(siteId: string, rawBody: unknown): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
+  if (strOf(b.type, 40) !== 'schedule') return jsonResp({ ok: false, error: 'Unauthorized' }, 401);
+  if (!(await verifySite(siteId))) return jsonResp({ ok: false, error: 'Unauthorized' }, 401);
+  const empId = strOf(b.employee_id, 60);
+  if (!UUID_RE.test(empId)) return jsonResp({ ok: false, error: 'Invalid employee' }, 400);
+  const pin = strOf(b.pin, 8);
+  if (!/^\d{4}$/.test(pin)) return jsonResp({ ok: false, error: 'PIN required' }, 400);
+  const emp = (await restJson(`employees?id=eq.${empId}&select=id,name,email,pin,site_id&limit=1`))?.[0];
+  // Same answer for "no such employee", "employee at another site" and "wrong PIN": nothing to probe.
+  if (!emp || emp.site_id !== siteId || String(emp.pin) !== pin) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+
+  const since = new Date(Date.now() - 3600 * 1000).toISOString();
+  const perEmp = await restJson(`audit_log?event=eq.email_sent:schedule_kiosk&filter=eq.emp:${empId}&at=gte.${since}&select=id`);
+  const perSite = await restJson(`audit_log?event=eq.email_sent:schedule_kiosk&table_name=eq.site:${siteId}&at=gte.${since}&select=id`);
+  if ((perEmp?.length ?? 0) >= KIOSK_EMAIL_PER_EMPLOYEE_HOUR || (perSite?.length ?? 0) >= KIOSK_EMAIL_PER_SITE_HOUR) {
+    return jsonResp({ ok: false, error: 'Too many emails requested. Please try again later.' }, 429);
+  }
+  const onFile = strOf(emp.email, 200).toLowerCase();
+  const to = onFile || strOf(b.email, 200).toLowerCase();
+  if (!EMAIL_SHAPE.test(to)) return jsonResp({ ok: false, error: 'Please enter a valid email address.' }, 400);
+  const payload = { email: to, name: emp.name || to, type: 'schedule', weekLabel: strOf(b.weekLabel, 60),
+    shifts: cleanShifts(b.shifts), lang: b.lang === 'fr' ? 'fr' : 'en' };
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => null);
+    if (!r.ok || !data || data.success !== true) return jsonResp({ ok: false, error: (data && data.error) || 'Could not send the email' }, 502);
+    logAudit(null, 'email_sent:schedule_kiosk', `site:${siteId}`, 'POST', `emp:${empId}`);
+    return jsonResp({ ok: true });
+  } catch {
+    return jsonResp({ ok: false, error: 'Could not send the email' }, 502);
+  }
+}
+
 async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Response> {
   const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
   const type = strOf(b.type, 40);
@@ -560,15 +618,7 @@ async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Respon
     if (!(await ownsCompany(emp.company_id))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
     const to = strOf(emp.email, 200).toLowerCase();
     if (!to) return jsonResp({ ok: false, error: 'This employee has no email address' }, 400);
-    const rows = Array.isArray(b.shifts) ? (b.shifts as unknown[]).slice(0, 60) : [];
-    const shifts = rows.map((r) => {
-      const x = (r && typeof r === 'object' ? r : {}) as Record<string, unknown>;
-      const st = strOf(x.startTime, 5), en = strOf(x.endTime, 5);
-      const col = strOf(x.labelColor, 7);
-      return { day: strOf(x.day, 60), startTime: HHMM_RE.test(st) ? st : '', endTime: HHMM_RE.test(en) ? en : '',
-        note: strOf(x.note, 200), label: strOf(x.label, 60), labelColor: HEX_RE.test(col) ? col : '' };
-    });
-    payload = { email: to, name: emp.name || to, type: 'schedule', weekLabel: strOf(b.weekLabel, 60), shifts, lang };
+    payload = { email: to, name: emp.name || to, type: 'schedule', weekLabel: strOf(b.weekLabel, 60), shifts: cleanShifts(b.shifts), lang };
 
   } else if (type === 'new_account_notification') {
     // A notice to us, built entirely from the caller's own account row, and only in the first
@@ -805,8 +855,28 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === 'send_email') {
+    if (caller) return await sendEmailAction(caller, body);
+    if (kioskSiteId) return await sendKioskScheduleEmail(kioskSiteId, body);
+    return errResp('Unauthorized', 401);
+  }
+
+  // Demoting a manager used to be a public RPC that trusted a caller id sent by the browser. Now the
+  // caller is the signed-in admin of this session; the database function still decides whether the
+  // manager belongs to that admin's account.
+  if (action === 'demote_manager') {
     if (!caller) return errResp('Unauthorized', 401);
-    return await sendEmailAction(caller, body);
+    if (caller.role === 'manager') return errResp('Forbidden', 403);
+    const mgrId = (body as Record<string, unknown> | null)?.manager_id;
+    if (typeof mgrId !== 'string' || !UUID_RE.test(mgrId)) return errResp('Invalid manager', 400);
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/demote_manager_to_employee`, {
+      method: 'POST',
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_caller_id: caller.adminId, p_manager_id: mgrId }),
+    });
+    const out = await r.json().catch(() => null);
+    if (!r.ok || !out) return errResp('Could not update this manager', 502);
+    if (out.ok) logAudit(caller.adminId, 'demote_manager', `admins:${mgrId}`);
+    return jsonResp(out);
   }
 
   // ── Table allowlist: deny by default ─────────────────────────────────────────────────────────
