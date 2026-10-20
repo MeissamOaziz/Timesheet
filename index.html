@@ -2298,6 +2298,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <label for="rememberMe" style="font-size:13px;color:var(--text2);cursor:pointer" data-i18n="login.rememberMe">Stay logged in</label>
     </div>
     <button class="btn-primary" onclick="withBusy(this,doLogin)" data-i18n="login.signIn">Sign In</button>
+    <div class="emp-hint" style="margin:14px 0 18px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;color:var(--text2);text-align:center;line-height:1.5"><span data-i18n="login.empHint">Employee? This is the admin sign-in.</span> <a href="employee.html" style="color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap" data-i18n="login.empLink">Open the employee portal &rarr;</a></div>
     <hr class="divider">
     <p style="text-align:center;color:var(--text2);font-size:13px"><span data-i18n="login.noAccount">No account?</span> <button class="link-btn" onclick="navigate('register')" data-i18n="login.register">Register</button></p>
   </div>
@@ -2323,6 +2324,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="forgotStep1">
       <div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@company.com" onkeydown="if(event.key==='Enter')sendResetCode()"></div>
       <button class="btn-primary" onclick="sendResetCode()" data-i18n="forgot.sendCode">Send Reset Code</button>
+      <div class="emp-hint" style="margin:14px 0 18px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;color:var(--text2);text-align:center;line-height:1.5"><span data-i18n="login.empHint">Employee? This is the admin sign-in.</span> <a href="employee.html" style="color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap" data-i18n="login.empLink">Open the employee portal &rarr;</a></div>
       <p style="text-align:center;color:var(--text2);font-size:13px;margin-top:14px"><button class="link-btn" onclick="navigate('login')" data-i18n="forgot.backToLogin">← Back to login</button></p>
     </div>
     <div id="forgotStep2" style="display:none">
@@ -6634,7 +6636,7 @@ async function doLogin(){
   const pass=document.getElementById('loginPass').value;
   try{
     const rows=await DB.rpc('verify_admin_login',{p_email:email,p_pass:pass});
-    if(!rows||!rows.length){showMsg('loginMsg',t('msg.invalidLogin'),'error');return;}
+    if(!rows||!rows.length){showMsg('loginMsg',t('msg.invalidLogin')+'<div style="margin-top:6px;font-size:12px;opacity:.9">'+t('login.empHint')+' <a href="employee.html" style="color:inherit;font-weight:600;text-decoration:underline">'+t('login.empLink')+'</a></div>','error');return;}
     const admin=rows[0];
     if(admin.expires_at&&new Date(admin.expires_at)<new Date()){showMsg('loginMsg','Your temporary access has expired.','error');return;}
     // Check if suspended
@@ -16187,7 +16189,7 @@ en:{
 'nav.login':'Admin Login','nav.logout':'✕ Logout',
 'login.title':'Admin Login','login.subtitle':'Sign in to access the admin dashboard.',
 'login.email':'Email','login.password':'Password','login.forgot':'Forgot password?',
-'login.signIn':'Sign In','login.noAccount':'No account?','login.register':'Register',
+'login.empHint':'Employee? This is the admin sign-in.','login.empLink':'Open the employee portal →','login.signIn':'Sign In','login.noAccount':'No account?','login.register':'Register',
 'login.alreadyReg':'Already registered?',
 'reg.title':'Create Account','reg.subtitle':'Set up your PunchClock Pro admin account.',
 'reg.firstName':'First Name','reg.lastName':'Last Name',
@@ -17098,7 +17100,7 @@ fr:{
 'nav.login':'Connexion Admin','nav.logout':'✕ Déconnexion',
 'login.title':'Connexion Admin','login.subtitle':'Connectez-vous pour accéder au tableau de bord.',
 'login.email':'Courriel','login.password':'Mot de passe','login.forgot':'Mot de passe oublié?',
-'login.signIn':'Se connecter','login.noAccount':'Pas de compte?','login.register':'S\'inscrire',
+'login.empHint':'Employé? Ceci est la connexion administrateur.','login.empLink':'Ouvrir le portail employé →','login.signIn':'Se connecter','login.noAccount':'Pas de compte?','login.register':'S\'inscrire',
 'login.alreadyReg':'Déjà inscrit?',
 'reg.title':'Créer un compte','reg.subtitle':'Configurez votre compte administrateur PunchClock Pro.',
 'reg.firstName':'Prénom','reg.lastName':'Nom de famille',
