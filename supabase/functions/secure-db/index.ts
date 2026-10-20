@@ -475,6 +475,134 @@ async function getAllRows(table: string, filter: string, hdrs: Record<string, st
   return { status: 200, text: JSON.stringify(all) };
 }
 
+// ── Emails sent on behalf of a signed-in admin ───────────────────────────────────────────────
+// The browser used to call send-verification directly with the public key, which meant anyone could
+// make us send mail from noreply@punchclock.ca to any address with any wording. Now the browser asks
+// *here*, with its session, and names a row (an invitation token, an employee, a join request). The
+// server reads that row, checks it belongs to the caller's account, takes the recipient and every
+// link from the row itself, and only then calls send-verification with the service key. Nothing the
+// browser sends decides who gets the email or where its buttons point.
+const NOTIFY_EMAIL = 'meissam.h.p@gmail.com';
+
+function jsonResp(obj: unknown, status = 200): Response {
+  return new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+}
+const strOf = (v: unknown, max = 200): string => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
+  const type = strOf(b.type, 40);
+  const dry = b.dry_run === true;
+  const isSuper = caller.role === 'super_admin';
+  const one = async (path: string) => (await restJson(path))?.[0] ?? null;
+  const ownsCompany = async (companyId: unknown) =>
+    isSuper || (typeof companyId === 'string' && (await ownedCompanyIds(caller.primaryAdminId)).includes(companyId));
+  const me = async () => (await one(`admins?id=eq.${caller.adminId}&select=name,email,plan,created_at&limit=1`)) as
+    { name?: string; email?: string; plan?: string; created_at?: string } | null;
+  const lang = b.lang === 'fr' ? 'fr' : 'en';
+
+  let payload: Record<string, unknown>;
+
+  if (type === 'invitation') {
+    const token = strOf(b.token, 60);
+    if (!UUID_RE.test(token)) return jsonResp({ ok: false, error: 'Invalid invitation' }, 400);
+    const inv = await one(`invitations?token=eq.${token}&select=email,role,company_id,status,expires_at&limit=1`);
+    if (!inv || inv.status !== 'pending') return jsonResp({ ok: false, error: 'Invitation not found' }, 404);
+    if (inv.expires_at && new Date(inv.expires_at) < new Date()) return jsonResp({ ok: false, error: 'Invitation has expired' }, 400);
+    if (!(await ownsCompany(inv.company_id))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    const co = await one(`companies?id=eq.${inv.company_id}&select=name&limit=1`);
+    const m = await me();
+    payload = { email: inv.email, name: inv.email, type: 'invitation', inviterName: m?.name || m?.email || 'Your administrator',
+      companyName: co?.name || '', role: inv.role, token };
+
+  } else if (type === 'employee_invite') {
+    const empId = strOf(b.employee_id, 60);
+    if (!UUID_RE.test(empId)) return jsonResp({ ok: false, error: 'Invalid employee' }, 400);
+    const emp = await one(`employees?id=eq.${empId}&select=id,name,company_id&limit=1`);
+    if (!emp) return jsonResp({ ok: false, error: 'Employee not found' }, 404);
+    if (!(await ownsCompany(emp.company_id))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    const portal = await one(`employee_portal?employee_id=eq.${empId}&select=email,invite_token,token_expires_at,status&limit=1`);
+    if (!portal || portal.status !== 'invited' || !portal.invite_token || !portal.email) {
+      return jsonResp({ ok: false, error: 'No pending portal invitation for this employee' }, 409);
+    }
+    const co = await one(`companies?id=eq.${emp.company_id}&select=name,logo_url&limit=1`);
+    payload = { type: 'employee_invite', email: portal.email, name: emp.name || portal.email,
+      portalUrl: `https://www.punchclock.ca/employee.html?token=${encodeURIComponent(portal.invite_token)}`,
+      lang, companyName: co?.name || '', logoUrl: co?.logo_url || '' };
+
+  } else if (type === 'join_approved' || type === 'join_denied') {
+    const reqId = strOf(b.request_id, 60);
+    if (!UUID_RE.test(reqId)) return jsonResp({ ok: false, error: 'Invalid request' }, 400);
+    const jr = await one(`join_requests?id=eq.${reqId}&select=requester_email,requester_name,target_admin_id,status&limit=1`);
+    if (!jr) return jsonResp({ ok: false, error: 'Request not found' }, 404);
+    if (!(isSuper || jr.target_admin_id === caller.primaryAdminId || jr.target_admin_id === caller.adminId)) {
+      return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    }
+    const wanted = type === 'join_approved' ? 'approved' : 'denied';
+    if (jr.status !== wanted || !jr.requester_email) return jsonResp({ ok: false, error: `This request is not ${wanted}` }, 409);
+    if (type === 'join_approved') {
+      const m = await me();
+      payload = { email: jr.requester_email, name: jr.requester_name || jr.requester_email, type: 'join_approved', adminName: m?.name || m?.email || 'your administrator' };
+    } else {
+      const target = await one(`admins?id=eq.${jr.target_admin_id}&select=name&limit=1`);
+      const co = await one(`companies?admin_id=eq.${jr.target_admin_id}&select=name&order=created_at.asc&limit=1`);
+      payload = { email: jr.requester_email, name: jr.requester_name || jr.requester_email, type: 'join_request_denied',
+        companyName: co?.name || '', adminName: target?.name || '' };
+    }
+
+  } else if (type === 'schedule') {
+    const empId = strOf(b.employee_id, 60);
+    if (!UUID_RE.test(empId)) return jsonResp({ ok: false, error: 'Invalid employee' }, 400);
+    const emp = await one(`employees?id=eq.${empId}&select=id,name,email,company_id&limit=1`);
+    if (!emp) return jsonResp({ ok: false, error: 'Employee not found' }, 404);
+    if (!(await ownsCompany(emp.company_id))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    const to = strOf(emp.email, 200).toLowerCase();
+    if (!to) return jsonResp({ ok: false, error: 'This employee has no email address' }, 400);
+    const rows = Array.isArray(b.shifts) ? (b.shifts as unknown[]).slice(0, 60) : [];
+    const shifts = rows.map((r) => {
+      const x = (r && typeof r === 'object' ? r : {}) as Record<string, unknown>;
+      const st = strOf(x.startTime, 5), en = strOf(x.endTime, 5);
+      const col = strOf(x.labelColor, 7);
+      return { day: strOf(x.day, 60), startTime: HHMM_RE.test(st) ? st : '', endTime: HHMM_RE.test(en) ? en : '',
+        note: strOf(x.note, 200), label: strOf(x.label, 60), labelColor: HEX_RE.test(col) ? col : '' };
+    });
+    payload = { email: to, name: emp.name || to, type: 'schedule', weekLabel: strOf(b.weekLabel, 60), shifts, lang };
+
+  } else if (type === 'new_account_notification') {
+    // A notice to us, built entirely from the caller's own account row, and only in the first
+    // minutes after the account exists: it cannot be replayed later or aimed at anyone else.
+    const m = await me();
+    if (!m || !m.created_at || Date.now() - new Date(m.created_at).getTime() > 30 * 60 * 1000) {
+      return jsonResp({ ok: false, error: 'Not available' }, 403);
+    }
+    const plan = (m.plan || 'free').toString();
+    payload = { email: NOTIFY_EMAIL, name: m.name || m.email || 'New account', type: 'new_account_notification',
+      userEmail: m.email || '', plan: plan.charAt(0).toUpperCase() + plan.slice(1), regType: 'New Company',
+      timestamp: new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' }) };
+
+  } else {
+    return jsonResp({ ok: false, error: 'Unknown email type' }, 400);
+  }
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/send-verification`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', ...(dry ? { 'x-dry-run': '1' } : {}) },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => null);
+    if (!r.ok || !data || data.success !== true) {
+      return jsonResp({ ok: false, error: (data && data.error) || 'Could not send the email' }, 502);
+    }
+    logAudit(caller.adminId, dry ? `email_dry_run:${type}` : `email_sent:${type}`);
+    return dry ? jsonResp({ ok: true, dry: true, to: data.to, subject: data.subject, html: data.html }) : jsonResp({ ok: true });
+  } catch {
+    return jsonResp({ ok: false, error: 'Could not send the email' }, 502);
+  }
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -674,6 +802,11 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: true, endsAt }), {
       status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
     });
+  }
+
+  if (action === 'send_email') {
+    if (!caller) return errResp('Unauthorized', 401);
+    return await sendEmailAction(caller, body);
   }
 
   // ── Table allowlist: deny by default ─────────────────────────────────────────────────────────
