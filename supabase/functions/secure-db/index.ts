@@ -40,6 +40,10 @@ const PROTECTED_TABLES = new Set([
   'work_labels',
 ]);
 
+// Every table the app may touch through this function: the protected set (each with its own access
+// rules below) and the announcements feed (public to read, super admin only to write).
+const APP_TABLES = new Set<string>([...PROTECTED_TABLES, 'announcements']);
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function errResp(msg: string, status = 500): Response {
@@ -670,6 +674,18 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: true, endsAt }), {
       status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
     });
+  }
+
+  // ── Table allowlist: deny by default ─────────────────────────────────────────────────────────
+  // The gates below only knew about PROTECTED_TABLES; any other table was forwarded untouched. That
+  // left `admin_sessions` (live admin session tokens, super admin included), `email_codes` (reset
+  // and registration code hashes) and `audit_log` readable by anyone holding the public anon key,
+  // and writable by any signed-in admin. The app reads and writes exactly the tables listed in
+  // PROTECTED_TABLES, plus the public announcements feed; nothing else is reachable from here.
+  // Server-side actions (sessions, codes) use the service key directly and never come through this
+  // path. Anything new must be added to the list on purpose.
+  if (!APP_TABLES.has(table)) {
+    return errResp('Forbidden', 403);
   }
 
   // ── Auth gate: writes (POST/PATCH/DELETE) — deny by default ──
