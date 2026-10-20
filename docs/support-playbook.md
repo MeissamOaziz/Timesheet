@@ -88,6 +88,13 @@ feature ships or a ticket teaches something, add it here in the same change.
   (6 sites, 60 employees), Business $79.49 (unlimited). Flat price per account, not per employee. Remote
   clock-in and geofencing are not plan-gated.
 
+## Everyone was signed out on 2026-10-19 (evening, Toronto)
+
+- All admin sessions were reset as a security precaution after a fix to the data access layer. If a
+  customer says they were suddenly logged out of the admin dashboard, that is expected: sign in again
+  with the usual email and password. Kiosks, clock-in and the employee portal were not affected.
+- Do not describe it as a breach. Say a security update required everyone to sign in again.
+
 ## Features and how to explain them
 
 Work labels (Scheduling add-on, $14.95/month, paid plans). Customers define their own labels (a task,
