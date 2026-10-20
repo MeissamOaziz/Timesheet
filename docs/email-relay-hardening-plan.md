@@ -1,4 +1,22 @@
-# Closing the open email relay (scoped 2026-10-19, not started)
+# Closing the open email relay (scoped 2026-10-19; steps 1-3 shipped 2026-10-20)
+
+## Status (2026-10-20)
+Done and live:
+- `send-verification` v27: escaping, own-site links only, valid recipient, dry run (service key only),
+  unused types removed. Differential test: 12 email types byte-identical to the old version.
+- `secure-db` v40: `send_email` action (admin session, 7 email types tied to database rows, dry run)
+  plus a PIN-checked, site-bound, rate-limited kiosk path for "email me my schedule".
+  Also deny-by-default for unused tables (admin_sessions, email_codes, audit_log were open).
+- App (commit 6ed1b08): every email goes through `send_email`; no direct call to `send-verification` left.
+
+Still to do:
+1. **Lock `send-verification`** (service key only). Wait a few days first: browsers that still hold the
+   old page (service-worker cache) call it directly. Before locking, confirm in the Resend sent list that
+   direct calls have stopped, and add a log line for rejected calls. Then deploy, and check the
+   anon-key call returns 401.
+2. Rate limit the admin path of `send_email` (the kiosk path already has one).
+3. Rate limit the contact form's automatic reply (`send-contact`).
+4. Live dry run of each email type with a signed-in admin (nothing is sent).
 
 ## The problem
 `send-verification` has JWT verification off and checks nothing about its caller. The public anon key
