@@ -275,7 +275,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .loading-overlay p{color:var(--text2);font-size:14px;}
 
 /* PICKER SCREEN (company & site) */
-.picker-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:8000;gap:24px;padding:24px;overflow-y:auto;}
+.picker-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;z-index:8000;gap:24px;padding:24px;overflow-y:auto;}
+/* Centre the content only when it fits. justify-content:center on a scrolling flex column pushes the
+   overflow above the top edge, where it can never be scrolled to: with 40 companies the header and the
+   first rows were unreachable. Auto margins on the first and last child centre it when there is room and
+   collapse to nothing when there isn't, so the page scrolls from its true top. */
+.picker-screen>:first-child{margin-top:auto;}
+.picker-screen>:last-child{margin-bottom:auto;}
 .picker-screen.hidden{display:none;}
 .picker-screen h2{font-size:28px;font-weight:700;}
 .picker-screen>.sub{color:var(--text2);font-size:15px;margin-top:-16px;}
