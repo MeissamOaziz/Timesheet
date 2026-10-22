@@ -176,6 +176,13 @@ Other recent changes
   `extensions.crypt('<temp>', extensions.gen_salt('bf', 10))` and then ask them to change it at once.
   Emails are matched case-insensitively. Portal account emails are stored in lowercase.
 
+- "Nothing works: punches, login and reports all fail for everyone" with HTTP 402 "service restricted":
+  that is the Supabase plan quota, not a bug. It happened 2026-10-22 from about 17:22 to 19:45 Toronto
+  (Free plan over its data and function quota); the organization is now on Pro and the kiosks were made
+  about 95% lighter. Punches attempted during an outage were never recorded: ask the customer who was
+  clocked in and out during that window and add the missing punches from Activity (Add punch). Check
+  Supabase Billing > Usage before anything else.
+
 ## Style of a good reply
 
 State what happened in plain words, say what was fixed and for whom, say what changes from now on,
