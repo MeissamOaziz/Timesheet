@@ -4945,8 +4945,11 @@ async function refreshCache(opts={}){
   if(!sess&&ctx){
     C.companies = ctx.co ? [ctx.co] : [];
     C.sites = ctx.site ? [ctx.site] : [];
+    // The staff list rarely changes, so a terminal re-reads it on load and every 5 minutes, not on every
+    // punch refresh (each read is a function call and a download, all day, on every tablet).
+    const needEmps=!!opts.fresh||!_kioskEmpsAt||!(C.employees&&C.employees.length)||(Date.now()-_kioskEmpsAt>5*60*1000);
     const [emps,punches]=await Promise.all([
-      DB.all('employees','order=name.asc').catch(()=>C.employees||[]),
+      needEmps?DB.all('employees','order=name.asc').then(r=>{_kioskEmpsAt=Date.now();return r;}).catch(()=>C.employees||[]):Promise.resolve(null),
       // An unattended kiosk can run for weeks with nobody around to notice a silently-failing
       // refresh — a run that was showing the same person "currently clocked in" since a date a
       // week prior turned out to be exactly this: fetches had been failing ever since and the
@@ -4954,7 +4957,7 @@ async function refreshCache(opts={}){
       // anything was wrong. _kioskLastFreshPunches lets the poll below detect that and recover.
       DB.all('punches','order=punched_at.desc&limit=2000').then(r=>{_kioskLastFreshPunches=Date.now();return r;}).catch(()=>C.punches||[]),
     ]);
-    C.employees=(emps||[]).filter(e=>(e.active!==false)&&(!ctx.site||e.site_id===ctx.site.id));
+    if(emps) C.employees=(emps||[]).filter(e=>(e.active!==false)&&(!ctx.site||e.site_id===ctx.site.id));
     C.punches=punches||[];
     return;
   }
@@ -5040,6 +5043,7 @@ async function refreshCache(opts={}){
 // ═══════════════════════════════════════════════════
 let currentPage='punch';
 let _kioskLastFreshPunches=Date.now();
+let _kioskEmpsAt=0;                    // when this terminal last read its staff list
 let _annSeenSyncedFor=null;
 let reportData=[];
 let pendingVerify=null;
@@ -7792,7 +7796,7 @@ async function loadPunchPage(){
   }
   const coId=ctx.co.id;
   const siteId=ctx.site?.id||null;
-  await refreshCache({coId,siteId});
+  await refreshCache({coId,siteId,fresh:true});
 
   // Banner
   const banner=document.getElementById('punchBanner');
@@ -7856,6 +7860,12 @@ async function loadPunchPage(){
     loadMyShifts(empId);
     updateBreakButton(empId);
     updateSwitchTaskButton(empId);
+    kioskFreshenPunches(3000).then(()=>{
+      if(sel.value!==empId) return;
+      updateBreakButton(empId);
+      updateSwitchTaskButton(empId);
+      refreshClockedIn();
+    });
   };
   updateBreakButton(sel.value);
   updateSwitchTaskButton(sel.value);
@@ -7970,23 +7980,57 @@ function elapsed(iso){
   return`${Math.floor(m/60)}h ${m%60}m`;
 }
 
-setInterval(async()=>{
-  if(currentPage==='punch'){
-    const ctx=Ctx.get();
-    const sess=Sess.get();
+// Background refresh of the punch screen.
+// Every open punch screen used to refetch everything every 30 seconds, around the clock. A dozen
+// always-on tablets used 14 GB and 600,000 function calls in a month, which was over the Free plan's
+// quota and got the whole organization switched off on 2026-10-22. Now:
+//   - a terminal asks for punches only (the staff list every 5 minutes), and the server answers with
+//     the last 36 hours plus each person's latest punch instead of the latest 1000 rows;
+//   - refresh every 90 seconds in the daytime, every 5 minutes overnight (00:00-05:59), and not at all
+//     while the screen is hidden (it refreshes the moment it is shown again);
+//   - a signed-in admin who left the clock page open refreshes every 3 minutes;
+//   - when someone picks their name or taps IN/OUT, their status is read again right then, so the
+//     slower background refresh can never make a second tablet show a stale "already clocked in".
+let _punchLastRefreshAt=0, _kioskFreshenP=null;
+function _punchRefreshEvery(){
+  if(Sess.get()) return 3*60*1000;
+  const h=new Date().getHours();
+  return (h>=0&&h<6)?5*60*1000:90*1000;
+}
+async function _punchTick(force){
+  if(currentPage!=='punch') return;
+  const ctx=Ctx.get();
+  const sess=Sess.get();
+  const every=_punchRefreshEvery();
+  if(!sess&&ctx?.site) _healStaleClient();     // static check for a newer app version, no database call
+  if(document.hidden&&!force) return;
+  if(!force){
     // Kiosk watchdog: a tablet left running for weeks has nobody around to notice if its refresh
-    // has been silently failing (expired auth, a network blip, a stale cached app bundle) — after
-    // 5 minutes with no successful punches fetch, reload rather than keep showing whatever was
-    // last fetched. Also check for a newer app version on every tick, the same self-heal already
-    // used for an admin's expired session, but unconditionally since a kiosk never hits that path.
-    if(!sess&&ctx?.site){
-      _healStaleClient();
-      if(Date.now()-_kioskLastFreshPunches>5*60*1000){ location.reload(); return; }
-    }
-    await refreshCache({coId:ctx?.co?.id,siteId:ctx?.site?.id});
-    refreshClockedIn();
+    // has been silently failing (expired auth, a network blip, a stale cached app bundle) — with no
+    // successful punches fetch for three refresh periods (at least 5 minutes), reload rather than
+    // keep showing whatever was last fetched.
+    if(!sess&&ctx?.site&&Date.now()-_kioskLastFreshPunches>Math.max(5*60*1000,every*3)){ location.reload(); return; }
+    if(Date.now()-_punchLastRefreshAt<every-2000) return;
   }
-},30000);
+  _punchLastRefreshAt=Date.now();
+  await refreshCache({coId:ctx?.co?.id,siteId:ctx?.site?.id});
+  refreshClockedIn();
+}
+setInterval(()=>{ _punchTick(false); },30000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) _punchTick(true); });
+
+// A terminal asks for the current punches right now (staff picking their name, or about to punch).
+// Falls back to what it already has if the answer takes more than 2.5 s or fails.
+function kioskFreshenPunches(maxAgeMs){
+  if(Sess.get()||!Ctx.get()?.site) return Promise.resolve();
+  if(Date.now()-_kioskLastFreshPunches<(maxAgeMs==null?5000:maxAgeMs)) return Promise.resolve();
+  if(_kioskFreshenP) return _kioskFreshenP;
+  _kioskFreshenP=Promise.race([
+    DB.all('punches','order=punched_at.desc&limit=2000').then(r=>{ if(Array.isArray(r)){ _kioskLastFreshPunches=Date.now(); C.punches=r; } }),
+    new Promise(res=>setTimeout(res,2500)),
+  ]).catch(()=>{}).then(()=>{ _kioskFreshenP=null; });
+  return _kioskFreshenP;
+}
 
 // ═══════════════════════════════════════════════════
 // PIN FLOW
@@ -8009,10 +8053,11 @@ let _punchLabelsAt = 0, _punchLabelsCo = null;
 async function refreshPunchLabels() {
   const ctx = Ctx.get();
   if(!ctx) { _punchLabels = []; return; }
-  // Most companies never use labels. When the last answer was "none", ask again only every few
-  // minutes (still quick enough for a newly switched-on setting to reach a running terminal).
+  // Labels rarely change, so a terminal asks again only every few minutes (still quick enough for a
+  // newly switched-on setting, or an edited label, to reach a running terminal). This used to be
+  // every refresh for companies that use labels.
   if(_punchLabelsCo !== ctx.co.id) { _punchLabelsCo = ctx.co.id; _punchLabels = []; _punchLabelsAt = 0; }
-  if(!_punchLabels.length && Date.now() - _punchLabelsAt < 5 * 60 * 1000) return;
+  if(Date.now() - _punchLabelsAt < 5 * 60 * 1000) return;
   _punchLabelsAt = Date.now();
   try {
     // A terminal (no session) is scoped by the server; a signed-in admin names their company.
@@ -8609,6 +8654,7 @@ async function executePunch(empId,type,isBreak,opts){
   try {
     const emp=C.employees.find(e=>e.id===empId);
     const ctx=Ctx.get();if(!emp||!ctx)return;
+    await kioskFreshenPunches(0);      // a terminal's view can be a minute old: read this person's status again now
     const{status}=getEmpStatus(empId);
     const isSwitch=!!(opts&&opts.switchTask);
     if(isSwitch){

@@ -91,6 +91,7 @@ function makeFetch() {
     if (p.kind === 'fn') { if (dryHdr) { let b = {}; try { b = JSON.parse(init.body); } catch { } return j({ success: true, dry: true, to: b.email, subject: 'S', html: '<html>' + (b.type || '') + '</html>' }); } return j({ success: true, sent: true }); }
     if (p.kind === 'rest' && p.name.startsWith('rpc/')) {
       if (p.name === 'rpc/issue_email_code') return j({ ok: true, exists: true, code: '123456', email: 'x@y.z', name: 'N' });
+      if (p.name === 'rpc/kiosk_recent_punches') { let b = {}; try { b = JSON.parse(init.body); } catch { } return b.p_site_id === 's8' ? j({ message: 'function not found' }, 404) : j(tables.punches.slice(0, 12)); }
       return j({ ok: true });
     }
     if (p.kind !== 'rest') return j({});
@@ -107,7 +108,7 @@ function makeFetch() {
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'id' && p.q.has('parent_admin_id')) return j([{ id: 'a2' }]);
     if (t === 'companies' && method === 'GET' && p.q.has('admin_id')) return j((companiesOf[eq('admin_id')] || []).map(id => ({ id, admin_id: eq('admin_id'), name: 'Acme Fence' })));
     if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j([{ admin_id: 'a1', punch_label_mode: 'off' }]);
-    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's9'].includes(eq('id')) ? [{ id: eq('id') }] : []);
+    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9'].includes(eq('id')) ? [{ id: eq('id') }] : []);
     if (t === 'sites' && method === 'GET' && p.q.get('select') === 'company_id') return j([{ company_id: 'c1' }]);
     if (t === 'sites' && method === 'GET' && p.q.has('company_id')) { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (sitesOf[c] || []).map(id => ({ id })))); }
     if (t === 'employees' && method === 'GET' && p.q.has('company_id') && p.q.get('select') === 'id') { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (employeesOf[c] || []).map(id => ({ id })))); }
@@ -149,7 +150,7 @@ const R = (group, name, payload, expect) => ({ group, name, payload, expect });
 const own = { sessionToken: 'tokOwner' }, mgr = { sessionToken: 'tokMgr' }, sup = { sessionToken: 'tokSuper' }, other = { sessionToken: 'tokOther' };
 const cases = [
   // kiosk
-  R('kiosk', 'read punches', { table: 'punches', method: 'GET', filter: 'order=punched_at.asc', kioskSiteId: S1 }),
+  R('kiosk_recent', 'read punches (now served by kiosk_recent_punches: intended difference)', { table: 'punches', method: 'GET', filter: 'order=punched_at.asc', kioskSiteId: S1 }, r => r.status === 200 && Array.isArray(r.rawBody)),
   R('kiosk', 'read employees', { table: 'employees', method: 'GET', filter: '', kioskSiteId: S1 }),
   R('kiosk', 'read shifts narrowed', { table: 'shifts', method: 'GET', filter: 'employee_id=eq.00000000-0000-0000-0000-0000000000e1&shift_date=gte.2026-10-19&order=shift_date.asc,start_time.asc', kioskSiteId: S1 }),
   R('kiosk', 'read visitors', { table: 'visitors', method: 'GET', filter: 'checked_out_at=is.null', kioskSiteId: S1 }),
@@ -261,6 +262,18 @@ const cases = [
   R('send_email', 'kiosk: employee from another site', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OTHER, pin: '9999', weekLabel: 'w', shifts: [] } }, r => r.status === 403 && r.fn.length === 0),
   R('send_email', 'kiosk: unknown site', { action: 'send_email', kioskSiteId: 'nope', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', weekLabel: 'w', shifts: [] } }, r => r.status === 401 && r.fn.length === 0),
 
+  // kiosk punches now come from kiosk_recent_punches (last 36 h + each person's latest punch).
+  R('kiosk_recent', 'kiosk reads punches through the recent-punches function', { table: 'punches', method: 'GET', filter: 'order=punched_at.desc&limit=2000', kioskSiteId: 's1' },
+    r => r.status === 200 && Array.isArray(r.rawBody) && r.rawBody.length === 12
+      && r.calls.some(c => /POST \/rest\/v1\/rpc\/kiosk_recent_punches/.test(c) && c.includes('"p_site_id":"s1"') && c.includes('"p_hours":36'))
+      && !r.calls.some(c => /GET \/rest\/v1\/punches\?/.test(c))),
+  R('kiosk_recent', 'the client cannot widen it: another site id in the filter is ignored', { table: 'punches', method: 'GET', filter: 'site_id=eq.s2&order=punched_at.desc', kioskSiteId: 's1' },
+    r => r.status === 200 && r.calls.some(c => c.includes('"p_site_id":"s1"')) && !r.calls.some(c => c.includes('s2"'))),
+  R('kiosk_recent', 'function unavailable: falls back to the old read of the latest 1000', { table: 'punches', method: 'GET', filter: 'order=punched_at.desc&limit=2000', kioskSiteId: 's8' },
+    r => r.status === 200 && r.calls.some(c => /GET \/rest\/v1\/punches\?.*site_id=eq\.s8/.test(c) && c.includes('limit=1000'))),
+  R('kiosk_recent', 'no site, no data', { table: 'punches', method: 'GET', filter: 'order=punched_at.desc', kioskSiteId: 'nope' }, r => r.status === 401),
+  R('kiosk_recent', 'an admin session still reads punches the normal way', { table: 'punches', method: 'GET', filter: 'order=punched_at.desc&limit=100', ...own },
+    r => r.status === 200 && !r.calls.some(c => /kiosk_recent_punches/.test(c))),
   // holidays: the Québec holiday button sends all 8 rows in one bulk insert.
   R('holidays', 'bulk insert into own company', { table: 'holidays', method: 'POST', body: [{ admin_id: 'a1', company_id: 'c1', site_id: null, holiday_date: '2026-01-01', name: "New Year's Day", name_fr: "Jour de l'An", note: '' }, { admin_id: 'a1', company_id: 'c1', site_id: null, holiday_date: '2026-12-25', name: 'Christmas Day', name_fr: 'Noël', note: '' }], ...own },
     r => r.status === 201 && JSON.parse(r.calls.find(c => /POST .*\/holidays/.test(c)).split('/holidays')[1].replace(/^\S*\s/, '')).length === 2),

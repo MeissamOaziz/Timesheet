@@ -376,6 +376,26 @@ async function restJson(path: string): Promise<any[] | null> {
   return Array.isArray(j) ? j : null;
 }
 
+// A terminal polls its punches every minute or two, all day. It only needs to know who is clocked in
+// and a little recent context, so instead of the latest 1000 rows (up to ~580 KB per refresh, per tablet)
+// it gets the last 36 hours plus each person's latest punch, whatever its age (kiosk_recent_punches).
+// Same columns, same newest-first order. Returns null if the function is unavailable, and the caller
+// then falls back to the old read, so a missing migration can never leave a tablet without data.
+async function kioskRecentPunches(siteId: string): Promise<unknown[] | null> {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/kiosk_recent_punches`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_site_id: siteId, p_hours: 36 }),
+    });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows : null;
+  } catch {
+    return null;
+  }
+}
+
 // What a kiosk may know about work labels: its own company's, and only when that account has the
 // Scheduling add-on. `mode` is the company's "labels at clock-in" setting (off / optional / required).
 async function kioskLabelContext(siteId: string): Promise<{ companyId: string; addon: boolean; mode: string } | null> {
@@ -980,6 +1000,10 @@ Deno.serve(async (req: Request) => {
       const validSite = await verifySite(kioskSiteId);
       if (!validSite) return errResp('Unauthorized', 401);
       const clientFilter = filter;
+      if (table === 'punches') {
+        const recent = await kioskRecentPunches(kioskSiteId);
+        if (recent) return new Response(JSON.stringify(recent), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      }
       filter = `site_id=eq.${kioskSiteId}`;
       // The forced filter above replaces whatever the kiosk asked for, including its ordering.
       // PostgREST caps a response at 1000 rows, so once a site passed ~1000 punches an unordered
