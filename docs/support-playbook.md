@@ -116,6 +116,25 @@ a job, a project, a client) with a colour.
 - Granting a 7-day trial is manual: set admins.scheduling_addon = true and scheduling_trial_ends_at,
   and schedule a guarded one-off pg_cron job to switch it off. Nothing expires it automatically.
 
+Evening hours (added 2026-10-22, all plans). For customers who pay an evening/night premium.
+- Setup: profile menu, Company Info, "Evening Hours": tick "Report evening hours separately", then From
+  (default 17:00), Until (empty = end of day) and the weekdays. The window cannot cross midnight (a shift
+  running past midnight counts the part before midnight; the part after is judged against the next day).
+- Result: Reports on screen, Excel, CSV and PDF get an "Evening Hrs" column (per punch, per employee
+  total, per site total) and a stat card. Regular and overtime hours do NOT change, and punch rounding is
+  applied the same way as the hour totals. Not in the employee portal or the emailed period summaries.
+- It does not price the premium: we store no wages, so customers apply their own rate to the hours.
+
+Quebec statutory holidays (added 2026-10-22, Scheduling add-on). Schedule, Holidays, "Add Quebec
+statutory holidays": adds the 8 statutory holidays for the chosen year for all sites, skipping dates that
+are already listed. Good Friday is used for the Easter holiday (employer may use Easter Monday: delete it
+and add that date); Canada Day moves to 2 July when 1 July is a Sunday. Holidays are only a calendar flag
+in the schedule. We do NOT calculate holiday pay (no wages stored).
+
+Not available yet (say so plainly; see the deferred-requests memory): authorized-devices-only punching
+(the terminal "revoke" button only hides a device), multi-factor sign-in for admins, offline punching on the
+kiosk, payroll integrations such as ADP (exports only), leave balances, wages and premium amounts.
+
 Other recent changes
 - Reports and Activity: Previous / Next / Current period buttons that step through pay periods.
 - Schedule: "Clear week" for one employee; copy a shift to other employees; a company setting lets
