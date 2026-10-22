@@ -3286,6 +3286,11 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button onclick="closeModal('holidaysModal')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1"><svg style="width:18px;height:18px"><use href="#i-x"/></svg></button>
     </div>
     <p style="font-size:13px;color:var(--text2);margin-bottom:20px" data-i18n="sched.holidayDesc">Mark dates as holidays to flag them in the schedule and in payroll reports. Holidays are not closures — shifts can still be assigned, but managers will see the holiday flag as a reminder that different pay rates may apply.</p>
+    <!-- One-click Québec statutory holidays -->
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px">
+      <button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="addQuebecHolidays()" id="qcHolidayBtn">Add Québec statutory holidays</button>
+      <span style="font-size:11.5px;color:var(--text3);line-height:1.5;flex:1;min-width:200px" data-i18n="sched.qcHolidaysHint">Adds the 8 statutory holidays (Good Friday is used; if you prefer Easter Monday, delete it and add that date) for the year picked below, for all sites. Dates already in your list are skipped.</span>
+    </div>
     <!-- Add holiday form -->
     <div style="background:var(--surface2);border-radius:var(--r-md);padding:16px;margin-bottom:20px">
       <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px" data-i18n="sched.addHoliday">Add Holiday</div>
@@ -3863,6 +3868,31 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div style="flex:1">
         <label style="font-size:11px;color:var(--text3)" data-i18n="modal.otWeeklyLabel">Weekly threshold</label>
         <select id="companyOtWeeklyHours" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px"><option value="35">35 h</option><option value="40">40 h</option><option value="44">44 h</option><option value="48">48 h</option><option value="50">50 h</option></select>
+      </div>
+    </div>
+    <hr class="divider" style="margin:14px 0">
+    <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.eveningSettings">Evening Hours</p>
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer">
+      <input type="checkbox" id="companyEveningOn" style="width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;margin-top:2px" onchange="toggleEveningSettings()">
+      <span>
+        <span style="display:block;font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.eveningTrack">Report evening hours separately</span>
+        <span style="display:block;font-size:11px;color:var(--text3);margin-top:2px;line-height:1.5" data-i18n="modal.eveningDesc">Adds an Evening Hrs column to reports and exports: the hours worked inside this window, on the days you choose. Handy for evening or night premiums. It does not change regular or overtime hours.</span>
+      </span>
+    </label>
+    <div id="eveningSettings" style="display:none;padding:10px 14px 0">
+      <div style="display:flex;gap:14px">
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--text3)" data-i18n="modal.eveningFrom">From</label>
+          <input type="time" id="companyEveningStart" value="17:00" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--text3)" data-i18n="modal.eveningTo">Until (empty = end of day)</label>
+          <input type="time" id="companyEveningEnd" style="width:100%;padding:6px 8px;font-size:12px;margin-top:3px">
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:11px;color:var(--text3)" data-i18n="modal.eveningDays">On these days</label>
+        <div id="companyEveningDays" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px"></div>
       </div>
     </div>
     <hr class="divider" style="margin:14px 0">
@@ -5305,6 +5335,37 @@ function _roundPunchMs(iso, mins){
   if(!mins) return ms;
   const step=mins*60000;
   return Math.round(ms/step)*step;
+}
+
+// Hours of one worked session (IN punch -> OUT punch) that fall inside the company's evening window
+// on its chosen weekdays. Informational: it never changes regular or overtime hours.
+// punch_date + punch_time are the site's own local clock, so the window is applied to that, then
+// shifted by the same rounding the hour totals use. The window cannot cross midnight (it is split
+// per calendar day, so a shift running past midnight counts the part after midnight on the next day).
+function _hhmmToMin(v){
+  const m=/^(\d{2}):(\d{2})/.exec(v||''); return m?(+m[1])*60+(+m[2]):null;
+}
+function _eveningHours(inP,outP,co){
+  const startM=_hhmmToMin(co&&co.evening_start); if(startM==null) return 0;
+  let endM=_hhmmToMin(co.evening_end); if(endM==null||endM<=startM) endM=1440;
+  const days=(Array.isArray(co.evening_days)&&co.evening_days.length)?co.evening_days.map(Number):[0,1,2,3,4,5,6];
+  const r=co.punch_rounding||0;
+  const loc=p=>{
+    let hms=/^\d{2}:\d{2}(:\d{2})?$/.test(p.punch_time||'')?p.punch_time:null;
+    let date=p.punch_date;
+    if(!hms||!date){ const d=new Date(p.punched_at); date=d.toLocaleDateString('en-CA'); hms=d.toTimeString().slice(0,8); }
+    if(hms.length===5) hms+=':00';
+    return Date.parse(date+'T'+hms+'Z')+(_roundPunchMs(p.punched_at,r)-new Date(p.punched_at).getTime());
+  };
+  const a=loc(inP), b=loc(outP);
+  if(!(b>a)) return 0;
+  let ms=0;
+  for(let d=Math.floor(a/864e5)*864e5; d<b; d+=864e5){
+    if(!days.includes(new Date(d).getUTCDay())) continue;
+    const ov=Math.min(b,d+endM*60000)-Math.max(a,d+startM*60000);
+    if(ov>0) ms+=ov;
+  }
+  return ms/3600000;
 }
 
 // ═══════════════════════════════════════════════════
@@ -11076,6 +11137,7 @@ function openAddCompanyModal(){
   setMgrAllSitesToggle(false);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
   document.getElementById('companyPunchLabelMode').value='off';
+  setEveningFields(null);
   _setGrowthAddonLockState();
   resetLogoUpload(null);
   openModal('addCompanyModal');
@@ -11116,9 +11178,32 @@ function editCompany(id){
   setMgrAllSitesToggle(!!co.managers_see_all_sites);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
   document.getElementById('companyPunchLabelMode').value=co.punch_label_mode||'off';
+  setEveningFields(co);
   _setGrowthAddonLockState();
   resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
+}
+
+// Evening hours settings (company modal). evening_start null = off; evening_days null = every day.
+function toggleEveningSettings(){
+  const on=document.getElementById('companyEveningOn').checked;
+  document.getElementById('eveningSettings').style.display=on?'':'none';
+}
+function renderEveningDays(sel){
+  const box=document.getElementById('companyEveningDays'); if(!box) return;
+  const on=(Array.isArray(sel)&&sel.length)?sel.map(Number):[0,1,2,3,4,5,6];
+  const loc=(_appLang==='fr')?'fr-CA':'en-CA';
+  box.innerHTML=[1,2,3,4,5,6,0].map(d=>{
+    const name=new Date(2024,0,7+d).toLocaleDateString(loc,{weekday:'short'});   // 7 Jan 2024 was a Sunday
+    return `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);cursor:pointer"><input type="checkbox" class="ev-day" value="${d}"${on.includes(d)?' checked':''} style="width:14px;height:14px;accent-color:var(--accent)">${name}</label>`;
+  }).join('');
+}
+function setEveningFields(co){
+  document.getElementById('companyEveningOn').checked=!!(co&&co.evening_start);
+  document.getElementById('companyEveningStart').value=(co&&co.evening_start)||'17:00';
+  document.getElementById('companyEveningEnd').value=(co&&co.evening_end)||'';
+  renderEveningDays(co&&co.evening_days);
+  toggleEveningSettings();
 }
 
 function toggleAnchorDateRow(){
@@ -11236,6 +11321,15 @@ async function saveCompany(){
     ? document.getElementById('companyPunchLabelMode').value
     : ((editId && (C.companies.find(c=>c.id===editId)||{}).punch_label_mode) || 'off');
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
+  const evOn=document.getElementById('companyEveningOn').checked;
+  const evStartV=document.getElementById('companyEveningStart').value||'17:00';
+  const evEndV=document.getElementById('companyEveningEnd').value||'';
+  const evDays=[...document.querySelectorAll('#companyEveningDays .ev-day:checked')].map(c=>Number(c.value));
+  if(evOn&&!evDays.length){showMsg('companyModalMsg',t('modal.eveningNeedDay')||'Pick at least one day for evening hours.','error');return;}
+  if(evOn&&evEndV&&evEndV<=evStartV){showMsg('companyModalMsg',t('modal.eveningBadEnd')||'The evening window must end after it starts (it cannot cross midnight). Leave "Until" empty to run to the end of the day.','error');return;}
+  const evening_start=evOn?evStartV:null;
+  const evening_end=(evOn&&evEndV)?evEndV:null;
+  const evening_days=(evOn&&evDays.length<7)?evDays:null;
   // Hard enforce plan limit on new company creation
   if(!editId){
     const {ok,current,max,plan}=canAddCompany();
@@ -11250,13 +11344,13 @@ async function saveCompany(){
     if(logoFile) logo_url = await uploadImage(logoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`);
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,logo_url});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,logo_url}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url,admin_id:sess?.id||null});
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
       if(r?.[0]){
@@ -11589,6 +11683,7 @@ function getPayrollPeriodAt(co,offset){
 // further back (and forward again, never past the current period) and parks the dropdown on
 // "Pay period" once it is neither.
 let _repPeriodOffset=-1;
+let _repShowEvening=false;        // does the report on screen carry the evening-hours column
 let _repShowLabel=false;          // does the report on screen carry labels
 let _reportLabelSummary=[];       // [{id,name,hours,emps:{name:hours}}] behind the Hours by label table
 let _repStepTimer=null;
@@ -11747,7 +11842,7 @@ async function generateReport(){
   }
 
   const allRows=[];
-  let grandTotal=0, grandOT=0, grandBreakMin=0;
+  let grandTotal=0, grandOT=0, grandBreakMin=0, grandEv=0;
   // Label filter. Applied AFTER overtime is worked out (below), so filtering to one label never
   // changes which hours count as overtime: OT depends on everything the person worked that week.
   const labelF=(document.getElementById('reportLabelWrap')?.style.display!=='none'&&document.getElementById('reportLabel')?.value)||'all';
@@ -11771,7 +11866,7 @@ async function generateReport(){
           const out=epsAll[i+1]?.type==='OUT'?epsAll[i+1]:null;
           const hrs=out?(_roundPunchMs(out.punched_at,co?.punch_rounding||0)-_roundPunchMs(p.punched_at,co?.punch_rounding||0))/3600000:null;
           if(out)i+=2;else i++;
-          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT,labelId:p.label_id||null,_ts:p.punched_at});
+          rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:p.punch_date,punchIn:p.punch_time,punchOut:out?.punch_time||'—',hours:hrs,evOn:!!co?.evening_start,evHours:(out&&hrs!=null)?Math.min(hrs,_eveningHours(p,out,co)):0,isManual:p.is_manual||false,isSubtotal:false,isSiteHeader:false,trackOT,labelId:p.label_id||null,_ts:p.punched_at});
         }else i++;
       }
       // Break time: a break is a same-employee OUT(is_break) immediately followed by an
@@ -11795,7 +11890,7 @@ async function generateReport(){
           if(breakCapMs>0){
             const paidHrs=Math.min(gapMs,breakCapMs)/3600000;
             if(paidHrs>0){
-              rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:a.punch_date,punchIn:a.punch_time,punchOut:b.punch_time,hours:paidHrs,isManual:false,isPaidBreak:true,isSubtotal:false,isSiteHeader:false,trackOT,labelId:brLabel,_ts:a.punched_at});
+              rawRows.push({empName:emp.name,empCode:emp.emp_code||'',company:co?.name||'—',siteName:site?.name||'—',dept:emp.dept||'—',date:a.punch_date,punchIn:a.punch_time,punchOut:b.punch_time,hours:paidHrs,evOn:!!co?.evening_start,evHours:0,isManual:false,isPaidBreak:true,isSubtotal:false,isSiteHeader:false,trackOT,labelId:brLabel,_ts:a.punched_at});
             }
           }
         }
@@ -11809,9 +11904,10 @@ async function generateReport(){
         allRows.push(...empRows);
         const tot=empRows.reduce((s,r)=>s+(r.hours??0),0);
         const totOT=empRows.reduce((s,r)=>s+(r.otHours||0),0);
-        grandTotal+=tot; grandOT+=totOT; grandBreakMin+=breakMin;
+        const totEv=empRows.reduce((s,r)=>s+(r.evHours||0),0);
+        grandTotal+=tot; grandOT+=totOT; grandBreakMin+=breakMin; grandEv+=totEv;
         const breakNote=breakMin>0?` (${t('reports.breakTime')||'Break Time'}: ${(breakMin/60).toFixed(2)}h)`:'';
-        allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total${breakNote}`,hours:tot,otHours:totOT,breakMin,trackOT,isSubtotal:true,isSiteHeader:false});
+        allRows.push({empName:emp.name,subtotalLabel:`${emp.name} — Total${breakNote}`,hours:tot,otHours:totOT,evOn:!!co?.evening_start,evHours:totEv,breakMin,trackOT,isSubtotal:true,isSiteHeader:false});
       }
     });
     if(siteGroups.length>1||site){
@@ -11819,7 +11915,8 @@ async function generateReport(){
       const siteTot=siteRows.reduce((s,r)=>s+(r.hours??0),0);
       const siteOT=siteRows.reduce((s,r)=>s+(r.otHours||0),0);
       const siteBreakMin=siteRows.reduce((s,r)=>s+(r.breakMin||0),0);
-      allRows.push({isSiteTotal:true,siteName:site?site.name:'No Site Assigned',hours:siteTot,otHours:siteOT,breakMin:siteBreakMin});
+      const siteEv=siteRows.reduce((s,r)=>s+(r.evHours||0),0);
+      allRows.push({isSiteTotal:true,siteName:site?site.name:'No Site Assigned',hours:siteTot,otHours:siteOT,evOn:siteRows.some(r=>r.evOn),evHours:siteEv,breakMin:siteBreakMin});
     }
   });
 
@@ -11829,6 +11926,8 @@ async function generateReport(){
   // a report for a company that doesn't use labels is exactly what it always was.
   _repShowLabel=dataRows.some(r=>r.labelId);
   const LC=_repShowLabel?1:0;
+  _repShowEvening=dataRows.some(r=>r.evOn);
+  const EV=_repShowEvening?1:0;
   const lblName=id=>{const l=id?labelByIdAny(id):null;return l?l.name:(id?(t('labels.deleted')||'(deleted label)'):(t('labels.none')||'No label'));};
   _reportLabelSummary=[];
   if(_repShowLabel){
@@ -11866,7 +11965,8 @@ async function generateReport(){
   if(headRow){
     headRow.innerHTML=`<th>${esc(t('reports.col.employee')||'Employee')}</th><th>${esc(t('admin.col.site')||'Site')}</th>`
       +(LC?`<th>${esc(t('labels.shiftField')||'Label')}</th>`:'')
-      +`<th>${esc(t('reports.date')||'Date')}</th><th>${esc(t('reports.col.in')||'Punch In')}</th><th>${esc(t('reports.col.out')||'Punch Out')}</th><th class="num">${esc(t('reports.col.reg')||'Reg Hours')}</th><th class="num">${esc(t('reports.col.ot')||'OT Hours')}</th>`;
+      +`<th>${esc(t('reports.date')||'Date')}</th><th>${esc(t('reports.col.in')||'Punch In')}</th><th>${esc(t('reports.col.out')||'Punch Out')}</th><th class="num">${esc(t('reports.col.reg')||'Reg Hours')}</th><th class="num">${esc(t('reports.col.ot')||'OT Hours')}</th>`
+      +(EV?`<th class="num">${esc(t('reports.col.evening')||'Evening Hrs')}</th>`:'');
   }
   const totalH=allRows.filter(r=>r.isSiteTotal).reduce((s,r)=>s+(r.hours??0),0)||
     allRows.filter(r=>r.isSubtotal).reduce((s,r)=>s+(r.hours??0),0);
@@ -11891,6 +11991,7 @@ async function generateReport(){
     <div class="stat-card"><div class="lbl">Total Sessions</div><div class="val blue">${dataRows.length}</div></div>
     <div class="stat-card"><div class="lbl">Total Hours</div><div class="val green">${totalH.toFixed(2)}</div></div>
     ${hasOT?`<div class="stat-card"><div class="lbl">Overtime Hours</div><div class="val amber">${grandOT.toFixed(2)}</div></div>`:''}
+    ${EV?`<div class="stat-card"><div class="lbl">${t('reports.col.evening')||'Evening Hrs'}</div><div class="val amber">${grandEv.toFixed(2)}</div></div>`:''}
     ${hasBreaks?`<div class="stat-card"><div class="lbl">${t('reports.breakTime')||'Break Time'}</div><div class="val amber">${(grandBreakMin/60).toFixed(2)}</div></div>`:''}
     ${offDays?`<div class="stat-card"><div class="lbl">${t('to.paidLeaveHours')||'Paid Leave Hours'}</div><div class="val amber">${offHours.toFixed(2)}</div></div>`:''}
     <div class="stat-card"><div class="lbl">Employees</div><div class="val purple">${selEmps.length}</div></div>
@@ -11914,11 +12015,13 @@ async function generateReport(){
     if(r.isSiteTotal)  return mcard(
       `<span style="color:var(--accent)">${esc(r.siteName)} — ${t('reports.siteTotal')||'Site Total'}</span>`,
       [[t('reports.hours')||'Hours', `<strong>${r.hours.toFixed(2)}</strong>`],
-       r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
+       r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null,
+       r.evHours>0 ? [t('reports.col.evening')||'Evening Hrs', `<span style="color:var(--amber)">${r.evHours.toFixed(2)}</span>`] : null]);
     if(r.isSubtotal)   return mcard(
       `<span style="color:var(--text2);font-size:13px">${esc(r.subtotalLabel)}</span>`,
       [[t('reports.hours')||'Hours', r.hours.toFixed(2)],
-       r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
+       r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null,
+       r.evHours>0 ? [t('reports.col.evening')||'Evening Hrs', `<span style="color:var(--amber)">${r.evHours.toFixed(2)}</span>`] : null]);
     return mcard(
       esc(r.empName||'') + (r.isManual?' <span class="manual-badge">MANUAL</span>':'') + (r.isPaidBreak?' <span class="break-badge">PAID BREAK</span>':''),
       [r.siteName!=='—' ? [t('admin.col.site')||'Site', esc(r.siteName)] : null,
@@ -11929,12 +12032,13 @@ async function generateReport(){
        [t('reports.hours')||'Hours', r.hours!==null
           ? `<strong>${(r.trackOT?(r.hours-(r.otHours||0)):r.hours).toFixed(2)}</strong>`
           : (t('reports.stillIn')||'Still in')],
-       r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null]);
+       r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null,
+       r.evHours>0 ? [t('reports.col.evening')||'Evening Hrs', `<span style="color:var(--amber)">${r.evHours.toFixed(2)}</span>`] : null]);
   }).join('');
 
   document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if(r.isSiteHeader)return`<tr style="background:rgba(79,142,247,.1)">
-      <td colspan="${7+LC}" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
+      <td colspan="${7+LC+EV}" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
         <svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}
       </td>
     </tr>`;
@@ -11943,12 +12047,14 @@ async function generateReport(){
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--accent)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.otHours>0?r.otHours.toFixed(2):''}</td>
+      ${EV?`<td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.evHours>0?r.evHours.toFixed(2):''}</td>`:''}
     </tr>`;
     if(r.isSubtotal)return`<tr style="background:rgba(255,255,255,.02)">
       <td colspan="${4+LC}" style="font-weight:600;color:var(--text2);font-size:12px;padding:8px 15px;padding-left:28px">&#8627; ${r.subtotalLabel}</td>
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px;color:var(--text2)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.trackOT&&r.otHours>0?r.otHours.toFixed(2):''}</td>
+      ${EV?`<td class="num" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.evHours>0?r.evHours.toFixed(2):''}</td>`:''}
     </tr>`;
     const otCell=r.trackOT&&r.otHours>0
       ?`<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:600">${r.otHours.toFixed(2)}</span>`
@@ -11962,6 +12068,7 @@ async function generateReport(){
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">${r.punchOut!=='—'?r.punchOut:'<span style="color:var(--text3)">—</span>'}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:600">${r.hours!==null?(r.trackOT?(r.hours-(r.otHours||0)).toFixed(2):r.hours.toFixed(2)):'<span style="color:var(--text3)">Still in</span>'}</td>
       <td class="num">${r.hours!==null?otCell:'<span style="color:var(--text3)">—</span>'}</td>
+      ${EV?`<td class="num" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.evHours>0?r.evHours.toFixed(2):'<span style="color:var(--text3)">—</span>'}</td>`:''}
     </tr>`;
   }).join('');
 }
@@ -12009,6 +12116,13 @@ function exportReport(fmt){
     });
   }
 
+  // Evening hours: one extra column at the end, after OT (and after the label columns/sections above,
+  // which position their own cells from the end of the row), only when the report has the setting on.
+  if(_repShowEvening){
+    headers.push(t('reports.col.evening')||'Evening Hrs');
+    rows.forEach((row,i)=>{ const r=i<reportData.length?reportData[i]:null; row.push(r&&!r.isSiteHeader&&r.evHours>0?r.evHours.toFixed(2):''); });
+  }
+
   if(fmt==='excel'){
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
@@ -12029,19 +12143,21 @@ function exportReport(fmt){
     doc.text(`Company: ${coLabel}  |  Site: ${siteLabel}  |  ${startD} → ${endD}  |  ${new Date().toLocaleString()}`,14,22);
     doc.setTextColor(0);
     const PL=_repShowLabel?1:0;
+    const PE=_repShowEvening?1:0;
+    const evCell=(r,st)=>PE?[{content:r.evHours>0?r.evHours.toFixed(2):'',styles:st||{}}]:[];
     doc.autoTable({
-      head:[['Employee','Site',...(PL?['Label']:[]),'Date','In','Out','Reg Hrs','OT Hrs']],
+      head:[['Employee','Site',...(PL?['Label']:[]),'Date','In','Out','Reg Hrs','OT Hrs',...(PE?['Evening Hrs']:[])]],
       body:reportData.map(r=>{
-        if(r.isSiteHeader)return[{content:`SITE: ${r.siteName}`,colSpan:7+PL,styles:{fontStyle:'bold',fillColor:[30,50,100],textColor:[150,190,255]}}];
-        if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5+PL,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2),styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{fillColor:[238,242,255],textColor:[200,140,0]}}];
-        if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5+PL,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2),styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{textColor:[200,140,0]}}];
+        if(r.isSiteHeader)return[{content:`SITE: ${r.siteName}`,colSpan:7+PL+PE,styles:{fontStyle:'bold',fillColor:[30,50,100],textColor:[150,190,255]}}];
+        if(r.isSiteTotal)return[{content:`${r.siteName} — Site Total`,colSpan:5+PL,styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.hours.toFixed(2),styles:{fontStyle:'bold',fillColor:[238,242,255],textColor:[60,80,200]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{fillColor:[238,242,255],textColor:[200,140,0]}},...evCell(r,{fillColor:[238,242,255],textColor:[200,140,0]})];
+        if(r.isSubtotal)return[{content:`  ${r.subtotalLabel}`,colSpan:5+PL,styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.hours.toFixed(2),styles:{fontStyle:'italic',textColor:[120,130,150]}},{content:r.otHours>0?r.otHours.toFixed(2):'',styles:{textColor:[200,140,0]}},...evCell(r,{textColor:[200,140,0]})];
         const reg=r.regHours!=null?r.regHours:r.hours;
-        return[r.empName+(r.isManual?' [M]':'')+(r.isPaidBreak?' [Break]':''),r.siteName!=='—'?r.siteName:'',...(PL?[exLabel(r.labelId)]:[]),r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):''];
+        return[r.empName+(r.isManual?' [M]':'')+(r.isPaidBreak?' [Break]':''),r.siteName!=='—'?r.siteName:'',...(PL?[exLabel(r.labelId)]:[]),r.date,r.punchIn,r.punchOut!=='—'?r.punchOut:'—',reg!=null?reg.toFixed(2):'Still In',r.otHours>0?r.otHours.toFixed(2):'',...(PE?[r.evHours>0?r.evHours.toFixed(2):'']:[])];
       }),
       startY:27,styles:{fontSize:8,cellPadding:3},
       headStyles:{fillColor:[79,142,247],textColor:255,fontStyle:'bold'},
       alternateRowStyles:{fillColor:[245,245,250]},
-      columnStyles:{[5+PL]:{halign:'right'},[6+PL]:{halign:'right'}},
+      columnStyles:{[5+PL]:{halign:'right'},[6+PL]:{halign:'right'},...(PE?{[7+PL]:{halign:'right'}}:{})},
     });
     if(PL&&_reportLabelSummary.length){
       const lbBody=[];
@@ -14622,6 +14738,7 @@ async function renderHolidayList() {
   const year = document.getElementById('holidayYearFilter')?.value || new Date().getFullYear();
   const listEl = document.getElementById('holidayList');
   if(!listEl) return;
+  updateQcHolidayBtn();
   listEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text3)">...</div>`;
   try {
     const rows = await DB.all('holidays',
@@ -14683,6 +14800,58 @@ async function saveHoliday() {
     setTimeout(()=>{ msgEl.innerHTML=''; }, 2500);
     await renderHolidayList();
     await renderScheduleGrid(); // refresh grid to show new holiday
+  } catch(e) {
+    msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
+  }
+}
+
+// Québec's eight statutory paid holidays (Act respecting labour standards). Good Friday is the default
+// for the Easter holiday; an employer may use Easter Monday instead, so the note says so.
+function _easterSunday(y){                       // Anonymous Gregorian algorithm
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+  const h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+  const mo=Math.floor((h+l-7*m+114)/31), da=((h+l-7*m+114)%31)+1;
+  return new Date(y,mo-1,da);
+}
+function quebecHolidays(y){
+  const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
+  const nthMonday=(month,n)=>{const d=new Date(y,month,1);d.setDate(1+((8-d.getDay())%7)+(n-1)*7);return d;};
+  const patriots=new Date(y,4,24); while(patriots.getDay()!==1) patriots.setDate(patriots.getDate()-1);   // Monday before 25 May
+  const jul1=new Date(y,6,1), canadaDay=jul1.getDay()===0?new Date(y,6,2):jul1;                            // 2 July when 1 July is a Sunday
+  return [
+    {date:new Date(y,0,1),               name:"New Year's Day",           fr:"Jour de l'An"},
+    {date:addDays(_easterSunday(y),-2),  name:'Good Friday',              fr:'Vendredi saint', note:"Easter Monday may be used instead (employer's choice) / Lundi de Pâques possible au choix de l'employeur"},
+    {date:patriots,                      name:"National Patriots' Day",   fr:'Journée nationale des patriotes'},
+    {date:new Date(y,5,24),              name:'Quebec National Holiday',  fr:'Fête nationale du Québec'},
+    {date:canadaDay,                     name:'Canada Day',               fr:'Fête du Canada'},
+    {date:nthMonday(8,1),                name:'Labour Day',               fr:'Fête du Travail'},
+    {date:nthMonday(9,2),                name:'Thanksgiving',             fr:'Action de grâce'},
+    {date:new Date(y,11,25),             name:'Christmas Day',            fr:'Noël'},
+  ];
+}
+function updateQcHolidayBtn(){
+  const btn=document.getElementById('qcHolidayBtn'); if(!btn) return;
+  const y=document.getElementById('holidayYearFilter')?.value||new Date().getFullYear();
+  btn.textContent=(t('sched.addQcHolidays')||'Add Québec statutory holidays')+' — '+y;
+}
+async function addQuebecHolidays() {
+  const coId = document.getElementById('schedCoFilter')?.value || C.companies[0]?.id;
+  if(!coId) return;
+  const year = parseInt(document.getElementById('holidayYearFilter')?.value,10) || new Date().getFullYear();
+  const s = Sess.get();
+  const adminId = s?.parent_admin_id || s?.id;
+  const msgEl = document.getElementById('holidayFormMsg');
+  const iso = d => d.toLocaleDateString('en-CA');
+  try {
+    const existing = await DB.all('holidays', `company_id=eq.${coId}&holiday_date=gte.${year}-01-01&holiday_date=lte.${year}-12-31`) || [];
+    const taken = new Set(existing.filter(h=>!h.site_id).map(h=>h.holiday_date));   // company-wide dates already listed
+    const todo = quebecHolidays(year).filter(h=>!taken.has(iso(h.date)));
+    if(!todo.length) { msgEl.innerHTML = `<div class="msg info">${t('sched.qcHolidaysNone')||'All Québec holidays are already in your list.'}</div>`; setTimeout(()=>{ msgEl.innerHTML=''; }, 3500); return; }
+    await DB.insert('holidays', todo.map(h => ({ admin_id: adminId, company_id: coId, site_id: null, holiday_date: iso(h.date), name: h.name, name_fr: h.fr, note: h.note || '' })));
+    msgEl.innerHTML = `<div class="msg success">✓ ${(t('sched.qcHolidaysAdded')||'{n} holidays added.').replace('{n}', todo.length)}</div>`;
+    setTimeout(()=>{ msgEl.innerHTML=''; }, 3500);
+    await renderHolidayList();
+    await renderScheduleGrid();
   } catch(e) {
     msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
   }
@@ -16406,7 +16575,7 @@ en:{
 'tour.s5t':'Hours add up on their own',
 'tour.s5b':'Every punch feeds Reports. Pick a date range and export to Excel, CSV or PDF when you run payroll. Nothing to tally by hand.',
 'reports.title':'Reports','reports.subtitle':'Generate time & attendance reports','reports.retention':'Punch records are kept for 18 months. Older records are archived and won\'t appear here.',
-'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All','reports.col.reg':'Reg Hours','reports.col.ot':'OT Hours',
+'reports.generate':'Generate','reports.selectAll':'Select All','reports.deselectAll':'Deselect All','reports.col.reg':'Reg Hours','reports.col.ot':'OT Hours','reports.col.evening':'Evening Hrs',
 'reports.period':'Period','reports.lastPeriod':'Last Payroll Period','reports.currentPeriod':'Current Period',
 'reports.btnPrevPeriod':'← Previous Period','reports.btnNextPeriod':'Next Period →','reports.btnCurPeriod':'Current Period','reports.payPeriod':'Pay period',
 'reports.thisWeek':'This Week','reports.biweekly':'Bi-Weekly',
@@ -16613,6 +16782,7 @@ en:{
 'modal.overtimeSettings':'Overtime Settings','modal.trackOvertime':'Track Overtime',
 'modal.overtimeDesc':'Flag daily and weekly overtime in reports — thresholds below',
 'modal.otDailyLabel':'Daily threshold','modal.otWeeklyLabel':'Weekly threshold',
+'modal.eveningSettings':'Evening Hours','modal.eveningTrack':'Report evening hours separately','modal.eveningDesc':'Adds an Evening Hrs column to reports and exports: the hours worked inside this window, on the days you choose. Handy for evening or night premiums. It does not change regular or overtime hours.','modal.eveningFrom':'From','modal.eveningTo':'Until (empty = end of day)','modal.eveningDays':'On these days','modal.eveningNeedDay':'Pick at least one day for evening hours.','modal.eveningBadEnd':'The evening window must end after it starts (it cannot cross midnight). Leave "Until" empty to run to the end of the day.',
 'modal.lunchSettings':'Lunch Breaks','modal.trackLunch':'Track Lunch Breaks',
 'modal.lunchDesc':'Adds a dedicated Break button on the clock-in screen, separate from clocking out',
 'modal.paidBreak':'Paid Break Minutes','modal.paidBreakDesc':'Minutes of each break counted as worked hours (0 = fully unpaid). A shorter break only pays for its actual length.','modal.minutesAbbrev':'min',
@@ -16878,7 +17048,7 @@ en:{
 'sched.myShifts':'My Upcoming Shifts',
 'sched.manageHolidays':'Holidays',
 'sched.holidayDesc':'Mark dates as holidays to flag them in the schedule and payroll reports. Holidays are not closures — shifts can still be assigned, but the ⭐ flag reminds managers that different pay rates may apply.',
-'sched.addHoliday':'Add Holiday',
+'sched.addHoliday':'Add Holiday','sched.addQcHolidays':'Add Québec statutory holidays','sched.qcHolidaysHint':'Adds the 8 statutory holidays (Good Friday is used; if you prefer Easter Monday, delete it and add that date) for the year picked below, for all sites. Dates already in your list are skipped.','sched.qcHolidaysAdded':'{n} holidays added.','sched.qcHolidaysNone':'All Québec holidays are already in your list.',
 'sched.holidayDate':'Date',
 'sched.holidayScope':'Applies to',
 'sched.holidayAllSites':'All sites',
@@ -17317,7 +17487,7 @@ fr:{
 'tour.s5t':'Les heures se calculent seules',
 'tour.s5b':'Chaque pointage alimente les Rapports. Choisissez une période et exportez vers Excel, CSV ou PDF au moment de la paie. Aucun calcul à la main.',
 'reports.title':'Rapports','reports.subtitle':'Générer des rapports de présence','reports.retention':'Les pointages sont conservés 18 mois. Les registres plus anciens sont archivés et n\'apparaissent plus ici.',
-'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner','reports.col.reg':'Heures rég.','reports.col.ot':'Heures supp.',
+'reports.generate':'Générer','reports.selectAll':'Tout sélectionner','reports.deselectAll':'Tout désélectionner','reports.col.reg':'Heures rég.','reports.col.ot':'Heures supp.','reports.col.evening':'Heures de soir',
 'reports.period':'Période','reports.lastPeriod':'Dernière période de paie','reports.currentPeriod':'Période en cours',
 'reports.btnPrevPeriod':'← Période précédente','reports.btnNextPeriod':'Période suivante →','reports.btnCurPeriod':'Période en cours','reports.payPeriod':'Période de paie',
 'reports.thisWeek':'Cette semaine','reports.biweekly':'Aux deux semaines',
@@ -17522,6 +17692,7 @@ fr:{
 'modal.overtimeSettings':'Paramètres des heures supp.','modal.trackOvertime':'Suivi des heures supp.',
 'modal.overtimeDesc':'Signaler les heures supp. quotidiennes et hebdomadaires dans les rapports — seuils ci-dessous',
 'modal.otDailyLabel':'Seuil quotidien','modal.otWeeklyLabel':'Seuil hebdomadaire',
+'modal.eveningSettings':'Heures de soir','modal.eveningTrack':'Afficher les heures de soir séparément','modal.eveningDesc':'Ajoute une colonne Heures de soir aux rapports et exportations : les heures travaillées dans cette plage, les jours choisis. Pratique pour les primes de soir ou de nuit. Cela ne change pas les heures régulières ni supplémentaires.','modal.eveningFrom':'De','modal.eveningTo':"Jusqu'à (vide = fin de journée)",'modal.eveningDays':'Ces jours-là','modal.eveningNeedDay':'Choisissez au moins un jour pour les heures de soir.','modal.eveningBadEnd':"La plage de soir doit se terminer après son début (elle ne peut pas traverser minuit). Laissez « Jusqu'à » vide pour aller jusqu'à la fin de la journée.",
 'modal.lunchSettings':'Pauses repas','modal.trackLunch':'Suivi des pauses repas',
 'modal.lunchDesc':'Ajoute un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie',
 'modal.paidBreak':'Minutes de pause payées','modal.paidBreakDesc':'Minutes de chaque pause comptées comme temps travaillé (0 = non payée). Une pause plus courte ne paie que sa durée réelle.','modal.minutesAbbrev':'min',
@@ -17791,7 +17962,7 @@ fr:{
 'sched.myShifts':'Mes prochains quarts',
 'sched.manageHolidays':'Jours fériés',
 'sched.holidayDesc':'Marquez des dates comme jours fériés pour les signaler dans l\'horaire et les rapports de paie. Les jours fériés ne sont pas des fermetures — des quarts peuvent toujours être assignés, mais le ⭐ rappelle aux gestionnaires qu\'un taux majoré pourrait s\'appliquer.',
-'sched.addHoliday':'Ajouter un jour férié',
+'sched.addHoliday':'Ajouter un jour férié','sched.addQcHolidays':'Ajouter les jours fériés du Québec','sched.qcHolidaysHint':"Ajoute les 8 jours fériés prévus par la loi (le Vendredi saint est utilisé; si vous préférez le lundi de Pâques, supprimez-le et ajoutez cette date) pour l'année choisie ci-dessous, pour tous les sites. Les dates déjà dans votre liste sont ignorées.",'sched.qcHolidaysAdded':'{n} jours fériés ajoutés.','sched.qcHolidaysNone':'Tous les jours fériés du Québec sont déjà dans votre liste.',
 'sched.holidayDate':'Date',
 'sched.holidayScope':'S\'applique à',
 'sched.holidayAllSites':'Tous les sites',

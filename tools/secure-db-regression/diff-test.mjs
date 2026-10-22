@@ -261,6 +261,11 @@ const cases = [
   R('send_email', 'kiosk: employee from another site', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OTHER, pin: '9999', weekLabel: 'w', shifts: [] } }, r => r.status === 403 && r.fn.length === 0),
   R('send_email', 'kiosk: unknown site', { action: 'send_email', kioskSiteId: 'nope', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', weekLabel: 'w', shifts: [] } }, r => r.status === 401 && r.fn.length === 0),
 
+  // holidays: the Québec holiday button sends all 8 rows in one bulk insert.
+  R('holidays', 'bulk insert into own company', { table: 'holidays', method: 'POST', body: [{ admin_id: 'a1', company_id: 'c1', site_id: null, holiday_date: '2026-01-01', name: "New Year's Day", name_fr: "Jour de l'An", note: '' }, { admin_id: 'a1', company_id: 'c1', site_id: null, holiday_date: '2026-12-25', name: 'Christmas Day', name_fr: 'Noël', note: '' }], ...own },
+    r => r.status === 201 && JSON.parse(r.calls.find(c => /POST .*\/holidays/.test(c)).split('/holidays')[1].replace(/^\S*\s/, '')).length === 2),
+  R('holidays', 'bulk insert with one row for another tenant is refused', { table: 'holidays', method: 'POST', body: [{ admin_id: 'a1', company_id: 'c1', holiday_date: '2026-01-01', name: 'x' }, { admin_id: 'a1', company_id: 'c9', holiday_date: '2026-01-02', name: 'y' }], ...own },
+    r => r.status === 403 && !r.calls.some(c => /POST .*\/holidays/.test(c))),
   // demote_manager: the caller comes from the session, never from the request body.
   R('demote_manager', 'no session', { action: 'demote_manager', body: { manager_id: E_OWN } }, r => r.status === 401 && r.calls.length === 0),
   R('demote_manager', 'a manager may not demote', { action: 'demote_manager', body: { manager_id: E_OWN }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /rpc\/demote/.test(c))),
