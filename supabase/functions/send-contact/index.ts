@@ -29,6 +29,56 @@ const SUBJECT_LABELS: Record<string, string> = {
 // the employee's name but delivered to the support inbox (two per request).
 const INTERNAL_TYPES = new Set(['new_account_notification', 'missed_punch', 'time_off']);
 
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+// This function is public on purpose (the landing contact form and the in-app support form post to it),
+// so it must not be usable to send mail anywhere else. Only our own server functions (notify-time-off,
+// notify-missed-punch) hold the service key; with it a caller may choose the recipients and use the
+// internal types. Everyone else always writes to the support inbox, in the two public types, within a
+// rate limit, and every field they control is escaped and length-capped.
+const PUBLIC_TYPES = new Set(['sales', 'support']);
+const MAX_PER_SENDER_HOUR = 5;
+const MAX_PER_HOUR_ALL = 120;
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+// Escape text for HTML and cap its length. Anything that is not a string becomes ''.
+function esc(v: unknown, max = 200): string {
+  const t = typeof v === 'string' ? v.trim().slice(0, max) : '';
+  return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+const oneLine = (v: unknown, max = 100): string =>
+  typeof v === 'string' ? v.replace(/[\r\n]+/g, ' ').trim().slice(0, max) : '';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Rate limit, kept in audit_log (service key only). Fails open: if the count cannot be read, a real
+// customer is never turned away because of our own bookkeeping.
+async function recentCount(filterClause: string): Promise<number> {
+  try {
+    const since = new Date(Date.now() - 3600 * 1000).toISOString();
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/audit_log?event=eq.contact_form&${filterClause}&at=gte.${since}&select=id&limit=200`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
+    });
+    if (!r.ok) return 0;
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows.length : 0;
+  } catch { return 0; }
+}
+async function recordContact(senderEmail: string): Promise<void> {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ event: 'contact_form', table_name: 'send-contact', filter: senderEmail.toLowerCase().slice(0, 200) }),
+    });
+  } catch { /* bookkeeping must never block a message */ }
+}
+
 function isValidEmail(e: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
@@ -51,8 +101,8 @@ function wrapper(body: string): string {
 }
 
 function buildAckHtml(name: string, subLabel: string, receivedEn: string, receivedFr: string): string {
-  const nameEn = name?.trim() || 'there';
-  const nameFr = name?.trim() || 'vous';
+  const nameEn = esc(name, 100) || 'there';
+  const nameFr = esc(name, 100) || 'vous';
   return wrapper(`
     <!-- ENGLISH -->
     <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">We received your message</h1>
@@ -106,29 +156,50 @@ function buildAckHtml(name: string, subLabel: string, receivedEn: string, receiv
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
+    const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    const isService = !!SERVICE_KEY && timingSafeEqual(bearer, SERVICE_KEY);
     const body = await req.json();
     const { type, name, email, subject, message, adminId, recipients } = body;
-    const toList: string[] = Array.isArray(recipients) && recipients.length > 0
-      ? recipients
-      : [DEST_EMAIL];
+    const fail = (status: number, error: string) => new Response(JSON.stringify({ error }), {
+      status, headers: { ...CORS, 'Content-Type': 'application/json' }
+    });
 
-    if (!name || !email || !subject || !message) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
-        headers: { ...CORS, 'Content-Type': 'application/json' }
-      });
+    if (!name || !email || !subject || !message) return fail(400, 'Missing required fields');
+    if (!isService && !PUBLIC_TYPES.has(String(type))) return fail(403, 'Unauthorized');
+
+    // Recipients: only the server may choose them. Everyone else writes to the support inbox.
+    let toList: string[] = [DEST_EMAIL];
+    if (isService && Array.isArray(recipients) && recipients.length > 0) {
+      toList = recipients.filter((r: unknown) => typeof r === 'string' && isValidEmail(r)).slice(0, 20);
+      if (!toList.length) toList = [DEST_EMAIL];
+    }
+
+    const senderEmail = oneLine(email, 200);
+    if (!isService) {
+      if (!isValidEmail(senderEmail)) return fail(400, 'Invalid email address');
+      if (String(message).length > 5000) return fail(400, 'Message is too long');
+      // Rate limit per sender address and overall. The acknowledgement goes to that address, so this is
+      // also what stops the form being used to mail someone repeatedly.
+      const [mine, all] = await Promise.all([
+        recentCount(`filter=eq.${encodeURIComponent(senderEmail.toLowerCase())}`),
+        recentCount('table_name=eq.send-contact'),
+      ]);
+      if (mine >= MAX_PER_SENDER_HOUR || all >= MAX_PER_HOUR_ALL) return fail(429, 'Too many messages. Please try again later.');
+      await recordContact(senderEmail);
     }
 
     const isSales = type === 'sales';
-    const subLabel = SUBJECT_LABELS[subject] ?? subject;
+    const subLabelRaw = SUBJECT_LABELS[subject] ?? oneLine(subject, 80);
+    const subLabel = esc(subLabelRaw, 120);
     const typeLabel = isSales ? '📣 Sales Inquiry' : '🎧 Support Request';
-    const emailSubject = `[PunchClock Pro] ${typeLabel} — ${subLabel}`;
+    const emailSubject = `[PunchClock Pro] ${typeLabel} — ${oneLine(subLabelRaw, 120)}`;
     // Many mail clients (Gmail webmail among them) strip <style> blocks entirely, so the
     // .message-box white-space:pre-wrap rule below can't be relied on to keep line breaks —
     // convert them to real <br> tags, which every client honours regardless of CSS support.
-    const messageHtml = message
-      .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const messageHtml = String(message).slice(0, 5000)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/\n/g, '<br>');
+    const safeAdminId = typeof adminId === 'string' && UUID_RE.test(adminId) ? adminId : '';
 
     const html = `
 <!DOCTYPE html>
@@ -149,8 +220,8 @@ Deno.serve(async (req) => {
   <div class="card">
     <h2>⏱ PunchClock Pro</h2>
     <div class="badge">${typeLabel}</div>
-    <div class="row"><div class="label">From</div><div class="value">${name} &lt;${email}&gt;</div></div>
-    ${adminId ? `<div class="row"><div class="label">Admin ID</div><div class="value">${adminId}</div></div>` : ''}
+    <div class="row"><div class="label">From</div><div class="value">${esc(name, 100)} &lt;${esc(senderEmail, 200)}&gt;</div></div>
+    ${safeAdminId ? `<div class="row"><div class="label">Admin ID</div><div class="value">${safeAdminId}</div></div>` : ''}
     <div class="row"><div class="label">Subject</div><div class="value">${subLabel}</div></div>
     <div class="row"><div class="label">Message</div><div class="value message-box" style="white-space:normal;line-height:1.6">${messageHtml}</div></div>
     <div class="footer">Sent via PunchClock Pro contact form</div>
@@ -168,7 +239,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: toList,
-        reply_to: email,
+        reply_to: senderEmail,
         subject: emailSubject,
         html
       })
@@ -180,7 +251,7 @@ Deno.serve(async (req) => {
     }
 
     // Fire-and-forget customer acknowledgment — never blocks the main response
-    if (!INTERNAL_TYPES.has(type) && email && isValidEmail(email)) {
+    if (!INTERNAL_TYPES.has(type) && senderEmail && isValidEmail(senderEmail)) {
       const now = new Date();
       const receivedEn = now.toLocaleString('en-CA', {
         timeZone: 'America/Toronto', dateStyle: 'long', timeStyle: 'short'
@@ -193,9 +264,9 @@ Deno.serve(async (req) => {
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: ACK_FROM,
-          to: [email],
+          to: [senderEmail],
           subject: '✅ We received your message | Nous avons reçu votre message — PunchClock Pro',
-          html: buildAckHtml(name, subLabel, receivedEn, receivedFr)
+          html: buildAckHtml(String(name), subLabel, receivedEn, receivedFr)
         })
       }).catch(() => { /* fire-and-forget: ack failures are non-fatal */ });
     }
@@ -204,7 +275,7 @@ Deno.serve(async (req) => {
       headers: { ...CORS, 'Content-Type': 'application/json' }
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500,
       headers: { ...CORS, 'Content-Type': 'application/json' }
     });

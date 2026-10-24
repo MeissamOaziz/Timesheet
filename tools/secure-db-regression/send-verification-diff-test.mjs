@@ -29,7 +29,7 @@ async function call(handler, payload, headers = {}) {
     resendCalls.push({ url: String(u), body: JSON.parse(init.body) });
     return new Response(JSON.stringify({ id: 'fake-id' }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
-  const req = new Request('https://fn/send-verification', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(payload) });
+  const req = new Request('https://fn/send-verification', { method: 'POST', headers: { 'content-type': 'application/json', ...(headers.__none ? {} : { authorization: `Bearer ${SERVICE}` }), ...headers }, body: JSON.stringify(payload) });
   const r = await handler(req);
   let j; try { j = await r.json(); } catch { j = null; }
   const sent = resendCalls.map(c => ({ to: c.body.to, subject: c.body.subject, html: c.body.html }));
@@ -108,8 +108,19 @@ n = await call(hNew, dryPayload, { 'x-dry-run': '1', authorization: `Bearer ${SE
 { const ok = n.status === 200 && n.json && n.json.dry === true && n.json.to === 'a@x.ca' && n.json.html.includes('Counter') && n.sent.length === 0; if (!ok) bad++; console.log(ok ? 'works      ' : '!! BROKEN', 'dry run with the service key returns the email and sends nothing'); }
 n = await call(hNew, dryPayload, { 'x-dry-run': '1', authorization: 'Bearer public-anon-key' });
 { const ok = n.status === 401 && n.sent.length === 0; if (!ok) bad++; console.log(ok ? 'refused    ' : '!! NOT REFUSED', 'dry run with the public key (and nothing is sent)'); }
-n = await call(hNew, dryPayload, { 'x-dry-run': '1' });
+n = await call(hNew, dryPayload, { 'x-dry-run': '1', __none: true });
 { const ok = n.status === 401 && n.sent.length === 0; if (!ok) bad++; console.log(ok ? 'refused    ' : '!! NOT REFUSED', 'dry run with no key (and nothing is sent)'); }
+
+// ---------- Part 4: the lock ----------
+console.log('--- Part 4: only the server may send');
+const ordinaryPayload = { email: 'victim@x.ca', name: 'Phish', code: '123456' };
+for (const [label, headers] of [['no key', { __none: true }], ['the public anon key', { authorization: 'Bearer public-anon-key' }], ['a wrong key of the right length', { authorization: `Bearer ${SERVICE.replace(/./g, 'x')}` }]]) {
+  const r = await call(hNew, ordinaryPayload, headers);
+  const ok = r.status === 401 && r.sent.length === 0;
+  if (!ok) bad++;
+  console.log(ok ? 'refused    ' : '!! NOT REFUSED', label, '(nothing is sent)');
+}
+{ const r = await call(hNew, ordinaryPayload); const ok = r.status === 200 && r.sent.length === 1; if (!ok) bad++; console.log(ok ? 'works      ' : '!! BROKEN', 'the server key still sends'); }
 
 console.log(bad ? `\n${bad} PROBLEM(S)` : '\nALL GOOD');
 process.exit(bad ? 1 : 0);

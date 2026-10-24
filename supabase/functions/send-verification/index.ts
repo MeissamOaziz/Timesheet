@@ -308,6 +308,16 @@ serve(async (req)=>{
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+    // Only the server may send mail through this function. The browser used to call it with the public
+    // key, which let anyone email any address from our domain in their own words; the app now asks
+    // secure-db (send_email), which checks the database row first and calls here with the service key.
+    // Anything else is refused and logged so a stale client or an abuser shows up in the function log.
+    if (!isService) {
+      console.warn("send-verification: refused a caller without the service key");
+      return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
     const body = await req.json();
     const { email, name, code, type, requesterName, requesterEmail, adminName, companyName, purpose } = body;
     if (!email || !name) {

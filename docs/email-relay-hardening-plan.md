@@ -9,14 +9,27 @@ Done and live:
   Also deny-by-default for unused tables (admin_sessions, email_codes, audit_log were open).
 - App (commit 6ed1b08): every email goes through `send_email`; no direct call to `send-verification` left.
 
+Done 2026-10-23:
+- `send-verification` v28 deployed: refuses every caller without the service key (401, logged). Checked
+  live: anon key and no key both return 401. Three days after the app stopped calling it directly.
+- `send-contact` v17 deployed (tested old vs new with `tools/secure-db-regression/send-contact-diff-test.mjs`):
+  only the service key may choose `recipients` or use the internal types (time_off, missed_punch,
+  new_account_notification); the public form is limited to `sales` and `support`, always writes to the
+  support inbox, is escaped and length-capped, and is rate limited (5 per sender address per hour, 120
+  overall) through `audit_log` rows (event `contact_form`). The customer acknowledgement can no longer be
+  used to mail a third party repeatedly. Fails open if the counter cannot be read.
+
+Written and tested, NOT yet deployed (waiting to ship with the Free-plan server checks, one deploy):
+- `secure-db` v43: per-admin rate limit on `send_email` (300 schedule emails and 30 other emails per
+  admin per hour, super admin exempt, dry runs never counted). Cases are in `diff-test.mjs`
+  (group `email-rate-limit`).
+
 Still to do:
-1. **Lock `send-verification`** (service key only). Wait a few days first: browsers that still hold the
-   old page (service-worker cache) call it directly. Before locking, confirm in the Resend sent list that
-   direct calls have stopped, and add a log line for rejected calls. Then deploy, and check the
-   anon-key call returns 401.
-2. Rate limit the admin path of `send_email` (the kiosk path already has one).
-3. Rate limit the contact form's automatic reply (`send-contact`).
-4. Live dry run of each email type with a signed-in admin (nothing is sent).
+1. Live dry run of each email type with a signed-in admin (nothing is sent). Needs a logged-in Chrome
+   session; the 12 templates are already proven byte-identical by the differential test.
+2. Audit the remaining mail functions (`send-onboarding`, `punch-alerts`, `send-owner-digest`,
+   `send-weekly-digest`, `churn-survey`, `send-support-reply`, `send-push`, `send-period-summary`)
+   for the same pattern: public key accepted, caller-chosen recipient or wording.
 
 ## The problem
 `send-verification` has JWT verification off and checks nothing about its caller. The public anon key
