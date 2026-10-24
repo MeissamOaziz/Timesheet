@@ -95,6 +95,29 @@ feature ships or a ticket teaches something, add it here in the same change.
   with the usual email and password. Kiosks, clock-in and the employee portal were not affected.
 - Do not describe it as a breach. Say a security update required everyone to sign in again.
 
+## What each plan includes, and the 14-day preview (from 2026-10-24)
+
+The pricing page, the in-app locks and the server jobs all follow this table. If it changes, change all three
+(`index.html` `featureEntitled`, `public.has_paid_features`, the pricing cards and FAQ) in the same commit.
+
+| | Free | Starter $19.49 | Growth $39.49 | Business $79.49 |
+|---|---|---|---|---|
+| Company / sites / employees / admins | 1 / 1 / 10 / 1 | 1 / 2 / 25 / 2 | 3 / 6 / 60 / 4 | unlimited / unlimited / unlimited / 6 |
+| Tablet terminal, geofencing, remote clock-in, employee portal, PDF reports, time off, alerts | yes | yes | yes | yes |
+| Excel and CSV export, add / edit / delete punches, overtime tracking, evening hours, automatic email reports (employees and the accountant's payroll summary) | no | yes | yes | yes |
+| Lunch breaks, visitor check-in | no | no | yes | yes |
+| Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels), 14-day trial | paid plans only | | | |
+
+- Every Free account previews the Starter features until **14 days after it was created, and in any case until
+  2026-11-06**. After that the controls lock, the daily job (`enforce_plan_features`, 05:10 UTC) switches off overtime
+  and evening hours, and the email reports stop (recipients stay on file and resume the day they upgrade).
+  Nothing is deleted. Lunch breaks and visitor check-in have no preview.
+- If a Free customer complains that a feature disappeared: it is as advertised on the pricing page, they had a
+  preview period to try it, and upgrading brings everything back as it was (their recipients are still saved; overtime
+  and evening hours need to be switched on again).
+- Grandfathered (unlimited): Oaziz Extracts and Connoisseur Culture.
+- Counts (employees, sites, companies, admins) are enforced in the app; extra seats are $4.90 each.
+
 ## Features and how to explain them
 
 Work labels (Scheduling add-on, $14.95/month, paid plans). Customers define their own labels (a task,

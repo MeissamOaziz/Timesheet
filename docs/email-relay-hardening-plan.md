@@ -19,10 +19,9 @@ Done 2026-10-23:
   overall) through `audit_log` rows (event `contact_form`). The customer acknowledgement can no longer be
   used to mail a third party repeatedly. Fails open if the counter cannot be read.
 
-Written and tested, NOT yet deployed (waiting to ship with the Free-plan server checks, one deploy):
-- `secure-db` v43: per-admin rate limit on `send_email` (300 schedule emails and 30 other emails per
-  admin per hour, super admin exempt, dry runs never counted). Cases are in `diff-test.mjs`
-  (group `email-rate-limit`).
+Deployed 2026-10-24 with the plan limits:
+- `secure-db` v43: per-admin rate limit on `send_email` (300 schedule emails and 30 other emails per admin per
+  hour, super admin exempt, dry runs never counted). Cases are in `diff-test.mjs` (group `email-rate-limit`).
 
 Still to do:
 1. Live dry run of each email type with a signed-in admin (nothing is sent). Needs a logged-in Chrome

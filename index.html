@@ -111,9 +111,12 @@ if (window.top !== window.self) {
     "Pointage par NIP sur tablette / PIN clock in on tablet",
     "Portail employé libre-service / Employee self-service portal",
     "Gestion multi-sites et multi-compagnies / Multi-site and multi-company management",
-    "Rapports de paie PDF et Excel / Payroll reports PDF and Excel",
-    "Rapports par courriel automatisés / Automated email reports",
-    "Suivi des heures supplémentaires / Overtime tracking",
+    "Rapports de paie PDF (Excel et CSV : plan Débutant et plus) / Payroll reports in PDF (Excel and CSV: Starter plan and above)",
+    "Rapports par courriel automatisés, y compris un sommaire de paie pour le comptable / Automated email reports, including a payroll summary for your accountant (plan Débutant et plus / Starter plan and above)",
+    "Suivi des heures supplémentaires / Overtime tracking (plan Débutant et plus / Starter plan and above)",
+    "Rapport des heures de soir / Evening hours report (plan Débutant et plus / Starter plan and above)",
+    "Correction des pointages / Punch corrections (plan Débutant et plus / Starter plan and above)",
+    "Pointage à distance avec position GPS / Remote clock-in with GPS location",
     "Planification des quarts de travail / Shift scheduling",
     "Demandes de congé en ligne / Online time-off requests",
     "Interface en français et en anglais / French and English interface",
@@ -155,7 +158,7 @@ if (window.top !== window.self) {
       "name": "Can I use PunchClock Pro with my payroll system?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. From the Reports tab you can export any date range to Excel, CSV or PDF, with regular and overtime hours separated per employee. Those formats open in every major payroll and accounting package, or can be sent straight to your bookkeeper. There is nothing to configure — pick the period, export, done."
+        "text": "Yes. From the Reports tab you can save any date range as a PDF on every plan, and export it to Excel or CSV on the Starter plan and above, with regular and overtime hours separated per employee. Those formats open in every major payroll and accounting package, or can be sent straight to your bookkeeper. There is nothing to configure — pick the period, export, done."
       }
     },
     {
@@ -163,7 +166,7 @@ if (window.top !== window.self) {
       "name": "What is overtime tracking?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view and in exported reports — so your payroll process is always accurate."
+        "text": "When enabled for a company, PunchClock Pro flags the hours worked past a daily limit and a weekly limit, which you choose (for example 8 hours a day and 40 a week). Overtime is highlighted in the activity view and in exported reports and payroll summaries, so your payroll process stays accurate. Overtime tracking is included on the Starter plan and above, and Free accounts have it during their 14-day preview."
       }
     },
     {
@@ -171,7 +174,7 @@ if (window.top !== window.self) {
       "name": "Is there a free plan?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. The free plan includes 1 company, 1 site, and up to 10 active employees — no credit card required, free forever. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports."
+        "text": "Yes. The Free plan includes 1 company, 1 site and up to 10 active employees, with the clock-in terminal, geofencing, remote clock-in, the employee portal and PDF reports. It needs no credit card and is free forever. Every new account also previews the Starter features (Excel and CSV export, overtime tracking, evening hours, punch corrections and automatic email reports) free for 14 days. Paid plans start at $19.49/month CAD and keep those features, with more sites, employees and admins."
       }
     },
     {
@@ -179,7 +182,7 @@ if (window.top !== window.self) {
       "name": "Can employees check their own schedule, hours and time off without contacting me?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes — every employee gets their own free self-service portal, included on every plan, even Free. From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, and set their availability — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
+        "text": "Yes — every employee gets their own free self-service portal, included on every plan, even Free. From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
       }
     },
     {
@@ -195,15 +198,7 @@ if (window.top !== window.self) {
       "name": "Why use a tablet terminal instead of a GPS mobile app?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "For a team with a shared physical location, a fixed tablet terminal is more accurate and harder to abuse than a GPS-based mobile app: employees must physically be at your site to punch in, there's no app to install, and no personal device required. If your team is fully remote or field-based with no shared location, PunchClock Pro also supports individually-authorized remote clock-in from each employee's own phone or computer — see the next question."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "We have remote or field staff with no shared location — can they still punch in?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes, on every plan. Turn on Allow Remote Clock-In in Company Info, then grant it to specific employees (or a whole site's roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee clocks in and out from their own phone or computer through their Employee Portal login, with no shared kiosk required."
+        "text": "A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There's also no app to install, no personal device required, and no battery or connectivity excuses."
       }
     },
     {
@@ -211,23 +206,7 @@ if (window.top !== window.self) {
       "name": "What is the Scheduling Add-On and how does it work?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. Available on any paid plan (Starter, Growth, or Business)."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I track lunch breaks separately from clocking out?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes, on the Growth plan and above. Turn on Track Lunch Breaks per company in Company Info settings, and a dedicated Break button appears on the clock-in screen, separate from the regular clock-in/out buttons. Break time is excluded from worked hours automatically, and shows up as its own line in reports and as a BREAK badge in the activity log."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Can visitors sign in and out, not just employees?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes, on the Growth plan and above. Turn on Enable Visitor Check-In per company in Company Info settings, and every clock-in screen gets a Visitor Check In button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a list of who's currently in the building. Useful for front-desk sign-in and for emergency preparedness, alongside staff attendance."
+        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. Available on any paid plan (Starter, Growth, or Business), with a 14-day free trial."
       }
     }
   ]
@@ -836,6 +815,7 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .feature-icon svg{width:30px;height:30px;color:var(--accent);}
 .feature-card h3{font-size:16px;font-weight:600;margin-bottom:7px;}
 .feature-card p{font-size:13px;color:var(--text2);line-height:1.6;}
+.plan-tag{font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap}
 .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:stretch;}
 .price-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:28px 24px;position:relative;display:flex;flex-direction:column;}
 .price-card.popular{border-color:var(--accent);background:rgba(79,142,247,.06);}
@@ -1454,18 +1434,23 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-bar-chart"/></svg></div>
-        <h3 data-i18n="land.feat3Title">Automated Reports</h3>
+        <h3><span data-i18n="land.feat3Title">Automated Reports</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
         <p data-i18n="land.feat3Desc">Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-edit"/></svg></div>
-        <h3 data-i18n="land.feat4Title">Manual Punch Editing</h3>
+        <h3><span data-i18n="land.feat4Title">Punch Corrections</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
         <p data-i18n="land.feat4Desc">Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
-        <h3 data-i18n="land.feat5Title">Overtime Tracking</h3>
+        <h3><span data-i18n="land.feat5Title">Overtime Tracking</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
         <p data-i18n="land.feat5Desc">Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
+        <h3><span data-i18n="land.feat16Title">Evening Hours</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat16Desc">Pick an evening window and the days it applies. Reports and exports get an Evening Hrs column, handy for evening and night premiums. It never changes regular or overtime hours.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
@@ -1622,10 +1607,12 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.free2">1 site · geofencing &amp; kiosk included</li>
           <li data-i18n="land.f.free3">Up to 10 employees</li>
           <li data-i18n="land.f.free4">Basic reports (PDF only)</li>
-          <li data-i18n="land.f.free5">Manual punch editing</li>
+          <li data-i18n="land.f.free5">Employee portal &amp; remote clock-in</li>
           <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
           <li class="dim" data-i18n="land.f.free9">Excel &amp; CSV export</li>
           <li class="dim" data-i18n="land.f.free7">Overtime tracking</li>
+          <li class="dim" data-i18n="land.f.free12">Add, edit &amp; delete punches</li>
+          <li class="dim" data-i18n="land.f.free13">Evening hours report</li>
           <li class="dim" data-i18n="land.f.free10">Lunch break tracking (Growth+)</li>
           <li class="dim" data-i18n="land.f.free11">Visitor check-in (Growth+)</li>
         </ul>
@@ -1643,6 +1630,8 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.start4">Automated period email reports</li>
           <li data-i18n="land.f.start5">Overtime tracking</li>
           <li data-i18n="land.f.start6">Excel, CSV &amp; PDF export</li>
+          <li data-i18n="land.f.start11">Add, edit &amp; delete punches</li>
+          <li data-i18n="land.f.start12">Evening hours report</li>
           <li data-i18n="land.f.start8">1 co-admin included</li>
           <li class="dim" data-i18n="land.f.start9">Lunch break tracking (Growth+)</li>
           <li class="dim" data-i18n="land.f.start10">Visitor check-in (Growth+)</li>
@@ -3851,7 +3840,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <input type="hidden" id="existingLogoUrl">
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.overtimeSettings">Overtime Settings</p>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleOvertimeOpt()">
+    <div id="otToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleOvertimeOpt()">
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:15px;height:15px"><use href="#i-alarm"/></svg><span data-i18n="modal.trackOvertime">Track Overtime</span></div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.overtimeDesc">Flag daily and weekly overtime in reports — thresholds below</div>
@@ -3872,7 +3861,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.eveningSettings">Evening Hours</p>
-    <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer">
+    <label id="eveningToggleRow" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer">
       <input type="checkbox" id="companyEveningOn" style="width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;margin-top:2px" onchange="toggleEveningSettings()">
       <span>
         <span style="display:block;font-size:13px;font-weight:600;color:var(--text)" data-i18n="modal.eveningTrack">Report evening hours separately</span>
@@ -3895,6 +3884,11 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div id="companyEveningDays" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px"></div>
       </div>
     </div>
+    <p id="paidFeatureNote" style="display:none;font-size:11px;color:var(--accent);margin:8px 2px 0;line-height:1.5">
+      <svg class="ic" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px"><use href="#i-lock"/></svg>
+      <span id="paidFeatureNoteText"></span>
+      <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addCompanyModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
+    </p>
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><span data-i18n="modal.lunchSettings">Lunch Breaks</span><span style="font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:1px 6px;border-radius:var(--r-xl);vertical-align:middle;margin-left:8px;text-transform:none;letter-spacing:normal" data-i18n="modal.growthPlanBadge">GROWTH+</span></p>
     <div id="lunchToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleLunchOpt()">
@@ -4595,13 +4589,13 @@ function resetPhotoUpload(existingUrl) {
 function isPaidCompany(companyId) {
   // Plan is per-account — a missing company lookup must NOT read as "not paid".
   const co = C.companies.find(c=>c.id===companyId);
-  return getCompanyPlan(co).name !== 'Free';
+  return featureEntitled('paid', co);
 }
 
 function isCurrentCompanyPaid() {
   // Exports/email reports are an account-plan feature — gate on the admin's effective plan,
   // independent of which company is selected (or whether a context is set).
-  return getAdminPlan().name !== 'Free';
+  return featureEntitled('paid');
 }
 
 function guardedExport(fmt) {
@@ -4662,6 +4656,36 @@ const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
 const PLAN_TIER_ORDER = ['Free','Starter','Growth','Business','Unlimited'];
 function hasGrowthOrAbove() {
   return PLAN_TIER_ORDER.indexOf(getAdminPlan().name) >= PLAN_TIER_ORDER.indexOf('Growth');
+}
+
+// What each plan includes, as the pricing page states it. Starter and up: Excel/CSV export, adding/editing/
+// deleting punches, overtime tracking, evening hours, automatic email reports. Growth and up: lunch breaks,
+// visitor check-in. A Free account previews the Starter features for 14 days after it was created, and in
+// any case until 2026-11-06 (the announced end of the preview for accounts that already exist).
+// public.has_paid_features in the database is the same rule for the server jobs; change both together.
+const PAID_PREVIEW_DAYS = 14, PAID_PREVIEW_SUNSET = Date.parse('2026-11-06T00:00:00-05:00');
+function paidPreviewEndsAt() {
+  const c = Date.parse((typeof C !== 'undefined' && C && C.acctCreatedAt) || '');
+  if (isNaN(c)) return Infinity;      // not known yet: never lock anything on a guess
+  return Math.max(c + PAID_PREVIEW_DAYS * 864e5, PAID_PREVIEW_SUNSET);
+}
+// kind 'paid' = a Starter feature (preview applies), 'growth' = a Growth feature (no preview).
+function featureEntitled(kind, co) {
+  const rank = PLAN_TIER_ORDER.indexOf((co ? getCompanyPlan(co) : getAdminPlan()).name);
+  if (kind === 'growth') return rank >= 2;
+  if (rank >= 1) return true;
+  return Date.now() < paidPreviewEndsAt();
+}
+// Only a Free account that is inside its preview (the end date is known and still ahead).
+function inPaidPreview() {
+  const end = paidPreviewEndsAt();
+  return isFinite(end) && Date.now() < end && !featureEntitledByPlan();
+}
+function featureEntitledByPlan() { return PLAN_TIER_ORDER.indexOf(getAdminPlan().name) >= 1; }
+function paidPreviewEndText() {
+  const end = paidPreviewEndsAt();
+  if (!isFinite(end)) return '';
+  return new Date(end).toLocaleDateString((typeof _appLang !== 'undefined' && _appLang === 'fr') ? 'fr-CA' : 'en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function getCompanyPlan(co) {
@@ -5027,10 +5051,15 @@ async function refreshCache(opts={}){
   if(sess&&sess.id&&!sess.parent_admin_id&&!superAdmin){
     C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
     C.primaryAdmin=null;
+    // When the account was created decides how long a Free account previews the paid features. Read once.
+    if(!C.acctCreatedAt&&sess.plan!=='business'&&sess.plan!=='unlimited'){
+      try{ const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at`); C.acctCreatedAt=me?.[0]?.created_at||null; }catch(_){}
+    }
   } else if(sess&&sess.parent_admin_id){
     // Co-admin: fetch primary admin's full record to inherit their plan/extra_seats
-    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id,scheduling_addon`);
+    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id,scheduling_addon,created_at`);
     C.primaryAdmin=primRows?.[0]||null;
+    C.acctCreatedAt=C.primaryAdmin?.created_at||null;
     C.coAdmins=[];
   } else {
     C.coAdmins=[];
@@ -5876,7 +5905,20 @@ async function submitFeedbackNote(reasonKey){
 // ═══════════════════════════════════════════════════
 // DASHBOARD (stats landing) — computed from the local cache
 // ═══════════════════════════════════════════════════
+// Free accounts see what the preview covers and when it ends; anyone else sees nothing.
+function renderPlanPreviewBanner(){
+  let el=document.getElementById('planPreviewBanner');
+  const show=inPaidPreview()&&!isDemo()&&!isSuperAdmin()&&!sessionStorage.getItem('pc_preview_banner_off');
+  if(!show){ if(el) el.remove(); return; }
+  const host=document.getElementById('dashboardContent'); if(!host) return;
+  if(!el){ el=document.createElement('div'); el.id='planPreviewBanner'; el.className='upgrade-wall'; el.style.margin='0 0 14px'; host.parentNode.insertBefore(el,host); }
+  el.innerHTML=`<p style="margin:0 0 8px">${(t('preview.banner')||'You are previewing the paid features: Excel and CSV export, overtime tracking, evening hours, punch editing and automatic email reports. The preview ends on {date}.').replace('{date}','<strong>'+paidPreviewEndText()+'</strong>')}</p>
+    <button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px" onclick="showUpgradePlans()">${t('preview.seePlans')||'See plans'}</button>
+    <button onclick="try{sessionStorage.setItem('pc_preview_banner_off','1')}catch(_){};this.parentNode.remove()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;margin-left:10px">${t('gate.dismiss')||'Dismiss'}</button>`;
+}
+
 function renderDashboard(){
+  renderPlanPreviewBanner();
   renderSetupChecklist();
   renderPayrollPrompt();
   renderFeedbackPrompt();
@@ -11185,6 +11227,7 @@ function openAddCompanyModal(){
   document.getElementById('companyPunchLabelMode').value='off';
   setEveningFields(null);
   _setGrowthAddonLockState();
+  _setPaidFeatureLockState(null);
   resetLogoUpload(null);
   openModal('addCompanyModal');
 }
@@ -11226,6 +11269,7 @@ function editCompany(id){
   document.getElementById('companyPunchLabelMode').value=co.punch_label_mode||'off';
   setEveningFields(co);
   _setGrowthAddonLockState();
+  _setPaidFeatureLockState(co);
   resetLogoUpload(co.logo_url||null);
   openModal('addCompanyModal');
 }
@@ -11322,6 +11366,24 @@ function setRemotePunchToggle(on){
 // Lunch breaks and visitor check-in are Growth-plan-and-up inclusions. Below Growth, force both
 // toggles off and lock the row (opacity + no pointer events) rather than letting an admin flip
 // them on and then silently lose the setting on save — the lock is visible and explained instead.
+// Overtime tracking and evening hours are Starter-and-up features (Free previews them, see featureEntitled).
+// Outside the preview the rows are locked and switched off, with the reason shown, rather than letting
+// an admin turn them on and have the setting silently dropped on save.
+function _setPaidFeatureLockState(co){
+  const ok=featureEntitled('paid',co||null);
+  const note=document.getElementById('paidFeatureNote'), txt=document.getElementById('paidFeatureNoteText');
+  const preview=ok&&inPaidPreview();
+  if(note) note.style.display=(!ok||preview)?'':'none';
+  if(txt) txt.textContent=ok
+    ? (t('modal.paidPreviewNote')||'Free preview: you can try these paid features until {date}.').replace('{date}',paidPreviewEndText())
+    : (t('modal.paidFeatureLock')||'Overtime tracking and evening hours are included on the Starter plan and above.');
+  ['otToggleRow','otThresholdSettings','eveningToggleRow','eveningSettings'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.style.opacity=ok?'1':'.5';
+    el.style.pointerEvents=ok?'':'none';
+  });
+  if(!ok){ setOvertimeToggle(false); document.getElementById('companyEveningOn').checked=false; toggleEveningSettings(); }
+}
 function _setGrowthAddonLockState(){
   const ok=hasGrowthOrAbove();
   const note=document.getElementById('growthAddonLockNote');
@@ -11350,7 +11412,8 @@ async function saveCompany(){
   const ot_daily_hours=parseInt(document.getElementById('companyOtDailyHours').value,10)||8;
   const ot_weekly_hours=parseInt(document.getElementById('companyOtWeeklyHours').value,10)||40;
   const payroll_anchor_date=document.getElementById('companyAnchorDate').value||null;
-  const track_overtime=document.getElementById('overtimeThumb').style.left==='20px';
+  const paidOk=featureEntitled('paid', document.getElementById('editCompanyUid').value?C.companies.find(c=>c.id===document.getElementById('editCompanyUid').value):null);
+  const track_overtime=paidOk&&document.getElementById('overtimeThumb').style.left==='20px';
   // Re-check plan eligibility at save time too — the row lock only guards the UI; a plan
   // downgrade between opening the modal and saving must not let either setting slip through.
   const growthOk=hasGrowthOrAbove();
@@ -11367,7 +11430,7 @@ async function saveCompany(){
     ? document.getElementById('companyPunchLabelMode').value
     : ((editId && (C.companies.find(c=>c.id===editId)||{}).punch_label_mode) || 'off');
   if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
-  const evOn=document.getElementById('companyEveningOn').checked;
+  const evOn=paidOk&&document.getElementById('companyEveningOn').checked;
   const evStartV=document.getElementById('companyEveningStart').value||'17:00';
   const evEndV=document.getElementById('companyEveningEnd').value||'';
   const evDays=[...document.querySelectorAll('#companyEveningDays .ev-day:checked')].map(c=>Number(c.value));
@@ -11449,6 +11512,19 @@ async function renderRecipients(){
     if(tzSel) tzSel.value=co.digest_timezone||'America/Toronto';
   }
 
+  // Automatic payroll summaries are a Starter-and-up feature. Outside the preview the recipients stay on
+  // file (nothing is deleted) but nothing is sent; say so and point at the plans.
+  {
+    const locked=!featureEntitled('paid',co);
+    const addBtn=document.getElementById('recipAddBtn'), sched=document.getElementById('recipScheduleRow');
+    if(addBtn) addBtn.style.display=locked?'none':'';
+    if(sched) sched.style.display=locked?'none':'';
+    if(locked){
+      _recipients=[];
+      list.innerHTML=`<div class="recip-empty">${t('gate.recipients')||'Automatic payroll summaries are part of the paid plans (Starter and above). Any recipients you added are kept, and the emails resume the day you upgrade.'}<br><button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px;margin-top:10px" onclick="showUpgradePlans()">${t('gate.viewPlans')||'View Plans'}</button></div>`;
+      return;
+    }
+  }
   if (isDemo()){
     _recipients = [];
     list.innerHTML = `<div class="recip-empty">${t('recip.demo')||'Add your accountant here once you have an account — they will get the hours automatically every pay period.'}</div>`;
@@ -11503,6 +11579,7 @@ async function savePayrollScheduleSettings(){
 
 function openRecipModal(){
   if (isDemo()){ showToast(t('demo.readOnly'),'info'); return; }
+  if (!featureEntitled('paid',C.companies.find(c=>c.id===_recipCompanyId()))){ showUpgradePlans(); return; }
   const coId=_recipCompanyId();
   if(!coId){ showToast(t('recip.noCompany')||'Create a company first.','error'); return; }
   document.getElementById('recipEmail').value='';
@@ -12550,7 +12627,7 @@ async function loadActivityPage(){
         ${isPaidCompany(p.company_id)&&(!isManager()||managerSiteIds.includes(p.site_id))?`
         <button class="btn-amber" style="padding:4px 10px;font-size:11px" onclick="openEditPunch('${p.id}')">${t('common.edit')}</button>
         <button class="btn-danger" style="padding:4px 10px;font-size:11px" onclick="confirmDeletePunch('${p.id}')">${t('common.delete')}</button>`
-        :isPaidCompany(p.company_id)?'':`<span style="font-size:11px;color:var(--text3)">— Paid plan only</span>`}
+        :isPaidCompany(p.company_id)?'':`<span style="font-size:11px;color:var(--text3)">— ${t('gate.paidOnly')||'Paid plan only'}</span>`}
       </div></td>
     </tr>`;
   }).join('');
@@ -16581,7 +16658,7 @@ en:{
 'val.nameRequired':'Name is required.','val.pinDigits':'PIN must be exactly 4 digits.','val.pinRequired':'A 4-digit PIN is required for new employees.','val.siteNameRequired':'Site name is required.','val.noCompany':'No active company.','val.emailForReport':'Please enter an email address for the report, or turn off the email report toggle.','val.emailInvalid':'Please enter a valid email address.',
 'demo.readOnly':'This is a demo — changes are not saved. Create a free account to set up your own team.',
 'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
-'gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Manual punch editing is available on paid plans.',
+'gate.paidOnly':'Paid plan only','gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Adding, editing and deleting punches is part of the paid plans (Starter and above).','gate.recipients':'Automatic payroll summaries are part of the paid plans (Starter and above). Any recipients you added are kept, and the emails resume the day you upgrade.','modal.paidFeatureLock':'Overtime tracking and evening hours are included on the Starter plan and above.','modal.paidPreviewNote':'Free preview: you can try these paid features until {date}.','preview.banner':'You are previewing the paid features: Excel and CSV export, overtime tracking, evening hours, punch editing and automatic email reports. The preview ends on {date}.','preview.seePlans':'See plans',
 'sendReport.send':'Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another','sendReport.bulkCount':'{n} employees','sendReport.bulkSent':'✓ {n} reports sent',
 'admin.pendingRequests':'Pending Access Requests','admin.pinSet':'Set',
 'admin.pinShow':'Show','admin.pinNone':'None',
@@ -16670,19 +16747,19 @@ en:{
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free forever: 1 site · up to 10 employees · geofencing & kiosk included',
 'land.featTitle':'Everything you need to manage shift workers',
-'land.featSub':'No complicated setup. No per-feature upsells. Just the tools your team needs.',
+'land.featSub':'No complicated setup. No per-employee fees. Every feature below is included in your plan unless it carries a badge.',
 'land.feat2Title':'Multi-Site Support','land.feat2Desc':'Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.',
-'land.feat3Title':'Automated Reports','land.feat3Desc':'Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.',
-'land.feat4Title':'Manual Punch Editing','land.feat4Desc':'Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.',
-'land.feat5Title':'Overtime Tracking','land.feat5Desc':'Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.',
+'land.feat3Title':'Automated Reports','land.feat3Desc':'Period summary emails go out automatically at the end of every pay period: each employee gets their own punch log, and your accountant or bookkeeper gets one payroll summary for the whole team with a CSV attached, no login needed. Starter plan and above.',
+'land.feat4Title':'Punch Corrections','land.feat4Desc':'Admins can fix forgotten clock-ins, edit times, delete mistakes, or add a whole missed shift in one step, right from the activity log. Every change is logged. Starter plan and above.',
+'land.feat5Title':'Overtime Tracking','land.feat5Desc':'Flags daily and weekly overtime in reports, with the thresholds you choose per company (for example 8 hours a day and 40 a week). Switch it on or off per company. Starter plan and above.','land.feat16Title':'Evening Hours','land.feat16Desc':'Pick an evening window (say 5 pm to midnight) and the days it applies. Reports and exports get an Evening Hrs column, handy for evening and night premiums. It never changes regular or overtime hours. Starter plan and above.','land.starterBadge':'STARTER+',
 'land.feat6Title':'Time Off Tracking','land.feat6Desc':'Log vacation, sick days and absences. See who is off today at a glance, and approve requests in one click.',
 'land.feat7Title':'Team Access','land.feat7Desc':'Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.',
 'land.feat8Title':'Flexible Payroll Periods','land.feat8Desc':'Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.',
 'land.priceTitle':'Simple, transparent pricing','land.priceSub':'Start free. Upgrade as you grow. No hidden fees.',
 'land.freeSub':'Perfect for trying it out','land.getStartedFree':'Get started free',
-'land.freeTrial':'Start free trial','land.freeTrial2':'Start free trial',
-'land.mostPopular':'Most Popular','land.unlimitedSub':'Unlimited everything','land.contactUs':'Contact us',
-'land.trialNote':'Start on the Free plan — free forever, no credit card. Upgrade only when you outgrow it.',
+'land.freeTrial':'Get Starter','land.freeTrial2':'Get Growth',
+'land.mostPopular':'Most Popular','land.unlimitedSub':'Unlimited everything','land.contactUs':'Get Business',
+'land.trialNote':'Start on the Free plan — free forever, no credit card. New accounts also try the Starter features free for 14 days. Upgrade only when you outgrow it.',
 'land.footerTagline':'Time & attendance software for modern shift workforces.',
 'land.tos':'Terms of Service','land.privacyPolicy':'Privacy Policy','land.adminLogin':'Admin Login','land.portalLogin':"Employee Portal",'land.portalHint':"Employee? Open the employee portal →",
 'land.copyright':'© 2026 PunchClock Pro. All rights reserved.',
@@ -16758,13 +16835,13 @@ en:{
 'land.growthSub':'3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin',
 'land.businessSub':'Unlimited companies, sites &amp; employees · 6 admins<br>+$4.90/mo per extra admin',
 'land.f.free1':'1 company','land.f.free2':'1 site · geofencing & kiosk included','land.f.free3':'Up to 10 employees',
-'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Manual punch editing',
+'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Employee portal & remote clock-in','land.f.free12':'Add, edit & delete punches','land.f.free13':'Evening hours report','land.f.start11':'Add, edit & delete punches','land.f.start12':'Evening hours report',
 'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free9':'Excel & CSV export',
 'land.f.free10':'Lunch break tracking (Growth+)','land.f.free11':'Visitor check-in (Growth+)',
 'land.f.start9':'Lunch break tracking (Growth+)','land.f.start10':'Visitor check-in (Growth+)',
 'land.f.grow7':'Lunch break tracking','land.f.grow8':'Visitor check-in',
-'land.f.start1':'1 company, 2 sites, 2 admins','land.f.start2':'Up to 25 employees','land.f.start3':'All Free features + Excel & CSV exports',
-'land.f.start4':'Automated period email reports','land.f.start5':'Overtime tracking',
+'land.f.start1':'1 company, 2 sites, 2 admins','land.f.start2':'Up to 25 employees','land.f.start3':'All Free features',
+'land.f.start4':'Automated email reports (employees + payroll summary)','land.f.start5':'Overtime tracking',
 'land.f.start6':'Excel, CSV & PDF export',
 'land.f.grow1':'Up to 3 companies','land.f.grow2':'Up to 6 sites','land.f.grow3':'Up to 60 employees',
 'land.f.grow4':'All Starter features','land.f.grow5':'Priority support',
@@ -16946,17 +17023,17 @@ en:{
 'faq.q2':'Can I manage multiple locations?',
 'faq.a2':'Yes. You can add as many sites (locations) as your plan allows under your single company account. Each site has its own employees, access code, and optional geofencing. Free: 1 site, Starter: 2 sites, Growth: 6 sites, Business: unlimited.',
 'faq.q3':'How do automated email reports work?',
-'faq.a3':'At the end of each pay period (weekly, bi-weekly, or monthly — set per company), every employee with a registered email and reports enabled automatically receives a PDF summary of their hours. Admins can also send a report manually at any time for any individual employee, or select multiple employees and send reports in bulk.',
+'faq.a3':'At the end of each pay period (weekly, bi-weekly, or monthly — set per company), every employee with a registered email and reports enabled automatically receives a summary of their hours with their full punch log. You can also add your accountant or bookkeeper as a recipient: they get one payroll summary for the whole team, with a CSV attached, and do not need a login. Admins can also send a report manually for any employee, or in bulk. Automatic reports are included on the Starter plan and above, and every new account previews them free for 14 days.',
 'faq.q4':'Can I edit or correct time punches after the fact?',
-'faq.a4':'Yes. Admins can correct, add, or delete any punch record from the Activity tab. All changes are logged in the audit trail with a timestamp.',
+'faq.a4':'Yes. On the Starter plan and above, admins can correct, add or delete any punch from the Activity tab, including adding a whole missed shift in one step. All changes are logged in the audit trail with a timestamp. Free accounts have this during their 14-day preview.',
 'faq.q5':'What happens to the clock page when I log out?',
 'faq.a5':'The clock in/out page stays active after you log out of your admin account — it keeps recording punches for the selected company and site. For tablet setup, log in as admin, pick your company and site, then tap <strong>"Set up for employees"</strong> at the top of the clock page. This logs you out while keeping the page active, so employees can punch in/out without touching your admin account. Use <strong>"Logout & go to PunchClock.ca"</strong> if you want to fully exit instead.',
 'faq.q6':'Can I use PunchClock Pro with my payroll system?',
-'faq.a6':'Yes. From the Reports tab you can export any date range to Excel, CSV or PDF, with regular and overtime hours separated per employee. Those formats open in every major payroll and accounting package, or can be sent straight to your bookkeeper. There is nothing to configure &mdash; pick the period, export, done.',
+'faq.a6':'Yes. From the Reports tab you can save any date range as a PDF on every plan, and export it to Excel or CSV on the Starter plan and above, with regular and overtime hours separated per employee. Those formats open in every major payroll and accounting package, or can be sent straight to your bookkeeper. There is nothing to configure — pick the period, export, done.',
 'faq.q7':'What is overtime tracking?',
-'faq.a7':'When enabled per company, PunchClock Pro automatically flags shifts that exceed 8 hours in a day and weeks that exceed 40 total hours. Overtime is highlighted in the activity view and in exported reports — so your payroll process is always accurate.',
+'faq.a7':'When enabled for a company, PunchClock Pro flags the hours worked past a daily limit and a weekly limit, which you choose (for example 8 hours a day and 40 a week). Overtime is highlighted in the activity view and in exported reports and payroll summaries, so your payroll process stays accurate. Overtime tracking is included on the Starter plan and above, and Free accounts have it during their 14-day preview.',
 'faq.q8':'Is there a free plan?',
-'faq.a8':'Yes. The free plan includes 1 company, 1 site, and up to 10 active employees — no credit card required, free forever. Paid plans start at $19.49/month CAD and unlock more sites, employees, and admins, plus automated email reports.',
+'faq.a8':'Yes. The Free plan includes 1 company, 1 site and up to 10 active employees, with the clock-in terminal, geofencing, remote clock-in, the employee portal and PDF reports. It needs no credit card and is free forever. Every new account also previews the Starter features (Excel and CSV export, overtime tracking, evening hours, punch corrections and automatic email reports) free for 14 days. Paid plans start at $19.49/month CAD and keep those features, with more sites, employees and admins.',
 'faq.q9':'Can I add more employees or admins beyond my plan limit?',
 'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Admins included (the owner counts as one): Free 1, Starter 2, Growth 4, Business 6. Extra admins beyond those limits are $4.90/mo each.',
 'faq.q10':'Can I take bulk actions on multiple employees at once?',
@@ -16966,7 +17043,7 @@ en:{
 'faq.q12':'Why use a tablet terminal instead of a GPS mobile app?',
 'faq.a12':'A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There\'s also no app to install, no personal device required, and no battery or connectivity excuses.',
 'faq.q13':'What is the Scheduling Add-On and how does it work?',
-'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. Available on any paid plan (Starter, Growth, or Business).',
+'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. Available on any paid plan (Starter, Growth, or Business), with a 14-day free trial.',
 'faq.q14':'Can employees see their schedule when they clock in?',
 'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. The Scheduling Add-On must be active on the account.',
 'faq.q15':'Is PunchClock Pro available in French and suitable for Quebec businesses?',
@@ -16988,7 +17065,7 @@ en:{
 'faq.q23':'Do I have to delete employees who have left to stay within my plan limit?',
 'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
 'faq.q24':'Can employees check their own schedule, hours and time off without contacting me?',
-'faq.a24':'Yes — every employee gets their own free self-service portal, included on every plan, even Free. From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, and set their availability — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
+'faq.a24':'Yes — every employee gets their own free self-service portal, included on every plan, even Free. From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
 'faq.q25':'Can I track lunch breaks separately from clocking out?',
 'faq.a25':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Track Lunch Breaks</strong> in Company Info → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap. You can also set <strong>Paid Break Minutes</strong> to pay part of a break automatically — say 30 of a 60-minute lunch — while the rest stays unpaid with no extra work.',
 'faq.q26':'Can visitors sign in and out, not just employees?',
@@ -17029,13 +17106,13 @@ en:{
 'land.feat1Title':'Tablet Terminal — No GPS Needed',
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
 'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
-'land.feat9Desc':"Build weekly schedules, assign shifts to employees per site, tag each shift with your own labels (a task, a job, a project) and filter by them, and let your team see their upcoming shifts — all inside PunchClock. Available as a $14.95/mo add-on on any paid plan.",
+'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal. $14.95/mo on any paid plan, with a 14-day free trial.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
 'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
 'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
 'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
 'land.feat12Title':'Employee Self-Service Portal',
-'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.',
+'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. They can change their own password at any time. Included free on every plan, even Free.',
 'land.feat15Title':'Remote Clock-In — With GPS Proof',
 'land.feat15Desc':'No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site\'s roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. Included free on every plan.',
 'land.feat13Title':'Lunch & Break Tracking',
@@ -17493,7 +17570,7 @@ fr:{
 'val.nameRequired':'Le nom est obligatoire.','val.pinDigits':'Le NIP doit contenir exactement 4 chiffres.','val.pinRequired':'Un NIP à 4 chiffres est obligatoire pour un nouvel employé.','val.siteNameRequired':'Le nom du site est obligatoire.','val.noCompany':'Aucune compagnie active.','val.emailForReport':'Veuillez entrer une adresse courriel pour le rapport, ou désactiver l\'envoi par courriel.','val.emailInvalid':'Veuillez entrer une adresse courriel valide.',
 'demo.readOnly':'Ceci est une démo — les changements ne sont pas enregistrés. Créez un compte gratuit pour configurer votre propre équipe.',
 'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',
-'gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':'La correction manuelle des pointages est offerte sur les forfaits payants.',
+'gate.paidOnly':'Forfait payant seulement','gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':"L'ajout, la modification et la suppression de pointages font partie des forfaits payants (Débutant et plus).",'gate.recipients':"Les sommaires de paie automatiques font partie des forfaits payants (Débutant et plus). Les destinataires que vous avez ajoutés sont conservés et les courriels reprennent dès que vous passez à un forfait payant.",'modal.paidFeatureLock':"Le suivi des heures supplémentaires et les heures de soir sont inclus dans le forfait Débutant et plus.",'modal.paidPreviewNote':"Aperçu gratuit : vous pouvez essayer ces fonctions payantes jusqu'au {date}.",'preview.banner':"Vous essayez les fonctions payantes : exportations Excel et CSV, suivi des heures supplémentaires, heures de soir, modification des pointages et courriels de rapports automatiques. L'aperçu se termine le {date}.",'preview.seePlans':'Voir les forfaits',
 'sendReport.send':'Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre','sendReport.bulkCount':'{n} employés','sendReport.bulkSent':'✓ {n} rapports envoyés',
 "admin.pendingRequests":"Demandes d'accès en attente",'admin.pinSet':'Défini',
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
@@ -17582,19 +17659,19 @@ fr:{
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
 'land.freeNote':'Gratuit pour toujours : 1 site · jusqu\'à 10 employés · géorepérage et kiosque inclus',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
-'land.featSub':'Pas de configuration compliquée. Pas de frais cachés. Juste les outils dont votre équipe a besoin.',
+'land.featSub':'Pas de configuration compliquée. Pas de frais par employé. Chaque fonction ci-dessous est incluse dans votre forfait, sauf si elle porte un badge.',
 'land.feat2Title':'Multi-sites','land.feat2Desc':'Gérez plusieurs emplacements sous une même compagnie. Chaque site a sa propre liste d\'employés et son terminal de pointage.',
-'land.feat3Title':'Rapports automatisés','land.feat3Desc':'Des courriels de résumé de période sont envoyés automatiquement à chaque employé en fin de période de paie.',
-'land.feat4Title':'Modification manuelle','land.feat4Desc':'Les admins peuvent corriger les oublis de pointage, modifier les heures ou ajouter des entrées manquantes depuis le journal.',
-'land.feat5Title':'Suivi des heures supp.','land.feat5Desc':'Signale automatiquement les heures supplémentaires quotidiennes (>8h) et hebdomadaires (>40h). Activable par compagnie.',
+'land.feat3Title':'Rapports automatisés','land.feat3Desc':'Des courriels de résumé partent automatiquement à la fin de chaque période de paie : chaque employé reçoit son propre journal de pointages, et votre comptable reçoit un seul sommaire de paie pour toute l\'équipe, avec un CSV en pièce jointe, sans compte à créer. Forfait Débutant et plus.',
+'land.feat4Title':'Correction des pointages','land.feat4Desc':'Les admins peuvent corriger un oubli de pointage, modifier les heures, supprimer une erreur ou ajouter un quart complet manqué en une seule étape, directement depuis le journal. Chaque modification est consignée. Forfait Débutant et plus.',
+'land.feat5Title':'Suivi des heures supp.','land.feat5Desc':'Signale les heures supplémentaires quotidiennes et hebdomadaires dans les rapports, avec les seuils que vous choisissez par compagnie (par exemple 8 h par jour et 40 h par semaine). Activable par compagnie. Forfait Débutant et plus.','land.feat16Title':'Heures de soir','land.feat16Desc':'Choisissez une plage de soir (par exemple de 17 h à minuit) et les jours où elle s\'applique. Les rapports et exportations reçoivent une colonne Heures de soir, pratique pour les primes de soir et de nuit. Elle ne change jamais les heures régulières ni supplémentaires. Forfait Débutant et plus.','land.starterBadge':'DÉBUTANT+',
 'land.feat6Title':'Suivi des congés','land.feat6Desc':'Enregistrez vacances, congés maladie et absences. Voyez d\'un coup d\'œil qui est absent aujourd\'hui et approuvez les demandes en un clic.',
 'land.feat7Title':'Accès équipe','land.feat7Desc':'Invitez des co-administrateurs avec accès complet ou des gestionnaires avec accès limité à leurs sites. Chaque invitation est envoyée par courriel.',
 'land.feat8Title':'Périodes de paie flexibles','land.feat8Desc':'Paie hebdomadaire, aux deux semaines ou mensuelle. Début de semaine dimanche ou lundi. Préréglages automatiques par compagnie.',
 'land.priceTitle':'Tarifs simples et transparents','land.priceSub':'Commencez gratuitement. Évoluez selon vos besoins. Aucun frais caché.',
 'land.freeSub':'Parfait pour essayer','land.getStartedFree':'Commencer gratuitement',
-'land.freeTrial':'Essai gratuit','land.freeTrial2':'Essai gratuit',
-'land.mostPopular':'Le plus populaire','land.unlimitedSub':'1 compagnie · Sites et employés illimités','land.contactUs':'Nous contacter',
-'land.trialNote':'Commencez avec le forfait Gratuit — gratuit pour toujours, sans carte de crédit. Passez à un forfait payant seulement quand vous en aurez besoin.',
+'land.freeTrial':'Choisir Débutant','land.freeTrial2':'Choisir Croissance',
+'land.mostPopular':'Le plus populaire','land.unlimitedSub':'1 compagnie · Sites et employés illimités','land.contactUs':'Choisir Entreprise',
+'land.trialNote':'Commencez avec le forfait Gratuit — gratuit pour toujours, sans carte de crédit. Les nouveaux comptes essaient aussi les fonctions du forfait Débutant gratuitement pendant 14 jours. Passez à un forfait payant seulement quand vous en aurez besoin.',
 'land.footerTagline':'Logiciel de pointage pour les équipes de travail modernes.',
 'land.tos':'Conditions d\'utilisation','land.privacyPolicy':'Politique de confidentialité','land.adminLogin':'Connexion Admin','land.portalLogin':"Portail employé",'land.portalHint':"Employé? Ouvrez le portail employé →",
 'land.copyright':'© 2026 PunchClock Pro. Tous droits réservés.',
@@ -17668,13 +17745,13 @@ fr:{
 'profile.saved':'✓ Profil mis à jour avec succès.',
 'land.businessSub':'Compagnies, sites et employés illimités · 6 admins<br>+4,90$/mois par admin supplémentaire',
 'land.f.free1':'1 compagnie','land.f.free2':'1 site · géorepérage et kiosque inclus','land.f.free3':'Jusqu\'à 10 employés',
-'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Modification manuelle des pointages',
+'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Portail employé et pointage à distance','land.f.free12':'Ajouter, modifier et supprimer des pointages','land.f.free13':'Rapport des heures de soir','land.f.start11':'Ajouter, modifier et supprimer des pointages','land.f.start12':'Rapport des heures de soir',
 'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free9':'Export Excel et CSV',
 'land.f.free10':'Suivi des pauses repas (Croissance+)','land.f.free11':'Pointage visiteur (Croissance+)',
 'land.f.start9':'Suivi des pauses repas (Croissance+)','land.f.start10':'Pointage visiteur (Croissance+)',
 'land.f.grow7':'Suivi des pauses repas','land.f.grow8':'Pointage visiteur',
-'land.f.start1':'1 compagnie, 2 sites, 2 admins','land.f.start2':'Jusqu\'à 25 employés','land.f.start3':'Toutes les fonctions Gratuit + exports Excel et CSV',
-'land.f.start4':'Rapports de période automatisés','land.f.start5':'Suivi des heures supp.',
+'land.f.start1':'1 compagnie, 2 sites, 2 admins','land.f.start2':'Jusqu\'à 25 employés','land.f.start3':'Toutes les fonctions Gratuit',
+'land.f.start4':'Rapports courriel automatisés (employés + sommaire de paie)','land.f.start5':'Suivi des heures supp.',
 'land.f.start6':'Export Excel, CSV et PDF',
 'land.f.grow1':'Jusqu\'à 3 compagnies','land.f.grow2':'Jusqu\'à 6 sites','land.f.grow3':'Jusqu\'à 60 employés',
 'land.f.grow4':'Toutes les fonctions Débutant','land.f.grow5':'Support prioritaire',
@@ -17856,17 +17933,17 @@ fr:{
 'faq.q2':'Puis-je gérer plusieurs emplacements?',
 'faq.a2':'Oui. Vous pouvez ajouter autant de sites (emplacements) que votre forfait le permet sous votre compte d\'entreprise. Chaque site a ses propres employés, code d\'accès et géolocalisation optionnelle. Gratuit : 1 site, Débutant : 2 sites, Croissance : 6 sites, Entreprise : illimité.',
 'faq.q3':'Comment fonctionnent les rapports par courriel automatiques?',
-'faq.a3':'À la fin de chaque période de paie (hebdomadaire, bimensuelle ou mensuelle — défini par compagnie), chaque employé avec un courriel et les rapports activés reçoit automatiquement un PDF de ses heures. L\'admin peut aussi envoyer un rapport manuellement à tout moment, ou sélectionner plusieurs employés et les envoyer en lot.',
+'faq.a3':'À la fin de chaque période de paie (hebdomadaire, bimensuelle ou mensuelle — défini par compagnie), chaque employé avec un courriel et les rapports activés reçoit automatiquement un résumé de ses heures avec son journal de pointages complet. Vous pouvez aussi ajouter votre comptable comme destinataire : il reçoit un seul sommaire de paie pour toute l\'équipe, avec un CSV en pièce jointe, sans avoir besoin de compte. Les admins peuvent aussi envoyer un rapport manuellement pour un employé, ou en lot. Les rapports automatiques sont inclus dans le forfait Débutant et plus, et chaque nouveau compte les essaie gratuitement pendant 14 jours.',
 'faq.q4':'Puis-je corriger des pointages après coup?',
-'faq.a4':'Oui. Les admins peuvent corriger, ajouter ou supprimer n\'importe quel pointage depuis l\'onglet Activité. Toutes les modifications sont enregistrées dans le journal d\'audit.',
+'faq.a4':'Oui. Avec le forfait Débutant et plus, les admins peuvent corriger, ajouter ou supprimer n\'importe quel pointage depuis l\'onglet Activité, y compris ajouter un quart complet manqué en une seule étape. Toutes les modifications sont enregistrées dans le journal d\'audit. Les comptes gratuits y ont accès pendant leur aperçu de 14 jours.',
 'faq.q5':'Que se passe-t-il sur la page de pointage quand je me déconnecte?',
 'faq.a5':'La page de pointage reste active après la déconnexion admin. Pour configurer une tablette, connectez-vous en admin, choisissez la compagnie et le site, puis appuyez sur <strong>«Configurer pour les employés»</strong> en haut de la page de pointage. Cela vous déconnecte tout en maintenant la page active — les employés peuvent pointer sans accéder à votre compte. Utilisez <strong>«Se déconnecter et aller sur PunchClock.ca»</strong> pour revenir au site principal.',
 'faq.q6':'Puis-je utiliser PunchClock Pro avec mon système de paie?',
-'faq.a6':'Oui. Depuis l\'onglet Rapports, vous pouvez exporter n\'importe quelle période en Excel, CSV ou PDF, avec les heures régulières et supplémentaires séparées par employé. Ces formats s\'ouvrent dans tous les principaux logiciels de paie et de comptabilité, ou s\'envoient directement à votre comptable. Rien à configurer &mdash; choisissez la période, exportez, c\'est fait.',
+'faq.a6':'Oui. Depuis l\'onglet Rapports, vous pouvez enregistrer n\'importe quelle période en PDF sur tous les forfaits, et l\'exporter en Excel ou CSV avec le forfait Débutant et plus, avec les heures régulières et supplémentaires séparées par employé. Ces formats s\'ouvrent dans tous les principaux logiciels de paie et de comptabilité, ou s\'envoient directement à votre comptable. Rien à configurer — choisissez la période, exportez, c\'est fait.',
 'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
-'faq.a7':'Lorsqu\'activé par compagnie, PunchClock Pro signale automatiquement les quarts dépassant 8 h/jour et les semaines dépassant 40 h. Les heures supplémentaires sont mises en évidence dans la vue Activité et les rapports exportés — pour un traitement de paie toujours précis.',
+'faq.a7':'Lorsqu\'il est activé pour une compagnie, PunchClock Pro signale les heures travaillées au-delà d\'une limite quotidienne et d\'une limite hebdomadaire que vous choisissez (par exemple 8 h par jour et 40 h par semaine). Les heures supplémentaires sont mises en évidence dans la vue Activité, les rapports exportés et les sommaires de paie, pour un traitement de paie toujours précis. Le suivi des heures supplémentaires est inclus dans le forfait Débutant et plus, et les comptes gratuits l\'ont pendant leur aperçu de 14 jours.',
 'faq.q8':'Y a-t-il un plan gratuit?',
-'faq.a8':'Oui. Le plan gratuit inclut 1 compagnie, 1 site et jusqu\'à 10 employés actifs — sans carte de crédit requise, gratuit pour toujours. Les plans payants commencent à 19,49$/mois CAD et débloquent plus de sites, d\'employés et d\'admins, ainsi que les rapports automatiques.',
+'faq.a8':'Oui. Le plan Gratuit inclut 1 compagnie, 1 site et jusqu\'à 10 employés actifs, avec le terminal de pointage, le géorepérage, le pointage à distance, le portail employé et les rapports PDF. Aucune carte de crédit n\'est requise, et il est gratuit pour toujours. Chaque nouveau compte essaie aussi les fonctions du forfait Débutant (export Excel et CSV, suivi des heures supplémentaires, heures de soir, correction des pointages et rapports courriel automatiques) gratuitement pendant 14 jours. Les forfaits payants commencent à 19,49$/mois CAD et conservent ces fonctions, avec plus de sites, d\'employés et d\'admins.',
 'faq.q9':'Puis-je ajouter plus d\'employés ou d\'administrateurs au-delà de la limite?',
 'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Admins inclus (le propriétaire en compte pour un) : Gratuit 1, Débutant 2, Croissance 4, Entreprise 6. Les admins au-delà de ces limites coûtent 4,90$/mois chacun.',
 'faq.q10':'Puis-je effectuer des actions groupées sur plusieurs employés?',
@@ -17876,7 +17953,7 @@ fr:{
 'faq.q12':'Pourquoi utiliser un terminal tablette plutôt qu\'une appli GPS mobile?',
 'faq.a12':'Un terminal tablette fixe à votre emplacement est plus précis et plus difficile à contourner qu\'une appli GPS. Avec les applis GPS, les employés peuvent pointer depuis leur domicile, leur voiture ou n\'importe où — et le GPS peut être falsifié. Un terminal ancré à votre entrée oblige les employés à être physiquement sur place pour pointer. De plus, aucune appli à installer, aucun appareil personnel requis, et pas d\'excuse de batterie ou de connexion.',
 'faq.q13':'Qu\'est-ce que le complément Planification et comment ça fonctionne?',
-'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Pro. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. Disponible sur tout plan payant (Débutant, Croissance ou Entreprise).',
+'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Pro. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. (4) Ajoutez les jours fériés à l\'horaire, avec les jours fériés du Québec en un clic, et identifiez les quarts avec des étiquettes de travail. Disponible sur tout forfait payant (Débutant, Croissance ou Entreprise), avec un essai gratuit de 14 jours.',
 'faq.q14':'Les employés peuvent-ils voir leur horaire quand ils pointent?',
 'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Le complément Planification doit être actif sur le compte.',
 'faq.q15':'PunchClock Pro est-il disponible en français et adapté aux entreprises québécoises?',
@@ -17898,7 +17975,7 @@ fr:{
 'faq.q23':'Dois-je supprimer les employés qui ont quitté pour respecter la limite de mon forfait?',
 'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
 'faq.q24':'Les employés peuvent-ils consulter leur horaire, leurs heures et leurs congés sans me contacter?',
-'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service gratuit, inclus sur tous les forfaits, même le forfait Gratuit. Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
+'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service gratuit, inclus sur tous les forfaits, même le forfait Gratuit. Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités et changer lui-même son mot de passe — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
 'faq.q25':'Puis-je suivre les pauses repas séparément de la sortie?',
 'faq.a25':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Suivi des pauses repas</strong> dans Info compagnie → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart. Vous pouvez aussi régler les <strong>Minutes de pause payées</strong> pour qu\'une partie de la pause soit payée automatiquement — par exemple 30 minutes d\'un dîner de 60 minutes — le reste demeurant non payé sans effort supplémentaire.',
 'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
@@ -17943,13 +18020,13 @@ fr:{
 'land.feat1Title':'Terminal tablette — Sans GPS',
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
 'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
-'land.feat9Desc':"Créez des horaires hebdomadaires, assignez des quarts aux employés par site, étiquetez chaque quart avec vos propres étiquettes (une tâche, un chantier, un projet) et filtrez par étiquette, et permettez à votre équipe de voir ses prochains quarts — directement dans PunchClock. Disponible en complément à 14,95 $/mois sur tout plan payant.",
+'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail. 14,95$/mois sur tout forfait payant, avec un essai gratuit de 14 jours.',
 'land.feat10Title':'Géorepérage — Pointage verrouillé par localisation',
 'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
 'land.feat11Title':'Raccourci kiosque — Pointer en un tap',
 'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
 'land.feat12Title':'Portail employé libre-service',
-'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
+'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Ils peuvent changer eux-mêmes leur mot de passe en tout temps. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
 'land.feat15Title':'Pointage à distance — Avec preuve GPS',
 'land.feat15Desc':'Aucun site commun où installer une tablette? Activez le pointage à distance et autorisez des employés spécifiques (ou tout le personnel d\'un site d\'un coup) à pointer l\'entrée et la sortie depuis leur propre téléphone ou ordinateur via leur portail employé — sans pointeau partagé, rien à installer. Chaque pointage enregistre la position GPS du téléphone, avec une épingle sur la carte dans votre journal d\'activité : vous voyez où chaque quart a commencé et fini. Inclus gratuitement sur tous les forfaits.',
 'land.feat13Title':'Suivi des pauses repas',

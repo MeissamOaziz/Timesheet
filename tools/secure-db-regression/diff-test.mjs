@@ -92,6 +92,10 @@ function makeFetch() {
     if (p.kind === 'rest' && p.name.startsWith('rpc/')) {
       if (p.name === 'rpc/issue_email_code') return j({ ok: true, exists: true, code: '123456', email: 'x@y.z', name: 'N' });
       if (p.name === 'rpc/kiosk_recent_punches') { let b = {}; try { b = JSON.parse(init.body); } catch { } return b.p_site_id === 's8' ? j({ message: 'function not found' }, 404) : j(tables.punches.slice(0, 12)); }
+      // plan helpers: tenant b1 is a Free account past its preview, everyone else is paid
+      if (p.name === 'rpc/has_paid_features') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_admin !== 'b1'); }
+      if (p.name === 'rpc/company_has_paid_features') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_company !== 'c9'); }
+      if (p.name === 'rpc/admin_plan_rank') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_admin === 'b1' ? 0 : 3); }
       return j({ ok: true });
     }
     if (p.kind !== 'rest') return j({});
@@ -121,6 +125,15 @@ function makeFetch() {
     if (t === 'employees' && method === 'GET' && p.q.has('id') && p.q.get('select') !== 'id') return j(pick(empRows, eq('id')));
     if (t === 'companies' && method === 'GET' && p.q.has('id') && !p.q.has('admin_id')) return j([{ id: eq('id'), name: 'Acme Fence', logo_url: 'https://uziwymrwaeojhqaagqcm.supabase.co/storage/v1/object/public/logos/c1.png' }]);
     if (t === 'admins' && method === 'GET' && p.q.has('id') && /^name/.test(p.q.get('select') || '')) return j(pick(adminProfile, eq('id')));
+    if (t === 'audit_log' && method === 'GET' && p.q.has('admin_id')) {
+      // per-admin send history: b1 has used up both ceilings, a2 has sent 100 schedules, the super admin has sent plenty
+      const who = (p.q.get('admin_id') || '').replace('eq.', '');
+      const rows = (n, ev) => Array.from({ length: n }, (_, i) => ({ id: i, event: ev }));
+      if (who === 'b1') return j([...rows(30, 'email_sent:invitation'), ...rows(300, 'email_sent:schedule')]);
+      if (who === 'a2') return j(rows(100, 'email_sent:schedule'));
+      if (who === 'sa') return j([...rows(100, 'email_sent:invitation'), ...rows(300, 'email_sent:schedule')]);
+      return j([]);
+    }
     if (t === 'audit_log' && method === 'GET' && p.q.has('event')) return j((p.q.get('filter') || '').includes(E_THROTTLED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }] : []);
     if (method === 'GET' && tables[t]) {
       let rows = tables[t]; const off = parseInt(p.q.get('offset') || '0', 10); const lim = parseInt(p.q.get('limit') || String(rows.length), 10);
@@ -291,6 +304,24 @@ const cases = [
   R('send_email', 'kiosk: cannot ask for a dry run', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', dry_run: true, weekLabel: 'w', shifts: [] } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].dry === false && !r.obj.html),
   R('send_email', 'kiosk: shifts are bounded like the admin path', { action: 'send_email', kioskSiteId: 's1', body: { type: 'schedule', employee_id: E_OWN, pin: '1234', weekLabel: 'x'.repeat(300), shifts: Array.from({ length: 100 }, () => ({ day: 'd'.repeat(300), startTime: '25:99', endTime: '<b>', note: 'n'.repeat(500) })) } },
     r => r.status === 200 && r.fn[0].body.shifts.length === 60 && r.fn[0].body.weekLabel.length === 60 && r.fn[0].body.shifts.every(x => x.startTime === '' && x.endTime === '' && x.note.length <= 200)),
+  R('email-rate-limit', 'admin rate limit: other emails, 30 an hour', { action: 'send_email', body: { type: 'invitation', token: T_OTHER }, sessionToken: 'tokOther' }, r => r.status === 429 && r.fn.length === 0),
+  R('email-rate-limit', 'admin rate limit: schedules, 300 an hour', { action: 'send_email', body: { type: 'schedule', employee_id: E_OTHER, weekLabel: 'w', shifts: [] }, sessionToken: 'tokOther' }, r => r.status === 429 && r.fn.length === 0),
+  R('send_email', 'admin rate limit: 100 schedules sent does not block an invitation', { action: 'send_email', body: { type: 'invitation', token: T_OK }, ...mgr }, r => r.status === 200 && r.fn.length === 1),
+  R('send_email', 'admin rate limit: 100 schedules sent does not block more schedules', { action: 'send_email', body: { type: 'schedule', employee_id: E_OWN, weekLabel: 'w', shifts: [] }, ...mgr }, r => r.status === 200 && r.fn.length === 1),
+  R('send_email', 'admin rate limit: super admin is exempt', { action: 'send_email', body: { type: 'invitation', token: T_OTHER }, ...sup }, r => r.status === 200 && r.fn.length === 1),
+  R('send_email', 'admin rate limit: a dry run is never counted or refused', { action: 'send_email', body: { type: 'invitation', token: T_OTHER, dry_run: true }, sessionToken: 'tokOther' }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].dry === true),
+  // plan limits on company settings and payroll recipients (b1 = Free, past its preview; a1 = paid)
+  R('plan-limits', 'free: cannot switch overtime on', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', track_overtime: true }, ...other }, r => r.status === 403 && /not included in your plan/.test(r.body) && !r.calls.some(c => c.startsWith('PATCH'))),
+  R('plan-limits', 'free: switching overtime off is fine', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', track_overtime: false }, ...other }, r => r.status === 200),
+  R('plan-limits', 'free: cannot set evening hours', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', evening_start: '17:00', evening_end: null, evening_days: null }, ...other }, r => r.status === 403),
+  R('plan-limits', 'free: clearing evening hours is fine', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', evening_start: null, evening_end: null, evening_days: null }, ...other }, r => r.status === 200),
+  R('plan-limits', 'free: cannot switch lunch breaks on', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', track_lunch_breaks: true }, ...other }, r => r.status === 403),
+  R('plan-limits', 'free: cannot switch visitor check-in on', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', visitor_checkin_enabled: true }, ...other }, r => r.status === 403),
+  R('plan-limits', 'free: a grandfathered company keeps overtime', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'Connoisseur Culture', track_overtime: true }, ...other }, r => r.status === 200),
+  R('plan-limits', 'free: a normal save with nothing gated', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', address: 'Y', punch_rounding: 5 }, ...other }, r => r.status === 200),
+  R('plan-limits', 'free: cannot add a payroll recipient', { table: 'report_recipients', method: 'POST', body: { company_id: 'c9', email: 'acct@x.ca' }, ...other }, r => r.status === 403),
+  R('plan-limits', 'paid: overtime, evening, lunch and visitor all allowed', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { name: 'X', track_overtime: true, evening_start: '17:00', track_lunch_breaks: true, visitor_checkin_enabled: true }, ...own }, r => r.status === 200),
+  R('plan-limits', 'paid: can add a payroll recipient', { table: 'report_recipients', method: 'POST', body: { company_id: 'c1', email: 'acct@x.ca' }, ...own }, r => r.status === 201 || r.status === 200),
   R('send_email', 'kiosk: nothing at all (no site, no session)', { action: 'send_email', body: { type: 'schedule', employee_id: E_OWN, pin: '1234' } }, r => r.status === 401 && r.fn.length === 0),
   // tables the app does not use (these are the ones allowed to differ: they were open, they must now be closed)
   R('unlisted-tables', 'anon reads admin_sessions', { table: 'admin_sessions', method: 'GET', filter: 'limit=1' }),

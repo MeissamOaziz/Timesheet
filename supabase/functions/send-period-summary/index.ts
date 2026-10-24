@@ -602,6 +602,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 };
+// Automated email reports are a paid feature (the pricing page says so). Free accounts have them during
+// the preview window (see public.has_paid_features); after that the report is skipped, not deleted:
+// the recipients stay on file and resume the day the account upgrades.
+async function reportsEntitled(companyId) {
+  const { data, error } = await supabase.rpc('company_has_paid_features', { p_company: companyId });
+  if (error) { console.error('entitlement check failed, sending anyway', error.message); return true; }
+  return data !== false;
+}
 Deno.serve(async (req)=>{
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -620,6 +628,7 @@ Deno.serve(async (req)=>{
       if (body.test_recipients && body.company_id) {
         const { data: co, error: cErr } = await supabase.from('companies').select('*').eq('id', body.company_id).single();
         if (cErr || !co) throw new Error('Company not found');
+        if (!(await reportsEntitled(co.id))) throw new Error('Automated email reports are part of the paid plans');
         const info = getPeriodInfo(addDays(new Date(new Date().setHours(0, 0, 0, 0)), 0), co.week_start || 'monday', co.payroll_frequency || 'biweekly', co.payroll_anchor_date);
         // The cron only fires on the (delayed) first day of a period; a test can run any day, so
         // fall back to the period that ended yesterday.
@@ -641,6 +650,7 @@ Deno.serve(async (req)=>{
         const { data: emp, error: empErr } = await supabase.from('employees').select('*').eq('id', body.emp_id).single();
         if (empErr || !emp) throw new Error('Employee not found');
         if (!emp.email) throw new Error('Employee has no email address');
+        if (!(await reportsEntitled(emp.company_id))) throw new Error('Automated email reports are part of the paid plans');
         const { data: co } = await supabase.from('companies').select('*').eq('id', emp.company_id).single();
         await sendToEmployee(emp, body.start_date, body.end_date, co?.payroll_frequency || 'biweekly', co?.name || 'Your Company', co?.punch_rounding || 0, co?.lunch_break_paid_minutes);
         return new Response(JSON.stringify({
@@ -684,6 +694,11 @@ Deno.serve(async (req)=>{
       const candidateDay = delayDays ? shiftLocalDay(nowLocal, -delayDays) : nowLocal;
       const isBoundary = isPeriodBoundaryDay(candidateDay, company.week_start || 'monday', company.payroll_frequency || 'biweekly', company.payroll_anchor_date);
       if (!isBoundary) {
+        companyResult.skipped++;
+        results.push(companyResult);
+        continue;
+      }
+      if (!(await reportsEntitled(company.id))) {
         companyResult.skipped++;
         results.push(companyResult);
         continue;

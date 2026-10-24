@@ -169,7 +169,22 @@ async function idList(path: string): Promise<Set<string>> {
 // The two reasons need different wording: one is "that row is not yours", the other is "that
 // column is not yours to set" -- reporting an entitlement block as a tenant error would send
 // anyone debugging it looking in the wrong place.
-interface WriteViolation { field: string; reason: 'tenant' | 'entitlement' }
+interface WriteViolation { field: string; reason: 'tenant' | 'entitlement' | 'plan' }
+
+// Plan checks run in the database (one definition, public.has_paid_features and friends, shared with
+// the daily job that switches off whatever an account is no longer entitled to). They fail open: a
+// lookup that cannot be answered never blocks a customer from saving their settings.
+async function planRpc(fn: string, args: Record<string, string>): Promise<unknown> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args),
+    });
+    return res.ok ? await res.json() : null;
+  } catch { return null; }
+}
+const GRANDFATHERED_COMPANIES = ['Oaziz Extracts', 'Connoisseur Culture'];
 async function validateWritePayload(
   table: string, body: unknown, caller: Caller,
 ): Promise<WriteViolation | null> {
@@ -242,6 +257,29 @@ async function validateWritePayload(
     for (const key of ['admin_id', 'inviter_admin_id', 'manager_id', 'parent_admin_id', 'reviewed_by']) {
       const a = str(row[key]);
       if (a && !(await teamIds()).has(a)) return { field: key, reason: 'tenant' };
+    }
+
+    // Plan limits. Overtime tracking, evening hours and automatic payroll recipients are Starter-and-up
+    // (a Free account previews them for a while); lunch breaks and visitor check-in are Growth-and-up.
+    // The browser already locks these controls; this is what stops a hand-made request.
+    if (table === 'companies') {
+      const wantsPaid = row.track_overtime === true || (row.evening_start != null && row.evening_start !== '');
+      const wantsGrowth = row.track_lunch_breaks === true || row.visitor_checkin_enabled === true;
+      if ((wantsPaid || wantsGrowth) && !GRANDFATHERED_COMPANIES.includes(String(row.name ?? ''))) {
+        if (wantsPaid && (await planRpc('has_paid_features', { p_admin: caller.primaryAdminId })) === false) {
+          return { field: row.track_overtime === true ? 'track_overtime' : 'evening_start', reason: 'plan' };
+        }
+        if (wantsGrowth) {
+          const rank = await planRpc('admin_plan_rank', { p_admin: caller.primaryAdminId });
+          if (typeof rank === 'number' && rank < 2) {
+            return { field: row.track_lunch_breaks === true ? 'track_lunch_breaks' : 'visitor_checkin_enabled', reason: 'plan' };
+          }
+        }
+      }
+    }
+    if (table === 'report_recipients' && co &&
+        (await planRpc('company_has_paid_features', { p_company: co })) === false) {
+      return { field: 'company_id', reason: 'plan' };
     }
 
     // Entitlements are billing state, not user data. The tenant scope above lets an admin write
@@ -530,6 +568,8 @@ function cleanShifts(raw: unknown) {
 // rate-limited so it cannot be used as a mail cannon.
 const KIOSK_EMAIL_PER_EMPLOYEE_HOUR = 5;
 const KIOSK_EMAIL_PER_SITE_HOUR = 60;
+const EMAIL_SCHEDULE_PER_ADMIN_HOUR = 300;
+const EMAIL_OTHER_PER_ADMIN_HOUR = 30;
 const EMAIL_SHAPE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
 async function sendKioskScheduleEmail(siteId: string, rawBody: unknown): Promise<Response> {
   const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
@@ -654,6 +694,20 @@ async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Respon
 
   } else {
     return jsonResp({ ok: false, error: 'Unknown email type' }, 400);
+  }
+
+  // Rate limit per signed-in admin. Real use is a few invitations, or one schedule per employee (a
+  // 60-person schedule is 60 emails), so those get a high ceiling; a stolen session or a script
+  // gets neither. If the count cannot be read the email is sent: bookkeeping never blocks a customer.
+  if (!dry && !isSuper) {
+    const since = new Date(Date.now() - 3600 * 1000).toISOString();
+    const recent = await restJson(`audit_log?admin_id=eq.${caller.adminId}&event=like.email_sent:*&at=gte.${since}&select=event&limit=500`);
+    if (Array.isArray(recent)) {
+      const schedules = recent.filter((r: { event?: string }) => r.event === 'email_sent:schedule').length;
+      const others = recent.length - schedules;
+      const tooMany = type === 'schedule' ? schedules >= EMAIL_SCHEDULE_PER_ADMIN_HOUR : others >= EMAIL_OTHER_PER_ADMIN_HOUR;
+      if (tooMany) return jsonResp({ ok: false, error: 'Too many emails sent in the last hour. Please try again later.' }, 429);
+    }
   }
 
   try {
@@ -940,11 +994,14 @@ Deno.serve(async (req: Request) => {
         const bad = await validateWritePayload(table, body, caller);
         if (bad) {
           logAudit(authedAdminId,
-            bad.reason === 'entitlement' ? 'entitlement_write_blocked' : 'cross_tenant_write_blocked',
+            bad.reason === 'entitlement' ? 'entitlement_write_blocked'
+              : bad.reason === 'plan' ? 'plan_write_blocked' : 'cross_tenant_write_blocked',
             table, method, bad.field);
           return errResp(bad.reason === 'entitlement'
             ? `Forbidden: ${bad.field} cannot be changed from the app`
-            : `Forbidden: ${bad.field} does not belong to your account`, 403);
+            : bad.reason === 'plan'
+              ? `Forbidden: ${bad.field} is not included in your plan`
+              : `Forbidden: ${bad.field} does not belong to your account`, 403);
         }
       }
     } else if (
