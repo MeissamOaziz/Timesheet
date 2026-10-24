@@ -34,13 +34,16 @@ add-on or tier that fits.
   Growth for lunch breaks and visitors).
 - Never pushy, never repeated, always true to the pricing page.
 
-## Cost, limits, privacy
-- Rate limit per admin (suggest 20 questions a day on Free, 100 on paid) and a global monthly spend cap that turns
-  the assistant into "contact support" when reached. Counters live in a small table with RLS on, service key only.
+## Cost, limits, privacy (decided by Meissam, 2026-10-24)
+- **Questions per admin per day: 10 on Free, 50 on paid plans.** Counted per admin in a small table (RLS on, service key only).
+- **Hard monthly budget: $25 USD for the whole assistant.** Each call records its token usage; the function adds up an
+  estimated cost per calendar month and, when it reaches the budget, replies "contact support" to everyone until the
+  1st (the Contact Support form keeps working). At 80% ($20) it writes a line in the audit log so the Monday usage check
+  can report it. The model is Haiku 5.5 with prompt caching, so $25 should cover thousands of questions; the cap is the
+  safety net, not the expectation.
+- When the account base reaches **10 paying users**, revisit both numbers and the budget together.
 - Conversations are stored 90 days (question, answer, rating, plan) to improve the knowledge base. The panel says so
   in one line (Law 25). Employee names and punch data are never sent to the model.
-- Rough size: a few tenths of a cent per question on Haiku; 40 free accounts asking 5 questions a month is pocket
-  change. Re-check against the current price list before launch.
 
 ## Quality control
 - A test file of about 60 real questions (EN and FR, taken from the support inbox and `support-playbook.md`) with the
@@ -57,5 +60,5 @@ add-on or tier that fits.
 ## What I need from Meissam
 - Go-ahead, and an Anthropic API key stored as the `ANTHROPIC_API_KEY` secret in the PunchClock Supabase project
   (Edge Functions secrets; I never see the value).
-- A monthly budget cap for the assistant.
+- (Budget cap decided: $25/month.)
 - OK on the one-line privacy notice in the panel.
