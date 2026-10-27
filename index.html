@@ -5052,8 +5052,9 @@ async function refreshCache(opts={}){
     C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
     C.primaryAdmin=null;
     // When the account was created decides how long a Free account previews the paid features. Read once.
-    if(!C.acctCreatedAt&&sess.plan!=='business'&&sess.plan!=='unlimited'){
-      try{ const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at`); C.acctCreatedAt=me?.[0]?.created_at||null; }catch(_){}
+    // Keyed by admin id so a second login in the same tab never inherits the first account's date.
+    if((!C.acctCreatedAt||C.acctCreatedFor!==sess.id)&&sess.plan!=='business'&&sess.plan!=='unlimited'){
+      try{ const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at`); C.acctCreatedAt=me?.[0]?.created_at||null; C.acctCreatedFor=sess.id; }catch(_){}
     }
   } else if(sess&&sess.parent_admin_id){
     // Co-admin: fetch primary admin's full record to inherit their plan/extra_seats
@@ -7194,6 +7195,7 @@ async function doVerify(){
 }
 
 function logout(){
+  C.acctCreatedAt=null; C.acctCreatedFor=null;
   const _t=Sess.get()?.token; if(_t){try{DB.rpc('admin_logout',{p_token:_t});}catch(_){}}
   Sess.clear();
   Ctx.clear();
