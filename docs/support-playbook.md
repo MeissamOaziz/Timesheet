@@ -136,8 +136,12 @@ a job, a project, a client) with a colour.
 - Not supported yet: choosing a task when clocking in from the employee portal.
 - A label is not the employee's Department. Department says who a person is; a label says what a
   shift or stretch of work is for.
-- Granting a 7-day trial is manual: set admins.scheduling_addon = true and scheduling_trial_ends_at,
-  and schedule a guarded one-off pg_cron job to switch it off. Nothing expires it automatically.
+- The Scheduling trial is 14 days and is granted BY HAND (there is no button in the app; the pricing page and
+  FAQ say "ask us and we switch it on"). Set admins.scheduling_addon = true and scheduling_trial_ends_at on the
+  owner's row, then schedule a guarded one-off pg_cron job that switches it off after the end date only if
+  the end date still matches and stripe_customer_id is null (example: job `scheduling-trial-end-lumiconseil`,
+  2026-10-28). Nothing expires it automatically. The customer must sign out and back in to see it. If they have
+  paid for anything since, the guard leaves it on: check by hand.
 
 Evening hours (added 2026-10-22, all plans). For customers who pay an evening/night premium.
 - Setup: profile menu, Company Info, "Evening Hours": tick "Report evening hours separately", then From
