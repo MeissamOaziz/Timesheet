@@ -1,7 +1,8 @@
 # Message centre announcement: end of the paid-features preview
 
-STATUS 2026-10-28: the first version was posted on 2026-10-24 (id c368b59e). The rule then changed: geofencing, remote
-clock-in, the employee portal and time off are paid features too. The REVISED text at the bottom replaces it once approved.
+STATUS 2026-10-28: the first version was posted on 2026-10-24 (id c368b59e). The rule then changed (geofencing, remote
+clock-in, the employee portal and time off are paid features too), so the REVISED text at the bottom was posted on
+2026-10-28 (id 7987413c) and the first one was deleted.
 
 ## First version (posted 2026-10-24, now out of date)
 
