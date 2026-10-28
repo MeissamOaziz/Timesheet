@@ -60,6 +60,13 @@ const adminProfile = {
   b1: { name: 'Other Owner', email: 'b@y.ca', plan: 'free', created_at: '2026-03-01T00:00:00Z' },
   a3: { name: 'Brand New', email: 'new-account@x.ca', plan: 'free', created_at: new Date().toISOString() },
 };
+// Scheduling trial: t1 is inside its free trial, x1 used it up, d1 has never started one
+sessions.tokTrial = 't1'; sessions.tokTrialOver = 'x1'; sessions.tokNoTrial = 'd1';
+admins.t1 = { id: 't1', parent_admin_id: null, role: 'admin', status: 'active' };
+admins.x1 = { id: 'x1', parent_admin_id: null, role: 'admin', status: 'active' };
+admins.d1 = { id: 'd1', parent_admin_id: null, role: 'admin', status: 'active' };
+companiesOf.t1 = ['c7']; companiesOf.x1 = ['c6'];
+sitesOf.c7 = ['s7']; sitesOf.c6 = ['s6'];
 sessions.tokNew = 'a3'; admins.a3 = { id: 'a3', parent_admin_id: null, role: 'admin', status: 'active' };
 const tables = {
   punches: bigPunches,
@@ -109,11 +116,13 @@ function makeFetch() {
       const a = admins[eq('id')]; return j(a ? [a] : []);
     }
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon') return j([{ scheduling_addon: eq('id') === 'a1' }]);
+    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_trial_ends_at') return j([{ scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
+    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon,scheduling_trial_ends_at') return j([{ scheduling_addon: eq('id') === 'a1', scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'id' && p.q.has('parent_admin_id')) return j([{ id: 'a2' }]);
     if (t === 'companies' && method === 'GET' && p.q.has('admin_id')) return j((companiesOf[eq('admin_id')] || []).map(id => ({ id, admin_id: eq('admin_id'), name: 'Acme Fence' })));
-    if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j([{ admin_id: 'a1', punch_label_mode: 'off' }]);
-    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9'].includes(eq('id')) ? [{ id: eq('id') }] : []);
-    if (t === 'sites' && method === 'GET' && p.q.get('select') === 'company_id') return j([{ company_id: 'c1' }]);
+    if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j(eq('id') === 'c7' ? [{ admin_id: 't1', punch_label_mode: 'optional' }] : eq('id') === 'c6' ? [{ admin_id: 'x1', punch_label_mode: 'optional' }] : [{ admin_id: 'a1', punch_label_mode: 'off' }]);
+    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9', 's7', 's6'].includes(eq('id')) ? [{ id: eq('id') }] : []);
+    if (t === 'sites' && method === 'GET' && p.q.get('select') === 'company_id') return j([{ company_id: eq('id') === 's7' ? 'c7' : eq('id') === 's6' ? 'c6' : 'c1' }]);
     if (t === 'sites' && method === 'GET' && p.q.has('company_id')) { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (sitesOf[c] || []).map(id => ({ id })))); }
     if (t === 'employees' && method === 'GET' && p.q.has('company_id') && p.q.get('select') === 'id') { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (employeesOf[c] || []).map(id => ({ id })))); }
     if (t === 'work_labels' && method === 'GET' && p.q.get('select') === 'id') return j(p.q.has('id') ? (eq('id') === 'l1' ? [{ id: 'l1' }] : []) : [{ id: 'l1' }]);
@@ -322,6 +331,19 @@ const cases = [
   R('plan-limits', 'free: cannot add a payroll recipient', { table: 'report_recipients', method: 'POST', body: { company_id: 'c9', email: 'acct@x.ca' }, ...other }, r => r.status === 403),
   R('plan-limits', 'paid: overtime, evening, lunch and visitor all allowed', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { name: 'X', track_overtime: true, evening_start: '17:00', track_lunch_breaks: true, visitor_checkin_enabled: true }, ...own }, r => r.status === 200),
   R('plan-limits', 'paid: can add a payroll recipient', { table: 'report_recipients', method: 'POST', body: { company_id: 'c1', email: 'acct@x.ca' }, ...own }, r => r.status === 201 || r.status === 200),
+  // free 14-day Scheduling trial: an end date on the owner's account, no flag to switch off
+  R('trial', 'trial running: owner creates a label', { table: 'work_labels', method: 'POST', body: { company_id: 'c7', name: 'Job 1' }, sessionToken: 'tokTrial' }, r => r.status === 201 || r.status === 200),
+  R('trial', 'trial used up: owner cannot create a label', { table: 'work_labels', method: 'POST', body: { company_id: 'c6', name: 'Job 1' }, sessionToken: 'tokTrialOver' }, r => r.status === 403),
+  R('trial', 'never started: owner cannot create a label', { table: 'work_labels', method: 'POST', body: { company_id: 'c9', name: 'x' }, ...other }, r => r.status === 403),
+  R('trial', 'trial running: a terminal sees the labels', { table: 'work_labels', method: 'GET', filter: '', kioskSiteId: 's7' }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length > 0),
+  R('trial', 'trial used up: a terminal sees no labels', { table: 'work_labels', method: 'GET', filter: '', kioskSiteId: 's6' }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length === 0),
+  R('trial-start', 'start trial: no session', { action: 'start_scheduling_trial' }, r => r.status === 401),
+  R('trial-start', 'start trial: a manager cannot', { action: 'start_scheduling_trial', ...mgr }, r => r.status === 403),
+  R('trial-start', 'start trial: already paid', { action: 'start_scheduling_trial', ...own }, r => r.status === 400),
+  R('trial-start', 'start trial: already running', { action: 'start_scheduling_trial', sessionToken: 'tokTrial' }, r => r.status === 400),
+  R('trial-start', 'start trial: used up, not offered again', { action: 'start_scheduling_trial', sessionToken: 'tokTrialOver' }, r => r.status === 400),
+  R('trial-start', 'start trial: first time, the server sets 14 days', { action: 'start_scheduling_trial', sessionToken: 'tokNoTrial' },
+    r => { if (r.status !== 200 || !r.obj || !r.obj.endsAt) return false; const d = (Date.parse(r.obj.endsAt) - Date.now()) / 864e5; const w = r.calls.find(c => c.startsWith('PATCH') && /admins/.test(c)); return d > 13.9 && d < 14.1 && !!w && /scheduling_trial_ends_at=is\.null/.test(w) && Object.keys(JSON.parse(w.split(' ').slice(2).join(' '))).join() === 'scheduling_trial_ends_at'; }),
   R('send_email', 'kiosk: nothing at all (no site, no session)', { action: 'send_email', body: { type: 'schedule', employee_id: E_OWN, pin: '1234' } }, r => r.status === 401 && r.fn.length === 0),
   // tables the app does not use (these are the ones allowed to differ: they were open, they must now be closed)
   R('unlisted-tables', 'anon reads admin_sessions', { table: 'admin_sessions', method: 'GET', filter: 'limit=1' }),

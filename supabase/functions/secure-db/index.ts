@@ -434,6 +434,15 @@ async function kioskRecentPunches(siteId: string): Promise<unknown[] | null> {
   }
 }
 
+// The Scheduling add-on is on when it is paid for, or during the free 14-day trial (an end date in the future,
+// set once by start_scheduling_trial). Paid is checked first, so the common case costs one lookup as before.
+async function schedulingActive(adminId: string): Promise<boolean> {
+  const paid = (await restJson(`admins?id=eq.${adminId}&select=scheduling_addon&limit=1`))?.[0];
+  if (paid?.scheduling_addon) return true;
+  const t = (await restJson(`admins?id=eq.${adminId}&select=scheduling_trial_ends_at&limit=1`))?.[0]?.scheduling_trial_ends_at;
+  return !!t && new Date(t as string).getTime() > Date.now();
+}
+
 // What a kiosk may know about work labels: its own company's, and only when that account has the
 // Scheduling add-on. `mode` is the company's "labels at clock-in" setting (off / optional / required).
 async function kioskLabelContext(siteId: string): Promise<{ companyId: string; addon: boolean; mode: string } | null> {
@@ -441,8 +450,8 @@ async function kioskLabelContext(siteId: string): Promise<{ companyId: string; a
   if (!site) return null;
   const co = (await restJson(`companies?id=eq.${site.company_id}&select=admin_id,punch_label_mode&limit=1`))?.[0];
   if (!co) return null;
-  const owner = co.admin_id ? (await restJson(`admins?id=eq.${co.admin_id}&select=scheduling_addon&limit=1`))?.[0] : null;
-  return { companyId: site.company_id as string, addon: !!owner?.scheduling_addon, mode: (co.punch_label_mode as string) || 'off' };
+  const addon = co.admin_id ? await schedulingActive(co.admin_id as string) : false;
+  return { companyId: site.company_id as string, addon, mode: (co.punch_label_mode as string) || 'off' };
 }
 
 async function kioskLabelBelongs(siteId: string, labelId: string): Promise<boolean> {
@@ -979,11 +988,7 @@ Deno.serve(async (req: Request) => {
     if (table === 'work_labels' && caller && caller.role !== 'super_admin') {
       // Managing labels is an owner/admin task, and the feature belongs to the Scheduling add-on.
       if (caller.role === 'manager') return errResp('Forbidden: managers cannot manage work labels', 403);
-      const own = await fetch(
-        `${SUPABASE_URL}/rest/v1/admins?id=eq.${caller.primaryAdminId}&select=scheduling_addon&limit=1`,
-        { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
-      ).then(r => r.ok ? r.json() : null).catch(() => null);
-      if (!Array.isArray(own) || !own[0]?.scheduling_addon) {
+      if (!(await schedulingActive(caller.primaryAdminId))) {
         return errResp('Forbidden: work labels are part of the Scheduling add-on', 403);
       }
     }

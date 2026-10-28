@@ -206,7 +206,7 @@ if (window.top !== window.self) {
       "name": "What is the Scheduling Add-On and how does it work?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. Available on any paid plan (Starter, Growth, or Business), and you can try it free for 14 days: just ask us and we will switch it on for your account."
+        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. Available on any paid plan (Starter, Growth, or Business), and you can try it free for 14 days: open the Schedule tab and click \"Try it free for 14 days\"."
       }
     }
   ]
@@ -5054,11 +5054,18 @@ async function refreshCache(opts={}){
     // When the account was created decides how long a Free account previews the paid features. Read once.
     // Keyed by admin id so a second login in the same tab never inherits the first account's date.
     if((!C.acctCreatedAt||C.acctCreatedFor!==sess.id)&&sess.plan!=='business'&&sess.plan!=='unlimited'){
-      try{ const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at`); C.acctCreatedAt=me?.[0]?.created_at||null; C.acctCreatedFor=sess.id; }catch(_){}
+      try{
+        const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at,scheduling_addon,scheduling_trial_ends_at`);
+        C.acctCreatedAt=me?.[0]?.created_at||null; C.acctCreatedFor=sess.id;
+        if(me?.[0]){
+          const cur=Sess.get();
+          if(cur&&cur.id===sess.id){ cur.scheduling_addon=!!me[0].scheduling_addon; cur.scheduling_trial_ends_at=me[0].scheduling_trial_ends_at||null; Sess.set(cur); }
+        }
+      }catch(_){}
     }
   } else if(sess&&sess.parent_admin_id){
     // Co-admin: fetch primary admin's full record to inherit their plan/extra_seats
-    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id,scheduling_addon,created_at`);
+    const primRows=await DB.all('admins',`id=eq.${sess.parent_admin_id}&select=id,name,email,plan,extra_seats,stripe_customer_id,scheduling_addon,scheduling_trial_ends_at,created_at`);
     C.primaryAdmin=primRows?.[0]||null;
     C.acctCreatedAt=C.primaryAdmin?.created_at||null;
     C.coAdmins=[];
@@ -6614,9 +6621,9 @@ function updateNav(){
     const showMobileSched=!isCoAdmin2&&plan2!=='free'&&plan2!=='unlimited';
     mobileSchedBtn.style.display=showMobileSched?'':'none';
     if(showMobileSched&&mobileSchedLabel){
-      const hasAddon2=!!(a2?.scheduling_addon);
+      const hasAddon2=!!(a2?.scheduling_addon)||schedulingTrialState().state==='active';
       mobileSchedLabel.textContent=hasAddon2
-        ?(t('addon.scheduling')+' — '+(t('addon.active')||'Active'))
+        ?(t('addon.scheduling')+' — '+(schedulingTrialState().state==='active'?(t('addon.trial')||'Trial'):(t('addon.active')||'Active')))
         :(t('addon.scheduling')+' — '+(t('nav.dd.addonAdd')||'+ Add'));
     }
   } else if(mobileSchedBtn){
@@ -6686,8 +6693,8 @@ function updateNav(){
         ddSched.style.display=showSched?'':'none';
         if(ddSchedSep) ddSchedSep.style.display=showSched?'':'none';
         if(showSched&&ddSchedBadge){
-          const hasAddon=!!(a.scheduling_addon);
-          ddSchedBadge.textContent=hasAddon?(t('addon.active')||'✓ Active'):(t('nav.dd.addonAdd')||'+ Add');
+          const hasAddon=!!(a.scheduling_addon)||schedulingTrialState().state==='active';
+          ddSchedBadge.textContent=hasAddon?(schedulingTrialState().state==='active'?(t('addon.trial')||'Trial'):(t('addon.active')||'✓ Active')):(t('nav.dd.addonAdd')||'+ Add');
           ddSchedBadge.className='user-dd-addon-badge '+(hasAddon?'addon-active':'addon-inactive');
         }
       }
@@ -6710,7 +6717,7 @@ function closeUserMenu(){
 function handleSchedulingAddonClick(){
   const s=Sess.get();
   if(!s) return;
-  if(s.scheduling_addon){
+  if(s.scheduling_addon||schedulingTrialState().state==='active'){
     closeUserMenu();
     navigate('schedule');
   } else {
@@ -6760,7 +6767,7 @@ async function doLogin(){
       return;
     }
     // Fetch full admin record to get parent_admin_id, extra_seats, stripe info
-    const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
+    const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`);
     const full = fullRows?.[0] || admin;
     const rememberMe = document.getElementById('rememberMe')?.checked || false;
     const _tok = await _mintSessionToken(email, pass);
@@ -6774,7 +6781,7 @@ async function doLogin(){
       extra_seats: Number(full.extra_seats||0),
       stripe_customer_id: full.stripe_customer_id||null,
       stripe_subscription_id: full.stripe_subscription_id||null,
-      scheduling_addon: !!full.scheduling_addon,
+      scheduling_addon:!!full.scheduling_addon,scheduling_trial_ends_at:full.scheduling_trial_ends_at||null,
       token: _tok,
     }, rememberMe);
     // verify_admin_login is a pure SELECT, so full.last_login is the PREVIOUS login — the only
@@ -6810,7 +6817,7 @@ async function doSetInvitePassword(){
       return;
     }
     // Log in as the co-admin
-    const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
+    const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`);
     const full=fullRows?.[0]||pendingInviteAdmin;
     const _tok=await _mintSessionToken(full.email, pw);
     Sess.set({
@@ -6820,7 +6827,7 @@ async function doSetInvitePassword(){
       extra_seats:Number(full.extra_seats||0),
       stripe_customer_id:full.stripe_customer_id||null,
       stripe_subscription_id:full.stripe_subscription_id||null,
-      scheduling_addon:!!full.scheduling_addon,
+      scheduling_addon:!!full.scheduling_addon,scheduling_trial_ends_at:full.scheduling_trial_ends_at||null,
       token:_tok,
     },false); // session only — they can choose remember me next login
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
@@ -6878,14 +6885,14 @@ async function doAcceptInvite(){
       return;
     }
     const newAdmin=[{id:acc.id,name:acc.name,email:acc.email,role:acc.role}];
-    const fullRows=await DB.all('admins',`id=eq.${newAdmin[0].id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon`);
+    const fullRows=await DB.all('admins',`id=eq.${newAdmin[0].id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`);
     const full=fullRows?.[0]||newAdmin[0];
     const _tok=await _mintSessionToken(full.email, pass);
     Sess.set({
       id:full.id,name:full.name,email:full.email,role:full.role,plan:full.plan||'free',
       status:full.status,parent_admin_id:full.parent_admin_id||null,
       extra_seats:full.extra_seats||0,stripe_customer_id:full.stripe_customer_id||null,
-      stripe_subscription_id:full.stripe_subscription_id||null,scheduling_addon:!!full.scheduling_addon,
+      stripe_subscription_id:full.stripe_subscription_id||null,scheduling_addon:!!full.scheduling_addon,scheduling_trial_ends_at:full.scheduling_trial_ends_at||null,
       token:_tok
     });
     DB.update('admins',`id=eq.${full.id}`,{last_login:new Date().toISOString()});
@@ -15168,6 +15175,59 @@ function schedChrome(show){
 // their business rather than a stock illustration. Nothing here is saved: it is generated from
 // a fixed pattern, never written, and every control is inert. The banner says so plainly —
 // showing invented shifts without labelling them would be worse than the empty wall it replaces.
+// Free 14-day trial of the Scheduling add-on. The owner starts it once; the server sets the end date.
+function _schedFmtDate(ms) {
+  return new Date(ms).toLocaleDateString((typeof _appLang !== 'undefined' && _appLang === 'fr') ? 'fr-CA' : 'en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+function _schedTrialCtaHtml() {
+  const s = Sess.get();
+  const st = schedulingTrialState();
+  const isOwner = !!(s && !s.parent_admin_id);
+  const buy = `<button class="btn-secondary" style="width:auto;padding:10px 24px" onclick="startSchedulingAddonCheckout()">${esc(t('addon.addFor')||'Add — $14.95/mo')}</button>`;
+  if (st.state === 'none' && isOwner) {
+    return `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-primary" id="schedTrialBtn" style="width:auto;padding:10px 24px" onclick="startSchedulingTrial()">${esc(t('sched.trialBtn')||'Try it free for 14 days')}</button>${buy}</div>
+      <p style="color:var(--text3);font-size:12px;margin:10px 0 0">${esc(t('sched.trialNote')||'No card needed. It starts now and stops by itself after 14 days.')}</p>`;
+  }
+  if (st.state === 'ended') {
+    return `<p style="color:var(--text2);font-size:13px;margin:0 0 12px">${esc((t('sched.trialEnded')||'Your free trial ended on {date}.').replace('{date}', _schedFmtDate(st.endsAt)))}</p>${buy}`;
+  }
+  if (!isOwner) {
+    return `<p style="color:var(--text2);font-size:13px;margin:0">${esc(t('sched.trialOwnerOnly')||'The account owner can start the free 14-day trial or add Scheduling.')}</p>`;
+  }
+  return buy;
+}
+async function startSchedulingTrial() {
+  const s = Sess.get();
+  if (!s) { navigate('login'); return; }
+  if (isDemo()) { showToast(t('demo.readOnly'), 'info'); return; }
+  const btn = document.getElementById('schedTrialBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const r = await supaFetch('POST', 'email_codes', { action: 'start_scheduling_trial' });
+    if (!r || r.ok !== true || !r.endsAt) throw new Error((r && r.error) || 'Could not start the trial');
+    s.scheduling_trial_ends_at = r.endsAt;
+    Sess.set(s);
+    showToast((t('sched.trialStarted')||'Trial started: Scheduling is yours until {date}.').replace('{date}', _schedFmtDate(Date.parse(r.endsAt))), 'success');
+    await loadSchedulePage();
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    showToast((e && e.message) || 'Could not start the trial', 'error');
+  }
+}
+// A reminder above the schedule while the trial runs, with the way to keep it.
+function renderSchedTrialBanner() {
+  const host = document.getElementById('schedGridContent');
+  let el = document.getElementById('schedTrialBanner');
+  const st = schedulingTrialState();
+  if (!host || st.state !== 'active' || isDemo() || isSuperAdmin()) { if (el) el.remove(); return; }
+  const days = Math.max(1, Math.ceil((st.endsAt - Date.now()) / 864e5));
+  if (!el) { el = document.createElement('div'); el.id = 'schedTrialBanner'; el.className = 'upgrade-wall'; el.style.margin = '0 0 12px'; host.parentNode.insertBefore(el, host); }
+  const owner = !(Sess.get() || {}).parent_admin_id;
+  el.innerHTML = `<p style="margin:0${owner ? ' 0 8px' : ''}">${esc((t('sched.trialLeft')||'Free trial: {n} days left (ends {date}).').replace('{n}', days).replace('{date}', _schedFmtDate(st.endsAt)))}</p>` +
+    (owner ? `<button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px" onclick="startSchedulingAddonCheckout()">${esc(t('sched.trialKeep')||'Keep it — $14.95/mo')}</button>` : '');
+}
+
 function renderSchedulePreview(){
   const host = document.getElementById('schedGridContent');
   if(!host) return;
@@ -15228,7 +15288,7 @@ function renderSchedulePreview(){
     <div class="sched-preview-cta">
       <h3 style="margin:0 0 6px;font-size:17px">${esc(t('sched.previewTitle')||'Build this for your team')}</h3>
       <p style="color:var(--text2);font-size:13.5px;margin:0 auto 16px;max-width:52ch">${esc(t('sched.previewBody')||'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.')}</p>
-      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="startSchedulingAddonCheckout()">${esc(t('addon.addFor')||'Add — $14.95/mo')}</button>
+      ${_schedTrialCtaHtml()}
     </div>`;
 }
 
@@ -15239,7 +15299,7 @@ async function loadSchedulePage() {
   const s = Sess.get();
 
   // Check add-on access — scheduling_addon must be explicitly purchased or granted
-  const hasAddon = !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin() || isDemo();
+  const hasAddon = hasSchedulingAddon();
   if(!hasAddon) {
     // A locked feature that shows nothing but a price is asking people to buy a description.
     // Zero customers have ever created a shift, and this wall is the first thing every one of
@@ -15249,6 +15309,7 @@ async function loadSchedulePage() {
     return;
   }
   schedChrome(true);
+  renderSchedTrialBanner();
   await ensureManagerSiteIds();
 
   // Populate company filter
@@ -15272,9 +15333,27 @@ async function loadSchedulePage() {
 // shift is for, so one employee can do different work on different days or hours.
 let _workLabels = [];
 let _schedLabelFilter = '';          // '' = all, '__none__' = unlabelled, otherwise a label id
+// The Scheduling add-on is "on" when it is paid for, or during the free 14-day trial. A trial is only an end
+// date on the account (scheduling_trial_ends_at, set by the server once); nothing has to switch it off, and
+// scheduling_addon stays true only for a paying account.
+function _schedTrialEnd(row) {
+  const v = row && row.scheduling_trial_ends_at;
+  const ms = v ? Date.parse(v) : NaN;
+  return isNaN(ms) ? null : ms;
+}
+// {state:'paid'|'active'|'ended'|'none', endsAt?} for the account that owns the subscription.
+function schedulingTrialState() {
+  const s = Sess.get();
+  const src = (s && s.parent_admin_id && C.primaryAdmin) ? C.primaryAdmin : s;
+  if (!src) return { state: 'none' };
+  if (src.scheduling_addon) return { state: 'paid' };
+  const e = _schedTrialEnd(src);
+  if (e === null) return { state: 'none' };
+  return { state: e > Date.now() ? 'active' : 'ended', endsAt: e };
+}
 function hasSchedulingAddon() {
   const s = Sess.get();
-  return !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || isSuperAdmin() || isDemo();
+  return !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || schedulingTrialState().state === 'active' || isSuperAdmin() || isDemo();
 }
 function labelById(id) { return _workLabels.find(l => l.id === id) || null; }
 async function loadWorkLabels(coId) {
@@ -16352,7 +16431,7 @@ var TRANSLATIONS={
 en:{
 'sched.previewNote':'Sample week — these shifts are an example, not your real schedule. Nothing here is saved.',
 'sched.previewTitle':'Build this for your team',
-'sched.previewBody':'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.',
+'sched.previewBody':'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.','sched.trialBtn':'Try it free for 14 days','sched.trialNote':'No card needed. It starts now and stops by itself after 14 days.','sched.trialEnded':'Your free trial ended on {date}.','sched.trialOwnerOnly':'The account owner can start the free 14-day trial or add Scheduling.','sched.trialStarted':'Trial started: Scheduling is yours until {date}.','sched.trialLeft':'Free trial: {n} days left (ends {date}).','sched.trialKeep':'Keep it — $14.95/mo','addon.trial':'Trial',
 'sched.hoursCol':'Hours',
 'help.catFix':'Fixing things',
 'kiosk.adminLogin':'Admin sign-in','kiosk.notAKiosk':'This device isn’t a kiosk? Reset it',
@@ -17045,7 +17124,7 @@ en:{
 'faq.q12':'Why use a tablet terminal instead of a GPS mobile app?',
 'faq.a12':'A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There\'s also no app to install, no personal device required, and no battery or connectivity excuses.',
 'faq.q13':'What is the Scheduling Add-On and how does it work?',
-'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. Available on any paid plan (Starter, Growth, or Business), and you can try it free for 14 days: just ask us and we will switch it on for your account.',
+'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Pro. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. Available on any paid plan (Starter, Growth, or Business), and you can try it free for 14 days: open the Schedule tab and click "Try it free for 14 days".',
 'faq.q14':'Can employees see their schedule when they clock in?',
 'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. The Scheduling Add-On must be active on the account.',
 'faq.q15':'Is PunchClock Pro available in French and suitable for Quebec businesses?',
@@ -17108,7 +17187,7 @@ en:{
 'land.feat1Title':'Tablet Terminal — No GPS Needed',
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
 'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
-'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal. $14.95/mo on any paid plan. Ask us for a free 14-day trial and we switch it on for you.',
+'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal. $14.95/mo on any paid plan, and you can try it free for 14 days from the Schedule tab.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
 'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
 'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
@@ -17264,7 +17343,7 @@ en:{
 fr:{
 'sched.previewNote':'Semaine d’exemple — ces quarts sont une illustration, pas votre horaire réel. Rien n’est enregistré ici.',
 'sched.previewTitle':'Construisez le vôtre pour votre équipe',
-'sched.previewBody':'Planifiez la semaine, voyez les heures de chacun au fur et à mesure, et envoyez l’horaire à votre équipe en une seule action. 14,95 $/mois sur tout forfait payant.',
+'sched.previewBody':'Planifiez la semaine, voyez les heures de chacun au fur et à mesure, et envoyez l’horaire à votre équipe en une seule action. 14,95 $/mois sur tout forfait payant.','sched.trialBtn':'Essayer gratuitement pendant 14 jours','sched.trialNote':'Sans carte de crédit. L\'essai commence maintenant et s\'arrête de lui-même après 14 jours.','sched.trialEnded':'Votre essai gratuit a pris fin le {date}.','sched.trialOwnerOnly':'Le propriétaire du compte peut démarrer l\'essai gratuit de 14 jours ou ajouter la planification.','sched.trialStarted':'Essai démarré : la planification est à vous jusqu\'au {date}.','sched.trialLeft':'Essai gratuit : {n} jours restants (se termine le {date}).','sched.trialKeep':'La garder — 14,95$/mois','addon.trial':'Essai',
 'sched.hoursCol':'Heures',
 'help.catFix':'Résoudre un problème',
 'kiosk.adminLogin':'Connexion admin','kiosk.notAKiosk':'Cet appareil n’est pas un kiosque? Réinitialiser',
@@ -17955,7 +18034,7 @@ fr:{
 'faq.q12':'Pourquoi utiliser un terminal tablette plutôt qu\'une appli GPS mobile?',
 'faq.a12':'Un terminal tablette fixe à votre emplacement est plus précis et plus difficile à contourner qu\'une appli GPS. Avec les applis GPS, les employés peuvent pointer depuis leur domicile, leur voiture ou n\'importe où — et le GPS peut être falsifié. Un terminal ancré à votre entrée oblige les employés à être physiquement sur place pour pointer. De plus, aucune appli à installer, aucun appareil personnel requis, et pas d\'excuse de batterie ou de connexion.',
 'faq.q13':'Qu\'est-ce que le complément Planification et comment ça fonctionne?',
-'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Pro. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. (4) Ajoutez les jours fériés à l\'horaire, avec les jours fériés du Québec en un clic, et identifiez les quarts avec des étiquettes de travail. Disponible sur tout forfait payant (Débutant, Croissance ou Entreprise), et vous pouvez l\'essayer gratuitement pendant 14 jours : il suffit de nous le demander et nous l\'activons pour votre compte.',
+'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Pro. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. (4) Ajoutez les jours fériés à l\'horaire, avec les jours fériés du Québec en un clic, et identifiez les quarts avec des étiquettes de travail. Disponible sur tout forfait payant (Débutant, Croissance ou Entreprise), et vous pouvez l\'essayer gratuitement pendant 14 jours : ouvrez l\'onglet Horaires et cliquez sur « Essayer gratuitement pendant 14 jours ».',
 'faq.q14':'Les employés peuvent-ils voir leur horaire quand ils pointent?',
 'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Le complément Planification doit être actif sur le compte.',
 'faq.q15':'PunchClock Pro est-il disponible en français et adapté aux entreprises québécoises?',
@@ -18022,7 +18101,7 @@ fr:{
 'land.feat1Title':'Terminal tablette — Sans GPS',
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
 'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
-'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail. 14,95$/mois sur tout forfait payant. Demandez-nous un essai gratuit de 14 jours et nous l\'activons pour vous.',
+'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail. 14,95$/mois sur tout forfait payant, avec un essai gratuit de 14 jours à partir de l\'onglet Horaires.',
 'land.feat10Title':'Géorepérage — Pointage verrouillé par localisation',
 'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
 'land.feat11Title':'Raccourci kiosque — Pointer en un tap',

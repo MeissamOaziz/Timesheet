@@ -121,6 +121,54 @@ for(const lang of ['en','fr']){
   ok('Starter: lunch breaks still locked (Growth)', await q(page,"document.getElementById('lunchToggleRow').style.pointerEvents==='none'"));
   await page.evaluate(()=>closeModal('addCompanyModal'));
 
+  // ── Scheduling add-on: the free 14-day trial button
+  const sched = async (o) => {
+    await setup(page, { plan: 'free', created: '2026-01-01T12:00:00Z', now: '2026-11-20T12:00:00Z' });
+    await page.evaluate(a => {
+      document.getElementById('schedTrialBanner')?.remove();
+      const s = Sess.get(); Object.assign(s, a.sess || {}); Sess.set(s);
+      C.primaryAdmin = a.primary || null;
+      if (!document.getElementById('schedGridContent')) document.body.insertAdjacentHTML('beforeend', '<div id="schedGridContent"></div>');
+      window.schedChrome = () => {}; window.ensureManagerSiteIds = async () => {}; window.refreshCache = async () => {};
+      window.onSchedCoChange = () => {}; window.checkHolidayReminder = () => {}; window.renderScheduleGrid = async () => { document.getElementById('schedGridContent').innerHTML = '<div id="realGrid"></div>'; };
+      window.__toasts = []; window.showToast = (m) => window.__toasts.push(String(m));
+      window.__trialCalls = 0;
+      window.supaFetch = async (m, t, o) => {
+        window.__trialCalls++;
+        if (a.fail) throw new Error('The scheduling trial has already been used');
+        return { ok: true, endsAt: new Date(Date.now() + 14 * 864e5).toISOString() };
+      };
+    }, o);
+    await page.evaluate(() => loadSchedulePage());
+  };
+  const FUT = new Date(Date.parse('2026-11-20T12:00:00Z') + 9 * 864e5).toISOString(), PST = new Date(Date.parse('2026-11-20T12:00:00Z') - 3 * 864e5).toISOString();
+
+  await sched({});
+  ok('trial: an owner who never tried sees the free-trial button', await q(page, "!!document.getElementById('schedTrialBtn') && /14/.test(document.getElementById('schedTrialBtn').textContent)"), await q(page, "(document.getElementById('schedTrialBtn')||{}).textContent"));
+  ok('trial: the paid option is still offered next to it', await q(page, "!!document.querySelector('.sched-preview-cta button.btn-secondary')"));
+  ok('trial: before starting, scheduling is off', !(await q(page, 'hasSchedulingAddon()')));
+  await page.evaluate(() => startSchedulingTrial()); await page.waitForTimeout(150);
+  ok('trial: clicking asks the server once', (await q(page, 'window.__trialCalls')) === 1);
+  ok('trial: scheduling is on, with a trial that ends in 14 days', await q(page, "schedulingTrialState().state==='active' && hasSchedulingAddon() && Math.round((schedulingTrialState().endsAt-Date.now())/864e5)===14"));
+  ok('trial: the session remembers it (survives a reload)', await q(page, "!!Sess.get().scheduling_trial_ends_at"));
+  ok('trial: the schedule opens with a "days left" reminder and a way to keep it', await q(page, "!!document.getElementById('schedTrialBanner') && /14|13/.test(document.getElementById('schedTrialBanner').textContent) && !!document.querySelector('#schedTrialBanner button')"), await q(page, "(document.getElementById('schedTrialBanner')||{}).textContent"));
+  ok('trial: the real schedule replaces the sample week', await q(page, "!!document.getElementById('realGrid') && !document.querySelector('.sched-preview-note')"));
+
+  await sched({ sess: { scheduling_trial_ends_at: FUT } });
+  ok('trial running: scheduling is open, banner shows', await q(page, "hasSchedulingAddon() && !!document.getElementById('schedTrialBanner')"));
+  await sched({ sess: { scheduling_trial_ends_at: PST } });
+  ok('trial over: scheduling is closed again', !(await q(page, 'hasSchedulingAddon()')));
+  ok('trial over: it says so, with the end date, and offers no second trial', await q(page, "!document.getElementById('schedTrialBtn') && /ended|a pris fin/.test(document.querySelector('.sched-preview-cta').textContent)"), await q(page, "document.querySelector('.sched-preview-cta').textContent.replace(/\s+/g,' ').slice(0,140)"));
+  await sched({ sess: { scheduling_addon: true } });
+  ok('paid: no trial banner, scheduling open', await q(page, "hasSchedulingAddon() && !document.getElementById('schedTrialBanner')"));
+  await sched({ sess: { parent_admin_id: 'owner-1' }, primary: { id: 'owner-1', scheduling_trial_ends_at: null } });
+  ok('co-admin, owner never tried: no button, told who can start it', await q(page, "!document.getElementById('schedTrialBtn') && /owner|propri/.test(document.querySelector('.sched-preview-cta').textContent)"));
+  await sched({ sess: { parent_admin_id: 'owner-1' }, primary: { id: 'owner-1', scheduling_trial_ends_at: FUT } });
+  ok("co-admin: the owner's running trial opens scheduling for the team", await q(page, 'hasSchedulingAddon()'));
+  await sched({ fail: true });
+  await page.evaluate(() => startSchedulingTrial()); await page.waitForTimeout(150);
+  ok('trial refused by the server: button comes back, the reason is shown, nothing turns on', await q(page, "!document.getElementById('schedTrialBtn').disabled && window.__toasts.some(m=>/already been used/.test(m)) && !hasSchedulingAddon()"));
+
   ok('no page errors', errs.length===0, errs.join(' | '));
   await page.close();
 }
