@@ -33,7 +33,7 @@ async function setup(page,{plan='free',created='2026-10-01T12:00:00Z',now='2026-
     C.employees=[];C.punches=[];
     Ctx.set({co:{id:'co1',name:a.coName},site:{id:'s1',name:'S'}});
     document.body.classList.add('role-resolved','role-admin');
-    document.querySelectorAll('.upgrade-wall').forEach(e=>e.remove());
+    document.querySelectorAll('.upgrade-wall:not(#toLockWall)').forEach(e=>e.remove());
   },{plan,created,now,coName});
 }
 const q=(page,expr)=>page.evaluate(expr);
@@ -168,6 +168,67 @@ for(const lang of ['en','fr']){
   await sched({ fail: true });
   await page.evaluate(() => startSchedulingTrial()); await page.waitForTimeout(150);
   ok('trial refused by the server: button comes back, the reason is shown, nothing turns on', await q(page, "!document.getElementById('schedTrialBtn').disabled && window.__toasts.some(m=>/already been used/.test(m)) && !hasSchedulingAddon()"));
+
+  // ── Geofencing, remote clock-in, the employee portal and time off are Starter-and-up too
+  const lockSetup = async (plan, now, created = '2026-01-01T12:00:00Z') => {
+    await setup(page, { plan, created, now });
+    await page.evaluate(() => {
+      C.companies[0].remote_punch_enabled = true; C.companies[0].name = 'Acme Fence';
+      C.sites = [{ id: 's1', name: 'Main', company_id: 'co1', geo_lat: 45.5, geo_lng: -73.5, geo_radius_m: 100, geo_strict: false }];
+      C.employees = [{ id: 'e1', name: 'Ann Lee', company_id: 'co1', site_id: 's1', active: true, remote_punch_enabled: true, email: 'ann@x.ca' }];
+      window.__upd = []; DB.update = async (t, f, b) => { window.__upd.push({ t, b }); return []; }; DB.all = async () => []; window.refreshCache = async () => {}; window.uploadImage = async () => null;
+      window.showToast = (m) => { (window.__toasts = window.__toasts || []).push(String(m)); };
+      window.showUpgradePlans = () => { window.__plansShown = true; };
+    });
+  };
+  const POST = '2026-11-20T12:00:00Z', PREV = '2026-10-24T12:00:00Z';
+
+  // site modal
+  await lockSetup('free', POST);
+  await page.evaluate(() => editSite('s1'));
+  ok('free after the preview: the geofence section is closed with the reason', await q(page, "document.getElementById('addSiteModal').classList.contains('paid-locked') && getComputedStyle(document.getElementById('geoExpandedSection')).display==='none' && getComputedStyle(document.getElementById('geoLockNote')).display==='block'"));
+  await page.evaluate(() => saveSite()); await page.waitForTimeout(150);
+  ok('...and saving the site leaves its geofence alone', await q(page, "window.__upd.length===1 && !('geo_lat' in window.__upd[0].b) && !('geo_strict' in window.__upd[0].b) && window.__upd[0].b.name==='Main'"), await q(page, 'JSON.stringify(window.__upd[0]&&window.__upd[0].b)'));
+  await lockSetup('free', PREV);
+  await page.evaluate(() => editSite('s1'));
+  ok('free during the preview: the geofence section works', await q(page, "!document.getElementById('addSiteModal').classList.contains('paid-locked') && getComputedStyle(document.getElementById('geoLockNote')).display==='none'"));
+  await page.evaluate(() => saveSite()); await page.waitForTimeout(150);
+  ok('...and the geofence is saved', await q(page, "window.__upd.length===1 && window.__upd[0].b.geo_lat===45.5"), await q(page, 'JSON.stringify(window.__upd[0]&&window.__upd[0].b)'));
+  await lockSetup('starter', POST);
+  await page.evaluate(() => editSite('s1'));
+  ok('starter: geofencing unlocked', await q(page, "!document.getElementById('addSiteModal').classList.contains('paid-locked')"));
+  await page.evaluate(() => closeModal('addSiteModal'));
+
+  // company modal: remote clock-in switch
+  await lockSetup('free', POST);
+  await page.evaluate(() => editCompany('co1'));
+  ok('free after the preview: the remote clock-in switch is locked', await q(page, "document.getElementById('remotePunchToggleRow').style.pointerEvents==='none'"));
+  await page.evaluate(() => { document.getElementById('remotePunchThumb').style.left = '2px'; saveCompany(); }); await page.waitForTimeout(200);
+  ok('...and saving keeps the stored value, whatever the screen says', await q(page, "window.__upd.length>=1 && window.__upd[0].b.remote_punch_enabled===true"), await q(page, 'JSON.stringify(window.__upd[0]&&window.__upd[0].b.remote_punch_enabled)'));
+  await lockSetup('starter', POST);
+  await page.evaluate(() => { editCompany('co1'); document.getElementById('remotePunchThumb').style.left = '2px'; saveCompany(); }); await page.waitForTimeout(200);
+  ok('starter: the switch is free to change', await q(page, "window.__upd.length>=1 && window.__upd[0].b.remote_punch_enabled===false && document.getElementById('remotePunchToggleRow').style.pointerEvents===''"));
+
+  // employee modal: portal invitation and remote grant
+  await lockSetup('free', POST);
+  await page.evaluate(() => { editEmployee('e1'); });
+  await page.waitForTimeout(150);
+  ok('free after the preview: portal invitation and remote grant are hidden, the reason is shown', await q(page, "document.getElementById('addEmpModal').classList.contains('paid-locked') && getComputedStyle(document.getElementById('empPortalInviteRow')).display==='none' && getComputedStyle(document.getElementById('empRemotePunchRow')).display==='none' && getComputedStyle(document.getElementById('empPaidLockHint')).display==='block'"));
+  await page.evaluate(() => { _selectedEmps.clear(); _selectedEmps.add('e1'); window.__upd = []; window.__plansShown = false; bulkToggleRemotePunch(true); }); await page.waitForTimeout(100);
+  ok('...and bulk remote grants are refused with the upgrade offer', await q(page, "window.__plansShown===true && window.__upd.length===0"));
+  await page.evaluate(() => closeModal('addEmpModal'));
+  await lockSetup('free', PREV);
+  await page.evaluate(() => { editEmployee('e1'); }); await page.waitForTimeout(150);
+  ok('free during the preview: the employee modal is unlocked', await q(page, "!document.getElementById('addEmpModal').classList.contains('paid-locked') && getComputedStyle(document.getElementById('empPaidLockHint')).display==='none'"));
+  await page.evaluate(() => closeModal('addEmpModal'));
+
+  // time off page
+  await lockSetup('free', POST);
+  await page.evaluate(() => { if (!document.getElementById('toSiteFilter')) {} window.refreshTimeOff = async () => {}; window.renderTimeOff = () => {}; loadTimeOffPage(); }); await page.waitForTimeout(100);
+  ok('free after the preview: the Time Off page explains it is a paid feature and hides the tool', await q(page, "document.getElementById('page-timeoff').classList.contains('to-locked') && getComputedStyle(document.getElementById('toLockWall')).display==='block' && getComputedStyle(document.querySelector('#page-timeoff .page-header .btn-primary')).display==='none'"));
+  await lockSetup('free', PREV);
+  await page.evaluate(() => { window.refreshTimeOff = async () => {}; window.renderTimeOff = () => {}; loadTimeOffPage(); }); await page.waitForTimeout(100);
+  ok('free during the preview: Time Off works', await q(page, "!document.getElementById('page-timeoff').classList.contains('to-locked') && getComputedStyle(document.getElementById('toLockWall')).display==='none'"));
 
   ok('no page errors', errs.length===0, errs.join(' | '));
   await page.close();

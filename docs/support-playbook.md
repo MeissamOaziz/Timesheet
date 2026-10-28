@@ -86,7 +86,7 @@ feature ships or a ticket teaches something, add it here in the same change.
   mode; the recorded GPS pin per punch is the proof of where they started and finished.
 - Plans: Free (1 site, 10 employees), Starter $19.49/month CAD (2 sites, 25 employees), Growth $39.49
   (6 sites, 60 employees), Business $79.49 (unlimited). Flat price per account, not per employee. Remote
-  clock-in and geofencing are not plan-gated.
+  clock-in and geofencing are Starter-and-up features (Free previews them 14 days; see the plan table below).
 
 ## Everyone was signed out on 2026-10-19 (evening, Toronto)
 
@@ -103,18 +103,23 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
 | | Free | Starter $19.49 | Growth $39.49 | Business $79.49 |
 |---|---|---|---|---|
 | Company / sites / employees / admins | 1 / 1 / 10 / 1 | 1 / 2 / 25 / 2 | 3 / 6 / 60 / 4 | unlimited / unlimited / unlimited / 6 |
-| Tablet terminal, geofencing, remote clock-in, employee portal, PDF reports, time off, alerts | yes | yes | yes | yes |
-| Excel and CSV export, add / edit / delete punches, overtime tracking, evening hours, automatic email reports (employees and the accountant's payroll summary) | no | yes | yes | yes |
+| Tablet terminal with PINs, dashboard and activity log, PDF reports, missed clock-out alerts | yes | yes | yes | yes |
+| Geofencing, remote clock-in, employee portal, time off, Excel and CSV export, add / edit / delete punches, overtime tracking, evening hours, automatic email reports (employees and the accountant's payroll summary) | no | yes | yes | yes |
 | Lunch breaks, visitor check-in | no | no | yes | yes |
 | Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels), 14-day trial | paid plans only | | | |
 
 - Every Free account previews the Starter features until **14 days after it was created, and in any case until
   2026-11-06**. After that the controls lock, the daily job (`enforce_plan_features`, 05:10 UTC) switches off overtime
   and evening hours, and the email reports stop (recipients stay on file and resume the day they upgrade).
-  Nothing is deleted. Lunch breaks and visitor check-in have no preview.
+  Geofences and the remote clock-in switch are switched off by the same job (hourly, `enforce_plan_features`) but their
+  settings are kept aside (`sites.geo_*_bak`, `companies.remote_punch_bak`) and come back automatically within the hour
+  of an upgrade. The employee portal stops at once for a company that is not entitled (its employees see "your
+  employer's plan does not include the portal"), which also stops remote punches and their time-off requests; the
+  Time Off page and the portal invitation / remote grant controls are replaced by an upgrade note. Nothing is deleted.
+  Lunch breaks and visitor check-in have no preview.
 - If a Free customer complains that a feature disappeared: it is as advertised on the pricing page, they had a
-  preview period to try it, and upgrading brings everything back as it was (their recipients are still saved; overtime
-  and evening hours need to be switched on again).
+  preview period to try it, and upgrading brings everything back as it was (recipients, geofences, the remote switch
+  and time-off entries are still saved; overtime and evening hours need to be switched on again).
 - Grandfathered (unlimited): Oaziz Extracts and Connoisseur Culture.
 - Counts (employees, sites, companies, admins) are enforced in the app; extra seats are $4.90 each.
 

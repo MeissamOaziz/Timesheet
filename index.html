@@ -174,7 +174,7 @@ if (window.top !== window.self) {
       "name": "Is there a free plan?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. The Free plan includes 1 company, 1 site and up to 10 active employees, with the clock-in terminal, geofencing, remote clock-in, the employee portal and PDF reports. It needs no credit card and is free forever. Every new account also previews the Starter features (Excel and CSV export, overtime tracking, evening hours, punch corrections and automatic email reports) free for 14 days. Paid plans start at $19.49/month CAD and keep those features, with more sites, employees and admins."
+        "text": "Yes. The Free plan includes 1 company, 1 site and up to 10 active employees, with the clock-in terminal, the dashboard, the activity log and PDF reports. It needs no credit card and is free forever. Every new account also previews the Starter features (geofencing, remote clock-in, the employee portal, time off, Excel and CSV export, overtime tracking, evening hours, punch corrections and automatic email reports) free for 14 days. Paid plans start at $19.49/month CAD and keep those features, with more sites, employees and admins."
       }
     },
     {
@@ -182,7 +182,7 @@ if (window.top !== window.self) {
       "name": "Can employees check their own schedule, hours and time off without contacting me?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes — every employee gets their own free self-service portal, included on every plan, even Free. From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
+        "text": "Yes — every employee gets their own self-service portal, included on every paid plan (Starter and above; free accounts have it during their 14-day preview). From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
       }
     },
     {
@@ -815,6 +815,14 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .feature-icon svg{width:30px;height:30px;color:var(--accent);}
 .feature-card h3{font-size:16px;font-weight:600;margin-bottom:7px;}
 .feature-card p{font-size:13px;color:var(--text2);line-height:1.6;}
+#addEmpModal.paid-locked #empPortalInviteRow,#addEmpModal.paid-locked #empRemotePunchRow,#addEmpModal.paid-locked #empRemotePunchOffHint{display:none!important}
+#empPaidLockHint,#geoLockNote{display:none;margin-top:12px;padding:10px 12px;font-size:12px;line-height:1.55;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md)}
+#addEmpModal.paid-locked #empPaidLockHint,#addSiteModal.paid-locked #geoLockNote{display:block}
+#addSiteModal.paid-locked #geoExpandedSection{display:none!important}
+#addSiteModal.paid-locked #geoToggleBtn{pointer-events:none;opacity:.5}
+#page-timeoff.to-locked>:not(.page-header):not(#toLockWall){display:none!important}
+#page-timeoff.to-locked .page-header .btn-primary{display:none}
+#page-timeoff.to-locked #toLockWall{display:block!important}
 .plan-tag{font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap}
 .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;align-items:stretch;}
 .price-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:28px 24px;position:relative;display:flex;flex-direction:column;}
@@ -1339,7 +1347,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <button class="land-btn-secondary" onclick="startDemo()" data-i18n="land.ctaDemo">▶ See a live demo — no signup</button>
       <!-- Sign in lives in the nav; a third hero CTA only competed with the two that matter. -->
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · geofencing &amp; kiosk included</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · clock-in terminal included</p>
     <p style="font-size:13px;margin-top:10px"><a href="employee.html" style="color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px" data-i18n="land.portalHint">Employee? Open the employee portal &rarr;</a></p>
   </div>
 
@@ -1454,7 +1462,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
-        <h3 data-i18n="land.feat6Title">Time Off Tracking</h3>
+        <h3><span data-i18n="land.feat6Title">Time Off Tracking</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
         <p data-i18n="land.feat6Desc">Log vacation, sick days and absences. See who is off today at a glance, and approve requests in one click.</p>
       </div>
       <div class="feature-card">
@@ -1474,7 +1482,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
         <div class="feature-icon"><svg style="color:#22c55e"><use href="#i-shield-pin"/></svg></div>
-        <h3 data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</h3>
+        <h3><span data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
         <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
       </div>
       <div class="feature-card">
@@ -1484,13 +1492,13 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-user"/></svg></div>
-        <h3 data-i18n="land.feat12Title">Employee Self-Service Portal</h3>
-        <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included free on every plan, even Free.</p>
+        <h3><span data-i18n="land.feat12Title">Employee Self-Service Portal</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. Included on every paid plan (Starter and up).</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
-        <h3 data-i18n="land.feat15Title">Remote Clock-In — For Distributed Teams</h3>
-        <p data-i18n="land.feat15Desc">No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site's roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. Included free on every plan.</p>
+        <h3><span data-i18n="land.feat15Title">Remote Clock-In — For Distributed Teams</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat15Desc">No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site's roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. Included on every paid plan (Starter and up).</p>
       </div>
       <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
         <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-pause"/></svg></div>
@@ -1604,15 +1612,18 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="price-sub" data-i18n="land.freeSub">Perfect for trying it out</div>
         <ul class="price-features">
           <li data-i18n="land.f.free1">1 company</li>
-          <li data-i18n="land.f.free2">1 site · geofencing &amp; kiosk included</li>
+          <li data-i18n="land.f.free2">1 site · clock-in terminal with PINs</li>
           <li data-i18n="land.f.free3">Up to 10 employees</li>
           <li data-i18n="land.f.free4">Basic reports (PDF only)</li>
-          <li data-i18n="land.f.free5">Employee portal &amp; remote clock-in</li>
+          <li data-i18n="land.f.free5">Dashboard &amp; activity log</li>
           <li class="dim" data-i18n="land.f.free6">Automated email reports</li>
           <li class="dim" data-i18n="land.f.free9">Excel &amp; CSV export</li>
           <li class="dim" data-i18n="land.f.free7">Overtime tracking</li>
           <li class="dim" data-i18n="land.f.free12">Add, edit &amp; delete punches</li>
           <li class="dim" data-i18n="land.f.free13">Evening hours report</li>
+          <li class="dim" data-i18n="land.f.free14">Geofencing</li>
+          <li class="dim" data-i18n="land.f.free15">Employee portal &amp; remote clock-in</li>
+          <li class="dim" data-i18n="land.f.free16">Time-off requests</li>
           <li class="dim" data-i18n="land.f.free10">Lunch break tracking (Growth+)</li>
           <li class="dim" data-i18n="land.f.free11">Visitor check-in (Growth+)</li>
         </ul>
@@ -1632,6 +1643,9 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.start6">Excel, CSV &amp; PDF export</li>
           <li data-i18n="land.f.start11">Add, edit &amp; delete punches</li>
           <li data-i18n="land.f.start12">Evening hours report</li>
+          <li data-i18n="land.f.start13">Geofencing</li>
+          <li data-i18n="land.f.start14">Employee portal &amp; remote clock-in</li>
+          <li data-i18n="land.f.start15">Time-off tracking &amp; requests</li>
           <li data-i18n="land.f.start8">1 co-admin included</li>
           <li class="dim" data-i18n="land.f.start9">Lunch break tracking (Growth+)</li>
           <li class="dim" data-i18n="land.f.start10">Visitor check-in (Growth+)</li>
@@ -1688,7 +1702,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           </tr></thead>
           <tbody>
             <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR1">Pricing model</td><td style="padding:10px 14px;text-align:center;font-weight:600" data-i18n="land.cmpR1a">Flat monthly rate</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR1b">Often per employee / per location</td></tr>
-            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR2">Geofencing on the free plan</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR2b">Usually a paid upgrade</td></tr>
+            <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR2">Geofencing from the first paid plan</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR2b">Usually a paid upgrade</td></tr>
             <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR3">Full French &amp; English</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR3b">Partial or English-first</td></tr>
             <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR4">Shared tablet kiosk with PINs</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR4b">Often needs a per-user app</td></tr>
             <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;color:var(--text2)" data-i18n="land.cmpR5">Support in French, from a human</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:var(--green)">✓</td><td style="padding:10px 14px;text-align:center;color:var(--text3)" data-i18n="land.cmpR5b">Rarely</td></tr>
@@ -2945,6 +2959,11 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div><h1 data-i18n="to.title">Time Off</h1><p data-i18n="to.subtitle">Vacation, sick days and absences</p></div>
     <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openTimeOffModal()" data-i18n="to.add">+ Add time off</button>
   </div>
+  <div id="toLockWall" class="upgrade-wall" style="display:none;margin:12px 0 0">
+    <h3 data-i18n="to.lockTitle">Time off is part of the paid plans</h3>
+    <p data-i18n="to.lockBody">Track vacations and absences, and let employees request time off from their portal, from the Starter plan up. Your existing entries are kept and come back when you upgrade.</p>
+    <button class="btn-primary" style="width:auto;padding:7px 18px;font-size:13px" onclick="showUpgradePlans()" data-i18n="gate.viewPlans">View Plans</button>
+  </div>
   <!-- Pending approvals surface first; the block hides itself when the queue is empty. -->
   <div id="toPendingSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,.35);border-radius:var(--radius);padding:14px 16px">
     <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px">
@@ -3651,6 +3670,10 @@ border-top:1px solid var(--border);margin:18px 0;}
           </div>
         </div>
       </div>
+      <div id="empPaidLockHint">
+        <svg class="ic" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><use href="#i-lock"/></svg><span data-i18n="emp.paidLock">The employee portal and remote clock-in are part of the Starter plan and above.</span>
+        <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addEmpModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
+      </div>
       <div id="empRemotePunchOffHint" style="display:none;margin-top:6px;padding:9px 12px;font-size:11.5px;color:var(--text3);background:var(--surface2);border-radius:var(--r-sm)" data-i18n="emp.remotePunchNeedsCompany">Turn on "Allow Remote Clock-In" in Company Info first to make this available.</div>
     </div>
     <input type="hidden" id="editEmpUid">
@@ -3726,6 +3749,10 @@ border-top:1px solid var(--border);margin:18px 0;}
         <svg class="ic" style="margin-right:5px"><use href="#i-map-pin"/></svg><span data-i18n="geo.setGeofence">Set Geofence</span>
         <span id="geoCollapseArrow" style="margin-left:auto;font-size:11px;display:inline-block;transition:transform .2s">▼</span>
       </button>
+      <div id="geoLockNote">
+        <svg class="ic" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><use href="#i-lock"/></svg><span data-i18n="geo.paidLock">Geofencing is part of the Starter plan and above.</span>
+        <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addSiteModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
+      </div>
 
       <div id="geoExpandedSection" style="display:none;margin-top:12px">
         <!-- Address search -->
@@ -8472,7 +8499,14 @@ function revokeDeviceToken(siteId){
 let _geoMap = null, _geoMarker = null, _geoCircle = null, _selectedGeoMode = 'lenient';
 let _geoSearchTimer = null;
 
+// Geofencing is a Starter-and-up feature (Free previews it). Outside the preview the section is closed with the
+// reason shown, and saving the site leaves its geofence fields alone.
+function _applyGeoLock(co){
+  window._geoLocked=!featureEntitled('paid', co||null);
+  const m=document.getElementById('addSiteModal'); if(m) m.classList.toggle('paid-locked', window._geoLocked);
+}
 function resetSiteGeoFields(site) {
+  _applyGeoLock((Ctx.get()||{}).co ? C.companies.find(c=>c.id===Ctx.get().co.id) || Ctx.get().co : null);
   destroyGeoMap();
   _selectedGeoMode = site?.geo_strict ? 'strict' : 'lenient';
 
@@ -9283,6 +9317,7 @@ async function bulkToggleActive(activate){
 async function bulkToggleRemotePunch(on){
   if(!_selectedEmps.size) return;
   const ctx=Ctx.get();
+  if(on && !featureEntitled('paid', ctx?ctx.co:null)){ showToast(t('emp.paidLock')||'The employee portal and remote clock-in are part of the Starter plan and above.','error'); showUpgradePlans(); return; }
   if(on && !ctx?.co?.remote_punch_enabled){
     showToast(t('bulk.remoteNeedsCompany')||'Turn on "Allow Remote Clock-In" in Company Info first.','error');
     return;
@@ -10553,11 +10588,18 @@ function setEmailToggle(on){
 // Remote clock-in per employee. The row itself is only ever shown when the company-wide switch
 // (Company Info → Remote Access) is on; _refreshEmpRemotePunchRowState hides it (with an
 // explanatory hint) otherwise, so there's nothing to toggle before that prerequisite is met.
+// The employee portal and remote clock-in are Starter-and-up features (Free previews them). Outside the
+// preview the invitation row and the remote grant are hidden and one explanation is shown instead.
+function _applyEmpPaidLock(co){
+  const m=document.getElementById('addEmpModal'); if(!m) return;
+  m.classList.toggle('paid-locked', !featureEntitled('paid', co||null));
+}
 function _refreshEmpRemotePunchRowState(companyId){
   const row=document.getElementById('empRemotePunchRow');
   const hint=document.getElementById('empRemotePunchOffHint');
   if(!row) return;
   const co=C.companies.find(c=>c.id===companyId);
+  _applyEmpPaidLock(co);
   const companyOk=!!co?.remote_punch_enabled;
   row.style.display=companyOk?'':'none';
   if(hint) hint.style.display=companyOk?'none':'';
@@ -11043,11 +11085,11 @@ async function saveSite(){
   const geo_strict  = geo_lat ? (_selectedGeoMode === 'strict') : false;
 
   try{
-    const payload={name,description,geo_lat,geo_lng,geo_radius_m,geo_strict};
+    const payload=window._geoLocked?{name,description}:{name,description,geo_lat,geo_lng,geo_radius_m,geo_strict};
     if(editId){
       await DB.update('sites',`id=eq.${editId}`,payload);
       const s=C.sites.find(s=>s.id===editId);
-      if(s)Object.assign(s,{name,description,geo_lat,geo_lng,geo_radius_m,geo_strict});
+      if(s)Object.assign(s,payload);
     }else{
       if(!ctx){showMsg('siteModalMsg',t('val.noCompany')||'No active company.','error');return;}
       const r=await DB.insert('sites',{company_id:ctx.co.id,...payload});
@@ -11353,9 +11395,8 @@ function setVisitorCheckinToggle(on){
   document.getElementById('visitorCheckinToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('visitorCheckinThumb').style.left=on?'20px':'2px';
 }
-// Unlike lunch/visitor tracking, remote clock-in is available on every plan — it shipped for a
-// Starter-plan customer (fully remote team, no shared kiosk possible), so gating it behind
-// Growth+ would defeat the point.
+// Remote clock-in is a Starter-and-up feature (Free previews it, see _setPaidFeatureLockState): it shipped for
+// a Starter customer with a fully remote team, so it is not held back to Growth.
 function toggleRemotePunchOpt(){
   const on=document.getElementById('remotePunchThumb').style.left!=='20px';
   document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
@@ -11386,7 +11427,7 @@ function _setPaidFeatureLockState(co){
   if(txt) txt.textContent=ok
     ? (t('modal.paidPreviewNote')||'Free preview: you can try these paid features until {date}.').replace('{date}',paidPreviewEndText())
     : (t('modal.paidFeatureLock')||'Overtime tracking and evening hours are included on the Starter plan and above.');
-  ['otToggleRow','otThresholdSettings','eveningToggleRow','eveningSettings'].forEach(id=>{
+  ['otToggleRow','otThresholdSettings','eveningToggleRow','eveningSettings','remotePunchToggleRow'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     el.style.opacity=ok?'1':'.5';
     el.style.pointerEvents=ok?'':'none';
@@ -11429,7 +11470,9 @@ async function saveCompany(){
   const track_lunch_breaks=growthOk&&document.getElementById('lunchThumb').style.left==='20px';
   const lunch_break_paid_minutes=track_lunch_breaks?(parseInt(document.getElementById('companyLunchPaidMinutes').value,10)||0):0;
   const visitor_checkin_enabled=growthOk&&document.getElementById('visitorCheckinThumb').style.left==='20px';
-  const remote_punch_enabled=document.getElementById('remotePunchThumb').style.left==='20px';
+  // Outside the paid plans the remote switch cannot be changed: keep whatever is stored.
+  const _storedCo=C.companies.find(c=>c.id===document.getElementById('editCompanyUid').value);
+  const remote_punch_enabled=paidOk?document.getElementById('remotePunchThumb').style.left==='20px':!!(_storedCo&&_storedCo.remote_punch_enabled);
   const managers_see_all_sites=document.getElementById('mgrAllSitesThumb').style.left==='20px';
   // Declared before first use: reading it below while it was still unset threw for every account without
   // the Scheduling add-on, so their company settings silently never saved.
@@ -13273,8 +13316,17 @@ function timeOffOn(dateStr, empId){
   return _timeOff.filter(r=>r.status==='approved' && _toCovers(r,dateStr) && (!empId||r.emp_id===empId));
 }
 
+// Time off is a Starter-and-up feature (Free previews it): outside the preview the page shows why, not an empty tool.
+function _applyTimeOffLock(){
+  const ctx=Ctx.get();
+  const co=ctx?C.companies.find(c=>c.id===ctx.co.id)||ctx.co:null;
+  const locked=!featureEntitled('paid', co);
+  const pg=document.getElementById('page-timeoff'); if(pg) pg.classList.toggle('to-locked', locked);
+  return locked;
+}
 async function loadTimeOffPage(){
   if(!isLoggedIn()&&!isDemo()){navigate('login');return;}
+  if(_applyTimeOffLock()){ applyAllTranslations(); return; }
   const ctx=Ctx.get();
   const sel=document.getElementById('toSiteFilter');
   let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites.slice();
@@ -16548,7 +16600,7 @@ en:{
 'land.previewNote':'This is the real dashboard — click it to explore the live demo with sample data.',
 'land.cmpTitle':'How we compare','land.cmpSub':'The differences that actually show up on your invoice.','land.cmpOthers':'Typical alternatives',
 'land.cmpR1':'Pricing model','land.cmpR1a':'Flat monthly rate','land.cmpR1b':'Often per employee / per location',
-'land.cmpR2':'Geofencing on the free plan','land.cmpR2b':'Usually a paid upgrade',
+'land.cmpR2':'Geofencing from the first paid plan','land.cmpR2b':'Often a higher-tier upgrade',
 'land.cmpR3':'Full French & English','land.cmpR3b':'Partial or English-first',
 'land.cmpR4':'Shared tablet kiosk with PINs','land.cmpR4b':'Often needs a per-user app',
 'land.cmpR5':'Support in French, from a human','land.cmpR5b':'Rarely',
@@ -16739,7 +16791,7 @@ en:{
 'val.nameRequired':'Name is required.','val.pinDigits':'PIN must be exactly 4 digits.','val.pinRequired':'A 4-digit PIN is required for new employees.','val.siteNameRequired':'Site name is required.','val.noCompany':'No active company.','val.emailForReport':'Please enter an email address for the report, or turn off the email report toggle.','val.emailInvalid':'Please enter a valid email address.',
 'demo.readOnly':'This is a demo — changes are not saved. Create a free account to set up your own team.',
 'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
-'gate.paidOnly':'Paid plan only','gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Adding, editing and deleting punches is part of the paid plans (Starter and above).','gate.recipients':'Automatic payroll summaries are part of the paid plans (Starter and above). Any recipients you added are kept, and the emails resume the day you upgrade.','modal.paidFeatureLock':'Overtime tracking and evening hours are included on the Starter plan and above.','modal.paidPreviewNote':'Free preview: you can try these paid features until {date}.','preview.banner':'You are previewing the paid features: Excel and CSV export, overtime tracking, evening hours, punch editing and automatic email reports. The preview ends on {date}.','preview.seePlans':'See plans',
+'gate.paidOnly':'Paid plan only','gate.title':'Paid Plan Required','gate.viewPlans':'View Plans','gate.dismiss':'Dismiss','gate.exports':'Excel and CSV exports require a paid plan (Starter or above). Upgrade to unlock these formats.','gate.addPunch':'Adding, editing and deleting punches is part of the paid plans (Starter and above).','gate.recipients':'Automatic payroll summaries are part of the paid plans (Starter and above). Any recipients you added are kept, and the emails resume the day you upgrade.','modal.paidFeatureLock':'Overtime tracking, evening hours and remote clock-in are included on the Starter plan and above.','emp.paidLock':'The employee portal and remote clock-in are part of the Starter plan and above.','geo.paidLock':'Geofencing is part of the Starter plan and above.','to.lockTitle':'Time off is part of the paid plans','to.lockBody':'Track vacations and absences, and let employees request time off from their portal, from the Starter plan up. Your existing entries are kept and come back when you upgrade.','modal.paidPreviewNote':'Free preview: you can try these paid features until {date}.','preview.banner':'You are previewing the paid features: Excel and CSV export, overtime tracking, evening hours, punch editing and automatic email reports. The preview ends on {date}.','preview.seePlans':'See plans',
 'sendReport.send':'Send Now','sendReport.closeWindow':'✓ Close Window','sendReport.sentSuccess':'✓ Report sent successfully to {email}','sendReport.alreadySent':'Already sent — close this window and reopen to send another','sendReport.bulkCount':'{n} employees','sendReport.bulkSent':'✓ {n} reports sent',
 'admin.pendingRequests':'Pending Access Requests','admin.pinSet':'Set',
 'admin.pinShow':'Show','admin.pinNone':'None',
@@ -16826,7 +16878,7 @@ en:{
 'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
 'land.heroSub':'PIN-based clock in/out on a fixed tablet terminal, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
-'land.freeNote':'Free forever: 1 site · up to 10 employees · geofencing & kiosk included',
+'land.freeNote':'Free forever: 1 site · up to 10 employees · clock-in terminal included',
 'land.featTitle':'Everything you need to manage shift workers',
 'land.featSub':'No complicated setup. No per-employee fees. Every feature below is included in your plan unless it carries a badge.',
 'land.feat2Title':'Multi-Site Support','land.feat2Desc':'Manage multiple locations under one company. Each site gets its own employee roster and clock-in terminal.',
@@ -16915,8 +16967,8 @@ en:{
 'land.starterSub':'1 company · 2 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin',
 'land.growthSub':'3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin',
 'land.businessSub':'Unlimited companies, sites &amp; employees · 6 admins<br>+$4.90/mo per extra admin',
-'land.f.free1':'1 company','land.f.free2':'1 site · geofencing & kiosk included','land.f.free3':'Up to 10 employees',
-'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Employee portal & remote clock-in','land.f.free12':'Add, edit & delete punches','land.f.free13':'Evening hours report','land.f.start11':'Add, edit & delete punches','land.f.start12':'Evening hours report',
+'land.f.free1':'1 company','land.f.free2':'1 site · clock-in terminal with PINs','land.f.free3':'Up to 10 employees',
+'land.f.free4':'Basic reports (PDF only)','land.f.free5':'Dashboard & activity log','land.f.free14':'Geofencing','land.f.free15':'Employee portal & remote clock-in','land.f.free16':'Time-off requests','land.f.start13':'Geofencing','land.f.start14':'Employee portal & remote clock-in','land.f.start15':'Time-off tracking & requests','land.f.free12':'Add, edit & delete punches','land.f.free13':'Evening hours report','land.f.start11':'Add, edit & delete punches','land.f.start12':'Evening hours report',
 'land.f.free6':'Automated email reports','land.f.free7':'Overtime tracking','land.f.free9':'Excel & CSV export',
 'land.f.free10':'Lunch break tracking (Growth+)','land.f.free11':'Visitor check-in (Growth+)',
 'land.f.start9':'Lunch break tracking (Growth+)','land.f.start10':'Visitor check-in (Growth+)',
@@ -17049,7 +17101,7 @@ en:{
 'help.visitorTitle':'Visitor Check-In',
 'help.visitorDesc':'Available on the <strong>Growth plan and above</strong>. In <strong>your profile menu → Company Info → Visitor Check-In</strong>, turn on <strong>Enable Visitor Check-In</strong> — every clock-in screen then gets a <strong>Visitor Check In</strong> button, no PIN or employee record required. A visitor taps it, enters their full name, company, phone and email, and checks in. To leave, they tap the same button and pick their name off the <strong>Currently in the building</strong> list — no need to fill out the form again. Useful for front-desk sign-in and knowing exactly who\'s on-site alongside your staff.',
 'help.remoteTitle':'Remote Clock-In',
-'help.remoteDesc':'Available on <strong>every plan</strong>. It\'s a two-step grant, on purpose: nobody gets remote access just because they have a portal login. Step 1 — in <strong>your profile menu → Company Info → Remote Access</strong>, turn on <strong>Allow Remote Clock-In</strong>; this only makes the feature available for your account, it doesn\'t turn it on for anyone yet. Step 2 — in <strong>Employees</strong>, open an employee and turn on their <strong>Remote Clock-In</strong> toggle (you\'ll see a confirmation explaining what it grants), or select several employees — e.g. filter to one site first — and use the bulk <strong>Enable Remote Clock-In</strong> button. Once granted, that employee sees a Clock In/Out bar at the top of their Employee Portal and can punch from their own phone or computer; punches are logged the same way a kiosk punch is, and show a mobile badge in the Activity log so you can tell them apart. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location) and shows as a map pin in Activity. Remote punches count against the employee\'s assigned site and are only blocked outside the boundary when that site is set to Strict mode; Lenient mode just records the distance. For crews that move between job sites, leave Strict mode off and rely on the GPS pin. Employees must allow location access on their phone.',
+'help.remoteDesc':'Available on <strong>every paid plan</strong> (Starter and above). It\'s a two-step grant, on purpose: nobody gets remote access just because they have a portal login. Step 1 — in <strong>your profile menu → Company Info → Remote Access</strong>, turn on <strong>Allow Remote Clock-In</strong>; this only makes the feature available for your account, it doesn\'t turn it on for anyone yet. Step 2 — in <strong>Employees</strong>, open an employee and turn on their <strong>Remote Clock-In</strong> toggle (you\'ll see a confirmation explaining what it grants), or select several employees — e.g. filter to one site first — and use the bulk <strong>Enable Remote Clock-In</strong> button. Once granted, that employee sees a Clock In/Out bar at the top of their Employee Portal and can punch from their own phone or computer; punches are logged the same way a kiosk punch is, and show a mobile badge in the Activity log so you can tell them apart. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location) and shows as a map pin in Activity. Remote punches count against the employee\'s assigned site and are only blocked outside the boundary when that site is set to Strict mode; Lenient mode just records the distance. For crews that move between job sites, leave Strict mode off and rely on the GPS pin. Employees must allow location access on their phone.',
 'help.s1title':'Set Up Your Account',
 'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
@@ -17114,7 +17166,7 @@ en:{
 'faq.q7':'What is overtime tracking?',
 'faq.a7':'When enabled for a company, PunchClock Pro flags the hours worked past a daily limit and a weekly limit, which you choose (for example 8 hours a day and 40 a week). Overtime is highlighted in the activity view and in exported reports and payroll summaries, so your payroll process stays accurate. Overtime tracking is included on the Starter plan and above, and Free accounts have it during their 14-day preview.',
 'faq.q8':'Is there a free plan?',
-'faq.a8':'Yes. The Free plan includes 1 company, 1 site and up to 10 active employees, with the clock-in terminal, geofencing, remote clock-in, the employee portal and PDF reports. It needs no credit card and is free forever. Every new account also previews the Starter features (Excel and CSV export, overtime tracking, evening hours, punch corrections and automatic email reports) free for 14 days. Paid plans start at $19.49/month CAD and keep those features, with more sites, employees and admins.',
+'faq.a8':'Yes. The Free plan includes 1 company, 1 site and up to 10 active employees, with the clock-in terminal, the dashboard, the activity log and PDF reports. It needs no credit card and is free forever. Every new account also previews the Starter features (geofencing, remote clock-in, the employee portal, time off, Excel and CSV export, overtime tracking, evening hours, punch corrections and automatic email reports) free for 14 days. Paid plans start at $19.49/month CAD and keep those features, with more sites, employees and admins.',
 'faq.q9':'Can I add more employees or admins beyond my plan limit?',
 'faq.a9':'Yes. On any paid plan you can add extra employee or admin seats for $4.90/month each. Admins included (the owner counts as one): Free 1, Starter 2, Growth 4, Business 6. Extra admins beyond those limits are $4.90/mo each.',
 'faq.q10':'Can I take bulk actions on multiple employees at once?',
@@ -17130,7 +17182,7 @@ en:{
 'faq.q15':'Is PunchClock Pro available in French and suitable for Quebec businesses?',
 'faq.a15':'Yes — fully. PunchClock Pro is entirely bilingual (French and English) and built with Quebec businesses in mind. The entire interface, all reports, and all automated emails can be used in French. Pricing is in Canadian dollars (CAD). The software respects Quebec Law 25 (Loi 25) requirements for personal data protection — data is stored securely, employees are only asked for what\'s necessary, and you can request data deletion at any time. Whether you run a restaurant in Montreal, a retail store in Quebec City, or a warehouse in Laval, PunchClock Pro is built for you.',
 'faq.q16':'What is Geofencing and how does it prevent employees from punching in remotely?',
-'faq.a16':'Geofencing creates an invisible GPS boundary around each of your sites. When an employee tries to clock in or out, their device\'s GPS position is checked silently. If they\'re inside the allowed radius (e.g. 25m for a restaurant), the punch goes through. If they\'re outside — at home, in a car, or anywhere else — the punch is blocked and they see a message showing exactly how far away they are. You set the radius per site: as tight as 10m for a small store, up to 500m for a large facility. Each punch also records the GPS coordinates and distance in the audit trail so you can review location data at any time.',
+'faq.a16':'Geofencing creates an invisible GPS boundary around each of your sites. When an employee tries to clock in or out, their device\'s GPS position is checked silently. If they\'re inside the allowed radius (e.g. 25m for a restaurant), the punch goes through. If they\'re outside — at home, in a car, or anywhere else — the punch is blocked and they see a message showing exactly how far away they are. You set the radius per site: as tight as 10m for a small store, up to 500m for a large facility. Each punch also records the GPS coordinates and distance in the audit trail so you can review location data at any time. Geofencing is included on the Starter plan and above.',
 'faq.q17':'What happens if an employee\'s phone has GPS turned off or they deny location access?',
 'faq.a17':'It depends on the mode you choose per site. In <strong>Lenient Mode</strong> (the default), if GPS is unavailable the employee sees a warning but the punch still goes through — good for sites with poor indoor signal. In <strong>Strict Mode</strong>, if GPS is unavailable or denied, the punch is blocked entirely — best when you need zero exceptions. You set this per site in the Geofence settings.',
 'faq.q18':'What is the Kiosk Shortcut and how do I set it up so employees can always find the punch page?',
@@ -17146,7 +17198,7 @@ en:{
 'faq.q23':'Do I have to delete employees who have left to stay within my plan limit?',
 'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
 'faq.q24':'Can employees check their own schedule, hours and time off without contacting me?',
-'faq.a24':'Yes — every employee gets their own free self-service portal, included on every plan, even Free. From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
+'faq.a24':'Yes — every employee gets their own self-service portal, included on every paid plan (Starter and above; free accounts have it during their 14-day preview). From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
 'faq.q25':'Can I track lunch breaks separately from clocking out?',
 'faq.a25':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Track Lunch Breaks</strong> in Company Info → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap. You can also set <strong>Paid Break Minutes</strong> to pay part of a break automatically — say 30 of a 60-minute lunch — while the rest stays unpaid with no extra work.',
 'faq.q26':'Can visitors sign in and out, not just employees?',
@@ -17154,7 +17206,7 @@ en:{
 'faq.q28':"Can I schedule my team for specific tasks, jobs or projects?",
 'faq.a28':"Yes. With the Scheduling add-on you create your own labels — a task, a job, a project, a client, whatever you track — and put one on each shift. Filter the schedule by label to see who is doing what and how many hours are planned for each. One person can have several shifts in a day with different labels (for example snow removal in the morning, transport in the afternoon). Employees see the label on their shifts in their portal and in the schedule email. You can also have employees pick what they are working on when they clock in, switch tasks during a shift, filter the Activity page by label, and get hours per label in Reports. Labels are available on paid plans with the Scheduling add-on ($14.95/month).",
 'faq.q27':'We have remote or field staff — can they clock in from their phone, with GPS showing where?',
-'faq.a27':'Yes, on <strong>every plan</strong>. Turn on <strong>Allow Remote Clock-In</strong> in Company Info, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location), shown as a map pin in Activity, so you can see where they clocked in and out. Remote punches count against the employee\'s assigned site; they are only blocked outside the boundary when that site is set to Strict mode, while Lenient mode just records the distance. For crews that move between job sites, leave Strict mode off and rely on the GPS pin. Employees need to allow location access on their phone.',
+'faq.a27':'Yes, on <strong>every paid plan</strong> (Starter and above; free accounts have it during their 14-day preview). Turn on <strong>Allow Remote Clock-In</strong> in Company Info, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location), shown as a map pin in Activity, so you can see where they clocked in and out. Remote punches count against the employee\'s assigned site; they are only blocked outside the boundary when that site is set to Strict mode, while Lenient mode just records the distance. For crews that move between job sites, leave Strict mode off and rely on the GPS pin. Employees need to allow location access on their phone.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -17193,9 +17245,9 @@ en:{
 'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
 'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
 'land.feat12Title':'Employee Self-Service Portal',
-'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. They can change their own password at any time. Included free on every plan, even Free.',
+'land.feat12Desc':'Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. They can change their own password at any time. Included on every paid plan (Starter and up).',
 'land.feat15Title':'Remote Clock-In — With GPS Proof',
-'land.feat15Desc':'No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site\'s roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. Included free on every plan.',
+'land.feat15Desc':'No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site\'s roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. Included on every paid plan (Starter and up).',
 'land.feat13Title':'Lunch & Break Tracking',
 'land.feat13Desc':'A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports. Pay part of a break automatically — say 30 of 60 minutes — with Paid Break Minutes. Included on the Growth plan and above.',
 'land.feat14Title':'Visitor Check-In',
@@ -17460,7 +17512,7 @@ fr:{
 'land.previewNote':'C\'est le vrai tableau de bord — cliquez pour explorer la démo avec des données d\'exemple.',
 'land.cmpTitle':'Comment on se compare','land.cmpSub':'Les différences qui paraissent vraiment sur votre facture.','land.cmpOthers':'Alternatives courantes',
 'land.cmpR1':'Modèle de prix','land.cmpR1a':'Tarif mensuel fixe','land.cmpR1b':'Souvent par employé / par emplacement',
-'land.cmpR2':'Géorepérage inclus au forfait gratuit','land.cmpR2b':'Habituellement payant',
+'land.cmpR2':'Géorepérage dès le premier forfait payant','land.cmpR2b':'Souvent réservé aux forfaits supérieurs',
 'land.cmpR3':'Français et anglais complets','land.cmpR3b':'Partiel ou anglais d\'abord',
 'land.cmpR4':'Kiosque sur tablette partagée avec NIP','land.cmpR4b':'Exige souvent une appli par employé',
 'land.cmpR5':'Soutien en français, par un humain','land.cmpR5b':'Rarement',
@@ -17651,7 +17703,7 @@ fr:{
 'val.nameRequired':'Le nom est obligatoire.','val.pinDigits':'Le NIP doit contenir exactement 4 chiffres.','val.pinRequired':'Un NIP à 4 chiffres est obligatoire pour un nouvel employé.','val.siteNameRequired':'Le nom du site est obligatoire.','val.noCompany':'Aucune compagnie active.','val.emailForReport':'Veuillez entrer une adresse courriel pour le rapport, ou désactiver l\'envoi par courriel.','val.emailInvalid':'Veuillez entrer une adresse courriel valide.',
 'demo.readOnly':'Ceci est une démo — les changements ne sont pas enregistrés. Créez un compte gratuit pour configurer votre propre équipe.',
 'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',
-'gate.paidOnly':'Forfait payant seulement','gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':"L'ajout, la modification et la suppression de pointages font partie des forfaits payants (Débutant et plus).",'gate.recipients':"Les sommaires de paie automatiques font partie des forfaits payants (Débutant et plus). Les destinataires que vous avez ajoutés sont conservés et les courriels reprennent dès que vous passez à un forfait payant.",'modal.paidFeatureLock':"Le suivi des heures supplémentaires et les heures de soir sont inclus dans le forfait Débutant et plus.",'modal.paidPreviewNote':"Aperçu gratuit : vous pouvez essayer ces fonctions payantes jusqu'au {date}.",'preview.banner':"Vous essayez les fonctions payantes : exportations Excel et CSV, suivi des heures supplémentaires, heures de soir, modification des pointages et courriels de rapports automatiques. L'aperçu se termine le {date}.",'preview.seePlans':'Voir les forfaits',
+'gate.paidOnly':'Forfait payant seulement','gate.title':'Forfait payant requis','gate.viewPlans':'Voir les forfaits','gate.dismiss':'Ignorer','gate.exports':'Les exports Excel et CSV nécessitent un forfait payant (Débutant ou plus). Passez à un forfait payant pour les débloquer.','gate.addPunch':"L'ajout, la modification et la suppression de pointages font partie des forfaits payants (Débutant et plus).",'gate.recipients':"Les sommaires de paie automatiques font partie des forfaits payants (Débutant et plus). Les destinataires que vous avez ajoutés sont conservés et les courriels reprennent dès que vous passez à un forfait payant.",'modal.paidFeatureLock':'Le suivi des heures supplémentaires, les heures de soir et le pointage à distance sont inclus dans le forfait Débutant et plus.','emp.paidLock':'Le portail employé et le pointage à distance font partie du forfait Débutant et plus.','geo.paidLock':'Le géorepérage fait partie du forfait Débutant et plus.','to.lockTitle':'Les congés font partie des forfaits payants','to.lockBody':'Suivez les vacances et les absences, et laissez vos employés demander un congé depuis leur portail, à partir du forfait Débutant. Vos entrées existantes sont conservées et reviennent quand vous passez à un forfait payant.','modal.paidPreviewNote':"Aperçu gratuit : vous pouvez essayer ces fonctions payantes jusqu'au {date}.",'preview.banner':"Vous essayez les fonctions payantes : exportations Excel et CSV, suivi des heures supplémentaires, heures de soir, modification des pointages et courriels de rapports automatiques. L'aperçu se termine le {date}.",'preview.seePlans':'Voir les forfaits',
 'sendReport.send':'Envoyer maintenant','sendReport.closeWindow':'✓ Fermer la fenêtre','sendReport.sentSuccess':'✓ Rapport envoyé avec succès à {email}','sendReport.alreadySent':'Déjà envoyé — fermez cette fenêtre et rouvrez-la pour en envoyer un autre','sendReport.bulkCount':'{n} employés','sendReport.bulkSent':'✓ {n} rapports envoyés',
 "admin.pendingRequests":"Demandes d'accès en attente",'admin.pinSet':'Défini',
 'admin.pinShow':'Voir','admin.pinNone':'Aucun',
@@ -17738,7 +17790,7 @@ fr:{
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
 'land.heroSub':'Pointage par NIP sur terminal tablette fixe, multi-sites, rapports de période automatisés, suivi des heures supplémentaires — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
-'land.freeNote':'Gratuit pour toujours : 1 site · jusqu\'à 10 employés · géorepérage et kiosque inclus',
+'land.freeNote':'Gratuit pour toujours : 1 site · jusqu\'à 10 employés · terminal de pointage inclus',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
 'land.featSub':'Pas de configuration compliquée. Pas de frais par employé. Chaque fonction ci-dessous est incluse dans votre forfait, sauf si elle porte un badge.',
 'land.feat2Title':'Multi-sites','land.feat2Desc':'Gérez plusieurs emplacements sous une même compagnie. Chaque site a sa propre liste d\'employés et son terminal de pointage.',
@@ -17825,8 +17877,8 @@ fr:{
 'profile.pwTooShort':'Le mot de passe doit comporter au moins 6 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
 'profile.saved':'✓ Profil mis à jour avec succès.',
 'land.businessSub':'Compagnies, sites et employés illimités · 6 admins<br>+4,90$/mois par admin supplémentaire',
-'land.f.free1':'1 compagnie','land.f.free2':'1 site · géorepérage et kiosque inclus','land.f.free3':'Jusqu\'à 10 employés',
-'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Portail employé et pointage à distance','land.f.free12':'Ajouter, modifier et supprimer des pointages','land.f.free13':'Rapport des heures de soir','land.f.start11':'Ajouter, modifier et supprimer des pointages','land.f.start12':'Rapport des heures de soir',
+'land.f.free1':'1 compagnie','land.f.free2':'1 site · terminal de pointage avec NIP','land.f.free3':'Jusqu\'à 10 employés',
+'land.f.free4':'Rapports de base (PDF seulement)','land.f.free5':'Tableau de bord et journal d\'activité','land.f.free14':'Géorepérage','land.f.free15':'Portail employé et pointage à distance','land.f.free16':'Demandes de congé','land.f.start13':'Géorepérage','land.f.start14':'Portail employé et pointage à distance','land.f.start15':'Congés : suivi et demandes','land.f.free12':'Ajouter, modifier et supprimer des pointages','land.f.free13':'Rapport des heures de soir','land.f.start11':'Ajouter, modifier et supprimer des pointages','land.f.start12':'Rapport des heures de soir',
 'land.f.free6':'Rapports courriel automatisés','land.f.free7':'Suivi des heures supp.','land.f.free9':'Export Excel et CSV',
 'land.f.free10':'Suivi des pauses repas (Croissance+)','land.f.free11':'Pointage visiteur (Croissance+)',
 'land.f.start9':'Suivi des pauses repas (Croissance+)','land.f.start10':'Pointage visiteur (Croissance+)',
@@ -17959,7 +18011,7 @@ fr:{
 'help.visitorTitle':'Pointage visiteur',
 'help.visitorDesc':'Disponible à partir du <strong>plan Croissance</strong>. Dans <strong>votre menu de profil → Info compagnie → Pointage visiteur</strong>, activez <strong>Activer le pointage visiteur</strong> — chaque écran de pointage obtient alors un bouton <strong>Pointage visiteur</strong>, sans NIP ni dossier employé requis. Un visiteur appuie dessus, inscrit son nom complet, son entreprise, son téléphone et son courriel, puis pointe son arrivée. Pour partir, il appuie sur le même bouton et choisit son nom dans la liste <strong>Actuellement dans l\'immeuble</strong> — pas besoin de remplir le formulaire à nouveau. Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en plus de votre personnel.',
 'help.remoteTitle':'Pointage à distance',
-'help.remoteDesc':'Disponible sur <strong>tous les forfaits</strong>. C\'est un octroi en deux étapes, volontairement : personne n\'obtient l\'accès à distance juste parce qu\'il a un accès au portail. Étape 1 — dans <strong>votre menu de profil → Info compagnie → Accès à distance</strong>, activez <strong>Permettre le pointage à distance</strong>; ceci rend seulement la fonction disponible pour votre compte, ça ne l\'active pour personne encore. Étape 2 — dans <strong>Employés</strong>, ouvrez un employé et activez son bouton <strong>Pointage à distance</strong> (une confirmation vous explique ce que ça accorde), ou sélectionnez plusieurs employés — par exemple en filtrant par site d\'abord — et utilisez le bouton en lot <strong>Activer le pointage à distance</strong>. Une fois accordé, cet employé voit une barre Entrée/Sortie en haut de son portail employé et peut pointer depuis son propre téléphone ou ordinateur; les pointages sont enregistrés de la même façon qu\'un pointage au pointeau, et affichent un badge mobile dans le journal d\'activité pour les distinguer. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement) et s\'affiche comme une épingle sur la carte dans Activité. Les pointages à distance comptent pour le site assigné à l\'employé et ne sont bloqués hors de la limite que si ce site est en mode Strict; le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, laissez le mode Strict désactivé et fiez-vous à l\'épingle GPS. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone.',
+'help.remoteDesc':'Disponible sur <strong>tous les forfaits payants</strong> (Débutant et plus). C\'est un octroi en deux étapes, volontairement : personne n\'obtient l\'accès à distance juste parce qu\'il a un accès au portail. Étape 1 — dans <strong>votre menu de profil → Info compagnie → Accès à distance</strong>, activez <strong>Permettre le pointage à distance</strong>; ceci rend seulement la fonction disponible pour votre compte, ça ne l\'active pour personne encore. Étape 2 — dans <strong>Employés</strong>, ouvrez un employé et activez son bouton <strong>Pointage à distance</strong> (une confirmation vous explique ce que ça accorde), ou sélectionnez plusieurs employés — par exemple en filtrant par site d\'abord — et utilisez le bouton en lot <strong>Activer le pointage à distance</strong>. Une fois accordé, cet employé voit une barre Entrée/Sortie en haut de son portail employé et peut pointer depuis son propre téléphone ou ordinateur; les pointages sont enregistrés de la même façon qu\'un pointage au pointeau, et affichent un badge mobile dans le journal d\'activité pour les distinguer. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement) et s\'affiche comme une épingle sur la carte dans Activité. Les pointages à distance comptent pour le site assigné à l\'employé et ne sont bloqués hors de la limite que si ce site est en mode Strict; le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, laissez le mode Strict désactivé et fiez-vous à l\'épingle GPS. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone.',
 'help.s1title':'Configurez votre compte',
 'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',
@@ -18024,7 +18076,7 @@ fr:{
 'faq.q7':'Qu\'est-ce que le suivi des heures supplémentaires?',
 'faq.a7':'Lorsqu\'il est activé pour une compagnie, PunchClock Pro signale les heures travaillées au-delà d\'une limite quotidienne et d\'une limite hebdomadaire que vous choisissez (par exemple 8 h par jour et 40 h par semaine). Les heures supplémentaires sont mises en évidence dans la vue Activité, les rapports exportés et les sommaires de paie, pour un traitement de paie toujours précis. Le suivi des heures supplémentaires est inclus dans le forfait Débutant et plus, et les comptes gratuits l\'ont pendant leur aperçu de 14 jours.',
 'faq.q8':'Y a-t-il un plan gratuit?',
-'faq.a8':'Oui. Le plan Gratuit inclut 1 compagnie, 1 site et jusqu\'à 10 employés actifs, avec le terminal de pointage, le géorepérage, le pointage à distance, le portail employé et les rapports PDF. Aucune carte de crédit n\'est requise, et il est gratuit pour toujours. Chaque nouveau compte essaie aussi les fonctions du forfait Débutant (export Excel et CSV, suivi des heures supplémentaires, heures de soir, correction des pointages et rapports courriel automatiques) gratuitement pendant 14 jours. Les forfaits payants commencent à 19,49$/mois CAD et conservent ces fonctions, avec plus de sites, d\'employés et d\'admins.',
+'faq.a8':'Oui. Le plan Gratuit inclut 1 compagnie, 1 site et jusqu\'à 10 employés actifs, avec le terminal de pointage, le tableau de bord, le journal d\'activité et les rapports PDF. Aucune carte de crédit n\'est requise, et il est gratuit pour toujours. Chaque nouveau compte essaie aussi les fonctions du forfait Débutant (géorepérage, pointage à distance, portail employé, congés, export Excel et CSV, suivi des heures supplémentaires, heures de soir, correction des pointages et rapports courriel automatiques) gratuitement pendant 14 jours. Les forfaits payants commencent à 19,49$/mois CAD et conservent ces fonctions, avec plus de sites, d\'employés et d\'admins.',
 'faq.q9':'Puis-je ajouter plus d\'employés ou d\'administrateurs au-delà de la limite?',
 'faq.a9':'Oui. Sur tout plan payant, ajoutez des sièges employé ou admin supplémentaires à 4,90$/mois chacun. Admins inclus (le propriétaire en compte pour un) : Gratuit 1, Débutant 2, Croissance 4, Entreprise 6. Les admins au-delà de ces limites coûtent 4,90$/mois chacun.',
 'faq.q10':'Puis-je effectuer des actions groupées sur plusieurs employés?',
@@ -18040,7 +18092,7 @@ fr:{
 'faq.q15':'PunchClock Pro est-il disponible en français et adapté aux entreprises québécoises?',
 'faq.a15':'Oui — entièrement. PunchClock Pro est complètement bilingue (français et anglais) et conçu en pensant aux entreprises québécoises. L\'interface, les rapports et les communications par courriel sont tous disponibles en français. Les prix sont en dollars canadiens (CAD). Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des renseignements personnels — les données sont stockées de façon sécurisée, on ne demande aux employés que le strict nécessaire, et vous pouvez demander la suppression de vos données en tout temps. Que vous gériez un restaurant à Montréal, un commerce au détail à Québec ou un entrepôt à Laval, PunchClock Pro est fait pour vous.',
 'faq.q16':'Qu\'est-ce que le géorepérage et comment empêche-t-il les employés de pointer à distance?',
-'faq.a16':'Le géorepérage crée une frontière GPS invisible autour de chacun de vos sites. Quand un employé tente de pointer, la position GPS de son appareil est vérifiée silencieusement. S\'il est dans le rayon autorisé (ex. 25m pour un restaurant), le pointage passe. S\'il est hors zone — à la maison, dans la voiture ou ailleurs — le pointage est bloqué et il voit un message indiquant sa distance exacte. Vous définissez le rayon par site : aussi précis que 10m pour un petit commerce, jusqu\'à 500m pour un grand site. Chaque pointage enregistre les coordonnées GPS et la distance dans le journal d\'audit.',
+'faq.a16':'Le géorepérage crée une frontière GPS invisible autour de chacun de vos sites. Quand un employé tente de pointer, la position GPS de son appareil est vérifiée silencieusement. S\'il est dans le rayon autorisé (ex. 25m pour un restaurant), le pointage passe. S\'il est hors zone — à la maison, dans la voiture ou ailleurs — le pointage est bloqué et il voit un message indiquant sa distance exacte. Vous définissez le rayon par site : aussi précis que 10m pour un petit commerce, jusqu\'à 500m pour un grand site. Chaque pointage enregistre les coordonnées GPS et la distance dans le journal d\'audit. Le géorepérage est inclus dans le forfait Débutant et plus.',
 'faq.q17':'Que se passe-t-il si le GPS d\'un employé est désactivé ou s\'il refuse l\'accès à la localisation?',
 'faq.a17':'Cela dépend du mode configuré par site. En <strong>Mode tolérant</strong> (par défaut), si le GPS est indisponible, l\'employé voit un avertissement mais le pointage passe quand même — adapté aux sites avec un mauvais signal GPS intérieur. En <strong>Mode strict</strong>, si le GPS est indisponible ou refusé, le pointage est bloqué — idéal quand vous exigez zéro exception. Ce paramètre se configure par site dans les réglages du géorepérage.',
 'faq.q18':'Qu\'est-ce que le raccourci kiosque et comment le configurer pour que les employés trouvent toujours la page de pointage?',
@@ -18056,7 +18108,7 @@ fr:{
 'faq.q23':'Dois-je supprimer les employés qui ont quitté pour respecter la limite de mon forfait?',
 'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
 'faq.q24':'Les employés peuvent-ils consulter leur horaire, leurs heures et leurs congés sans me contacter?',
-'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service gratuit, inclus sur tous les forfaits, même le forfait Gratuit. Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités et changer lui-même son mot de passe — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
+'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service, inclus dans tous les forfaits payants (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités et changer lui-même son mot de passe — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
 'faq.q25':'Puis-je suivre les pauses repas séparément de la sortie?',
 'faq.a25':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Suivi des pauses repas</strong> dans Info compagnie → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart. Vous pouvez aussi régler les <strong>Minutes de pause payées</strong> pour qu\'une partie de la pause soit payée automatiquement — par exemple 30 minutes d\'un dîner de 60 minutes — le reste demeurant non payé sans effort supplémentaire.',
 'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
@@ -18064,7 +18116,7 @@ fr:{
 'faq.q28':"Puis-je planifier mon équipe pour des tâches, chantiers ou projets précis?",
 'faq.a28':"Oui. Avec le module complémentaire Horaires, vous créez vos propres étiquettes — une tâche, un chantier, un projet, un client, tout ce que vous suivez — et vous en mettez une sur chaque quart. Filtrez l'horaire par étiquette pour voir qui fait quoi et combien d'heures sont prévues pour chacune. Une même personne peut avoir plusieurs quarts dans une journée avec des étiquettes différentes (par exemple déneigement le matin, transport l'après-midi). Les employés voient l'étiquette sur leurs quarts dans leur portail et dans le courriel d'horaire. Vous pouvez aussi demander aux employés de choisir sur quoi ils travaillent en pointant leur entrée, de changer de tâche en cours de quart, filtrer la page Activité par étiquette et obtenir les heures par étiquette dans les rapports. Les étiquettes sont offertes avec les forfaits payants qui incluent le module Horaires (14,95 $/mois).",
 'faq.q27':'Nos employés travaillent à distance ou sur le terrain — peuvent-ils pointer depuis leur téléphone, avec le GPS pour voir où?',
-'faq.a27':'Oui, sur <strong>tous les forfaits</strong>. Activez <strong>Permettre le pointage à distance</strong> dans Info compagnie, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement), affichée sous forme d\'épingle sur la carte dans Activité : vous voyez où l\'employé a pointé son entrée et sa sortie. Les pointages à distance comptent pour le site assigné à l\'employé; ils ne sont bloqués hors de la limite que si ce site est en mode Strict, alors que le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, laissez le mode Strict désactivé et fiez-vous à l\'épingle GPS. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone.',
+'faq.a27':'Oui, sur <strong>tous les forfaits payants</strong> (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Activez <strong>Permettre le pointage à distance</strong> dans Info compagnie, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement), affichée sous forme d\'épingle sur la carte dans Activité : vous voyez où l\'employé a pointé son entrée et sa sortie. Les pointages à distance comptent pour le site assigné à l\'employé; ils ne sont bloqués hors de la limite que si ce site est en mode Strict, alors que le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, laissez le mode Strict désactivé et fiez-vous à l\'épingle GPS. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',
@@ -18107,9 +18159,9 @@ fr:{
 'land.feat11Title':'Raccourci kiosque — Pointer en un tap',
 'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
 'land.feat12Title':'Portail employé libre-service',
-'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Ils peuvent changer eux-mêmes leur mot de passe en tout temps. Inclus gratuitement sur tous les forfaits, même le forfait Gratuit.',
+'land.feat12Desc':'Chaque employé reçoit son propre accès sécurisé — depuis un téléphone, une tablette ou un ordinateur, sans application à installer. Il peut consulter son horaire, ses heures pour la période de paie en cours, faire une demande de congé et indiquer ses disponibilités, sans avoir à vous appeler ou vous texter. Ils peuvent changer eux-mêmes leur mot de passe en tout temps. Inclus dans tous les forfaits payants (Débutant et plus).',
 'land.feat15Title':'Pointage à distance — Avec preuve GPS',
-'land.feat15Desc':'Aucun site commun où installer une tablette? Activez le pointage à distance et autorisez des employés spécifiques (ou tout le personnel d\'un site d\'un coup) à pointer l\'entrée et la sortie depuis leur propre téléphone ou ordinateur via leur portail employé — sans pointeau partagé, rien à installer. Chaque pointage enregistre la position GPS du téléphone, avec une épingle sur la carte dans votre journal d\'activité : vous voyez où chaque quart a commencé et fini. Inclus gratuitement sur tous les forfaits.',
+'land.feat15Desc':'Aucun site commun où installer une tablette? Activez le pointage à distance et autorisez des employés spécifiques (ou tout le personnel d\'un site d\'un coup) à pointer l\'entrée et la sortie depuis leur propre téléphone ou ordinateur via leur portail employé — sans pointeau partagé, rien à installer. Chaque pointage enregistre la position GPS du téléphone, avec une épingle sur la carte dans votre journal d\'activité : vous voyez où chaque quart a commencé et fini. Inclus dans tous les forfaits payants (Débutant et plus).',
 'land.feat13Title':'Suivi des pauses repas',
 'land.feat13Desc':'Un bouton Pause dédié sur l\'écran de pointage, distinct de la sortie — pour que le personnel ne confonde jamais une pause repas avec un départ pour la journée. Activable par compagnie; le temps de pause apparaît comme une ligne distincte dans les rapports. Payez automatiquement une partie de la pause — par exemple 30 des 60 minutes — grâce aux Minutes de pause payées. Inclus à partir du plan Croissance.',
 'land.feat14Title':'Pointage visiteur',
@@ -18298,11 +18350,11 @@ function updateMetaTags(lang){
     document.getElementById('twDesc').content='Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit.';
   } else {
     document.getElementById('metaTitle').textContent='PunchClock Pro — Time & Attendance Software for Shift Workforces | Canada';
-    document.getElementById('metaDesc').content='PunchClock Pro is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, a free employee self-service portal (schedule, hours, time-off requests), automated payroll reports, shift scheduling. Free plan available.';
+    document.getElementById('metaDesc').content='PunchClock Pro is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, an employee self-service portal (schedule, hours, time-off requests), automated payroll reports, shift scheduling. Free plan available.';
     document.getElementById('ogTitle').content='PunchClock Pro — Time & Attendance Software for Canada';
-    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, a free employee self-service portal, payroll reports, shift scheduling, and a free plan to get started.';
+    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, an employee self-service portal, payroll reports, shift scheduling, and a free plan to get started.';
     document.getElementById('twTitle').content='PunchClock Pro — Time & Attendance Software';
-    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, a free employee self-service portal, automated reports, shift scheduling. Free plan available.';
+    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, an employee self-service portal, automated reports, shift scheduling. Free plan available.';
   }
 }
 

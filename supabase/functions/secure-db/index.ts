@@ -277,9 +277,20 @@ async function validateWritePayload(
         }
       }
     }
-    if (table === 'report_recipients' && co &&
+    if ((table === 'report_recipients' || table === 'time_off') && co &&
         (await planRpc('company_has_paid_features', { p_company: co })) === false) {
       return { field: 'company_id', reason: 'plan' };
+    }
+    // The employee portal (invitations, access) is a paid feature too. Revoking access sends no employee_id, so
+    // it is never blocked.
+    if (table === 'employee_portal') {
+      const portalEmp = str(row.employee_id);
+      if (portalEmp) {
+        const owner = (await restJson(`employees?id=eq.${portalEmp}&select=company_id&limit=1`))?.[0];
+        if (owner?.company_id && (await planRpc('company_has_paid_features', { p_company: owner.company_id as string })) === false) {
+          return { field: 'employee_id', reason: 'plan' };
+        }
+      }
     }
 
     // Entitlements are billing state, not user data. The tenant scope above lets an admin write
@@ -650,6 +661,9 @@ async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Respon
     const emp = await one(`employees?id=eq.${empId}&select=id,name,company_id&limit=1`);
     if (!emp) return jsonResp({ ok: false, error: 'Employee not found' }, 404);
     if (!(await ownsCompany(emp.company_id))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    if ((await planRpc('company_has_paid_features', { p_company: emp.company_id as string })) === false) {
+      return jsonResp({ ok: false, error: 'The employee portal is part of the paid plans' }, 403);
+    }
     const portal = await one(`employee_portal?employee_id=eq.${empId}&select=email,invite_token,token_expires_at,status&limit=1`);
     if (!portal || portal.status !== 'invited' || !portal.invite_token || !portal.email) {
       return jsonResp({ ok: false, error: 'No pending portal invitation for this employee' }, 409);

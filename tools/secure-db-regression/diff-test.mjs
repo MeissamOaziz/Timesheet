@@ -36,6 +36,7 @@ const empRows = {
   [E_THROTTLED]: { id: E_THROTTLED, name: 'Busy Bee', email: null, company_id: 'c1', site_id: 's1', pin: '3333' },
   [E_OTHER]: { id: E_OTHER, name: 'Other Tenant', email: 'o@other.ca', company_id: 'c9', site_id: 's9', pin: '9999' },
 };
+empRows.e1 = { id: 'e1', company_id: 'c1' }; empRows.e9 = { id: 'e9', company_id: 'c9' };
 const invRows = {
   [T_OK]: { token: T_OK, email: 'inv@x.ca', role: 'manager', company_id: 'c1', status: 'pending', expires_at: FUTURE },
   [T_OTHER]: { token: T_OTHER, email: 'inv@other.ca', role: 'co_admin', company_id: 'c9', status: 'pending', expires_at: FUTURE },
@@ -344,6 +345,14 @@ const cases = [
   R('trial-start', 'start trial: used up, not offered again', { action: 'start_scheduling_trial', sessionToken: 'tokTrialOver' }, r => r.status === 400),
   R('trial-start', 'start trial: first time, the server sets 14 days', { action: 'start_scheduling_trial', sessionToken: 'tokNoTrial' },
     r => { if (r.status !== 200 || !r.obj || !r.obj.endsAt) return false; const d = (Date.parse(r.obj.endsAt) - Date.now()) / 864e5; const w = r.calls.find(c => c.startsWith('PATCH') && /admins/.test(c)); return d > 13.9 && d < 14.1 && !!w && /scheduling_trial_ends_at=is\.null/.test(w) && Object.keys(JSON.parse(w.split(' ').slice(2).join(' '))).join() === 'scheduling_trial_ends_at'; }),
+  // time off and the employee portal are paid features (b1 = Free past its preview, a1 = paid)
+  R('plan-limits', 'free: cannot create a time-off entry', { table: 'time_off', method: 'POST', body: { company_id: 'c9', employee_id: 'e9', start_date: '2026-12-01', end_date: '2026-12-02', status: 'approved' }, ...other }, r => r.status === 403 && /not included in your plan/.test(r.body)),
+  R('plan-limits', 'free: approving or denying an existing request is not blocked', { table: 'time_off', method: 'PATCH', filter: 'id=eq.t1', body: { status: 'denied' }, ...other }, r => r.status === 200),
+  R('plan-limits', 'paid: can create a time-off entry', { table: 'time_off', method: 'POST', body: { company_id: 'c1', employee_id: 'e1', start_date: '2026-12-01', end_date: '2026-12-02', status: 'approved' }, ...own }, r => r.status === 201 || r.status === 200),
+  R('plan-limits', 'free: cannot invite an employee to the portal', { table: 'employee_portal', method: 'POST', body: { employee_id: 'e9', email: 'x@y.ca', status: 'invited' }, ...other }, r => r.status === 403),
+  R('plan-limits', 'free: can still revoke portal access', { table: 'employee_portal', method: 'PATCH', filter: 'employee_id=eq.e9', body: { status: 'revoked' }, ...other }, r => r.status === 200),
+  R('plan-limits', 'paid: can invite an employee to the portal', { table: 'employee_portal', method: 'POST', body: { employee_id: 'e1', email: 'x@y.ca', status: 'invited' }, ...own }, r => r.status === 201 || r.status === 200),
+  R('plan-limits', 'free company: the portal invitation email is refused', { action: 'send_email', body: { type: 'employee_invite', employee_id: E_OTHER, lang: 'en' }, ...sup }, r => r.status === 403 && r.fn.length === 0 && /paid plans/.test(r.body)),
   R('send_email', 'kiosk: nothing at all (no site, no session)', { action: 'send_email', body: { type: 'schedule', employee_id: E_OWN, pin: '1234' } }, r => r.status === 401 && r.fn.length === 0),
   // tables the app does not use (these are the ones allowed to differ: they were open, they must now be closed)
   R('unlisted-tables', 'anon reads admin_sessions', { table: 'admin_sessions', method: 'GET', filter: 'limit=1' }),

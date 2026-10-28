@@ -633,7 +633,7 @@ const T = {
     fgDone:'Password updated — sign in with your new one.',
     loginEmailLabel: 'Email Address', loginPassLabel: 'Password', loginBtn: 'Sign In',
     loginFooter: "Don't have access? Ask your admin to send you an invitation.",
-    invalidCreds: 'Invalid email or password.', setPassTitle: 'Welcome! Set your password',
+    planLocked: "Your employer's current plan does not include the employee portal. Please ask them about upgrading.", invalidCreds: 'Invalid email or password.', setPassTitle: 'Welcome! Set your password',
     setPassSub: "You've been invited to the employee portal. Choose a password to activate your account.",
     setPassLabel: 'New Password', setPassConfirmLabel: 'Confirm Password', setPassBtn: 'Activate Account',
     tokenExpired: 'This invitation link has expired. Please ask your admin to resend it.',
@@ -712,7 +712,7 @@ const T = {
     fgDone:'Mot de passe mis à jour — connectez-vous avec le nouveau.',
     loginEmailLabel: 'Adresse courriel', loginPassLabel: 'Mot de passe', loginBtn: 'Se connecter',
     loginFooter: "Pas d'accès? Demandez à votre admin de vous envoyer une invitation.",
-    invalidCreds: 'Courriel ou mot de passe invalide.', setPassTitle: 'Bienvenue! Définissez votre mot de passe',
+    planLocked: "Le forfait actuel de votre employeur n'inclut pas le portail employé. Demandez-lui de passer à un forfait payant.", invalidCreds: 'Courriel ou mot de passe invalide.', setPassTitle: 'Bienvenue! Définissez votre mot de passe',
     setPassSub: "Vous avez été invité au portail employé. Choisissez un mot de passe pour activer votre compte.",
     setPassLabel: 'Nouveau mot de passe', setPassConfirmLabel: 'Confirmer le mot de passe', setPassBtn: 'Activer le compte',
     tokenExpired: "Ce lien d'invitation a expiré. Demandez à votre admin de le renvoyer.",
@@ -949,7 +949,7 @@ async function doSetEmpPassword() {
     // Pass session_token so loginWithPortal can call portal_get_me (no direct anon reads)
     await loginWithPortal({ portal_id: acct.portal_id, employee_id: acct.employee_id, email: acct.email, session_token: acct.session_token });
   } catch(e) {
-    showMsg('setPassMsg', 'Error: ' + e.message, 'error');
+    showMsg('setPassMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('setPassBtn');
   }
 }
@@ -1055,7 +1055,7 @@ async function doEmpLogin() {
     }
     await loginWithPortal(rows[0]); // rows[0] = {portal_id, employee_id, email, session_token}
   } catch(e) {
-    showMsg('loginMsg', 'Error: ' + e.message, 'error');
+    showMsg('loginMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('loginBtn');
   }
 }
