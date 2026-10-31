@@ -394,6 +394,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<!-- WORK LABEL PICKER (clock-in, only for companies using labels at clock-in) -->
+<div class="cp-overlay" id="plOverlay" onclick="if(event.target===this)punchLabelCancel()">
+  <div class="cp-card" role="dialog" aria-modal="true" aria-labelledby="plTitle">
+    <h3 id="plTitle">What are you working on?</h3>
+    <div id="plList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="cp-row">
+      <button class="btn-pw" id="plSkipBtn" onclick="punchLabelChoose(null)">Skip</button>
+      <button class="btn-pw" id="plCancelBtn" onclick="punchLabelCancel()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div class="app" id="screenApp">
   <nav class="nav">
@@ -691,6 +703,9 @@ const T = {
     punchErr_remote_punch_disabled: 'Remote clock-in is not enabled for your company.',
     punchErr_employee_not_authorized: 'Remote clock-in isn\'t turned on for your account yet — ask your admin to enable it for you.',
     punchErr_unauthorized: 'Your session expired. Please sign in again.',
+    punchErr_invalid_label: 'That job is no longer available. Please try again.',
+    punchErr_label_required: 'Please choose what you are working on.',
+    punchLabelTitle: 'What are you working on?', punchLabelSkip: 'Skip', punchLabelCancel: 'Cancel',
     punchErr_generic: 'Could not record punch. Please try again.',
     punchOk_in: 'Clocked in.', punchOk_out: 'Clocked out.',
     punchLocDenied: '(location not shared)',
@@ -770,6 +785,9 @@ const T = {
     punchErr_remote_punch_disabled: 'Le pointage à distance n\'est pas activé pour votre compagnie.',
     punchErr_employee_not_authorized: 'Le pointage à distance n\'est pas encore activé pour votre compte — demandez à votre admin de l\'activer pour vous.',
     punchErr_unauthorized: 'Votre session a expiré. Veuillez vous reconnecter.',
+    punchErr_invalid_label: 'Ce travail n\'est plus disponible. Veuillez réessayer.',
+    punchErr_label_required: 'Veuillez choisir sur quoi vous travaillez.',
+    punchLabelTitle: 'Sur quoi travaillez-vous?', punchLabelSkip: 'Passer', punchLabelCancel: 'Annuler',
     punchErr_generic: 'Impossible d\'enregistrer le pointage. Veuillez réessayer.',
     punchOk_in: 'Entrée enregistrée.', punchOk_out: 'Sortie enregistrée.',
     punchLocDenied: '(localisation non partagée)',
@@ -1153,6 +1171,47 @@ let _remotePunchEnabled = false;
 let _lastPunchType = null;   // 'IN' | 'OUT' | null (never punched)
 let _lastPunchAt = null;     // Date | null
 let _punching = false;
+let _punchLabels = [];       // the company's active work labels; empty = no picker (feature off, no add-on, or error)
+let _punchLabelMode = 'off'; // 'off' | 'optional' | 'required', from the server alongside the labels
+let _punchLabelResolve = null;
+
+// Same rule as the kiosk: the server hands the portal its own company's labels only when the company
+// uses labels at clock-in and has Scheduling. A failure here just means no picker; the server still
+// refuses a punch that needs a label (label_required) so nothing is recorded on a guess.
+async function loadPunchLabels() {
+  try {
+    const rows = asRows(await rpc('portal_get_punch_labels', { p_session: _session.token }));
+    _punchLabels = rows.filter(r => r && r.id);
+    _punchLabelMode = _punchLabels.length ? (_punchLabels[0].mode || 'off') : 'off';
+  } catch(e) { _punchLabels = []; _punchLabelMode = 'off'; }
+}
+
+// Resolves {labelId} (null = skipped) or null when cancelled. Nothing is recorded on a guess.
+function pickPunchLabel() {
+  return new Promise(resolve => {
+    if (_punchLabelResolve) _punchLabelResolve(null);
+    _punchLabelResolve = resolve;
+    document.getElementById('plTitle').textContent = t('punchLabelTitle');
+    document.getElementById('plSkipBtn').textContent = t('punchLabelSkip');
+    document.getElementById('plSkipBtn').style.display = _punchLabelMode === 'required' ? 'none' : '';
+    document.getElementById('plCancelBtn').textContent = t('punchLabelCancel');
+    document.getElementById('plList').innerHTML = _punchLabels.map(l => {
+      const c = /^#[0-9a-fA-F]{6}$/.test(l.color || '') ? l.color : '#4f8ef7';
+      return `<button type="button" class="btn-pw" data-label-id="${escHtml(l.id)}" onclick="punchLabelChoose(this.dataset.labelId)" style="display:flex;align-items:center;gap:8px;text-align:left;border-left:4px solid ${c}"><span>${escHtml(l.name)}</span></button>`;
+    }).join('');
+    document.getElementById('plOverlay').style.display = 'flex';
+  });
+}
+function punchLabelChoose(id) {
+  document.getElementById('plOverlay').style.display = 'none';
+  const r = _punchLabelResolve; _punchLabelResolve = null;
+  if (r) r({ labelId: id || null });
+}
+function punchLabelCancel() {
+  document.getElementById('plOverlay').style.display = 'none';
+  const r = _punchLabelResolve; _punchLabelResolve = null;
+  if (r) r(null);
+}
 
 async function initPunchBar() {
   // Two gates, both required: the company must have the feature on at all, AND this specific
@@ -1166,7 +1225,7 @@ async function initPunchBar() {
   const bar = document.getElementById('punchBar');
   if (!_remotePunchEnabled) { bar.style.display = 'none'; return; }
   bar.style.display = '';
-  await refreshPunchStatus();
+  await Promise.all([refreshPunchStatus(), loadPunchLabels()]);
 }
 
 async function refreshPunchStatus() {
@@ -1245,6 +1304,19 @@ async function doPunch() {
   clearPunchError();
 
   const type = _lastPunchType === 'IN' ? 'OUT' : 'IN';
+  // The job is chosen on the way IN (an OUT never carries one). Asked before the time and location
+  // are taken, so the punch is stamped when it is actually sent, not while someone reads the list.
+  let labelId = null;
+  if (type === 'IN' && _punchLabels.length && _punchLabelMode !== 'off') {
+    const picked = await pickPunchLabel();
+    if (!picked) {          // cancelled: nothing recorded
+      _punching = false;
+      label.textContent = prevLabel;
+      renderPunchStatus();
+      return;
+    }
+    labelId = picked.labelId;
+  }
   const now = new Date();
   const geo = geoIfFresh(await getGeolocation(), now.getTime(), Date.now());
 
@@ -1262,6 +1334,7 @@ async function doPunch() {
       p_lat: geo ? geo.lat : null,
       p_lng: geo ? geo.lng : null,
       p_accuracy_m: geo ? geo.acc : null,
+      ...(labelId ? { p_label_id: labelId } : {}),
     }));
     const res = rows.length ? rows[0] : null;
     if (res && res.ok) {
