@@ -69,3 +69,10 @@ and text never collides with the UI beneath it.
 knowing: pick a clocked-**out** employee before opening the PIN pad (otherwise the app shows
 the "already clocked in" warning instead), and call `generateReport()` before shooting Reports
 (the results table is empty until then).
+
+## Keep this tree public-safe
+
+This repository is public and every tracked file is served at www.punchclock.ca. Never commit kiosk site ids,
+customer, company or staff names, real emails, plans, runbooks or incident write-ups here. Use synthetic fixtures or
+environment variables (see `secure-db-regression/live-smoke.mjs`), and keep anything sensitive in the private
+claude-ops repository under `docs-private/`.
