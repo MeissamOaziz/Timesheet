@@ -7288,8 +7288,7 @@ async function startCheckout(plan){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
         plan,
-        adminId:s.id,
-        adminEmail:s.email,
+        sessionToken:s.token,
         successUrl:`https://www.punchclock.ca?checkout=success&plan=${plan}`,
         cancelUrl:`https://www.punchclock.ca?checkout=cancelled`,
       })
@@ -7320,9 +7319,7 @@ async function startExtraSeatCheckout(){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
         plan:'extra_seat',
-        priceId:EXTRA_SEAT_PRICE_ID,
-        adminId:s.id,
-        adminEmail:s.email,
+        sessionToken:s.token,
         successUrl:`https://www.punchclock.ca?checkout=success&plan=extra_seat`,
         cancelUrl:`https://www.punchclock.ca?checkout=cancelled`,
       })
@@ -7359,9 +7356,7 @@ async function startSchedulingAddonCheckout(){
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
         plan:'scheduling_addon',
-        priceId:SCHEDULING_ADDON_PRICE_ID,
-        adminId:s.id,
-        adminEmail:s.email,
+        sessionToken:s.token,
         successUrl:`https://www.punchclock.ca?checkout=success&plan=scheduling_addon`,
         cancelUrl:`https://www.punchclock.ca?checkout=cancelled`,
       })
@@ -7495,7 +7490,7 @@ async function openBillingPortal(){
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY,'apikey':SUPA_KEY},
       body:JSON.stringify({
-        adminId:s.id,
+        sessionToken:s.token,
         returnUrl:'https://www.punchclock.ca',
       })
     });

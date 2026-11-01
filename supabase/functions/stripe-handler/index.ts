@@ -104,6 +104,34 @@ async function getAdminById(adminId) {
   const { data } = await supabase.from("admins").select("id, plan, extra_seats, scheduling_addon, stripe_customer_id, stripe_subscription_id").eq("id", adminId).maybeSingle();
   return data;
 }
+// ── Who is calling? (checkout and portal) ─────────────────────────────────────────────────────
+// These two actions used to trust an `adminId` (and a `priceId`) sent by the browser, so anyone who
+// knew an account's id could open that customer's billing portal, and any price could be attached to
+// any plan label. The caller is now identified by their admin session token, only the account OWNER
+// may manage the subscription, and prices come from this file's own list.
+const TOKEN_RE = /^[A-Za-z0-9_-]{1,200}$/;
+async function resolveBillingOwner(sessionToken: unknown): Promise<{ id: string; email: string } | { error: string; status: number }> {
+  if (typeof sessionToken !== "string" || !TOKEN_RE.test(sessionToken)) return { error: "Please sign in again", status: 401 };
+  const { data: s } = await supabase.from("admin_sessions").select("admin_id, expires_at").eq("token", sessionToken).maybeSingle();
+  if (!s || new Date(s.expires_at as string).getTime() <= Date.now()) return { error: "Please sign in again", status: 401 };
+  const { data: a } = await supabase.from("admins").select("id, email, parent_admin_id, status").eq("id", s.admin_id).maybeSingle();
+  if (!a || !(a.status === "active" || a.status === "pending_invite")) return { error: "Please sign in again", status: 401 };
+  if (a.parent_admin_id) return { error: "Only the account owner can manage the subscription", status: 403 };
+  return { id: a.id as string, email: a.email as string };
+}
+// Redirect targets must stay on our own site.
+function safeReturnUrl(candidate: unknown, fallback: string): string {
+  return typeof candidate === "string" && /^https:\/\/www\.punchclock\.ca(\/|\?|#|$)/.test(candidate) ? candidate : fallback;
+}
+// A constant-time comparison for the one action reserved for server-to-server use.
+function bearerIsServiceKey(req: Request): boolean {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get("authorization") || "");
+  if (!m || !SUPABASE_SERVICE_KEY) return false;
+  const a = new TextEncoder().encode(m[1]), b = new TextEncoder().encode(SUPABASE_SERVICE_KEY);
+  let r = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) r |= (a[i] ?? 0) ^ (b[i] ?? 0);
+  return r === 0;
+}
 async function getAdminContact(adminId: string): Promise<{ name: string; email: string } | null> {
   const { data } = await supabase.from("admins").select("name, email").eq("id", adminId).maybeSingle();
   return data;
@@ -193,13 +221,17 @@ async function markProcessed(eventId: string): Promise<void> {
 }
 // ── Checkout ──────────────────────────────────────────────────────────────────
 async function handleCheckout(body) {
-  const { plan, adminId, adminEmail, successUrl, cancelUrl, priceId: overridePriceId } = body;
-  if (!plan || !adminId || !adminEmail) {
+  const { plan, successUrl, cancelUrl } = body;
+  const who = await resolveBillingOwner(body.sessionToken);
+  if ("error" in who) return json({ error: who.error }, who.status);
+  const adminId = who.id, adminEmail = who.email;
+  if (!plan || typeof plan !== "string") {
     return json({
-      error: "Missing required fields: plan, adminId, adminEmail"
+      error: "Missing required field: plan"
     }, 400);
   }
-  const priceId = overridePriceId || PRICE_IDS[plan];
+  // Only this file's own price list: a client can no longer attach another price to a plan label.
+  const priceId = Object.prototype.hasOwnProperty.call(PRICE_IDS, plan) ? PRICE_IDS[plan] : undefined;
   if (!priceId) return json({
     error: `No price configured for plan: ${plan}`
   }, 400);
@@ -224,8 +256,8 @@ async function handleCheckout(body) {
     mode: "subscription",
     "line_items[0][price]": priceId,
     "line_items[0][quantity]": "1",
-    success_url: successUrl || `https://www.punchclock.ca?checkout=success&plan=${plan}`,
-    cancel_url: cancelUrl || "https://www.punchclock.ca?checkout=cancelled",
+    success_url: safeReturnUrl(successUrl, `https://www.punchclock.ca?checkout=success&plan=${plan}`),
+    cancel_url: safeReturnUrl(cancelUrl, "https://www.punchclock.ca?checkout=cancelled"),
     "metadata[adminId]": adminId,
     "metadata[plan]": plan,
     "subscription_data[metadata][adminId]": adminId,
@@ -240,11 +272,10 @@ async function handleCheckout(body) {
 }
 // ── Portal ────────────────────────────────────────────────────────────────────
 async function handlePortal(body) {
-  const { adminId, returnUrl } = body;
-  if (!adminId) return json({
-    error: "Missing adminId"
-  }, 400);
-  const admin = await getAdminById(adminId);
+  const { returnUrl } = body;
+  const who = await resolveBillingOwner(body.sessionToken);
+  if ("error" in who) return json({ error: who.error }, who.status);
+  const admin = await getAdminById(who.id);
   if (!admin?.stripe_customer_id) {
     return json({
       error: "No Stripe customer found for this account"
@@ -252,7 +283,7 @@ async function handlePortal(body) {
   }
   const session = await stripePost("billing_portal/sessions", {
     customer: admin.stripe_customer_id,
-    return_url: returnUrl || "https://www.punchclock.ca"
+    return_url: safeReturnUrl(returnUrl, "https://www.punchclock.ca")
   });
   return json({
     url: session.url
@@ -441,6 +472,8 @@ serve(async (req)=>{
     if (action === "checkout") return handleCheckout(body);
     if (action === "portal") return handlePortal(body);
     if (action === "test_payment_email") {
+      // Server-to-server only: anyone else could otherwise make us mail the owner on demand.
+      if (!bearerIsServiceKey(req)) return json({ error: "Unauthorized" }, 401);
       // Sends a sample straight to OWNER_INBOX so the notification can be checked without
       // waiting for — or faking — a real Stripe charge.
       await sendOwnerEmail(
