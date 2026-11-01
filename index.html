@@ -4421,7 +4421,7 @@ async function supaFetch(method,table,opts={},_retried){
         filter:opts.filter||'',
         body:opts.body||null,
         sessionId:sess?.id||null,
-        sessionToken:sess?.token||null,
+        sessionToken:opts.token||sess?.token||null,
         kioskSiteId:(!sess&&ctx?.site?.id)?ctx.site.id:null,
         kioskV:2,
         pinToken:(!sess&&window._kioskPinProof&&Date.now()<window._kioskPinProof.exp)?window._kioskPinProof.proof:null
@@ -4952,6 +4952,13 @@ const Ctx={
 // Mint an opaque admin session token after a successful auth (login / register / invite
 // accept / set-password). The password is re-verified server-side. Best-effort: a null
 // token still works during the dual-mode transition (secure-db falls back to the admin id).
+// The signed-in admin's own row, read with the session token that was just minted. Without a token (the
+// mint failed) it falls back to the minimal pre-login lookup the server still answers.
+async function _ownAdminRow(adminId, token){
+  try{
+    return await supaFetch('GET','admins',{filter:`id=eq.${adminId}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`,token:token||undefined});
+  }catch(_){ return null; }
+}
 async function _mintSessionToken(email,pass){
   try{
     const m=await DB.rpc('mint_admin_session',{p_email:(email||'').toLowerCase(),p_pass:pass});
@@ -6805,10 +6812,10 @@ async function doLogin(){
       return;
     }
     // Fetch full admin record to get parent_admin_id, extra_seats, stripe info
-    const fullRows = await DB.all('admins',`id=eq.${admin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`);
-    const full = fullRows?.[0] || admin;
     const rememberMe = document.getElementById('rememberMe')?.checked || false;
     const _tok = await _mintSessionToken(email, pass);
+    const fullRows = await _ownAdminRow(admin.id, _tok);
+    const full = fullRows?.[0] || admin;
     Sess.set({
       id: full.id,
       name: full.name,
@@ -6855,9 +6862,9 @@ async function doSetInvitePassword(){
       return;
     }
     // Log in as the co-admin
-    const fullRows=await DB.all('admins',`id=eq.${pendingInviteAdmin.id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`);
+    const _tok=await _mintSessionToken(pendingInviteAdmin.email, pw);
+    const fullRows=await _ownAdminRow(pendingInviteAdmin.id, _tok);
     const full=fullRows?.[0]||pendingInviteAdmin;
-    const _tok=await _mintSessionToken(full.email, pw);
     Sess.set({
       id:full.id,name:full.name,email:full.email,
       role:full.role||'admin',plan:full.plan||'free',
@@ -6923,9 +6930,9 @@ async function doAcceptInvite(){
       return;
     }
     const newAdmin=[{id:acc.id,name:acc.name,email:acc.email,role:acc.role}];
-    const fullRows=await DB.all('admins',`id=eq.${newAdmin[0].id}&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon,scheduling_trial_ends_at`);
+    const _tok=await _mintSessionToken(newAdmin[0].email, pass);
+    const fullRows=await _ownAdminRow(newAdmin[0].id, _tok);
     const full=fullRows?.[0]||newAdmin[0];
-    const _tok=await _mintSessionToken(full.email, pass);
     Sess.set({
       id:full.id,name:full.name,email:full.email,role:full.role,plan:full.plan||'free',
       status:full.status,parent_admin_id:full.parent_admin_id||null,
@@ -6993,10 +7000,7 @@ async function submitSurvey(){
     }
     // Email a copy to the team (best-effort — the response is already safely saved).
     try{
-      await fetch(`${SUPA_URL}/functions/v1/churn-survey`,{
-        method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-        body:JSON.stringify({action:'notify',email:r.email,company:r.company_name,reason,liked,disliked,wanted,rating:_surveyRating})
-      });
+      await supaFetch('POST','email_codes',{action:'survey_notify',body:{token:_surveyToken}});
     }catch(_){}
     _surveyToken=null;
     document.getElementById('surveyForm').style.display='none';
@@ -7153,8 +7157,6 @@ async function doRegister(){
   showMsg('registerMsg','<span style="color:var(--text2)"><span class="mini-spin"></span> Sending verification code...</span>','info');
 
   try{
-    const ex=await DB.all('admins',`email=eq.${encodeURIComponent(email)}`);
-    if(ex.length){showMsg('registerMsg',t('msg.emailTaken')+' <button class="link-btn" onclick="navigate(\'login\')">'+t('login.signIn')+'</button>','error');return;}
 
     pendingVerify={firstName,lastName,email,pass,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile};
     try{
@@ -9086,13 +9088,8 @@ async function _finalizeMissedPunchReport(){
     // and sends approver + employee emails). Best-effort, but failures are logged.
     if(reqId){
       try{
-        const nr = await fetch(`${SUPA_URL}/functions/v1/notify-missed-punch`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-          body:JSON.stringify({ requestId: reqId })
-        });
-        if(!nr.ok){ console.error('notify-missed-punch failed', nr.status, await nr.text().catch(()=>'')); }
-      }catch(e){ console.error('notify-missed-punch error', e); }
+        await supaFetch('POST','email_codes',{action:'notify_request',body:{kind:'missed_punch',request_id:reqId,mode:'submitted'}});
+      }catch(e){ console.error('missed-punch notification failed', e.message); }
     } else {
       console.error('missed-punch insert returned no id; notification skipped');
     }
@@ -10417,13 +10414,10 @@ function toggleEditMissedPunch(btn){
 async function notifyDecision(fn, requestId){
   if(!requestId || window._demoMode) return;
   try{
-    const r = await fetch(`${SUPA_URL}/functions/v1/${fn}`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-      body:JSON.stringify({ requestId, mode:'decision' })
-    });
-    if(!r.ok) console.error(fn+' decision failed', r.status, await r.text().catch(()=>''));
-  }catch(e){ console.error(fn+' decision error', e); }
+    // The server checks the request belongs to this account, reads it, and mails from the database.
+    const kind = fn==='notify-time-off' ? 'time_off' : 'missed_punch';
+    await supaFetch('POST','email_codes',{action:'notify_request',body:{kind,request_id:requestId,mode:'decision'}});
+  }catch(e){ console.error(fn+' decision error', e.message); }
 }
 
 async function approveMissedPunch(id){
@@ -11732,13 +11726,8 @@ async function testRecipient(id){
   const orig=btn?btn.textContent:'';
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="mini-spin"></span>'; }
   try{
-    const res=await fetch(`${SUPA_URL}/functions/v1/send-period-summary`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPA_KEY}`},
-      body:JSON.stringify({test_recipients:true, company_id:_recipCompanyId()})
-    });
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok||data.success===false) throw new Error((data.errors&&data.errors[0])||data.error||'Send failed');
+    const data=await supaFetch('POST','email_codes',{action:'send_period_summary',body:{mode:'test_recipients', company_id:_recipCompanyId()}})||{};
+    if(data.success===false||data.ok===false) throw new Error((data.errors&&data.errors[0])||data.error||'Send failed');
     showToast((t('recip.testSent')||'Test summary sent for {start} to {end}.')
       .replace('{start}',data.period?.start||'').replace('{end}',data.period?.end||''),'success');
   }catch(e){ showToast(e.message,'error'); }
@@ -13971,22 +13960,9 @@ async function executeSendReport(){
     const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';
 
     const sendOne = async (target)=>{
-      const res = await fetch(`${SUPA_URL}/functions/v1/send-period-summary`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPA_KEY}`,
-        },
-        body: JSON.stringify({
-          manual: true,
-          emp_id: target.id,
-          start_date: start,
-          end_date: end,
-        })
-      });
-      const data = await res.json();
-      const ok = data.success && (data.results?.[0]?.sent > 0 || data.manual_sent);
-      return { ok, err: data.results?.[0]?.errors?.[0] || data.error || 'Unknown error' };
+      const data = await supaFetch('POST','email_codes',{action:'send_period_summary',body:{mode:'manual', emp_id:target.id, start_date:start, end_date:end}}) || {};
+      const ok = !!(data.success && data.manual_sent);
+      return { ok, err: (data.errors&&data.errors[0]) || data.error || 'Unknown error' };
     };
 
     const sent = [], failed = [];

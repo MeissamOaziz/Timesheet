@@ -84,6 +84,36 @@ const tables = {
   audit_log: [{ id: 'au1', event: 'write' }],
 };
 
+// ---- rows for the notify / period-summary / survey / role cases (added 2026-11-01) ----
+const NOW_ISO = new Date().toISOString(), HOUR_AGO = new Date(Date.now() - 36e5).toISOString();
+const MPR_OK = '33333333-3333-4333-8333-333333333331', MPR_S2 = '33333333-3333-4333-8333-333333333332', MPR_OLD = '33333333-3333-4333-8333-333333333333', MPR_DUP = '33333333-3333-4333-8333-333333333334', MPR_APPR = '33333333-3333-4333-8333-333333333335', MPR_OTHER = '33333333-3333-4333-8333-333333333336', MPR_E2 = '33333333-3333-4333-8333-333333333337';
+const mprRows = {
+  [MPR_OK]: { id: MPR_OK, company_id: 'c1', site_id: 's1', emp_id: 'e1', status: 'pending', created_at: NOW_ISO },
+  [MPR_S2]: { id: MPR_S2, company_id: 'c1', site_id: 's2', emp_id: 'e1', status: 'pending', created_at: NOW_ISO },
+  [MPR_OLD]: { id: MPR_OLD, company_id: 'c1', site_id: 's1', emp_id: 'e1', status: 'pending', created_at: HOUR_AGO },
+  [MPR_DUP]: { id: MPR_DUP, company_id: 'c1', site_id: 's1', emp_id: 'e1', status: 'pending', created_at: NOW_ISO },
+  [MPR_APPR]: { id: MPR_APPR, company_id: 'c1', site_id: 's1', emp_id: 'e1', status: 'approved', created_at: HOUR_AGO },
+  [MPR_OTHER]: { id: MPR_OTHER, company_id: 'c9', site_id: 's9', emp_id: 'e9', status: 'approved', created_at: HOUR_AGO },
+  [MPR_E2]: { id: MPR_E2, company_id: 'c1', site_id: 's2', emp_id: 'e2', status: 'approved', created_at: HOUR_AGO },
+};
+const TO_OK = '44444444-4444-4444-8444-444444444441', TO_ADMIN = '44444444-4444-4444-8444-444444444442';
+const toRows = {
+  [TO_OK]: { id: TO_OK, company_id: 'c1', site_id: 's1', emp_id: E_OWN, status: 'pending', requested_by: 'employee', created_at: NOW_ISO },
+  [TO_ADMIN]: { id: TO_ADMIN, company_id: 'c1', site_id: 's1', emp_id: E_OWN, status: 'pending', requested_by: 'admin', created_at: NOW_ISO },
+};
+const TOK_S_OK = 'aa11bb22cc33dd44aa11bb22cc33dd44', TOK_S_SENT = 'aa11bb22cc33dd44aa11bb22cc33dd45', TOK_S_OLD = 'aa11bb22cc33dd44aa11bb22cc33dd46', TOK_S_DUP = 'aa11bb22cc33dd44aa11bb22cc33dd47';
+const INV_DUP = 'inv-dup';
+const surveyInvites = {
+  [TOK_S_OK]: { id: 'inv-ok', status: 'responded', responded_at: NOW_ISO },
+  [TOK_S_SENT]: { id: 'inv-sent', status: 'sent', responded_at: null },
+  [TOK_S_OLD]: { id: 'inv-old', status: 'responded', responded_at: HOUR_AGO },
+  [TOK_S_DUP]: { id: INV_DUP, status: 'responded', responded_at: NOW_ISO },
+};
+admins.a4 = { id: 'a4', parent_admin_id: 'a1', role: 'manager', status: 'active' };   // a second manager under a1
+admins.a5 = { id: 'a5', parent_admin_id: 'a1', role: 'admin', status: 'active' };     // a co-admin under a1
+sessions.tokCoAdmin = 'a5';
+empRows.e2 = { id: 'e2', company_id: 'c1', site_id: 's2' };
+
 function parse(u) {
   const url = new URL(u);
   const m = /\/rest\/v1\/([^?]+)/.exec(url.pathname);
@@ -102,6 +132,7 @@ function makeFetch() {
       if (p.name === 'rpc/issue_email_code') return j({ ok: true, exists: true, code: '123456', email: 'x@y.z', name: 'N' });
       if (p.name === 'rpc/kiosk_recent_punches') { let b = {}; try { b = JSON.parse(init.body); } catch { } return b.p_site_id === 's8' ? j({ message: 'function not found' }, 404) : j(tables.punches.slice(0, 12)); }
       // plan helpers: tenant b1 is a Free account past its preview, everyone else is paid
+      if (p.name === 'rpc/_resolve_portal_session') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_token === 'ptokE1' ? E_OWN : b.p_token === 'ptokOther' ? E_OTHER : null); }
       if (p.name === 'rpc/has_paid_features') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_admin !== 'b1'); }
       if (p.name === 'rpc/company_has_paid_features') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_company !== 'c9'); }
       if (p.name === 'rpc/admin_plan_rank') { let b = {}; try { b = JSON.parse(init.body); } catch { } return j(b.p_admin === 'b1' ? 0 : 3); }
@@ -140,6 +171,8 @@ function makeFetch() {
     if (t === 'employees' && method === 'GET' && p.q.has('id') && p.q.get('select') !== 'id') return j(pick(empRows, eq('id')));
     if (t === 'companies' && method === 'GET' && p.q.has('id') && !p.q.has('admin_id')) return j([{ id: eq('id'), name: 'Acme Fence', logo_url: 'https://uziwymrwaeojhqaagqcm.supabase.co/storage/v1/object/public/logos/c1.png' }]);
     if (t === 'admins' && method === 'GET' && p.q.has('id') && /^name/.test(p.q.get('select') || '')) return j(pick(adminProfile, eq('id')));
+    if (t === 'audit_log' && method === 'GET' && (p.q.get('table_name') || '').includes(MPR_DUP)) return j([{ id: 9 }]);
+    if (t === 'audit_log' && method === 'GET' && (p.q.get('table_name') || '').includes('invite:' + INV_DUP)) return j([{ id: 9 }]);
     if (t === 'audit_log' && method === 'GET' && p.q.has('admin_id')) {
       // per-admin send history: b1 has used up both ceilings, a2 has sent 100 schedules, the super admin has sent plenty
       const who = (p.q.get('admin_id') || '').replace('eq.', '');
@@ -150,6 +183,28 @@ function makeFetch() {
       return j([]);
     }
     if (t === 'audit_log' && method === 'GET' && p.q.has('event')) return j((p.q.get('filter') || '').includes(E_LOCKED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }] : (p.q.get('filter') || '').includes(E_THROTTLED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }] : []);
+    // ---- rows for the notify / period-summary / survey / role cases (added 2026-11-01) ----
+    if (t === 'admins' && method === 'GET' && (p.q.has('marker') || (p.q.get('select') || '').includes('stripe_customer_id'))) {
+      return j([{ id: 'a1', name: 'N', email: 'o@x.ca', password: 'H', invite_token: 'T', invite_expires_at: FUTURE, onboarding_emails_sent: 3, stripe_customer_id: 'cus', stripe_subscription_id: 'sub', unsub_token: 'u' },
+        { id: 'a2', name: 'M', email: 'm@x.ca', password: 'H', invite_token: 'T2', onboarding_emails_sent: 1, stripe_customer_id: 'cus2', unsub_token: 'u2' }]);
+    }
+    if (t === 'admins' && method === 'GET' && /^id,role,parent_admin_id/.test(p.q.get('select') || '')) {
+      // which rows a write would hit: the id in the filter, limited to the caller's scope (or=(id.eq.X,id.eq.Y,parent_admin_id.eq.P))
+      const orv = p.q.get('or') || ''; const ids = [...orv.matchAll(/id\.eq\.([\w]+)/g)].map(m => m[1]); const par = (/parent_admin_id\.eq\.([\w]+)/.exec(orv) || [])[1];
+      let rows = Object.values(admins);
+      if (p.q.has('id')) rows = rows.filter(r => r.id === eq('id'));
+      if (p.q.has('parent_admin_id')) rows = rows.filter(r => r.parent_admin_id === eq('parent_admin_id'));
+      if (orv) rows = rows.filter(r => ids.includes(r.id) || (par && r.parent_admin_id === par));
+      return j(rows.map(r => ({ id: r.id, role: r.role, parent_admin_id: r.parent_admin_id })));
+    }
+    if (t === 'manager_sites' && method === 'GET' && p.q.has('manager_id')) return j(eq('manager_id') === 'a2' ? [{ site_id: 's1' }] : []);
+    if (t === 'punches' && method === 'GET' && p.q.has('id') && p.q.has('company_id')) return j(eq('id') === 'pOwn' ? [{ id: 'pOwn' }] : []);
+    if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id,site_id' && p.q.has('id')) return j(pick(empRows, eq('id')).map(r => ({ id: r.id, site_id: r.site_id })));
+    if (t === 'missed_punch_requests' && method === 'GET' && p.q.has('id')) return j(pick(mprRows, eq('id')));
+    if (t === 'time_off' && method === 'GET' && p.q.has('id') && p.q.get('select') === '*') return j(pick(toRows, eq('id')));
+    if (t === 'survey_invites' && method === 'GET' && p.q.has('token')) return j(pick(surveyInvites, eq('token')));
+    if (t === 'survey_responses' && method === 'GET' && p.q.has('invite_id')) return j([{ email: 'cust@x.ca', company_name: 'Cust Co', reason: 'price', liked: 'a', disliked: 'b', wanted_feature: 'c', rating: 3 }]);
+    if (t === 'join_requests' && method === 'GET' && !p.q.has('id')) return j(Object.values(joinRows));
     if (method === 'GET' && tables[t]) {
       let rows = tables[t]; const off = parseInt(p.q.get('offset') || '0', 10); const lim = parseInt(p.q.get('limit') || String(rows.length), 10);
       const total = rows.length; rows = rows.slice(off, off + lim);
@@ -210,7 +265,7 @@ const cases = [
   R('kiosk', 'kiosk deletes punch (refused)', { table: 'punches', method: 'DELETE', kioskSiteId: S1, filter: 'id=eq.p1' }),
   // anonymous
   R('anon', 'read admins', { table: 'admins', method: 'GET', filter: 'limit=1' }),
-  R('anon', 'pre-auth admin lookup', { table: 'admins', method: 'GET', filter: 'email=eq.o@x.ca' }),
+  R('preauth', 'pre-auth admin lookup (now only says the address exists)', { table: 'admins', method: 'GET', filter: 'email=eq.o@x.ca' }),
   R('anon', 'read punches', { table: 'punches', method: 'GET', filter: '' }),
   R('anon', 'read announcements (public)', { table: 'announcements', method: 'GET', filter: 'order=created_at.desc' }),
   R('anon', 'write announcements', { table: 'announcements', method: 'POST', body: { title: 'x', body: 'y' } }),
@@ -432,6 +487,157 @@ const cases = [
   R('kiosk-pin', 'strict: terminal employee list has no PIN and no email', { table: 'employees', method: 'GET', filter: '', kioskV: 2, kioskSiteId: S1 }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length > 0 && r.obj.every(e => !('pin' in e) && !('email' in e) && e.has_pin === true)),
   R('kiosk-pin', 'transition: a client that has not announced v2 still gets the old data', { table: 'employees', method: 'GET', filter: '', kioskSiteId: S1 }, r => r.status === 200 && r.obj.some(e => 'pin' in e)),
   R('kiosk-pin', 'an admin still sees the PINs of their own employees', { table: 'employees', method: 'GET', filter: 'active=eq.true', ...own }, r => r.status === 200 && r.obj.some(e => 'pin' in e)),
+  // ---- notify / period summary / survey (2026-11-01): the browsers no longer call the mail functions; they ask here ----
+  // missed-punch report just filed at a terminal
+  R('notify', 'kiosk: report just filed, with the employee PIN proof', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { kind: 'missed_punch', request_id: MPR_OK, mode: 'submitted' } },
+    r => r.status === 200 && r.obj.ok === true && r.fn.length === 1 && r.fn[0].url.endsWith('/notify-missed-punch') && r.fn[0].body.requestId === MPR_OK && r.fn[0].body.mode === 'submitted' && Object.keys(r.fn[0].body).length === 2),
+  R('notify', 'kiosk: no proof', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, body: { kind: 'missed_punch', request_id: MPR_OK, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'kiosk: proof for another site', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_FOR_S2, body: { kind: 'missed_punch', request_id: MPR_OK, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'kiosk: tampered proof', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_TAMPERED, body: { kind: 'missed_punch', request_id: MPR_OK, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'kiosk: report filed at another site', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { kind: 'missed_punch', request_id: MPR_S2, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'kiosk: an old report cannot be replayed', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { kind: 'missed_punch', request_id: MPR_OLD, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'kiosk: cannot trigger a decision notice', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { kind: 'missed_punch', request_id: MPR_APPR, mode: 'decision' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'kiosk: a notice already sent is not sent twice', { action: 'notify_request', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { kind: 'missed_punch', request_id: MPR_DUP, mode: 'submitted' } }, r => r.status === 200 && r.obj.skipped === 'already_sent' && r.fn.length === 0),
+  R('notify', 'nobody: no credentials at all', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_OK, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'bad kind', { action: 'notify_request', ...own, body: { kind: 'x', request_id: MPR_OK } }, r => r.status === 400 && r.fn.length === 0),
+  R('notify', 'bad request id', { action: 'notify_request', ...own, body: { kind: 'missed_punch', request_id: "1' or '1'='1" } }, r => r.status === 400 && r.fn.length === 0),
+  R('notify', 'unknown request', { action: 'notify_request', ...own, body: { kind: 'missed_punch', request_id: '33333333-3333-4333-8333-3333333333ff' } }, r => r.status === 404 && r.fn.length === 0),
+  // decisions by an admin
+  R('notify', 'owner: decision notice for an approved request of their company', { action: 'notify_request', ...own, body: { kind: 'missed_punch', request_id: MPR_APPR, mode: 'decision' } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].url.endsWith('/notify-missed-punch') && r.fn[0].body.mode === 'decision'),
+  R('notify', 'another tenant admin cannot trigger it', { action: 'notify_request', ...other, body: { kind: 'missed_punch', request_id: MPR_APPR, mode: 'decision' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'owner cannot trigger another tenant request', { action: 'notify_request', ...own, body: { kind: 'missed_punch', request_id: MPR_OTHER, mode: 'decision' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'manager: request at a site they run', { action: 'notify_request', ...mgr, body: { kind: 'missed_punch', request_id: MPR_APPR, mode: 'decision' } }, r => r.status === 200 && r.fn.length === 1),
+  R('notify', 'manager: request at a site they do not run', { action: 'notify_request', ...mgr, body: { kind: 'missed_punch', request_id: MPR_E2, mode: 'decision' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'super admin may', { action: 'notify_request', ...sup, body: { kind: 'missed_punch', request_id: MPR_OTHER, mode: 'decision' } }, r => r.status === 200 && r.fn.length === 1),
+  // time off from the employee portal
+  R('notify', 'portal: request just filed by this employee', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'submitted', portal_token: 'ptokE1' } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].url.endsWith('/notify-time-off') && r.fn[0].body.requestId === TO_OK),
+  R('notify', 'portal: session of another employee', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'submitted', portal_token: 'ptokOther' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: unknown session', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'submitted', portal_token: 'nope' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: no session', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: an admin-entered absence is not an employee request', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_ADMIN, mode: 'submitted', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: cannot ask for a decision notice', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'decision', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal token with query syntax', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'submitted', portal_token: 'x&y=z' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'admin: time off decision for own company', { action: 'notify_request', ...own, body: { kind: 'time_off', request_id: TO_OK, mode: 'decision' } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].url.endsWith('/notify-time-off')),
+  // survey team copy
+  R('survey', 'answered survey: team copy built from the saved response', { action: 'survey_notify', body: { token: TOK_S_OK, email: 'evil@x.ca', reason: 'INJECTED' } },
+    r => r.status === 200 && r.fn.length === 1 && r.fn[0].url.endsWith('/churn-survey') && r.fn[0].body.email === 'cust@x.ca' && r.fn[0].body.reason === 'price' && !JSON.stringify(r.fn[0].body).includes('INJECTED')),
+  R('survey', 'unanswered survey', { action: 'survey_notify', body: { token: TOK_S_SENT } }, r => r.status === 403 && r.fn.length === 0),
+  R('survey', 'survey answered long ago', { action: 'survey_notify', body: { token: TOK_S_OLD } }, r => r.status === 403 && r.fn.length === 0),
+  R('survey', 'unknown token', { action: 'survey_notify', body: { token: 'ffffffffffffffffffffffffffffffff' } }, r => r.status === 403 && r.fn.length === 0),
+  R('survey', 'malformed token', { action: 'survey_notify', body: { token: "x' or '1'='1" } }, r => r.status === 400 && r.fn.length === 0),
+  R('survey', 'copy already sent', { action: 'survey_notify', body: { token: TOK_S_DUP } }, r => r.status === 200 && r.obj.skipped === 'already_sent' && r.fn.length === 0),
+  // payroll test mail and per-employee hours mail
+  R('period', 'no session', { action: 'send_period_summary', body: { mode: 'manual', emp_id: 'e1', start_date: '2026-10-01', end_date: '2026-10-14' } }, r => r.status === 401 && r.fn.length === 0),
+  R('period', 'owner: test summary for own company', { action: 'send_period_summary', ...own, body: { mode: 'test_recipients', company_id: 'c1' } },
+    r => r.status === 200 && r.obj.success === true && r.fn.length === 1 && r.fn[0].url.endsWith('/send-period-summary') && r.fn[0].body.test_recipients === true && r.fn[0].body.company_id === 'c1'),
+  R('period', 'owner: another tenant company', { action: 'send_period_summary', ...own, body: { mode: 'test_recipients', company_id: 'c9' } }, r => r.status === 403 && r.fn.length === 0),
+  R('period', 'manager cannot send the payroll test', { action: 'send_period_summary', ...mgr, body: { mode: 'test_recipients', company_id: 'c1' } }, r => r.status === 403 && r.fn.length === 0),
+  R('period', 'owner: hours for an own employee', { action: 'send_period_summary', ...own, body: { mode: 'manual', emp_id: 'e1', start_date: '2026-10-01', end_date: '2026-10-14' } },
+    r => r.status === 200 && r.obj.manual_sent === true && r.fn.length === 1 && r.fn[0].body.manual === true && r.fn[0].body.emp_id === 'e1' && r.fn[0].body.start_date === '2026-10-01'),
+  R('period', 'owner: employee of another tenant', { action: 'send_period_summary', ...own, body: { mode: 'manual', emp_id: 'e9', start_date: '2026-10-01', end_date: '2026-10-14' } }, r => r.status === 403 && r.fn.length === 0),
+  R('period', 'manager: employee at their site', { action: 'send_period_summary', ...mgr, body: { mode: 'manual', emp_id: 'e1', start_date: '2026-10-01', end_date: '2026-10-14' } }, r => r.status === 200 && r.fn.length === 1),
+  R('period', 'manager: employee at another site', { action: 'send_period_summary', ...mgr, body: { mode: 'manual', emp_id: 'e2', start_date: '2026-10-01', end_date: '2026-10-14' } }, r => r.status === 403 && r.fn.length === 0),
+  R('period', 'manual without dates', { action: 'send_period_summary', ...own, body: { mode: 'manual', emp_id: 'e1' } }, r => r.status === 400 && r.fn.length === 0),
+  R('period', 'dates reversed', { action: 'send_period_summary', ...own, body: { mode: 'manual', emp_id: 'e1', start_date: '2026-10-14', end_date: '2026-10-01' } }, r => r.status === 400 && r.fn.length === 0),
+  R('period', 'ten year range', { action: 'send_period_summary', ...own, body: { mode: 'manual', emp_id: 'e1', start_date: '2016-10-01', end_date: '2026-10-14' } }, r => r.status === 400 && r.fn.length === 0),
+  R('period', 'employee id with query syntax', { action: 'send_period_summary', ...own, body: { mode: 'manual', emp_id: 'e1&company_id=neq.0', start_date: '2026-10-01', end_date: '2026-10-14' } }, r => r.status === 400 && r.fn.length === 0),
+  R('period', 'unknown mode', { action: 'send_period_summary', ...own, body: { mode: 'all' } }, r => r.status === 400 && r.fn.length === 0),
+  R('period', 'hourly cap per admin', { action: 'send_period_summary', ...other, body: { mode: 'manual', emp_id: 'e9', start_date: '2026-10-01', end_date: '2026-10-14' } }, r => r.status === 429 && r.fn.length === 0),
+  // ---- role rules (2026-11-01): who inside an account may do what ----
+  R('roles', 'manager cannot change the owner email', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { email: 'attacker@evil.ca' }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('roles', 'manager cannot suspend the owner', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { status: 'suspended' }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('roles', 'manager cannot promote self', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { role: 'admin' }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('roles', 'manager cannot edit another manager', { table: 'admins', method: 'PATCH', filter: 'id=eq.a4', body: { name: 'x' }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('roles', 'manager cannot edit a co-admin', { table: 'admins', method: 'PATCH', filter: 'id=eq.a5', body: { status: 'suspended' }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('roles', 'manager cannot delete admins', { table: 'admins', method: 'DELETE', filter: 'id=eq.a4', ...mgr }, r => r.status === 403 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('roles', 'manager cannot delete the owner', { table: 'admins', method: 'DELETE', filter: 'id=eq.a1', ...mgr }, r => r.status === 403 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('roles', 'manager cannot insert an admin row', { table: 'admins', method: 'POST', body: { email: 'x@y.ca', name: 'x', role: 'admin', parent_admin_id: 'a1' }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^POST /.test(c))),
+  R('roles', 'manager can still rename self and mute alerts', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { name: 'Mgr', mute_manager_alerts: true, mute_approval_emails: false }, ...mgr }, r => r.status === 200),
+  R('roles', 'manager can still mark the announcement as seen', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { last_seen_announcement_at: '2026-11-01T00:00:00Z' }, ...mgr }, r => r.status === 200),
+  R('roles', 'manager can still record the login time', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { last_login: '2026-11-01T00:00:00Z' }, ...mgr }, r => r.status === 200),
+  R('roles', 'owner edits a manager (name, role, status)', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { name: 'Mgr', role: 'admin', status: 'suspended' }, ...own }, r => r.status === 200),
+  R('roles', 'owner cannot make anyone a super admin', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { role: 'super_admin' }, ...own }, r => r.status === 403),
+  R('roles', 'owner cannot invent a role', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { role: 'owner' }, ...own }, r => r.status === 403),
+  R('roles', 'owner cannot change a team member email', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { email: 'x@y.ca' }, ...own }, r => r.status === 403),
+  R('roles', 'owner cannot re-parent a team member to another tenant', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { parent_admin_id: 'b1' }, ...own }, r => r.status === 403),
+  R('roles', 'owner cannot set a status the app does not offer', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { status: 'pending_invite' }, ...own }, r => r.status === 403),
+  R('roles', 'owner renames self', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { name: 'Owner' }, ...own }, r => r.status === 200),
+  R('roles', 'owner cannot change own role or email', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { role: 'manager' }, ...own }, r => r.status === 403),
+  R('roles', 'owner cannot change own email', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { email: 'new@x.ca' }, ...own }, r => r.status === 403),
+  R('roles', 'owner removes a team member', { table: 'admins', method: 'DELETE', filter: 'id=eq.a4', ...own }, r => r.status === 204 || r.status === 200),
+  R('roles', 'owner cannot delete own account from the app', { table: 'admins', method: 'DELETE', filter: 'id=eq.a1', ...own }, r => r.status === 403 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('roles', 'owner cannot insert an admin row', { table: 'admins', method: 'POST', body: { email: 'x@y.ca', name: 'x', role: 'admin', parent_admin_id: 'a1' }, ...own }, r => r.status === 403),
+  R('roles', 'co-admin cannot change the owner', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { name: 'x' }, sessionToken: 'tokCoAdmin' }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('roles', 'co-admin cannot delete the owner', { table: 'admins', method: 'DELETE', filter: 'id=eq.a1', sessionToken: 'tokCoAdmin' }, r => r.status === 403 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('roles', 'co-admin edits a manager', { table: 'admins', method: 'PATCH', filter: 'id=eq.a4', body: { name: 'x', status: 'suspended' }, sessionToken: 'tokCoAdmin' }, r => r.status === 200),
+  R('roles', 'co-admin removes a manager', { table: 'admins', method: 'DELETE', filter: 'id=eq.a4', sessionToken: 'tokCoAdmin' }, r => r.status === 204 || r.status === 200),
+  R('roles', 'co-admin renames self', { table: 'admins', method: 'PATCH', filter: 'id=eq.a5', body: { name: 'Co' }, sessionToken: 'tokCoAdmin' }, r => r.status === 200),
+  R('roles', 'another tenant cannot reach a1 team (scoped away, nothing changes)', { table: 'admins', method: 'PATCH', filter: 'id=eq.a2', body: { name: 'x' }, ...other }, r => r.status === 200 && r.calls.some(c => /^PATCH .*or=/.test(c))),
+  R('roles', 'super admin edits anything', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { email: 'x@y.ca', plan: 'starter' }, ...sup }, r => r.status === 200),
+  R('roles', 'manager cannot create a site', { table: 'sites', method: 'POST', body: { company_id: 'c1', name: 'New' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot edit a site', { table: 'sites', method: 'PATCH', filter: 'id=eq.s1', body: { name: 'New' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot delete a site', { table: 'sites', method: 'DELETE', filter: 'id=eq.s1', ...mgr }, r => r.status === 403),
+  R('roles', 'owner creates a site', { table: 'sites', method: 'POST', body: { company_id: 'c1', name: 'New' }, ...own }, r => r.status === 201),
+  R('roles', 'manager cannot edit company settings', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { name: 'Mine now' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot delete a company', { table: 'companies', method: 'DELETE', filter: 'id=eq.c1', ...mgr }, r => r.status === 403),
+  R('roles', 'owner edits company settings', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { name: 'Co', address: 'x' }, ...own }, r => r.status === 200),
+  R('roles', 'co-admin creates a company: it belongs to the account owner', { table: 'companies', method: 'POST', body: { name: 'New Co', admin_id: 'a5' }, sessionToken: 'tokCoAdmin' }, r => r.status === 201 && r.calls.some(c => /^POST .*"admin_id":"a1"/.test(c))),
+  R('roles', 'a company cannot be handed to a co-admin', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { admin_id: 'a5' }, ...own }, r => r.status === 403),
+  R('roles', 'manager cannot add payroll recipients', { table: 'report_recipients', method: 'POST', body: { company_id: 'c1', email: 'x@y.ca' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot remove payroll recipients', { table: 'report_recipients', method: 'DELETE', filter: 'id=eq.r1', ...mgr }, r => r.status === 403),
+  R('roles', 'recipient created_by must be on the account', { table: 'report_recipients', method: 'POST', body: { company_id: 'c1', email: 'x@y.ca', created_by: 'b1' }, ...own }, r => r.status === 403),
+  R('roles', 'manager cannot invite', { table: 'invitations', method: 'POST', body: { token: T_OK, inviter_admin_id: 'a2', company_id: 'c1', email: 'n@x.ca', role: 'admin', site_ids: [] }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot cancel an invitation', { table: 'invitations', method: 'DELETE', filter: 'id=eq.i1', ...mgr }, r => r.status === 403),
+  R('roles', 'owner invites a manager to own sites', { table: 'invitations', method: 'POST', body: { token: T_OK, inviter_admin_id: 'a1', company_id: 'c1', email: 'n@x.ca', role: 'manager', site_ids: ['s1', 's2'] }, ...own }, r => r.status === 201),
+  R('roles', 'owner invites a manager to someone else site', { table: 'invitations', method: 'POST', body: { token: T_OK, inviter_admin_id: 'a1', company_id: 'c1', email: 'n@x.ca', role: 'manager', site_ids: ['s1', 's9'] }, ...own }, r => r.status === 403),
+  R('roles', 'invitation site_ids must be a list', { table: 'invitations', method: 'POST', body: { token: T_OK, inviter_admin_id: 'a1', company_id: 'c1', email: 'n@x.ca', role: 'manager', site_ids: 's9' }, ...own }, r => r.status === 403),
+  R('roles', 'invitation for a super admin', { table: 'invitations', method: 'POST', body: { token: T_OK, inviter_admin_id: 'a1', company_id: 'c1', email: 'n@x.ca', role: 'super_admin', site_ids: [] }, ...own }, r => r.status === 403),
+  R('roles', 'invitation sent in the name of someone else', { table: 'invitations', method: 'POST', body: { token: T_OK, inviter_admin_id: 'b1', company_id: 'c1', email: 'n@x.ca', role: 'admin', site_ids: [] }, ...own }, r => r.status === 403),
+  R('roles', 'owner cancels an invitation', { table: 'invitations', method: 'DELETE', filter: 'id=eq.i1', ...own }, r => r.status === 204 || r.status === 200),
+  R('roles', 'invitations are not edited in place', { table: 'invitations', method: 'PATCH', filter: 'id=eq.i1', body: { role: 'admin' }, ...own }, r => r.status === 403),
+  R('roles', 'manager cannot assign managers to sites', { table: 'manager_sites', method: 'POST', body: { manager_id: 'a2', site_id: 's2' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot unassign managers', { table: 'manager_sites', method: 'DELETE', filter: 'manager_id=eq.a2', ...mgr }, r => r.status === 403),
+  R('roles', 'owner assigns a manager to an own site', { table: 'manager_sites', method: 'POST', body: { manager_id: 'a2', site_id: 's2' }, ...own }, r => r.status === 201),
+  R('roles', 'owner cannot assign a manager to another tenant site', { table: 'manager_sites', method: 'POST', body: { manager_id: 'a2', site_id: 's9' }, ...own }, r => r.status === 403),
+  R('roles', 'manager reads own site assignments (scoped to the account sites)', { table: 'manager_sites', method: 'GET', filter: 'manager_id=eq.a2', ...mgr }, r => r.status === 200 && r.calls.some(c => /manager_sites\?.*site_id=in\.\(s1,s2\)/.test(c))),
+  R('roles', 'another tenant deletes manager assignments by site: scoped to its own sites', { table: 'manager_sites', method: 'DELETE', filter: 'site_id=eq.s1', ...other }, r => r.calls.some(c => /^DELETE .*site_id=in\.\(s9\)/.test(c))),
+  R('roles', 'manager cannot delete employees', { table: 'employees', method: 'DELETE', filter: 'id=eq.e1', ...mgr }, r => r.status === 403),
+  R('roles', 'manager edits an employee at their site', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { name: 'A', active: false }, ...mgr }, r => r.status === 200),
+  R('roles', 'manager cannot edit an employee at another site', { table: 'employees', method: 'PATCH', filter: 'id=eq.e2', body: { name: 'B' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot move an employee to another site', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { site_id: 's2' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager adds an employee at their site', { table: 'employees', method: 'POST', body: { name: 'N', company_id: 'c1', site_id: 's1' }, ...mgr }, r => r.status === 201),
+  R('roles', 'manager cannot add an employee at another site', { table: 'employees', method: 'POST', body: { name: 'N', company_id: 'c1', site_id: 's2' }, ...mgr }, r => r.status === 403),
+  R('roles', 'manager cannot add an employee with no site', { table: 'employees', method: 'POST', body: { name: 'N', company_id: 'c1' }, ...mgr }, r => r.status === 403),
+  R('roles', 'owner deletes an employee', { table: 'employees', method: 'DELETE', filter: 'id=eq.e1', ...own }, r => r.status === 204 || r.status === 200),
+  R('roles', 'kiosk devices: revoke', { table: 'kiosk_devices', method: 'PATCH', filter: 'id=eq.d1', body: { revoked: true }, ...own }, r => r.status === 200),
+  R('roles', 'kiosk devices: no other column', { table: 'kiosk_devices', method: 'PATCH', filter: 'id=eq.d1', body: { site_id: 's2' }, ...own }, r => r.status === 403),
+  R('roles', 'kiosk devices: no insert', { table: 'kiosk_devices', method: 'POST', body: { site_id: 's1', device_id: 'abcdefgh' }, ...own }, r => r.status === 403),
+  R('roles', 'kiosk devices: no delete', { table: 'kiosk_devices', method: 'DELETE', filter: 'id=eq.d1', ...own }, r => r.status === 403),
+  R('roles', 'portal access: cannot write a password hash', { table: 'employee_portal', method: 'PATCH', filter: 'employee_id=eq.e1', body: { password_hash: '$2a$10$x' }, ...own }, r => r.status === 403),
+  R('roles', 'portal access: cannot activate by hand', { table: 'employee_portal', method: 'PATCH', filter: 'employee_id=eq.e1', body: { status: 'active' }, ...own }, r => r.status === 403),
+  R('roles', 'a punch reference must be a punch of the account (own)', { table: 'missed_punch_requests', method: 'PATCH', filter: 'id=eq.m1', body: { status: 'approved', punch_id: 'pOwn' }, ...own }, r => r.status === 200),
+  R('roles', 'a punch reference must be a punch of the account (foreign)', { table: 'missed_punch_requests', method: 'PATCH', filter: 'id=eq.m1', body: { status: 'approved', punch_id: 'pForeign' }, ...own }, r => r.status === 403),
+  // ---- join requests (stored XSS source) ----
+  R('joinreq', 'an admin cannot insert join requests', { table: 'join_requests', method: 'POST', body: { requester_id: 'a1', target_admin_id: 'a1', requester_name: '<img src=x onerror=alert(1)>', requester_email: 'x@y.ca', target_admin_email: 'o@x.ca' }, ...own }, r => r.status === 403 && !r.calls.some(c => /^POST /.test(c))),
+  R('joinreq', 'a manager cannot insert join requests', { table: 'join_requests', method: 'POST', body: { requester_name: 'x' }, ...mgr }, r => r.status === 403),
+  R('joinreq', 'super admin: markup in the name is refused', { table: 'join_requests', method: 'POST', body: { requester_name: '<img src=x onerror=alert(1)>', requester_email: 'x@y.ca', target_admin_email: 'o@x.ca' }, ...sup }, r => r.status === 400 && !r.calls.some(c => /^POST /.test(c))),
+  R('joinreq', 'super admin: a 5000 character name is refused', { table: 'join_requests', method: 'POST', body: { requester_name: 'x'.repeat(5000), requester_email: 'x@y.ca' }, ...sup }, r => r.status === 400),
+  R('joinreq', 'super admin: an address with markup is refused', { table: 'join_requests', method: 'POST', body: { requester_name: 'Ok', requester_email: 'a<script>@y.ca' }, ...sup }, r => r.status === 400),
+  R('joinreq', 'super admin: a well formed request', { table: 'join_requests', method: 'POST', body: { requester_name: 'Ok Person', requester_email: 'ok@y.ca', target_admin_email: 'o@x.ca' }, ...sup }, r => r.status === 201),
+  R('joinreq', 'owner approves a request aimed at them', { table: 'join_requests', method: 'PATCH', filter: `id=eq.${J_PENDING}`, body: { status: 'approved' }, ...own }, r => r.status === 200 && r.calls.some(c => /^PATCH .*or=\(target_admin_id\.eq\.a1/.test(c))),
+  R('joinreq', 'owner cannot rewrite the request text', { table: 'join_requests', method: 'PATCH', filter: `id=eq.${J_PENDING}`, body: { requester_name: '<b>x</b>' }, ...own }, r => r.status === 403),
+  R('joinreq', 'owner reads requests: only those aimed at their account', { table: 'join_requests', method: 'GET', filter: 'status=eq.pending', ...own }, r => r.status === 200 && r.calls.some(c => /join_requests\?.*or=\(target_admin_id\.eq\.a1,target_admin_id\.eq\.a1,requester_id\.eq\.a1\)/.test(c))),
+  // ---- admin rows: what comes back ----
+  R('admins-out', 'team list: no invite token, no bookkeeping, no billing or unsubscribe on other rows', { table: 'admins', method: 'GET', filter: 'marker=eq.1&parent_admin_id=eq.a1', ...own },
+    r => r.status === 200 && r.obj.length === 2 && r.obj.every(x => !('password' in x) && !('invite_token' in x) && !('invite_expires_at' in x) && !('onboarding_emails_sent' in x)) && r.obj.find(x => x.id === 'a1').stripe_customer_id === 'cus' && !('stripe_customer_id' in r.obj.find(x => x.id === 'a2')) && !('unsub_token' in r.obj.find(x => x.id === 'a2'))),
+  R('admins-out', 'a request that merely mentions the caller id in another clause does not unlock other rows', { table: 'admins', method: 'GET', filter: 'marker=eq.1&name=neq.id=eq.a1', ...own },
+    r => r.status === 200 && !('stripe_customer_id' in r.obj.find(x => x.id === 'a2'))),
+  // ---- the pre-login admin lookup ----
+  R('preauth', 'anon: by e-mail only says the address exists', { table: 'admins', method: 'GET', filter: 'email=eq.o@x.ca&select=stripe_customer_id' }, r => r.status === 200 && r.obj.every(x => Object.keys(x).join() === 'email')),
+  R('preauth', 'anon: by id gives only the sign-in columns', { table: 'admins', method: 'GET', filter: 'id=eq.a1&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon' },
+    r => r.status === 200 && r.obj.every(x => Object.keys(x).every(k => ['id', 'name', 'email', 'role', 'plan', 'status', 'parent_admin_id', 'extra_seats', 'scheduling_addon', 'scheduling_trial_ends_at'].includes(k)))),
+  R('preauth', 'anon: a compound lookup is still refused', { table: 'admins', method: 'GET', filter: 'email=eq.o@x.ca&role=eq.admin' }, r => r.status === 401),
+  R('preauth', 'anon: a bulk read is still refused', { table: 'admins', method: 'GET', filter: 'status=eq.active' }, r => r.status === 401),
 ];
 
 async function run(handler) {
@@ -444,7 +650,7 @@ async function run(handler) {
     try { const r = await handler(req); status = r.status; const t = await r.text(); try { body = JSON.parse(t); } catch { body = t; } }
     catch (e) { status = 'THROW'; body = String(e.message || e); }
     // the audit log write is fire-and-forget and order-independent; keep it but sort for stability
-    results.push({ ...c, status, body: JSON.stringify(body).slice(0, 600), rawBody: body, audit: upstream.filter(u => /audit_log/.test(u.url)).map(u => `${u.method} ${u.url}`), calls: upstream.filter(u => !/audit_log/.test(u.url)).map(u => `${u.method} ${u.url} ${u.dry ? '[dry] ' : ''}${u.body || ''}`), fn: upstream.filter(u => /functions\/v1/.test(u.url)).map(u => ({ dry: u.dry, body: (() => { try { return JSON.parse(u.body); } catch { return null; } })() })), obj: (body && typeof body === 'object') ? body : null });
+    results.push({ ...c, status, body: JSON.stringify(body).slice(0, 600), rawBody: body, audit: upstream.filter(u => /audit_log/.test(u.url)).map(u => `${u.method} ${u.url}`), calls: upstream.filter(u => !/audit_log/.test(u.url)).map(u => `${u.method} ${u.url} ${u.dry ? '[dry] ' : ''}${u.body || ''}`), fn: upstream.filter(u => /functions\/v1/.test(u.url)).map(u => ({ url: u.url, dry: u.dry, body: (() => { try { return JSON.parse(u.body); } catch { return null; } })() })), obj: (body && typeof body === 'object') ? body : null });
   }
   return results;
 }
@@ -462,10 +668,11 @@ for (let i = 0; i < cases.length; i++) {
   if (ok) expectPass++; else { expectFail++; console.log(`!! EXPECTATION FAILED [${cases[i].group}] ${cases[i].name}\n   got ${newRes[i].status} ${newRes[i].body.slice(0, 160)} fn=${JSON.stringify(newRes[i].fn).slice(0, 200)}`); }
 }
 if (expectPass + expectFail) console.log(`expectations: ${expectPass} passed, ${expectFail} failed`);
+const norm = (x) => String(x).replace(/\d{13}\.[\w-]{20,}/g, 'PROOF').replace(/\d{4}-\d\d-\d\dT[\d:.]+Z/g, 'ISO');
 let same = 0, diff = 0, unexpected = 0;
 for (let i = 0; i < cases.length; i++) {
   const o = oldRes[i], n = newRes[i];
-  const identical = o.status === n.status && o.body === n.body && JSON.stringify(o.calls) === JSON.stringify(n.calls);
+  const identical = o.status === n.status && norm(o.body) === norm(n.body) && norm(JSON.stringify(o.calls)) === norm(JSON.stringify(n.calls));
   if (identical) { same++; continue; }
   diff++;
   const ok = allowDiff.has(o.group);

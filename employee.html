@@ -1743,12 +1743,13 @@ async function submitTimeOff() {
     // plus a confirmation to the employee). Best-effort: a mail failure must not lose the request.
     if (res && res.id) {
       try {
-        const nr = await fetch(`${SUPA_URL}/functions/v1/notify-time-off`, {
+        // secure-db checks this portal session owns the request, reads it, and mails from the database.
+        const nr = await fetch(`${SUPA_URL}/functions/v1/secure-db`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-          body: JSON.stringify({ requestId: res.id })
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` },
+          body: JSON.stringify({ action: 'notify_request', body: { kind: 'time_off', request_id: res.id, mode: 'submitted', portal_token: _session.token } })
         });
-        if (!nr.ok) console.error('notify-time-off failed', nr.status, await nr.text().catch(()=>''));
+        if (!nr.ok) console.error('time-off notification failed', nr.status);
       } catch(e) { console.error('notify-time-off error', e); }
     }
     document.getElementById('toReasonInput').value = '';

@@ -253,8 +253,26 @@ async function validateWritePayload(
     const lab = str(row.label_id);
     if (lab && !(await labelIds()).has(lab)) return { field: 'label_id', reason: 'tenant' };
 
+    // A punch reference (missed-punch approval) must be a punch of the caller's own companies.
+    const pid = str(row.punch_id);
+    if (pid) {
+      if (!TOKEN_RE.test(pid)) return { field: 'punch_id', reason: 'tenant' };
+      const cs = [...(await companyIds())];
+      const own = cs.length ? await restJson(`punches?id=eq.${pid}&company_id=in.(${cs.join(',')})&select=id&limit=1`) : [];
+      if (!own || !own.length) return { field: 'punch_id', reason: 'tenant' };
+    }
+
+    // An invitation lists the sites a manager is to be given (accept_invitation inserts manager_sites for
+    // each); every one must be a site of the caller's own account.
+    if (table === 'invitations' && row.site_ids !== undefined && row.site_ids !== null) {
+      if (!Array.isArray(row.site_ids)) return { field: 'site_ids', reason: 'tenant' };
+      for (const sid of row.site_ids as unknown[]) {
+        if (typeof sid !== 'string' || !(await siteIds()).has(sid)) return { field: 'site_ids', reason: 'tenant' };
+      }
+    }
+
     // admin-ish references must stay inside the caller's own account
-    for (const key of ['admin_id', 'inviter_admin_id', 'manager_id', 'parent_admin_id', 'reviewed_by']) {
+    for (const key of ['admin_id', 'inviter_admin_id', 'manager_id', 'parent_admin_id', 'reviewed_by', 'created_by', 'requester_id', 'target_admin_id']) {
       const a = str(row[key]);
       if (a && !(await teamIds()).has(a)) return { field: key, reason: 'tenant' };
     }
@@ -377,14 +395,21 @@ function isPreAuthAllowed(table: string, filter: string): boolean {
   return false;
 }
 
-// Strip sensitive admin fields. Password is always removed.
-// Stripe fields are kept only when the admin is fetching their own record.
-function stripAdminRows(rows: unknown[], sessionId: string | null, filter: string): unknown[] {
-  const isSelf = !!sessionId && filter.includes(`id=eq.${sessionId}`);
+// Strip sensitive admin fields. Password is always removed, and so are invitation credentials and
+// onboarding bookkeeping: nothing in the apps reads them back, and invite_token is a bearer credential.
+// Stripe fields and the unsubscribe token are kept only on the caller's OWN row (decided per returned
+// row, not by looking for the caller's id inside the request's filter text).
+function stripAdminRows(rows: unknown[], sessionId: string | null): unknown[] {
   return rows.map(row => {
     if (typeof row !== 'object' || row === null) return row;
     const r = { ...(row as Record<string, unknown>) };
+    const isSelf = !!sessionId && r['id'] === sessionId;
     delete r['password'];
+    delete r['invite_token'];
+    delete r['invite_expires_at'];
+    delete r['invite_used_at'];
+    delete r['invite_site_ids'];
+    delete r['onboarding_emails_sent'];
     if (!isSelf) {
       delete r['stripe_customer_id'];
       delete r['stripe_subscription_id'];
@@ -393,6 +418,22 @@ function stripAdminRows(rows: unknown[], sessionId: string | null, filter: strin
       delete r['unsub_token'];
     }
     return r;
+  });
+}
+
+// A request with no session may look an admin up before login (the sign-in, set-password and invitation
+// screens, and the registration e-mail check). It used to get the whole row. Now: a lookup by e-mail
+// learns only that the address exists, a lookup by id gets the handful of columns the sign-in screens
+// build a session from. Nothing else (no billing ids, last login, tokens, counters).
+const PREAUTH_ADMIN_COLS = ['id', 'name', 'email', 'role', 'plan', 'status', 'parent_admin_id', 'extra_seats', 'scheduling_addon', 'scheduling_trial_ends_at'];
+function preAuthAdminRows(rows: unknown[], filter: string): unknown[] {
+  const byEmail = filter.split('&').some(p => p.startsWith('email=eq.'));
+  return rows.map(row => {
+    if (typeof row !== 'object' || row === null) return row;
+    const r = row as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const k of (byEmail ? ['email'] : PREAUTH_ADMIN_COLS)) if (k in r) out[k] = r[k];
+    return out;
   });
 }
 
@@ -872,6 +913,332 @@ async function pinAttemptClear(id: string | null): Promise<void> {
   } catch { /* a leftover row only makes the throttle slightly stricter */ }
 }
 
+// ── Notifications and summaries triggered from the apps ──────────────────────────────────────
+// notify-missed-punch, notify-time-off, send-period-summary and churn-survey used to be called by the
+// browsers directly with the public key, so anybody could re-send mail, or make us send it, with only
+// an id. Now the browser asks HERE, this function proves who is asking (admin session for their own
+// company, kiosk PIN proof for the missed-punch report it has just filed, portal session for the time
+// off request the employee has just filed, the single-use survey link for the survey just answered),
+// reads the row itself, and only then calls the mail function with the service key. Recipients and
+// content always come from the database. Every send is recorded once in audit_log, so repeating the
+// same request cannot send the same mail twice.
+const NOTIFY_KINDS: Record<string, { fn: string; table: string }> = {
+  missed_punch: { fn: 'notify-missed-punch', table: 'missed_punch_requests' },
+  time_off: { fn: 'notify-time-off', table: 'time_off' },
+};
+const NOTIFY_FRESH_MS = 15 * 60 * 1000;
+
+async function markAudit(event: string, tableName: string, filter: string): Promise<string | null> {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ admin_id: null, event, table_name: tableName, method: 'POST', filter }),
+    });
+    const rows = r.ok ? await r.json().catch(() => null) : null;
+    const rid = Array.isArray(rows) && rows[0] ? rows[0].id : null;
+    return (typeof rid === 'number' || (typeof rid === 'string' && /^\d+$/.test(rid))) ? String(rid) : null;
+  } catch { return null; }
+}
+
+async function callMailFunction(fn: string, payload: Record<string, unknown>): Promise<{ ok: boolean; data: any }> {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => null);
+    return { ok: r.ok, data };
+  } catch { return { ok: false, data: null }; }
+}
+
+// The sites a manager has been assigned.
+async function managerSiteSet(managerId: string): Promise<Set<string>> {
+  const rows = await restJson(`manager_sites?manager_id=eq.${managerId}&select=site_id`);
+  return new Set((rows || []).map((r: { site_id: string }) => r.site_id));
+}
+
+async function notifyRequestAction(
+  caller: Caller | null, kioskSiteId: string | null, pinProof: string | null, rawBody: unknown,
+): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
+  const kind = strOf(b.kind, 30);
+  const mode = b.mode === 'decision' ? 'decision' : 'submitted';
+  const spec = NOTIFY_KINDS[kind];
+  const reqId = strOf(b.request_id, 60);
+  if (!spec || !UUID_RE.test(reqId)) return jsonResp({ ok: false, error: 'Invalid request' }, 400);
+  const row = (await restJson(`${spec.table}?id=eq.${reqId}&select=*&limit=1`))?.[0];
+  if (!row) return jsonResp({ ok: false, error: 'Request not found' }, 404);
+
+  const fresh = row.created_at && Date.now() - new Date(row.created_at as string).getTime() < NOTIFY_FRESH_MS;
+  let allowed = false;
+  if (caller) {
+    // A signed-in admin: the request must belong to a company of their own account (managers: a site they run).
+    if (caller.role === 'super_admin') allowed = true;
+    else if (typeof row.company_id === 'string' && (await ownedCompanyIds(caller.primaryAdminId)).includes(row.company_id)) {
+      allowed = true;
+      if (caller.role === 'manager' && row.site_id && !(await managerSiteSet(caller.adminId)).has(row.site_id as string)) allowed = false;
+    }
+  } else if (mode === 'submitted' && fresh && row.status === 'pending') {
+    if (kind === 'missed_punch' && kioskSiteId) {
+      // The report just filed at this terminal: same site, and the PIN proof of the employee who filed it.
+      allowed = row.site_id === kioskSiteId && typeof row.emp_id === 'string' && TOKEN_RE.test(row.emp_id) &&
+        await verifyPinProof(pinProof, row.emp_id as string, kioskSiteId);
+    } else if (kind === 'time_off') {
+      // The request just filed from the employee portal: the portal session must be that employee's.
+      const tok = strOf(b.portal_token, 200);
+      if (TOKEN_RE.test(tok) && row.requested_by === 'employee' && typeof row.emp_id === 'string') {
+        const emp = await planRpc('_resolve_portal_session', { p_token: tok });
+        allowed = typeof emp === 'string' && emp === row.emp_id;
+      }
+    }
+  }
+  if (!allowed) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+
+  // One notice per request, per mode and per status (an approval and a later denial are different notices).
+  const event = `notify:${kind}:${mode}`, tbl = `req:${reqId}`, flt = String(row.status ?? '');
+  const prior = await restJson(`audit_log?event=eq.${event}&table_name=eq.${tbl}&filter=eq.${encodeURIComponent(flt)}&select=id&limit=1`);
+  if (prior && prior.length) return jsonResp({ ok: true, skipped: 'already_sent' });
+  const markId = await markAudit(event, tbl, flt);
+  const out = await callMailFunction(spec.fn, { requestId: reqId, mode });
+  if (!out.ok) {
+    // Let the person try again: nothing was delivered.
+    await pinAttemptClear(markId);
+    return jsonResp({ ok: false, error: 'Could not send the notification' }, 502);
+  }
+  return jsonResp({ ok: true });
+}
+
+// The survey page is opened from an emailed link with a single-use token. After the answers are saved
+// (submit_survey_response consumes the token), the page asks for the team copy. The text comes from the
+// saved response, never from the request, and only for a survey answered in the last half hour.
+async function surveyNotifyAction(rawBody: unknown): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
+  const tok = strOf(b.token, 200);
+  if (!TOKEN_RE.test(tok)) return jsonResp({ ok: false, error: 'Invalid survey' }, 400);
+  const inv = (await restJson(`survey_invites?token=eq.${tok}&select=id,status,responded_at&limit=1`))?.[0];
+  if (!inv || inv.status !== 'responded' || !inv.responded_at ||
+      Date.now() - new Date(inv.responded_at as string).getTime() > 30 * 60 * 1000) {
+    return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+  }
+  const prior = await restJson(`audit_log?event=eq.notify:survey&table_name=eq.invite:${inv.id}&select=id&limit=1`);
+  if (prior && prior.length) return jsonResp({ ok: true, skipped: 'already_sent' });
+  const since = new Date(Date.now() - 3600 * 1000).toISOString();
+  const recent = await restJson(`audit_log?event=eq.notify:survey&at=gte.${since}&select=id&limit=61`);
+  if ((recent?.length ?? 0) > 60) return jsonResp({ ok: false, error: 'Busy, try later' }, 429);
+  const resp = (await restJson(`survey_responses?invite_id=eq.${inv.id}&select=email,company_name,reason,liked,disliked,wanted_feature,rating&limit=1`))?.[0];
+  if (!resp) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+  const markId = await markAudit('notify:survey', `invite:${inv.id}`, '');
+  const out = await callMailFunction('churn-survey', {
+    action: 'notify', email: resp.email, company: resp.company_name, reason: resp.reason,
+    liked: resp.liked, disliked: resp.disliked, wanted: resp.wanted_feature, rating: resp.rating,
+  });
+  if (!out.ok) { await pinAttemptClear(markId); return jsonResp({ ok: false, error: 'Could not send the notification' }, 502); }
+  return jsonResp({ ok: true });
+}
+
+// "Send a test summary" (payroll recipients) and "email this employee their hours". The admin must own
+// the company; the function itself works out recipients and content from the database. Only the
+// outcome comes back (never names or addresses), and sends are capped per admin per hour.
+const PERIOD_TEST_PER_ADMIN_HOUR = 20;
+const PERIOD_MANUAL_PER_ADMIN_HOUR = 300;
+async function periodSummaryAction(caller: Caller, rawBody: unknown): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
+  const mode = strOf(b.mode, 30);
+  const isSuper = caller.role === 'super_admin';
+  const startD = strOf(b.start_date, 10), endD = strOf(b.end_date, 10);
+  const hasDates = startD !== '' || endD !== '';
+  if (hasDates) {
+    if (!DATE_RE.test(startD) || !DATE_RE.test(endD) || startD > endD ||
+        (Date.parse(endD) - Date.parse(startD)) / 86400000 > 400) {
+      return jsonResp({ ok: false, error: 'Invalid dates' }, 400);
+    }
+  }
+  const owns = async (companyId: unknown) =>
+    isSuper || (typeof companyId === 'string' && (await ownedCompanyIds(caller.primaryAdminId)).includes(companyId));
+  let payload: Record<string, unknown>;
+  if (mode === 'test_recipients') {
+    // Payroll recipients are an owner/admin matter; the panel is hidden from managers.
+    if (caller.role === 'manager') return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    const coId = strOf(b.company_id, 60);
+    if (!TOKEN_RE.test(coId) || !(await owns(coId))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    payload = { test_recipients: true, company_id: coId, ...(hasDates ? { start_date: startD, end_date: endD } : {}) };
+  } else if (mode === 'manual') {
+    const empId = strOf(b.emp_id, 60);
+    if (!TOKEN_RE.test(empId) || !hasDates) return jsonResp({ ok: false, error: 'Invalid request' }, 400);
+    const emp = (await restJson(`employees?id=eq.${empId}&select=id,company_id,site_id&limit=1`))?.[0];
+    if (!emp || !(await owns(emp.company_id))) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    if (caller.role === 'manager' && !(emp.site_id && (await managerSiteSet(caller.adminId)).has(emp.site_id as string))) {
+      return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+    }
+    payload = { manual: true, emp_id: empId, start_date: startD, end_date: endD };
+  } else {
+    return jsonResp({ ok: false, error: 'Unknown request' }, 400);
+  }
+  if (!isSuper) {
+    const since = new Date(Date.now() - 3600 * 1000).toISOString();
+    const cap = mode === 'manual' ? PERIOD_MANUAL_PER_ADMIN_HOUR : PERIOD_TEST_PER_ADMIN_HOUR;
+    const recent = await restJson(`audit_log?admin_id=eq.${caller.adminId}&event=eq.period_summary:${mode}&at=gte.${since}&select=id&limit=${cap + 1}`);
+    if ((recent?.length ?? 0) >= cap) return jsonResp({ ok: false, success: false, error: 'Too many sends in the last hour. Please try again later.' }, 429);
+  }
+  logAudit(caller.adminId, `period_summary:${mode}`);
+  const out = await callMailFunction('send-period-summary', payload);
+  const d = out.data && typeof out.data === 'object' ? out.data : null;
+  if (!d) return jsonResp({ ok: false, success: false, error: 'Could not send the summary' }, 502);
+  if (d.success === false) {
+    const msg = typeof d.error === 'string' ? d.error.slice(0, 160) : '';
+    const known = /^(Automated email reports are part of the paid plans|Employee has no email address)$/.test(msg);
+    return jsonResp({ ok: false, success: false, error: known ? msg : 'Send failed' });
+  }
+  if (mode === 'manual') return jsonResp({ ok: true, success: true, manual_sent: true });
+  const errs = Array.isArray(d.errors) ? d.errors.slice(0, 3).map(() => 'Some recipients could not be reached') : [];
+  return jsonResp({ ok: true, success: errs.length === 0, test: true, period: d.period || null, recipientsSent: d.recipientsSent || 0, errors: errs });
+}
+
+// ── Role rules for writes ────────────────────────────────────────────────────────────────────
+// The tenant scope says WHICH ROWS a signed-in admin may touch (their own account's). It said nothing
+// about WHO inside the account may do what, so the lowest role could do anything the owner could: a
+// manager could rewrite the owner's email (then reset the password to the new address), promote
+// themselves, delete admins or companies. The browser hides those controls from managers; this is the
+// server enforcing the same rules, so a hand-made request gets no further than the buttons do.
+//
+//   owner       the primary admin (no parent): everything in their account
+//   co-admin    role 'admin' with a parent: edits and removes the account's other admins and managers
+//               (as the Admins tab lets them), but never the owner, and never themselves beyond profile
+//   manager     employees at their assigned sites, schedules, punches, time off; reads the rest. No
+//               admins, invitations, sites, companies, recipients, manager assignments.
+// Super admins are exempt (they never reach this function).
+const SELF_ADMIN_FIELDS = new Set(['name', 'mute_manager_alerts', 'mute_approval_emails', 'last_login', 'last_seen_announcement_at', 'lang', 'weekly_digest']);
+const CHILD_ADMIN_FIELDS = new Set(['name', 'role', 'status']);
+const KIOSK_DEVICE_FIELDS = new Set(['revoked', 'label']);
+const PORTAL_WRITE_FIELDS = new Set(['employee_id', 'email', 'invite_token', 'token_expires_at', 'status']);
+const JOIN_REQUEST_FIELDS = new Set(['status']);
+
+function bodyRows(body: unknown): Record<string, unknown>[] {
+  return Array.isArray(body) ? (body as Record<string, unknown>[]).filter(r => r && typeof r === 'object')
+    : (body && typeof body === 'object' ? [body as Record<string, unknown>] : []);
+}
+// The filter with its projection and paging removed, for reading which rows a write would hit.
+function targetFilter(filter: string): string {
+  return filter.split('&').filter(p => p && !/^(select|order|limit|offset)=/.test(safeDecode(p))).join('&');
+}
+const JR_NAME_MAX = 100, JR_EMAIL_MAX = 200;
+// join_requests rows are shown to the super admin and mailed from; whoever writes one gets the same
+// shape checks (super admins included): short text, no markup characters, real addresses, real ids.
+function joinRequestShapeError(row: Record<string, unknown>): string | null {
+  for (const k of ['requester_name']) {
+    const v = row[k];
+    if (v != null && (typeof v !== 'string' || v.length > JR_NAME_MAX || /[<>\u0000-\u001f]/.test(v))) return k;
+  }
+  for (const k of ['requester_email', 'target_admin_email']) {
+    const v = row[k];
+    if (v != null && (typeof v !== 'string' || v.length > JR_EMAIL_MAX || !EMAIL_SHAPE.test(v))) return k;
+  }
+  for (const k of ['requester_id', 'target_admin_id']) {
+    const v = row[k];
+    if (v != null && (typeof v !== 'string' || !UUID_RE.test(v))) return k;
+  }
+  if (row.status != null && !['pending', 'approved', 'denied'].includes(String(row.status))) return 'status';
+  return null;
+}
+
+// Returns a refusal message, or null when the caller's role may make this write.
+async function roleViolation(
+  table: string, method: string, body: unknown, filter: string, caller: Caller,
+): Promise<string | null> {
+  const isMgr = caller.role === 'manager';
+  const rows = bodyRows(body);
+  const keysIn = (allowed: Set<string>) => rows.every(r => Object.keys(r).every(k => allowed.has(k)));
+
+  switch (table) {
+    case 'admins': {
+      // Accounts are made by registration, invitation and the super admin: never by a row insert.
+      if (method === 'POST') return 'Forbidden: accounts are created by invitation';
+      const targets = await restJson(`admins?${targetFilter(filter)}&select=id,role,parent_admin_id&limit=100`);
+      if (targets === null) return 'Forbidden';
+      for (const t of targets) {
+        if (t.id === caller.adminId) {
+          if (method === 'DELETE') return 'Forbidden: you cannot delete your own account here';
+          if (!keysIn(SELF_ADMIN_FIELDS)) return 'Forbidden: that field of your account cannot be changed from the app';
+        } else if (t.id === caller.primaryAdminId) {
+          return 'Forbidden: the account owner cannot be changed from here';
+        } else if (t.parent_admin_id === caller.primaryAdminId && !isMgr) {
+          if (method === 'PATCH') {
+            if (rows.length !== 1 || !keysIn(CHILD_ADMIN_FIELDS)) return 'Forbidden: that field cannot be changed';
+            const r = rows[0];
+            if (r.role !== undefined && !['admin', 'manager'].includes(String(r.role))) return 'Forbidden: invalid role';
+            if (r.status !== undefined && !['active', 'suspended'].includes(String(r.status))) return 'Forbidden: invalid status';
+          }
+        } else {
+          return 'Forbidden: only the account owner or an admin can manage admins';
+        }
+      }
+      return null;
+    }
+    case 'manager_sites':
+    case 'sites':
+    case 'companies':
+    case 'report_recipients':
+      if (isMgr) return 'Forbidden: managers cannot change this';
+      if (table === 'companies') {
+        if (method === 'POST') {
+          // A company belongs to the account, not to whichever co-admin typed it in.
+          for (const r of rows) if (r.admin_id !== undefined && r.admin_id !== caller.primaryAdminId) r.admin_id = caller.primaryAdminId;
+        } else if (method === 'PATCH') {
+          for (const r of rows) if (r.admin_id !== undefined && r.admin_id !== caller.primaryAdminId) return 'Forbidden: a company cannot be moved to another admin';
+        }
+      }
+      return null;
+    case 'invitations': {
+      if (isMgr) return 'Forbidden: managers cannot invite';
+      if (method === 'PATCH') return 'Forbidden: an invitation is cancelled by deleting it';
+      if (method === 'POST') {
+        for (const r of rows) {
+          if (!['admin', 'manager'].includes(String(r.role))) return 'Forbidden: invalid role';
+          if (r.status !== undefined && r.status !== 'pending') return 'Forbidden: invalid status';
+          if (r.inviter_admin_id !== undefined && r.inviter_admin_id !== caller.adminId && r.inviter_admin_id !== caller.primaryAdminId) return 'Forbidden: invitations are sent as yourself';
+        }
+      }
+      return null;
+    }
+    case 'kiosk_devices':
+      // Tablets register themselves through kiosk_device_checkin; the app only revokes or renames.
+      if (method !== 'PATCH') return 'Forbidden';
+      return keysIn(KIOSK_DEVICE_FIELDS) ? null : 'Forbidden: that field cannot be changed';
+    case 'employee_portal':
+      if (method === 'POST' || method === 'PATCH') {
+        if (!keysIn(PORTAL_WRITE_FIELDS)) return 'Forbidden: that field cannot be changed';
+        if (rows.some(r => r.status !== undefined && !['invited', 'revoked'].includes(String(r.status)))) return 'Forbidden: invalid status';
+      }
+      return null;
+    case 'join_requests':
+      if (method === 'POST') return 'Forbidden';
+      if (method === 'PATCH') {
+        if (!keysIn(JOIN_REQUEST_FIELDS)) return 'Forbidden: that field cannot be changed';
+        if (rows.some(r => !['approved', 'denied'].includes(String(r.status)))) return 'Forbidden: invalid status';
+      }
+      return null;
+    case 'employees': {
+      if (!isMgr) return null;
+      if (method === 'DELETE') return 'Forbidden: managers cannot delete employees';
+      const mine = await managerSiteSet(caller.adminId);
+      for (const r of rows) {
+        if (method === 'POST' && r.site_id === undefined) return 'Forbidden: choose one of your sites';
+        if (r.site_id !== undefined && !(typeof r.site_id === 'string' && mine.has(r.site_id))) return 'Forbidden: that site is not assigned to you';
+      }
+      if (method === 'PATCH') {
+        const targets = await restJson(`employees?${targetFilter(filter)}&select=id,site_id&limit=1000`);
+        if (targets === null) return 'Forbidden';
+        for (const t of targets) if (!(typeof t.site_id === 'string' && mine.has(t.site_id))) return 'Forbidden: that employee is not at one of your sites';
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -1116,6 +1483,15 @@ Deno.serve(async (req: Request) => {
     return errResp('Unauthorized', 401);
   }
 
+  // Notices about a request that was just filed or decided (missed punch, time off), the team copy of a
+  // survey answer, and the payroll / employee hours e-mails. See the section above for who may ask.
+  if (action === 'notify_request') return await notifyRequestAction(caller, kioskSiteId, pinProof, body);
+  if (action === 'survey_notify') return await surveyNotifyAction(body);
+  if (action === 'send_period_summary') {
+    if (!caller) return errResp('Unauthorized', 401);
+    return await periodSummaryAction(caller, body);
+  }
+
   // Demoting a manager used to be a public RPC that trusted a caller id sent by the browser. Now the
   // caller is the signed-in admin of this session; the database function still decides whether the
   // manager belongs to that admin's account.
@@ -1295,12 +1671,14 @@ Deno.serve(async (req: Request) => {
   // Narrow GET/PATCH/DELETE to the caller's own tenant rows so a logged-in admin cannot read
   // or modify another tenant's data. Narrowing is safe-by-design: a legitimate op still matches
   // the caller's rows; only cross-tenant rows fall out (0 rows). Super admins are unscoped.
-  // Inserts are not yet tenant-validated here (lowest-damage vector; tracked as follow-up).
+  // Inserts and updates are validated separately (validateWritePayload: every tenant-bearing column in
+  // the body must point at the caller's own account) and by role (roleViolation) before forwarding.
   // Pre-auth lookups and kiosk paths have no caller and are unaffected.
   if (caller && caller.role !== 'super_admin' &&
       (method === 'GET' || method === 'PATCH' || method === 'DELETE') &&
       (COMPANY_SCOPED.has(table) || table === 'companies' || table === 'admins' ||
-       table === 'availability' || table === 'employee_portal')) {
+       table === 'availability' || table === 'employee_portal' ||
+       table === 'manager_sites' || table === 'join_requests')) {
     if (table === 'availability' || table === 'employee_portal') {
       // Neither table has a company_id column — both hang off employee_id — so scope through
       // the caller's employees. An empty list yields a sentinel that matches nothing, so the
@@ -1308,11 +1686,38 @@ Deno.serve(async (req: Request) => {
       const empIds = await ownedEmployeeIds(await ownedCompanyIds(caller.primaryAdminId));
       const scope = `employee_id=in.(${empIds.length ? empIds.join(',') : '00000000-0000-0000-0000-000000000000'})`;
       filter = filter ? `${filter}&${scope}` : scope;
+    } else if (table === 'manager_sites') {
+      // Manager assignments hang off sites: only those at the caller's own account's sites.
+      const cs = await ownedCompanyIds(caller.primaryAdminId);
+      const siteList = cs.length ? [...await idList(`sites?company_id=in.(${cs.join(',')})&select=id`)] : [];
+      const scope = `site_id=in.(${siteList.length ? siteList.join(',') : '00000000-0000-0000-0000-000000000000'})`;
+      filter = filter ? `${filter}&${scope}` : scope;
+    } else if (table === 'join_requests') {
+      // Access requests: only those aimed at this account (or filed by the caller).
+      const scope = `or=(target_admin_id.eq.${caller.primaryAdminId},target_admin_id.eq.${caller.adminId},requester_id.eq.${caller.adminId})`;
+      filter = filter ? `${filter}&${scope}` : scope;
     } else {
       const owned = (COMPANY_SCOPED.has(table) || table === 'companies')
         ? await ownedCompanyIds(caller.primaryAdminId) : [];
       const scope = tenantScopeFilter(table, caller, owned);
       if (scope) filter = filter ? `${filter}&${scope}` : scope;
+    }
+  }
+
+  // ── Role rules and shape checks for writes (see roleViolation) ───────────────
+  if (authedAdminId && (method === 'POST' || method === 'PATCH' || method === 'DELETE')) {
+    if (caller && caller.role !== 'super_admin') {
+      const denied = await roleViolation(table, method, body, filter, caller);
+      if (denied) {
+        logAudit(authedAdminId, 'role_write_blocked', table, method, denied.slice(0, 100));
+        return errResp(denied, 403);
+      }
+    }
+    if (table === 'join_requests' && method !== 'DELETE') {
+      for (const r of bodyRows(body)) {
+        const badField = joinRequestShapeError(r);
+        if (badField) return errResp(`Invalid ${badField}`, 400);
+      }
     }
   }
 
@@ -1363,7 +1768,8 @@ Deno.serve(async (req: Request) => {
     // Prefer: return=representation, so renaming a co-admin was handing the caller that person's
     // bcrypt hash -- the same secret the GET path has always been careful to remove.
     if (table === 'admins' && Array.isArray(data)) {
-      data = stripAdminRows(data, authedAdminId, filter);
+      data = stripAdminRows(data, authedAdminId);
+      if (!authedAdminId) data = preAuthAdminRows(data, filter);
     }
     if (table === 'employee_portal' && Array.isArray(data)) {
       data = stripPortalRows(data);
