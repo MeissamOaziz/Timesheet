@@ -6825,7 +6825,7 @@ async function doLogin(){
     updateNav();
     await refreshCache();
     navigate('dashboard');
-  }catch(e){showMsg('loginMsg',t('msg.connError')+': '+e.message,'error');}
+  }catch(e){showMsg('loginMsg',/too_many_attempts/.test((e&&(e._raw||e.message))||'')?t('msg.loginLocked'):t('msg.connError')+': '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════
@@ -6835,13 +6835,13 @@ async function doSetInvitePassword(){
   if(!pendingInviteAdmin){showMsg('setpassMsg','Session expired. Please log in again.','error');return;}
   const pw=document.getElementById('setpassNew').value;
   const pw2=document.getElementById('setpassConfirm').value;
-  if(!pw||pw.length<6){showMsg('setpassMsg',t('msg.passShort')||'Password must be at least 6 characters.','error');return;}
+  if(!pw||pw.length<8){showMsg('setpassMsg',t('msg.shortPassword8'),'error');return;}
   if(pw!==pw2){showMsg('setpassMsg',t('msg.passMismatch')||'Passwords do not match.','error');return;}
   try{
     showMsg('setpassMsg','Saving...','info');
     const act=await DB.rpc('activate_invited_admin',{p_id:pendingInviteAdmin.id,p_curpass:pendingInviteAdmin._tmp||'',p_newpass:pw});
     if(!act||!act.ok){
-      const map={weak_password:t('msg.passShort')||'Password must be at least 6 characters.',not_pending:'This invitation is no longer valid. Please log in.',not_found:'Account not found.'};
+      const map={weak_password:t('msg.shortPassword8'),too_many_attempts:t('msg.loginLocked'),not_pending:'This invitation is no longer valid. Please log in.',not_found:'Account not found.'};
       showMsg('setpassMsg', map[act&&act.error] || 'Could not set password. Please try again.','error');
       return;
     }
@@ -7102,13 +7102,13 @@ async function doPasswordReset(){
   const newPass=document.getElementById('forgotNewPass')?.value||'';
   const conf=document.getElementById('forgotConfirmPass')?.value||'';
   if(!pendingReset||!pendingReset.email||!pendingReset.code){ showMsg('forgotMsg',t('msg.resetExpired')||'Session expired. Please restart the reset.','error'); return; }
-  if(!newPass||newPass.length<6){ showMsg('forgotMsg',t('msg.shortPassword'),'error'); return; }
+  if(!newPass||newPass.length<8){ showMsg('forgotMsg',t('msg.shortPassword8'),'error'); return; }
   if(newPass!==conf){ showMsg('forgotMsg',t('msg.passwordMismatch'),'error'); return; }
   try{
     showMsg('forgotMsg',t('msg.saving')||'Saving...','info');
     const r=await DB.rpc('verify_code_and_reset',{p_email:pendingReset.email,p_code:pendingReset.code,p_newpass:newPass});
     if(!r||!r.ok){
-      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',no_code:t('msg.badCode')||'Incorrect or expired code.',weak_password:t('msg.shortPassword')};
+      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',no_code:t('msg.badCode')||'Incorrect or expired code.',weak_password:t('msg.shortPassword8')};
       showMsg('forgotMsg', map[r&&r.error] || (t('msg.resetFailed')||'Could not reset password. Please try again.'), 'error');
       return;
     }
@@ -7804,7 +7804,7 @@ async function saveProfile(){
     if(!curPw){msg(t('profile.curPwRequired')||'Please enter your current password.','error');return;}
     if(!newPw){msg(t('profile.newPwRequired')||'Please enter a new password.','error');return;}
     if(newPw!==confirmPw){msg(t('msg.passwordMismatch'),'error');return;}
-    if(newPw.length<6){msg(t('profile.pwTooShort')||'Password must be at least 6 characters.','error');return;}
+    if(newPw.length<8){msg(t('profile.pwTooShort')||'Password must be at least 8 characters.','error');return;}
   }
 
   const mute_manager_alerts=!document.getElementById('profileNotifyAlerts').checked;
@@ -7815,9 +7815,9 @@ async function saveProfile(){
     await DB.update('admins',`id=eq.${s.id}`,{name:newName,mute_manager_alerts,mute_approval_emails});
     // Update password if requested
     if(changingPw){
-      const cp=await DB.rpc('change_own_password',{p_session_id:s.id,p_curpass:curPw,p_newpass:newPw});
+      const cp=await DB.rpc('change_own_password',{p_token:s.token||'',p_curpass:curPw,p_newpass:newPw});
       if(!cp||!cp.ok){
-        const map={wrong_current:t('profile.wrongCurPw')||'Current password is incorrect.',weak_password:t('profile.pwTooShort')||'Password must be at least 6 characters.',no_session:t('msg.sessionExpired')||'Session expired. Please log in again.'};
+        const map={wrong_current:t('profile.wrongCurPw')||'Current password is incorrect.',weak_password:t('profile.pwTooShort')||'Password must be at least 8 characters.',too_many_attempts:t('msg.loginLocked'),no_session:t('msg.sessionExpired')||'Session expired. Please log in again.'};
         msg(map[cp&&cp.error] || 'Could not change password. Please try again.','error');
         return;
       }
@@ -10556,12 +10556,12 @@ async function saveCreateAdmin(){
   const role=document.getElementById('newAdminRole').value;
   const expires_at=role==='super_admin'?(document.getElementById('newAdminExpires').value||null):null;
   if(!name||!email||!pass){showMsg('createAdminMsg','All fields required.','error');return;}
-  if(pass.length<6){showMsg('createAdminMsg','Password must be at least 6 characters.','error');return;}
+  if(pass.length<8){showMsg('createAdminMsg','Password must be at least 8 characters.','error');return;}
   try{
     const s=Sess.get();
-    const cr=await DB.rpc('superadmin_create_admin',{p_session_id:s?.id,p_name:name,p_email:email,p_pass:pass,p_plan:plan,p_role:role,p_expires:expires_at});
+    const cr=await DB.rpc('superadmin_create_admin',{p_token:s?.token||'',p_name:name,p_email:email,p_pass:pass,p_plan:plan,p_role:role,p_expires:expires_at});
     if(!cr||!cr.ok){
-      const map={not_authorized:'Not authorized.',email_taken:'Email already registered.',weak_password:'Password must be at least 6 characters.',missing_fields:'All fields required.'};
+      const map={not_authorized:'Not authorized.',email_taken:'Email already registered.',weak_password:'Password must be at least 8 characters.',missing_fields:'All fields required.',invalid_email:'Enter a valid email address.',invalid_role:'Invalid role.',invalid_plan:'Invalid plan.'};
       showMsg('createAdminMsg', map[cr&&cr.error] || 'Could not create admin. Please try again.','error');
       return;
     }
@@ -14267,7 +14267,7 @@ function renderKioskDevices(devs, siteId){
 }
 
 async function revokeKioskDevice(id){
-  if(!(await uiConfirm(t('kw.confirmUnlink')||'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.'))) return;
+  if(!(await uiConfirm(t('kw.confirmUnlink')||'Unlink this tablet? It will stop appearing in this list.'))) return;
   try{
     await DB.update('kiosk_devices', `id=eq.${id}`, {revoked:true});
     const sid = window._currentKioskSiteId;
@@ -16601,7 +16601,7 @@ en:{
 'kw.justConnected':'{device} just connected — you’re all set.',
 'kw.connected':'{device} is set up and ready.',
 'kw.aDevice':'A tablet','kw.connectedTablets':'Connected tablets','kw.lastSeen':'last active {when}','kw.touchscreen':'touchscreen','kw.firstSeen':'first seen {when}',
-'kw.unlink':'Unlink','kw.confirmUnlink':'Unlink this tablet? It will stop appearing here until it opens the kiosk link again.',
+'kw.unlink':'Unlink','kw.confirmUnlink':'Unlink this tablet? It will stop appearing in this list.',
 'kw.justNow':'just now','kw.minsAgo':'{n} min ago','kw.hrsAgo':'{n}h ago','kw.daysAgo':'{n}d ago',
 'kw.s4':'Authorise this device.',
 'kw.s4sub':'This site only accepts punches from devices you approve. Do this step on the tablet itself, signed in as an admin.',
@@ -16974,6 +16974,7 @@ en:{
 'msg.invalidLogin':'Invalid credentials or account not verified.',
 'msg.suspended':'Your account has been suspended. Contact support.',
 'msg.connError':'Connection error',
+'msg.loginLocked':'Too many failed attempts. Please wait 15 minutes and try again, or use "Forgot password".','msg.shortPassword8':'Password must be at least 8 characters.',
 'msg.allRequired':'All fields required.','msg.shortPassword':'Password must be at least 6 characters.',
 'msg.enterAdminEmail':"Please enter your administrator's email address.",
 'msg.ownEmail':"That's your own email — please enter your administrator's email.",
@@ -17019,7 +17020,7 @@ en:{
 'toast.noSubscription':'No active Stripe subscription. Please subscribe to a plan to access billing management.',
 'profile.nameRequired':'Name cannot be empty.','profile.nameTaken':'That name is already taken by another user.',
 'profile.curPwRequired':'Please enter your current password.','profile.newPwRequired':'Please enter a new password.',
-'profile.pwTooShort':'Password must be at least 6 characters.','profile.wrongCurPw':'Current password is incorrect.',
+'profile.pwTooShort':'Password must be at least 8 characters.','profile.wrongCurPw':'Current password is incorrect.',
 'profile.saved':'✓ Profile updated successfully.',
 'land.starterSub':'1 company · 2 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin',
 'land.growthSub':'3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin',
@@ -17513,7 +17514,7 @@ fr:{
 'kw.justConnected':'{device} vient de se connecter — tout est prêt.',
 'kw.connected':'{device} est configuré et prêt.',
 'kw.aDevice':'Une tablette','kw.connectedTablets':'Tablettes connectées','kw.lastSeen':'dernière activité {when}','kw.touchscreen':'écran tactile','kw.firstSeen':'vue pour la première fois le {when}',
-'kw.unlink':'Délier','kw.confirmUnlink':'Délier cette tablette? Elle disparaîtra d’ici jusqu’à ce qu’elle rouvre le lien du kiosque.',
+'kw.unlink':'Délier','kw.confirmUnlink':'Délier cette tablette? Elle n’apparaîtra plus dans cette liste.',
 'kw.justNow':'à l’instant','kw.minsAgo':'il y a {n} min','kw.hrsAgo':'il y a {n} h','kw.daysAgo':'il y a {n} j',
 'kw.s4':'Autoriser cet appareil.',
 'kw.s4sub':'Ce site n’accepte que les pointages provenant d’appareils que vous approuvez. Faites cette étape sur la tablette elle-même, connecté comme admin.',
@@ -17886,6 +17887,7 @@ fr:{
 'msg.invalidLogin':'Identifiants invalides ou compte non vérifié.',
 'msg.suspended':'Votre compte a été suspendu. Contactez le support.',
 'msg.connError':'Erreur de connexion',
+'msg.loginLocked':'Trop de tentatives échouées. Veuillez patienter 15 minutes puis réessayer, ou utiliser « Mot de passe oublié ».','msg.shortPassword8':'Le mot de passe doit contenir au moins 8 caractères.',
 'msg.allRequired':'Tous les champs sont requis.','msg.shortPassword':'Le mot de passe doit contenir au moins 6 caractères.',
 'msg.enterAdminEmail':'Veuillez entrer le courriel de votre administrateur.',
 'msg.ownEmail':'C\'est votre propre courriel — veuillez entrer celui de votre administrateur.',
@@ -17931,7 +17933,7 @@ fr:{
 'toast.noSubscription':'Aucun abonnement Stripe actif. Veuillez souscrire à un forfait pour accéder à la gestion de facturation.',
 'profile.nameRequired':'Le nom ne peut pas être vide.','profile.nameTaken':'Ce nom est déjà utilisé par un autre utilisateur.',
 'profile.curPwRequired':'Veuillez entrer votre mot de passe actuel.','profile.newPwRequired':'Veuillez entrer un nouveau mot de passe.',
-'profile.pwTooShort':'Le mot de passe doit comporter au moins 6 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
+'profile.pwTooShort':'Le mot de passe doit comporter au moins 8 caractères.','profile.wrongCurPw':'Le mot de passe actuel est incorrect.',
 'profile.saved':'✓ Profil mis à jour avec succès.',
 'land.businessSub':'Compagnies, sites et employés illimités · 6 admins<br>+4,90$/mois par admin supplémentaire',
 'land.f.free1':'1 compagnie','land.f.free2':'1 site · terminal de pointage avec NIP','land.f.free3':'Jusqu\'à 10 employés',

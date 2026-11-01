@@ -641,7 +641,7 @@ const T = {
     fgNeedEmail:'Enter your email address.',
     fgSent:'If that address has a portal account, a code is on its way. It expires in 15 minutes.',
     fgBadCode:'That code is not valid or has expired.',
-    fgWeak:'Password must be at least 6 characters.',
+    fgWeak:'Password must be at least 8 characters.',
     fgDone:'Password updated — sign in with your new one.',
     loginEmailLabel: 'Email Address', loginPassLabel: 'Password', loginBtn: 'Sign In',
     loginFooter: "Don't have access? Ask your admin to send you an invitation.",
@@ -649,7 +649,8 @@ const T = {
     setPassSub: "You've been invited to the employee portal. Choose a password to activate your account.",
     setPassLabel: 'New Password', setPassConfirmLabel: 'Confirm Password', setPassBtn: 'Activate Account',
     tokenExpired: 'This invitation link has expired. Please ask your admin to resend it.',
-    passShort: 'Password must be at least 6 characters.', passMismatch: 'Passwords do not match.',
+    passShort: 'Password must be at least 8 characters.', passMismatch: 'Passwords do not match.',
+    loginLocked: 'Too many failed attempts. Please wait 15 minutes and try again, or use "Forgot your password?".',
     logoutBtn: 'Sign Out', navSub: 'Employee Portal',
     tabSched: 'Schedule', tabReports: 'My Hours', tabAvail: 'Availability',
     tabTimeOff: 'Time Off',
@@ -723,7 +724,7 @@ const T = {
     fgNeedEmail:'Entrez votre adresse courriel.',
     fgSent:'Si cette adresse a un compte portail, un code est en route. Il expire dans 15 minutes.',
     fgBadCode:'Ce code est invalide ou expiré.',
-    fgWeak:'Le mot de passe doit contenir au moins 6 caractères.',
+    fgWeak:'Le mot de passe doit contenir au moins 8 caractères.',
     fgDone:'Mot de passe mis à jour — connectez-vous avec le nouveau.',
     loginEmailLabel: 'Adresse courriel', loginPassLabel: 'Mot de passe', loginBtn: 'Se connecter',
     loginFooter: "Pas d'accès? Demandez à votre admin de vous envoyer une invitation.",
@@ -731,7 +732,8 @@ const T = {
     setPassSub: "Vous avez été invité au portail employé. Choisissez un mot de passe pour activer votre compte.",
     setPassLabel: 'Nouveau mot de passe', setPassConfirmLabel: 'Confirmer le mot de passe', setPassBtn: 'Activer le compte',
     tokenExpired: "Ce lien d'invitation a expiré. Demandez à votre admin de le renvoyer.",
-    passShort: 'Le mot de passe doit contenir au moins 6 caractères.', passMismatch: 'Les mots de passe ne correspondent pas.',
+    passShort: 'Le mot de passe doit contenir au moins 8 caractères.', passMismatch: 'Les mots de passe ne correspondent pas.',
+    loginLocked: 'Trop de tentatives échouées. Veuillez patienter 15 minutes puis réessayer, ou utiliser « Mot de passe oublié ».',
     logoutBtn: 'Déconnexion', navSub: 'Portail employé',
     tabSched: 'Horaire', tabReports: 'Mes heures', tabAvail: 'Disponibilité',
     tabTimeOff: 'Congés',
@@ -950,7 +952,7 @@ async function checkInviteToken() {
 async function doSetEmpPassword() {
   const pw = document.getElementById('setPassNew').value;
   const confirm = document.getElementById('setPassConfirm').value;
-  if (pw.length < 6) { showMsg('setPassMsg', t('passShort'), 'error'); return; }
+  if (pw.length < 8) { showMsg('setPassMsg', t('passShort'), 'error'); return; }
   if (pw !== confirm) { showMsg('setPassMsg', t('passMismatch'), 'error'); return; }
   const btn = document.getElementById('setPassBtn');
   btn.disabled = true; btn.textContent = '...';
@@ -967,7 +969,7 @@ async function doSetEmpPassword() {
     // Pass session_token so loginWithPortal can call portal_get_me (no direct anon reads)
     await loginWithPortal({ portal_id: acct.portal_id, employee_id: acct.employee_id, email: acct.email, session_token: acct.session_token });
   } catch(e) {
-    showMsg('setPassMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : 'Error: ' + e.message, 'error');
+    showMsg('setPassMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : /password_too_short/.test(e.message) ? t('passShort') : 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('setPassBtn');
   }
 }
@@ -1040,7 +1042,7 @@ async function doEmpReset(){
   const code=(document.getElementById('fgCode').value||'').trim();
   const pass=document.getElementById('fgPass').value||'';
   if(!/^\d{6}$/.test(code)){ showMsg('fgMsg', t('fgBadCode'), 'error'); return; }
-  if(pass.length<6){ showMsg('fgMsg', t('fgWeak'), 'error'); return; }
+  if(pass.length<8){ showMsg('fgMsg', t('fgWeak'), 'error'); return; }
   const btn=document.getElementById('fgResetBtn');
   btn.disabled=true;
   try{
@@ -1073,7 +1075,7 @@ async function doEmpLogin() {
     }
     await loginWithPortal(rows[0]); // rows[0] = {portal_id, employee_id, email, session_token}
   } catch(e) {
-    showMsg('loginMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : 'Error: ' + e.message, 'error');
+    showMsg('loginMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : /too_many_attempts/.test(e.message) ? t('loginLocked') : 'Error: ' + e.message, 'error');
     btn.disabled = false; btn.textContent = t('loginBtn');
   }
 }

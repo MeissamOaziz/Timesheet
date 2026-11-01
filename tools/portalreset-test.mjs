@@ -88,7 +88,7 @@ for(const lang of ['en','fr']){
     document.getElementById('fgPass').value='abc'; });
   await page.evaluate(()=>doEmpReset());
   ok('a short password is rejected',
-     await page.evaluate(()=>/6|six/i.test(document.getElementById('fgMsg').innerText)));
+     await page.evaluate(()=>/8|eight|huit/i.test(document.getElementById('fgMsg').innerText)));
 
   ok('back link returns to sign in', await page.evaluate(()=>{ showEmpLogin();
     return getComputedStyle(document.getElementById('screenLogin')).display!=='none'; }));
