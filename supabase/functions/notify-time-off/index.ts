@@ -15,6 +15,47 @@ const CORS = {
   'Access-Control-Max-Age': '86400',
 };
 
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+// Browsers never call this function: they ask secure-db, which checks who is asking and calls here.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SERVICE_KEY && safeEq(tok, SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status, headers: { ...CORS, 'Content-Type': 'application/json' },
@@ -70,15 +111,18 @@ const KIND_LABEL: Record<string, string> = {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (!(await isAuthorised(req))) return unauthorizedResponse(CORS);
 
   let requestId: string, mode = 'submitted';
   try {
     const body = await req.json();
+    if (body && body.action === 'auth_probe') return json({ ok: true });
     requestId = body.requestId;
     mode = body.mode === 'decision' ? 'decision' : 'submitted';
   }
   catch { return json({ error: 'Invalid body' }, 400); }
   if (!requestId) return json({ error: 'Missing requestId' }, 400);
+  if (typeof requestId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId)) return json({ error: 'Invalid requestId' }, 400);
 
   try {
     const row = (await rest(`time_off?id=eq.${requestId}&select=*&limit=1`))[0];

@@ -16,6 +16,47 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+// Browsers never call this function: they ask secure-db, which checks who is asking and calls here.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SERVICE_KEY && safeEq(tok, SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
+
 function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
 }
@@ -99,16 +140,18 @@ function feedbackEmailHtml(d: Record<string, unknown>): string {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (!(await isAuthorised(req))) return unauthorizedResponse(CORS);
   const body = await req.json().catch(() => ({} as Record<string, unknown>));
+  if (body.action === 'auth_probe') return new Response(JSON.stringify({ ok: true }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
 
   // ── action=notify: email a submitted response to the team inbox ──
   if (body.action === 'notify') {
     try {
       await sendEmail({
         to: TEAM_INBOX,
-        subject: `Nouveau commentaire / New feedback${body.email ? ` — ${body.email}` : ''}`,
+        subject: `Nouveau commentaire / New feedback${body.email ? ` — ${String(body.email).replace(/[\r\n]+/g, ' ').slice(0, 120)}` : ''}`,
         html: feedbackEmailHtml(body),
-        replyTo: typeof body.email === 'string' ? body.email : undefined,
+        replyTo: typeof body.email === 'string' && /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/.test(body.email) ? body.email : undefined,
       });
     } catch (_e) { /* swallow — the response is already saved in the DB */ }
     return new Response(JSON.stringify({ ok: true }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
@@ -132,7 +175,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, url: `${APP_URL}/?survey=${tok}` }),
         { headers: { ...CORS, 'Content-Type': 'application/json' } });
     } catch (e) {
-      return new Response(JSON.stringify({ ok: false, error: (e as Error).message }),
+      console.error('churn-survey test failed', (e as Error).message);
+      return new Response(JSON.stringify({ ok: false, error: 'Failed' }),
         { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
   }
@@ -147,8 +191,9 @@ Deno.serve(async (req) => {
     const candidates = candRes.ok ? await candRes.json() : [];
 
     // Exclude anyone already surveyed.
-    const invRes = await rest('survey_invites?select=admin_id');
-    const already = new Set((invRes.ok ? await invRes.json() : []).map((r: { admin_id: string }) => r.admin_id));
+    const candIds = (candidates as Array<Record<string, unknown>>).map((a) => String(a.id)).filter((x) => /^[0-9a-f-]{36}$/i.test(x));
+    const invRes = candIds.length ? await rest(`survey_invites?select=admin_id&admin_id=in.(${candIds.join(',')})`) : null;
+    const already = new Set((invRes && invRes.ok ? await invRes.json() : []).map((r: { admin_id: string }) => r.admin_id));
 
     const targets = (candidates as Array<Record<string, unknown>>)
       .filter((a) => a.email && !already.has(a.id as string))
@@ -163,7 +208,7 @@ Deno.serve(async (req) => {
         method: 'POST', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ admin_id: a.id, email: a.email, company_name: company, token: tok }),
       });
-      if (!ins.ok) { errors.push(`invite ${a.email}: ${ins.status}`); continue; }
+      if (!ins.ok) { errors.push(`invite ${ins.status}`); continue; }
       try {
         await sendEmail({
           to: a.email as string,
@@ -172,12 +217,13 @@ Deno.serve(async (req) => {
           replyTo: SUPPORT_REPLY_TO,
         });
         sent++;
-      } catch (e) { errors.push(`email ${a.email}: ${(e as Error).message}`); }
+      } catch (e) { errors.push('email failed'); console.error('churn-survey email failed', (e as Error).message.slice(0, 120)); }
     }
-    return new Response(JSON.stringify({ ok: true, candidates: targets.length, sent, errors }, null, 2),
+    return new Response(JSON.stringify({ ok: true, candidates: targets.length, sent, errors: errors.length }),
       { headers: { ...CORS, 'Content-Type': 'application/json' } });
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
+    console.error('churn-survey failed', (e as Error).message);
+    return new Response(JSON.stringify({ ok: false, error: 'Failed' }), {
       status: 500, headers: { ...CORS, 'Content-Type': 'application/json' },
     });
   }

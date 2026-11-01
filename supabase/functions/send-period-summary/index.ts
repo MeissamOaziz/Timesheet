@@ -16,6 +16,54 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+// Browsers never call this function: they ask secure-db, which checks who is asking and calls here.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SUPABASE_SERVICE_KEY && safeEq(tok, SUPABASE_SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
+
+// HTML-escape for text that came from a person (company, site, employee names and codes).
+function esc(s: unknown): string {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+}
+// Subjects are single-line text.
+function oneLine(s: unknown): string { return String(s ?? '').replace(/[\r\n]+/g, ' ').slice(0, 200); }
 function toDateStr(d) {
   return d.toLocaleDateString('en-CA');
 }
@@ -197,7 +245,7 @@ function buildEmailHtml(params) {
       </td>
     </tr>`;
   }
-  const contextLine = siteName ? `${companyName} — ${siteName}` : companyName;
+  const contextLine = siteName ? `${esc(companyName)} — ${esc(siteName)}` : esc(companyName);
   const periodFmt = (d)=>{
     const dt = new Date(d + 'T12:00:00');
     return dt.toLocaleDateString('en-US', {
@@ -233,7 +281,7 @@ function buildEmailHtml(params) {
   </tr>
   <tr>
     <td style="padding:28px 32px 12px">
-      <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#1e293b">Hi ${empName},</h1>
+      <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#1e293b">Hi ${esc(empName)},</h1>
       <p style="margin:0;font-size:14px;color:#64748b;line-height:1.6">
         Here's your complete punch log for the ${freqLabel[frequency]?.toLowerCase() || ''} period ending
         <strong style="color:#334155">${periodFmt(periodEnd)}</strong>.
@@ -431,8 +479,8 @@ function buildPayrollSummaryHtml(params) {
   const otHead = trackOvertime ? '<th style="padding:9px 12px;text-align:right;font-size:12px;color:#64748b;font-weight:600">Overtime</th>' : '';
   const rowsHtml = rows.map((r, i) => `
     <tr style="background:${i % 2 ? '#f8fafc' : '#ffffff'}">
-      <td style="padding:9px 12px;font-size:13px;color:#0f172a">${r.name}${r.code ? ` <span style="color:#94a3b8">${r.code}</span>` : ''}</td>
-      <td style="padding:9px 12px;font-size:13px;color:#64748b">${r.site || '—'}</td>
+      <td style="padding:9px 12px;font-size:13px;color:#0f172a">${esc(r.name)}${r.code ? ` <span style="color:#94a3b8">${esc(r.code)}</span>` : ''}</td>
+      <td style="padding:9px 12px;font-size:13px;color:#64748b">${r.site ? esc(r.site) : '—'}</td>
       <td style="padding:9px 12px;font-size:13px;color:#64748b;text-align:right">${r.days}</td>
       <td style="padding:9px 12px;font-size:13px;color:#0f172a;text-align:right;font-variant-numeric:tabular-nums">${fmt(r.regular)}</td>
       ${trackOvertime ? `<td style="padding:9px 12px;font-size:13px;text-align:right;color:${r.overtime > 0 ? '#b45309' : '#94a3b8'};font-variant-numeric:tabular-nums">${r.overtime > 0 ? fmt(r.overtime) : '—'}</td>` : ''}
@@ -448,7 +496,7 @@ function buildPayrollSummaryHtml(params) {
   </td></tr>
   <tr><td style="padding:24px 26px 8px">
     <h1 style="margin:0 0 6px;font-size:20px;color:#0f172a">${freqLabel} payroll summary</h1>
-    <p style="margin:0 0 4px;font-size:14px;color:#475569">${companyName}${scopeLabel ? ` · ${scopeLabel}` : ''}</p>
+    <p style="margin:0 0 4px;font-size:14px;color:#475569">${esc(companyName)}${scopeLabel ? ` · ${esc(scopeLabel)}` : ''}</p>
     <p style="margin:0 0 18px;font-size:14px;color:#475569">Period <strong style="color:#0f172a">${periodStart}</strong> to <strong style="color:#0f172a">${periodEnd}</strong> (now closed)</p>
   </td></tr>
   <tr><td style="padding:0 26px">
@@ -474,7 +522,7 @@ function buildPayrollSummaryHtml(params) {
   ${warn.length ? `<tr><td style="padding:16px 26px 0">
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;line-height:1.6">
       <strong>Check before you run payroll.</strong> ${warn.length} employee${warn.length === 1 ? '' : 's'} had a clock-in with no matching clock-out
-      (${warn.map((w) => w.name).join(', ')}). Those shifts are not counted above until an admin corrects them in PunchClock.
+      (${warn.map((w) => esc(w.name)).join(', ')}). Those shifts are not counted above until an admin corrects them in PunchClock.
     </div></td></tr>` : ''}
   <tr><td style="padding:18px 26px 26px">
     <p style="margin:0;font-size:12.5px;color:#64748b;line-height:1.65">
@@ -484,7 +532,7 @@ function buildPayrollSummaryHtml(params) {
   </td></tr>
   <tr><td style="padding:14px 26px;border-top:1px solid #e2e8f0;background:#f8fafc">
     <p style="margin:0;font-size:11.5px;color:#94a3b8;line-height:1.6">
-      You receive this because an administrator at ${companyName} added you as a payroll report recipient in PunchClock Pro.
+      You receive this because an administrator at ${esc(companyName)} added you as a payroll report recipient in PunchClock Pro.
       Ask them to remove you if you'd rather not get it.
     </p>
   </td></tr>
@@ -556,13 +604,14 @@ async function sendPayrollSummaries(company, startStr, endStr, result) {
       filename: `payroll-hours-${startStr}-to-${endStr}.csv`,
       content: btoa(unescape(encodeURIComponent(csv)))
     }];
-    const subject = `${freqLabel} payroll summary — ${company.name}${scopeLabel ? ` (${scopeLabel})` : ''} · ${startStr} to ${endStr}`;
+    const subject = oneLine(`${freqLabel} payroll summary — ${company.name}${scopeLabel ? ` (${scopeLabel})` : ''} · ${startStr} to ${endStr}`);
     for (const r of recips.filter((x) => (x.site_id || '') === scope)) {
       try {
         await sendEmail(r.email, subject, html, attachments);
         result.recipientsSent = (result.recipientsSent || 0) + 1;
       } catch (e) {
-        result.errors.push(`recipient ${r.email}: ${e.message}`);
+        result.errors.push('recipient: send failed');
+        console.error('period summary recipient failed', company.id, String(e.message).slice(0, 160));
       }
     }
   }
@@ -583,7 +632,7 @@ async function sendToEmployee(emp, startStr, endStr, frequency, companyName, rou
     biweekly: 'Bi-Weekly',
     monthly: 'Monthly'
   };
-  const subject = `${freqLabel[frequency] || 'Period'} Hours Summary — ${companyName} (${startStr} → ${endStr})`;
+  const subject = oneLine(`${freqLabel[frequency] || 'Period'} Hours Summary — ${companyName} (${startStr} → ${endStr})`);
   const html = buildEmailHtml({
     empName: emp.name,
     companyName,
@@ -616,15 +665,21 @@ Deno.serve(async (req)=>{
       headers: corsHeaders
     });
   }
+  if (!(await isAuthorised(req))) return unauthorizedResponse(corsHeaders);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   try {
     if (req.method === 'POST') {
       const body = await req.json().catch(()=>({}));
+      if (body && body.action === 'auth_probe') {
+        return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
       // "Send a test now" from the recipients panel: same email the cron would send, for the
       // period the admin picked, so a typo'd address gets caught before payroll day. Runs as if
       // today with no delay — a test should show the most recently closed period regardless of
       // the company's configured delay/hour, so a typo is caught immediately rather than waiting.
+      const okDate = (d: unknown) => d === undefined || d === null || d === '' || (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d));
+      if (!okDate(body.start_date) || !okDate(body.end_date)) throw new Error('Invalid dates');
       if (body.test_recipients && body.company_id) {
         const { data: co, error: cErr } = await supabase.from('companies').select('*').eq('id', body.company_id).single();
         if (cErr || !co) throw new Error('Company not found');
@@ -635,7 +690,7 @@ Deno.serve(async (req)=>{
         const endStr = body.end_date || toDateStr(info ? info.periodEnd : addDays(today, -1));
         const startStr = body.start_date || toDateStr(info ? info.periodStart
           : addDays(addDays(today, -1), -((co.payroll_frequency === 'weekly' ? 7 : 14) - 1)));
-        const result = { company: co.name, sent: 0, skipped: 0, errors: [], recipientsSent: 0 };
+        const result = { company: co.id, sent: 0, skipped: 0, errors: [], recipientsSent: 0 };
         await sendPayrollSummaries(co, startStr, endStr, result);
         return new Response(JSON.stringify({
           success: result.errors.length === 0,
@@ -671,7 +726,7 @@ Deno.serve(async (req)=>{
     if (coErr) throw coErr;
     for (const company of companies || []){
       const companyResult = {
-        company: company.name,
+        company: company.id,
         sent: 0,
         skipped: 0,
         errors: []
@@ -729,7 +784,8 @@ Deno.serve(async (req)=>{
           await sendToEmployee(emp, startStr, endStr, company.payroll_frequency || 'biweekly', company.name, company.punch_rounding || 0, company.lunch_break_paid_minutes);
           companyResult.sent++;
         } catch (e) {
-          companyResult.errors.push(`${emp.name}: ${e.message}`);
+          companyResult.errors.push(`employee ${emp.id}: send failed`);
+          console.error('period summary employee send failed', emp.id, String(e.message).slice(0, 160));
         }
       }
       // Whoever runs payroll gets the consolidated version. Kept outside the employee loop and
@@ -737,7 +793,8 @@ Deno.serve(async (req)=>{
       try {
         await sendPayrollSummaries(company, startStr, endStr, companyResult);
       } catch (e) {
-        companyResult.errors.push(`payroll recipients: ${e.message}`);
+        companyResult.errors.push('payroll recipients: send failed');
+        console.error('period summary recipients failed', company.id, String(e.message).slice(0, 160));
       }
       results.push(companyResult);
     }
