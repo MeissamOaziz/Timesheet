@@ -4422,7 +4422,9 @@ async function supaFetch(method,table,opts={},_retried){
         body:opts.body||null,
         sessionId:sess?.id||null,
         sessionToken:sess?.token||null,
-        kioskSiteId:(!sess&&ctx?.site?.id)?ctx.site.id:null
+        kioskSiteId:(!sess&&ctx?.site?.id)?ctx.site.id:null,
+        kioskV:2,
+        pinToken:(!sess&&window._kioskPinProof&&Date.now()<window._kioskPinProof.exp)?window._kioskPinProof.proof:null
       }),
       signal:controller.signal
     });
@@ -8208,7 +8210,7 @@ function requestSwitchTask() {
   const empId = document.getElementById('empSelect').value;
   if(!empId) { showPunchMsg(t('msg.selectName'), 'error'); return; }
   const emp = C.employees.find(e => e.id === empId); if(!emp) return;
-  if(!emp.pin) { showPunchMsg(t('msg.noPin'), 'error'); return; }
+  if(!empHasPin(emp)) { showPunchMsg(t('msg.noPin'), 'error'); return; }
   if(getEmpStatus(empId).status !== 'IN') { showPunchMsg(`${emp.name} ${t('plabel.notIn')||'needs to be clocked IN to switch task.'}`, 'error'); return; }
   pinState = { empId, punchType: 'OUT', entered: '', purpose: 'switch', isBreak: false };
   document.getElementById('pinEmpName').textContent = emp.name;
@@ -8223,7 +8225,7 @@ function requestPunch(type){
   const empId=document.getElementById('empSelect').value;
   if(!empId){showPunchMsg(t('msg.selectName'),'error');return;}
   const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
-  if(!emp.pin){showPunchMsg(t('msg.noPin'),'error');return;}
+  if(!empHasPin(emp)){showPunchMsg(t('msg.noPin'),'error');return;}
   const{status}=getEmpStatus(empId);
   if(type==='IN'&&status==='IN'){ showDoublePunchWarning(empId,'IN'); return; }
   if(type==='OUT'&&status==='OUT'){ showDoublePunchWarning(empId,'OUT'); return; }
@@ -8246,7 +8248,7 @@ function requestBreak(){
   const empId=document.getElementById('empSelect').value;
   if(!empId){showPunchMsg(t('msg.selectName'),'error');return;}
   const emp=C.employees.find(e=>e.id===empId);if(!emp)return;
-  if(!emp.pin){showPunchMsg(t('msg.noPin'),'error');return;}
+  if(!empHasPin(emp)){showPunchMsg(t('msg.noPin'),'error');return;}
   const{status,last}=getEmpStatus(empId);
   const onBreak = status==='OUT' && last && last.is_break;
   if(status==='OUT' && !onBreak){
@@ -8343,11 +8345,49 @@ function pinDel(){pinState.entered=pinState.entered.slice(0,-1);updatePinDots();
 function updatePinDots(){for(let i=0;i<4;i++){document.getElementById('pd'+i).classList.toggle('filled',i<pinState.entered.length);document.getElementById('pd'+i).classList.remove('error');}}
 function resetPinDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.remove('filled','error');}
 
-function validatePin(){
+// Terminals no longer receive anyone's PIN, only whether they have one. An admin who is signed in on the
+// punch page still loads the PINs with the employee list, so for them emp.pin is present.
+function empHasPin(emp){ return emp.has_pin!==undefined ? !!emp.has_pin : !!emp.pin; }
+
+// Ask the server whether this is the employee's PIN. On success it returns a short-lived proof that the
+// next punch must carry (supaFetch attaches it); the PIN never has to be on the device.
+async function kioskVerifyPin(empId,pin){
+  const ctx=Ctx.get();
+  try{
+    const res=await fetch(`${SUPA_URL}/functions/v1/secure-db`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+      body:JSON.stringify({action:'kiosk_verify_pin',kioskV:2,kioskSiteId:ctx?.site?.id||null,body:{employee_id:empId,pin}})
+    });
+    const out=await res.json().catch(()=>null);
+    if(out&&out.ok&&out.proof){
+      window._kioskPinProof={proof:out.proof,exp:Date.now()+Math.max(10000,(out.ttl||120000)-5000)};
+      return {ok:true};
+    }
+    return {ok:false,locked:!!(out&&out.locked)};
+  }catch(_e){ return {ok:false,network:true}; }
+}
+
+let _pinChecking=false;
+async function validatePin(){
+  if(_pinChecking) return;
   const emp=C.employees.find(e=>e.id===pinState.empId);
-  if(!emp||pinState.entered!==emp.pin){
+  let good=false, why=null;
+  if(emp){
+    if(emp.pin!==undefined&&emp.pin!==null){ good=(pinState.entered===emp.pin); }
+    else{
+      _pinChecking=true;
+      try{
+        const r=await kioskVerifyPin(emp.id,pinState.entered);
+        good=r.ok;
+        if(!good&&r.locked) why=t('pin.locked')||'Too many wrong PINs. Please wait a few minutes.';
+        else if(!good&&r.network) why=t('pin.netFail')||'Could not check the PIN. Check the connection and try again.';
+      }finally{ _pinChecking=false; }
+    }
+  }
+  if(!good){
     for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
-    document.getElementById('pinErrorMsg').textContent=t('pin.incorrect')||'Incorrect PIN. Try again.';
+    document.getElementById('pinErrorMsg').textContent=why||t('pin.incorrect')||'Incorrect PIN. Try again.';
     setTimeout(()=>{pinState.entered='';resetPinDots();},900);return;
   }
   const{empId,punchType,purpose,isBreak}=pinState;
@@ -9005,7 +9045,7 @@ async function submitMissedPunch(){
     return;
   }
   const emp = C.employees.find(e=>e.id===empId); if(!emp) return;
-  if(!emp.pin){
+  if(!empHasPin(emp)){
     showMsg('missedPunchMsg', t('msg.noPin')||`${emp.name} has no PIN set. Ask an admin to set one first.`, 'error');
     return;
   }
@@ -14763,7 +14803,9 @@ async function init(){
       // One anon RPC returns the site, its owning company, and its active employees (the site
       // id is the kiosk credential). Replaces anonymous reads of the protected sites/companies
       // tables, which the read gate (correctly) blocks.
-      const boot = await DB.rpc('get_kiosk_bootstrap',{p_site_id:kioskSiteId});
+      let boot;
+      try{ boot = await DB.rpc('get_kiosk_bootstrap_v2',{p_site_id:kioskSiteId}); }
+      catch(_v2){ boot = await DB.rpc('get_kiosk_bootstrap',{p_site_id:kioskSiteId}); }
       const site = (boot&&boot.ok) ? boot.site : null;
       if(!site){
         document.getElementById('loadingOverlay').classList.add('hidden');
@@ -16362,10 +16404,19 @@ async function verifySchedPin() {
     showMsg('sendMySchedMsg', t('sched.pinRequired')||'Please enter your 4-digit PIN.', 'error');
     return;
   }
-  if(pin !== emp.pin) {
-    showMsg('sendMySchedMsg', t('sched.pinWrong')||'Incorrect PIN. Please try again.', 'error');
-    document.getElementById('sendMySchedPin').value = '';
-    return;
+  if(emp.pin!==undefined && emp.pin!==null) {
+    if(pin !== emp.pin) {
+      showMsg('sendMySchedMsg', t('sched.pinWrong')||'Incorrect PIN. Please try again.', 'error');
+      document.getElementById('sendMySchedPin').value = '';
+      return;
+    }
+  } else {
+    const vr = await kioskVerifyPin(emp.id, pin);
+    if(!vr.ok) {
+      showMsg('sendMySchedMsg', vr.locked ? (t('pin.locked')||'Too many wrong PINs. Please wait a few minutes.') : (t('sched.pinWrong')||'Incorrect PIN. Please try again.'), 'error');
+      document.getElementById('sendMySchedPin').value = '';
+      return;
+    }
   }
 
   // PIN verified — move to step 2
@@ -16378,6 +16429,11 @@ async function verifySchedPin() {
     document.getElementById('sendMySchedEmail').value = emp.email;
     document.getElementById('sendMySchedEmailLabel').textContent =
       (t('sched.sendingTo')||'Sending to:') + ' ' + emp.email;
+  } else if(emp.has_email) {
+    // A terminal is not told the address on file; the server sends to it.
+    document.getElementById('sendMySchedEmail').value = '';
+    document.getElementById('sendMySchedEmailLabel').textContent =
+      (t('sched.sendingTo')||'Sending to:') + ' ' + (t('sched.emailOnFile')||'the email address on file');
   } else {
     document.getElementById('sendMySchedEmail').value = '';
     document.getElementById('sendMySchedEmailLabel').setAttribute('data-i18n','sched.yourEmail');
@@ -16394,8 +16450,9 @@ async function sendMyScheduleNow() {
   const emp = C.employees.find(e => e.id === empId);
   if(!emp) return;
 
-  const email = document.getElementById('sendMySchedEmail').value.trim().toLowerCase();
-  if(!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+  const onFileOnly = !emp.email && !!emp.has_email;
+  const email = onFileOnly ? '' : document.getElementById('sendMySchedEmail').value.trim().toLowerCase();
+  if(!onFileOnly && (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email))) {
     showMsg('sendMySchedMsg', t('contact.invalidEmail')||'Please enter a valid email address.', 'error');
     return;
   }
@@ -16787,7 +16844,7 @@ en:{
 'emp.promoteEmail':'Email Address','emp.promoteSiteHint':'(select at least one)','emp.promoteSendInvite':'Send Invitation',
 'emp.promoteDescPrefix':'Promote','emp.promoteDescSuffix':'to Manager? They will receive an email invitation to create their account password. Once accepted, they can manage assigned sites.',
 'emp.promoteInviteSent':'Invitation sent to','emp.promoteInviteNote':"They'll appear as a manager once they accept.",
-'pin.toClockIn':'Enter PIN to clock IN','pin.toClockOut':'Enter PIN to clock OUT','pin.toStartBreak':'Enter PIN to start break','pin.toEndBreak':'Enter PIN to end break','pin.incorrect':'Incorrect PIN. Try again.','pin.confirmReport':'Enter your PIN to confirm this report',
+'pin.toClockIn':'Enter PIN to clock IN','pin.toClockOut':'Enter PIN to clock OUT','pin.toStartBreak':'Enter PIN to start break','pin.toEndBreak':'Enter PIN to end break','pin.incorrect':'Incorrect PIN. Try again.','pin.locked':'Too many wrong PINs. Please wait a few minutes.','pin.netFail':'Could not check the PIN. Check the connection and try again.','sched.emailOnFile':'the email address on file','pin.confirmReport':'Enter your PIN to confirm this report',
 'val.nameRequired':'Name is required.','val.pinDigits':'PIN must be exactly 4 digits.','val.pinRequired':'A 4-digit PIN is required for new employees.','val.siteNameRequired':'Site name is required.','val.noCompany':'No active company.','val.emailForReport':'Please enter an email address for the report, or turn off the email report toggle.','val.emailInvalid':'Please enter a valid email address.',
 'demo.readOnly':'This is a demo — changes are not saved. Create a free account to set up your own team.',
 'err.temporary':'Temporary connection problem. Please try again in a moment.','err.notAllowed':'You do not have permission to do that. Try logging out and back in.','err.duplicate':'That already exists. Please use a different value.','err.linked':'This item is still linked to other records and cannot be removed.','err.server':'The server is temporarily unavailable. Please try again shortly.','err.generic':'Something went wrong. Please try again.',
@@ -17699,7 +17756,7 @@ fr:{
 'emp.promoteEmail':'Adresse courriel','emp.promoteSiteHint':'(sélectionnez au moins un)','emp.promoteSendInvite':'Envoyer l\'invitation',
 'emp.promoteDescPrefix':'Promouvoir','emp.promoteDescSuffix':'en gestionnaire ? Ils recevront une invitation par courriel. Une fois acceptée, ils pourront gérer les sites attribués.',
 'emp.promoteInviteSent':'Invitation envoyée à','emp.promoteInviteNote':"Ils apparaîtront comme gestionnaire une fois l'invitation acceptée.",
-'pin.toClockIn':'Entrez le NIP pour pointer l\'ENTRÉE','pin.toClockOut':'Entrez le NIP pour pointer la SORTIE','pin.toStartBreak':'Entrez le NIP pour débuter la pause','pin.toEndBreak':'Entrez le NIP pour terminer la pause','pin.incorrect':'NIP incorrect. Réessayez.','pin.confirmReport':'Entrez votre NIP pour confirmer ce signalement',
+'pin.toClockIn':'Entrez le NIP pour pointer l\'ENTRÉE','pin.toClockOut':'Entrez le NIP pour pointer la SORTIE','pin.toStartBreak':'Entrez le NIP pour débuter la pause','pin.toEndBreak':'Entrez le NIP pour terminer la pause','pin.incorrect':'NIP incorrect. Réessayez.','pin.locked':'Trop de NIP erronés. Veuillez patienter quelques minutes.','pin.netFail':'Impossible de vérifier le NIP. Vérifiez la connexion et réessayez.','sched.emailOnFile':'l\'adresse courriel au dossier','pin.confirmReport':'Entrez votre NIP pour confirmer ce signalement',
 'val.nameRequired':'Le nom est obligatoire.','val.pinDigits':'Le NIP doit contenir exactement 4 chiffres.','val.pinRequired':'Un NIP à 4 chiffres est obligatoire pour un nouvel employé.','val.siteNameRequired':'Le nom du site est obligatoire.','val.noCompany':'Aucune compagnie active.','val.emailForReport':'Veuillez entrer une adresse courriel pour le rapport, ou désactiver l\'envoi par courriel.','val.emailInvalid':'Veuillez entrer une adresse courriel valide.',
 'demo.readOnly':'Ceci est une démo — les changements ne sont pas enregistrés. Créez un compte gratuit pour configurer votre propre équipe.',
 'err.temporary':'Problème de connexion temporaire. Veuillez réessayer dans un instant.','err.notAllowed':'Vous n\'avez pas la permission d\'effectuer cette action. Essayez de vous déconnecter et de vous reconnecter.','err.duplicate':'Cet élément existe déjà. Veuillez utiliser une valeur différente.','err.linked':'Cet élément est encore lié à d\'autres enregistrements et ne peut pas être supprimé.','err.server':'Le serveur est temporairement indisponible. Veuillez réessayer sous peu.','err.generic':'Une erreur est survenue. Veuillez réessayer.',

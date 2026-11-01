@@ -622,9 +622,13 @@ async function sendKioskScheduleEmail(siteId: string, rawBody: unknown): Promise
   if (!UUID_RE.test(empId)) return jsonResp({ ok: false, error: 'Invalid employee' }, 400);
   const pin = strOf(b.pin, 8);
   if (!/^\d{4}$/.test(pin)) return jsonResp({ ok: false, error: 'PIN required' }, 400);
+  // Wrong guesses are throttled exactly like the punch PIN: this check was an open PIN oracle.
+  const attempt = await pinAttemptStart(siteId, empId);
+  if (attempt.locked) return jsonResp({ ok: false, error: 'Too many wrong PINs. Please wait a few minutes.' }, 429);
   const emp = (await restJson(`employees?id=eq.${empId}&select=id,name,email,pin,site_id&limit=1`))?.[0];
   // Same answer for "no such employee", "employee at another site" and "wrong PIN": nothing to probe.
-  if (!emp || emp.site_id !== siteId || String(emp.pin) !== pin) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+  if (!emp || emp.site_id !== siteId || !emp.pin || String(emp.pin) !== pin) return jsonResp({ ok: false, error: 'Forbidden' }, 403);
+  await pinAttemptClear(attempt.id);
 
   const since = new Date(Date.now() - 3600 * 1000).toISOString();
   const perEmp = await restJson(`audit_log?event=eq.email_sent:schedule_kiosk&filter=eq.emp:${empId}&at=gte.${since}&select=id`);
@@ -773,6 +777,101 @@ async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Respon
   }
 }
 
+// ── Kiosk PIN proof ───────────────────────────────────────────────────────────────────────────
+// The PIN used to be shipped to every tablet (and to anyone holding the site id) and compared in the
+// browser. Now the browser sends the PIN HERE, this function compares it against the database,
+// throttles wrong guesses, and answers with a short-lived proof bound to that employee and that site.
+// A kiosk punch is only accepted with a valid proof, so knowing a site id and an employee id is no
+// longer enough to write punches. The proof is an HMAC under a key derived from the service key (it
+// never leaves this function), so no new secret has to be stored.
+// Strict kiosk mode (no PINs or emails sent to terminals, a PIN proof required for every kiosk punch)
+// applies to every request from a moment in time. Before it, only clients that announce `kioskV: 2`
+// get it, so tablets still running the previous page keep working while they update themselves
+// (they check for a new version every 30 seconds). Pages from before this change stop punching
+// after that moment until they reload. The moment is read from internal_secrets key
+// 'kiosk_strict_from' (an ISO timestamp, cached for a minute) so it can be set without a redeploy;
+// if the row is missing, the built-in fallback below applies, so strict mode can never stay off.
+const KIOSK_STRICT_FALLBACK = Date.parse('2026-11-01T12:46:00Z');
+let _strictCache = { at: 0, from: KIOSK_STRICT_FALLBACK };
+async function kioskStrictFrom(): Promise<number> {
+  if (Date.now() - _strictCache.at < 60_000) return _strictCache.from;
+  let from = KIOSK_STRICT_FALLBACK;
+  try {
+    const v = (await restJson(`internal_secrets?key=eq.kiosk_strict_from&select=value&limit=1`))?.[0]?.value;
+    const t = v ? Date.parse(String(v)) : NaN;
+    if (Number.isFinite(t)) from = t;
+  } catch { /* keep the fallback */ }
+  _strictCache = { at: Date.now(), from };
+  return from;
+}
+const PIN_PROOF_TTL_MS = 120_000;
+const PIN_ATTEMPTS_PER_EMPLOYEE = 5;
+const PIN_ATTEMPTS_PER_SITE = 40;
+const PIN_WINDOW_MS = 10 * 60 * 1000;
+let _pinKeyP: Promise<CryptoKey> | null = null;
+function pinKey(): Promise<CryptoKey> {
+  if (!_pinKeyP) {
+    _pinKeyP = crypto.subtle.importKey('raw', new TextEncoder().encode('kiosk-pin-proof-v1:' + SERVICE_KEY),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  }
+  return _pinKeyP;
+}
+function b64url(buf: ArrayBuffer): string {
+  let s = '';
+  for (const b of new Uint8Array(buf)) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function pinProofSig(empId: string, siteId: string, exp: number): Promise<string> {
+  return b64url(await crypto.subtle.sign('HMAC', await pinKey(), new TextEncoder().encode(`${empId}.${siteId}.${exp}`)));
+}
+async function mintPinProof(empId: string, siteId: string): Promise<string> {
+  const exp = Date.now() + PIN_PROOF_TTL_MS;
+  return `${exp}.${await pinProofSig(empId, siteId, exp)}`;
+}
+async function verifyPinProof(proof: unknown, empId: string, siteId: string): Promise<boolean> {
+  if (typeof proof !== 'string' || proof.length > 200) return false;
+  const dot = proof.indexOf('.');
+  if (dot < 1) return false;
+  const exp = Number(proof.slice(0, dot));
+  if (!Number.isFinite(exp) || exp < Date.now() || exp > Date.now() + PIN_PROOF_TTL_MS + 5000) return false;
+  const want = await pinProofSig(empId, siteId, exp);
+  const got = proof.slice(dot + 1);
+  if (got.length !== want.length) return false;
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ got.charCodeAt(i);
+  return diff === 0;
+}
+// Every PIN attempt is written down BEFORE it is judged (so a burst of parallel guesses cannot all
+// slip under the limit) and removed again when the PIN turns out to be right, which leaves only wrong
+// guesses to count. The audit_log write is awaited here, unlike the usual fire-and-forget logging.
+async function pinAttemptStart(siteId: string, empId: string): Promise<{ locked: boolean; id: string | null }> {
+  let id: string | null = null;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ admin_id: null, event: 'kiosk_pin_attempt', table_name: `site:${siteId}`, method: 'POST', filter: `emp:${empId}` }),
+    });
+    const rows = r.ok ? await r.json().catch(() => null) : null;
+    // audit_log.id is a bigint, which arrives as a JSON number
+    const rid = Array.isArray(rows) && rows[0] ? rows[0].id : null;
+    id = (typeof rid === 'number' || (typeof rid === 'string' && /^\d+$/.test(rid))) ? String(rid) : null;
+  } catch { /* if the log is unavailable the PIN check itself still runs */ }
+  const since = new Date(Date.now() - PIN_WINDOW_MS).toISOString();
+  const perEmp = await restJson(`audit_log?event=eq.kiosk_pin_attempt&filter=eq.emp:${empId}&at=gte.${since}&select=id&limit=${PIN_ATTEMPTS_PER_EMPLOYEE + 1}`);
+  const perSite = await restJson(`audit_log?event=eq.kiosk_pin_attempt&table_name=eq.site:${siteId}&at=gte.${since}&select=id&limit=${PIN_ATTEMPTS_PER_SITE + 1}`);
+  const locked = (perEmp?.length ?? 0) > PIN_ATTEMPTS_PER_EMPLOYEE || (perSite?.length ?? 0) > PIN_ATTEMPTS_PER_SITE;
+  return { locked, id };
+}
+async function pinAttemptClear(id: string | null): Promise<void> {
+  if (!id || !/^\d{1,18}$/.test(id)) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/audit_log?id=eq.${id}`, {
+      method: 'DELETE', headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
+    });
+  } catch { /* a leftover row only makes the throttle slightly stricter */ }
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -785,7 +884,8 @@ Deno.serve(async (req: Request) => {
   let filter: string;
   let table: string, method: string, body: unknown,
       sessionToken: string | null,
-      kioskSiteId: string | null, action: string | null;
+      kioskSiteId: string | null, action: string | null,
+      pinProof: string | null, kioskStrict: boolean;
   try {
     const p = await req.json();
     table        = p.table;
@@ -795,6 +895,8 @@ Deno.serve(async (req: Request) => {
     sessionToken = p.sessionToken || null;
     kioskSiteId  = p.kioskSiteId  || null;
     action       = p.action || null;
+    pinProof     = typeof p.pinToken === 'string' ? p.pinToken : null;
+    kioskStrict  = p.kioskV === 2 || Date.now() >= await kioskStrictFrom();
   } catch {
     return errResp('Invalid request body', 400);
   }
@@ -991,6 +1093,23 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  // A person at a kiosk proves their PIN to the server (see "Kiosk PIN proof" above). The answer for a
+  // wrong PIN, an unknown employee, an employee of another site and an employee without a PIN is the
+  // same, so there is nothing to probe; repeated wrong guesses lock that employee for a few minutes.
+  if (action === 'kiosk_verify_pin') {
+    if (caller || !kioskSiteId) return errResp('Unauthorized', 401);
+    if (!(await verifySite(kioskSiteId))) return errResp('Unauthorized', 401);
+    const vb = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
+    const vEmp = strOf(vb.employee_id, 60), vPin = strOf(vb.pin, 8);
+    if (!UUID_RE.test(vEmp) || !/^\d{4}$/.test(vPin)) return jsonResp({ ok: false, error: 'invalid' }, 400);
+    const attempt = await pinAttemptStart(kioskSiteId, vEmp);
+    if (attempt.locked) return jsonResp({ ok: false, locked: true, error: 'Too many wrong PINs. Please wait a few minutes.' }, 429);
+    const emp = (await restJson(`employees?id=eq.${vEmp}&select=id,site_id,pin&limit=1`))?.[0];
+    if (!emp || emp.site_id !== kioskSiteId || !emp.pin || String(emp.pin) !== vPin) return jsonResp({ ok: false, error: 'incorrect' }, 200);
+    await pinAttemptClear(attempt.id);
+    return jsonResp({ ok: true, proof: await mintPinProof(vEmp, kioskSiteId), ttl: PIN_PROOF_TTL_MS });
+  }
+
   if (action === 'send_email') {
     if (caller) return await sendEmailAction(caller, body);
     if (kioskSiteId) return await sendKioskScheduleEmail(kioskSiteId, body);
@@ -1094,6 +1213,8 @@ Deno.serve(async (req: Request) => {
           return errResp('Forbidden: employee does not belong to this site', 403);
         }
         if (kb.company_id === undefined && table === 'punches') kb.company_id = emp.company_id;
+        // ...and the person at the terminal must have just proved that employee's PIN to the server.
+        if ((kioskStrict || pinProof) && !(await verifyPinProof(pinProof, empId, kioskSiteId))) return errResp('PIN required', 401);
       }
 
     } else if (
@@ -1246,6 +1367,14 @@ Deno.serve(async (req: Request) => {
     }
     if (table === 'employee_portal' && Array.isArray(data)) {
       data = stripPortalRows(data);
+    }
+    // A terminal learns who works at its site, never their PIN or email: it only needs to know whether
+    // each of them has one (the PIN itself is checked by kiosk_verify_pin).
+    if (table === 'employees' && kioskSiteId && !authedAdminId && kioskStrict && Array.isArray(data)) {
+      data = data.map((e: any) => {
+        const { pin, email, ...rest } = e;
+        return { ...rest, has_pin: !!pin, has_email: !!email };
+      });
     }
     // A terminal has no other way to learn the company's "labels at clock-in" setting, so it rides
     // along on each label it is allowed to see.

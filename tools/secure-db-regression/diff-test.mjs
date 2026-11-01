@@ -26,6 +26,7 @@ const companiesOf = { a1: ['c1'], b1: ['c9'] };
 const sitesOf = { c1: ['s1', 's2'], c9: ['s9'] };
 const employeesOf = { c1: ['e1', 'e2'], c9: ['e9'] };
 const bigPunches = Array.from({ length: 2500 }, (_, i) => ({ id: 'p' + String(i).padStart(5, '0'), emp_id: 'e1', type: i % 2 ? 'OUT' : 'IN', punched_at: new Date(2026, 9, 1, 0, 0, i).toISOString(), site_id: 's1' }));
+const E_LOCKED = '00000000-0000-4000-8000-0000000000e4';
 const E_OWN = '00000000-0000-4000-8000-0000000000e1', E_NOMAIL = '00000000-0000-4000-8000-0000000000e2', E_OTHER = '00000000-0000-4000-8000-0000000000e9', E_THROTTLED = '00000000-0000-4000-8000-0000000000e3';
 const T_OK = '11111111-1111-4111-8111-111111111111', T_OTHER = '11111111-1111-4111-8111-111111111112', T_EXPIRED = '11111111-1111-4111-8111-111111111113', T_USED = '11111111-1111-4111-8111-111111111114';
 const J_OK = '22222222-2222-4222-8222-222222222221', J_PENDING = '22222222-2222-4222-8222-222222222222', J_OTHER = '22222222-2222-4222-8222-222222222223', J_DENIED = '22222222-2222-4222-8222-222222222224';
@@ -127,7 +128,11 @@ function makeFetch() {
     if (t === 'sites' && method === 'GET' && p.q.has('company_id')) { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (sitesOf[c] || []).map(id => ({ id })))); }
     if (t === 'employees' && method === 'GET' && p.q.has('company_id') && p.q.get('select') === 'id') { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (employeesOf[c] || []).map(id => ({ id })))); }
     if (t === 'work_labels' && method === 'GET' && p.q.get('select') === 'id') return j(p.q.has('id') ? (eq('id') === 'l1' ? [{ id: 'l1' }] : []) : [{ id: 'l1' }]);
-    if (method === 'POST' && t === 'audit_log') return new Response(null, { status: 201 });
+    if (method === 'POST' && t === 'audit_log') {
+      // like the real table: a bigint id comes back when the caller asks for the representation
+      if (init.headers && init.headers.Prefer === 'return=representation') return j([{ id: 4242 }], 201);
+      return new Response(null, { status: 201 });
+    }
     const pick = (map, key) => { const r = map[key]; return r ? [r] : []; };
     if (t === 'invitations' && method === 'GET' && p.q.has('token')) return j(pick(invRows, eq('token')));
     if (t === 'employee_portal' && method === 'GET' && p.q.has('employee_id')) return j(pick(portalRows, eq('employee_id')));
@@ -144,7 +149,7 @@ function makeFetch() {
       if (who === 'sa') return j([...rows(100, 'email_sent:invitation'), ...rows(300, 'email_sent:schedule')]);
       return j([]);
     }
-    if (t === 'audit_log' && method === 'GET' && p.q.has('event')) return j((p.q.get('filter') || '').includes(E_THROTTLED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }] : []);
+    if (t === 'audit_log' && method === 'GET' && p.q.has('event')) return j((p.q.get('filter') || '').includes(E_LOCKED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 6 }] : (p.q.get('filter') || '').includes(E_THROTTLED) ? [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }] : []);
     if (method === 'GET' && tables[t]) {
       let rows = tables[t]; const off = parseInt(p.q.get('offset') || '0', 10); const lim = parseInt(p.q.get('limit') || String(rows.length), 10);
       const total = rows.length; rows = rows.slice(off, off + lim);
@@ -166,6 +171,19 @@ async function load(file, tag) {
   await import(pathToFileURL(out).href + '?v=' + Date.now());
   return globalThis.__H;
 }
+
+// ---------- kiosk PIN proofs (same algorithm as the function: HMAC-SHA256 over emp.site.exp, key derived from the service key) ----------
+import { webcrypto } from 'node:crypto';
+async function mintProof(emp, site, ttlMs = 60000) {
+  const exp = Date.now() + ttlMs;
+  const key = await webcrypto.subtle.importKey('raw', new TextEncoder().encode('kiosk-pin-proof-v1:svc-key'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = Buffer.from(await webcrypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${emp}.${site}.${exp}`))).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${exp}.${sig}`;
+}
+const PROOF_E1_S1 = await mintProof('e1', 's1');
+const PROOF_E1_EXPIRED = await mintProof('e1', 's1', -1000);
+const PROOF_E1_FOR_S2 = await mintProof('e1', 's2');
+const PROOF_TAMPERED = PROOF_E1_S1.slice(0, -3) + 'AAA';
 
 // ---------- request corpus ----------
 const S1 = 's1';
@@ -390,6 +408,30 @@ const cases = [
   R('hardening', 'kiosk punch with no employee at all', { table: 'punches', method: 'POST', kioskSiteId: S1, body: { type: 'IN', site_id: S1 } }, r => r.status === 403 && !r.calls.some(c => /^POST .*punches/.test(c))),
   R('hardening', 'kiosk punch: company is filled in from the employee', { table: 'punches', method: 'POST', kioskSiteId: S1, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => (r.status === 201 || r.status === 200) && r.calls.some(c => /^POST .*punches.*"company_id":"c1"/.test(c))),
   R('hardening', 'kiosk missed punch for another company employee', { table: 'missed_punch_requests', method: 'POST', kioskSiteId: S1, body: { site_id: S1, emp_id: 'e9' } }, r => r.status === 403),
+  // ---- kiosk PIN proof (2026-11-01) ----
+  R('kiosk-pin', 'verify: right PIN returns a proof', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OWN, pin: '1234' } }, r => r.status === 200 && r.obj.ok === true && typeof r.obj.proof === 'string' && !JSON.stringify(r.obj).includes('1234')),
+  R('kiosk-pin', 'verify: a right PIN removes its own attempt row, so successes never count against the limit', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OWN, pin: '1234' } }, r => r.status === 200 && r.obj.ok === true && r.audit.some(a => /^POST .*audit_log/.test(a)) && r.audit.some(a => /^DELETE .*audit_log\?id=eq\.4242/.test(a))),
+  R('kiosk-pin', 'verify: a wrong PIN keeps its attempt row', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OWN, pin: '0000' } }, r => r.status === 200 && r.obj.ok === false && r.audit.some(a => /^POST .*audit_log/.test(a)) && !r.audit.some(a => /^DELETE /.test(a))),
+  R('kiosk-pin', 'verify: wrong PIN', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OWN, pin: '0000' } }, r => r.status === 200 && r.obj.ok === false && !r.obj.proof),
+  R('kiosk-pin', 'verify: employee of another site', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OTHER, pin: '9999' } }, r => r.status === 200 && r.obj.ok === false && !r.obj.proof),
+  R('kiosk-pin', 'verify: right PIN at the wrong site', { action: 'kiosk_verify_pin', kioskSiteId: 's2', body: { employee_id: E_OWN, pin: '1234' } }, r => r.status === 200 && r.obj.ok === false && !r.obj.proof),
+  R('kiosk-pin', 'verify: too many wrong PINs locks the employee', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_LOCKED, pin: '1234' } }, r => r.status === 429 && r.obj.locked === true && !r.obj.proof),
+  R('kiosk-pin', 'verify: no site', { action: 'kiosk_verify_pin', body: { employee_id: E_OWN, pin: '1234' } }, r => r.status === 401),
+  R('kiosk-pin', 'verify: a signed-in admin is not a kiosk', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OWN, pin: '1234' }, ...own }, r => r.status === 401),
+  R('kiosk-pin', 'verify: malformed employee id', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: "x' or '1'='1", pin: '1234' } }, r => r.status === 400),
+  R('kiosk-pin', 'verify: malformed pin', { action: 'kiosk_verify_pin', kioskSiteId: S1, body: { employee_id: E_OWN, pin: '12ab' } }, r => r.status === 400),
+  R('kiosk-pin', 'strict: punch without a proof is refused', { table: 'punches', method: 'POST', kioskV: 2, kioskSiteId: S1, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => r.status === 401 && !r.calls.some(c => /^POST .*punches/.test(c))),
+  R('kiosk-pin', 'strict: proof for another site is refused', { table: 'punches', method: 'POST', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_FOR_S2, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => r.status === 401 && !r.calls.some(c => /^POST .*punches/.test(c))),
+  R('kiosk-pin', 'strict: expired proof is refused', { table: 'punches', method: 'POST', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_EXPIRED, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => r.status === 401),
+  R('kiosk-pin', 'strict: tampered proof is refused', { table: 'punches', method: 'POST', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_TAMPERED, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => r.status === 401),
+  R('kiosk-pin', 'strict: a proof for one employee does not work for another', { table: 'punches', method: 'POST', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { emp_id: 'e9', type: 'IN', site_id: S1 } }, r => r.status === 403 && !r.calls.some(c => /^POST .*punches/.test(c))),
+  R('kiosk-pin', 'strict: punch with a valid proof', { table: 'punches', method: 'POST', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => (r.status === 201 || r.status === 200) && r.calls.some(c => /^POST .*punches/.test(c))),
+  R('kiosk-pin', 'strict: missed-punch request needs the proof too', { table: 'missed_punch_requests', method: 'POST', kioskV: 2, kioskSiteId: S1, body: { site_id: S1, emp_id: 'e1' } }, r => r.status === 401),
+  R('kiosk-pin', 'strict: missed-punch request with a proof', { table: 'missed_punch_requests', method: 'POST', kioskV: 2, kioskSiteId: S1, pinToken: PROOF_E1_S1, body: { site_id: S1, emp_id: 'e1' } }, r => r.status === 201 || r.status === 200),
+  R('kiosk-pin', 'strict: visitor check-in needs no PIN', { table: 'visitors', method: 'POST', kioskV: 2, kioskSiteId: S1, body: { site_id: S1, name: 'V' } }, r => r.status === 201 || r.status === 200),
+  R('kiosk-pin', 'strict: terminal employee list has no PIN and no email', { table: 'employees', method: 'GET', filter: '', kioskV: 2, kioskSiteId: S1 }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length > 0 && r.obj.every(e => !('pin' in e) && !('email' in e) && e.has_pin === true)),
+  R('kiosk-pin', 'transition: a client that has not announced v2 still gets the old data', { table: 'employees', method: 'GET', filter: '', kioskSiteId: S1 }, r => r.status === 200 && r.obj.some(e => 'pin' in e)),
+  R('kiosk-pin', 'an admin still sees the PINs of their own employees', { table: 'employees', method: 'GET', filter: 'active=eq.true', ...own }, r => r.status === 200 && r.obj.some(e => 'pin' in e)),
 ];
 
 async function run(handler) {
@@ -402,7 +444,7 @@ async function run(handler) {
     try { const r = await handler(req); status = r.status; const t = await r.text(); try { body = JSON.parse(t); } catch { body = t; } }
     catch (e) { status = 'THROW'; body = String(e.message || e); }
     // the audit log write is fire-and-forget and order-independent; keep it but sort for stability
-    results.push({ ...c, status, body: JSON.stringify(body).slice(0, 600), rawBody: body, calls: upstream.filter(u => !/audit_log/.test(u.url)).map(u => `${u.method} ${u.url} ${u.dry ? '[dry] ' : ''}${u.body || ''}`), fn: upstream.filter(u => /functions\/v1/.test(u.url)).map(u => ({ dry: u.dry, body: (() => { try { return JSON.parse(u.body); } catch { return null; } })() })), obj: (body && typeof body === 'object') ? body : null });
+    results.push({ ...c, status, body: JSON.stringify(body).slice(0, 600), rawBody: body, audit: upstream.filter(u => /audit_log/.test(u.url)).map(u => `${u.method} ${u.url}`), calls: upstream.filter(u => !/audit_log/.test(u.url)).map(u => `${u.method} ${u.url} ${u.dry ? '[dry] ' : ''}${u.body || ''}`), fn: upstream.filter(u => /functions\/v1/.test(u.url)).map(u => ({ dry: u.dry, body: (() => { try { return JSON.parse(u.body); } catch { return null; } })() })), obj: (body && typeof body === 'object') ? body : null });
   }
   return results;
 }
