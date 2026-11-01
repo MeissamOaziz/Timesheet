@@ -1,0 +1,51 @@
+# Public functions that the anon (public) key may EXECUTE: exactly the ones index.html and employee.html call
+# with rpc('<name>', ...). Anything not listed here must be executable by service_role and postgres only.
+# anon-exposure-check.mjs fails if the live database differs from this list in either direction.
+#
+# Adding a browser-callable function: add it here AND grant it on purpose in the migration:
+#   grant execute on function public.<name>(<arg types>) to anon;
+# Everything else (helpers, cron jobs, trigger functions, secure-db-only RPCs): revoke all ... from public, anon, authenticated.
+#
+# Not on the list although they exist: portal_get_sites, portal_register_push_token (planned mobile app, no caller yet:
+# grant them and list them here when that app ships), accept_invite, lookup_invite (legacy, no caller).
+accept_invitation
+activate_employee_portal
+activate_invited_admin
+admin_delete_survey
+admin_list_surveys
+admin_logout
+admin_set_survey_status
+change_own_password
+check_email_code
+get_invitation
+get_kiosk_bootstrap
+get_kiosk_bootstrap_v2
+get_portal_invite
+get_survey_invite
+kiosk_device_checkin
+mint_admin_session
+portal_add_availability
+portal_cancel_time_off
+portal_change_password
+portal_delete_availability
+portal_get_availability
+portal_get_company_payroll
+portal_get_me
+portal_get_punch_labels
+portal_get_punches
+portal_get_schedule_status
+portal_get_shifts
+portal_get_team_shifts
+portal_get_time_off
+portal_login
+portal_logout
+portal_punch
+portal_request_time_off
+portal_reset_password
+submit_inapp_feedback
+submit_survey_response
+superadmin_create_admin
+unsubscribe_weekly_digest
+verify_admin_login
+verify_code_and_register
+verify_code_and_reset

@@ -54,13 +54,21 @@ Deno.serve(async (req: Request) => {
   // cache means most repeat views (across kiosks, dashboards, every admin session) never
   // re-download the file at all, which was otherwise the single largest source of Supabase
   // egress on this project.
-  const upRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${fileName}`, {
+  //
+  // Object name: the client-supplied name plus 12 random hex characters, and never an overwrite. The caller is
+  // anyone holding the public anon key, so a client-chosen name with upsert would let them replace another
+  // customer's logo or an employee photo, and a guessable name would make the files enumerable. Clients only
+  // ever use the URL returned below (never rebuild it from the file name), so the suffix is invisible to them.
+  const rnd = Array.from(crypto.getRandomValues(new Uint8Array(6))).map((b) => b.toString(16).padStart(2, '0')).join('');
+  const dot = fileName.lastIndexOf('.');
+  const objName = dot > 0 ? `${fileName.slice(0, dot)}-${rnd}${fileName.slice(dot)}` : `${fileName}-${rnd}`;
+  const upRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${objName}`, {
     method: 'POST',
     headers: {
       'apikey': SERVICE_KEY,
       'Authorization': `Bearer ${SERVICE_KEY}`,
       'Content-Type': contentType,
-      'x-upsert': 'true',
+      'x-upsert': 'false',
       'cache-control': 'max-age=604800',
     },
     body: bytes,
@@ -69,7 +77,7 @@ Deno.serve(async (req: Request) => {
     const t = await upRes.text();
     return err('Upload failed: ' + t, 500);
   }
-  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${fileName}`;
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${objName}`;
   return new Response(JSON.stringify({ ok: true, url: publicUrl }), {
     status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
   });
