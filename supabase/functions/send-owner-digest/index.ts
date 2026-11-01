@@ -29,6 +29,47 @@ const FROM_EMAIL = "PunchClock Pro <noreply@punchclock.ca>";
 const APP_URL = "https://www.punchclock.ca";
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
+const SERVICE_KEY = SUPABASE_SERVICE_KEY ?? "";
+
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SERVICE_KEY && safeEq(tok, SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
 
 const ENT: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>]/g, (c) => ENT[c]);
@@ -262,7 +303,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
   });
   if (!res.ok) {
-    console.error(`Resend error for ${to}: ${await res.text()}`);
+    console.error(`Resend error (status ${res.status})`);
     return false;
   }
   return true;
@@ -270,6 +311,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { status: 200 });
+  if (!(await isAuthorised(req))) return unauthorizedResponse({});
 
   // Copy changes reach every customer on the next run, so the function is inspectable without
   // sending: dry_run reports exactly who would get what, `only` targets one company by id,
@@ -277,8 +319,12 @@ Deno.serve(async (req) => {
   let dryRun = false, only = "", force = false;
   try {
     const b = await req.json();
+    // Harmless probe so a deployment can be verified without running the digest or sending mail.
+    if (b?.action === "auth_probe") {
+      return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+    }
     dryRun = !!b?.dry_run;
-    only = b?.only_company_id || "";
+    only = typeof b?.only_company_id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.only_company_id) ? b.only_company_id : "";
     force = !!b?.force;
   } catch { /* cron posts no body */ }
 
@@ -301,13 +347,13 @@ Deno.serve(async (req) => {
 
     for (const co of (companies ?? []) as CompanyRow[]) {
       const admin = adminById.get(co.admin_id) as Record<string, unknown> | undefined;
-      if (!admin || admin.role === "super_admin" || !admin.verified) { results.push({ company: co.name, skipped: "no admin" }); continue; }
+      if (!admin || admin.role === "super_admin" || !admin.verified) { results.push({ skipped: "no admin" }); continue; }
       // Honoured before anything is computed — an unsubscribed owner is not a data question.
-      if (admin.weekly_digest === false) { results.push({ company: co.name, skipped: "unsubscribed" }); continue; }
+      if (admin.weekly_digest === false) { results.push({ skipped: "unsubscribed" }); continue; }
 
       const lastSent = co.digest_last_sent_at ? new Date(co.digest_last_sent_at) : null;
       const window = force ? { start: new Date(now.getTime() - 7 * 86400000), end: now } : dueWindow(co, now, lastSent);
-      if (!window) { results.push({ company: co.name, skipped: "not due" }); continue; }
+      if (!window) { results.push({ skipped: "not due" }); continue; }
 
       // Mark as processed for this due hour immediately (unless this is just a dry run) — a cron
       // that fires more than once inside the same hour must not double-send.
@@ -321,7 +367,7 @@ Deno.serve(async (req) => {
 
       // Silence beats a digest that reports nothing happened.
       if (!(punchRows ?? []).length || hours < 1) {
-        results.push({ company: co.name, skipped: "no activity" });
+        results.push({ skipped: "no activity" });
         continue;
       }
 
@@ -345,10 +391,11 @@ Deno.serve(async (req) => {
       });
 
       const sent = dryRun ? true : await sendEmail(admin.email as string, subject, html);
+      // No company name or owner email in the response: callers only need the counts.
       results.push({
-        company: co.name, email: admin.email, sent, dryRun, frequency: co.digest_frequency,
+        sent, dryRun, frequency: co.digest_frequency,
         hours: Math.round(hours), people, punches: (punchRows ?? []).length,
-        pending: (pendingPunch ?? 0) + (pendingTimeOff ?? 0), subject,
+        pending: (pendingPunch ?? 0) + (pendingTimeOff ?? 0),
       });
     }
 
@@ -358,7 +405,7 @@ Deno.serve(async (req) => {
       { headers: { "Content-Type": "application/json" } });
   } catch (e) {
     console.error("owner digest error:", e);
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
+    return new Response(JSON.stringify({ ok: false, error: "Internal error" }), {
       status: 500, headers: { "Content-Type": "application/json" },
     });
   }

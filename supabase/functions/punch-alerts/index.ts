@@ -15,6 +15,46 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SERVICE_KEY && safeEq(tok, SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
+
 function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
 }
@@ -63,7 +103,13 @@ function alertEmailHtml(adminName: string, companyName: string, alerts: Alert[])
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  if (!(await isAuthorised(req))) return unauthorizedResponse(CORS);
   const body = await req.json().catch(() => ({} as Record<string, unknown>));
+
+  // Harmless probe so a deployment can be verified without running the alert pass or sending mail.
+  if (body.action === 'auth_probe') {
+    return new Response(JSON.stringify({ ok: true }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
+  }
 
   if (body.action === 'test') {
     try {
@@ -207,8 +253,7 @@ Deno.serve(async (req) => {
     for (const c of fresh) (freshByCo[c.company_id] || (freshByCo[c.company_id] = [])).push(c);
 
     let emailed = 0;
-    const errors: string[] = [];
-    const recipients: string[] = [];
+    let failed = 0;
     for (const coId of Object.keys(freshByCo)) {
       const co = coById[coId];
       if (!co) continue;
@@ -234,13 +279,13 @@ Deno.serve(async (req) => {
           await sendEmail(person.email, `Alertes PunchClock / PunchClock alerts — ${co.name}`,
             alertEmailHtml(person.name, co.name, mine.map((c) => c.alert)));
           emailed++;
-          recipients.push(person.email);
-        } catch (e) { errors.push(`${person.email}: ${(e as Error).message}`); }
+        } catch (e) { failed++; console.error('punch-alerts: send failed:', (e as Error).message.slice(0, 80)); }
       }
     }
-    return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, recipients, errors }, null, 2),
+    return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, failed }),
       { headers: { ...CORS, 'Content-Type': 'application/json' } });
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    console.error('punch-alerts error:', (e as Error).message);
+    return new Response(JSON.stringify({ ok: false, error: 'Internal error' }), { status: 500, headers: { ...CORS, 'Content-Type': 'application/json' } });
   }
 });

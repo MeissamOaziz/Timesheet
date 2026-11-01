@@ -13,8 +13,55 @@ const SUPPORT_EMAIL = "PunchClock Pro <support@punchclock.ca>";
 const APP_URL = "https://www.punchclock.ca";
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
+const SERVICE_KEY = SUPABASE_SERVICE_KEY ?? "";
 
-// ── Shared helpers ────────────────────────────────────────────────────────────
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SERVICE_KEY && safeEq(tok, SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
+
+// Anything a person typed (account name, company name) is escaped before it goes into mail HTML,
+// and subjects are cut to one bounded line.
+const esc = (v: unknown): string => String(v == null ? "" : v).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" } as Record<string, string>)[c]);
+const oneLine = (v: unknown): string => String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").slice(0, 200);
+
+// -- Shared helpers --
 function wrapper(body: string, replyable = false): string {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
@@ -73,8 +120,9 @@ function stepListFr(): string {
   </div>`;
 }
 
-// ── Email templates ───────────────────────────────────────────────────────────
+// -- Email templates --
 function buildDay1(name: string): { subject: string; html: string } {
+  name = esc(name);
   return {
     subject: "Welcome to PunchClock Pro — here’s how to get started 🎉 | Bienvenue sur PunchClock Pro",
     html: wrapper(`
@@ -102,6 +150,7 @@ function buildDay1(name: string): { subject: string; html: string } {
 }
 
 function buildDay3(name: string): { subject: string; html: string } {
+  name = esc(name);
   return {
     subject: "Still getting set up? We’re here to help 👋 | Besoin d’aide?",
     html: wrapper(`
@@ -133,6 +182,7 @@ function buildDay3(name: string): { subject: string; html: string } {
 // Stalled after adding people but before any punch — by far the most common way a trial dies.
 // The usual cause is not knowing the employee PIN, so that is what this email leads with.
 function buildNoPunch(name: string, dayLabelEn: string, dayLabelFr: string): { subject: string; html: string } {
+  name = esc(name);
   // This used to teach the workaround it had to teach at the time: reveal an employee's PIN
   // one row at a time and punch on their behalf. It never mentioned putting a tablet at the
   // door, which is the actual product and the exact step the funnel dies on. The kiosk wizard
@@ -198,6 +248,7 @@ function buildNoPunch(name: string, dayLabelEn: string, dayLabelFr: string): { s
 
 // Site exists but nobody has been added yet.
 function buildNoEmployees(name: string, dayLabelEn: string, dayLabelFr: string): { subject: string; html: string } {
+  name = esc(name);
   return {
     subject: "Add your team to start tracking hours 👥 | Ajoutez votre équipe",
     html: wrapper(`
@@ -227,6 +278,7 @@ function buildNoEmployees(name: string, dayLabelEn: string, dayLabelFr: string):
 }
 
 function buildDay6(name: string): { subject: string; html: string } {
+  name = esc(name);
   return {
     subject: "⏰ Your PunchClock Pro trial expires tomorrow | Votre essai expire demain",
     html: wrapper(`
@@ -276,6 +328,7 @@ function buildDay6(name: string): { subject: string; html: string } {
 }
 
 function buildDay7(name: string): { subject: string; html: string } {
+  name = esc(name);
   return {
     subject: "Your trial has ended — here’s what happens next | Votre essai est terminé",
     html: wrapper(`
@@ -320,20 +373,23 @@ function buildDay7(name: string): { subject: string; html: string } {
   };
 }
 
-// ── Send email via Resend ─────────────────────────────────────────────────────
+// -- Send email via Resend --
 // Day 7, for accounts that ARE punching. They previously heard nothing after day 4 — the only
 // day-7 message was the trial one, so success went unacknowledged while failure got a shutdown
 // notice. Every figure comes from the account's own punches; the caller skips the send when
 // there is nothing real to report.
 function buildWeekRecap(name: string, company: string, hours: number, punches: number, people: number) {
   const h = Math.round(hours);
+  const coSubject = oneLine(company);
+  name = esc(name);
+  company = esc(company);
   const stat = (n: string, en: string) =>
     `<td style="border:1px solid #e2e8f0;padding:12px 14px;text-align:center;background:#f8fafc">
        <span style="font-size:21px;font-weight:700;color:#1e293b;display:block">${n}</span>
        <span style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em">${en}</span>
      </td>`;
   return {
-    subject: `Your first week at ${company}: ${h}h tracked | Votre première semaine : ${h} h suivies`,
+    subject: `Your first week at ${coSubject}: ${h}h tracked | Votre première semaine : ${h} h suivies`,
     html: wrapper(`
       <!-- ENGLISH -->
       <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Hi ${name} — your first week is in</h1>
@@ -418,7 +474,7 @@ async function sendEmail(to: string, subject: string, html: string, from = FROM_
   });
   if (!res.ok) {
     const err = await res.text();
-    console.error(`Resend error for ${to}: ${err}`);
+    console.error(`Resend error (status ${res.status}): ${err.slice(0, 120)}`);
     return false;
   }
   return true;
@@ -439,11 +495,12 @@ async function sendEmail(to: string, subject: string, html: string, from = FROM_
 // true, and they are the useful half.
 const TRIAL_EMAILS_ENABLED = false;
 
-// ── Main handler ──────────────────────────────────────────────────────────────
+// -- Main handler --
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { status: 200 });
   }
+  if (!(await isAuthorised(req))) return unauthorizedResponse({});
 
   // Copy changes here go straight to customers on the next cron, so the function has to be
   // inspectable without sending. `dry_run` reports exactly who would receive what and marks
@@ -456,6 +513,11 @@ Deno.serve(async (req) => {
     testTo = body?.to || "";
     dryRun = !!body?.dry_run;
   } catch { /* cron posts no body */ }
+
+  // Harmless probe so a deployment can be verified without running the drip or sending mail.
+  if (action === "auth_probe") {
+    return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+  }
 
   if (action === "test_recap") {
     if (!testTo) return new Response(JSON.stringify({ ok: false, error: "Missing `to`" }), { status: 400 });
@@ -472,7 +534,7 @@ Deno.serve(async (req) => {
     const coName = (coRows?.[0] as { name?: string })?.name || "your company";
     const { subject, html } = buildWeekRecap(admin.name, coName, totals.hours, totals.punches, totals.people);
     const ok = await sendEmail(testTo, subject, html, SUPPORT_EMAIL);
-    return new Response(JSON.stringify({ ok, sentTo: testTo, subject, totals }, null, 2),
+    return new Response(JSON.stringify({ ok, subject, totals }, null, 2),
       { headers: { "Content-Type": "application/json" } });
   }
 
@@ -505,7 +567,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const results: Array<{ admin: string; sent: string[]; skipped: string[] }> = [];
+    const results: Array<{ sent: string[]; skipped: string[] }> = [];
 
     for (const admin of admins) {
       const sent: string[] = [];
@@ -626,7 +688,7 @@ Deno.serve(async (req) => {
           .eq("id", admin.id);
       }
 
-      results.push({ admin: admin.email, sent, skipped });
+      results.push({ sent, skipped });
     }
 
     const totalSent = results.reduce((n, r) => n + r.sent.length, 0);
@@ -637,7 +699,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("Onboarding error:", e);
-    return new Response(JSON.stringify({ ok: false, error: e.message }), {
+    return new Response(JSON.stringify({ ok: false, error: "Internal error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

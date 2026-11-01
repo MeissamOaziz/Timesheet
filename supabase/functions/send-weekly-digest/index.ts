@@ -15,8 +15,49 @@ const DIGEST_TO = "meissam.h.p@gmail.com";
 const PRICE = { starter: 19.49, growth: 39.49, business: 79.49, schedulingAddon: 14.95 };
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
+const SERVICE_KEY = SUPABASE_SERVICE_KEY ?? "";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ---- Caller authorisation (server-to-server only) --------------------------------------------
+// verify_jwt is OFF on this function, so the gate is here: the Authorization bearer must equal the
+// service-role key or the `cron_secret` row of internal_secrets (what pg_cron sends). Compared in
+// constant time; the secret is loaded once per isolate. Anything else gets 401 before any work.
+const _enc = new TextEncoder();
+function safeEq(a: string, b: string): boolean {
+  const x = _enc.encode(a), y = _enc.encode(b);
+  let r = x.length ^ y.length;
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) r |= (x[i] ?? 0) ^ (y[i] ?? 0);
+  return r === 0;
+}
+let _cronSecret = '';
+async function loadCronSecret(): Promise<string> {
+  if (_cronSecret) return _cronSecret;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.cron_secret&select=value`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (r.ok) {
+      const rows = await r.json();
+      const v = rows?.[0]?.value;
+      if (typeof v === 'string' && v.length >= 32) _cronSecret = v;
+    }
+  } catch (_e) { /* fail closed */ }
+  return _cronSecret;
+}
+async function isAuthorised(req: Request): Promise<boolean> {
+  const m = /^Bearer\s+(\S+)\s*$/i.exec(req.headers.get('authorization') || '');
+  if (!m) return false;
+  const tok = m[1];
+  if (SERVICE_KEY && safeEq(tok, SERVICE_KEY)) return true;
+  const cs = await loadCronSecret();
+  return cs !== '' && safeEq(tok, cs);
+}
+function unauthorizedResponse(cors: Record<string, string>): Response {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } });
+}
+// ----------------------------------------------------------------------------------------------
+
+// -- Helpers --
 function fmtDate(d: Date): string {
   return d.toLocaleDateString("en-CA", { month: "short", day: "2-digit", year: "numeric" });
 }
@@ -32,7 +73,7 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// ── Email wrapper (matches existing dark theme) ─────────────────────────────
+// -- Email wrapper (matches existing dark theme) --
 function wrapper(body: string, headerLine: string): string {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
@@ -91,9 +132,10 @@ function emptyHint(text: string): string {
   return `<div style="color:#94a3b8;font-size:13px;font-style:italic">${text}</div>`;
 }
 
-// ── Main handler ────────────────────────────────────────────────────────────
+// -- Main handler --
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { status: 200 });
+  if (!(await isAuthorised(req))) return unauthorizedResponse({});
 
   // dry_run computes every figure and returns it without sending. Added because verifying a
   // change to the revenue numbers should not require mailing the owner a digest he did not ask
@@ -102,6 +144,10 @@ Deno.serve(async (req) => {
   try {
     const p = await req.json();
     dryRun = p?.dry_run === true;
+    // Harmless probe so a deployment can be verified without computing or sending a digest.
+    if (p?.action === "auth_probe") {
+      return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+    }
   } catch { /* no body: a normal cron invocation */ }
 
   try {
@@ -208,7 +254,7 @@ Deno.serve(async (req) => {
       .neq("role", "super_admin")
       .is("parent_admin_id", null);
 
-    // ── Build email body ────────────────────────────────────────────────────
+    // -- Build email body --
     const totalPaid = billed.length;
 
     const statsRow = `
@@ -294,7 +340,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({
         ok: true, dry_run: true, dateRange,
         mrr: Number(mrr.toFixed(2)),
-        paying: billed.map(a => ({ email: a.email, plan: a.plan, subscription: a.stripe_subscription_id })),
+        // Only reachable with the service key or cron secret. Stripe ids are never returned.
+        paying: billed.map(a => ({ email: a.email, plan: a.plan })),
         comped: comped.map(a => ({ email: a.email, plan: a.plan })),
         freeAccounts: (newFree ?? []).length + (olderFree ?? []).length,
         totalAccounts: totalActive ?? 0,
@@ -302,7 +349,7 @@ Deno.serve(async (req) => {
       }, null, 2), { headers: { "Content-Type": "application/json" } });
     }
 
-    // ── Send via Resend ─────────────────────────────────────────────────────
+    // -- Send via Resend --
     const sendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -311,14 +358,13 @@ Deno.serve(async (req) => {
     const sendText = await sendRes.text();
     if (!sendRes.ok) {
       console.error(`Resend error: ${sendText}`);
-      return new Response(JSON.stringify({ ok: false, error: sendText }), {
+      return new Response(JSON.stringify({ ok: false, error: "Send failed" }), {
         status: 500, headers: { "Content-Type": "application/json" },
       });
     }
 
     const summary = {
       ok: true,
-      to: DIGEST_TO,
       dateRange,
       counts: {
         newThisWeek: (newUsers ?? []).length,
@@ -337,7 +383,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("Weekly digest error:", e);
-    return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
+    return new Response(JSON.stringify({ ok: false, error: "Internal error" }), {
       status: 500, headers: { "Content-Type": "application/json" },
     });
   }
