@@ -1,0 +1,17 @@
+-- Owner decision (2026-11-01): employee photos (avatars) and company logos (logos) must not be reachable by
+-- anyone who merely has, or guesses, the object address. Both buckets become PRIVATE.
+--
+-- From now on:
+--   * the pages only show short-lived SIGNED urls, minted by secure-db with the service key (one batched Storage
+--     call, cached per isolate): kiosk_bootstrap action, employee and company reads and write answers;
+--   * photo_url / logo_url keep the stored public-style address (.../object/public/<bucket>/<object>); it no longer
+--     opens by itself, secure-db maps it to the object name when it signs;
+--   * uploads go through the storage-upload function, which now needs an admin session token and a company the
+--     admin owns, files objects under <company uuid>/ and returns the stored address;
+--   * employee invitation emails carry a 30 day signed logo url minted at send time.
+-- Applied after the server (secure-db v50, storage-upload v4) and the pages were live and the kiosk tablets had
+-- picked up sw.js punchclock-v89.
+--
+-- ROLLBACK (instantly makes every stored address open again):
+--   update storage.buckets set public = true where id in ('avatars', 'logos');
+update storage.buckets set public = false where id in ('avatars', 'logos');
