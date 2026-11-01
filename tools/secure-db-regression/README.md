@@ -23,4 +23,13 @@ nothing is deployed without both of these.
    if the `http` extension is installed. Prints names and counts only. A new browser-callable function means
    a deliberate `grant execute ... to anon` plus a line in the allowlist.
 
+4. **function-gate-test.mjs** (offline, whenever a mail or cron function changes). Loads churn-survey, send-period-summary,
+   notify-missed-punch and notify-time-off with a stubbed database and mail provider and asserts that the public key, no
+   credential and a wrong bearer get 401, that the service key and the cron secret get `{ok:true}` from `auth_probe`, and
+   that nothing reaches the mail provider. Browsers never call these functions: they call secure-db actions
+   (`notify_request`, `send_period_summary`, `survey_notify`), covered by diff-test groups `notify`, `period`, `survey`,
+   and by `tools/notify-secure-db-test.mjs` for the pages. Role rules (manager / co-admin / owner) are the `roles`,
+   `joinreq`, `admins-out` and `preauth` groups. The live probe must never send `auth_probe` to a function that is not
+   gated yet: for churn-survey and send-period-summary that body runs the whole job.
+
 Needs Node 22 or newer (runs the TypeScript directly).
