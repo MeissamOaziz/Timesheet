@@ -36,7 +36,7 @@ const empRows = {
   [E_THROTTLED]: { id: E_THROTTLED, name: 'Busy Bee', email: null, company_id: 'c1', site_id: 's1', pin: '3333' },
   [E_OTHER]: { id: E_OTHER, name: 'Other Tenant', email: 'o@other.ca', company_id: 'c9', site_id: 's9', pin: '9999' },
 };
-empRows.e1 = { id: 'e1', company_id: 'c1' }; empRows.e9 = { id: 'e9', company_id: 'c9' };
+empRows.e1 = { id: 'e1', company_id: 'c1', site_id: 's1' }; empRows.e9 = { id: 'e9', company_id: 'c9', site_id: 's9' };
 const invRows = {
   [T_OK]: { token: T_OK, email: 'inv@x.ca', role: 'manager', company_id: 'c1', status: 'pending', expires_at: FUTURE },
   [T_OTHER]: { token: T_OTHER, email: 'inv@other.ca', role: 'co_admin', company_id: 'c9', status: 'pending', expires_at: FUTURE },
@@ -364,6 +364,32 @@ const cases = [
   R('unlisted-tables', 'owner deletes admin_sessions', { table: 'admin_sessions', method: 'DELETE', filter: 'admin_id=eq.sa', ...own }),
   R('unlisted-tables', 'super admin reads admin_sessions', { table: 'admin_sessions', method: 'GET', filter: '', ...sup }),
   R('unlisted-tables', 'unknown table', { table: 'whatever', method: 'GET', filter: '' }),
+  // ---- hardening (2026-11-01): the bypasses found in the security audit. Old code let them through; new code must refuse. ----
+  R('hardening', 'lowercase post inserts an admin without a session', { table: 'admins', method: 'post', body: { email: 'evil@x.ca', role: 'super_admin' } }, r => r.status === 401 && !r.calls.some(c => /^POST .*\/rest\/v1\/admins/.test(c))),
+  R('hardening', 'lowercase get reads admins without a session', { table: 'admins', method: 'get', filter: 'limit=100' }, r => (r.status === 401 || r.status === 403) && !r.calls.some(c => /rest\/v1\/admins\?limit=100/.test(c))),
+  R('hardening', 'lowercase delete wipes punches without a session', { table: 'punches', method: 'delete', filter: 'id=neq.0' }, r => r.status === 401 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('hardening', 'put is not a supported verb', { table: 'punches', method: 'put', filter: 'id=eq.p1', body: {} , ...own }, r => r.status === 405 && !r.calls.some(c => /^PUT /.test(c))),
+  R('hardening', 'odd verb is refused', { table: 'punches', method: 'TRACE', filter: '', ...own }, r => r.status === 405),
+  R('hardening', 'mixed-case verb from a signed-in owner behaves exactly like GET', { table: 'employees', method: 'GeT', filter: 'active=eq.true', ...own }, r => r.status === 200 && r.calls.some(c => /GET .*employees\?active=eq\.true.*company_id=in\.\(c1\)/.test(c) || /company_id/.test(c))),
+  R('hardening', 'unknown action cannot ride into the table path', { action: 'bogus', table: 'admins', method: 'post', body: { email: 'evil@x.ca' } }, r => r.status === 400 && !r.calls.some(c => /rest\/v1\/admins/.test(c))),
+  R('hardening', 'hash in filter cannot drop the tenant scope', { table: 'punches', method: 'GET', filter: 'id=neq.0#', ...other }, r => r.status === 400 && r.calls.length <= 3 && !r.calls.some(c => /rest\/v1\/punches/.test(c))),
+  R('hardening', 'hash in a delete filter', { table: 'employees', method: 'DELETE', filter: 'id=neq.0#', ...other }, r => r.status === 400 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('hardening', 'newline in filter', { table: 'punches', method: 'GET', filter: 'id=eq.1\nx=y', ...own }, r => r.status === 400),
+  R('hardening', 'embed through select is dropped', { table: 'employees', method: 'GET', filter: 'select=*,employee_portal(*)&active=eq.true', ...own }, r => r.status === 200 && !r.calls.some(c => /employee_portal\(/.test(c))),
+  R('hardening', 'embed through an encoded select key is dropped', { table: 'employees', method: 'GET', filter: '%73elect=*,employee_portal(*)&active=eq.true', ...own }, r => r.status === 200 && !r.calls.some(c => /employee_portal\(|%73elect/.test(c))),
+  R('hardening', 'embed through an encoded select value is dropped', { table: 'employees', method: 'GET', filter: 'select=%2A%2Cemployee_portal%28%2A%29', ...own }, r => r.status === 200 && !r.calls.some(c => /employee_portal|%28/.test(c))),
+  R('hardening', 'ordering by a related table is dropped', { table: 'employees', method: 'GET', filter: 'order=employee_portal(password_hash).asc&active=eq.true', ...own }, r => r.status === 200 && !r.calls.some(c => /employee_portal\(/.test(c))),
+  R('hardening', 'a normal order still works', { table: 'punches', method: 'GET', filter: 'order=punched_at.desc,id.asc&limit=5', ...own }, r => r.status === 200 && r.calls.some(c => /order=punched_at\.desc,id\.asc/.test(c))),
+  R('hardening', 'a plain column list in select still works', { table: 'employees', method: 'GET', filter: 'select=id,name&active=eq.true', ...own }, r => r.status === 200 && r.calls.some(c => /select=id,name/.test(c))),
+  R('hardening', 'table name with query syntax', { table: 'admins?select=*', method: 'GET', filter: '', ...own }, r => r.status === 400 && r.calls.length <= 3),
+  R('hardening', 'table name that points at an rpc', { table: 'rpc/issue_email_code', method: 'POST', body: {}, ...own }, r => r.status === 400),
+  R('hardening', 'session token with query syntax is not a session', { table: 'punches', method: 'GET', filter: '', sessionToken: 'x&admin_id=neq.0' }, r => r.status === 401 && !r.calls.some(c => /x&admin_id/.test(c))),
+  R('hardening', 'kiosk site id with query syntax', { table: 'punches', method: 'GET', filter: '', kioskSiteId: 's1&company_id=neq.0' }, r => r.status === 401 && r.calls.length === 0),
+  R('hardening', 'kiosk punch for an employee of another company', { table: 'punches', method: 'POST', kioskSiteId: S1, body: { emp_id: 'e9', emp_name: 'Other', company_id: 'c9', type: 'IN', site_id: S1 } }, r => r.status === 403 && !r.calls.some(c => /^POST .*punches/.test(c))),
+  R('hardening', 'kiosk punch with another company id for a real employee', { table: 'punches', method: 'POST', kioskSiteId: S1, body: { emp_id: 'e1', company_id: 'c9', type: 'IN', site_id: S1 } }, r => r.status === 403 && !r.calls.some(c => /^POST .*punches/.test(c))),
+  R('hardening', 'kiosk punch with no employee at all', { table: 'punches', method: 'POST', kioskSiteId: S1, body: { type: 'IN', site_id: S1 } }, r => r.status === 403 && !r.calls.some(c => /^POST .*punches/.test(c))),
+  R('hardening', 'kiosk punch: company is filled in from the employee', { table: 'punches', method: 'POST', kioskSiteId: S1, body: { emp_id: 'e1', type: 'IN', site_id: S1 } }, r => (r.status === 201 || r.status === 200) && r.calls.some(c => /^POST .*punches.*"company_id":"c1"/.test(c))),
+  R('hardening', 'kiosk missed punch for another company employee', { table: 'missed_punch_requests', method: 'POST', kioskSiteId: S1, body: { site_id: S1, emp_id: 'e9' } }, r => r.status === 403),
 ];
 
 async function run(handler) {

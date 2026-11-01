@@ -338,6 +338,29 @@ function tenantScopeFilter(table: string, caller: Caller, owned: string[]): stri
   return '';
 }
 
+const ALLOWED_METHODS = new Set(['GET', 'POST', 'PATCH', 'DELETE']);
+const TABLE_NAME_RE = /^[a-z_][a-z0-9_]{0,62}$/;
+// Session tokens, site ids and other opaque ids: letters, digits, '-' and '_' only. Nothing that
+// could add a query parameter, a filter operator or a path segment when interpolated into a URL.
+const TOKEN_RE = /^[A-Za-z0-9_-]{1,200}$/;
+function safeDecode(s: string): string { try { return decodeURIComponent(s); } catch { return s; } }
+// PostgREST resource embedding (select=*,employee_portal(*)) lets a caller pull columns from other
+// tables through foreign keys, including ones this proxy never intended to expose. Client `select`
+// parameters are only honoured when they are a plain column list. The parameter NAME is decoded
+// first because PostgREST decodes it too (%73elect is "select").
+function sanitizeSelect(filter: string): string {
+  if (!filter) return filter;
+  return filter.split('&').filter(p => {
+    const i = p.indexOf('=');
+    const key = safeDecode(i < 0 ? p : p.slice(0, i));
+    if (key !== 'select' && key !== 'order') return true;
+    const val = safeDecode(i < 0 ? '' : p.slice(i + 1));
+    // `order` may also reach into related tables (order=employee_portal(password_hash)), which would
+    // leak how hidden values compare; only plain "column.direction" lists are honoured.
+    return key === 'order' ? /^[A-Za-z0-9_.,]+$/.test(val) : /^[A-Za-z0-9_,*]+$/.test(val);
+  }).join('&');
+}
+
 // Pre-auth: single equality lookup with no compound conditions.
 // Covers login (email=eq.), invite acceptance (token=eq.), and
 // specific-id lookups (id=eq.) needed before a session exists.
@@ -775,8 +798,25 @@ Deno.serve(async (req: Request) => {
   } catch {
     return errResp('Invalid request body', 400);
   }
+  // ── Request-shape validation (security) ──────────────────────────────────────────────────────
+  // `method` used to be compared with exact upper-case strings below, so any other spelling
+  // ('post', 'get', 'delete') skipped the auth gate, the protected-table gate and the tenant scoping
+  // but was still forwarded upstream with the service key (fetch normalises the case). Normalise it
+  // once and refuse anything outside the four verbs the apps use.
+  if (typeof method === 'string') method = method.toUpperCase();
   // action requests don't need table/method
   if (!action && (!table || !method)) return errResp('Missing table or method', 400);
+  if (!action && !ALLOWED_METHODS.has(method)) return errResp('Method not allowed', 405);
+  if (!action && (typeof table !== 'string' || !TABLE_NAME_RE.test(table))) return errResp('Invalid table', 400);
+  // A literal '#' ends the URL's query, so everything appended after it (the tenant scope!) would
+  // be dropped from the upstream request. Control characters have no place in a filter either.
+  if (typeof filter !== 'string' || filter.length > 8000 || /[#\u0000-\u001f\u007f]/.test(filter)) {
+    return errResp('Invalid filter', 400);
+  }
+  filter = sanitizeSelect(filter);
+  // Identifiers that are interpolated into upstream URLs must be plain tokens, never query syntax.
+  if (sessionToken !== null && (typeof sessionToken !== 'string' || !TOKEN_RE.test(sessionToken))) sessionToken = null;
+  if (kioskSiteId !== null && (typeof kioskSiteId !== 'string' || !TOKEN_RE.test(kioskSiteId))) return errResp('Unauthorized', 401);
 
   // ── Server-side actions (non-CRUD) ──────────────────────────────────────
   // Same shape as request_reset_code below, for the employee portal. Kept separate rather
@@ -976,6 +1016,10 @@ Deno.serve(async (req: Request) => {
     return jsonResp(out);
   }
 
+  // An `action` that none of the handlers above recognised must stop here. It used to fall through
+  // into the table path below with whatever method/table came along in the same body.
+  if (action) return errResp('Unknown action', 400);
+
   // ── Table allowlist: deny by default ─────────────────────────────────────────────────────────
   // The gates below only knew about PROTECTED_TABLES; any other table was forwarded untouched. That
   // left `admin_sessions` (live admin session tokens, super admin included), `email_codes` (reset
@@ -1036,6 +1080,20 @@ Deno.serve(async (req: Request) => {
       const punchLabel = (body as Record<string, unknown>).label_id;
       if (table === 'punches' && punchLabel != null && !(await kioskLabelBelongs(kioskSiteId, String(punchLabel)))) {
         return errResp("Forbidden: that label does not belong to this site's company", 403);
+      }
+      // The employee on a kiosk punch / missed-punch must really work at THIS site, and the company
+      // is taken from the site, never from the request. Without this, anyone holding one valid site
+      // id could write punches for any employee id they had seen, in any company.
+      if (table === 'punches' || table === 'missed_punch_requests') {
+        const kb = body as Record<string, unknown>;
+        const empId = kb.emp_id;
+        if (typeof empId !== 'string' || !TOKEN_RE.test(empId)) return errResp('Forbidden: employee does not belong to this site', 403);
+        const emp = (await restJson(`employees?id=eq.${empId}&select=id,site_id,company_id&limit=1`))?.[0];
+        if (!emp || emp.site_id !== kioskSiteId) return errResp('Forbidden: employee does not belong to this site', 403);
+        if (kb.company_id !== undefined && kb.company_id !== null && kb.company_id !== emp.company_id) {
+          return errResp('Forbidden: employee does not belong to this site', 403);
+        }
+        if (kb.company_id === undefined && table === 'punches') kb.company_id = emp.company_id;
       }
 
     } else if (
