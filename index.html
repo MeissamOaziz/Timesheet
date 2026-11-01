@@ -4473,6 +4473,16 @@ async function sendAppEmail(type, data){
 function esc(v){
   return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+// Value for a single-quoted JS string inside a double-quoted inline handler, e.g. onclick="f('${jsq(name)}')".
+// Backslash, both quotes, angle brackets, ampersand, backtick and line breaks become \uXXXX escapes, so the
+// result can neither end the JS string nor the HTML attribute, whatever the name contains.
+function jsq(v){
+  return String(v==null?'':v).replace(/[\\'"<>&`\u2028\u2029\r\n]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+}
+// Avatar initials: letters and digits only, so the result is inert in HTML text and in inline handlers.
+function initialsOf(name){
+  return String(name==null?'':name).split(' ').map(n=>n[0]||'').join('').replace(/[^\p{L}\p{N}]/gu,'').toUpperCase().slice(0,2);
+}
 
 const DB={
   all:(t,f)=>supaFetch('GET',t,{filter:f}),
@@ -5173,13 +5183,13 @@ function showCompanyPicker(){
     const empCnt=C.employees.filter(e=>e.company_id===co.id&&e.active).length;
     const siteCnt=C.sites.filter(s=>s.company_id===co.id).length;
     const col=colors[i%colors.length];
-    const ini2=co.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const ini2=initialsOf(co.name);
     return `<div class="pick-card" onclick="onCompanyPicked('${co.id}')" style="border-color:${col}33">
       <div class="pick-icon" style="overflow:hidden;border-radius:var(--r-md);width:64px;height:64px;margin:0 auto 10px;background:${co.logo_url?'var(--surface2)':'linear-gradient(135deg,'+col+','+col+'99)'};display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff">
-        ${co.logo_url?`<img src="${co.logo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-md)" onerror="this.parentElement.innerHTML='${ini2}'">`:`${ini2}`}
+        ${co.logo_url?`<img src="${esc(co.logo_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-md)" onerror="this.parentElement.innerHTML='${ini2}'">`:`${ini2}`}
       </div>
-      <h3 style="color:${col}">${co.name}</h3>
-      <p>${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</p>
+      <h3 style="color:${col}">${esc(co.name)}</h3>
+      <p>${esc(co.industry||'')}${co.industry&&co.description?' · ':''}${esc(co.description||'')}</p>
       <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} employees · ${siteCnt} site${siteCnt!==1?'s':''}</p>
     </div>`;
   }).join('');
@@ -5227,8 +5237,8 @@ function showSitePicker(co,sites){
     const col=colors[i%colors.length];
     return `<div class="pick-card" onclick="onSitePicked('${co.id}','${s.id}')" style="border-color:${col}33">
       <div class="pick-icon" style="color:var(--accent)"><svg style="width:26px;height:26px"><use href="#i-pin"/></svg></div>
-      <h3 style="color:${col}">${s.name}</h3>
-      <p>${s.description||''}</p>
+      <h3 style="color:${col}">${esc(s.name)}</h3>
+      <p>${esc(s.description||'')}</p>
       <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} employee${empCnt!==1?'s':''}</p>
     </div>`;
   }).join('');
@@ -5967,7 +5977,6 @@ function renderDashboard(){
   _markTourAvailable();
   const host=document.getElementById('dashboardContent');
   if(!host) return;
-  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const fmtH=h=>{const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh+'h '+(mm<10?'0':'')+mm+'m';};
   const fmtTime=iso=>{try{return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}catch(_){return '';}};
   const allEmps=(C.employees||[]).filter(e=>e.active!==false);
@@ -6096,7 +6105,7 @@ function showSupportModal(){
   document.getElementById('supportSendBtn').textContent=t('contact.send')||'Send Message';
   // Pre-fill subject hint with account email
   if(s) document.getElementById('supportMsg').innerHTML=
-    `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">${s.email}</div>`;
+    `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">${esc(s.email)}</div>`;
   applyAllTranslations();
   openModal('supportModal');
 }
@@ -7014,7 +7023,6 @@ async function loadSurveyFeedback(){
   }catch(e){wrap.innerHTML='<div class="empty" style="padding:18px;color:var(--text3);font-size:13px">Error loading feedback.</div>';}
 }
 function renderSurveyCard(s){
-  const esc=v=>String(v??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
   const statusColors={new:'#4f8ef7',planned:'#22c55e',dismissed:'#94a3b8'};
   const sc=statusColors[s.review_status]||'#4f8ef7';
   const stars=s.rating?('★'.repeat(s.rating)+'☆'.repeat(5-s.rating)):'';
@@ -7679,7 +7687,7 @@ async function quickAddEmployee(coId){
     navigate('admin');
     showToast(`✓ ${name} added successfully!`,'success');
   }catch(e){
-    if(msgEl)msgEl.innerHTML=`<div class="msg error">Error: ${e.message}</div>`;
+    if(msgEl)msgEl.innerHTML=`<div class="msg error">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -7888,9 +7896,9 @@ async function loadPunchPage(){
   if(logoEl){
     const co=C.companies.find(co=>co.id===coId)||ctx.co;
     if(co.logo_url){
-      logoEl.innerHTML=`<img src="${co.logo_url}" class="punch-co-logo" alt="${co.name}" onerror="this.style.display='none'">`;
+      logoEl.innerHTML=`<img src="${esc(co.logo_url)}" class="punch-co-logo" alt="${esc(co.name)}" onerror="this.style.display='none'">`;
     } else {
-      logoEl.innerHTML=`<div class="punch-co-initials">${(ctx.co.name||'?').slice(0,1).toUpperCase()}</div>`;
+      logoEl.innerHTML=`<div class="punch-co-initials">${esc((ctx.co.name||'?').slice(0,1).toUpperCase())}</div>`;
     }
   }
   if(nameEl) nameEl.textContent=ctx.co.name;
@@ -7989,17 +7997,17 @@ function refreshClockedIn(){
   if(!clockedIn.length){list.innerHTML=`<div class="ci-empty">${tp('punch.noOneIn')}</div>`;return;}
 
   list.innerHTML=clockedIn.map(({emp,last})=>{
-    const ini=emp.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const ini=initialsOf(emp.name);
     const ciAvatar=emp.photo_url
-      ?`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0"><img src="${emp.photo_url}" alt="${ini}" onerror="this.parentElement.innerHTML='${ini}'"></div>`
+      ?`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0"><img src="${esc(emp.photo_url)}" alt="${ini}" onerror="this.parentElement.innerHTML='${ini}'"></div>`
       :`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">${ini}</div>`;
     const dur=elapsed(last.punched_at);
     const over=last.punch_date!==today;
     const warn=over?`<span style="color:var(--red);font-size:10px;font-weight:600;margin-left:4px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>since ${last.punch_date}</span>`:'';
     return `<div class="ci-row" style="${over?'border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.05)':''}">
       ${ciAvatar}
-      <div style="flex:1;min-width:0"><div class="ci-name">${emp.name}${warn}</div>
-        ${emp.dept?`<div class="ci-dur">${emp.dept}</div>`:''}
+      <div style="flex:1;min-width:0"><div class="ci-name">${esc(emp.name)}${warn}</div>
+        ${emp.dept?`<div class="ci-dur">${esc(emp.dept)}</div>`:''}
         ${(() => { const lb = last.label_id ? labelByIdAny(last.label_id) : null; return lb ? `<div><span class="ci-label" style="--lb:${esc(lb.color)}"><i></i>${esc(lb.name)}</span></div>` : ''; })()}
       </div>
       <div style="text-align:right;flex-shrink:0">
@@ -8034,7 +8042,7 @@ async function refreshCheckedInVisitors(){
   if(!rows.length){ list.innerHTML=`<div class="ci-empty">${t('visitor.noneIn')||'No visitors currently checked in.'}</div>`; return; }
 
   list.innerHTML=rows.map(v=>{
-    const ini=(v.full_name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const ini=initialsOf(v.full_name||'?');
     const dur=elapsed(v.checked_in_at);
     return `<div class="ci-row">
       <div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0;background:#7c5cbf">${ini}</div>
@@ -8206,7 +8214,7 @@ function requestSwitchTask() {
   if(!empId) { showPunchMsg(t('msg.selectName'), 'error'); return; }
   const emp = C.employees.find(e => e.id === empId); if(!emp) return;
   if(!empHasPin(emp)) { showPunchMsg(t('msg.noPin'), 'error'); return; }
-  if(getEmpStatus(empId).status !== 'IN') { showPunchMsg(`${emp.name} ${t('plabel.notIn')||'needs to be clocked IN to switch task.'}`, 'error'); return; }
+  if(getEmpStatus(empId).status !== 'IN') { showPunchMsg(`${esc(emp.name)} ${t('plabel.notIn')||'needs to be clocked IN to switch task.'}`, 'error'); return; }
   pinState = { empId, punchType: 'OUT', entered: '', purpose: 'switch', isBreak: false };
   document.getElementById('pinEmpName').textContent = emp.name;
   document.getElementById('pinActionLabel').textContent = t('plabel.pinSwitch') || 'Enter PIN to switch task';
@@ -8247,7 +8255,7 @@ function requestBreak(){
   const{status,last}=getEmpStatus(empId);
   const onBreak = status==='OUT' && last && last.is_break;
   if(status==='OUT' && !onBreak){
-    showPunchMsg(`${emp.name} ${t('punch.notClockedIn')||'needs to be clocked IN before starting a break.'}`,'error');
+    showPunchMsg(`${esc(emp.name)} ${t('punch.notClockedIn')||'needs to be clocked IN before starting a break.'}`,'error');
     return;
   }
   const type = onBreak ? 'IN' : 'OUT';
@@ -8738,7 +8746,7 @@ async function searchGeoAddress() {
         return;
       }
       res.innerHTML = data.map(item =>
-        `<div class="geo-search-result" onclick="placeGeoResult(${item.lat},${item.lon})">${item.display_name}</div>`
+        `<div class="geo-search-result" onclick="placeGeoResult(${Number(item.lat)},${Number(item.lon)})">${esc(item.display_name)}</div>`
       ).join('');
     } catch {
       res.innerHTML = '<div style="padding:8px 12px;color:var(--red);font-size:13px">Search failed. Try again.</div>';
@@ -8778,7 +8786,7 @@ async function executePunch(empId,type,isBreak,opts){
     const{status}=getEmpStatus(empId);
     const isSwitch=!!(opts&&opts.switchTask);
     if(isSwitch){
-      if(status!=='IN'){closeModal('pinModal');showPunchMsg(`${emp.name} ${t('plabel.notIn')||'needs to be clocked IN to switch task.'}`,'error');return;}
+      if(status!=='IN'){closeModal('pinModal');showPunchMsg(`${esc(emp.name)} ${t('plabel.notIn')||'needs to be clocked IN to switch task.'}`,'error');return;}
     }else{
       if(type==='IN'&&status==='IN'){closeModal('pinModal');showDoublePunchWarning(empId,'IN');return;}
       if(type==='OUT'&&status==='OUT'){closeModal('pinModal');showDoublePunchWarning(empId,'OUT');return;}
@@ -8791,7 +8799,7 @@ async function executePunch(empId,type,isBreak,opts){
       const hasToken = checkDeviceToken(site.id);
       if(!hasToken){
         showPunchMsg(
-          `${t('geo.deviceNotRegistered')||'This device is not registered for'} <strong>${site.name}</strong>. ${t('geo.askAdmin')||'Ask your manager to register this device using the Kiosk Shortcut button.'}`,
+          `${t('geo.deviceNotRegistered')||'This device is not registered for'} <strong>${esc(site.name)}</strong>. ${t('geo.askAdmin')||'Ask your manager to register this device using the Kiosk Shortcut button.'}`,
           'error'
         );
         document.getElementById('empSelect').value='';
@@ -8815,7 +8823,7 @@ async function executePunch(empId,type,isBreak,opts){
           const dist = geoResult.distance;
           const radius = site.geo_radius_m||25;
           showPunchMsg(
-            `${emp.name} — ${t('geo.tooFar')||'You are too far from'} <strong>${site.name}</strong>.<br>`+
+            `${esc(emp.name)} — ${t('geo.tooFar')||'You are too far from'} <strong>${esc(site.name)}</strong>.<br>`+
             `<span style="font-size:12px;opacity:.8">${t('geo.distance')||'Distance'}: ${dist}m · ${t('geo.allowed')||'Allowed'}: ${radius}m</span>`,
             'error'
           );
@@ -8884,10 +8892,10 @@ async function executePunch(empId,type,isBreak,opts){
       const geoNote = geoResult.status==='ok' ? ` · ${geoResult.distance}m` : '';
       const switchedName=((_punchLabels.find(l=>l.id===labelId))||{}).name||'';
       const msg = isSwitch
-        ? `&#10003; ${emp.name} ${t('plabel.switchedTo')||'switched to'} ${esc(switchedName)} ${timeStr}`
+        ? `&#10003; ${esc(emp.name)} ${t('plabel.switchedTo')||'switched to'} ${esc(switchedName)} ${timeStr}`
         : isBreak
-        ? (type==='OUT' ? `&#10003; ${emp.name} ${t('punch.breakStarted')||'started their break'} ${timeStr}` : `&#10003; ${emp.name} ${t('punch.breakEnded')||'ended their break'} ${timeStr}`)
-        : `&#10003; ${emp.name} clocked ${type} at ${timeStr}${geoNote}`;
+        ? (type==='OUT' ? `&#10003; ${esc(emp.name)} ${t('punch.breakStarted')||'started their break'} ${timeStr}` : `&#10003; ${esc(emp.name)} ${t('punch.breakEnded')||'ended their break'} ${timeStr}`)
+        : `&#10003; ${esc(emp.name)} clocked ${type} at ${timeStr}${geoNote}`;
       showPunchMsg(msg,'success');
       document.getElementById('empSelect').value='';
       refreshClockedIn();
@@ -8981,7 +8989,7 @@ function openMissedPunchModal(prefillEmpId, prefillType, prefillDate){
   const sel = document.getElementById('missedPunchEmp');
   const choosePlaceholder = t('missed.choose')||'-- Choose employee --';
   sel.innerHTML = `<option value="">${choosePlaceholder}</option>` +
-    siteEmps.map(e=>`<option value="${e.id}">${e.name}${e.emp_code?' ('+e.emp_code+')':''}</option>`).join('');
+    siteEmps.map(e=>`<option value="${e.id}">${esc(e.name)}${e.emp_code?' ('+esc(e.emp_code)+')':''}</option>`).join('');
   if(prefillEmpId) sel.value = prefillEmpId;
   document.getElementById('missedPunchType').value = prefillType||'IN';
   const now = new Date();
@@ -9041,7 +9049,7 @@ async function submitMissedPunch(){
   }
   const emp = C.employees.find(e=>e.id===empId); if(!emp) return;
   if(!empHasPin(emp)){
-    showMsg('missedPunchMsg', t('msg.noPin')||`${emp.name} has no PIN set. Ask an admin to set one first.`, 'error');
+    showMsg('missedPunchMsg', t('msg.noPin')||`${esc(emp.name)} has no PIN set. Ask an admin to set one first.`, 'error');
     return;
   }
   const fullTime = (time.length===5 ? time+':00' : time);
@@ -9279,7 +9287,7 @@ function populateEmpSiteFilter(){
   let sites=ctx?C.sites.filter(s=>s.company_id===ctx.co.id):C.sites;
   if(managerSiteIds!==null) sites=sites.filter(s=>managerSiteIds.includes(s.id));
   const sf=document.getElementById('empSiteFilter');
-  sf.innerHTML=`<option value="">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  sf.innerHTML=`<option value="">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
 }
 
 // ─── EMPLOYEE BULK SELECTION ─────────────────────────────────────────────────
@@ -9476,7 +9484,7 @@ function renderEmployees(){
   const df=document.getElementById('empDeptFilter');
   const cur=df.value;
   df.innerHTML=`<option value="">${t('admin.allDepts')}</option>`;
-  depts.forEach(d=>df.innerHTML+=`<option value="${d}"${d===cur?' selected':''}>${d}</option>`);
+  depts.forEach(d=>df.innerHTML+=`<option value="${esc(d)}"${d===cur?' selected':''}>${esc(d)}</option>`);
 
   let emps=filteredEmployees();
 
@@ -9500,7 +9508,7 @@ function renderEmployees(){
 
   const rows=emps.map(e=>{
     const site=C.sites.find(s=>s.id===e.site_id);
-    const ini=e.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    const ini=initialsOf(e.name);
     // Click-to-reveal. The PIN used to show only as "Set", so an admin trying their own first
     // punch had no way to learn the 4 digits without opening Edit on every employee — the exact
     // point where trials stalled with employees added and zero punches.
@@ -9508,10 +9516,10 @@ function renderEmployees(){
       ? `<span id="pincell-${e.id}"><button class="btn-secondary" style="width:auto;padding:3px 10px;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:1px" onclick="revealPin('${e.id}')" title="${t('admin.pinShow')||'Show PIN'}">•••• <span style="font-family:inherit;letter-spacing:0;font-weight:600">${t('admin.pinShow')||'Show'}</span></button></span>`
       : `<span class="pill out"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>${t('admin.pinNone')||'None'}</span>`;
     const emailStatus=e.send_report&&e.email
-      ?`<span style="font-size:11px;color:var(--amber)"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${e.email}</span>`
+      ?`<span style="font-size:11px;color:var(--amber)"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${esc(e.email)}</span>`
       :`<span style="color:var(--text3);font-size:12px">—</span>`;
     const avatarHtml=e.photo_url
-      ?`<div class="avatar"><img src="${e.photo_url}" alt="${ini}" width="45" height="45" onerror="this.parentElement.innerHTML='<svg class=\\'avatar-usericon\\'><use href=\\'#i-user\\'/></svg>'"></div>`
+      ?`<div class="avatar"><img src="${esc(e.photo_url)}" alt="${ini}" width="45" height="45" onerror="this.parentElement.innerHTML='<svg class=\\'avatar-usericon\\'><use href=\\'#i-user\\'/></svg>'"></div>`
       :`<div class="avatar"><svg class="avatar-usericon"><use href="#i-user"/></svg></div>`;
     return {e,site,ini,pin,emailStatus,avatarHtml};
   });
@@ -9524,10 +9532,10 @@ function renderEmployees(){
     const rowBase=isOrphaned?'opacity:0.75;background:rgba(239,68,68,0.04)':isSelected?'background:rgba(79,142,247,.06)':'';
     return `<tr${rowBase?` style="${rowBase}"`:''}>
       <td style="width:36px;text-align:center"><input type="checkbox" class="emp-cb" data-id="${e.id}" ${isSelected?'checked':''} onchange="toggleEmpSelect('${e.id}',this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer"></td>
-      <td><div class="emp-row">${avatarHtml}<div><div style="font-weight:500">${e.name}${orphanBadge}</div></div></div></td>
-      <td>${site?`<span class="pill site" style="font-size:11px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${site.name}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
-      <td style="font-size:12px;color:var(--text2)">${isOrphaned?'<span style="color:#ef4444;font-size:11px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>Deleted</span>':e.dept||'—'}</td>
-      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${e.emp_code||'—'}</td>
+      <td><div class="emp-row">${avatarHtml}<div><div style="font-weight:500">${esc(e.name)}${orphanBadge}</div></div></div></td>
+      <td>${site?`<span class="pill site" style="font-size:11px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${esc(site.name)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="font-size:12px;color:var(--text2)">${isOrphaned?'<span style="color:#ef4444;font-size:11px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>Deleted</span>':esc(e.dept||'—')}</td>
+      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${esc(e.emp_code||'—')}</td>
       <td>${pin}</td>
       <td style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${emailStatus}</td>
       <td><span class="pill ${e.active?'in':'out'}" style="font-size:10px">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span></td>
@@ -9535,7 +9543,7 @@ function renderEmployees(){
         <button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="editEmployee('${e.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
         <button class="icon-btn" title="${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}" onclick="toggleEmp('${e.id}')" style="${e.active?'color:var(--amber)':'color:var(--green)'}"><svg class="ic"><use href="#${e.active?'i-pause':'i-play'}"/></svg></button>
         <button class="icon-btn" title="${t('admin.sendReport')||'Send Report'}" onclick="openSendReportModal('${e.id}')" style="color:var(--amber)"><svg class="ic"><use href="#i-mail"/></svg></button>
-        ${_isMgr?'':'<button class="icon-btn danger" title="'+( t('common.delete')||'Delete')+'" onclick="confirmDelete(\'emp\',\''+e.id+'\',\''+e.name.replace(/'/g,"\\'")+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'}
+        ${_isMgr?'':'<button class="icon-btn danger" title="'+( t('common.delete')||'Delete')+'" onclick="confirmDelete(\'emp\',\''+e.id+'\',\''+jsq(e.name)+'\')"><svg class="ic"><use href="#i-trash"/></svg></button>'}
       </div></td>
     </tr>`;
   }).join('');
@@ -9551,21 +9559,21 @@ function renderEmployees(){
         <input type="checkbox" class="emp-cb" data-id="${e.id}" ${isSelected2?'checked':''} onchange="toggleEmpSelect('${e.id}',this.checked)" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0" onclick="event.stopPropagation()">
         ${avatarHtml}
         <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:1px">${site?'<svg class="ic" style="margin-right:3px"><use href="#i-pin"/></svg>'+site.name:''}${e.dept?' · '+e.dept:''}</div>
+          <div style="font-weight:600;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.name)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">${site?'<svg class="ic" style="margin-right:3px"><use href="#i-pin"/></svg>'+esc(site.name):''}${e.dept?' · '+esc(e.dept):''}</div>
         </div>
         <span class="pill ${e.active?'in':'out'}" style="font-size:10px;flex-shrink:0">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
         <div style="background:var(--surface2);border-radius:var(--r-sm);padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">PIN</div><div style="margin-top:3px">${pin}</div></div>
-        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Code</div><div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px">${e.emp_code||'—'}</div></div>
+        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Code</div><div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px">${esc(e.emp_code||'—')}</div></div>
       </div>
-      ${e.send_report&&e.email?`<div style="font-size:11px;color:var(--amber);margin-bottom:10px"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${e.email}</div>`:''}
+      ${e.send_report&&e.email?`<div style="font-size:11px;color:var(--amber);margin-bottom:10px"><svg class="ic" style="margin-right:4px"><use href="#i-mail"/></svg>${esc(e.email)}</div>`:''}
       <div class="mc-actions">
         <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-edit"/></svg>${t('common.edit')||'Edit'}</button>
         <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--amber)':'var(--green)'}" onclick="toggleEmp('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#${e.active?'i-pause':'i-play'}"/></svg>${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}</button>
         <button class="btn-amber" style="font-size:12px" onclick="openSendReportModal('${e.id}')"><svg class="ic"><use href="#i-mail"/></svg></button>
-        ${_isMgr?'':`<button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${e.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#i-trash"/></svg></button>`}
+        ${_isMgr?'':`<button class="btn-danger" style="font-size:12px" onclick="confirmDelete('emp','${e.id}','${jsq(e.name)}')"><svg class="ic"><use href="#i-trash"/></svg></button>`}
       </div>
     </div>`;
   }).join('');
@@ -9599,13 +9607,13 @@ async function renderSitesAdmin(){
     const mgrIds=allMgrSites.filter(r=>r.site_id===s.id).map(r=>r.manager_id);
     const siteMgrs=managers.filter(a=>mgrIds.includes(a.id));
     const mgrPills=siteMgrs.length
-      ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:var(--r-xl);font-size:11px;padding:2px 9px;color:#a78bfa"><svg class="ic"><use href="#i-user"/></svg>${a.name}</span>`).join('')
+      ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:var(--r-xl);font-size:11px;padding:2px 9px;color:#a78bfa"><svg class="ic"><use href="#i-user"/></svg>${esc(a.name)}</span>`).join('')
       :`<span style="font-size:12px;color:var(--text3)">${t('site.noManagers')||'No managers assigned'}</span>`;
     return`<div class="site-item" style="flex-wrap:wrap">
       <div style="width:34px;height:34px;border-radius:var(--r-md);background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)"><svg style="width:18px;height:18px"><use href="#i-pin"/></svg></div>
       <div style="flex:1;min-width:200px">
-        <div class="site-name">${s.name} ${geoBadge}</div>
-        <div class="site-meta">${co?co.name+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+s.description:''}</div>
+        <div class="site-name">${esc(s.name)} ${geoBadge}</div>
+        <div class="site-meta">${co?esc(co.name)+' · ':''} ${empCnt} ${empCnt!==1?(t('site.employees')||'employees'):(t('site.employee')||'employee')} ${s.description?'· '+esc(s.description):''}</div>
         <div id="siteMgrPills_${s.id}" style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
           ${mgrPills}
           ${_isMgr?'':`<button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${s.id}')">${t('site.editManagers')||'Edit Managers'}</button>`}
@@ -9614,7 +9622,7 @@ async function renderSitesAdmin(){
       <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
         <button class="btn-primary" style="padding:5px 12px;font-size:11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-smartphone"/></svg>${t('site.kioskShortcut')||'Kiosk Shortcut'}</button>
         <button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
-        ${_isMgr?'':`<button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${s.name.replace(/'/g,"\\'")}')"> ${t('common.delete')}</button>`}
+        ${_isMgr?'':`<button class="btn-danger" style="padding:5px 11px;font-size:11px" onclick="confirmDelete('site','${s.id}','${jsq(s.name)}')"> ${t('common.delete')}</button>`}
       </div>
     </div>`;
   }).join('');
@@ -9641,8 +9649,8 @@ function openSiteManagersModal(siteId){
     const assigned=new Set((rows||[]).map(r=>r.manager_id));
     container.innerHTML=managers.map(a=>`<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer">
       <input type="checkbox" value="${a.id}"${assigned.has(a.id)?' checked':''} style="accent-color:var(--accent)">
-      <span style="font-size:13px;color:var(--text)">${a.name}</span>
-      <span style="font-size:11px;color:var(--text3);margin-left:auto">${a.email}</span>
+      <span style="font-size:13px;color:var(--text)">${esc(a.name)}</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">${esc(a.email)}</span>
     </label>`).join('');
     openModal('siteManagersModal');
   }).catch(e=>uiAlert(e.message));
@@ -9668,7 +9676,7 @@ async function renderSiteManagerPills(siteId){
   const assigned=rows.map(r=>r.manager_id);
   const siteMgrs=managers.filter(a=>assigned.includes(a.id));
   const mgrPills=siteMgrs.length
-    ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:var(--r-xl);font-size:11px;padding:2px 9px;color:#a78bfa">${a.name}</span>`).join('')
+    ?siteMgrs.map(a=>`<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.12);border:1px solid rgba(124,92,191,.2);border-radius:var(--r-xl);font-size:11px;padding:2px 9px;color:#a78bfa">${esc(a.name)}</span>`).join('')
     :`<span style="font-size:12px;color:var(--text3)">${t('site.noManagers')||'No managers assigned'}</span>`;
   container.innerHTML=mgrPills+`<button class="btn-secondary" style="padding:3px 10px;font-size:11px" onclick="openSiteManagersModal('${siteId}')">${t('site.editManagers')||'Edit Managers'}</button>`;
 }
@@ -9687,7 +9695,7 @@ function openPromoteToManagerModal(){
   const mySites=myCo?C.sites.filter(s=>s.company_id===myCo.id):[];
   document.getElementById('promoteSiteCheckboxes').innerHTML=mySites.length===0
     ?`<p style="font-size:12px;color:var(--text3)">${t('msg.noSiteFirst')||'No sites found. Add a site first.'}</p>`
-    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
+    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${esc(s.name)}</span></label>`).join('');
   closeModal('addEmpModal');
   openModal('promoteToManagerModal');
 }
@@ -9753,7 +9761,7 @@ function openInviteModal(){
   const container=document.getElementById('inviteSiteCheckboxes');
   container.innerHTML=mySites.length===0
     ?`<p style="font-size:12px;color:var(--text3)">${t('inv.noSites')||'No sites found. Add a site first.'}</p>`
-    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
+    :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${s.id}" style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${esc(s.name)}</span></label>`).join('');
   openModal('inviteModal');
 }
 function setInviteRole(role){
@@ -9832,7 +9840,7 @@ async function loadCoAdmins(){
     const statusClass=st=>st==='active'?'in':st==='pending_invite'?'site':'out';
     const statusLabel=st=>st==='active'?t('admin.active'):st==='pending_invite'?(t('coAdmin.pendingInvite')||'Pending Invite'):t('admin.suspended')||'Suspended';
     const isMe=a=>a.id===sess.id;
-    const escAttr=s=>String(s||'').replace(/'/g,"\\'");
+    const escAttr=s=>jsq(s);
     const actionsCell = a => {
       if(a._isPrimary||isMe(a)) return '<span style="font-size:11px;color:var(--text3)">—</span>';
       if(a._isInvitation){
@@ -9860,20 +9868,20 @@ async function loadCoAdmins(){
       </div>`;
     };
     tbody.innerHTML=allRows.map(a=>`<tr>
-      <td style="font-weight:500${a._isInvitation?';color:var(--text2);font-style:italic':''}">${a.name}${isMe(a)?` <span style="font-size:10px;color:var(--text3)">(${t('common.you')||'you'})</span>`:''}</td>
-      <td style="font-size:13px">${a.email}</td>
+      <td style="font-weight:500${a._isInvitation?';color:var(--text2);font-style:italic':''}">${esc(a.name)}${isMe(a)?` <span style="font-size:10px;color:var(--text3)">(${t('common.you')||'you'})</span>`:''}</td>
+      <td style="font-size:13px">${esc(a.email)}</td>
       <td><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></td>
       <td><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></td>
       <td>${actionsCell(a)}</td>
     </tr>`).join('');
     if(cards) cards.innerHTML=allRows.map(a=>`
       <div class="mobile-card-row">
-        <div class="mc-name"><span${a._isInvitation?' style="color:var(--text2);font-style:italic"':''}>${a.name}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
-        <div class="mc-row"><span>Email</span><span style="font-size:12px">${a.email}</span></div>
+        <div class="mc-name"><span${a._isInvitation?' style="color:var(--text2);font-style:italic"':''}>${esc(a.name)}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
+        <div class="mc-row"><span>Email</span><span style="font-size:12px">${esc(a.email)}</span></div>
         <div class="mc-row"><span>Role</span><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></div>
         ${actionsCellMobile(a)}
       </div>`).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="5" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="5" style="color:var(--red);padding:16px">Error: ${esc(e.message)}</td></tr>`;}
 }
 
 function toggleEditCoAdminSites(){
@@ -9907,7 +9915,7 @@ async function openEditCoAdminModal(id){
     const container=document.getElementById('editManagerSiteCheckboxes');
     container.innerHTML=mySites.length===0
       ?`<p style="font-size:12px;color:var(--text3)">${t('inv.noSites')||'No sites found. Add a site first.'}</p>`
-      :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${s.id}"${assignedIds.has(s.id)?' checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${s.name}</span></label>`).join('');
+      :mySites.map(s=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer"><input type="checkbox" value="${s.id}"${assignedIds.has(s.id)?' checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;margin:0"><span style="font-size:13px;color:var(--text);flex:1;min-width:0">${esc(s.name)}</span></label>`).join('');
 
     toggleEditCoAdminSites();
     openModal('editCoAdminModal');
@@ -10068,7 +10076,7 @@ async function renderAdmins(){
     const rows = accounts.map(a=>{
       const isMe = a.id === sess.id;
       const status = a.status||'active';
-      const ini = a.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const ini = initialsOf(a.name);
       const cos=C.companies.filter(c=>c.admin_id===a.id);
       const coIds=new Set(cos.map(c=>c.id));
       const siteCount=C.sites.filter(s=>coIds.has(s.company_id)).length;
@@ -10132,7 +10140,7 @@ async function renderAdmins(){
           <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf);width:28px;height:28px;min-width:28px;font-size:10px">${ini}</div>
           <div><span style="font-weight:500">${esc(a.name)}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">▸</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
         </div></td>
-        <td style="font-size:13px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.email}">${a.email}</td>
+        <td style="font-size:13px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(a.email)}">${esc(a.email)}</td>
         <td style="white-space:nowrap">${billingBadge(a)}</td>
         <td style="white-space:nowrap"><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?(t('status.active')||'Active'):status==='pending_approval'?(t('status.pending')||'Pending'):(t('status.suspended')||'Suspended')}</span></td>
         <td style="color:var(--text2);font-size:12px;white-space:nowrap">${new Date(a.created_at).toLocaleDateString()}<div style="font-size:10.5px;color:var(--text3)">${tenureStr(a.created_at)}</div></td>
@@ -10146,7 +10154,7 @@ async function renderAdmins(){
         <td style="white-space:nowrap;min-width:120px;display:flex;gap:6px;align-items:center">${isMe
           ? '<span style="font-size:11px;color:var(--text3)">—</span>'
           : '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">' + (t('common.edit')||'Edit') + '</button>'
-          + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">' + (t('common.delete')||'Delete') + '</button>'
+          + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + jsq(a.name) + '\')">' + (t('common.delete')||'Delete') + '</button>'
         }</td>
       </tr>
       <tr id="adminDetail_${a.id}" style="display:none"><td colspan="11" style="background:var(--surface2);padding:12px 20px;font-size:13px">${detailRows||'<em style="color:var(--text3)">No companies</em>'}${teamLine}</td></tr>`;
@@ -10162,7 +10170,7 @@ async function renderAdmins(){
           </div>
           ${activeThisWeek?`<span class="pill in">${t('admin.active')||'✓ Active'}</span>`:`<span class="pill ${needsAttention?'out':'site'}">${t('admin.quiet')||'⚠ Quiet'}</span>`}
         </div>
-        <div class="mc-row"><span>Email</span><span style="font-size:12px">${a.email}</span></div>
+        <div class="mc-row"><span>Email</span><span style="font-size:12px">${esc(a.email)}</span></div>
         <div class="mc-row"><span>Billing</span><span>${billingBadge(a)}</span></div>
         <div class="mc-row"><span>Status</span><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></div>
         <div class="mc-row"><span>Signed up</span><span style="font-size:12px">${new Date(a.created_at).toLocaleDateString()} (${tenureStr(a.created_at)})</span></div>
@@ -10170,14 +10178,14 @@ async function renderAdmins(){
         <div class="mc-row"><span>Companies / Sites / Emp.</span><span style="font-size:12px">${coCount} / ${siteCount} / ${empCount}</span></div>
         ${!isMe ? '<div class="mc-actions">'
           + '<button class="btn-secondary" style="font-size:12px" onclick="openEditAdminModal(\'' + a.id + '\')">Edit</button>'
-          + '<button class="btn-secondary" style="font-size:12px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + a.name.replace(/'/g,"\\'") + '\')">Delete</button>'
+          + '<button class="btn-secondary" style="font-size:12px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + jsq(a.name) + '\')">Delete</button>'
           + '</div>' : ''}
       </div>`).join('');
 
     // Load join requests
     await renderJoinRequests();
 
-  }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);padding:16px">Error: ${e.message}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);padding:16px">Error: ${esc(e.message)}</td></tr>`;}
 }
 
 async function deleteAdmin(id, name){
@@ -10262,17 +10270,17 @@ async function renderJoinRequests(){
       [[t('admin.col.email')||'Email', esc(r.requester_email||'')],
        [t('admin.joinTarget')||'Requesting access to', esc(r.target_admin_email||'')],
        [t('admin.col.requested')||'Requested', new Date(r.created_at).toLocaleDateString()]],
-      `<button class="btn-primary" style="font-size:12px" onclick="approveJoinRequest('${r.id}','${r.requester_id}')">${t('common.approve')||'Approve'}</button>
-       <button class="btn-danger" style="font-size:12px" onclick="denyJoinRequest('${r.id}','${r.requester_id}')">${t('common.deny')||'Deny'}</button>`
+      `<button class="btn-primary" style="font-size:12px" onclick="approveJoinRequest('${r.id}','${jsq(r.requester_id)}')">${t('common.approve')||'Approve'}</button>
+       <button class="btn-danger" style="font-size:12px" onclick="denyJoinRequest('${r.id}','${jsq(r.requester_id)}')">${t('common.deny')||'Deny'}</button>`
     )).join('');
     tbody.innerHTML = requests.map(r=>`<tr>
-      <td style="font-weight:500">${r.requester_name}</td>
-      <td>${r.requester_email}</td>
-      <td style="font-size:12px;color:var(--text2)">${r.target_admin_email}</td>
+      <td style="font-weight:500">${esc(r.requester_name)}</td>
+      <td>${esc(r.requester_email)}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(r.target_admin_email)}</td>
       <td style="font-size:12px;color:var(--text2)">${new Date(r.created_at).toLocaleDateString()}</td>
       <td><div style="display:flex;gap:6px">
-        <button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${r.requester_id}')">✓ Approve</button>
-        <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${r.requester_id}')">✗ Deny</button>
+        <button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${jsq(r.requester_id)}')">✓ Approve</button>
+        <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${jsq(r.requester_id)}')">✗ Deny</button>
       </div></td>
     </tr>`).join('');
   }catch(e){console.error('Join requests error:',e);}
@@ -10321,7 +10329,7 @@ async function renderMissedPunchRequests(){
       const reason=esc(r.reason||'');
       const timeStr=(r.requested_time||'').slice(0,5);
       return `<tr>
-        <td style="font-weight:500">${r.emp_name}</td>
+        <td style="font-weight:500">${esc(r.emp_name)}</td>
         <td>${typePill}</td>
         <td style="white-space:nowrap">${r.requested_date}</td>
         <td style="white-space:nowrap">${timeStr}</td>
@@ -10350,7 +10358,7 @@ async function renderMissedPunchRequests(){
       const reason=esc(r.reason||'');
       const timeStr=(r.requested_time||'').slice(0,5);
       return `<div class="mobile-card-row">
-        <div class="mc-name"><span style="font-weight:500">${r.emp_name}</span>${typePill}</div>
+        <div class="mc-name"><span style="font-weight:500">${esc(r.emp_name)}</span>${typePill}</div>
         <div class="mc-row"><span>Date</span><span>${r.requested_date}</span></div>
         <div class="mc-row"><span>Time</span><span>${timeStr}</span></div>
         ${reason?`<div class="mc-row"><span>Reason</span><span style="font-size:12px">${reason}</span></div>`:''}
@@ -10975,7 +10983,7 @@ async function sendEmpPortalInvite(empId, email, empName) {
     const emp = C.employees.find(e=>e.id===empId);
     if(emp) setTimeout(()=>loadEmpPortalStatus(emp),600);
   } catch(e) {
-    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">Error: ${e.message}</div>`;
+    if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--red);margin-top:4px">Error: ${esc(e.message)}</div>`;
     btn.disabled=false;
   }
 }
@@ -10995,7 +11003,7 @@ async function revokeEmpPortalAccess(empId) {
 function populateSiteDropdown(selectId,coId,selectedSiteId){
   const sel=document.getElementById(selectId);
   const sites=C.sites.filter(s=>s.company_id===coId);
-  sel.innerHTML=`<option value="">${t('emp.noSiteAssigned')||'No Site Assigned'}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===selectedSiteId?' selected':''}>${s.name}</option>`).join('');
+  sel.innerHTML=`<option value="">${t('emp.noSiteAssigned')||'No Site Assigned'}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===selectedSiteId?' selected':''}>${esc(s.name)}</option>`).join('');
   // Auto-select if only one site exists and no selection is specified
   if(!selectedSiteId && sites.length===1){
     sel.value=sites[0].id;
@@ -11176,18 +11184,18 @@ async function loadCompaniesPage(){
     return`<div class="company-card" style="${isCur?`border-color:${col};background:${col}0a`:''}">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <div class="company-logo">
-          ${co.logo_url?`<img src="${co.logo_url}" alt="${co.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
-          <span style="${co.logo_url?'display:none':''}">${co.name.slice(0,1).toUpperCase()}</span>
+          ${co.logo_url?`<img src="${esc(co.logo_url)}" alt="${esc(co.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+          <span style="${co.logo_url?'display:none':''}">${esc(co.name.slice(0,1).toUpperCase())}</span>
         </div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <h3 style="${isCur?'color:'+col:''}">${co.name}</h3>
+            <h3 style="${isCur?'color:'+col:''}">${esc(co.name)}</h3>
             ${isCur?`<span class="pill admin" style="font-size:10px;padding:1px 7px">Active</span>`:''}
             ${getPlanBadgeHtml(co)}
           </div>
         </div>
       </div>
-      <div class="meta">${co.industry||''}${co.industry&&co.description?' · ':''}${co.description||''}</div>
+      <div class="meta">${esc(co.industry||'')}${co.industry&&co.description?' · ':''}${esc(co.description||'')}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
         <span><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg>${total} ${t('common.total')} · ${active} ${t('common.active')}</span>
         <span><svg class="ic" style="margin-right:5px"><use href="#i-pin"/></svg>${siteCnt} ${t('common.sites')}</span>
@@ -11200,7 +11208,7 @@ async function loadCompaniesPage(){
       <div class="actions">
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="selectCtxFromCompany('${co.id}')">${t('common.switchTo')}</button>
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editCompany('${co.id}')">${t('common.edit')}</button>
-        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('company','${co.id}','${co.name}')">${t('common.delete')}</button>
+        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('company','${co.id}','${jsq(co.name)}')">${t('common.delete')}</button>
       </div>
     </div>`;
   }).join('');
@@ -11235,22 +11243,22 @@ async function loadSitesPage(){
       ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${s.geo_radius_m||25}m</span>`
       :`<span class="geo-status-badge geo-none" title="No geofence set"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>No geofence</span>`;
     const payrollLine=co?`${freqLabel[co.payroll_frequency]||'—'} · ${weekLabel[co.week_start]||'—'}`:'';
-    const companyLine=superAdmin&&co?`<div class="meta" style="margin-bottom:3px;color:var(--accent)">${co.name}</div>`:'';
+    const companyLine=superAdmin&&co?`<div class="meta" style="margin-bottom:3px;color:var(--accent)">${esc(co.name)}</div>`:'';
     return`<div class="company-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <div style="width:36px;height:36px;border-radius:var(--r-md);background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)"><svg class="ic" style="width:18px;height:18px"><use href="#i-nav-sites"/></svg></div>
         <div style="flex:1;min-width:0">
           ${companyLine}
-          <h3 style="margin:0;font-size:14px;font-weight:600">${s.name}</h3>
+          <h3 style="margin:0;font-size:14px;font-weight:600">${esc(s.name)}</h3>
           <div style="margin-top:4px">${geoBadge}</div>
         </div>
       </div>
       ${payrollLine?`<div class="meta" style="margin-bottom:4px"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-calendar"/></svg>${payrollLine}</div>`:''}
-      <div class="meta"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-users"/></svg>${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+s.description:''}</div>
+      <div class="meta"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-users"/></svg>${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+esc(s.description):''}</div>
       ${_isMgr?'':`<div class="actions">
         <button class="btn-primary" style="font-size:11px;padding:5px 11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-tablet"/></svg>${t('site.kioskShortcut')||'Kiosk'}</button>
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
-        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('site','${s.id}','${s.name}')">${t('common.delete')}</button>
+        <button class="btn-danger" style="font-size:11px;padding:5px 11px" onclick="confirmDelete('site','${s.id}','${jsq(s.name)}')">${t('common.delete')}</button>
       </div>`}
     </div>`;
   }).join('');
@@ -11755,7 +11763,7 @@ async function loadReportsPage(){
   const rco=document.getElementById('reportCompany');
   let _repCos=C.companies;
   if(managerSiteIds!==null)_repCos=_repCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
-  rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_repCos.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${c.name}</option>`).join('');
+  rco.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_repCos.map(c=>`<option value="${c.id}"${ctx?.co?.id===c.id?' selected':''}>${esc(c.name)}</option>`).join('');
   await loadAllWorkLabels();
   onReportCompanyChange();
   renderRecipients();
@@ -11776,7 +11784,7 @@ function onReportCompanyChange(){
   let sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
   if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
   const rs=document.getElementById('reportSite');
-  rs.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  rs.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
   loadReportEmps();
   fillReportLabelFilter();
   // Auto-load payroll settings for date range
@@ -11819,7 +11827,7 @@ function loadReportEmps(){
     return`<label class="emp-check-item">
       <input type="checkbox" class="emp-check" value="${e.id}"${e.active?' checked':''}>
       <span>${esc(e.name)}${inactiveTag}</span>
-      <span style="color:var(--text3);font-size:11px;margin-left:auto">${[co?.name,site?.name].filter(Boolean).join(' · ')}</span>
+      <span style="color:var(--text3);font-size:11px;margin-left:auto">${esc([co?.name,site?.name].filter(Boolean).join(' · '))}</span>
     </label>`;
   }).join('');
 }
@@ -12249,18 +12257,18 @@ async function generateReport(){
   document.getElementById('reportTableBody').innerHTML=allRows.map(r=>{
     if(r.isSiteHeader)return`<tr style="background:rgba(79,142,247,.1)">
       <td colspan="${7+LC+EV}" style="font-weight:700;font-size:14px;color:var(--accent);padding:12px 15px;letter-spacing:.3px">
-        <svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}
+        <svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${esc(r.siteName)}
       </td>
     </tr>`;
     if(r.isSiteTotal)return`<tr style="background:rgba(79,142,247,.04);border-top:2px solid rgba(79,142,247,.3)">
-      <td colspan="${4+LC}" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px"><svg class="ic" style="margin-right:5px"><use href="#i-nav-reports"/></svg>${r.siteName} — Site Total</td>
+      <td colspan="${4+LC}" style="font-weight:700;color:var(--accent);font-size:13px;padding:10px 15px"><svg class="ic" style="margin-right:5px"><use href="#i-nav-reports"/></svg>${esc(r.siteName)} — Site Total</td>
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:16px;color:var(--accent)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.otHours>0?r.otHours.toFixed(2):''}</td>
       ${EV?`<td class="num" style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:var(--amber)">${r.evHours>0?r.evHours.toFixed(2):''}</td>`:''}
     </tr>`;
     if(r.isSubtotal)return`<tr style="background:rgba(255,255,255,.02)">
-      <td colspan="${4+LC}" style="font-weight:600;color:var(--text2);font-size:12px;padding:8px 15px;padding-left:28px">&#8627; ${r.subtotalLabel}</td>
+      <td colspan="${4+LC}" style="font-weight:600;color:var(--text2);font-size:12px;padding:8px 15px;padding-left:28px">&#8627; ${esc(r.subtotalLabel)}</td>
       <td></td>
       <td class="num" style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px;color:var(--text2)">${r.hours.toFixed(2)}</td>
       <td class="num" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.trackOT&&r.otHours>0?r.otHours.toFixed(2):''}</td>
@@ -12270,8 +12278,8 @@ async function generateReport(){
       ?`<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:600">${r.otHours.toFixed(2)}</span>`
       :`<span style="color:var(--text3)">—</span>`;
     return`<tr ${r.trackOT&&r.otHours>0?'style="background:rgba(245,158,11,.04)"':''}>
-      <td><span style="font-weight:500">${r.empName}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${r.empCode}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}${r.isPaidBreak?`<span class="break-badge">PAID BREAK</span>`:''}</td>
-      <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${r.siteName}</span>`:''}</td>
+      <td><span style="font-weight:500">${esc(r.empName)}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${esc(r.empCode)}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}${r.isPaidBreak?`<span class="break-badge">PAID BREAK</span>`:''}</td>
+      <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${esc(r.siteName)}</span>`:''}</td>
       ${LC?`<td>${labelBadge({label_id:r.labelId}).replace('margin-left:6px','')||''}</td>`:''}
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${r.punchIn}</td>
@@ -12615,7 +12623,7 @@ async function loadActivityPage(){
   if(acf.options.length<=1){
     let _actCos=C.companies;
     if(managerSiteIds!==null)_actCos=_actCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
-    acf.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_actCos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    acf.innerHTML=`<option value="all">${t('common.allCompanies')}</option>`+_actCos.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
   }
 
   // Rebuild employee dropdown scoped to current company + manager site scope
@@ -12626,7 +12634,7 @@ async function loadActivityPage(){
   if(managerSiteIds!==null)_actEmps=_actEmps.filter(e=>managerSiteIds.includes(e.site_id));
   _actEmps=_actEmps.filter(e=>e.active).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   aef.innerHTML=`<option value="all">${t('common.allEmployees')||'All Employees'}</option>`+
-    _actEmps.map(e=>`<option value="${e.id}"${e.id===prevEmp?' selected':''}>${e.name}</option>`).join('');
+    _actEmps.map(e=>`<option value="${e.id}"${e.id===prevEmp?' selected':''}>${esc(e.name)}</option>`).join('');
 
   const opts={};
   if(coId!=='all')opts.coId=coId;
@@ -12705,8 +12713,8 @@ async function loadActivityPage(){
     const coSite=[pco?.name,site?.name].filter(Boolean).join(' · ');
     return`<tr class="${p.is_manual?'edited-row':''}">
       <td><input type="checkbox" class="act-row-check" data-punch-id="${p.id}" onclick="onActivityRowCheckChange()" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer"></td>
-      <td style="font-weight:500">${p.emp_name}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${emp.emp_code}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}${channelBadge(p)}${breakBadge(p)}${switchBadge(p)}${labelBadge(p)}${punchMapBtn(p)}</td>
-      <td style="font-size:12px">${coSite||'—'}</td>
+      <td style="font-weight:500">${esc(p.emp_name)}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${esc(emp.emp_code)}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}${channelBadge(p)}${breakBadge(p)}${switchBadge(p)}${labelBadge(p)}${punchMapBtn(p)}</td>
+      <td style="font-size:12px">${esc(coSite||'—')}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type==="IN"?t("punch.in").replace("✓ ",""):t("punch.out").replace("✕ ","")}</span></td>
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${p.punch_time}</td>
@@ -12806,7 +12814,7 @@ function openBulkReassignSite(){
   const sel=document.getElementById('bulkReassignSiteSelect');
   sel.innerHTML=sites.map(s=>{
     const co=C.companies.find(c=>c.id===s.company_id);
-    return`<option value="${s.id}">${s.name}${co?' — '+co.name:''}</option>`;
+    return`<option value="${s.id}">${esc(s.name)}${co?' — '+esc(co.name):''}</option>`;
   }).join('');
   document.getElementById('bulkReassignCount').textContent=_actSelectedIds.size;
   openModal('bulkReassignSiteModal');
@@ -12849,7 +12857,7 @@ function updateActSiteFilter(coId){
   const prev=asf.value;
   let sites=coId==='all'?C.sites:C.sites.filter(s=>s.company_id===coId);
   if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
-  asf.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${s.name}</option>`).join('');
+  asf.innerHTML=`<option value="all">${t('admin.allSites')}</option>`+sites.map(s=>`<option value="${s.id}"${s.id===prev?' selected':''}>${esc(s.name)}</option>`).join('');
 }
 
 function onActCoChange(){
@@ -12968,7 +12976,7 @@ async function saveVisitorEdit(){
     closeModal('editVisitorModal');
     await loadActivityPage();
     showToast(t('visitor.updated')||'Visitor record updated.','success');
-  }catch(e){ msgEl.innerHTML=`<div class="msg error">Error: ${e.message}</div>`; }
+  }catch(e){ msgEl.innerHTML=`<div class="msg error">Error: ${esc(e.message)}</div>`; }
 }
 
 async function deleteVisitorRecord(){
@@ -13014,7 +13022,7 @@ async function openEditPunch(id){
   const coId=p.company_id||emp?.company_id;
   const sites=coId?C.sites.filter(s=>s.company_id===coId):C.sites;
   const sel=document.getElementById('editPunchSite');
-  sel.innerHTML='<option value="">No Site</option>'+sites.map(s=>`<option value="${s.id}"${s.id===p.site_id?' selected':''}>${s.name}</option>`).join('');
+  sel.innerHTML='<option value="">No Site</option>'+sites.map(s=>`<option value="${s.id}"${s.id===p.site_id?' selected':''}>${esc(s.name)}</option>`).join('');
   await loadAllWorkLabels();
   _fillEditPunchLabel(p);
   openModal('editPunchModal');
@@ -13101,7 +13109,7 @@ function openAddPunchModal(){
   // Populate employee dropdown scoped to active company
   const emps=ctx?C.employees.filter(e=>e.active&&e.company_id===ctx.co.id):C.employees.filter(e=>e.active);
   const sel=document.getElementById('addPunchEmp');
-  sel.innerHTML=emps.map(e=>`<option value="${e.id}">${e.name}${e.emp_code?' ('+e.emp_code+')':''}</option>`).join('');
+  sel.innerHTML=emps.map(e=>`<option value="${e.id}">${esc(e.name)}${e.emp_code?' ('+esc(e.emp_code)+')':''}</option>`).join('');
   document.getElementById('addPunchDate').value=new Date().toLocaleDateString('en-CA');
   document.getElementById('addPunchTime').value='';
   document.getElementById('addPunchTimeOut').value='';
@@ -13338,7 +13346,7 @@ const TO_KINDS={vacation:{c:'#4f8ef7'},sick:{c:'#ef4444'},personal:{c:'#a78bfa'}
 let _timeOff=[];
 let _toEditId=null;
 
-function _toKindLabel(k){ return t('to.k.'+k)||k; }
+function _toKindLabel(k){ return t('to.k.'+k)||String(k==null?'':k).replace(/[^\w -]/g,''); }
 function _toDays(r){
   const a=new Date(r.start_date+'T00:00:00'), b=new Date(r.end_date+'T00:00:00');
   return Math.round((b-a)/864e5)+1;
@@ -13871,7 +13879,7 @@ function openSendReportModal(empId, isBulk){
     const names = bulkIds.map(id=>C.employees.find(e=>e.id===id)).filter(Boolean).map(e=>esc(e.name));
     emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>${names.join(', ')}`;
   } else if(emp.email){
-    emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Will be sent to <strong style="color:var(--text)">${emp.email}</strong>`;
+    emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Will be sent to <strong style="color:var(--text)">${esc(emp.email)}</strong>`;
   } else {
     emailEl.innerHTML = `<span style="color:var(--red)"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>No email address on file — please edit this employee and add one first.</span>`;
   }
@@ -14939,7 +14947,7 @@ async function openHolidaysModal() {
   const siteSel = document.getElementById('holidaySiteScope');
   const sites = C.sites.filter(s => s.company_id === coId);
   siteSel.innerHTML = `<option value="company">${t('sched.holidayAllSites')||'All sites'}</option>`
-    + sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    + sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
   // Populate year filter
   const yr = new Date().getFullYear();
   const yearSel = document.getElementById('holidayYearFilter');
@@ -14979,14 +14987,14 @@ async function renderHolidayList() {
       return `<div class="holiday-list-item">
         <div>
           <div class="holiday-list-date">${dateLabel}</div>
-          <div class="holiday-list-name">${name}</div>
-          <div class="holiday-list-sub">${site ? `<svg class="ic" style="margin-right:3px"><use href="#i-pin"/></svg>${site.name}` : (t('sched.holidayAllSites')||'All sites')}${h.note ? ` · ${h.note}` : ''}</div>
+          <div class="holiday-list-name">${esc(name)}</div>
+          <div class="holiday-list-sub">${site ? `<svg class="ic" style="margin-right:3px"><use href="#i-pin"/></svg>${esc(site.name)}` : (t('sched.holidayAllSites')||'All sites')}${h.note ? ` · ${esc(h.note)}` : ''}</div>
         </div>
         <button class="btn-avail-remove" onclick="deleteHoliday('${h.id}')" title="${t('common.delete')||'Delete'}"><svg style="width:13px;height:13px"><use href="#i-x"/></svg></button>
       </div>`;
     }).join('');
   } catch(e) {
-    listEl.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px">Error: ${e.message}</div>`;
+    listEl.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -15022,7 +15030,7 @@ async function saveHoliday() {
     await renderHolidayList();
     await renderScheduleGrid(); // refresh grid to show new holiday
   } catch(e) {
-    msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
+    msgEl.innerHTML = `<div class="msg error">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -15074,7 +15082,7 @@ async function addQuebecHolidays() {
     await renderHolidayList();
     await renderScheduleGrid();
   } catch(e) {
-    msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
+    msgEl.innerHTML = `<div class="msg error">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -15165,7 +15173,7 @@ async function saveAdminAvail() {
     msgEl.innerHTML = `<div class="msg success">✓ ${t('sched.availSaved')||'Saved.'}</div>`;
     setTimeout(()=>{ msgEl.innerHTML=''; }, 2000);
   } catch(e) {
-    msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
+    msgEl.innerHTML = `<div class="msg error">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -15208,7 +15216,7 @@ async function renderAdminAvailList() {
       </div>`;
     }).join('');
   } catch(e) {
-    listEl.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px">Error: ${e.message}</div>`;
+    listEl.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -15406,7 +15414,7 @@ async function loadSchedulePage() {
   if(coSel.options.length === 0) {
     let _schedCos=C.companies;
     if(managerSiteIds!==null)_schedCos=_schedCos.filter(c=>C.sites.some(s=>s.company_id===c.id&&managerSiteIds.includes(s.id)));
-    coSel.innerHTML = _schedCos.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    coSel.innerHTML = _schedCos.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
   }
   onSchedCoChange();
   // Check if holidays need to be set for this year
@@ -15572,7 +15580,7 @@ function onSchedCoChange() {
   const _schedCo = C.companies.find(c => c.id === coId);
   if(managerSiteIds!==null && !(_schedCo && _schedCo.managers_see_all_sites))sites=sites.filter(s=>managerSiteIds.includes(s.id));
   siteSel.innerHTML = `<option value="all">${t('admin.allSites')||'All Sites'}</option>` +
-    sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    sites.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
   renderScheduleGrid();
 }
 
@@ -15709,7 +15717,7 @@ async function renderScheduleGrid() {
     const holidayBadge = dayHolidays.length
       ? dayHolidays.map(h => {
           const name = (_appLang==='fr'&&h.name_fr) ? h.name_fr : h.name;
-          return `<span class="sched-holiday-header" title="${h.note||''}">⭐ ${name}</span>`;
+          return `<span class="sched-holiday-header" title="${esc(h.note||'')}">⭐ ${esc(name)}</span>`;
         }).join('')
       : '';
     html += `<th class="${isToday?'today-col':''}${dayHolidays.length?' sched-holiday-cell':''}">${dayNames[i]}<br><span style="font-weight:400;font-size:10px">${dateLabel}</span>${holidayBadge}</th>`;
@@ -15718,13 +15726,13 @@ async function renderScheduleGrid() {
   html += `<th class="sched-hours">${t('sched.hoursCol')||'Hours'}</th></tr></thead><tbody>`;
 
   empsShown.forEach(emp => {
-    const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const initials = initialsOf(emp.name||'?');
     const site = C.sites.find(s=>s.id===emp.site_id);
     const allEmpShifts = _schedShifts.filter(sh=>sh.employee_id===emp.id);
     const empShiftsThisWeek = viewShifts.filter(sh=>sh.employee_id===emp.id);
     const hasEmail = !!(emp.email);
     const emailBtn = hasEmail
-      ? `<button class="btn-sched-email" onclick="sendScheduleEmail('${emp.id}')" title="${emp.email}">${t('sched.sendEmail')||'Send schedule'}</button>`
+      ? `<button class="btn-sched-email" onclick="sendScheduleEmail('${emp.id}')" title="${esc(emp.email)}">${t('sched.sendEmail')||'Send schedule'}</button>`
       : `<button class="btn-sched-add-email" onclick="openEmpForEmail('${emp.id}')">${t('sched.addEmail')||'+ Add email'}</button>`;
     const copyBtn = `<button class="btn-sched-copy" onclick="copyLastWeekForEmployee('${emp.id}')" title="${t('sched.copyLastWeekTitle')||"Copy this employee's shifts from last week into this week"}">${t('sched.copyLastWeek')||'↺ Copy last week'}</button>`;
 
@@ -15732,8 +15740,8 @@ async function renderScheduleGrid() {
       <div class="sched-emp-info">
         <div class="sched-emp-avatar">${initials}</div>
         <div>
-          <div class="sched-emp-name">${emp.name}</div>
-          ${site ? `<div class="sched-emp-site"><svg class="ic" style="width:11px;height:11px;margin-right:4px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${site.name}</div>` : ''}
+          <div class="sched-emp-name">${esc(emp.name)}</div>
+          ${site ? `<div class="sched-emp-site"><svg class="ic" style="width:11px;height:11px;margin-right:4px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${esc(site.name)}</div>` : ''}
           <div class="sched-emp-actions">${copyBtn}${allEmpShifts.length > 0 ? emailBtn : ''}${(allEmpShifts.length > 0 && !_schedLabelFilter) ? `<button class="btn-sched-clear" onclick="clearWeekForEmployee('${emp.id}')" title="${esc(t('sched.clearWeekTitle')||"Remove all of this employee's shifts this week")}">${t('sched.clearWeek')||'Clear week'}</button>` : ''}</div>
         </div>
       </div>
@@ -15783,7 +15791,7 @@ async function renderScheduleGrid() {
       if(isHoliday) {
         const holNames = dayHols.map(h=>(_appLang==='fr'&&h.name_fr)?h.name_fr:h.name).join(', ');
         const holNotes = dayHols.filter(h=>h.note).map(h=>h.note).join(', ');
-        html += `<div title="${holNotes||holNames}" style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-xs);padding:3px 7px;margin-bottom:2px">⭐ ${holNames}</div>`;
+        html += `<div title="${esc(holNotes||holNames)}" style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-xs);padding:3px 7px;margin-bottom:2px">⭐ ${esc(holNames)}</div>`;
       }
 
       if(isUnavail) {
@@ -15801,7 +15809,7 @@ async function renderScheduleGrid() {
           ${isUnavail?`<div style="font-size:9px;color:var(--amber);margin-bottom:2px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>${t('sched.overlapWarning')||'Overlap'}</div>`:''}
           ${(!isUnavail && emp.dept) ? `<div class="shift-dept">${esc(emp.dept)}</div>` : ''}
           ${(() => { const lb = sh.label_id ? labelById(sh.label_id) : null; return lb ? `<div class="shift-label" style="--lb:${esc(lb.color)}" title="${esc(lb.name)}"><i></i>${esc(lb.name)}</div>` : ''; })()}
-          ${sh.note ? `<div style="font-size:11px;font-weight:600">${sh.note}</div>` : ''}
+          ${sh.note ? `<div style="font-size:11px;font-weight:600">${esc(sh.note)}</div>` : ''}
           <div class="shift-time">${startFmt} – ${endFmt}</div>
           <span class="shift-delete" onclick="event.stopPropagation();deleteShiftById('${sh.id}')"><svg style="width:11px;height:11px"><use href="#i-x"/></svg></span>
         </div>`;
@@ -15974,7 +15982,7 @@ function openAddShiftModal(empId = '', dateStr = '') {
   const coId = document.getElementById('schedCoFilter')?.value;
   const empSel = document.getElementById('shiftEmpSelect');
   const emps = schedRoster(coId);
-  empSel.innerHTML = emps.map(e=>`<option value="${e.id}" ${e.id===empId?'selected':''}>${e.name}</option>`).join('');
+  empSel.innerHTML = emps.map(e=>`<option value="${e.id}" ${e.id===empId?'selected':''}>${esc(e.name)}</option>`).join('');
 
   document.getElementById('shiftDate').value = dateStr || schedDateStr(new Date());
   document.getElementById('shiftStart').value = '09:00';
@@ -15999,7 +16007,7 @@ function openEditShiftModal(shiftId) {
   const coId = document.getElementById('schedCoFilter')?.value;
   const empSel = document.getElementById('shiftEmpSelect');
   const emps = schedRoster(coId);
-  empSel.innerHTML = emps.map(e=>`<option value="${e.id}" ${e.id===sh.employee_id?'selected':''}>${e.name}</option>`).join('');
+  empSel.innerHTML = emps.map(e=>`<option value="${e.id}" ${e.id===sh.employee_id?'selected':''}>${esc(e.name)}</option>`).join('');
 
   document.getElementById('shiftDate').value = sh.shift_date;
   document.getElementById('shiftStart').value = sh.start_time.slice(0,5);
@@ -16192,7 +16200,7 @@ async function saveShift() {
     if(empSkipped) parts.push((t('sched.copyEmpSkipped')||'{k} skipped (already scheduled or off that day).').replace('{k}',empSkipped));
     showToast(parts.join(' '), (copied || empCopied || (!skipped && !empSkipped)) ? 'success' : 'info');
   } catch(e) {
-    msgEl.innerHTML = `<div class="msg error">Error: ${e.message}</div>`;
+    msgEl.innerHTML = `<div class="msg error">Error: ${esc(e.message)}</div>`;
   }
 }
 
@@ -16274,7 +16282,7 @@ async function loadMyShifts(empId) {
         : d.toLocaleDateString(t('sched.locale')||'en-CA', {weekday:'short', month:'short', day:'numeric'});
       return `<div class="my-shift-row ${isToday?'my-shift-today':''}">
         <div>
-          <div class="my-shift-day">${dayLabel}${sh.note ? ` · <span style="color:var(--text2);font-weight:400">${sh.note}</span>` : ''}</div>
+          <div class="my-shift-day">${dayLabel}${sh.note ? ` · <span style="color:var(--text2);font-weight:400">${esc(sh.note)}</span>` : ''}</div>
         </div>
         <div class="my-shift-time">${sh.start_time.slice(0,5)} – ${sh.end_time.slice(0,5)}</div>
       </div>`;
