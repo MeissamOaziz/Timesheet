@@ -6,18 +6,18 @@ feature ships or a ticket teaches something, add it here in the same change.
 
 ## Ground rules
 
-- Drafts carry no signature (the Gmail alias appends one). Interactive sessions never send customer email:
-  they draft and Meissam reviews and sends. The triage routine follows its own prompt: it may send a
-  reply itself only for a Lane A or B fix it has verified, and everything else it drafts.
+- Drafts carry no signature (the mail alias appends one). Interactive sessions never send customer email:
+  they draft and the owner reviews and sends. Automated triage follows its own prompt and drafts
+  everything it is not explicitly allowed to send.
 - Reply in the customer's language (French or English).
 - Before trusting a triage summary, check whether a draft or reply already exists in that thread and
-  when it was written. A concurrent session may already have changed the facts (the Marie-Pier
-  "not a feature yet" reply went out the day the feature shipped).
+  when it was written. A concurrent session may already have changed the facts (a customer once got a
+  "not a feature yet" reply on the day the feature shipped).
 - Check recent commits and the live product before saying a feature does not exist. Features land
   often, and this document may lag a day.
 - Prefer the in-app Message centre (the bell) for announcing updates over emailing every customer.
 - Editing a customer's punch rows is never a routine fix. Find the cause, then draft the reply and
-  put the exact row and the correction in the summary email for Meissam to approve. If a fix is made
+  put the exact row and the correction in the summary email for the owner to approve. If a fix is made
   in an interactive session, say in the draft what was changed.
 - If a ticket reveals something this playbook does not cover (a new cause, a feature question, a
   trap), add a short "Playbook suggestion:" line to the summary email so it can be added.
@@ -34,15 +34,15 @@ feature ships or a ticket teaches something, add it here in the same change.
   employee portal on a phone is tagged MOBILE in Activity. Portal punches always use the employee's
   assigned site: there is no site picker, so geofence distance is measured against that one site.
 
-## Wrong hours on a phone punch (Thrive Medical, 2026-10-14)
+## Wrong hours on a phone punch (clinic customer, 2026-10-14)
 
 - Symptom: a day shows about 23 hours instead of about 1 hour.
 - Cause: the portal page did not finish sending the clock-out until it was reopened the next morning
   (22 hours later); the portal has no offline queue, so the likely reason is the phone suspending the
   page in the background right after the tap. The portal sends the tap time along with the punch,
-  but the server only trusted that time for 16 hours, so it stamped the sync time while keeping the
-  real date and time for display. Hours use the stamped time. The GPS pin on such a punch is likely
-  from when the page woke up, not from the tap (Stephanie's late OUT and her next IN had identical
+  but the server only trusted that time within a limited window, so it stamped the sync time while
+  keeping the real date and time for display. Hours use the stamped time. The GPS pin on such a punch
+  is likely from when the page woke up, not from the tap (the late OUT and the next IN had identical
   coordinates). This was first described as an offline app queue; that was an inference, not a fact.
   Since 2026-10-19 the portal drops a GPS fix taken more than 30 seconds after the tap, so a delayed
   punch carries no location instead of a wrong one. Older delayed punches may still show a wrong pin.
@@ -54,12 +54,12 @@ feature ships or a ticket teaches something, add it here in the same change.
 - Diagnosis query: compare punches.punched_at with punch_date + punch_time (company time zone), and
   check synced_late and source.
 
-## Employee can't sign in to the portal (Thrive Medical, 2026-10-19)
+## Employee can't sign in to the portal (clinic customer, 2026-10-19)
 
 - Symptom: "invalid credentials or account not verified" although the employee is sure the password is
   right, and "Forgot password" seems to send nothing.
 - Cause found: portal login compared the stored email with the lowercased typed one, so an account
-  stored with a capital letter (Kennedy@...) could never match. Fixed 2026-10-19: stored emails are
+  stored with a capital letter in the email could never match. Fixed 2026-10-19: stored emails are
   lowercased, a trigger keeps them lowercase, and both login functions ignore case. A password
   reset would NOT have fixed this, because login failed the same way afterwards.
 - Forgot password only sends a code to the exact email the account is registered under, and says
@@ -90,10 +90,10 @@ feature ships or a ticket teaches something, add it here in the same change.
 
 ## Everyone was signed out on 2026-10-19 (evening, Toronto)
 
-- All admin sessions were reset as a security precaution after a fix to the data access layer. If a
-  customer says they were suddenly logged out of the admin dashboard, that is expected: sign in again
-  with the usual email and password. Kiosks, clock-in and the employee portal were not affected.
-- Do not describe it as a breach. Say a security update required everyone to sign in again.
+- All admin sessions were reset once as a security precaution. If a customer says they were suddenly
+  logged out of the admin dashboard around that date, that is expected: sign in again with the usual
+  email and password. Kiosks, clock-in and the employee portal were not affected.
+- Keep the explanation to: a security update required everyone to sign in again.
 
 ## What each plan includes, and the 14-day preview (from 2026-10-24)
 
@@ -120,7 +120,7 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
 - If a Free customer complains that a feature disappeared: it is as advertised on the pricing page, they had a
   preview period to try it, and upgrading brings everything back as it was (recipients, geofences, the remote switch
   and time-off entries are still saved; overtime and evening hours need to be switched on again).
-- Grandfathered (unlimited): Oaziz Extracts and Connoisseur Culture.
+- A small number of grandfathered accounts have unlimited limits (the owner's own company and one partner account). Never grant or promise this to a customer.
 - Counts (employees, sites, companies, admins) are enforced in the app; extra seats are $4.90 each.
 
 ## Features and how to explain them
@@ -145,7 +145,7 @@ a job, a project, a client) with a colour.
   picker disappears and punches carry no label. If the list does not appear: check the setting, that the
   company has active labels, and the add-on. Server messages: "That job is no longer available" (label
   deleted or deactivated since the page loaded) and "Please choose what you are working on" (Required).
-  Requested by Lumi Conseil (technicians moving between client jobs).
+  Requested by a consulting customer whose technicians move between client jobs.
 - A label is not the employee's Department. Department says who a person is; a label says what a
   shift or stretch of work is for.
 - The Scheduling trial is 14 days and self-serve (from 2026-10-28): Schedule tab, "Try it free for 14 days"
@@ -183,7 +183,7 @@ Other recent changes
   for the last 18 months. Older data is available on request. This is stated in the Terms
   and the Privacy Policy.
 - Kiosk device list (site settings) shows IP, model and OS, which helps identify a tablet.
-- Kiosks reload themselves when they detect stale data (the Windsor ghost clock-in issue).
+- Kiosks reload themselves when they detect stale data (fixes a past ghost clock-in issue).
 
 ## Diagnostic recipes
 
@@ -206,22 +206,22 @@ Other recent changes
   https://www.punchclock.ca/employee.html says "Invalid email or password." instead. So the employee is
   almost certainly typing their email on the wrong page: employees have a portal account, not an admin
   account, so the admin screen can never accept them, and its "Forgot password?" sends nothing (it only
-  looks up admins), which looks like "the reset email never arrives". Check this FIRST (Thrive Medical /
-  Kennedy Watson, Oct 16-20, took three rounds because it was missed). Since 2026-10-20 the admin
+  looks up admins), which looks like "the reset email never arrives". Check this FIRST (a clinic customer's
+  employee, Oct 16-20, took three rounds because it was missed). Since 2026-10-20 the admin
   sign-in card, its error message and its forgot-password page link to the employee portal.
 - Employee wants a new password: in the portal, tap "Change password" at the bottom of the page (or the
   circle with their initial, top right); it needs the current password. If they forgot it, "Forgot your
-  password?" on the portal sign-in page emails a 6-digit code (15 minutes). Support can also set a
-  temporary password directly in employee_portal.password_hash with
-  `extensions.crypt('<temp>', extensions.gen_salt('bf', 10))` and then ask them to change it at once.
-  Emails are matched case-insensitively. Portal account emails are stored in lowercase.
+  password?" on the portal sign-in page emails a 6-digit code (15 minutes). If that cannot work, ask the
+  owner to set a temporary password (the procedure is in the owner's private notes, not here) and tell
+  the employee to change it at once. Emails are matched case-insensitively. Portal account emails are
+  stored in lowercase.
 
 - "Nothing works: punches, login and reports all fail for everyone" with HTTP 402 "service restricted":
-  that is the Supabase plan quota, not a bug. It happened 2026-10-22 from about 17:22 to 19:45 Toronto
-  (Free plan over its data and function quota); the organization is now on Pro and the kiosks were made
-  about 95% lighter. Punches attempted during an outage were never recorded: ask the customer who was
-  clocked in and out during that window and add the missing punches from Activity (Add punch). Check
-  Supabase Billing > Usage before anything else.
+  that is the database provider's plan quota, not a bug. It happened once, on 2026-10-22 for about two and
+  a half hours (Free plan over its data and function quota); the project is now on a paid plan and the
+  kiosks were made about 95% lighter. Punches attempted during an outage were never recorded: ask the
+  customer who was clocked in and out during that window and add the missing punches from Activity
+  (Add punch). Check the provider's Billing > Usage page before anything else.
 
 ## Style of a good reply
 

@@ -2,12 +2,22 @@
 // Prints a stable signature (no timestamps) so two runs can be diffed before/after a deploy:
 //   node tools/secure-db-regression/live-smoke.mjs > before.json ; (deploy) ; node ... > after.json ; diff before.json after.json
 // Punch counts move as people clock in and out, so ignore small changes in 'n' on the kiosk punch lines.
+//
+// Kiosk site ids are kiosk credentials and are NOT stored in this repo (it is public). Supply the real
+// ones at run time as a comma-separated list, up to four, in the SMOKE_SITE_IDS environment variable
+// (the owner keeps them in the private claude-ops repo, docs-private/). Example (bash):
+//   SMOKE_SITE_IDS=<uuid1>,<uuid2>,<uuid3>,<uuid4> node tools/secure-db-regression/live-smoke.mjs > before.json
+// With the variable unset, synthetic ids are used: the script still runs, but the per-site lines then
+// only exercise the 'unknown site' paths and are not a meaningful before/after comparison.
 import fs from 'node:fs';
 const html = fs.readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 const URL_ = /SUPA_URL\s*=\s*'([^']+)'/.exec(html)[1];
 const KEY = /SUPA_KEY\s*=\s*'([^']+)'/.exec(html)[1];
-const HAW1 = 'd3eaa156-0ed0-45ad-969e-0a97ed2ee62e', WIN1 = '97dbd2d2-a465-442c-bb56-5c4c49b04cc2';
-const OAZIZ = 'bc8372da-6aed-4de6-acf0-b97224ed8bcc', THRIVE = 'e59d1153-5ea7-409b-95dd-6ff7e560c6bc';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const envIds = (process.env.SMOKE_SITE_IDS || '').split(',').map((x) => x.trim()).filter((x) => UUID_RE.test(x));
+if (!envIds.length) console.error('SMOKE_SITE_IDS not set: using synthetic site ids (see the header of this file).');
+const SYNTH = ['aaaaaaaa-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000003', 'aaaaaaaa-0000-4000-8000-000000000004'];
+const [SITE_A, SITE_B, SITE_C, SITE_D] = [0, 1, 2, 3].map((i) => envIds[i] || SYNTH[i]);
 
 async function sdb(payload) {
   const r = await fetch(`${URL_}/functions/v1/secure-db`, {
@@ -28,7 +38,7 @@ async function rpc(name, args) {
 const sig = {};
 const sum = (rows) => Array.isArray(rows) ? { n: rows.length } : { raw: rows };
 
-for (const [label, site] of [['HAW1', HAW1], ['WIN1', WIN1], ['OAZIZ', OAZIZ], ['THRIVE', THRIVE]]) {
+for (const [label, site] of [['SITE_A', SITE_A], ['SITE_B', SITE_B], ['SITE_C', SITE_C], ['SITE_D', SITE_D]]) {
   // Kiosk reads, exactly as the punch screen makes them
   const p = await sdb({ table: 'punches', method: 'GET', filter: 'order=punched_at.desc', kioskSiteId: site });
   sig[`${label} kiosk punches`] = { status: p.status, ...(Array.isArray(p.body) ? { n: p.body.length, newestIsLast: p.body.length ? p.body[0].punched_at >= p.body[p.body.length - 1].punched_at : null } : { raw: p.body }) };
@@ -49,7 +59,7 @@ let r = await sdb({ table: 'punches', method: 'POST', body: { emp_id: '00000000-
 sig['anon punch insert, no kiosk, no session'] = { status: r.status };
 r = await sdb({ table: 'employees', method: 'POST', body: { name: 'x' } });
 sig['anon employee insert'] = { status: r.status };
-r = await sdb({ table: 'punches', method: 'POST', kioskSiteId: HAW1, body: { emp_id: '00000000-0000-0000-0000-000000000000', type: 'IN', label_id: '00000000-0000-0000-0000-000000000001' } });
+r = await sdb({ table: 'punches', method: 'POST', kioskSiteId: SITE_A, body: { emp_id: '00000000-0000-0000-0000-000000000000', type: 'IN', label_id: '00000000-0000-0000-0000-000000000001' } });
 sig['kiosk punch with foreign label'] = { status: r.status };
 r = await sdb({ table: 'punches', method: 'PATCH', filter: 'id=eq.00000000-0000-0000-0000-000000000000', body: { type: 'OUT' } });
 sig['anon punch update'] = { status: r.status };

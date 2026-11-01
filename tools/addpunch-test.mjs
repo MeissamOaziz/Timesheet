@@ -1,6 +1,6 @@
 // Adding a punch for a day someone forgot entirely.
 //
-// Reported by a customer (Connoisseur Culture, 2026-08-30): an employee missed BOTH punches on
+// Reported by a customer (a customer, 2026-08-30): an employee missed BOTH punches on
 // 2026-08-26, and the Add Punch dialog refused every way of fixing it. The IN was rejected
 // because the next punch (the following day's IN) is also an IN; the OUT was rejected because
 // no IN existed yet. The day was unrepairable in both directions.
@@ -38,11 +38,11 @@ async function setup(page, history=HISTORY){
   await page.evaluate(h=>{
     window._demoMode=false;
     Sess.set({id:'a1',email:'o@t.ca',status:'active',role:'admin',token:'t'}, false);
-    C.companies=[{id:'co1',name:'Connoisseur',admin_id:'a1'}];
-    C.sites=[{id:'s1',name:'WIN1',company_id:'co1'}];
+    C.companies=[{id:'co1',name:'Acme Test Co',admin_id:'a1'}];
+    C.sites=[{id:'s1',name:'Site 1',company_id:'co1'}];
     C.employees=[{id:'e1',name:'Chantal Arruda',site_id:'s1',company_id:'co1',active:true}];
     C.punches=[];
-    Ctx.set({co:{id:'co1',name:'Connoisseur'},site:{id:'s1',name:'WIN1'}});
+    Ctx.set({co:{id:'co1',name:'Acme Test Co'},site:{id:'s1',name:'Site 1'}});
     document.body.classList.add('role-resolved','role-admin');
     window.__hist=h.slice();
     window.__inserted=[];

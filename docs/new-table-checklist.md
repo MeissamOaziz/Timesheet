@@ -22,7 +22,3 @@ Then:
 2. Run the Supabase security advisor and the regression kit (`tools/secure-db-regression`).
 3. Functions (`create function ... security definer`) are executable by everyone by default: add
    `revoke all on function ... from public, anon, authenticated;` and grant only what is needed.
-
-Status of the existing projects (checked 2026-10-20): PunchClock and OazizWebPortal already hold their
-grants, so nothing changes for the tables they have. `pronto-imbianchino` is paused (nothing to do until
-it is restored; check its grants then).

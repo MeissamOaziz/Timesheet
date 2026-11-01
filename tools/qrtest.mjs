@@ -6,8 +6,8 @@ new Function('globalThis','module', src).call(root, root, undefined);
 const QR = root.PCQR;
 const cases=[
  'HELLO',
- 'https://www.punchclock.ca/?kiosk=bc8372da-6aed-4de6-acf0-b97224ed8bcc',
- 'https://www.punchclock.ca/?kiosk=46b8b88f-78ba-4625-bd1b-e997b1c383d1',
+ 'https://www.punchclock.ca/?kiosk=aaaaaaaa-0000-4000-8000-000000000001',
+ 'https://www.punchclock.ca/?kiosk=aaaaaaaa-0000-4000-8000-000000000002',
  'https://www.punchclock.ca/?kiosk=00000000-0000-0000-0000-000000000000&x=padding-to-push-the-version-up-a-fair-bit-further',
  'a', 'Café Rivière — été 2026 ✓'
 ];

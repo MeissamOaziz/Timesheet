@@ -21,3 +21,6 @@ tools/snap-*.json
 # assets; an underscore prefix keeps them out of the published site.
 assets/screenshots/_*
 tools/_*
+
+# Local agent settings (never publish)
+.claude/
