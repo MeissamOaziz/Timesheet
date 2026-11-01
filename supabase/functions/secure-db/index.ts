@@ -633,6 +633,133 @@ const strOf = (v: unknown, max = 200): string => (typeof v === 'string' ? v.trim
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
+// ── Private images (employee photos and company logos) ───────────────────────────────────────────
+// The avatars and logos buckets are PRIVATE. photo_url / logo_url keep the stored, public-style value
+// (.../storage/v1/object/public/<bucket>/<object>), which no longer opens by itself; every response that
+// carries one hands the page a short-lived SIGNED url instead (minted here with the service key, many paths
+// in one Storage call, cached per isolate so a kiosk that refreshes every 90 s does not cost a call each
+// time). Whatever the page writes back (it may hold a signed url from an earlier read) is turned back into
+// the stored form before it reaches the database, and must point at an object this account may use.
+const IMG_SIGN_SECS = 4 * 3600;            // lifetime of a url handed to a page
+const IMG_CACHE_MS = 20 * 60 * 1000;       // a cached url is reused for this long (so it always has >3 h left)
+const IMG_EMAIL_SECS = 30 * 24 * 3600;     // lifetime of a logo url put into an email (opened days later)
+const IMG_BUCKET_OF: Record<string, string> = { employees: 'avatars', companies: 'logos' };
+const IMG_COL_OF: Record<string, string> = { employees: 'photo_url', companies: 'logo_url' };
+const imgCache = new Map<string, { url: string; at: number }>();
+const IMG_OBJECT_RE = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/;
+
+// Reads a stored or signed url of OUR storage into {bucket, path}; anything else gives null.
+function parseImageRef(v: unknown): { bucket: string; path: string } | null {
+  if (typeof v !== 'string' || v.length > 600) return null;
+  const prefix = `${SUPABASE_URL}/storage/v1/object/`;
+  if (!v.startsWith(prefix)) return null;
+  const m = v.slice(prefix.length).split(/[?#]/)[0].match(/^(public|sign|authenticated)\/(avatars|logos)\/(.+)$/);
+  if (!m || !IMG_OBJECT_RE.test(m[3]) || m[3].split('/').some((s) => s === '.' || s === '..')) return null;
+  return { bucket: m[2], path: m[3] };
+}
+const canonicalImageUrl = (r: { bucket: string; path: string }) =>
+  `${SUPABASE_URL}/storage/v1/object/public/${r.bucket}/${r.path}`;
+
+// Signs the given objects, batching one Storage call per bucket. Returns "bucket/path" -> full signed url;
+// objects that could not be signed are simply absent (the caller keeps the stored value, which then shows
+// the page's initials fallback rather than failing the whole read).
+async function signImages(refs: { bucket: string; path: string }[], secs = IMG_SIGN_SECS, useCache = true): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const now = Date.now();
+  const need: Record<string, Set<string>> = {};
+  for (const r of refs) {
+    const key = `${r.bucket}/${r.path}`;
+    const hit = useCache ? imgCache.get(key) : undefined;
+    if (hit && now - hit.at < IMG_CACHE_MS) { if (hit.url) out.set(key, hit.url); continue; }
+    (need[r.bucket] ||= new Set()).add(r.path);
+  }
+  for (const [bucket, set] of Object.entries(need)) {
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 3000);
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${bucket}`, {
+        method: 'POST',
+        headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiresIn: secs, paths: [...set] }),
+        signal: ctl.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) continue;
+      const rows = await res.json().catch(() => null);
+      if (!Array.isArray(rows)) continue;
+      for (const row of rows) {
+        const rel = row && typeof row.signedURL === 'string' && !row.error ? row.signedURL : '';
+        if (!rel || typeof row.path !== 'string') continue;
+        const full = rel.startsWith('http') ? rel : `${SUPABASE_URL}/storage/v1${rel.startsWith('/') ? '' : '/'}${rel}`;
+        const key = `${bucket}/${row.path}`;
+        out.set(key, full);
+        if (useCache) {
+          if (imgCache.size > 2000) imgCache.clear();
+          imgCache.set(key, { url: full, at: now });
+        }
+      }
+    } catch (_e) { /* signing is best effort: the stored value is kept */ }
+    // An object that could not be signed (deleted, or a failed call) is remembered for a while too, so a dangling
+    // reference does not cost a Storage call on every 90 s terminal refresh.
+    if (useCache) for (const pth of set) if (!out.has(`${bucket}/${pth}`)) imgCache.set(`${bucket}/${pth}`, { url: '', at: now });
+  }
+  return out;
+}
+
+// Replaces the stored url with a signed one on every row/object that has `col`.
+async function signImageFields(items: Record<string, unknown>[], col: string): Promise<void> {
+  const refs: { bucket: string; path: string }[] = [];
+  for (const it of items) {
+    const r = it && typeof it === 'object' ? parseImageRef(it[col]) : null;
+    if (r) refs.push(r);
+  }
+  if (!refs.length) return;
+  const signed = await signImages(refs);
+  for (const it of items) {
+    const r = it && typeof it === 'object' ? parseImageRef(it[col]) : null;
+    const s = r ? signed.get(`${r.bucket}/${r.path}`) : undefined;
+    if (s) it[col] = s;
+  }
+}
+
+// A logo url good for 30 days, for an email. Empty string when it cannot be signed (the email then has no logo).
+async function emailLogoUrl(stored: unknown): Promise<string> {
+  const r = parseImageRef(stored);
+  if (!r) return '';
+  return (await signImages([r], IMG_EMAIL_SECS, false)).get(`${r.bucket}/${r.path}`) || '';
+}
+
+// Turns whatever photo_url / logo_url a write carries into the stored form and refuses anything that is not
+// an object of this account's own: a url of ours, in the right bucket, either inside the folder of a company
+// the caller owns (every upload since the buckets went private) or an older flat object this account already
+// uses. Super admins are not tenant-scoped. Returns an error message, or null.
+async function normaliseImageWrite(table: string, body: unknown, caller: Caller | null): Promise<string | null> {
+  const col = IMG_COL_OF[table], bucket = IMG_BUCKET_OF[table];
+  if (!col) return null;
+  let owned: string[] | null = null;
+  for (const row of bodyRows(body)) {
+    if (!(col in row)) continue;
+    const v = row[col];
+    if (v === null || v === '') { row[col] = null; continue; }
+    const ref = parseImageRef(v);
+    if (!ref || ref.bucket !== bucket) return `Invalid ${col}`;
+    row[col] = canonicalImageUrl(ref);
+    if (caller && caller.role !== 'super_admin') {
+      owned ||= await ownedCompanyIds(caller.primaryAdminId);
+      const folder = ref.path.split('/')[0];
+      if (ref.path.includes('/') && UUID_RE.test(folder)) {
+        if (!owned.includes(folder)) return `Forbidden: ${col} does not belong to your account`;
+      } else {
+        const scope = table === 'companies' ? `admin_id=eq.${caller.primaryAdminId}`
+          : `company_id=in.(${owned.length ? owned.join(',') : '00000000-0000-0000-0000-000000000000'})`;
+        const used = await restJson(`${table}?${col}=eq.${encodeURIComponent(row[col] as string)}&${scope}&select=id&limit=1`);
+        if (!used || !used.length) return `Forbidden: ${col} does not belong to your account`;
+      }
+    }
+  }
+  return null;
+}
+
 // Bounded, well-formed shifts only: whatever the browser sent, the email gets at most 60 rows of
 // short text, real clock times and a real colour.
 function cleanShifts(raw: unknown) {
@@ -739,7 +866,7 @@ async function sendEmailAction(caller: Caller, rawBody: unknown): Promise<Respon
     const co = await one(`companies?id=eq.${emp.company_id}&select=name,logo_url&limit=1`);
     payload = { type: 'employee_invite', email: portal.email, name: emp.name || portal.email,
       portalUrl: `https://www.punchclock.ca/employee.html?token=${encodeURIComponent(portal.invite_token)}`,
-      lang, companyName: co?.name || '', logoUrl: co?.logo_url || '' };
+      lang, companyName: co?.name || '', logoUrl: await emailLogoUrl(co?.logo_url) };
 
   } else if (type === 'join_approved' || type === 'join_denied') {
     const reqId = strOf(b.request_id, 60);
@@ -1477,6 +1604,24 @@ Deno.serve(async (req: Request) => {
     return jsonResp({ ok: true, proof: await mintPinProof(vEmp, kioskSiteId), ttl: PIN_PROOF_TTL_MS });
   }
 
+  // A terminal's one read of its site, company and employees. The database function returns whole rows; the
+  // photo and logo urls in them are swapped for short-lived signed ones here, because the buckets are private.
+  if (action === 'kiosk_bootstrap') {
+    if (caller || !kioskSiteId || !UUID_RE.test(kioskSiteId)) return errResp('Unauthorized', 401);
+    const br = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_kiosk_bootstrap_v2`, {
+      method: 'POST',
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_site_id: kioskSiteId }),
+    });
+    const boot = await br.json().catch(() => null);
+    if (!br.ok || !boot || typeof boot !== 'object') return errResp('Could not load this terminal', 502);
+    if (boot.ok) {
+      if (boot.company && typeof boot.company === 'object') await signImageFields([boot.company], 'logo_url');
+      if (Array.isArray(boot.employees)) await signImageFields(boot.employees, 'photo_url');
+    }
+    return jsonResp(boot);
+  }
+
   if (action === 'send_email') {
     if (caller) return await sendEmailAction(caller, body);
     if (kioskSiteId) return await sendKioskScheduleEmail(kioskSiteId, body);
@@ -1721,6 +1866,12 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // photo_url / logo_url: back to the stored form, and only an object this account may use (see above).
+  if (authedAdminId && (method === 'POST' || method === 'PATCH') && IMG_COL_OF[table]) {
+    const imgBad = await normaliseImageWrite(table, body, caller);
+    if (imgBad) return errResp(imgBad, imgBad.startsWith('Forbidden') ? 403 : 400);
+  }
+
   // ── Build and forward upstream request ───────────────────────────────────
   const qp: string[] = [];
   if (filter) qp.push(filter);
@@ -1773,6 +1924,11 @@ Deno.serve(async (req: Request) => {
     }
     if (table === 'employee_portal' && Array.isArray(data)) {
       data = stripPortalRows(data);
+    }
+    // Employee photos and company logos live in private buckets: reads (and the rows a write sends back)
+    // carry short-lived signed urls, never the bare storage address.
+    if (IMG_COL_OF[table] && Array.isArray(data) && upstreamStatus < 300) {
+      await signImageFields(data as Record<string, unknown>[], IMG_COL_OF[table]);
     }
     // A terminal learns who works at its site, never their PIN or email: it only needs to know whether
     // each of them has one (the PIN itself is checked by kiosk_verify_pin).

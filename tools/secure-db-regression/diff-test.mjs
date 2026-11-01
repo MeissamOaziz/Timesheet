@@ -70,6 +70,10 @@ admins.d1 = { id: 'd1', parent_admin_id: null, role: 'admin', status: 'active' }
 companiesOf.t1 = ['c7']; companiesOf.x1 = ['c6'];
 sitesOf.c7 = ['s7']; sitesOf.c6 = ['s6'];
 sessions.tokNew = 'a3'; admins.a3 = { id: 'a3', parent_admin_id: null, role: 'admin', status: 'active' };
+// Private images: an account whose company id is a real uuid (uploads are filed under <company uuid>/)
+const CO_IMG = '55555555-5555-4555-8555-555555555551', CO_FOREIGN = '55555555-5555-4555-8555-555555555552', SITE_UUID = '66666666-6666-4666-8666-666666666661';
+sessions.tokImg = 'im1'; admins.im1 = { id: 'im1', parent_admin_id: null, role: 'admin', status: 'active' }; companiesOf.im1 = [CO_IMG];
+const PUB = 'https://fake.supabase.co/storage/v1/object/public';
 const tables = {
   punches: bigPunches,
   employees: [{ id: 'e1', name: 'A', company_id: 'c1', site_id: 's1', pin: '1234' }, { id: 'e2', name: 'B', company_id: 'c1', site_id: 's2', pin: '2222' }],
@@ -127,8 +131,15 @@ function makeFetch() {
     const dryHdr = !!(init.headers && init.headers['x-dry-run']);
     upstream.push({ method, url: String(u).replace('https://fake.supabase.co', ''), body: init.body ? String(init.body).slice(0, 60000) : null, prefer: (init.headers && init.headers.Prefer) || null, dry: dryHdr });
     const j = (data, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', ...extra } });
+    if (/\/storage\/v1\/object\/sign\//.test(String(u))) {
+      // batch endpoint: POST /object/sign/<bucket> {expiresIn, paths}; a path containing "missing" cannot be signed
+      const bucket = String(u).split('/object/sign/')[1]; let b = {}; try { b = JSON.parse(init.body); } catch { }
+      return j((b.paths || []).map(pth => pth.includes('missing') ? { error: 'Object not found', path: pth, signedURL: null } : { error: null, path: pth, signedURL: `/object/sign/${bucket}/${pth}?token=T${b.expiresIn}` }));
+    }
     if (p.kind === 'fn') { if (dryHdr) { let b = {}; try { b = JSON.parse(init.body); } catch { } return j({ success: true, dry: true, to: b.email, subject: 'S', html: '<html>' + (b.type || '') + '</html>' }); } return j({ success: true, sent: true }); }
     if (p.kind === 'rest' && p.name.startsWith('rpc/')) {
+      if (p.name === 'rpc/get_kiosk_bootstrap_v2') return j({ ok: true, site: { id: SITE_UUID, company_id: 'cK' }, company: { id: 'cK', name: 'Kiosk Co', logo_url: PUB + '/logos/kiosk-logo-1.png' },
+        employees: [{ id: 'k1', name: 'K One', photo_url: PUB + '/avatars/kiosk-photo-1.png', has_pin: true }, { id: 'k2', name: 'K Two', photo_url: null, has_pin: false }] });
       if (p.name === 'rpc/issue_email_code') return j({ ok: true, exists: true, code: '123456', email: 'x@y.z', name: 'N' });
       if (p.name === 'rpc/kiosk_recent_punches') { let b = {}; try { b = JSON.parse(init.body); } catch { } return b.p_site_id === 's8' ? j({ message: 'function not found' }, 404) : j(tables.punches.slice(0, 12)); }
       // plan helpers: tenant b1 is a Free account past its preview, everyone else is paid
@@ -154,9 +165,14 @@ function makeFetch() {
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'id' && p.q.has('parent_admin_id')) return j([{ id: 'a2' }]);
     if (t === 'companies' && method === 'GET' && p.q.has('admin_id')) return j((companiesOf[eq('admin_id')] || []).map(id => ({ id, admin_id: eq('admin_id'), name: 'Acme Fence' })));
     if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j(eq('id') === 'c7' ? [{ admin_id: 't1', punch_label_mode: 'optional' }] : eq('id') === 'c6' ? [{ admin_id: 'x1', punch_label_mode: 'optional' }] : [{ admin_id: 'a1', punch_label_mode: 'off' }]);
-    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9', 's7', 's6'].includes(eq('id')) ? [{ id: eq('id') }] : []);
+    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9', 's7', 's6', 'sImg'].includes(eq('id')) ? [{ id: eq('id') }] : []);
     if (t === 'sites' && method === 'GET' && p.q.get('select') === 'company_id') return j([{ company_id: eq('id') === 's7' ? 'c7' : eq('id') === 's6' ? 'c6' : 'c1' }]);
     if (t === 'sites' && method === 'GET' && p.q.has('company_id')) { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (sitesOf[c] || []).map(id => ({ id })))); }
+    if (t === 'employees' && method === 'GET' && (p.q.has('imgtest') || p.q.get('site_id') === 'eq.sImg')) return j([
+      { id: 'i1', name: 'One', photo_url: `${PUB}/avatars/${CO_IMG}/photo-aaa.png`, company_id: CO_IMG }, { id: 'i2', name: 'Two', photo_url: `${PUB}/avatars/legacy-2.png` },
+      { id: 'i3', name: 'Three', photo_url: null }, { id: 'i4', name: 'Four', photo_url: 'https://evil.example/x.png' }, { id: 'i5', name: 'Five', photo_url: `${PUB}/avatars/missing-5.png` }]);
+    if ((t === 'employees' || t === 'companies') && method === 'GET' && (p.q.get('photo_url') || p.q.get('logo_url') || '').includes('legacy-used')) return j([{ id: 'u1' }]);
+    if ((t === 'employees' || t === 'companies') && method === 'GET' && (p.q.has('photo_url') || p.q.has('logo_url'))) return j([]);
     if (t === 'employees' && method === 'GET' && p.q.has('company_id') && p.q.get('select') === 'id') { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (employeesOf[c] || []).map(id => ({ id })))); }
     if (t === 'work_labels' && method === 'GET' && p.q.get('select') === 'id') return j(p.q.has('id') ? (eq('id') === 'l1' ? [{ id: 'l1' }] : []) : [{ id: 'l1' }]);
     if (method === 'POST' && t === 'audit_log') {
@@ -169,7 +185,7 @@ function makeFetch() {
     if (t === 'employee_portal' && method === 'GET' && p.q.has('employee_id')) return j(pick(portalRows, eq('employee_id')));
     if (t === 'join_requests' && method === 'GET' && p.q.has('id')) return j(pick(joinRows, eq('id')));
     if (t === 'employees' && method === 'GET' && p.q.has('id') && p.q.get('select') !== 'id') return j(pick(empRows, eq('id')));
-    if (t === 'companies' && method === 'GET' && p.q.has('id') && !p.q.has('admin_id')) return j([{ id: eq('id'), name: 'Acme Fence', logo_url: 'https://uziwymrwaeojhqaagqcm.supabase.co/storage/v1/object/public/logos/c1.png' }]);
+    if (t === 'companies' && method === 'GET' && p.q.has('id') && !p.q.has('admin_id')) return j([{ id: eq('id'), name: 'Acme Fence', logo_url: PUB + '/logos/c1.png' }]);
     if (t === 'admins' && method === 'GET' && p.q.has('id') && /^name/.test(p.q.get('select') || '')) return j(pick(adminProfile, eq('id')));
     if (t === 'audit_log' && method === 'GET' && (p.q.get('table_name') || '').includes(MPR_DUP)) return j([{ id: 9 }]);
     if (t === 'audit_log' && method === 'GET' && (p.q.get('table_name') || '').includes('invite:' + INV_DUP)) return j([{ id: 9 }]);
@@ -329,8 +345,8 @@ const cases = [
   R('send_email', 'invitation: already used', { action: 'send_email', body: { type: 'invitation', token: T_USED }, ...own }, r => r.status === 404 && r.fn.length === 0),
   R('send_email', 'invitation: unknown token', { action: 'send_email', body: { type: 'invitation', token: '99999999-9999-4999-8999-999999999999' }, ...own }, r => r.status === 404 && r.fn.length === 0),
   R('send_email', 'invitation: malformed token', { action: 'send_email', body: { type: 'invitation', token: "x' or '1'='1" }, ...own }, r => r.status === 400 && r.fn.length === 0),
-  R('send_email', 'employee invite: builds the link itself', { action: 'send_email', body: { type: 'employee_invite', employee_id: E_OWN, lang: 'en', portalUrl: 'https://evil.example/phish', email: 'attacker@evil.example' }, ...own },
-    r => r.status === 200 && r.fn[0].body.email === 'ann@x.ca' && r.fn[0].body.portalUrl === 'https://www.punchclock.ca/employee.html?token=tok%20abc%2F123' && !JSON.stringify(r.fn[0].body).includes('evil.example') && r.fn[0].body.logoUrl.includes('supabase.co') && r.fn[0].body.companyName === 'Acme Fence'),
+  R('images-email', 'employee invite: builds the link itself, logo is a 30 day signed url', { action: 'send_email', body: { type: 'employee_invite', employee_id: E_OWN, lang: 'en', portalUrl: 'https://evil.example/phish', email: 'attacker@evil.example' }, ...own },
+    r => r.status === 200 && r.fn[0].body.email === 'ann@x.ca' && r.fn[0].body.portalUrl === 'https://www.punchclock.ca/employee.html?token=tok%20abc%2F123' && !JSON.stringify(r.fn[0].body).includes('evil.example') && /\/object\/sign\/logos\/c1\.png\?token=T2592000$/.test(r.fn[0].body.logoUrl) && r.fn[0].body.companyName === 'Acme Fence'),
   R('send_email', 'employee invite: nothing pending', { action: 'send_email', body: { type: 'employee_invite', employee_id: E_NOMAIL }, ...own }, r => r.status === 409 && r.fn.length === 0),
   R('send_email', 'employee invite: another tenant', { action: 'send_email', body: { type: 'employee_invite', employee_id: E_OTHER }, ...own }, r => r.status === 403 && r.fn.length === 0),
   R('send_email', 'join approved', { action: 'send_email', body: { type: 'join_approved', request_id: J_OK }, ...own },
@@ -627,6 +643,33 @@ const cases = [
   R('joinreq', 'owner approves a request aimed at them', { table: 'join_requests', method: 'PATCH', filter: `id=eq.${J_PENDING}`, body: { status: 'approved' }, ...own }, r => r.status === 200 && r.calls.some(c => /^PATCH .*or=\(target_admin_id\.eq\.a1/.test(c))),
   R('joinreq', 'owner cannot rewrite the request text', { table: 'join_requests', method: 'PATCH', filter: `id=eq.${J_PENDING}`, body: { requester_name: '<b>x</b>' }, ...own }, r => r.status === 403),
   R('joinreq', 'owner reads requests: only those aimed at their account', { table: 'join_requests', method: 'GET', filter: 'status=eq.pending', ...own }, r => r.status === 200 && r.calls.some(c => /join_requests\?.*or=\(target_admin_id\.eq\.a1,target_admin_id\.eq\.a1,requester_id\.eq\.a1\)/.test(c))),
+  // ---- private images (avatars / logos buckets): signed urls out, stored form in ----
+  R('images', 'owner reads employees: photos come back signed, in ONE storage call, other values untouched', { table: 'employees', method: 'GET', filter: 'imgtest=eq.1', ...sup },
+    r => r.status === 200 && r.obj[0].photo_url.includes(`/object/sign/avatars/${CO_IMG}/photo-aaa.png?token=T14400`) && r.obj[1].photo_url.includes('/object/sign/avatars/legacy-2.png?token=T14400') && r.obj[2].photo_url === null
+      && r.obj[3].photo_url === 'https://evil.example/x.png' && r.obj[4].photo_url === `${PUB}/avatars/missing-5.png` && r.calls.filter(c => /^POST .*\/storage\/v1\/object\/sign\/avatars/.test(c)).length === 1),
+  R('images', 'the same read again: every object (also the unsignable one) is served from the cache: no storage call', { table: 'employees', method: 'GET', filter: 'imgtest=eq.1', ...sup },
+    r => r.status === 200 && r.obj[0].photo_url.includes('token=T14400') && r.calls.filter(c => /object\/sign/.test(c)).length === 0),
+  R('images', 'a terminal reading its employees gets signed photos too', { table: 'employees', method: 'GET', filter: '', kioskV: 2, kioskSiteId: 'sImg' },
+    r => r.status === 200 && r.obj[0].photo_url.includes('/object/sign/avatars/') && r.obj.every(e => !('pin' in e))),
+  R('images', 'terminal bootstrap: company logo and employee photos signed, no photo for k2', { action: 'kiosk_bootstrap', kioskV: 2, kioskSiteId: SITE_UUID },
+    r => r.status === 200 && r.obj.ok === true && r.obj.company.logo_url.includes('/object/sign/logos/kiosk-logo-1.png?token=T14400') && r.obj.employees[0].photo_url.includes('/object/sign/avatars/kiosk-photo-1.png?token=T14400') && r.obj.employees[1].photo_url === null
+      && r.calls.filter(c => /^POST .*rpc\/get_kiosk_bootstrap_v2/.test(c)).length === 1),
+  R('images', 'terminal bootstrap needs a site', { action: 'kiosk_bootstrap', kioskV: 2 }, r => r.status === 401 && r.calls.length === 0),
+  R('images', 'terminal bootstrap: a signed-in admin is not a terminal', { action: 'kiosk_bootstrap', kioskV: 2, kioskSiteId: SITE_UUID, ...own }, r => r.status === 401 && r.calls.every(c => !/get_kiosk_bootstrap/.test(c))),
+  R('images', 'terminal bootstrap: site id is not query syntax', { action: 'kiosk_bootstrap', kioskV: 2, kioskSiteId: 'x&select=*' }, r => r.status === 401),
+  R('images', 'write: a signed url of an own object is stored in its public form, the answer is signed again', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { name: 'A', photo_url: `https://fake.supabase.co/storage/v1/object/sign/avatars/${CO_IMG}/photo-new.png?token=abc` }, sessionToken: 'tokImg' },
+    r => r.status === 200 && r.calls.some(c => /^PATCH /.test(c) && c.includes(`"photo_url":"${PUB}/avatars/${CO_IMG}/photo-new.png"`) && !c.includes('token=')) && r.obj[0].photo_url.includes('/object/sign/avatars/')),
+  R('images', 'write: an object in another company folder is refused', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: `${PUB}/avatars/${CO_FOREIGN}/photo.png` }, sessionToken: 'tokImg' }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('images', 'write: an address outside our storage is refused', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: 'https://evil.example/x.png' }, sessionToken: 'tokImg' }, r => r.status === 400 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('images', 'write: a path with .. is refused', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: `${PUB}/avatars/${CO_IMG}/../${CO_FOREIGN}/p.png` }, sessionToken: 'tokImg' }, r => r.status === 400),
+  R('images', 'write: the wrong bucket is refused (logo as a photo)', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: `${PUB}/logos/${CO_IMG}/l.png` }, sessionToken: 'tokImg' }, r => r.status === 400),
+  R('images', 'write: an older flat object the account does not use is refused', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: `${PUB}/avatars/legacy-other.png` }, sessionToken: 'tokImg' }, r => r.status === 403),
+  R('images', 'write: an older flat object the account already uses is accepted (re-saving an employee)', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { name: 'A', photo_url: `https://fake.supabase.co/storage/v1/object/sign/avatars/legacy-used-1.png?token=zzz` }, sessionToken: 'tokImg' },
+    r => r.status === 200 && r.calls.some(c => /^PATCH /.test(c) && c.includes(`"photo_url":"${PUB}/avatars/legacy-used-1.png"`))),
+  R('images', 'write: clearing the photo', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: '' }, sessionToken: 'tokImg' }, r => r.status === 200 && r.calls.some(c => /^PATCH /.test(c) && c.includes('"photo_url":null'))),
+  R('images', 'write: own company logo', { table: 'companies', method: 'PATCH', filter: `id=eq.${CO_IMG}`, body: { logo_url: `${PUB}/logos/${CO_IMG}/logo-x.png` }, sessionToken: 'tokImg' }, r => r.status === 200 && r.obj[0].logo_url.includes('/object/sign/logos/')),
+  R('images', 'write: another company logo folder', { table: 'companies', method: 'PATCH', filter: `id=eq.${CO_IMG}`, body: { logo_url: `${PUB}/logos/${CO_FOREIGN}/logo-x.png` }, sessionToken: 'tokImg' }, r => r.status === 403),
+  R('images', 'write: super admin may use any folder', { table: 'employees', method: 'PATCH', filter: 'id=eq.e1', body: { photo_url: `${PUB}/avatars/${CO_FOREIGN}/p.png` }, ...sup }, r => r.status === 200),
   // ---- admin rows: what comes back ----
   R('admins-out', 'team list: no invite token, no bookkeeping, no billing or unsubscribe on other rows', { table: 'admins', method: 'GET', filter: 'marker=eq.1&parent_admin_id=eq.a1', ...own },
     r => r.status === 200 && r.obj.length === 2 && r.obj.every(x => !('password' in x) && !('invite_token' in x) && !('invite_expires_at' in x) && !('onboarding_emails_sent' in x)) && r.obj.find(x => x.id === 'a1').stripe_customer_id === 'cus' && !('stripe_customer_id' in r.obj.find(x => x.id === 'a2')) && !('unsub_token' in r.obj.find(x => x.id === 'a2'))),

@@ -32,4 +32,13 @@ nothing is deployed without both of these.
    `joinreq`, `admins-out` and `preauth` groups. The live probe must never send `auth_probe` to a function that is not
    gated yet: for churn-survey and send-period-summary that body runs the whole job.
 
+5. **Private images** (employee photos and company logos, buckets `avatars` and `logos` are private since 2026-11-01).
+   diff-test groups `images` (signed urls out, one batched Storage call, per-isolate cache, the `kiosk_bootstrap` action,
+   writes mapped back to the stored address and refused unless the object belongs to the caller's own company folder)
+   and `images-email` (30 day signed logo in the employee invitation mail). Pages: `tools/private-images-test.mjs`.
+   `anon-exposure-check.mjs` also fails if a bare public address of either bucket opens. Rollback of the buckets:
+   `update storage.buckets set public = true where id in ('avatars','logos');`
+6. **Spreadsheet formula injection** is covered by `tools/export-formula-test.mjs` (index.html exports, real SheetJS) and
+   by the CSV attachment of send-period-summary (`csvText`).
+
 Needs Node 22 or newer (runs the TypeScript directly).

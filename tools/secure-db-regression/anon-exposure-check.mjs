@@ -7,7 +7,7 @@
 // What it asserts
 //   Anonymous probes (always run, anon key read from index.html):
 //     - GET /rest/v1/<table> returns no rows for every table named in supabase/migrations (401 permission denied is the target)
-//     - the Storage list API returns no objects for the avatars and logos buckets (public URLs still serve files)
+//     - the Storage list API returns no objects for the avatars and logos buckets, and the buckets are private (a bare public address does not open)
 //   Catalog snapshot (needs the service key; calls public.security_audit_snapshot(), service_role only):
 //     - no public table, view or sequence carries a privilege for anon, authenticated or PUBLIC
 //     - every public table has row level security enabled
@@ -63,6 +63,14 @@ for (const b of ['avatars', 'logos']) {
   const j = await r.json().catch(() => null);
   if (Array.isArray(j) && j.length) fail(`anon can list the ${b} bucket (${j.length}+ objects)`);
   else pass(`anon cannot list the ${b} bucket`);
+}
+// 2b. the buckets are private: a bare public address answers "Bucket not found" (a public bucket answers "Object not found")
+for (const b of ['avatars', 'logos']) {
+  const r = await fetch(`${URL_}/storage/v1/object/public/${b}/zz-exposure-check-no-such-object.png`);
+  const j = await r.json().catch(() => null);
+  const msg = String((j && (j.message || j.error)) || '');
+  if (/bucket not found/i.test(msg)) pass(`the ${b} bucket is private (a public address does not open)`);
+  else fail(`the ${b} bucket looks PUBLIC: HTTP ${r.status} "${msg.slice(0, 60)}" (expected "Bucket not found"; images are shown through signed urls)`);
 }
 
 // 3. catalog snapshot

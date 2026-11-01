@@ -460,10 +460,20 @@ function csvEscape(v) {
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 
+// Spreadsheet formula injection: an employee name, code or site name that begins with = + - @ (or a tab / CR)
+// runs as a formula when the bookkeeper opens the CSV in Excel or Google Sheets. Text cells get a leading '
+// (the usual fix); plain numbers ("8.00", "-1.50") are not text and are left as they are.
+const FORMULA_START = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^[+-]?(\d+([.,]\d+)?|[.,]\d+)$/;
+function csvText(v) {
+  const s = String(v ?? '');
+  return FORMULA_START.test(s) && !PLAIN_NUMBER.test(s) ? "'" + s : s;
+}
+
 function buildPayrollCsv(rows, periodStart, periodEnd) {
   const head = ['Employee', 'Employee code', 'Site', 'Days worked', 'Regular hours', 'Overtime hours', 'Total hours', 'Period start', 'Period end'];
   const body = rows.map((r) => [
-    r.name, r.code || '', r.site || '', r.days,
+    csvText(r.name), csvText(r.code || ''), csvText(r.site || ''), r.days,
     r.regular.toFixed(2), r.overtime.toFixed(2), r.total.toFixed(2),
     periodStart, periodEnd
   ].map(csvEscape).join(','));
