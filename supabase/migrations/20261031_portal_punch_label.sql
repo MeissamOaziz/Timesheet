@@ -2,10 +2,11 @@
 -- Requested by Lumi Conseil: technicians move between client jobs and labelling afterwards in
 -- Activity is extra work.
 --
--- NOT APPLIED. Written on branch agent/portal-job-picker for review. Before applying, confirm the
--- deployed portal_punch is in the 48h state (see 20261015_portal_punch_late_sync_window_48h.sql):
---   select pg_get_functiondef('public.portal_punch(text,text,uuid,date,text,timestamptz,double precision,double precision,double precision)'::regprocedure);
--- The body below is the 72h body with the 48h interval, plus the label handling. Nothing else changes.
+-- APPLIED to production 2026-10-31 (migration version 20261101032244). Written by the Beelink agent on
+-- branch agent/portal-job-picker, then checked against the live 48h portal_punch: 16 non-label scenarios
+-- gave identical results before and after, plus 20 label checks, in a rolled-back simulation.
+-- The body below is the 48h body (20261015_portal_punch_late_sync_window_48h.sql) plus the label handling.
+-- Nothing else changes.
 --
 -- Same rules as the kiosk (see kioskLabelContext in secure-db):
 --   * labels exist only while the company's owner has the Scheduling add-on or its free trial

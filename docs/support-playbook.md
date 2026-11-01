@@ -138,7 +138,14 @@ a job, a project, a client) with a colour.
   Label filter, a Label column and an "Hours by label" table (also in PDF/Excel/CSV). Hours are
   attributed from the IN punch. Filtering never changes overtime. Not shown: dollar labour cost
   (planned, not built).
-- Not supported yet: choosing a task when clocking in from the employee portal.
+- Employee portal (phone clock-in, since 2026-10-31): with the same "Work labels at clock-in" setting, an
+  employee who taps Clock In sees "What are you working on?" with the company's active labels (Skip only
+  when the setting is "Ask but allow skipping"; Cancel records nothing). The label is saved on the IN only; a
+  clock-out never asks. It needs the Scheduling add-on or its trial, like the kiosk. If the add-on lapses the
+  picker disappears and punches carry no label. If the list does not appear: check the setting, that the
+  company has active labels, and the add-on. Server messages: "That job is no longer available" (label
+  deleted or deactivated since the page loaded) and "Please choose what you are working on" (Required).
+  Requested by Lumi Conseil (technicians moving between client jobs).
 - A label is not the employee's Department. Department says who a person is; a label says what a
   shift or stretch of work is for.
 - The Scheduling trial is 14 days and self-serve (from 2026-10-28): Schedule tab, "Try it free for 14 days"
