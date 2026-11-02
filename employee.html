@@ -488,6 +488,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
                 <th id="thDate">Date</th>
                 <th id="thIn">Clock In</th>
                 <th id="thOut">Clock Out</th>
+                <th id="thLabel" style="display:none">Job</th>
                 <th id="thHours">Hours</th>
               </tr>
             </thead>
@@ -682,7 +683,7 @@ const T = {
     reportsTitle: 'My Hours', reportsSub: 'View your punch records and hours worked',
     periodCurrent: 'Current Period', periodLast: 'Last Period', periodLast2: '2 Periods Ago',
     totalHours: 'Total Hours', regularHours: 'Regular', overtimeHours: 'Overtime', totalPunches: 'Punches',
-    punchLogLabel: 'Punch Log', thDate: 'Date', thIn: 'Clock In', thOut: 'Clock Out', thHours: 'Hours',
+    punchLogLabel: 'Punch Log', thDate: 'Date', thIn: 'Clock In', thOut: 'Clock Out', thHours: 'Hours', thLabel: 'Job',
     noPunches: 'No punch records for this period.',
     availTitle: 'My Availability', availSub: 'Set the days and times when you are NOT available to be scheduled.',
     recurringLabel: 'Weekly Recurring Unavailability',
@@ -765,7 +766,7 @@ const T = {
     reportsTitle: 'Mes heures', reportsSub: 'Consultez vos pointages et vos heures travaillées',
     periodCurrent: 'Période actuelle', periodLast: 'Période précédente', periodLast2: 'Il y a 2 périodes',
     totalHours: 'Heures totales', regularHours: 'Régulières', overtimeHours: 'Supplémentaires', totalPunches: 'Pointages',
-    punchLogLabel: 'Journal de pointage', thDate: 'Date', thIn: 'Entrée', thOut: 'Sortie', thHours: 'Heures',
+    punchLogLabel: 'Journal de pointage', thDate: 'Date', thIn: 'Entrée', thOut: 'Sortie', thHours: 'Heures', thLabel: 'Travail',
     noPunches: 'Aucun pointage pour cette période.',
     availTitle: 'Ma disponibilité', availSub: 'Indiquez les jours et heures où vous N\'ÊTES PAS disponible.',
     recurringLabel: 'Indisponibilité hebdomadaire récurrente',
@@ -847,7 +848,7 @@ function applyTranslations() {
   const toLbl = document.getElementById('toDateLabel');
   if(toLbl) toLbl.textContent = t('toDate');
   // Table headers
-  const ths = {thDate:'thDate', thIn:'thIn', thOut:'thOut', thHours:'thHours'};
+  const ths = {thDate:'thDate', thIn:'thIn', thOut:'thOut', thLabel:'thLabel', thHours:'thHours'};
   for (const [key, id] of Object.entries(ths)) {
     const el = document.getElementById(id);
     if (el) el.textContent = t(key);
@@ -1171,6 +1172,7 @@ function showPortal() {
 // ══════════════════════════════════════════════════════
 let _remotePunchEnabled = false;
 let _lastPunchType = null;   // 'IN' | 'OUT' | null (never punched)
+let _lastPunchLabel = '';   // job picked at the last clock-in, '' when none
 let _lastPunchAt = null;     // Date | null
 let _punching = false;
 let _punchLabels = [];       // the company's active work labels; empty = no picker (feature off, no add-on, or error)
@@ -1238,7 +1240,8 @@ async function refreshPunchStatus() {
     const last = punches.length ? punches[punches.length - 1] : null;
     _lastPunchType = last ? last.type : null;
     _lastPunchAt = last ? new Date(last.punched_at) : null;
-  } catch(e) { _lastPunchType = null; _lastPunchAt = null; }
+    _lastPunchLabel = last && last.type === 'IN' ? (last.label_name || '') : '';
+  } catch(e) { _lastPunchType = null; _lastPunchAt = null; _lastPunchLabel = ''; }
   renderPunchStatus();
 }
 
@@ -1252,7 +1255,7 @@ function renderPunchStatus() {
   dot.classList.toggle('in', isIn);
   text.textContent = isIn ? t('punchClockedIn') : t('punchClockedOut');
   sub.textContent = _lastPunchAt
-    ? `${t('punchSince')} ${_lastPunchAt.toLocaleTimeString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { hour: 'numeric', minute: '2-digit' })}`
+    ? `${t('punchSince')} ${_lastPunchAt.toLocaleTimeString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { hour: 'numeric', minute: '2-digit' })}${isIn && _lastPunchLabel ? ' · ' + _lastPunchLabel : ''}`
     : '';
   btn.classList.toggle('in', !isIn);
   btn.classList.toggle('out', isIn);
@@ -1550,7 +1553,7 @@ async function loadPeriodData(period) {
       if (p.type === 'IN') {
         const out = punches[i+1]?.type === 'OUT' ? punches[i+1] : null;
         const hrs = out ? (rMs(out.punched_at) - rMs(p.punched_at)) / 3600000 : null;
-        pairs.push({ date: p.punch_date, in: p.punch_time, out: out?.punch_time || '—', hours: hrs, _ts: p.punched_at });
+        pairs.push({ date: p.punch_date, in: p.punch_time, out: out?.punch_time || '—', hours: hrs, _ts: p.punched_at, label: p.label_name || '', labelColor: p.label_color || '' });
         if (hrs) { totalHours += hrs; pairCount++; }
         i += out ? 2 : 1;
       } else i++;
@@ -1607,12 +1610,22 @@ async function loadPeriodData(period) {
     `;
 
     if (!pairs.length) {
-      bodyEl.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px">${t('noPunches')}</td></tr>`;
+      bodyEl.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">${t('noPunches')}</td></tr>`;
       const ce=document.getElementById('punchCards');
       if(ce) ce.innerHTML = `<div style="text-align:center;color:var(--text3);padding:22px">${t('noPunches')}</div>`;
       return;
     }
 
+    // The job picked at clock-in is stored on the IN punch. The column and card row only appear when
+    // something in this period has one, so companies that do not use labels see no change.
+    const hasLabels = pairs.some(p => p.label);
+    const thLabel = document.getElementById('thLabel');
+    if (thLabel) thLabel.style.display = hasLabels ? '' : 'none';
+    const labelChip = (p) => {
+      if (!p.label) return '<span style="color:var(--text3)">—</span>';
+      const col = /^#[0-9a-fA-F]{6}$/.test(p.labelColor) ? p.labelColor : '#6b7280';
+      return `<span style="display:inline-flex;align-items:center;gap:6px;font-weight:500"><span style="width:9px;height:9px;border-radius:50%;background:${col};flex:none"></span>${escHtml(p.label)}</span>`;
+    };
     const breakTag = `<span style="font-size:9.5px;font-weight:700;background:rgba(124,92,191,.18);color:#7c5cbf;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle">${t('paidBreak')||'PAID BREAK'}</span>`;
     const cardsEl = document.getElementById('punchCards');
     if(cardsEl) cardsEl.innerHTML = pairs.map(p => `
@@ -1620,6 +1633,7 @@ async function loadPeriodData(period) {
         <div class="pcard-date">${fmtDate(p.date)}${p.isBreak?breakTag:''}</div>
         <div class="pcard-row"><span>${t('thIn')||'Clock In'}</span><span class="punch-type-in">${p.in}</span></div>
         <div class="pcard-row"><span>${t('thOut')||'Clock Out'}</span><span>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '—'}</span></div>
+        ${hasLabels ? `<div class="pcard-row"><span>${t('thLabel')||'Job'}</span><span>${labelChip(p)}</span></div>` : ''}
         <div class="pcard-row"><span>${t('thHours')||'Hours'}</span><span style="font-family:'DM Mono',monospace">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</span></div>
       </div>`).join('');
 
@@ -1628,6 +1642,7 @@ async function loadPeriodData(period) {
         <td style="font-weight:500">${fmtDate(p.date)}${p.isBreak?breakTag:''}</td>
         <td><span class="punch-type-in">${p.in}</span></td>
         <td>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
+        ${hasLabels ? `<td>${labelChip(p)}</td>` : ''}
         <td style="font-family:\'DM Mono\',monospace;font-size:12px">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</td>
       </tr>
     `).join('');
