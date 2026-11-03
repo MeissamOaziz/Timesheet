@@ -109,9 +109,12 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
 | Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels), 14-day trial | paid plans only | | | |
 
 - Every Free account previews the Starter features until **14 days after it was created, and in any case until
-  2026-11-06**. After that the controls lock, the daily job (`enforce_plan_features`, 05:10 UTC) switches off overtime
-  and evening hours, and the email reports stop (recipients stay on file and resume the day they upgrade).
-  Geofences and the remote clock-in switch are switched off by the same job (hourly, `enforce_plan_features`) but their
+  2026-11-06**. The lock starts at midnight Eastern at the start of 6 November (the screens and the portal lock at once;
+  the clean-up job below runs 10 minutes past every hour, so settings are switched off by 00:10). Accounts created after
+  23 October keep their full 14 days and lock later. After that the controls lock, the hourly job
+  (`enforce_plan_features`) switches off overtime and evening hours, and the email reports stop (recipients stay on file
+  and resume the day they upgrade).
+  Geofences and the remote clock-in switch are switched off by the same job but their
   settings are kept aside (`sites.geo_*_bak`, `companies.remote_punch_bak`) and come back automatically within the hour
   of an upgrade. The employee portal stops at once for a company that is not entitled (its employees see "your
   employer's plan does not include the portal"), which also stops remote punches and their time-off requests; the
