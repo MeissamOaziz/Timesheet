@@ -137,6 +137,54 @@ for(const lang of ['en','fr']){
   r=await result(page);
   ok('a shift wrapping an existing punch is refused', r.inserted.length===0 && !!r.msg, r.msg.slice(0,70));
 
+  // ── Same event entered twice (a phone punch already synced, then the manager adds it by hand).
+  // A same-type punch within 10 minutes AFTER the one being added is a hard stop, not a warning.
+  const L=(d,t)=>new Date(`${d}T${t}`).toISOString();     // local wall time -> ISO, like the page does
+  await setup(page,[{id:'pm',emp_id:'e1',type:'IN',punch_date:'2026-08-26',punch_time:'08:05:00',punched_at:L('2026-08-26','08:05:00'),source:'mobile'}]);
+  await page.evaluate(()=>{window.__confirmAnswer=true;});
+  await fill(page,{type:'IN',date:'2026-08-26',tin:'08:00:00'});
+  await page.evaluate(()=>saveAddPunch());
+  await page.waitForTimeout(150);
+  r=await result(page);
+  ok('an IN 5 minutes before an existing IN is refused as a duplicate', r.inserted.length===0 && !!r.msg, r.msg.slice(0,90));
+  ok('...without offering to confirm it away', r.confirms.length===0, r.confirms.join(' / '));
+  ok('...and the message names the existing punch time', /08:05/.test(r.msg), r.msg.slice(0,90));
+  ok('...in the right language', lang==='fr' ? /doublon/i.test(r.msg) : /duplicate/i.test(r.msg), r.msg.slice(0,60));
+
+  await setup(page,[{id:'pm',emp_id:'e1',type:'IN',punch_date:'2026-08-26',punch_time:'09:00:00',punched_at:L('2026-08-26','09:00:00')}]);
+  await page.evaluate(()=>{window.__confirmAnswer=true;});
+  await fill(page,{type:'IN',date:'2026-08-26',tin:'08:00:00'});
+  await page.evaluate(()=>saveAddPunch());
+  await page.waitForTimeout(150);
+  r=await result(page);
+  ok('an IN an hour before another IN is still only a warning', r.confirms.length===1 && r.inserted.length===1, `confirms=${r.confirms.length} inserted=${r.inserted.length}`);
+
+  await setup(page,[
+    {id:'pa',emp_id:'e1',type:'IN', punch_date:'2026-08-26',punch_time:'06:00:00',punched_at:L('2026-08-26','06:00:00')},
+    {id:'pb',emp_id:'e1',type:'OUT',punch_date:'2026-08-26',punch_time:'12:05:00',punched_at:L('2026-08-26','12:05:00'),source:'mobile'}]);
+  await page.evaluate(()=>{window.__confirmAnswer=true;});
+  await fill(page,{type:'OUT',date:'2026-08-26',tin:'12:00:00'});
+  await page.evaluate(()=>saveAddPunch());
+  await page.waitForTimeout(150);
+  r=await result(page);
+  ok('an OUT 5 minutes before an existing OUT is refused as a duplicate', r.inserted.length===0 && !!r.msg && r.confirms.length===0, r.msg.slice(0,80));
+
+  await setup(page,[{id:'pc',emp_id:'e1',type:'OUT',punch_date:'2026-08-26',punch_time:'16:33:00',punched_at:L('2026-08-26','16:33:00'),source:'mobile'}]);
+  await page.evaluate(()=>{window.__confirmAnswer=true;});
+  await fill(page,{type:'SHIFT',date:'2026-08-26',tin:'08:45:00',tout:'16:30:00'});
+  await page.evaluate(()=>saveAddPunch());
+  await page.waitForTimeout(150);
+  r=await result(page);
+  ok('a whole shift whose OUT repeats an existing OUT is refused', r.inserted.length===0 && !!r.msg && r.confirms.length===0, r.msg.slice(0,80));
+
+  await setup(page,[{id:'pc',emp_id:'e1',type:'OUT',punch_date:'2026-08-26',punch_time:'18:30:00',punched_at:L('2026-08-26','18:30:00')}]);
+  await page.evaluate(()=>{window.__confirmAnswer=true;});
+  await fill(page,{type:'SHIFT',date:'2026-08-26',tin:'08:45:00',tout:'16:30:00'});
+  await page.evaluate(()=>saveAddPunch());
+  await page.waitForTimeout(150);
+  r=await result(page);
+  ok('a shift ending 2 hours before an existing OUT only warns', r.inserted.length===2 && r.confirms.length===1, `inserted=${r.inserted.length} confirms=${r.confirms.length}`);
+
   // ── Overnight shift: the OUT lands on the next day, and the dialog says so first.
   await setup(page,[]);
   await fill(page,{type:'SHIFT',date:'2026-08-26',tin:'22:00:00',tout:'06:00:00'});
