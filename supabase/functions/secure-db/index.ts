@@ -1368,6 +1368,94 @@ async function managerScopeViolation(
   return null;
 }
 
+// ── Plan limits ───────────────────────────────────────────────────────────────────────────────
+// The website checks how many employees, sites and companies a plan includes in the browser only, so a hand-made request
+// (or any new client) could go past what the account pays for. The server now applies the same table (index.html PLANS):
+//   plan       employees  sites  companies      (extra seats raise the employee limit)
+//   free           10       1       1
+//   starter        25       2       1
+//   growth         60       6       3
+//   business / unlimited: no limit
+// The account owner's plan counts (co-admins and managers inherit it). A company on the grandfathered list is unlimited
+// for its employees and sites, as on the website. Only creating is limited: reactivating an employee counts as creating,
+// deleting never does, and an account that is already above a limit can still edit and deactivate, just not add.
+const PLAN_CAPS: Record<string, { employees: number; sites: number; companies: number }> = {
+  free:      { employees: 10, sites: 1, companies: 1 },
+  starter:   { employees: 25, sites: 2, companies: 1 },
+  growth:    { employees: 60, sites: 6, companies: 3 },
+  business:  { employees: Infinity, sites: Infinity, companies: Infinity },
+  unlimited: { employees: Infinity, sites: Infinity, companies: Infinity },
+};
+
+async function planLimitViolation(
+  table: string, method: string, body: unknown, filter: string, caller: Caller,
+): Promise<string | null> {
+  if (caller.role === 'super_admin' || method === 'DELETE') return null;
+  const rows = bodyRows(body);
+  const employees = table === 'employees' && (method === 'POST' || (method === 'PATCH' && rows.some(r => r.active === true)));
+  const sites = table === 'sites' && method === 'POST';
+  const companies = table === 'companies' && method === 'POST';
+  if (!employees && !sites && !companies) return null;
+
+  const owner = (await restJson(`admins?id=eq.${caller.primaryAdminId}&select=plan,extra_seats&limit=1`))?.[0];
+  if (!owner) return 'Forbidden: could not check your plan, please try again';
+  const caps = PLAN_CAPS[String(owner.plan ?? 'free')] ?? PLAN_CAPS.free;
+  const extraSeats = Math.max(0, Number(owner.extra_seats ?? 0)) || 0;
+  const cos = await restJson(`companies?admin_id=eq.${caller.primaryAdminId}&select=id,name&limit=500`);
+  if (cos === null) return 'Forbidden: could not check your plan, please try again';
+  const ownedIds = cos.map((c: { id: string }) => c.id);
+  const grandfathered = new Set(cos.filter((c: { name: string }) => GRANDFATHERED_COMPANIES.includes(String(c.name))).map((c: { id: string }) => c.id));
+
+  if (companies) {
+    if (ownedIds.length + rows.length > caps.companies) {
+      return `Forbidden: your plan allows ${caps.companies} ${caps.companies === 1 ? 'company' : 'companies'}`;
+    }
+    return null;
+  }
+
+  if (sites) {
+    const perCompany = new Map<string, number>();
+    for (const r of rows) {
+      const cid = typeof r.company_id === 'string' ? r.company_id : '';
+      if (!TOKEN_RE.test(cid)) return 'Forbidden: choose a company';
+      perCompany.set(cid, (perCompany.get(cid) ?? 0) + 1);
+    }
+    for (const [cid, adding] of perCompany) {
+      const cap = grandfathered.has(cid) ? Infinity : caps.sites;
+      if (cap === Infinity) continue;
+      const cur = await restJson(`sites?company_id=eq.${cid}&select=id&limit=${cap + 1}`);
+      if (cur === null) return 'Forbidden: could not check your plan, please try again';
+      if (cur.length + adding > cap) return `Forbidden: your plan allows ${cap} ${cap === 1 ? 'site' : 'sites'} per company`;
+    }
+    return null;
+  }
+
+  // employees: new rows, or inactive ones being switched back on
+  let adding = 0;
+  const involved = new Set<string>();
+  if (method === 'POST') {
+    for (const r of rows) {
+      if (r.active === false) continue;
+      adding++;
+      involved.add(typeof r.company_id === 'string' ? r.company_id : '');
+    }
+  } else {
+    const targets = await restJson(`employees?${targetFilter(filter)}&active=eq.false&select=id,company_id&limit=1001`);
+    if (targets === null) return 'Forbidden: could not check your plan, please try again';
+    adding = targets.length;
+    for (const t of targets) involved.add(String(t.company_id ?? ''));
+  }
+  if (!adding) return null;
+  const limit = caps.employees === Infinity ? Infinity : caps.employees + extraSeats;
+  if (limit === Infinity) return null;
+  if ([...involved].every(id => grandfathered.has(id))) return null;
+  if (!ownedIds.length) return null;
+  const cur = await restJson(`employees?company_id=in.(${ownedIds.join(',')})&active=eq.true&select=id&limit=${limit + 1}`);
+  if (cur === null) return 'Forbidden: could not check your plan, please try again';
+  if (cur.length + adding > limit) return `Forbidden: your plan allows ${limit} active employees`;
+  return null;
+}
+
 // Returns a refusal message, or null when the caller's role may make this write.
 async function roleViolation(
   table: string, method: string, body: unknown, filter: string, caller: Caller,
@@ -1795,6 +1883,15 @@ Deno.serve(async (req: Request) => {
         return errResp('Forbidden: work labels are part of the Scheduling add-on', 403);
       }
     }
+    // Shifts and holidays are the Scheduling add-on (paid, or its free 14-day trial). The website shows the page read-only
+    // without it; this is what stops a hand-made request. Deleting stays open so an account whose add-on lapsed can still
+    // clean up (and company or employee deletes can cascade).
+    if ((table === 'shifts' || table === 'holidays') && method !== 'DELETE' && caller && caller.role !== 'super_admin') {
+      if (!(await schedulingActive(caller.primaryAdminId))) {
+        logAudit(caller.adminId, 'plan_write_blocked', table, method, 'scheduling_addon');
+        return errResp('Forbidden: scheduling is part of the Scheduling add-on', 403);
+      }
+    }
     if (authedAdminId) {
       // Authenticated admin — allowed, but the payload must not point at another tenant.
       // Super admins are deliberately unscoped, matching the read path.
@@ -1961,6 +2058,12 @@ Deno.serve(async (req: Request) => {
       if (denied) {
         logAudit(authedAdminId, 'role_write_blocked', table, method, denied.slice(0, 100));
         return errResp(denied, 403);
+      }
+      // What the plan includes: how many employees, sites and companies an account may have.
+      const limited = await planLimitViolation(table, method, body, filter, caller);
+      if (limited) {
+        logAudit(authedAdminId, 'plan_limit_blocked', table, method, limited.slice(0, 100));
+        return errResp(limited, 403);
       }
     }
     if (table === 'join_requests' && method !== 'DELETE') {

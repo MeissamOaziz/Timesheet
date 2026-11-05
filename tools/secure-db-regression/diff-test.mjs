@@ -127,6 +127,16 @@ sessions.tokFlagOwn = 'f1'; sessions.tokFlagMgr = 'fm';
 companiesOf.f1 = ['cF']; sitesOf.cF = ['sF1', 'sF2']; employeesOf.cF = ['eF1', 'eF2'];
 empRows.eF1 = { id: 'eF1', company_id: 'cF', site_id: 'sF1' }; empRows.eF2 = { id: 'eF2', company_id: 'cF', site_id: 'sF2' };
 const siteCompanyOf = { s1: 'c1', s2: 'c1', s9: 'c9', sF1: 'cF', sF2: 'cF' };
+// ---- plan limits (added 2026-11-05) ----
+// l1: Free, at its 10 employees and 1 site. l2: Starter with 2 extra seats (27 employees), 26 active, at its 2 sites.
+// l3: Free but its company is on the grandfathered list (30 employees). l4: Growth at its 6 sites, 1 of 3 companies.
+for (const [id, tok] of [['l1', 'tokL1'], ['l2', 'tokL2'], ['l3', 'tokL3'], ['l4', 'tokL4']]) { admins[id] = { id, parent_admin_id: null, role: 'admin', status: 'active' }; sessions[tok] = id; }
+companiesOf.l1 = ['cL1']; companiesOf.l2 = ['cL2']; companiesOf.l3 = ['cG']; companiesOf.l4 = ['cL4'];
+sitesOf.cL1 = ['sL1']; sitesOf.cL2 = ['sL2a', 'sL2b']; sitesOf.cG = ['sG']; sitesOf.cL4 = ['sa', 'sb', 'sc', 'sd', 'se', 'sf'];
+employeesOf.cL1 = ['eL1']; employeesOf.cL2 = ['eL2']; employeesOf.cG = ['eG']; employeesOf.cL4 = ['eL4'];
+const planOf = { a1: 'business', f1: 'business', b1: 'free', l1: 'free', l2: 'starter', l3: 'free', l4: 'growth' };
+const activeEmps = { cL1: 10, cL2: 26, cG: 30, cL4: 3 };
+const siteCounts = { cL1: 1, cL2: 2, cG: 1, cL4: 6 };
 const sr = (id, o) => ({ id, company_id: 'c1', ...o });
 const scopeRows = {
   punches: { pS1: sr('pS1', { emp_id: 'e1', site_id: 's1' }), pS2: sr('pS2', { emp_id: 'e1', site_id: 's2' }),
@@ -194,6 +204,19 @@ function makeFetch() {
       return j(ids.filter(id => siteCompanyOf[id]).map(id => ({ id, company_id: siteCompanyOf[id] })));
     }
     if (t === 'companies' && method === 'GET' && p.q.has('managers_see_all_sites')) return j(eq('admin_id') === 'f1' ? [{ id: 'cF' }] : []);
+    // ---- plan limits (added 2026-11-05): the owner's plan, company names, and how many are already there ----
+    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'plan,extra_seats') return j([{ plan: planOf[eq('id')] || 'free', extra_seats: eq('id') === 'l2' ? 2 : 0 }]);
+    if (t === 'companies' && method === 'GET' && p.q.get('select') === 'id,name' && p.q.has('admin_id')) { const a = eq('admin_id'); return j((companiesOf[a] || []).map(id => ({ id, name: a === 'l3' ? 'Connoisseur Culture' : 'Acme Fence' }))); }
+    if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id' && p.q.get('active') === 'eq.true') {
+      const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(',');
+      const n = cs.reduce((sum, c) => sum + (activeEmps[c] || 0), 0); const lim = parseInt(p.q.get('limit') || String(n), 10);
+      return j(Array.from({ length: Math.min(n, lim) }, (_, i) => ({ id: 'x' + i })));
+    }
+    if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id,company_id' && p.q.get('active') === 'eq.false') return j([{ id: 'eLX', company_id: 'cL1' }]);
+    if (t === 'sites' && method === 'GET' && p.q.get('select') === 'id' && /^eq\./.test(p.q.get('company_id') || '')) {
+      const n = siteCounts[eq('company_id')] || 0; const lim = parseInt(p.q.get('limit') || String(n), 10);
+      return j(Array.from({ length: Math.min(n, lim) }, (_, i) => ({ id: 'y' + i })));
+    }
     if (t === 'admin_sessions' && p.q.has('token') && method === 'GET') {
       const tok = eq('token'); const aid = sessions[tok];
       return j(aid ? [{ admin_id: aid, expires_at: tok === 'tokExpired' ? new Date(Date.now() - 1e3).toISOString() : FUTURE }] : []);
@@ -201,9 +224,9 @@ function makeFetch() {
     if (t === 'admins' && method === 'GET' && p.q.get('select') && p.q.get('select').startsWith('id,parent_admin_id')) {
       const a = admins[eq('id')]; return j(a ? [a] : []);
     }
-    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon') return j([{ scheduling_addon: eq('id') === 'a1' }]);
+    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon') return j([{ scheduling_addon: ['a1', 'f1'].includes(eq('id')) }]);
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_trial_ends_at') return j([{ scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
-    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon,scheduling_trial_ends_at') return j([{ scheduling_addon: eq('id') === 'a1', scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
+    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon,scheduling_trial_ends_at') return j([{ scheduling_addon: ['a1', 'f1'].includes(eq('id')), scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'id' && p.q.has('parent_admin_id')) return j([{ id: 'a2' }]);
     if (t === 'companies' && method === 'GET' && p.q.has('admin_id')) return j((companiesOf[eq('admin_id')] || []).map(id => ({ id, admin_id: eq('admin_id'), name: 'Acme Fence' })));
     if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j(eq('id') === 'c7' ? [{ admin_id: 't1', punch_label_mode: 'optional' }] : eq('id') === 'c6' ? [{ admin_id: 'x1', punch_label_mode: 'optional' }] : [{ admin_id: 'a1', punch_label_mode: 'off' }]);
@@ -689,6 +712,45 @@ const cases = [
       R(G, 'owner is not restricted: delete a shift anywhere', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS2', ...own }, ok),
       R(G, 'co-admin is not restricted: time off at any site', { table: 'time_off', method: 'PATCH', filter: 'id=eq.toS2', body: { status: 'approved' }, sessionToken: 'tokCoAdmin' }, ok),
       R(G, 'super admin is not restricted', { table: 'punches', method: 'PATCH', filter: 'id=eq.pS2', body: { punch_time: '09:00:00' }, ...sup }, ok),
+    ];
+  })(),
+  // ---- plan limits and the scheduling add-on gate (added 2026-11-05) ----
+  ...(() => {
+    const ok = r => r.status === 200 || r.status === 201 || r.status === 204;
+    const no = (m, msg) => r => r.status === 403 && (!msg || r.body.includes(msg)) && !r.calls.some(c => new RegExp('^' + m + ' /rest/v1/(?!rpc/|audit_log)').test(c));
+    const L1 = { sessionToken: 'tokL1' }, L2 = { sessionToken: 'tokL2' }, L3 = { sessionToken: 'tokL3' }, L4 = { sessionToken: 'tokL4' };
+    const G = 'plan-caps';
+    const emp = (co, extra = {}) => ({ name: 'New', company_id: co, pin: '4821', active: true, ...extra });
+    return [
+      R(G, 'free account at 10 employees cannot add the 11th', { table: 'employees', method: 'POST', body: emp('cL1'), ...L1 }, no('POST', 'allows 10 active employees')),
+      R(G, 'starter with 2 extra seats and 26 active can add one (27)', { table: 'employees', method: 'POST', body: emp('cL2'), ...L2 }, ok),
+      R(G, 'starter with 2 extra seats cannot add two at once (28)', { table: 'employees', method: 'POST', body: [emp('cL2'), emp('cL2')], ...L2 }, no('POST', 'allows 27 active employees')),
+      R(G, 'a grandfathered company is unlimited', { table: 'employees', method: 'POST', body: emp('cG'), ...L3 }, ok),
+      R(G, 'an inactive row does not count against the limit', { table: 'employees', method: 'POST', body: emp('cL1', { active: false }), ...L1 }, ok),
+      R(G, 'business accounts have no limit', { table: 'employees', method: 'POST', body: emp('c1'), ...own }, ok),
+      R(G, 'super admin has no limit', { table: 'employees', method: 'POST', body: emp('c1'), ...sup }, ok),
+      R(G, 'reactivating an employee at the limit is refused', { table: 'employees', method: 'PATCH', filter: 'id=eq.eLX', body: { active: true }, ...L1 }, no('PATCH', 'allows 10 active employees')),
+      R(G, 'editing an employee at the limit still works', { table: 'employees', method: 'PATCH', filter: 'id=eq.eLX', body: { name: 'Renamed' }, ...L1 }, ok),
+      R(G, 'deactivating an employee at the limit still works', { table: 'employees', method: 'PATCH', filter: 'id=eq.eLX', body: { active: false }, ...L1 }, ok),
+      R(G, 'deleting an employee at the limit still works', { table: 'employees', method: 'DELETE', filter: 'id=eq.eLX', ...L1 }, ok),
+      R(G, 'free account with its 1 site cannot add a second', { table: 'sites', method: 'POST', body: { company_id: 'cL1', name: 'Two' }, ...L1 }, no('POST', 'allows 1 site')),
+      R(G, 'starter with its 2 sites cannot add a third', { table: 'sites', method: 'POST', body: { company_id: 'cL2', name: 'Three' }, ...L2 }, no('POST', 'allows 2 sites')),
+      R(G, 'growth with its 6 sites cannot add a seventh', { table: 'sites', method: 'POST', body: { company_id: 'cL4', name: 'Seven' }, ...L4 }, no('POST', 'allows 6 sites')),
+      R(G, 'a grandfathered company can add sites', { table: 'sites', method: 'POST', body: { company_id: 'cG', name: 'More' }, ...L3 }, ok),
+      R(G, 'editing a site at the limit still works', { table: 'sites', method: 'PATCH', filter: 'id=eq.sL1', body: { name: 'Renamed' }, ...L1 }, ok),
+      R(G, 'free account with its 1 company cannot add another', { table: 'companies', method: 'POST', body: { name: 'Second Co' }, ...L1 }, no('POST', 'allows 1 company')),
+      R(G, 'growth with 1 of 3 companies can add one', { table: 'companies', method: 'POST', body: { name: 'Second Co' }, ...L4 }, ok),
+      R(G, 'editing a company at the limit still works', { table: 'companies', method: 'PATCH', filter: 'id=eq.cL1', body: { name: 'Renamed' }, ...L1 }, ok),
+      // the Scheduling add-on: paid (a1), in its free trial (t1), trial over (x1), never started (d1)
+      R(G, 'shift: no add-on and trial over is refused', { table: 'shifts', method: 'POST', body: { company_id: 'c6', site_id: 's6', shift_date: '2026-11-10' }, sessionToken: 'tokTrialOver' }, no('POST', 'Scheduling add-on')),
+      R(G, 'shift: never had the add-on is refused', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', shift_date: '2026-11-10' }, sessionToken: 'tokNoTrial' }, r => r.status === 403),
+      R(G, 'shift edit without the add-on is refused', { table: 'shifts', method: 'PATCH', filter: 'id=eq.shS1', body: { start_time: '09:00:00' }, sessionToken: 'tokTrialOver' }, no('PATCH', 'Scheduling add-on')),
+      R(G, 'holiday without the add-on is refused', { table: 'holidays', method: 'POST', body: { company_id: 'c6', holiday_date: '2026-12-25', name: 'Christmas' }, sessionToken: 'tokTrialOver' }, no('POST', 'Scheduling add-on')),
+      R(G, 'shift during the free trial is allowed', { table: 'shifts', method: 'POST', body: { company_id: 'c7', site_id: 's7', shift_date: '2026-11-10' }, sessionToken: 'tokTrial' }, ok),
+      R(G, 'with the paid add-on a shift is allowed', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', employee_id: 'e1', shift_date: '2026-11-10' }, ...own }, ok),
+      R(G, 'deleting a shift stays open after the add-on lapsed', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS1', sessionToken: 'tokTrialOver' }, ok),
+      R(G, 'reading shifts stays open without the add-on', { table: 'shifts', method: 'GET', filter: 'shift_date=gte.2026-11-01', sessionToken: 'tokTrialOver' }, ok),
+      R(G, 'super admin is not gated', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', shift_date: '2026-11-10' }, ...sup }, ok),
     ];
   })(),
   R('roles', 'a company cannot be handed to a co-admin', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { admin_id: 'a5' }, ...own }, r => r.status === 403),
