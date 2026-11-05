@@ -9,13 +9,17 @@
 # Not on the list although they exist: accept_invite, lookup_invite (legacy, no caller).
 # The employee mobile app (2026-11-04 migrations) calls portal_* with the public key; each one authenticates with the
 # session token in code, except portal_app_config (returns only the minimum app version).
+# The admin mobile app (20261105_admin_push_tokens.sql) calls admin_register_push_token / admin_unregister_push_token
+# the same way, authenticating with the admin session token (51 functions in total).
 accept_invitation
 activate_employee_portal
 activate_invited_admin
 admin_delete_survey
 admin_list_surveys
 admin_logout
+admin_register_push_token
 admin_set_survey_status
+admin_unregister_push_token
 change_own_password
 check_email_code
 get_invitation

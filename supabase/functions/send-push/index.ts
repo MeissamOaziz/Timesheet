@@ -1,5 +1,6 @@
 // send-push — Supabase Edge Function
-// Sends Expo push notifications to one or more employees' registered devices.
+// Sends Expo push notifications to one or more employees' registered devices (employee_ids) and/or
+// to admins' devices (admin_ids: owners, co-admins, managers, registered by the admin app).
 // Zero-infra choice matching "I have Expo Go": Expo's own hosted push API, no Firebase/APNs
 // integration needed. Same shape as the email functions (punch-alerts, send-weekly-digest) —
 // this is push's equivalent of Resend.
@@ -61,7 +62,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const MAX_IDS = 200;
 
 interface PushRequest {
-  employee_ids: string[];
+  employee_ids?: string[];
+  admin_ids?: string[];   // owners / co-admins / managers: tokens live in admin_push_tokens
   title: string;
   body: string;
   data?: Record<string, unknown>;
@@ -132,18 +134,36 @@ Deno.serve(async (req) => {
   const employeeIds = Array.isArray(body.employee_ids)
     ? body.employee_ids.filter((x): x is string => typeof x === 'string' && UUID_RE.test(x)).slice(0, MAX_IDS)
     : [];
+  // Admin recipients (admin app): same UUID filtering and cap, tokens from admin_push_tokens.
+  const adminIds = Array.isArray(body.admin_ids)
+    ? body.admin_ids.filter((x): x is string => typeof x === 'string' && UUID_RE.test(x)).slice(0, MAX_IDS)
+    : [];
   const title = typeof body.title === 'string' ? body.title : '';
   const msg = typeof body.body === 'string' ? body.body : '';
-  if (!employeeIds.length || !title || !msg) {
-    return new Response(JSON.stringify({ ok: false, error: 'valid employee_ids, title and body are required' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
+  if ((!employeeIds.length && !adminIds.length) || !title || !msg) {
+    return new Response(JSON.stringify({ ok: false, error: 'valid employee_ids or admin_ids, title and body are required' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
   }
 
   try {
-    const res = await rest(`employee_push_tokens?employee_id=in.(${employeeIds.join(',')})&select=token`);
-    const rows: Array<{ token: string }> = res.ok ? await res.json() : [];
-    const tokens = rows.map((r) => r.token);
+    let tokens: string[] = [];
+    if (employeeIds.length) {
+      const res = await rest(`employee_push_tokens?employee_id=in.(${employeeIds.join(',')})&select=token`);
+      const rows: Array<{ token: string }> = res.ok ? await res.json() : [];
+      tokens = rows.map((r) => r.token);
+    }
+    if (adminIds.length) {
+      // Up to MAX_IDS admins x 10 devices can exceed PostgREST's 1000-row cap, so order and page.
+      for (let offset = 0; offset < 5000; offset += 1000) {
+        const res = await rest(`admin_push_tokens?admin_id=in.(${adminIds.join(',')})&select=token&order=token.asc&limit=1000&offset=${offset}`);
+        if (!res.ok) break;
+        const rows: Array<{ token: string }> = await res.json();
+        tokens.push(...rows.map((r) => r.token));
+        if (rows.length < 1000) break;
+      }
+      tokens = [...new Set(tokens)]; // one message per device even if a token were ever in both tables
+    }
     if (!tokens.length) {
-      return new Response(JSON.stringify({ ok: true, sent: 0, note: 'no registered devices for these employees' }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ ok: true, sent: 0, note: adminIds.length ? 'no registered devices for these recipients' : 'no registered devices for these employees' }), { headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
     const result = await sendToTokens(tokens, title, msg, body.data);
     return new Response(JSON.stringify({ ok: true, sent: result.sent, failed: result.errors.length }), { headers: { ...CORS, 'Content-Type': 'application/json' } });

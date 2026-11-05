@@ -99,6 +99,11 @@ async function sendContact(payload: Record<string, unknown>): Promise<boolean> {
   } catch (e) { console.error('send-contact threw', e?.message || e); return false; }
 }
 
+// Text shown on a lock screen: plain, no control characters, short.
+function pushText(s: unknown, max = 60): string {
+  return String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -257,18 +262,25 @@ Deno.serve(async (req: Request) => {
 
     // ---- Resolve approver emails (admin + active co-admins + site managers) ----
     const approvers = new Set<string>();
-    const addApprovers = (rows: any[]) => rows.forEach(a => a.email && !a.mute_approval_emails && approvers.add(a.email.toLowerCase()));
+    // Same set, remembered by admin id too, for the push to their phones (admin id -> lower-case email).
+    const approverAdmins = new Map<string, string>();
+    const addApprovers = (rows: any[]) => rows.forEach(a => {
+      if (a.email && !a.mute_approval_emails) {
+        approvers.add(a.email.toLowerCase());
+        if (typeof a.id === 'string') approverAdmins.set(a.id, a.email.toLowerCase());
+      }
+    });
     if (mpr.company_id) {
       const adminId = (await rest(`companies?id=eq.${mpr.company_id}&select=admin_id`))[0]?.admin_id;
       if (adminId) {
-        addApprovers(await rest(`admins?id=eq.${adminId}&select=email,mute_approval_emails`));
-        addApprovers(await rest(`admins?parent_admin_id=eq.${adminId}&status=eq.active&select=email,mute_approval_emails`));
+        addApprovers(await rest(`admins?id=eq.${adminId}&select=id,email,mute_approval_emails`));
+        addApprovers(await rest(`admins?parent_admin_id=eq.${adminId}&status=eq.active&select=id,email,mute_approval_emails`));
       }
     }
     if (mpr.site_id) {
       const mgrIds = (await rest(`manager_sites?site_id=eq.${mpr.site_id}&select=manager_id`)).map(m => m.manager_id).filter(Boolean);
       if (mgrIds.length) {
-        addApprovers(await rest(`admins?id=in.(${mgrIds.join(',')})&status=eq.active&select=email,mute_approval_emails`));
+        addApprovers(await rest(`admins?id=in.(${mgrIds.join(',')})&status=eq.active&select=id,email,mute_approval_emails`));
       }
     }
 
@@ -283,6 +295,26 @@ Deno.serve(async (req: Request) => {
 
     const approverList = [...approvers];
     let approverSent = false, employeeSent = false;
+
+    // Same approvers, also pushed to their admin phones (PunchClock Crew Admin app). Lock-screen text
+    // stays minimal: name, IN/OUT and date/time only, no reason, no email. Backgrounded so a push
+    // failure never affects the email result.
+    const approverAdminIds = [...approverAdmins].filter(([, em]) => !employeeEmail || em !== employeeEmail).map(([id]) => id);
+    if (approverAdminIds.length) {
+      const pushJob = fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admin_ids: approverAdminIds,
+          title: '🕘 Missed punch request / Demande de pointage',
+          body: `${pushText(mpr.emp_name)} · ${mpr.type === 'IN' ? 'IN' : 'OUT'} ${pushText(mpr.requested_date, 10)} ${pushText(mpr.requested_time, 8).slice(0, 5)}`,
+          data: { type: 'missed_punch', id: requestId, v: 1 },
+        }),
+      }).catch(() => {});
+      // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+      if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(pushJob);
+      else await pushJob;
+    }
 
     // ---- (A) Approver "needs review" email ----
     if (approverList.length) {

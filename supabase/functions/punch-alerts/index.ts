@@ -254,6 +254,9 @@ Deno.serve(async (req) => {
 
     let emailed = 0;
     let failed = 0;
+    // One low-noise push per recipient per company per run, to the same people who get the email
+    // (same team, same mute_manager_alerts, same manager-site filter, same dedupe via `fresh`).
+    const adminPushJobs: Promise<unknown>[] = [];
     for (const coId of Object.keys(freshByCo)) {
       const co = coById[coId];
       if (!co) continue;
@@ -275,12 +278,31 @@ Deno.serve(async (req) => {
           ? items.filter((c) => c.site_id && (mgrSiteIds[person.id] || new Set()).has(c.site_id))
           : items;
         if (!mine.length) continue;
+        adminPushJobs.push(
+          fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              admin_ids: [person.id],
+              title: '⏱️ Punch alerts / Alertes de pointage',
+              body: `${mine.length} ${mine.length === 1 ? 'alert' : 'alerts'} / ${mine.length} ${mine.length === 1 ? 'alerte' : 'alertes'} — ${String(co.name ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 60)}`,
+              data: { type: 'alert', v: 1 },
+            }),
+          }).catch(() => {})
+        );
         try {
           await sendEmail(person.email, `Alertes PunchClock / PunchClock alerts — ${co.name}`,
             alertEmailHtml(person.name, co.name, mine.map((c) => c.alert)));
           emailed++;
         } catch (e) { failed++; console.error('punch-alerts: send failed:', (e as Error).message.slice(0, 80)); }
       }
+    }
+    // Backgrounded like the employee push above: a push failure must never affect the email result.
+    if (adminPushJobs.length) {
+      const adminPushAll = Promise.all(adminPushJobs);
+      // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
+      if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(adminPushAll);
+      else await adminPushAll;
     }
     return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, failed }),
       { headers: { ...CORS, 'Content-Type': 'application/json' } });
