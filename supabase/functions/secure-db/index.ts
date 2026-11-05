@@ -1270,6 +1270,104 @@ function joinRequestShapeError(row: Record<string, unknown>): string | null {
   return null;
 }
 
+// ── Manager write scope ───────────────────────────────────────────────────────────────────────
+// A manager runs one or more sites (manager_sites). The tenant scope above only keeps them inside the
+// account; without this they could edit, add or delete punches, time off, missed-punch decisions,
+// schedules, visitor rows and portal invitations of ANY site of the company with a hand-made request
+// (the website and the phone apps only hide those rows). A manager's write must now land on a row at one
+// of their own sites. The site comes from the row itself, and for a row without one from the employee it
+// belongs to; a row that cannot be tied to any site is refused. Owners and co-admins are not affected.
+// "Managers can schedule staff from all sites" (companies.managers_see_all_sites) widens SCHEDULING only
+// (shifts, availability), exactly as the website words it; it never widens punches or time off.
+const MANAGER_SCOPED: Record<string, { emp: string | null; site: string | null; company: boolean }> = {
+  punches:               { emp: 'emp_id',      site: 'site_id', company: true },
+  time_off:              { emp: 'emp_id',      site: 'site_id', company: true },
+  missed_punch_requests: { emp: 'emp_id',      site: 'site_id', company: true },
+  shifts:                { emp: 'employee_id', site: 'site_id', company: true },
+  visitors:              { emp: null,          site: 'site_id', company: true },
+  availability:          { emp: 'employee_id', site: null,      company: false },
+  employee_portal:       { emp: 'employee_id', site: null,      company: false },
+};
+const MANAGER_ROW_CAP = 1000;
+const MGR_SCOPE_MSG = 'Forbidden: that record is not at one of your sites';
+
+async function managerScopeViolation(
+  table: string, method: string, rows: Record<string, unknown>[], filter: string, caller: Caller,
+): Promise<string | null> {
+  const spec = MANAGER_SCOPED[table];
+  if (!spec) return null;
+  const mine = await managerSiteSet(caller.adminId);
+  const scheduling = table === 'shifts' || table === 'availability';
+  let wide = new Set<string>();
+  if (scheduling) {
+    const cs = await restJson(`companies?admin_id=eq.${caller.primaryAdminId}&managers_see_all_sites=eq.true&select=id`);
+    if (cs === null) return 'Forbidden';
+    wide = new Set(cs.map((c: { id: string }) => c.id));
+  }
+  const siteOk = (siteId: unknown, companyId: unknown) =>
+    typeof siteId === 'string' && (mine.has(siteId) || (typeof companyId === 'string' && wide.has(companyId)));
+
+  // The rows this write touches or creates: what the filter hits now (PATCH, DELETE), and what the body writes.
+  type Item = { site: unknown; emp: unknown; company: unknown; fromBody: boolean; hasSite: boolean; hasEmp: boolean };
+  const items: Item[] = [];
+  if (method === 'PATCH' || method === 'DELETE') {
+    const cols = ['id', spec.emp, spec.site, spec.company ? 'company_id' : null].filter(Boolean).join(',');
+    const targets = await restJson(`${table}?${targetFilter(filter)}&select=${cols}&limit=${MANAGER_ROW_CAP + 1}`);
+    if (targets === null) return 'Forbidden';
+    if (targets.length > MANAGER_ROW_CAP) return 'Forbidden: too many records, narrow the request';
+    for (const t of targets) {
+      items.push({
+        site: spec.site ? t[spec.site] : null, emp: spec.emp ? t[spec.emp] : null,
+        company: t.company_id ?? null, fromBody: false, hasSite: true, hasEmp: true,
+      });
+    }
+  }
+  if (method === 'POST' || method === 'PATCH') {
+    for (const r of rows) {
+      items.push({
+        site: spec.site ? r[spec.site] : null, emp: spec.emp ? r[spec.emp] : null,
+        company: r.company_id ?? null, fromBody: true,
+        hasSite: !!spec.site && r[spec.site] !== undefined,
+        hasEmp: !!spec.emp && r[spec.emp] !== undefined,
+      });
+    }
+  }
+
+  // The employees behind the rows (site and company), looked up once.
+  const empIds = [...new Set(items.map(i => i.emp).filter(e => e != null))];
+  for (const e of empIds) if (typeof e !== 'string' || !TOKEN_RE.test(e)) return MGR_SCOPE_MSG;
+  const emps = new Map<string, { site_id: string | null; company_id: string | null }>();
+  if (empIds.length) {
+    const found = await restJson(`employees?id=in.(${empIds.join(',')})&select=id,site_id,company_id&limit=${empIds.length}`);
+    if (found === null) return 'Forbidden';
+    for (const e of found) emps.set(e.id, { site_id: e.site_id ?? null, company_id: e.company_id ?? null });
+  }
+  // Which company a site belongs to (only needed when a company switched the scheduling flag on).
+  const siteCompany = new Map<string, string>();
+  if (wide.size) {
+    const siteIds = [...new Set(items.map(i => i.site).filter((s): s is string => typeof s === 'string' && TOKEN_RE.test(s)))];
+    if (siteIds.length) {
+      const found = await restJson(`sites?id=in.(${siteIds.join(',')})&select=id,company_id&limit=${siteIds.length}`);
+      if (found === null) return 'Forbidden';
+      for (const s of found) siteCompany.set(s.id, s.company_id);
+    }
+  }
+
+  for (const it of items) {
+    const emp = typeof it.emp === 'string' ? emps.get(it.emp) : undefined;
+    // An employee id that does not resolve to an employee is never accepted on a write.
+    if (spec.emp && it.hasEmp && it.emp != null && !emp) return MGR_SCOPE_MSG;
+    // A PATCH body only has to be checked for what it changes.
+    if (it.fromBody && method === 'PATCH' && !it.hasSite && !it.hasEmp) continue;
+    const siteForRow = (spec.site && it.hasSite && it.site != null) ? it.site : (emp?.site_id ?? null);
+    const company = it.company ?? emp?.company_id ?? (typeof siteForRow === 'string' ? siteCompany.get(siteForRow) : null) ?? null;
+    if (!siteOk(siteForRow, company)) return MGR_SCOPE_MSG;
+    // A schedule is for staff the manager runs: the employee's own site must be theirs too.
+    if (table === 'shifts' && emp && it.hasEmp && !siteOk(emp.site_id, emp.company_id ?? company)) return MGR_SCOPE_MSG;
+  }
+  return null;
+}
+
 // Returns a refusal message, or null when the caller's role may make this write.
 async function roleViolation(
   table: string, method: string, body: unknown, filter: string, caller: Caller,
@@ -1338,7 +1436,7 @@ async function roleViolation(
         if (!keysIn(PORTAL_WRITE_FIELDS)) return 'Forbidden: that field cannot be changed';
         if (rows.some(r => r.status !== undefined && !['invited', 'revoked'].includes(String(r.status)))) return 'Forbidden: invalid status';
       }
-      return null;
+      return isMgr ? await managerScopeViolation(table, method, rows, filter, caller) : null;
     case 'join_requests':
       if (method === 'POST') return 'Forbidden';
       if (method === 'PATCH') {
@@ -1361,6 +1459,13 @@ async function roleViolation(
       }
       return null;
     }
+    case 'punches':
+    case 'time_off':
+    case 'missed_punch_requests':
+    case 'shifts':
+    case 'availability':
+    case 'visitors':
+      return isMgr ? await managerScopeViolation(table, method, rows, filter, caller) : null;
     default:
       return null;
   }

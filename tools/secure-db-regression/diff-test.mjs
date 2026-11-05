@@ -118,6 +118,29 @@ admins.a5 = { id: 'a5', parent_admin_id: 'a1', role: 'admin', status: 'active' }
 sessions.tokCoAdmin = 'a5';
 empRows.e2 = { id: 'e2', company_id: 'c1', site_id: 's2' };
 
+// ---- manager write scope (added 2026-11-05) ----
+// a2 is a manager of site s1 only (see the manager_sites rule below). f1 is a second owner whose company cF has switched
+// "managers can schedule staff from all sites" on; its manager fm runs sF1 only.
+admins.f1 = { id: 'f1', parent_admin_id: null, role: 'admin', status: 'active' };
+admins.fm = { id: 'fm', parent_admin_id: 'f1', role: 'manager', status: 'active' };
+sessions.tokFlagOwn = 'f1'; sessions.tokFlagMgr = 'fm';
+companiesOf.f1 = ['cF']; sitesOf.cF = ['sF1', 'sF2']; employeesOf.cF = ['eF1', 'eF2'];
+empRows.eF1 = { id: 'eF1', company_id: 'cF', site_id: 'sF1' }; empRows.eF2 = { id: 'eF2', company_id: 'cF', site_id: 'sF2' };
+const siteCompanyOf = { s1: 'c1', s2: 'c1', s9: 'c9', sF1: 'cF', sF2: 'cF' };
+const sr = (id, o) => ({ id, company_id: 'c1', ...o });
+const scopeRows = {
+  punches: { pS1: sr('pS1', { emp_id: 'e1', site_id: 's1' }), pS2: sr('pS2', { emp_id: 'e1', site_id: 's2' }),
+    pNoneE1: sr('pNoneE1', { emp_id: 'e1', site_id: null }), pNoneE2: sr('pNoneE2', { emp_id: 'e2', site_id: null }),
+    pF2: { id: 'pF2', company_id: 'cF', emp_id: 'eF2', site_id: 'sF2' } },
+  time_off: { toS1: sr('toS1', { emp_id: 'e1', site_id: 's1' }), toS2: sr('toS2', { emp_id: 'e2', site_id: 's2' }) },
+  missed_punch_requests: { mS1: sr('mS1', { emp_id: 'e1', site_id: 's1' }), mS2: sr('mS2', { emp_id: 'e2', site_id: 's2' }) },
+  shifts: { shS1: sr('shS1', { employee_id: 'e1', site_id: 's1' }), shS2: sr('shS2', { employee_id: 'e2', site_id: 's2' }),
+    shF2: { id: 'shF2', company_id: 'cF', employee_id: 'eF2', site_id: 'sF2' } },
+  visitors: { vS1: sr('vS1', { site_id: 's1' }), vS2: sr('vS2', { site_id: 's2' }) },
+  availability: { avE1: { id: 'avE1', employee_id: 'e1' }, avE2: { id: 'avE2', employee_id: 'e2' } },
+  employee_portal: { epE1: { id: 'epE1', employee_id: 'e1' }, epE2: { id: 'epE2', employee_id: 'e2' } },
+};
+
 function parse(u) {
   const url = new URL(u);
   const m = /\/rest\/v1\/([^?]+)/.exec(url.pathname);
@@ -152,6 +175,25 @@ function makeFetch() {
     if (p.kind !== 'rest') return j({});
     const t = p.name;
     const eq = (k) => (p.q.get(k) || '').replace(/^eq\./, '');
+    // ---- manager write scope (added 2026-11-05): what a write would hit, the employees behind it, site -> company, the flag ----
+    if (method === 'GET' && scopeRows[t] && /^id,(emp_id|employee_id|site_id)/.test(p.q.get('select') || '')) {
+      let rows = Object.values(scopeRows[t]);
+      const listOf = (v) => v.startsWith('in.(') ? v.slice(4, -1).split(',') : [v.replace(/^eq\./, '')];
+      if (p.q.get('id')) { const ids = listOf(p.q.get('id')); rows = rows.filter(r => ids.includes(r.id)); }
+      for (const k of ['emp_id', 'employee_id']) { if (p.q.get(k)) { const ids = listOf(p.q.get(k)); rows = rows.filter(r => ids.includes(r[k])); } }
+      if (eq('emp_id') === 'eBig') rows = Array.from({ length: 1001 }, (_, i) => ({ id: 'b' + i, emp_id: 'eBig', site_id: 's1', company_id: 'c1' }));
+      const lim = parseInt(p.q.get('limit') || '0', 10);
+      return j(lim ? rows.slice(0, lim) : rows);
+    }
+    if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id,site_id,company_id' && p.q.has('id')) {
+      const ids = (p.q.get('id') || '').replace(/^in\.\(|\)$/g, '').split(',');
+      return j(ids.map(id => empRows[id]).filter(Boolean).map(r => ({ id: r.id, site_id: r.site_id, company_id: r.company_id })));
+    }
+    if (t === 'sites' && method === 'GET' && p.q.get('select') === 'id,company_id' && p.q.has('id')) {
+      const ids = (p.q.get('id') || '').replace(/^in\.\(|\)$/g, '').split(',');
+      return j(ids.filter(id => siteCompanyOf[id]).map(id => ({ id, company_id: siteCompanyOf[id] })));
+    }
+    if (t === 'companies' && method === 'GET' && p.q.has('managers_see_all_sites')) return j(eq('admin_id') === 'f1' ? [{ id: 'cF' }] : []);
     if (t === 'admin_sessions' && p.q.has('token') && method === 'GET') {
       const tok = eq('token'); const aid = sessions[tok];
       return j(aid ? [{ admin_id: aid, expires_at: tok === 'tokExpired' ? new Date(Date.now() - 1e3).toISOString() : FUTURE }] : []);
@@ -213,7 +255,7 @@ function makeFetch() {
       if (orv) rows = rows.filter(r => ids.includes(r.id) || (par && r.parent_admin_id === par));
       return j(rows.map(r => ({ id: r.id, role: r.role, parent_admin_id: r.parent_admin_id })));
     }
-    if (t === 'manager_sites' && method === 'GET' && p.q.has('manager_id')) return j(eq('manager_id') === 'a2' ? [{ site_id: 's1' }] : []);
+    if (t === 'manager_sites' && method === 'GET' && p.q.has('manager_id')) return j(eq('manager_id') === 'a2' ? [{ site_id: 's1' }] : eq('manager_id') === 'fm' ? [{ site_id: 'sF1' }] : []);
     if (t === 'punches' && method === 'GET' && p.q.has('id') && p.q.has('company_id')) return j(eq('id') === 'pOwn' ? [{ id: 'pOwn' }] : []);
     if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id,site_id' && p.q.has('id')) return j(pick(empRows, eq('id')).map(r => ({ id: r.id, site_id: r.site_id })));
     if (t === 'missed_punch_requests' && method === 'GET' && p.q.has('id')) return j(pick(mprRows, eq('id')));
@@ -598,6 +640,57 @@ const cases = [
   R('roles', 'manager cannot delete a company', { table: 'companies', method: 'DELETE', filter: 'id=eq.c1', ...mgr }, r => r.status === 403),
   R('roles', 'owner edits company settings', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { name: 'Co', address: 'x' }, ...own }, r => r.status === 200),
   R('roles', 'co-admin creates a company: it belongs to the account owner', { table: 'companies', method: 'POST', body: { name: 'New Co', admin_id: 'a5' }, sessionToken: 'tokCoAdmin' }, r => r.status === 201 && r.calls.some(c => /^POST .*"admin_id":"a1"/.test(c))),
+  // ---- manager write scope (added 2026-11-05): a manager's writes must land on rows at their own sites ----
+  ...(() => {
+    const fm = { sessionToken: 'tokFlagMgr' };
+    const ok = r => r.status === 200 || r.status === 201 || r.status === 204;
+    const no = (m) => r => r.status === 403 && !r.calls.some(c => new RegExp('^' + m + ' /rest/v1/(?!rpc/|audit_log)').test(c));
+    const G = 'mgr-scope';
+    return [
+      R(G, 'manager edits a punch at own site', { table: 'punches', method: 'PATCH', filter: 'id=eq.pS1', body: { punch_time: '09:00:00' }, ...mgr }, ok),
+      R(G, 'manager cannot edit a punch at another site', { table: 'punches', method: 'PATCH', filter: 'id=eq.pS2', body: { punch_time: '09:00:00' }, ...mgr }, no('PATCH')),
+      R(G, 'manager cannot move a punch to another site', { table: 'punches', method: 'PATCH', filter: 'id=eq.pS1', body: { site_id: 's2' }, ...mgr }, no('PATCH')),
+      R(G, 'manager cannot delete a punch at another site', { table: 'punches', method: 'DELETE', filter: 'id=eq.pS2', ...mgr }, no('DELETE')),
+      R(G, 'manager cannot bulk-delete when one punch is at another site', { table: 'punches', method: 'DELETE', filter: 'id=in.(pS1,pS2)', ...mgr }, no('DELETE')),
+      R(G, 'manager deletes a punch at own site', { table: 'punches', method: 'DELETE', filter: 'id=eq.pS1', ...mgr }, ok),
+      R(G, 'manager cannot delete thousands of rows with one broad filter', { table: 'punches', method: 'DELETE', filter: 'emp_id=eq.eBig', ...mgr }, no('DELETE')),
+      R(G, 'manager adds a punch at own site', { table: 'punches', method: 'POST', body: { emp_id: 'e1', company_id: 'c1', site_id: 's1', type: 'IN' }, ...mgr }, ok),
+      R(G, 'manager adds a punch without a site: the employee own site counts', { table: 'punches', method: 'POST', body: { emp_id: 'e1', company_id: 'c1', type: 'IN' }, ...mgr }, ok),
+      R(G, 'manager cannot add a punch at another site', { table: 'punches', method: 'POST', body: { emp_id: 'e2', company_id: 'c1', site_id: 's2', type: 'IN' }, ...mgr }, no('POST')),
+      R(G, 'manager cannot add a punch for an employee of another site without naming a site', { table: 'punches', method: 'POST', body: { emp_id: 'e2', company_id: 'c1', type: 'IN' }, ...mgr }, no('POST')),
+      R(G, 'manager cannot file an own-site employee punch under another site', { table: 'punches', method: 'POST', body: { emp_id: 'e1', company_id: 'c1', site_id: 's2', type: 'IN' }, ...mgr }, no('POST')),
+      R(G, 'manager adds an IN and an OUT together (array body)', { table: 'punches', method: 'POST', body: [{ emp_id: 'e1', company_id: 'c1', site_id: 's1', type: 'IN' }, { emp_id: 'e1', company_id: 'c1', site_id: 's1', type: 'OUT' }], ...mgr }, ok),
+      R(G, 'manager cannot sneak a second-site row into an array body', { table: 'punches', method: 'POST', body: [{ emp_id: 'e1', company_id: 'c1', site_id: 's1', type: 'IN' }, { emp_id: 'e2', company_id: 'c1', site_id: 's2', type: 'OUT' }], ...mgr }, no('POST')),
+      R(G, 'manager edits a site-less punch of an own-site employee', { table: 'punches', method: 'PATCH', filter: 'id=eq.pNoneE1', body: { punch_time: '10:00:00' }, ...mgr }, ok),
+      R(G, 'manager cannot edit a site-less punch of another site employee', { table: 'punches', method: 'PATCH', filter: 'id=eq.pNoneE2', body: { punch_time: '10:00:00' }, ...mgr }, no('PATCH')),
+      R(G, 'manager decides a time-off request at own site', { table: 'time_off', method: 'PATCH', filter: 'id=eq.toS1', body: { status: 'approved' }, ...mgr }, ok),
+      R(G, 'manager cannot decide a time-off request at another site', { table: 'time_off', method: 'PATCH', filter: 'id=eq.toS2', body: { status: 'approved' }, ...mgr }, no('PATCH')),
+      R(G, 'manager cannot delete time off at another site', { table: 'time_off', method: 'DELETE', filter: 'id=eq.toS2', ...mgr }, no('DELETE')),
+      R(G, 'manager adds time off for an own-site employee', { table: 'time_off', method: 'POST', body: { company_id: 'c1', site_id: 's1', emp_id: 'e1', kind: 'vacation', status: 'approved' }, ...mgr }, ok),
+      R(G, 'manager cannot add time off for another site', { table: 'time_off', method: 'POST', body: { company_id: 'c1', site_id: 's2', emp_id: 'e2', kind: 'vacation', status: 'approved' }, ...mgr }, no('POST')),
+      R(G, 'manager decides a missed punch at own site', { table: 'missed_punch_requests', method: 'PATCH', filter: 'id=eq.mS1', body: { status: 'approved' }, ...mgr }, ok),
+      R(G, 'manager cannot decide a missed punch at another site', { table: 'missed_punch_requests', method: 'PATCH', filter: 'id=eq.mS2', body: { status: 'denied' }, ...mgr }, no('PATCH')),
+      R(G, 'manager schedules an own-site employee at own site', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', employee_id: 'e1', shift_date: '2026-11-10' }, ...mgr }, ok),
+      R(G, 'manager cannot schedule another site employee (flag off)', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's2', employee_id: 'e2', shift_date: '2026-11-10' }, ...mgr }, no('POST')),
+      R(G, 'manager cannot schedule another site employee at own site (flag off)', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', employee_id: 'e2', shift_date: '2026-11-10' }, ...mgr }, no('POST')),
+      R(G, 'manager cannot delete a shift at another site', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS2', ...mgr }, no('DELETE')),
+      R(G, 'manager deletes a shift at own site', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS1', ...mgr }, ok),
+      R(G, 'flag on: manager schedules staff of another site', { table: 'shifts', method: 'POST', body: { company_id: 'cF', site_id: 'sF2', employee_id: 'eF2', shift_date: '2026-11-10' }, ...fm }, ok),
+      R(G, 'flag on: manager edits a shift at another site', { table: 'shifts', method: 'PATCH', filter: 'id=eq.shF2', body: { start_time: '09:00:00' }, ...fm }, ok),
+      R(G, 'flag on: the flag does NOT widen punches', { table: 'punches', method: 'POST', body: { emp_id: 'eF2', company_id: 'cF', site_id: 'sF2', type: 'IN' }, ...fm }, no('POST')),
+      R(G, 'flag on: the flag does NOT widen punch edits', { table: 'punches', method: 'PATCH', filter: 'id=eq.pF2', body: { punch_time: '09:00:00' }, ...fm }, no('PATCH')),
+      R(G, 'manager cannot delete a visitor row of another site', { table: 'visitors', method: 'DELETE', filter: 'id=eq.vS2', ...mgr }, no('DELETE')),
+      R(G, 'manager edits a visitor row of own site', { table: 'visitors', method: 'PATCH', filter: 'id=eq.vS1', body: { checked_out_at: '2026-11-05T12:00:00Z' }, ...mgr }, ok),
+      R(G, 'manager cannot invite an employee of another site to the portal', { table: 'employee_portal', method: 'POST', body: { employee_id: 'e2', email: 'x@y.ca', invite_token: 'tok', status: 'invited' }, ...mgr }, no('POST')),
+      R(G, 'manager invites an own-site employee to the portal', { table: 'employee_portal', method: 'POST', body: { employee_id: 'e1', email: 'x@y.ca', invite_token: 'tok', status: 'invited' }, ...mgr }, ok),
+      R(G, 'manager cannot revoke another site portal access', { table: 'employee_portal', method: 'DELETE', filter: 'id=eq.epE2', ...mgr }, no('DELETE')),
+      R(G, 'manager cannot edit another site availability', { table: 'availability', method: 'PATCH', filter: 'id=eq.avE2', body: { note: 'x' }, ...mgr }, no('PATCH')),
+      R(G, 'owner is not restricted: punch at any site', { table: 'punches', method: 'PATCH', filter: 'id=eq.pS2', body: { punch_time: '09:00:00' }, ...own }, ok),
+      R(G, 'owner is not restricted: delete a shift anywhere', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS2', ...own }, ok),
+      R(G, 'co-admin is not restricted: time off at any site', { table: 'time_off', method: 'PATCH', filter: 'id=eq.toS2', body: { status: 'approved' }, sessionToken: 'tokCoAdmin' }, ok),
+      R(G, 'super admin is not restricted', { table: 'punches', method: 'PATCH', filter: 'id=eq.pS2', body: { punch_time: '09:00:00' }, ...sup }, ok),
+    ];
+  })(),
   R('roles', 'a company cannot be handed to a co-admin', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { admin_id: 'a5' }, ...own }, r => r.status === 403),
   R('roles', 'manager cannot add payroll recipients', { table: 'report_recipients', method: 'POST', body: { company_id: 'c1', email: 'x@y.ca' }, ...mgr }, r => r.status === 403),
   R('roles', 'manager cannot remove payroll recipients', { table: 'report_recipients', method: 'DELETE', filter: 'id=eq.r1', ...mgr }, r => r.status === 403),
