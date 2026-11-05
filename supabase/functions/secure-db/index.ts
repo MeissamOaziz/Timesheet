@@ -1287,6 +1287,7 @@ const MANAGER_SCOPED: Record<string, { emp: string | null; site: string | null; 
   visitors:              { emp: null,          site: 'site_id', company: true },
   availability:          { emp: 'employee_id', site: null,      company: false },
   employee_portal:       { emp: 'employee_id', site: null,      company: false },
+  kiosk_devices:         { emp: null,          site: 'site_id', company: true },
 };
 const MANAGER_ROW_CAP = 1000;
 const MGR_SCOPE_MSG = 'Forbidden: that record is not at one of your sites';
@@ -1366,6 +1367,56 @@ async function managerScopeViolation(
     if (table === 'shifts' && emp && it.hasEmp && !siteOk(emp.site_id, emp.company_id ?? company)) return MGR_SCOPE_MSG;
   }
   return null;
+}
+
+// ── Manager read scope ────────────────────────────────────────────────────────────────────────
+// The write rules above keep a manager's changes on their own sites; this keeps their READS there too. Until now the
+// server handed a manager every row of the company and left the narrowing to the website and the phone app, so a
+// hand-made request could read other sites' punches, requests, schedules, visitors and staff (names, emails, PINs).
+// The scope matches what the website shows a manager: rows at their assigned sites. Time-off requests without a site stay
+// visible (the website shows them). The company setting "managers can schedule staff from all sites" widens only what
+// scheduling needs: shifts, the staff list and availability. Owners, co-admins and super admins are not narrowed.
+const MANAGER_READ_SCOPED = new Set([
+  'punches', 'employees', 'time_off', 'missed_punch_requests', 'shifts', 'availability', 'visitors', 'employee_portal', 'kiosk_devices',
+]);
+const MATCH_NOTHING = 'id=eq.00000000-0000-0000-0000-000000000000';
+
+// The extra filter to AND onto a manager's read. It always narrows: an unknown state yields "no rows", never "all rows".
+async function managerReadScope(table: string, caller: Caller): Promise<string> {
+  const mine = [...(await managerSiteSet(caller.adminId))].filter(id => TOKEN_RE.test(id));
+  const scheduling = table === 'shifts' || table === 'availability' || table === 'employees';
+  let wide: string[] = [];
+  if (scheduling) {
+    const cs = await restJson(`companies?admin_id=eq.${caller.primaryAdminId}&managers_see_all_sites=eq.true&select=id`);
+    if (cs === null) return MATCH_NOTHING;
+    wide = cs.map((c: { id: string }) => c.id).filter((id: string) => TOKEN_RE.test(id));
+  }
+  const bySite = mine.length ? `site_id.in.(${mine.join(',')})` : '';
+  const byCompany = wide.length ? `company_id.in.(${wide.join(',')})` : '';
+  // "site_id.in.(..)" or "company_id.in.(..)" as one filter, or the two joined with OR
+  const siteOrCompany = (): string => {
+    if (bySite && byCompany) return `or=(${bySite},${byCompany})`;
+    if (bySite) return bySite.replace('.in.', '=in.');
+    if (byCompany) return byCompany.replace('.in.', '=in.');
+    return MATCH_NOTHING;
+  };
+  switch (table) {
+    case 'punches': case 'missed_punch_requests': case 'visitors': case 'kiosk_devices':
+      return mine.length ? `site_id=in.(${mine.join(',')})` : MATCH_NOTHING;
+    case 'time_off':
+      return mine.length ? `or=(site_id.in.(${mine.join(',')}),site_id.is.null)` : 'site_id=is.null';
+    case 'shifts': case 'employees':
+      return siteOrCompany();
+    case 'availability': case 'employee_portal': {
+      // These hang off employee_id: scope through the employees the manager may see (availability is part of scheduling).
+      const empScope = table === 'availability' ? siteOrCompany() : (mine.length ? `site_id=in.(${mine.join(',')})` : MATCH_NOTHING);
+      if (empScope === MATCH_NOTHING) return MATCH_NOTHING;
+      const ids = await restJson(`employees?${empScope}&select=id&limit=1000`);
+      if (ids === null || !ids.length) return MATCH_NOTHING;
+      return `employee_id=in.(${ids.map((e: { id: string }) => e.id).filter((id: string) => TOKEN_RE.test(id)).join(',')})`;
+    }
+  }
+  return MATCH_NOTHING;
 }
 
 // ── Plan limits ───────────────────────────────────────────────────────────────────────────────
@@ -1518,7 +1569,8 @@ async function roleViolation(
     case 'kiosk_devices':
       // Tablets register themselves through kiosk_device_checkin; the app only revokes or renames.
       if (method !== 'PATCH') return 'Forbidden';
-      return keysIn(KIOSK_DEVICE_FIELDS) ? null : 'Forbidden: that field cannot be changed';
+      if (!keysIn(KIOSK_DEVICE_FIELDS)) return 'Forbidden: that field cannot be changed';
+      return isMgr ? await managerScopeViolation(table, method, rows, filter, caller) : null;
     case 'employee_portal':
       if (method === 'POST' || method === 'PATCH') {
         if (!keysIn(PORTAL_WRITE_FIELDS)) return 'Forbidden: that field cannot be changed';
@@ -2049,6 +2101,12 @@ Deno.serve(async (req: Request) => {
       const scope = tenantScopeFilter(table, caller, owned);
       if (scope) filter = filter ? `${filter}&${scope}` : scope;
     }
+  }
+
+  // A manager reads only the rows at their own sites (see managerReadScope).
+  if (caller && caller.role === 'manager' && method === 'GET' && MANAGER_READ_SCOPED.has(table)) {
+    const scope = await managerReadScope(table, caller);
+    filter = filter ? `${filter}&${scope}` : scope;
   }
 
   // ── Role rules and shape checks for writes (see roleViolation) ───────────────

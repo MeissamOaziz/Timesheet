@@ -127,6 +127,7 @@ sessions.tokFlagOwn = 'f1'; sessions.tokFlagMgr = 'fm';
 companiesOf.f1 = ['cF']; sitesOf.cF = ['sF1', 'sF2']; employeesOf.cF = ['eF1', 'eF2'];
 empRows.eF1 = { id: 'eF1', company_id: 'cF', site_id: 'sF1' }; empRows.eF2 = { id: 'eF2', company_id: 'cF', site_id: 'sF2' };
 const siteCompanyOf = { s1: 'c1', s2: 'c1', s9: 'c9', sF1: 'cF', sF2: 'cF' };
+sessions.tokMgrNoSites = 'a4'; // a4 is a manager under a1 with no assigned site
 // ---- plan limits (added 2026-11-05) ----
 // l1: Free, at its 10 employees and 1 site. l2: Starter with 2 extra seats (27 employees), 26 active, at its 2 sites.
 // l3: Free but its company is on the grandfathered list (30 employees). l4: Growth at its 6 sites, 1 of 3 companies.
@@ -149,6 +150,7 @@ const scopeRows = {
   visitors: { vS1: sr('vS1', { site_id: 's1' }), vS2: sr('vS2', { site_id: 's2' }) },
   availability: { avE1: { id: 'avE1', employee_id: 'e1' }, avE2: { id: 'avE2', employee_id: 'e2' } },
   employee_portal: { epE1: { id: 'epE1', employee_id: 'e1' }, epE2: { id: 'epE2', employee_id: 'e2' } },
+  kiosk_devices: { kd1: sr('kd1', { site_id: 's1' }), kd2: sr('kd2', { site_id: 's2' }) },
 };
 
 function parse(u) {
@@ -751,6 +753,44 @@ const cases = [
       R(G, 'deleting a shift stays open after the add-on lapsed', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS1', sessionToken: 'tokTrialOver' }, ok),
       R(G, 'reading shifts stays open without the add-on', { table: 'shifts', method: 'GET', filter: 'shift_date=gte.2026-11-01', sessionToken: 'tokTrialOver' }, ok),
       R(G, 'super admin is not gated', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', shift_date: '2026-11-10' }, ...sup }, ok),
+    ];
+  })(),
+  // ---- manager read scope (added 2026-11-05): a manager reads only the rows at their own sites ----
+  ...(() => {
+    const G = 'mgr-read';
+    const nothing = { sessionToken: 'tokMgrNoSites' }, fm = { sessionToken: 'tokFlagMgr' };
+    const sawGet = (table, re) => r => r.status === 200 && r.calls.some(c => c.startsWith('GET /rest/v1/' + table + '?') && re.test(c));
+    const rd = (name, table, filter, who, re) => R(G, name, { table, method: 'GET', filter, ...who }, sawGet(table, re));
+    return [
+      rd('manager punches: own sites only', 'punches', 'punch_date=gte.2026-11-01', mgr, /site_id=in\.\(s1\)/),
+      rd('manager missed-punch requests: own sites only', 'missed_punch_requests', 'status=eq.pending', mgr, /site_id=in\.\(s1\)/),
+      rd('manager visitors: own sites only', 'visitors', 'checked_out_at=is.null', mgr, /site_id=in\.\(s1\)/),
+      rd('manager tablets: own sites only', 'kiosk_devices', 'revoked=eq.false', mgr, /site_id=in\.\(s1\)/),
+      rd('manager time off: own sites or no site', 'time_off', 'status=eq.pending', mgr, /or=\(site_id\.in\.\(s1\),site_id\.is\.null\)/),
+      rd('manager shifts (flag off): own sites only', 'shifts', 'shift_date=gte.2026-11-01', mgr, /site_id=in\.\(s1\)/),
+      rd('manager staff (flag off): own sites only', 'employees', 'active=eq.true', mgr, /site_id=in\.\(s1\)/),
+      rd('manager availability: through the employees they may see', 'availability', 'avail_type=eq.recurring', mgr, /employee_id=in\.\(e1,e2\)/),
+      rd('manager portal status: through the employees at their sites', 'employee_portal', 'employee_id=eq.e1', mgr, /employee_id=in\./),
+      rd('flag on: manager shifts also cover the whole company', 'shifts', 'shift_date=gte.2026-11-01', fm, /or=\(site_id\.in\.\(sF1\),company_id\.in\.\(cF\)\)/),
+      rd('flag on: manager staff list also covers the whole company', 'employees', 'active=eq.true', fm, /or=\(site_id\.in\.\(sF1\),company_id\.in\.\(cF\)\)/),
+      R(G, 'flag on: punches are NOT widened by the flag', { table: 'punches', method: 'GET', filter: 'punch_date=gte.2026-11-01', ...fm },
+        r => r.status === 200 && r.calls.some(c => c.startsWith('GET /rest/v1/punches?') && /site_id=in\.\(sF1\)/.test(c) && !/company_id=in\.\(cF\)/.test(c.split('&').filter(x => /^site_id|^or=/.test(x)).join('&')))),
+      rd('a manager with no site reads no punches', 'punches', 'punch_date=gte.2026-11-01', nothing, /id=eq\.00000000-0000-0000-0000-000000000000/),
+      rd('a manager with no site reads no staff', 'employees', 'active=eq.true', nothing, /id=eq\.00000000-0000-0000-0000-000000000000/),
+      rd('a manager with no site still sees time-off requests that name no site', 'time_off', 'status=eq.pending', nothing, /site_id=is\.null/),
+      rd('the client filter is kept (ANDed), not replaced', 'punches', 'emp_id=eq.e1&punch_date=gte.2026-11-01', mgr, /emp_id=eq\.e1.*site_id=in\.\(s1\)/),
+      rd('asking for another site only adds to the filter, the scope stays', 'punches', 'site_id=eq.s2', mgr, /site_id=eq\.s2.*site_id=in\.\(s1\)/),
+      R(G, 'owner reads are not narrowed (punches)', { table: 'punches', method: 'GET', filter: 'punch_date=gte.2026-11-01', ...own },
+        r => r.status === 200 && r.calls.some(c => c.startsWith('GET /rest/v1/punches?')) && !r.calls.some(c => c.startsWith('GET /rest/v1/punches?') && /site_id=in\./.test(c))),
+      R(G, 'owner reads are not narrowed (staff)', { table: 'employees', method: 'GET', filter: 'active=eq.true', ...own },
+        r => r.status === 200 && !r.calls.some(c => c.startsWith('GET /rest/v1/employees?') && /site_id=in\./.test(c))),
+      R(G, 'co-admin reads are not narrowed (shifts)', { table: 'shifts', method: 'GET', filter: 'shift_date=gte.2026-11-01', sessionToken: 'tokCoAdmin' },
+        r => r.status === 200 && !r.calls.some(c => c.startsWith('GET /rest/v1/shifts?') && /site_id=in\./.test(c))),
+      R(G, 'super admin reads are not narrowed', { table: 'punches', method: 'GET', filter: 'punch_date=gte.2026-11-01', ...sup },
+        r => r.status === 200 && !r.calls.some(c => c.startsWith('GET /rest/v1/punches?') && /site_id=in\./.test(c))),
+      R(G, 'manager edits a tablet at own site', { table: 'kiosk_devices', method: 'PATCH', filter: 'id=eq.kd1', body: { label: 'Front desk' }, ...mgr }, r => r.status === 200),
+      R(G, 'manager cannot revoke a tablet at another site', { table: 'kiosk_devices', method: 'PATCH', filter: 'id=eq.kd2', body: { revoked: true }, ...mgr }, r => r.status === 403 && !r.calls.some(c => /^PATCH \/rest\/v1\/kiosk_devices/.test(c))),
+      R(G, 'owner revokes any tablet', { table: 'kiosk_devices', method: 'PATCH', filter: 'id=eq.kd2', body: { revoked: true }, ...own }, r => r.status === 200),
     ];
   })(),
   R('roles', 'a company cannot be handed to a co-admin', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { admin_id: 'a5' }, ...own }, r => r.status === 403),
