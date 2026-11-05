@@ -10,7 +10,7 @@
 # The employee mobile app (2026-11-04 migrations) calls portal_* with the public key; each one authenticates with the
 # session token in code, except portal_app_config (returns only the minimum app version).
 # The admin mobile app (20261105_admin_push_tokens.sql) calls admin_register_push_token / admin_unregister_push_token
-# the same way, authenticating with the admin session token (51 functions in total).
+# the same way, authenticating with the admin session token (52 functions in total).
 accept_invitation
 activate_employee_portal
 activate_invited_admin
@@ -52,6 +52,7 @@ portal_register_push_token
 portal_request_time_off
 portal_reset_password
 portal_revoke_session
+portal_set_punch_note
 portal_set_session_device
 portal_time_anchor
 portal_unregister_push_token

@@ -24,6 +24,14 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Constant-time compare, same as send-verification / send-contact.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+
 function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
 }
@@ -56,7 +64,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { secret, to, subject, message } = body as { secret?: string; to?: string; subject?: string; message?: string };
 
-    if (!secret) {
+    if (!secret || typeof secret !== 'string') {
+      console.warn('send-support-reply: request without a secret');
       return new Response(JSON.stringify({ error: 'Missing secret' }), { status: 401, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
     const secretRes = await fetch(`${SUPABASE_URL}/rest/v1/internal_secrets?key=eq.support_reply_secret&select=value`, {
@@ -64,7 +73,8 @@ Deno.serve(async (req) => {
     });
     const secretRows = secretRes.ok ? await secretRes.json() : [];
     const expected = secretRows?.[0]?.value;
-    if (!expected || secret !== expected) {
+    if (!expected || !timingSafeEqual(secret, expected)) {
+      console.warn('send-support-reply: wrong secret refused'); // never log the value itself
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
