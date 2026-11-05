@@ -88,6 +88,24 @@ feature ships or a ticket teaches something, add it here in the same change.
   (6 sites, 60 employees), Business $79.49 (unlimited). Flat price per account, not per employee. Remote
   clock-in and geofencing are Starter-and-up features (Free previews them 14 days; see the plan table below).
 
+## Kiosk link or QR "opens the sign-up page" (retail customer, 2026-11-04)
+
+- What the page does: a kiosk link is the site address plus `?kiosk=<site id>`. A device also remembers its kiosk
+  in its own browser storage (`pc_kiosk_device`), so a home-screen icon that opens the bare address returns to the
+  punch page only while that storage survives. With no `?kiosk=` and nothing stored, the page shows the landing
+  (sign-up) page. If the site id is unknown the landing page shows with a red "Kiosk URL not found" message. Any
+  error in the lookup also falls back to the landing page silently.
+- Check in this order: (1) is the kiosk really down? Compare the latest punches of that site by `source` (`kiosk`
+  versus `admin`) and the site's `kiosk_devices.last_seen`; a tablet that never reached the page leaves no check-in.
+  (2) Does the link work from a fresh browser? POST `{action:'kiosk_bootstrap',kioskV:2,kioskSiteId}` to secure-db
+  and expect `ok:true` with the site and employees, then open the link in a clean mobile browser with the
+  `kiosk_device_checkin` call stubbed so no fake terminal is added to the customer's list. (3) Is the QR valid?
+  Run the page's own encoder on the link and decode it with a second scanner (zbar). All three were fine on
+  2026-11-04, so the cause was on the tablet or in how the code was opened.
+- Reply with a QR-free path: Sites, the site's kiosk shortcut, "Copy link", send the link to the tablet and open it
+  there, then "Add to Home Screen". Ask for the address shown in the tablet's browser, the tablet model and browser,
+  and any red message. A reset needs a confirmation tap, so an accidental reset is unlikely.
+
 ## Everyone was signed out on 2026-10-19 (evening, Toronto)
 
 - All admin sessions were reset once as a security precaution. If a customer says they were suddenly
