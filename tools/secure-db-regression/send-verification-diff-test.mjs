@@ -87,7 +87,7 @@ const hostile = [
   ['quote breaking out of a link', { email: 'a@x.ca', name: 'A', type: 'invitation', inviterName: 'B', companyName: 'C', role: 'co_admin', token: '"><script>alert(1)</script>' }, h => !h.includes('<script>') && h.includes('invite=')],
   ['foreign link in an invite', { email: 'a@x.ca', name: 'A', type: 'employee_invite', portalUrl: 'https://evil.example/steal?token=1', lang: 'en', companyName: 'C' }, h => !h.includes('evil.example') && h.includes('www.punchclock.ca/employee.html')],
   ['javascript link', { email: 'a@x.ca', name: 'A', type: 'employee_invite', portalUrl: 'javascript:alert(1)', lang: 'en', companyName: 'C' }, h => !h.includes('javascript:')],
-  ['foreign logo', { email: 'a@x.ca', name: 'A', type: 'employee_invite', portalUrl: 'https://www.punchclock.ca/employee.html?token=a', lang: 'en', companyName: 'C', logoUrl: 'https://evil.example/pixel.png' }, h => !h.includes('evil.example') && !h.includes('<img')],
+  ['foreign logo', { email: 'a@x.ca', name: 'A', type: 'employee_invite', portalUrl: 'https://www.punchclock.ca/employee.html?token=a', lang: 'en', companyName: 'C', logoUrl: 'https://evil.example/pixel.png' }, h => !h.includes('evil.example') && !/<img[^>]+src="(?!https:\/\/www\.punchclock\.ca\/)/i.test(h)],
 ];
 for (const [name, payload, check] of hostile) {
   const n = await call(hNew, payload);

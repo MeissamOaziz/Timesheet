@@ -1,4 +1,4 @@
-// PunchClock Pro — Onboarding Drip Email Sequence
+// PunchClock Crew — Onboarding Drip Email Sequence
 // Supabase Edge Function: send-onboarding
 // Runs daily at 9am UTC via pg_cron
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -6,10 +6,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const FROM_EMAIL = "PunchClock Pro <noreply@punchclock.ca>";
+const FROM_EMAIL = "PunchClock Crew <noreply@punchclock.ca>";
 // The day-7 recap asks a question, so it cannot come from a no-reply address with a footer
 // telling people not to reply. support@ is a real monitored alias.
-const SUPPORT_EMAIL = "PunchClock Pro <support@punchclock.ca>";
+const SUPPORT_EMAIL = "PunchClock Crew <support@punchclock.ca>";
 const APP_URL = "https://www.punchclock.ca";
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
@@ -67,13 +67,13 @@ function wrapper(body: string, replyable = false): string {
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
 <div style="max-width:520px;margin:0 auto;padding:40px 20px;">
   <div style="text-align:center;margin-bottom:32px;">
-    <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+    <span style="font-size:22px;font-weight:700;color:#4f8ef7;"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</span>
   </div>
   <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;">
     ${body}
   </div>
   <div style="text-align:center;margin-top:28px;">
-    <p style="color:#5c6b7f;font-size:12px;">PunchClock Pro &mdash; Time &amp; Attendance Software<br>${replyable ? "Reply to this email and a real person will read it." : "This is an automated message, please do not reply."}</p>
+    <p style="color:#5c6b7f;font-size:12px;">PunchClock Crew &mdash; Time &amp; Attendance Software<br>${replyable ? "Reply to this email and a real person will read it." : "This is an automated message, please do not reply."}</p>
   </div>
 </div></body></html>`;
 }
@@ -124,12 +124,12 @@ function stepListFr(): string {
 function buildDay1(name: string): { subject: string; html: string } {
   name = esc(name);
   return {
-    subject: "Welcome to PunchClock Pro — here’s how to get started 🎉 | Bienvenue sur PunchClock Pro",
+    subject: "Welcome to PunchClock Crew — here’s how to get started 🎉 | Bienvenue sur PunchClock Crew",
     html: wrapper(`
       <!-- ENGLISH -->
       <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Welcome aboard, ${name}!</h1>
       <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px">
-        Your PunchClock Pro account is ready. Getting set up takes less than 5 minutes &mdash; just follow these 3 simple steps:
+        Your PunchClock Crew account is ready. Getting set up takes less than 5 minutes &mdash; just follow these 3 simple steps:
       </p>
       ${stepListEn()}
       ${ctaButton("Set Up My Account →", APP_URL)}
@@ -140,7 +140,7 @@ function buildDay1(name: string): { subject: string; html: string } {
       <!-- FRANÇAIS -->
       <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Bienvenue, ${name}!</h1>
       <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px">
-        Votre compte PunchClock Pro est pr&ecirc;t. La configuration prend moins de 5 minutes &mdash; suivez ces 3 &eacute;tapes simples&nbsp;:
+        Votre compte PunchClock Crew est pr&ecirc;t. La configuration prend moins de 5 minutes &mdash; suivez ces 3 &eacute;tapes simples&nbsp;:
       </p>
       ${stepListFr()}
       ${ctaButton("Configurer mon compte →", APP_URL)}
@@ -280,7 +280,7 @@ function buildNoEmployees(name: string, dayLabelEn: string, dayLabelFr: string):
 function buildDay6(name: string): { subject: string; html: string } {
   name = esc(name);
   return {
-    subject: "⏰ Your PunchClock Pro trial expires tomorrow | Votre essai expire demain",
+    subject: "⏰ Your PunchClock Crew trial expires tomorrow | Votre essai expire demain",
     html: wrapper(`
       <!-- ENGLISH -->
       <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Your trial expires tomorrow</h1>
@@ -335,7 +335,7 @@ function buildDay7(name: string): { subject: string; html: string } {
       <!-- ENGLISH -->
       <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Your trial period has ended</h1>
       <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px">
-        Hi ${name}, your 7-day PunchClock Pro trial has ended. But don&rsquo;t worry &mdash; you can still use the free plan:
+        Hi ${name}, your 7-day PunchClock Crew trial has ended. But don&rsquo;t worry &mdash; you can still use the free plan:
       </p>
       <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px">
         <div style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Free plan includes</div>
@@ -355,7 +355,7 @@ function buildDay7(name: string): { subject: string; html: string } {
       <!-- FRANÇAIS -->
       <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px">Votre p&eacute;riode d&rsquo;essai est termin&eacute;e</h1>
       <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px">
-        Bonjour ${name}, votre essai PunchClock Pro de 7 jours est termin&eacute;. Mais pas d&rsquo;inqui&eacute;tude &mdash; vous pouvez continuer avec le plan gratuit&nbsp;:
+        Bonjour ${name}, votre essai PunchClock Crew de 7 jours est termin&eacute;. Mais pas d&rsquo;inqui&eacute;tude &mdash; vous pouvez continuer avec le plan gratuit&nbsp;:
       </p>
       <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;margin-bottom:20px">
         <div style="font-size:12px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Le plan gratuit comprend</div>

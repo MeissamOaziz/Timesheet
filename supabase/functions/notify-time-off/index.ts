@@ -282,7 +282,7 @@ ${headFr}
         message:
           `A time off request has been submitted and needs your review.\n\n` +
           details +
-          `\nNothing has been approved yet. Open PunchClock Pro → Time Off to approve or decline.`,
+          `\nNothing has been approved yet. Open PunchClock Crew → Time Off to approve or decline.`,
         companyId: row.company_id, companyName: coName,
         recipients: approverList,
       });

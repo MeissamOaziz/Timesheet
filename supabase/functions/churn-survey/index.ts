@@ -73,7 +73,7 @@ async function sendEmail(opts: { to: string; subject: string; html: string; repl
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'PunchClock Pro <noreply@punchclock.ca>',
+      from: 'PunchClock Crew <noreply@punchclock.ca>',
       to: [opts.to], subject: opts.subject, html: opts.html,
       ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
     }),
@@ -94,24 +94,24 @@ function surveyEmailHtml(name: string, url: string): string {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
   <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:22px 32px">
-    <div style="font-size:20px;font-weight:700;color:#4f8ef7">⏱ PunchClock Pro</div></td></tr>
+    <div style="font-size:20px;font-weight:700;color:#4f8ef7"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</div></td></tr>
   <tr><td style="padding:28px 32px">
     <!-- Français -->
     <h1 style="margin:0 0 12px;font-size:21px;color:#1e293b">${hiFr}</h1>
-    <p style="margin:0 0 14px;font-size:15px;color:#475569;line-height:1.6">Vous avez récemment essayé PunchClock Pro — puis le silence. Nous aimerions vraiment savoir <strong>ce qui a fonctionné et ce qui n'a pas fonctionné</strong>. Ça prend une minute, et vos réponses vont directement à notre équipe et façonnent ce que nous construisons ensuite.</p>
+    <p style="margin:0 0 14px;font-size:15px;color:#475569;line-height:1.6">Vous avez récemment essayé PunchClock Crew — puis le silence. Nous aimerions vraiment savoir <strong>ce qui a fonctionné et ce qui n'a pas fonctionné</strong>. Ça prend une minute, et vos réponses vont directement à notre équipe et façonnent ce que nous construisons ensuite.</p>
     <p style="margin:0 0 22px;font-size:15px;color:#475569;line-height:1.6">Que ce soit le design, une fonctionnalité manquante ou quelque chose qui ne convenait pas — dites-le-nous. <strong>Si nous développons ce que vous demandez, nous vous écrirons pour l'essayer, gratuitement.</strong></p>
     ${cta('Partager mes commentaires →')}
     <p style="margin:22px 0 0;font-size:13px;color:#94a3b8;line-height:1.6;text-align:center">Vous préférez répondre directement? Répondez simplement à ce courriel — ça nous parvient directement.</p>
     <div style="border-top:1px solid #e2e8f0;margin:26px 0"></div>
     <!-- English -->
     <h1 style="margin:0 0 12px;font-size:21px;color:#1e293b">${hiEn}</h1>
-    <p style="margin:0 0 14px;font-size:15px;color:#475569;line-height:1.6">You recently gave PunchClock Pro a try — and then things went quiet. We'd genuinely love to know <strong>what worked and what didn't</strong>. It takes about a minute, and your answers go straight to our team and shape what we build next.</p>
+    <p style="margin:0 0 14px;font-size:15px;color:#475569;line-height:1.6">You recently gave PunchClock Crew a try — and then things went quiet. We'd genuinely love to know <strong>what worked and what didn't</strong>. It takes about a minute, and your answers go straight to our team and shape what we build next.</p>
     <p style="margin:0 0 22px;font-size:15px;color:#475569;line-height:1.6">Whether it was the design, a missing feature, or something that just didn't fit — tell us. <strong>If we build what you ask for, we'll email you to come try it, free.</strong></p>
     ${cta('Share your feedback →')}
     <p style="margin:22px 0 0;font-size:13px;color:#94a3b8;line-height:1.6;text-align:center">Prefer to just reply? Hit reply to this email and tell us anything — it comes straight to us.</p>
   </td></tr>
   <tr><td style="padding:18px 32px 28px;border-top:1px solid #e2e8f0">
-    <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;text-align:center">Nous sommes une petite équipe qui veut bien servir ses clients. Merci.<br>We're a small team that genuinely wants to serve our customers well. Thank you. — L'équipe PunchClock Pro</p>
+    <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;text-align:center">Nous sommes une petite équipe qui veut bien servir ses clients. Merci.<br>We're a small team that genuinely wants to serve our customers well. Thank you. — L'équipe PunchClock Crew</p>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
       });
       await sendEmail({
         to: TEAM_INBOX,
-        subject: 'Votre avis sur PunchClock Pro? / Your feedback on PunchClock Pro? (1 min)',
+        subject: 'Votre avis sur PunchClock Crew? / Your feedback on PunchClock Crew? (1 min)',
         html: surveyEmailHtml('', `${APP_URL}/?survey=${tok}`),
         replyTo: SUPPORT_REPLY_TO,
       });
@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
       try {
         await sendEmail({
           to: a.email as string,
-          subject: 'Votre avis sur PunchClock Pro? / Your feedback on PunchClock Pro? (1 min)',
+          subject: 'Votre avis sur PunchClock Crew? / Your feedback on PunchClock Crew? (1 min)',
           html: surveyEmailHtml((a.name as string) || '', `${APP_URL}/?survey=${tok}`),
           replyTo: SUPPORT_REPLY_TO,
         });

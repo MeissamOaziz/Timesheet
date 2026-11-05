@@ -1,4 +1,4 @@
-// PunchClock Pro — Period Summary Email
+// PunchClock Crew — Period Summary Email
 // Supabase Edge Function: send-period-summary
 //
 // Two audiences share one "period just closed" event: each employee gets their own hours
@@ -267,7 +267,7 @@ function buildEmailHtml(params) {
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td>
-            <div style="font-size:20px;font-weight:700;color:#4f8ef7;letter-spacing:-0.5px">⏱ PunchClock Pro</div>
+            <div style="font-size:20px;font-weight:700;color:#4f8ef7;letter-spacing:-0.5px"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</div>
             <div style="font-size:13px;color:#64748b;margin-top:2px">${contextLine}</div>
           </td>
           <td align="right">
@@ -337,7 +337,7 @@ function buildEmailHtml(params) {
   <tr>
     <td style="padding:24px 32px 32px">
       <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;text-align:center">
-        This is an automated summary from <a href="https://www.punchclock.ca" style="color:#4f8ef7;text-decoration:none">PunchClock Pro</a>.<br>
+        This is an automated summary from <a href="https://www.punchclock.ca" style="color:#4f8ef7;text-decoration:none">PunchClock Crew</a>.<br>
         If you notice any errors, please contact your manager.
       </p>
     </td>
@@ -350,7 +350,7 @@ function buildEmailHtml(params) {
 }
 async function sendEmail(to, subject, html, attachments) {
   const payload = {
-    from: 'PunchClock Pro <noreply@punchclock.ca>',
+    from: 'PunchClock Crew <noreply@punchclock.ca>',
     to: [
       to
     ],
@@ -502,7 +502,7 @@ function buildPayrollSummaryHtml(params) {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 14px"><tr><td align="center">
 <table width="680" cellpadding="0" cellspacing="0" style="max-width:680px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 22px rgba(15,23,42,.08)">
   <tr><td style="padding:20px 26px;border-bottom:1px solid #e2e8f0">
-    <div style="font-size:18px;font-weight:700;color:#4f8ef7">&#9201; PunchClock Pro</div>
+    <div style="font-size:18px;font-weight:700;color:#4f8ef7"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</div>
   </td></tr>
   <tr><td style="padding:24px 26px 8px">
     <h1 style="margin:0 0 6px;font-size:20px;color:#0f172a">${freqLabel} payroll summary</h1>
@@ -542,7 +542,7 @@ function buildPayrollSummaryHtml(params) {
   </td></tr>
   <tr><td style="padding:14px 26px;border-top:1px solid #e2e8f0;background:#f8fafc">
     <p style="margin:0;font-size:11.5px;color:#94a3b8;line-height:1.6">
-      You receive this because an administrator at ${esc(companyName)} added you as a payroll report recipient in PunchClock Pro.
+      You receive this because an administrator at ${esc(companyName)} added you as a payroll report recipient in PunchClock Crew.
       Ask them to remove you if you'd rather not get it.
     </p>
   </td></tr>

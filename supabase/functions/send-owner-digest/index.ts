@@ -25,7 +25,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const FROM_EMAIL = "PunchClock Pro <noreply@punchclock.ca>";
+const FROM_EMAIL = "PunchClock Crew <noreply@punchclock.ca>";
 const APP_URL = "https://www.punchclock.ca";
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!);
@@ -191,14 +191,14 @@ function wrapper(body: string, unsubUrl: string): string {
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
 <div style="max-width:540px;margin:0 auto;padding:40px 20px;">
   <div style="text-align:center;margin-bottom:30px;">
-    <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+    <span style="font-size:22px;font-weight:700;color:#4f8ef7;"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</span>
   </div>
   <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:34px 30px;">
     ${body}
   </div>
   <div style="text-align:center;margin-top:24px;">
     <p style="color:#5c6b7f;font-size:12px;line-height:1.6;margin:0;">
-      PunchClock Pro &mdash; Time &amp; Attendance Software<br>
+      PunchClock Crew &mdash; Time &amp; Attendance Software<br>
       You get this because you run a company here, on the schedule set in Company Info.
       <a href="${unsubUrl}" style="color:#5c6b7f;">Turn these off</a>.
     </p>
@@ -274,7 +274,7 @@ function buildDigest(o: {
         `${o.pendingTimeOff} time off request${o.pendingTimeOff > 1 ? "s" : ""} to review`,
         "Nothing is waiting on your approval.")}
       ${o.offNext ? `<p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 18px"><strong>${o.offNext}</strong> approved ${o.offNext > 1 ? "absences are" : "absence is"} coming up next.</p>` : ""}
-      ${cta("Open PunchClock Pro &rarr;")}
+      ${cta("Open PunchClock Crew &rarr;")}
 
       <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0 24px">
 
@@ -291,7 +291,7 @@ function buildDigest(o: {
         `${o.pendingTimeOff} demande${o.pendingTimeOff > 1 ? "s" : ""} de cong&eacute; &agrave; r&eacute;viser`,
         "Rien n&rsquo;attend votre approbation.")}
       ${o.offNext ? `<p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 18px"><strong>${o.offNext}</strong> absence${o.offNext > 1 ? "s" : ""} approuv&eacute;e${o.offNext > 1 ? "s" : ""} &agrave; venir.</p>` : ""}
-      ${cta("Ouvrir PunchClock Pro &rarr;")}
+      ${cta("Ouvrir PunchClock Crew &rarr;")}
     `, o.unsubUrl),
   };
 }

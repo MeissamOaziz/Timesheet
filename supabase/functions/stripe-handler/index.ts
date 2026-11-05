@@ -182,7 +182,7 @@ async function sendOwnerEmail(subject: string, html: string): Promise<void> {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "PunchClock Pro <noreply@punchclock.ca>", to: [OWNER_INBOX], subject, html }),
+      body: JSON.stringify({ from: "PunchClock Crew <noreply@punchclock.ca>", to: [OWNER_INBOX], subject, html }),
     });
     if (!res.ok) console.error(`Resend error: ${await res.text()}`);
   } catch (e) {

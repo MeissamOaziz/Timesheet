@@ -1,5 +1,5 @@
 // send-support-reply — Supabase Edge Function
-// Sends a customer-support reply from "PunchClock Pro Support <support@punchclock.ca>" via
+// Sends a customer-support reply from "PunchClock Crew Support <support@punchclock.ca>" via
 // Resend, on behalf of the overnight support-triage cloud routine. This bypasses Gmail
 // entirely — the Gmail MCP tools this project uses (reply/create_draft/send_message) have no
 // way to pick a "send as" alias, so anything sent through them goes out as Meissam's primary
@@ -16,7 +16,7 @@
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
-const FROM = '"PunchClock Pro Support" <support@punchclock.ca>';
+const FROM = '"PunchClock Crew Support" <support@punchclock.ca>';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -35,13 +35,13 @@ function wrapper(bodyHtml: string): string {
 <body style="margin:0;padding:0;background:#0f1117;font-family:Arial,sans-serif;">
 <div style="max-width:540px;margin:0 auto;padding:40px 20px;">
   <div style="text-align:center;margin-bottom:32px;">
-    <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+    <span style="font-size:22px;font-weight:700;color:#4f8ef7;"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</span>
   </div>
   <div style="background:#1a1d27;border:1px solid #2e3347;border-radius:16px;padding:36px 32px;">
     ${bodyHtml}
   </div>
   <div style="text-align:center;margin-top:28px;">
-    <p style="color:#555e7a;font-size:12px;">PunchClock Pro Support &mdash; support@punchclock.ca</p>
+    <p style="color:#555e7a;font-size:12px;">PunchClock Crew Support &mdash; support@punchclock.ca</p>
   </div>
 </div></body></html>`;
 }

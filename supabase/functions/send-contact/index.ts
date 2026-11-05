@@ -1,11 +1,11 @@
-// PunchClock Pro — Contact & Support Email Edge Function
+// PunchClock Crew — Contact & Support Email Edge Function
 // Deploy to: supabase/functions/send-contact/index.ts
 //
 // Required env vars (set in Supabase Dashboard → Settings → Edge Functions):
 //   RESEND_API_KEY  — your Resend API key (already used by send-verification)
 const DEST_EMAIL = Deno.env.get('SUPPORT_EMAIL') || 'support@punchclock.ca';
-const FROM_EMAIL = 'PunchClock Pro <noreply@punchclock.ca>';
-const ACK_FROM = 'PunchClock Pro Support <support@punchclock.ca>';
+const FROM_EMAIL = 'PunchClock Crew <noreply@punchclock.ca>';
+const ACK_FROM = 'PunchClock Crew Support <support@punchclock.ca>';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'content-type, authorization, apikey, x-client-info',
@@ -89,13 +89,13 @@ function wrapper(body: string): string {
 <body style="margin:0;padding:0;background:#0f1117;font-family:Arial,sans-serif;">
 <div style="max-width:540px;margin:0 auto;padding:40px 20px;">
   <div style="text-align:center;margin-bottom:32px;">
-    <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+    <span style="font-size:22px;font-weight:700;color:#4f8ef7;"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</span>
   </div>
   <div style="background:#1a1d27;border:1px solid #2e3347;border-radius:16px;padding:36px 32px;">
     ${body}
   </div>
   <div style="text-align:center;margin-top:28px;">
-    <p style="color:#555e7a;font-size:12px;">PunchClock Pro &mdash; Time &amp; Attendance Software</p>
+    <p style="color:#555e7a;font-size:12px;">PunchClock Crew &mdash; Time &amp; Attendance Software</p>
   </div>
 </div></body></html>`;
 }
@@ -108,12 +108,12 @@ function buildAckHtml(name: string, subLabel: string, receivedEn: string, receiv
     <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">We received your message</h1>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">Hi ${nameEn},</p>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      Thank you for contacting PunchClock Pro support. We've received your message and our team will get back to you within <strong style="color:#e8eaf0;">48 hours</strong>.
+      Thank you for contacting PunchClock Crew support. We've received your message and our team will get back to you within <strong style="color:#e8eaf0;">48 hours</strong>.
     </p>
     <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 10px;">In the meantime, here are a few things that might help:</p>
     <ul style="color:#8b92a8;font-size:14px;line-height:1.9;margin:0 0 24px;padding-left:20px;">
       <li>Visit <a href="https://punchclock.ca" style="color:#4f8ef7;">punchclock.ca</a> for guides on setting up your company, sites, and employees</li>
-      <li>PunchClock Pro is a time &amp; attendance tracking platform — it records clock-ins/outs and generates payroll-ready reports</li>
+      <li>PunchClock Crew is a time &amp; attendance tracking platform — it records clock-ins/outs and generates payroll-ready reports</li>
       <li>For billing questions, you can manage your subscription directly from your account under <strong style="color:#e8eaf0;">My Profile → Manage Billing</strong></li>
     </ul>
     <div style="background:#0f1117;border:1px solid #2e3347;border-radius:12px;padding:18px 20px;margin-bottom:36px;">
@@ -129,12 +129,12 @@ function buildAckHtml(name: string, subLabel: string, receivedEn: string, receiv
     <h1 style="font-size:22px;font-weight:700;color:#e8eaf0;margin:0 0 16px;">Nous avons reçu votre message</h1>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">Bonjour ${nameFr},</p>
     <p style="color:#8b92a8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      Merci d'avoir contacté le support PunchClock Pro. Nous avons bien reçu votre message et notre équipe vous répondra dans les <strong style="color:#e8eaf0;">48 heures</strong>.
+      Merci d'avoir contacté le support PunchClock Crew. Nous avons bien reçu votre message et notre équipe vous répondra dans les <strong style="color:#e8eaf0;">48 heures</strong>.
     </p>
     <p style="color:#8b92a8;font-size:14px;line-height:1.6;margin:0 0 10px;">En attendant, voici quelques ressources utiles :</p>
     <ul style="color:#8b92a8;font-size:14px;line-height:1.9;margin:0 0 24px;padding-left:20px;">
       <li>Visitez <a href="https://punchclock.ca" style="color:#4f8ef7;">punchclock.ca</a> pour des guides sur la configuration de votre entreprise, vos sites et vos employés</li>
-      <li>PunchClock Pro est une plateforme de suivi du temps de présence — elle enregistre les pointages et génère des rapports prêts pour la paie</li>
+      <li>PunchClock Crew est une plateforme de suivi du temps de présence — elle enregistre les pointages et génère des rapports prêts pour la paie</li>
       <li>Pour toute question de facturation, vous pouvez gérer votre abonnement directement depuis votre compte sous <strong style="color:#e8eaf0;">Mon profil → Gérer la facturation</strong></li>
     </ul>
     <div style="background:#0f1117;border:1px solid #2e3347;border-radius:12px;padding:18px 20px;margin-bottom:36px;">
@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
     const subLabelRaw = SUBJECT_LABELS[subject] ?? oneLine(subject, 80);
     const subLabel = esc(subLabelRaw, 120);
     const typeLabel = isSales ? '📣 Sales Inquiry' : '🎧 Support Request';
-    const emailSubject = `[PunchClock Pro] ${typeLabel} — ${oneLine(subLabelRaw, 120)}`;
+    const emailSubject = `[PunchClock Crew] ${typeLabel} — ${oneLine(subLabelRaw, 120)}`;
     // Many mail clients (Gmail webmail among them) strip <style> blocks entirely, so the
     // .message-box white-space:pre-wrap rule below can't be relied on to keep line breaks —
     // convert them to real <br> tags, which every client honours regardless of CSS support.
@@ -218,13 +218,13 @@ Deno.serve(async (req) => {
 </style></head>
 <body>
   <div class="card">
-    <h2>⏱ PunchClock Pro</h2>
+    <h2><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</h2>
     <div class="badge">${typeLabel}</div>
     <div class="row"><div class="label">From</div><div class="value">${esc(name, 100)} &lt;${esc(senderEmail, 200)}&gt;</div></div>
     ${safeAdminId ? `<div class="row"><div class="label">Admin ID</div><div class="value">${safeAdminId}</div></div>` : ''}
     <div class="row"><div class="label">Subject</div><div class="value">${subLabel}</div></div>
     <div class="row"><div class="label">Message</div><div class="value message-box" style="white-space:normal;line-height:1.6">${messageHtml}</div></div>
-    <div class="footer">Sent via PunchClock Pro contact form</div>
+    <div class="footer">Sent via PunchClock Crew contact form</div>
   </div>
 </body>
 </html>`;
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: ACK_FROM,
           to: [senderEmail],
-          subject: '✅ We received your message | Nous avons reçu votre message — PunchClock Pro',
+          subject: '✅ We received your message | Nous avons reçu votre message — PunchClock Crew',
           html: buildAckHtml(String(name), subLabel, receivedEn, receivedFr)
         })
       }).catch(() => { /* fire-and-forget: ack failures are non-fatal */ });

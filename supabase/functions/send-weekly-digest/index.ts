@@ -1,4 +1,4 @@
-// PunchClock Pro — Weekly Digest Email
+// PunchClock Crew — Weekly Digest Email
 // Supabase Edge Function: send-weekly-digest
 // Runs weekly via pg_cron (Mondays 9am UTC). Manually triggerable.
 // Sends a snapshot of new accounts, the free base, paying customers, comped accounts, MRR
@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const FROM_EMAIL = "PunchClock Pro <noreply@punchclock.ca>";
+const FROM_EMAIL = "PunchClock Crew <noreply@punchclock.ca>";
 const DIGEST_TO = "meissam.h.p@gmail.com";
 
 // Pricing (CAD/month, matches Stripe live mode)
@@ -79,14 +79,14 @@ function wrapper(body: string, headerLine: string): string {
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
 <div style="max-width:640px;margin:0 auto;padding:32px 18px;">
   <div style="text-align:center;margin-bottom:28px;">
-    <span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+    <span style="font-size:22px;font-weight:700;color:#4f8ef7;"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</span>
     <div style="color:#475569;font-size:13px;margin-top:6px">${headerLine}</div>
   </div>
   ${body}
   <div style="text-align:center;margin-top:24px;">
     <p style="color:#94a3b8;font-size:11px;line-height:1.6">
       <em>Note: Last login tracking started April 14, 2026.<br>Null values for earlier accounts are expected.</em><br><br>
-      PunchClock Pro &mdash; Weekly Digest<br>
+      PunchClock Crew &mdash; Weekly Digest<br>
       Automated message; do not reply.
     </p>
   </div>
@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
     const body = statsRow + newSection + newFreeSection + olderFreeSection
                + paidSection + compedSection + alertsSection;
     const html = wrapper(body, `Weekly Digest &middot; ${dateRange}`);
-    const subject = `📊 PunchClock Pro — Weekly Digest ${dateRange}`;
+    const subject = `📊 PunchClock Crew — Weekly Digest ${dateRange}`;
 
     if (dryRun) {
       return new Response(JSON.stringify({

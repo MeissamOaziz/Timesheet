@@ -1479,7 +1479,7 @@ Deno.serve(async (req: Request) => {
             email: issued.email,
             name: issued.name || '',
             code: issued.code,
-            subject: 'Reset your PunchClock Pro password',
+            subject: 'Reset your PunchClock Crew password',
             purpose: 'password_reset',
           }),
         }).then(() => {}).catch(() => {});

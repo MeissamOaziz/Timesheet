@@ -68,7 +68,7 @@ async function sendEmail(to: string, subject: string, html: string) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: 'PunchClock Pro <noreply@punchclock.ca>', to: [to], subject, html }),
+    body: JSON.stringify({ from: 'PunchClock Crew <noreply@punchclock.ca>', to: [to], subject, html }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
 }
@@ -88,7 +88,7 @@ function alertEmailHtml(adminName: string, companyName: string, alerts: Alert[])
   return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 16px"><tr><td align="center">
 <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-  <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:20px 28px"><div style="font-size:18px;font-weight:700;color:#4f8ef7">⏱ PunchClock Pro</div></td></tr>
+  <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:20px 28px"><div style="font-size:18px;font-weight:700;color:#4f8ef7"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</div></td></tr>
   <tr><td style="padding:22px 28px">
     <h1 style="margin:0 0 4px;font-size:18px;color:#1e293b">Alertes pour ${esc(companyName)} / Alerts for ${esc(companyName)}</h1>
     <p style="margin:0 0 14px;font-size:13px;color:#64748b">Bonjour ${esc(adminName || '')}, voici ce qui demande votre attention. / Hi ${esc(adminName || '')}, here's what needs a look.</p>
@@ -96,7 +96,7 @@ function alertEmailHtml(adminName: string, companyName: string, alerts: Alert[])
     <div style="border-top:1px solid #e2e8f0;margin:18px 0 14px"></div>
     <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">English</p>
     <table width="100%" cellpadding="0" cellspacing="0">${rowsEn}</table>
-    <p style="margin:18px 0 0;font-size:12px;color:#94a3b8;line-height:1.6">Ouvrez PunchClock Pro pour corriger les pointages. / Open PunchClock Pro to review and fix the punches.</p>
+    <p style="margin:18px 0 0;font-size:12px;color:#94a3b8;line-height:1.6">Ouvrez PunchClock Crew pour corriger les pointages. / Open PunchClock Crew to review and fix the punches.</p>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }

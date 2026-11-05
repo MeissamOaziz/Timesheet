@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "PunchClock Pro <noreply@punchclock.ca>";
+const FROM_EMAIL = "PunchClock Crew <noreply@punchclock.ca>";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-dry-run"
@@ -46,13 +46,13 @@ function wrapper(body) {
 <tr><td align="center" style="padding:40px 20px;">
 <table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
 <tr><td align="center" style="padding-bottom:32px;font-family:Arial,sans-serif;">
-<span style="font-size:22px;font-weight:700;color:#4f8ef7;">&#9201; PunchClock Pro</span>
+<span style="font-size:22px;font-weight:700;color:#4f8ef7;"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</span>
 </td></tr>
 <tr><td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;">
 ${body}
 </td></tr>
 <tr><td align="center" style="padding-top:28px;font-family:Arial,sans-serif;">
-<p style="color:#94a3b8;font-size:12px;margin:0;">PunchClock Pro &mdash; Time &amp; Attendance Software<br>This is an automated message, please do not reply.</p>
+<p style="color:#94a3b8;font-size:12px;margin:0;">PunchClock Crew &mdash; Time &amp; Attendance Software<br>This is an automated message, please do not reply.</p>
 </td></tr>
 </table>
 </td></tr>
@@ -72,7 +72,7 @@ function ctaButton(href, label, color) {
 function buildVerificationHtml(name, code) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">Verify your email address</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 28px;">
-      Hi ${esc(name)}, use the code below to complete your PunchClock Pro registration.
+      Hi ${esc(name)}, use the code below to complete your PunchClock Crew registration.
       This code expires in <strong style="color:#1e293b;">10 minutes</strong>.
     </p>
     <div style="background:#f1f5f9;border:2px solid #4f8ef7;border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
@@ -91,7 +91,7 @@ function buildPasswordResetHtml(name, code) {
     </div>`;
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">Reset your password</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 28px;">
-      Hi ${esc(name)}, enter the code below on the PunchClock Pro sign-in page to choose a new password.
+      Hi ${esc(name)}, enter the code below on the PunchClock Crew sign-in page to choose a new password.
       This code expires in <strong style="color:#1e293b;">15 minutes</strong>.
     </p>
     ${box}
@@ -99,7 +99,7 @@ function buildPasswordResetHtml(name, code) {
     <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 28px;">
     <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px;">R&eacute;initialisez votre mot de passe</h2>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      Bonjour ${esc(name)}, entrez le code ci-dessus sur la page de connexion PunchClock Pro pour choisir un nouveau mot de passe.
+      Bonjour ${esc(name)}, entrez le code ci-dessus sur la page de connexion PunchClock Crew pour choisir un nouveau mot de passe.
       Ce code expire dans <strong style="color:#1e293b;">15 minutes</strong>.
     </p>
     <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;">Si vous n'avez pas demand&eacute; cette r&eacute;initialisation, vous pouvez ignorer ce courriel. Votre mot de passe n'a pas chang&eacute;.</p>`);
@@ -107,13 +107,13 @@ function buildPasswordResetHtml(name, code) {
 function buildJoinApprovedHtml(coAdminName, primaryAdminName) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">✅ Your access has been approved!</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Hi ${esc(coAdminName)}, <strong style="color:#1e293b;">${esc(primaryAdminName)}</strong> has approved your request to join their PunchClock Pro account.
+      Hi ${esc(coAdminName)}, <strong style="color:#1e293b;">${esc(primaryAdminName)}</strong> has approved your request to join their PunchClock Crew account.
     </p>
     <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       You can now log in to access all companies and sites associated with this account.
     </p>
     <a href="https://www.punchclock.ca" style="display:inline-block;background:#22c55e;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:15px;">
-      Log In to PunchClock Pro →
+      Log In to PunchClock Crew →
     </a>`);
 }
 function buildScheduleHtml(empName, weekLabel, shifts, lang) {
@@ -160,7 +160,7 @@ function buildEmployeeInviteHtml(empName, portalUrl, lang, companyName, logoUrl)
   const employerLabel = companyName
     ? `<strong style="color:#1e293b">${esc(companyName)}</strong>`
     : (isFr ? `Votre employeur` : `Your employer`);
-  const intro = isFr ? `${employerLabel} vous a donné accès au <strong style="color:#1e293b">portail employé PunchClock Pro</strong>. Depuis ce portail, vous pouvez :` : `${employerLabel} has given you access to the <strong style="color:#1e293b">PunchClock Pro Employee Portal</strong>. From the portal, you can:`;
+  const intro = isFr ? `${employerLabel} vous a donné accès au <strong style="color:#1e293b">portail employé PunchClock Crew</strong>. Depuis ce portail, vous pouvez :` : `${employerLabel} has given you access to the <strong style="color:#1e293b">PunchClock Crew Employee Portal</strong>. From the portal, you can:`;
   const features = isFr ? [
     `🗓️ Consulter votre horaire de quarts à venir`,
     `📊 Voir vos rapports d'heures et pointages`,
@@ -195,7 +195,7 @@ function buildJoinDeniedHtml(name, companyName) {
     <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">Your access request</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">Hi ${esc(name)},</p>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Your request to join <strong style="color:#1e293b;">${co}</strong> on PunchClock Pro was not approved.
+      Your request to join <strong style="color:#1e293b;">${co}</strong> on PunchClock Crew was not approved.
     </p>
     <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
       If you believe this is a mistake, please contact the company administrator directly.
@@ -205,7 +205,7 @@ function buildJoinDeniedHtml(name, companyName) {
     <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">Votre demande d'acc&egrave;s</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">Bonjour ${esc(name)},</p>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      Votre demande pour rejoindre <strong style="color:#1e293b;">${co}</strong> sur PunchClock Pro n&rsquo;a pas &eacute;t&eacute; approuv&eacute;e.
+      Votre demande pour rejoindre <strong style="color:#1e293b;">${co}</strong> sur PunchClock Crew n&rsquo;a pas &eacute;t&eacute; approuv&eacute;e.
     </p>
     <p style="color:#475569;font-size:14px;line-height:1.6;margin:0;">
       Si vous pensez qu&rsquo;il s&rsquo;agit d&rsquo;une erreur, veuillez contacter directement l&rsquo;administrateur de l&rsquo;entreprise.
@@ -221,16 +221,16 @@ function buildInvitationHtml(inviterName, companyName, role, token) {
   // Role-aware H1 and intro — promotion gets different wording than a generic co-admin invite
   const h1En = isManager
     ? `You've been promoted to Manager 🎉`
-    : `You've been invited to join PunchClock Pro`;
+    : `You've been invited to join PunchClock Crew`;
   const h1Fr = isManager
     ? `Vous avez été promu(e) gestionnaire 🎉`
-    : `Vous avez été invité à rejoindre PunchClock Pro`;
+    : `Vous avez été invité à rejoindre PunchClock Crew`;
   const introEn = isManager
-    ? `<strong style="color:#1e293b;">${esc(inviterName)}</strong> has promoted you to <strong style="color:#4f8ef7;">Manager</strong> at <strong style="color:#1e293b;">${esc(companyName)}</strong> on PunchClock Pro.`
-    : `<strong style="color:#1e293b;">${esc(inviterName)}</strong> has invited you to join <strong style="color:#1e293b;">${esc(companyName)}</strong> on PunchClock Pro as a <strong style="color:#4f8ef7;">${roleEn}</strong>.`;
+    ? `<strong style="color:#1e293b;">${esc(inviterName)}</strong> has promoted you to <strong style="color:#4f8ef7;">Manager</strong> at <strong style="color:#1e293b;">${esc(companyName)}</strong> on PunchClock Crew.`
+    : `<strong style="color:#1e293b;">${esc(inviterName)}</strong> has invited you to join <strong style="color:#1e293b;">${esc(companyName)}</strong> on PunchClock Crew as a <strong style="color:#4f8ef7;">${roleEn}</strong>.`;
   const introFr = isManager
-    ? `<strong style="color:#1e293b;">${esc(inviterName)}</strong> vous a promu(e) <strong style="color:#4f8ef7;">Gestionnaire</strong> chez <strong style="color:#1e293b;">${esc(companyName)}</strong> sur PunchClock Pro.`
-    : `<strong style="color:#1e293b;">${esc(inviterName)}</strong> vous a invité à rejoindre <strong style="color:#1e293b;">${esc(companyName)}</strong> sur PunchClock Pro en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.`;
+    ? `<strong style="color:#1e293b;">${esc(inviterName)}</strong> vous a promu(e) <strong style="color:#4f8ef7;">Gestionnaire</strong> chez <strong style="color:#1e293b;">${esc(companyName)}</strong> sur PunchClock Crew.`
+    : `<strong style="color:#1e293b;">${esc(inviterName)}</strong> vous a invité à rejoindre <strong style="color:#1e293b;">${esc(companyName)}</strong> sur PunchClock Crew en tant que <strong style="color:#4f8ef7;">${roleFr}</strong>.`;
   return wrapper(`
     <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 16px;">${h1En}</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 16px;">${introEn}</p>
@@ -258,7 +258,7 @@ function buildInvitationHtml(inviterName, companyName, role, token) {
 function buildNewAccountNotificationHtml(userName, userEmail, plan, regType, timestamp) {
   return wrapper(`<h1 style="font-size:22px;font-weight:700;color:#1e293b;margin:0 0 8px;">🆕 New Account Registration</h1>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 20px;">
-      A new admin account has been created on PunchClock Pro.
+      A new admin account has been created on PunchClock Crew.
     </p>
     <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
       <div style="margin-bottom:14px">
@@ -340,7 +340,7 @@ serve(async (req)=>{
     let subject;
     let html;
     if (type === "join_approved") {
-      subject = "Your PunchClock Pro access has been approved!";
+      subject = "Your PunchClock Crew access has been approved!";
       html = buildJoinApprovedHtml(name, adminName || "your administrator");
     } else if (type === "schedule") {
       const { weekLabel, shifts, lang } = body;
@@ -348,20 +348,20 @@ serve(async (req)=>{
       html = buildScheduleHtml(name, weekLabel || '', shifts || [], lang || 'en');
     } else if (type === "employee_invite") {
       const { portalUrl, lang, logoUrl } = body;
-      subject = lang === 'fr' ? `🔗 Accès à votre portail employé PunchClock Pro` : `🔗 You've been invited to the PunchClock Pro Employee Portal`;
+      subject = lang === 'fr' ? `🔗 Accès à votre portail employé PunchClock Crew` : `🔗 You've been invited to the PunchClock Crew Employee Portal`;
       html = buildEmployeeInviteHtml(name, siteUrl(portalUrl, 'https://www.punchclock.ca/employee.html'), lang || 'en', companyName || '', logoUrl || '');
     } else if (type === "join_request_denied") {
-      subject = "Your access request — PunchClock Pro | Votre demande d'accès";
+      subject = "Your access request — PunchClock Crew | Votre demande d'accès";
       html = buildJoinDeniedHtml(name, companyName || '');
     } else if (type === "invitation") {
       const { inviterName, companyName, role, token } = body;
       subject = role === 'manager'
-        ? `🎉 You've been promoted to Manager at ${oneLine(companyName || 'your company')} — PunchClock Pro`
-        : `You've been invited to join ${oneLine(companyName || 'a company')} on PunchClock Pro | Invitation PunchClock Pro`;
+        ? `🎉 You've been promoted to Manager at ${oneLine(companyName || 'your company')} — PunchClock Crew`
+        : `You've been invited to join ${oneLine(companyName || 'a company')} on PunchClock Crew | Invitation PunchClock Crew`;
       html = buildInvitationHtml(inviterName || 'Your administrator', companyName || 'your company', role || 'co_admin', token || '');
     } else if (type === "new_account_notification") {
       const { userEmail, plan, regType, timestamp } = body;
-      subject = `🆕 New PunchClock Pro registration: ${oneLine(name)}`;
+      subject = `🆕 New PunchClock Crew registration: ${oneLine(name)}`;
       html = buildNewAccountNotificationHtml(name, userEmail || email, plan || 'Free', regType || 'New Company', timestamp || new Date().toISOString());
     } else {
       if (!code) {
@@ -380,7 +380,7 @@ serve(async (req)=>{
         subject = `${code} — Reset your PunchClock password | Réinitialisez votre mot de passe`;
         html = buildPasswordResetHtml(name, code);
       } else {
-        subject = `${code} — Your PunchClock Pro verification code`;
+        subject = `${code} — Your PunchClock Crew verification code`;
         html = buildVerificationHtml(name, code);
       }
     }
