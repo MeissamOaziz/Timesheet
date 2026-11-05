@@ -6,8 +6,9 @@
 #   grant execute on function public.<name>(<arg types>) to anon;
 # Everything else (helpers, cron jobs, trigger functions, secure-db-only RPCs): revoke all ... from public, anon, authenticated.
 #
-# Not on the list although they exist: portal_get_sites, portal_register_push_token (planned mobile app, no caller yet:
-# grant them and list them here when that app ships), accept_invite, lookup_invite (legacy, no caller).
+# Not on the list although they exist: accept_invite, lookup_invite (legacy, no caller).
+# The employee mobile app (2026-11-04 migrations) calls portal_* with the public key; each one authenticates with the
+# session token in code, except portal_app_config (returns only the minimum app version).
 accept_invitation
 activate_employee_portal
 activate_invited_admin
@@ -25,6 +26,7 @@ get_survey_invite
 kiosk_device_checkin
 mint_admin_session
 portal_add_availability
+portal_app_config
 portal_cancel_time_off
 portal_change_password
 portal_delete_availability
@@ -35,13 +37,20 @@ portal_get_punch_labels
 portal_get_punches
 portal_get_schedule_status
 portal_get_shifts
+portal_get_sites
 portal_get_team_shifts
 portal_get_time_off
+portal_list_sessions
 portal_login
 portal_logout
 portal_punch
+portal_register_push_token
 portal_request_time_off
 portal_reset_password
+portal_revoke_session
+portal_set_session_device
+portal_time_anchor
+portal_unregister_push_token
 submit_inapp_feedback
 submit_survey_response
 superadmin_create_admin
