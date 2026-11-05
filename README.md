@@ -1,4 +1,4 @@
-# PunchClock Pro
+# PunchClock Crew
 
 Web-based employee time clock for small businesses, served at https://www.punchclock.ca.
 

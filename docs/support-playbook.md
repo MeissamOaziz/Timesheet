@@ -1,8 +1,12 @@
-# PunchClock Pro support playbook
+# PunchClock Crew support playbook
 
 Read this before answering any support ticket. It records what the product does today, how past
 tickets were diagnosed, and the traps already hit. Keep it current: whenever a customer-visible
 feature ships or a ticket teaches something, add it here in the same change.
+
+## Brand (since 2026-11-04)
+
+The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-04, so a customer's older emails, screenshots and invoices may still say "PunchClock Pro": same product. Use "PunchClock Crew" in every reply and draft. Support replies come from "PunchClock Crew Support". The employee phone app is also called PunchClock Crew (iPhone and Android, early testing only: do not promise a release date). If an instruction elsewhere in your prompt still says "PunchClock Pro", this section wins.
 
 ## Ground rules
 
@@ -66,7 +70,7 @@ feature ships or a ticket teaches something, add it here in the same change.
   nothing either way (so addresses cannot be probed). If no code arrives, ask which address the
   employee typed and compare with employee_portal.email.
 - Diagnosis: check employee_portal (status = active, password set, last_login), then Resend's sent
-  list for that address. A reset sends an email titled "NNNNNN - Your PunchClock Pro verification
+  list for that address. A reset sends an email titled "NNNNNN - Your PunchClock Crew verification
   code". If none exists there, no code was generated for that address.
 - Admin workaround when someone is locked out: Admin, Employees, resend the portal invitation.
 

@@ -1,4 +1,4 @@
--- Erase one PunchClock Pro account and everything tied to it (Law 25 / customer deletion request).
+-- Erase one PunchClock Crew account and everything tied to it (Law 25 / customer deletion request).
 -- Run it in the Supabase dashboard > SQL editor, project uziwymrwaeojhqaagqcm.
 --
 --   1. Set v_admin and v_email below (the account owner's admin id and sign-in email).
