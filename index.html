@@ -1946,6 +1946,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <li>Company information: company name, industry, payroll settings</li>
       <li>Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)</li>
       <li>Time and attendance records: clock-in/out times, dates, site locations</li>
+      <li data-i18n="priv.liSignup">How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”</li>
     </ul>
     <h2 data-i18n="priv.h2">2. How We Use Your Information</h2>
     <p data-i18n="priv.p2">We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.</p>
@@ -2449,6 +2450,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <hr class="divider">
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
+        <div class="form-group"><label for="regHeard" data-i18n="reg.heardLabel">How did you hear about us? (optional)</label><select id="regHeard"><option value="" data-i18n="reg.heardNone">Choose…</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="linkedin">LinkedIn</option><option value="google" data-i18n="reg.heardGoogle">Google search</option><option value="friend" data-i18n="reg.heardFriend">A friend or colleague</option><option value="accountant" data-i18n="reg.heardAccountant">My accountant or bookkeeper</option><option value="other" data-i18n="reg.heardOther">Other</option></select></div>
         <p style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:2px" data-i18n="reg.settingsLater">Address, payroll schedule, overtime and your logo are all in Settings once you're in — with sensible defaults until you change them.</p>
       <button class="btn-primary" style="margin-top:20px" onclick="withBusy(this,doRegister)" data-i18n="reg.continue">Continue →</button>
     </div>
@@ -7177,7 +7179,8 @@ async function doRegister(){
 
   try{
 
-    pendingVerify={firstName,lastName,email,pass,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile};
+    const heard=(document.getElementById('regHeard')||{}).value||'';
+    pendingVerify={firstName,lastName,email,pass,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile,heard};
     try{
       const rr = await DB.requestRegistrationCode(email, name);
       if(rr && rr.ok===false && rr.error==='email_taken'){
@@ -7215,7 +7218,7 @@ async function doVerify(){
     // The logo is uploaded after the account exists (uploads need the new admin's session), see below.
     const logo_url=null;
     // Admin + company are created atomically server-side — no anonymous client-side write.
-    const reg = await DB.rpc('verify_code_and_register',{
+    const regParams = {
       p_email: pendingVerify.email,
       p_code: entered,
       p_newpass: pendingVerify.pass,
@@ -7230,7 +7233,19 @@ async function doVerify(){
       p_payroll_anchor_date: pendingVerify.anchorDate||null,
       p_track_overtime: !!pendingVerify.trackOvertime,
       p_logo_url: logo_url
-    });
+    };
+    // How this visitor found us (campaign link, referring site, the optional question). Never blocks
+    // registration: a database that does not know these parameters yet answers PGRST202 before running
+    // anything, and the account is then created without them.
+    const _src = getSignupSource() || {};
+    const srcParams = { p_signup_utm_source:_src.s||null, p_signup_utm_medium:_src.m||null, p_signup_utm_campaign:_src.c||null,
+      p_signup_utm_content:_src.t||null, p_signup_referrer_host:_src.r||null, p_signup_heard:pendingVerify.heard||null };
+    let reg;
+    try{ reg = await DB.rpc('verify_code_and_register',{...regParams,...srcParams}); }
+    catch(e){
+      if(/PGRST202|Could not find the function/i.test(String((e&&e._raw)||(e&&e.message)||''))) reg = await DB.rpc('verify_code_and_register',regParams);
+      else throw e;
+    }
     if(!reg || !reg.ok){
       const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',no_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',weak_password:t('msg.shortPassword'),email_taken:t('msg.emailTaken')||'That email is already registered.',missing_name:t('msg.allRequired')};
       showMsg('registerMsg', map[reg&&reg.error] || (t('msg.resetFailed')||'Could not create account. Please try again.'),'error');
@@ -7254,6 +7269,7 @@ async function doVerify(){
     }
     sendAppEmail('new_account_notification').catch(e=>console.warn('New account notification failed:',e));
     pendingVerify=null;
+    try{ localStorage.removeItem(SIGNUP_SRC_KEY); }catch(_){}
     updateNav();
     await refreshCache();
     showMsg('registerMsg',t('msg.accountCreated'),'success');
@@ -14797,10 +14813,49 @@ function openKioskQR(){
 // ═══════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════
+// ── Signup source (marketing attribution) ─────────────────────────────────────────────────────
+// Remembers how a visitor arrived (the utm_* tags of a campaign link, or the domain of the site that
+// referred them) so the account they create later records which post or channel brought it. Only plain
+// tokens are kept, only in this browser, for 90 days, and nothing leaves the browser until the visitor
+// creates an account; verify_code_and_register cleans the values again on the server.
+const SIGNUP_SRC_KEY='pc_signup_src', SIGNUP_SRC_DAYS=90;
+function _srcToken(v,max){ return String(v||'').toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,max); }
+function getSignupSource(){
+  try{
+    const v=JSON.parse(localStorage.getItem(SIGNUP_SRC_KEY)||'null');
+    if(!v||typeof v!=='object') return null;
+    if(!(v.at>0) || Date.now()-v.at>SIGNUP_SRC_DAYS*864e5){ localStorage.removeItem(SIGNUP_SRC_KEY); return null; }
+    return v;
+  }catch(_){ return null; }
+}
+// Must run before anything rewrites the address (the ?demo=1 link drops its query string).
+function captureSignupSource(){
+  try{
+    const q=new URLSearchParams(window.location.search);
+    if(q.has('kiosk')) return; // terminals never sign up
+    const utm={s:_srcToken(q.get('utm_source'),60),m:_srcToken(q.get('utm_medium'),60),c:_srcToken(q.get('utm_campaign'),60),t:_srcToken(q.get('utm_content'),60)};
+    let ref='';
+    try{
+      if(document.referrer){
+        const h=new URL(document.referrer).hostname.toLowerCase();
+        if(h && !/(^|\.)punchclock\.ca$/.test(h)) ref=h.replace(/[^a-z0-9.-]/g,'').slice(0,100);
+      }
+    }catch(_){}
+    const prev=getSignupSource();
+    if(utm.s||utm.m||utm.c||utm.t){
+      // The latest campaign link wins; a referrer seen earlier is kept if this visit has none.
+      localStorage.setItem(SIGNUP_SRC_KEY,JSON.stringify({...utm,r:ref||(prev&&prev.r)||'',at:Date.now()}));
+    }else if(ref && !prev){
+      localStorage.setItem(SIGNUP_SRC_KEY,JSON.stringify({s:'',m:'',c:'',t:'',r:ref,at:Date.now()}));
+    }
+  }catch(_){}
+}
+
 async function init(){
   // Register the service worker first so the auto-heal (update check + controllerchange reload)
   // is armed on every load, regardless of auth state.
   registerServiceWorker();
+  captureSignupSource();
   // Demo context must never leak into a real session. sessionStorage dies with the tab but the
   // stored Ctx doesn't, so drop any leftover demo context before the normal flow reads it.
   let _wasDemo=false;
@@ -16780,6 +16835,7 @@ en:{
 'reg.adminEmail':"Administrator's Registered Email",
 'reg.companyInfo':'Company Information',
 'reg.companyName':'Company Name',
+'reg.heardLabel':'How did you hear about us? (optional)','reg.heardNone':'Choose…','reg.heardGoogle':'Google search','reg.heardFriend':'A friend or colleague','reg.heardAccountant':'My accountant or bookkeeper','reg.heardOther':'Other',
 'reg.companyAddress':'Corporate Address',
 'reg.companyPhone':'Company Phone',
 'reg.industry':'Industry',
@@ -17152,6 +17208,7 @@ en:{
 'tos.h11':'11. Governing Law','tos.p11':'These Terms are governed by the laws of the Province of Quebec, Canada, without regard to conflict of law principles.',
 'tos.h12':'12. Contact','tos.p12':'For questions about these Terms, contact us through the app or at the email address on file with your account.',
 'priv.title':'Privacy Policy','priv.updated':'Last updated: October 2, 2026',
+'priv.liSignup':'How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”',
 'priv.h1':'1. Information We Collect','priv.p1':'We collect information you provide directly to us, including:',
 'priv.h2':'2. How We Use Your Information','priv.p2':'We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.',
 'priv.h3':'3. Data Storage and Security','priv.p3':'Your data is stored in Supabase, a secure cloud database platform hosted on AWS infrastructure. We implement industry-standard security measures including encrypted connections (TLS/SSL) for all data in transit. However, no method of transmission over the internet is 100% secure.',
@@ -17693,6 +17750,7 @@ fr:{
 'reg.adminEmail':"Courriel enregistré de l'administrateur",
 'reg.companyInfo':'Informations sur la compagnie',
 'reg.companyName':'Nom de la compagnie',
+'reg.heardLabel':'Comment avez-vous entendu parler de nous? (facultatif)','reg.heardNone':'Choisir…','reg.heardGoogle':'Recherche Google','reg.heardFriend':'Un ami ou un collègue','reg.heardAccountant':'Mon comptable ou teneur de livres','reg.heardOther':'Autre',
 'reg.companyAddress':'Adresse corporative',
 'reg.companyPhone':'Téléphone de la compagnie',
 'reg.industry':"Secteur d'activité",
@@ -18063,6 +18121,7 @@ fr:{
 'tos.h11':'11. Droit applicable','tos.p11':'Ces Conditions sont régies par les lois de la province de Québec, Canada, sans égard aux principes de conflit de lois.',
 'tos.h12':'12. Contact','tos.p12':'Pour toute question concernant ces Conditions, contactez-nous via l\'application ou à l\'adresse courriel associée à votre compte.',
 'priv.title':'Politique de confidentialité','priv.updated':'Dernière mise à jour : 2 octobre 2026',
+'priv.liSignup':'Comment vous nous avez trouvés, enregistré à la création du compte : les étiquettes de campagne du lien suivi, le domaine du site qui vous a dirigé vers nous et votre réponse facultative à « Comment avez-vous entendu parler de nous? »',
 'priv.h1':'1. Informations collectées','priv.p1':'Nous collectons les informations que vous nous fournissez directement, notamment :',
 'priv.h2':'2. Utilisation de vos informations','priv.p2':'Nous utilisons les informations collectées pour : fournir et maintenir le Service; envoyer des courriels de résumé de période automatisés aux employés (si activé); générer des rapports de présence; améliorer et développer le Service; et respecter les obligations légales.',
 'priv.h3':'3. Stockage et sécurité des données','priv.p3':'Vos données sont stockées dans Supabase, une plateforme de base de données sécurisée hébergée sur l\'infrastructure AWS. Nous appliquons des mesures de sécurité standard de l\'industrie, notamment des connexions chiffrées (TLS/SSL).',

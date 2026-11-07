@@ -33,7 +33,8 @@ for(const lang of ['en','fr']){
   const fields = await page.evaluate(()=>
     [...document.querySelectorAll('#regStep1 input, #regStep1 select')].map(e=>e.id).filter(Boolean));
   ok('only the essential fields remain',
-     JSON.stringify(fields)===JSON.stringify(['regFirstName','regLastName','regEmail','regPass','regCompany']),
+     // regHeard: the optional "How did you hear about us?" question (signup source, 2026-11-06).
+     JSON.stringify(fields)===JSON.stringify(['regFirstName','regLastName','regEmail','regPass','regCompany','regHeard']),
      fields.join(', '));
 
   ok('no raw i18n keys on the form', await page.evaluate(()=>

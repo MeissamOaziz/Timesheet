@@ -209,6 +209,12 @@ Other recent changes
   and the Privacy Policy.
 - Kiosk device list (site settings) shows IP, model and OS, which helps identify a tablet.
 - Kiosks reload themselves when they detect stale data (fixes a past ghost clock-in issue).
+- "How did you hear about us?" (sign-up form, optional, since 2026-11-07): together with the
+  campaign tags of the link a visitor arrived with and the domain of the site that sent them, it is
+  stored once on the new account (columns `admins.signup_*`) so we can see which channel brings
+  customers. It is optional, has no effect on the account, cannot be edited afterwards, and is listed
+  in the Privacy Policy (section 1). If someone asks: "It only tells us how you found us, so we know
+  where to spend our time; you can leave it blank."
 
 ## Diagnostic recipes
 
