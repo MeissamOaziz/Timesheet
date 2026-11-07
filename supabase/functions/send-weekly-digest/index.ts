@@ -2,8 +2,10 @@
 // Supabase Edge Function: send-weekly-digest
 // Runs weekly via pg_cron (Mondays 9am UTC). Manually triggerable.
 // Sends a snapshot of new accounts, the free base, paying customers, comped accounts, MRR
-// (from live Stripe subscriptions only), and login alerts.
+// (from live Stripe subscriptions only), login alerts, and where new accounts came from
+// (signup-source tracking since 2026-11-07, see sources.ts).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { TRACKING_START, sourceDetail, sourcesSectionHtml, summariseHeard, summariseSources, type SourceRow } from "./sources.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -107,7 +109,7 @@ function sectionCard(title: string, color: string, inner: string): string {
   </div>`;
 }
 
-type AdminRow = {
+type AdminRow = SourceRow & {
   id: string; name: string; email: string; plan: string;
   last_login: string | null; created_at: string;
   scheduling_addon?: boolean | null;
@@ -124,7 +126,8 @@ function userRow(a: AdminRow): string {
     </div>
     <div style="color:#475569;font-size:11px;margin-top:2px">
       registered ${days}d ago &middot; ${lastLogin}
-    </div>
+    </div>${(() => { const d = sourceDetail(a); return d ? `
+    <div style="color:#475569;font-size:11px;margin-top:1px">came from: ${escapeHtml(d)}</div>` : ""; })()}
   </div>`;
 }
 
@@ -157,7 +160,8 @@ Deno.serve(async (req) => {
     const dateRange = `${fmtDate(sevenDaysAgo)} – ${fmtDate(now)}`;
 
     // Common select fields
-    const SEL = "id,name,email,plan,last_login,created_at,scheduling_addon";
+    const SRC = "signup_utm_source,signup_utm_medium,signup_utm_campaign,signup_utm_content,signup_referrer_host,signup_heard";
+    const SEL = "id,name,email,plan,last_login,created_at,scheduling_addon," + SRC;
 
     // 1) NEW THIS WEEK — primary admins registered in the last 7 days
     const { data: newUsers = [], error: e1 } = await supabase
@@ -254,6 +258,20 @@ Deno.serve(async (req) => {
       .neq("role", "super_admin")
       .is("parent_admin_id", null);
 
+    // 8) WHERE NEW ACCOUNTS CAME FROM - primary accounts since tracking started (at most 60 days back).
+    // Ordered and capped explicitly (PostgREST silently truncates unordered reads at 1000 rows).
+    const since = new Date(Math.max(new Date(TRACKING_START).getTime(), now.getTime() - 60 * 86400000));
+    const { data: srcRowsRaw = [], error: e8 } = await supabase
+      .from("admins")
+      .select("created_at,plan,stripe_subscription_id," + SRC)
+      .neq("role", "super_admin")
+      .is("parent_admin_id", null)
+      .gte("created_at", since.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (e8) throw e8;
+    const srcRows = (srcRowsRaw ?? []) as unknown as SourceRow[];
+
     // -- Build email body --
     const totalPaid = billed.length;
 
@@ -272,6 +290,12 @@ Deno.serve(async (req) => {
       (newUsers ?? []).length
         ? (newUsers as AdminRow[]).map(userRow).join("")
         : emptyHint("No new primary admins registered in the last 7 days.")
+    );
+
+    const sourcesSection = sectionCard(
+      `📣 Where new accounts came from`,
+      "#FFB020",
+      sourcesSectionHtml(srcRows, sevenDaysAgo.toISOString(), since.toISOString())
     );
 
     const newFreeSection = sectionCard(
@@ -331,7 +355,7 @@ Deno.serve(async (req) => {
         : emptyHint("Every paying customer has logged in within the last 30 days. 🎉")
     );
 
-    const body = statsRow + newSection + newFreeSection + olderFreeSection
+    const body = statsRow + newSection + sourcesSection + newFreeSection + olderFreeSection
                + paidSection + compedSection + alertsSection;
     const html = wrapper(body, `Weekly Digest &middot; ${dateRange}`);
     const subject = `📊 PunchClock Crew — Weekly Digest ${dateRange}`;
@@ -346,6 +370,8 @@ Deno.serve(async (req) => {
         freeAccounts: (newFree ?? []).length + (olderFree ?? []).length,
         totalAccounts: totalActive ?? 0,
         loginAlerts: loginAlerts.map(a => a.email),
+        sources: summariseSources(srcRows, sevenDaysAgo.toISOString()),
+        heard: summariseHeard(srcRows),
       }, null, 2), { headers: { "Content-Type": "application/json" } });
     }
 
@@ -374,6 +400,7 @@ Deno.serve(async (req) => {
         comped: comped.length,
         loginAlerts: loginAlerts.length,
         totalActive: totalActive ?? 0,
+        sources: summariseSources(srcRows, sevenDaysAgo.toISOString()),
       },
       mrr: Number(mrr.toFixed(2)),
     };
