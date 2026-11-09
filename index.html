@@ -6006,7 +6006,8 @@ function renderDashboard(){
   const host=document.getElementById('dashboardContent');
   if(!host) return;
   const fmtH=h=>{const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh+'h '+(mm<10?'0':'')+mm+'m';};
-  const fmtTime=iso=>{try{return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}catch(_){return '';}};
+  const fmtTime=iso=>{try{return new Date(iso).toLocaleTimeString(_appLang==='fr'?'fr-CA':[], {hour:'2-digit',minute:'2-digit'});}catch(_){return '';}};
+  const badge=k=>String(t(k)||'').replace(/^[✓✕]\s*/,'');
   const allEmps=(C.employees||[]).filter(e=>e.active!==false);
   const allPunches=(C.punches||[]); // ordered punched_at desc
   // Date windows (week start honours the company setting)
@@ -6099,7 +6100,7 @@ function renderDashboard(){
       : `<div style="color:var(--text3);font-size:13px;padding:12px 0">${t('dash.noneIn')||'Nobody is clocked in right now.'}</div>`;
     const recent=punches.slice(0,6);
     const recentList=recent.length
-      ? recent.map(p=>{const isIn=p.type==='IN';return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(p.emp_name||'')}</span><span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:var(--r-xl);background:${isIn?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'};color:${isIn?'var(--green)':'var(--red)'}">${isIn?'IN':'OUT'}</span><span style="font-size:12px;color:var(--text2);min-width:115px;text-align:right">${esc(p.punch_date)} ${fmtTime(p.punched_at)}</span></span></div>`;}).join('')
+      ? recent.map(p=>{const isIn=p.type==='IN';return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">${esc(p.emp_name||'')}</span><span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:var(--r-xl);background:${isIn?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'};color:${isIn?'var(--green)':'var(--red)'}">${badge(isIn?'punch.in':'punch.out')}</span><span style="font-size:12px;color:var(--text2);min-width:115px;text-align:right">${esc(p.punch_date)} ${fmtTime(p.punched_at)}</span></span></div>`;}).join('')
       : `<div style="color:var(--text3);font-size:13px;padding:12px 0">${t('dash.noActivity')||'No recent activity.'}</div>`;
     return `<section style="margin-bottom:26px">
       <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--border)">
@@ -18613,6 +18614,9 @@ function setLang(lang,scope){
       // landing page — applyAllTranslations already handles static strings
     }else if(typeof currentPage!=='undefined'){
       if(currentPage==='punch')loadPunchPage();
+      else if(currentPage==='dashboard')renderDashboard();
+      else if(currentPage==='schedule')loadSchedulePage();
+      else if(currentPage==='timeoff')loadTimeOffPage();
       else if(currentPage==='admin')loadAdminPage();
       else if(currentPage==='reports')loadReportsPage();
       else if(currentPage==='sites')loadSitesPage();
