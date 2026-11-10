@@ -11230,7 +11230,7 @@ async function loadCompaniesPage(){
       </div>
       <div class="meta">${esc(co.industry||'')}${co.industry&&co.description?' · ':''}${esc(co.description||'')}</div>
       <div class="meta" style="margin-top:7px;display:flex;gap:10px;flex-wrap:wrap">
-        <span><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg>${total} ${t('common.total')} · ${active} ${t('common.active')}</span>
+        <span><svg class="ic" style="margin-right:5px"><use href="#i-users"/></svg>${total} ${t('common.total')} · ${active} ${t(active>1?'common.activePlural':'common.active')}</span>
         <span><svg class="ic" style="margin-right:5px"><use href="#i-pin"/></svg>${siteCnt} ${t('common.sites')}</span>
       </div>
       <div class="meta" style="margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;color:var(--text2)">
@@ -11287,7 +11287,7 @@ async function loadSitesPage(){
         </div>
       </div>
       ${payrollLine?`<div class="meta" style="margin-bottom:4px"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-calendar"/></svg>${payrollLine}</div>`:''}
-      <div class="meta"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-users"/></svg>${activeEmp} ${t('common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+esc(s.description):''}</div>
+      <div class="meta"><svg class="ic" style="width:12px;height:12px;margin-right:5px;vertical-align:-2px"><use href="#i-users"/></svg>${activeEmp} ${t(activeEmp>1?'common.activePlural':'common.active')} · ${empCnt} ${t('common.total')}${s.description?' · '+esc(s.description):''}</div>
       ${_isMgr?'':`<div class="actions">
         <button class="btn-primary" style="font-size:11px;padding:5px 11px;background:linear-gradient(135deg,var(--accent),#7c5cbf)" onclick="openKioskShortcut('${s.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-tablet"/></svg>${t('site.kioskShortcut')||'Kiosk'}</button>
         <button class="btn-secondary" style="font-size:11px;padding:5px 11px" onclick="editSite('${s.id}')">${t('common.edit')}</button>
@@ -16692,6 +16692,7 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'common.activePlural':'active',
 'priv.li1':'Admin account information: name, email address, password (hashed)',
 'priv.li2':'Company information: company name, industry, payroll settings',
 'priv.li3':'Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)',
@@ -17753,6 +17754,7 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'common.activePlural':'actifs',
 'priv.li1':'Renseignements du compte administrateur : nom, adresse courriel, mot de passe (haché)',
 'priv.li2':'Renseignements sur l\'entreprise : nom de l\'entreprise, secteur d\'activité, paramètres de paie',
 'priv.li3':'Données des employés : noms, numéros d\'employé, service, sites assignés, adresses courriel, NIP à 4 chiffres (conservés tels quels)',
