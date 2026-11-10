@@ -1942,10 +1942,10 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h2 data-i18n="priv.h1">1. Information We Collect</h2>
     <p data-i18n="priv.p1">We collect information you provide directly to us, including:</p>
     <ul>
-      <li>Admin account information: name, email address, password (hashed)</li>
-      <li>Company information: company name, industry, payroll settings</li>
-      <li>Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)</li>
-      <li>Time and attendance records: clock-in/out times, dates, site locations</li>
+      <li data-i18n="priv.li1">Admin account information: name, email address, password (hashed)</li>
+      <li data-i18n="priv.li2">Company information: company name, industry, payroll settings</li>
+      <li data-i18n="priv.li3">Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)</li>
+      <li data-i18n="priv.li4">Time and attendance records: clock-in/out times, dates, site locations</li>
       <li data-i18n="priv.liSignup">How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”</li>
     </ul>
     <h2 data-i18n="priv.h2">2. How We Use Your Information</h2>
@@ -1977,24 +1977,24 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- LOADING -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <p>Connecting to database...</p>
+  <p data-i18n="ui.connecting">Connecting to database...</p>
 </div>
 
 <!-- COMPANY PICKER -->
 <div class="picker-screen hidden" id="pickerCompany">
   <div style="text-align:center"><div style="font-size:38px;margin-bottom:10px">&#9201;</div>
     <h2>PunchClock Crew</h2>
-    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px">Select your company</p>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="ui.selectCompany">Select your company</p>
   </div>
   <div class="picker-grid" id="pickerCompanyGrid"></div>
   <div class="picker-hints" id="pickerCompanyHints">
-    <span class="picker-hint" onclick="closePicker();navigate('login')"><svg class="ic" style="margin-right:5px"><use href="#i-lock"/></svg>Admin Login</span>
+    <span class="picker-hint" onclick="closePicker();navigate('login')"><svg class="ic" style="margin-right:5px"><use href="#i-lock"/></svg><span data-i18n="ui.adminLogin">Admin Login</span></span>
   </div>
 </div>
 
 <!-- SITE PICKER -->
 <div class="picker-screen hidden" id="pickerSite">
-  <button class="picker-back" onclick="showCompanyPicker()">&#8592; Back</button>
+  <button class="picker-back" onclick="showCompanyPicker()" data-i18n="ui.back">&#8592; Back</button>
   <div style="text-align:center">
     <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:38px;height:38px"><use href="#i-map-pin"/></svg></div>
     <h2 id="sitePickerTitle">Select Site</h2>
@@ -2002,7 +2002,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div class="picker-grid" id="pickerSiteGrid"></div>
   <div class="picker-hints">
-    <span class="picker-hint" onclick="closePicker();navigate('login')"><svg class="ic" style="margin-right:5px"><use href="#i-lock"/></svg>Admin Login</span>
+    <span class="picker-hint" onclick="closePicker();navigate('login')"><svg class="ic" style="margin-right:5px"><use href="#i-lock"/></svg><span data-i18n="ui.adminLogin">Admin Login</span></span>
   </div>
 </div>
 
@@ -2021,7 +2021,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     </div>
     <button class="btn-primary" style="margin-top:18px;width:100%;max-width:220px" onclick="submitSiteCode()" data-i18n="siteCode.btn">Access Terminal</button>
     <p style="font-size:12px;color:var(--text3);margin-top:18px" data-i18n="siteCode.hint">Ask your site administrator for the access code.</p>
-    <button class="picker-back" style="position:relative;margin-top:20px" onclick="showSiteCodeBack()">← Back</button>
+    <button class="picker-back" style="position:relative;margin-top:20px" onclick="showSiteCodeBack()" data-i18n="ui.back">← Back</button>
   </div>
 </div>
 
@@ -2154,7 +2154,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
   <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa"><svg><use href="#i-nav-schedule"/></svg> <span id="mobileSchedulingLabel"></span></button>
   <hr class="mobile-nav-divider">
-  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> Admin Login</button>
+  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> <span data-i18n="ui.adminLogin">Admin Login</span></button>
   <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)"><svg><use href="#i-nav-logout"/></svg> Logout</button>
 </div>
 
@@ -2320,12 +2320,12 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- ═══════════════ SET PASSWORD (invited co-admins) ═══════════════ -->
 <div class="page" id="page-setpassword">
   <div class="form-card" style="margin-top:50px">
-    <h2>Welcome to PunchClock Crew</h2>
-    <p>You've been invited as a co-admin. Please set your password to activate your account.</p>
+    <h2 data-i18n="setpass.title">Welcome to PunchClock Crew</h2>
+    <p data-i18n="setpass.desc">You've been invited as a co-admin. Please set your password to activate your account.</p>
     <div id="setpassMsg"></div>
-    <div class="form-group"><label>New Password</label><div class="pw-wrap"><input type="password" id="setpassNew" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('setpassNew',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-    <div class="form-group"><label>Confirm Password</label><div class="pw-wrap"><input type="password" id="setpassConfirm" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSetInvitePassword()"><button type="button" class="pw-toggle" onclick="togglePw('setpassConfirm',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-    <button class="btn-primary" onclick="doSetInvitePassword()">Activate Account</button>
+    <div class="form-group"><label data-i18n="pw.new">New Password</label><div class="pw-wrap"><input type="password" id="setpassNew" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('setpassNew',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="form-group"><label data-i18n="pw.confirm">Confirm Password</label><div class="pw-wrap"><input type="password" id="setpassConfirm" placeholder="Repeat password" data-i18n="pw.repeat" onkeydown="if(event.key==='Enter')doSetInvitePassword()"><button type="button" class="pw-toggle" onclick="togglePw('setpassConfirm',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <button class="btn-primary" onclick="doSetInvitePassword()" data-i18n="setpass.activate">Activate Account</button>
   </div>
 </div>
 
@@ -2335,21 +2335,21 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h2 data-i18n="forgot.title">Reset Password</h2><p data-i18n="forgot.subtitle">Enter your email and we'll send you a 6-digit reset code.</p>
     <div id="forgotMsg"></div>
     <div id="forgotStep1">
-      <div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="admin@company.com" onkeydown="if(event.key==='Enter')sendResetCode()"></div>
+      <div class="form-group"><label data-i18n="col.email">Email</label><input type="email" id="forgotEmail" placeholder="admin@company.com" onkeydown="if(event.key==='Enter')sendResetCode()"></div>
       <button class="btn-primary" onclick="sendResetCode()" data-i18n="forgot.sendCode">Send Reset Code</button>
       <div class="emp-hint" style="margin:14px 0 18px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md);font-size:13px;color:var(--text2);text-align:center;line-height:1.5"><span data-i18n="login.empHint">Employee? This is the admin sign-in.</span> <a href="employee.html" style="color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap" data-i18n="login.empLink">Open the employee portal &rarr;</a></div>
       <p style="text-align:center;color:var(--text2);font-size:13px;margin-top:14px"><button class="link-btn" onclick="navigate('login')" data-i18n="forgot.backToLogin">← Back to login</button></p>
     </div>
     <div id="forgotStep2" style="display:none">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">We sent a 6-digit code to <strong id="forgotEmailSent"></strong></p>
-      <div class="form-group"><label>Verification Code</label><input type="text" id="forgotCode" placeholder="000000" maxlength="6" style="letter-spacing:6px;font-size:20px;text-align:center" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyResetCode()"></div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px"><span data-i18n="forgot.sentTo">We sent a 6-digit code to</span> <strong id="forgotEmailSent"></strong></p>
+      <div class="form-group"><label data-i18n="forgot.codeLabel">Verification Code</label><input type="text" id="forgotCode" placeholder="000000" maxlength="6" style="letter-spacing:6px;font-size:20px;text-align:center" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')verifyResetCode()"></div>
       <button class="btn-primary" onclick="verifyResetCode()" data-i18n="forgot.verifyCode">Verify Code</button>
-      <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:12px">Didn't receive it? <button class="link-btn" style="font-size:12px" onclick="sendResetCode(true)">Resend</button></p>
+      <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:12px"><span data-i18n="forgot.noCode">Didn't receive it?</span> <button class="link-btn" style="font-size:12px" onclick="sendResetCode(true)" data-i18n="forgot.resend">Resend</button></p>
     </div>
     <div id="forgotStep3" style="display:none">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Almost there! Set your new password for <strong id="forgotEmailFinal"></strong></p>
-      <div class="form-group"><label>New Password</label><div class="pw-wrap"><input type="password" id="forgotNewPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('forgotNewPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
-      <div class="form-group"><label>Confirm Password</label><div class="pw-wrap"><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" onkeydown="if(event.key==='Enter')doPasswordReset()"><button type="button" class="pw-toggle" onclick="togglePw('forgotConfirmPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px"><span data-i18n="forgot.almost">Almost there! Set your new password for</span> <strong id="forgotEmailFinal"></strong></p>
+      <div class="form-group"><label data-i18n="pw.new">New Password</label><div class="pw-wrap"><input type="password" id="forgotNewPass" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('forgotNewPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-group"><label data-i18n="pw.confirm">Confirm Password</label><div class="pw-wrap"><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" data-i18n="pw.repeatNew" onkeydown="if(event.key==='Enter')doPasswordReset()"><button type="button" class="pw-toggle" onclick="togglePw('forgotConfirmPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <button class="btn-primary" onclick="doPasswordReset()" data-i18n="forgot.setPassword">Set New Password</button>
     </div>
   </div>
@@ -2361,24 +2361,24 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:22px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:8px"><svg style="width:22px;height:22px"><use href="#i-nav-clock"/></svg>PunchClock Crew</div>
     </div>
-    <h2 id="acceptInviteTitle" style="font-size:20px;font-weight:700;margin:0 0 8px">You've been invited</h2>
+    <h2 id="acceptInviteTitle" style="font-size:20px;font-weight:700;margin:0 0 8px" data-i18n="invite.title">You've been invited</h2>
     <p id="acceptInviteSubtitle" style="font-size:14px;color:var(--text2);margin:0 0 22px"></p>
     <div id="acceptInviteMsg" style="margin-bottom:10px"></div>
-    <div class="form-group"><label>First Name</label><input type="text" id="acceptFirstName" placeholder="Jane" autocomplete="off"></div>
-    <div class="form-group"><label>Last Name</label><input type="text" id="acceptLastName" placeholder="Smith" autocomplete="off"></div>
-    <div class="form-group"><label>Password</label>
+    <div class="form-group"><label data-i18n="reg.firstName">First Name</label><input type="text" id="acceptFirstName" placeholder="Jane" autocomplete="off"></div>
+    <div class="form-group"><label data-i18n="reg.lastName">Last Name</label><input type="text" id="acceptLastName" placeholder="Smith" autocomplete="off"></div>
+    <div class="form-group"><label data-i18n="login.password">Password</label>
       <div class="pw-wrap">
-        <input type="password" id="acceptPass" placeholder="Min 6 characters">
+        <input type="password" id="acceptPass" placeholder="Min 6 characters" data-i18n="pw.min6">
         <button type="button" class="pw-toggle" onclick="togglePw('acceptPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
     </div>
-    <div class="form-group"><label>Confirm Password</label>
+    <div class="form-group"><label data-i18n="pw.confirm">Confirm Password</label>
       <div class="pw-wrap">
-        <input type="password" id="acceptPassConfirm" placeholder="Repeat password">
+        <input type="password" id="acceptPassConfirm" placeholder="Repeat password" data-i18n="pw.repeat">
         <button type="button" class="pw-toggle" onclick="togglePw('acceptPassConfirm',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
     </div>
-    <button class="btn-primary" onclick="doAcceptInvite()" style="margin-top:8px">Create Account</button>
+    <button class="btn-primary" onclick="doAcceptInvite()" style="margin-top:8px" data-i18n="invite.create">Create Account</button>
   </div>
 </div>
 
@@ -2446,7 +2446,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="form-group"><label data-i18n="reg.lastName">Last Name</label><input type="text" id="regLastName" placeholder="Smith"></div>
       </div>
       <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
-      <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <hr class="divider">
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
@@ -2493,9 +2493,9 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <!-- MISSED PUNCH REQUESTS -->
   <div id="missedPunchRequestsSection" class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
-    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="missed.requestsTitle">Missed Punch Requests</span></h3>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+      <thead><tr><th data-i18n="missed.employee">Employee</th><th data-i18n="missed.type">Type</th><th data-i18n="missed.date">Date</th><th data-i18n="missed.time">Time</th><th data-i18n="missed.reason">Reason</th><th data-i18n="col.actions">Actions</th></tr></thead>
       <tbody class="missedPunchRequestsBody"></tbody>
     </table></div>
     <div class="missedPunchCardsContainer"></div>
@@ -2560,7 +2560,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="superAdminPanel">
       <div id="joinRequestsSection" style="display:none;margin-bottom:24px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <h3 style="font-size:14px;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Pending Access Requests</h3>
+          <h3 style="font-size:14px;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="admin.pendingRequests">Pending Access Requests</span></h3>
         </div>
         <div class="table-wrap"><table>
           <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.requestedAdmin">Requested Admin</th><th data-i18n="col.date">Date</th><th data-i18n="col.actions">Actions</th></tr></thead>
@@ -2607,7 +2607,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div id="coAdminMsg" style="margin-bottom:8px"></div>
       <div class="table-wrap"><table>
         <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.role">Role</th><th data-i18n="col.status">Status</th><th data-i18n="col.actions">Actions</th></tr></thead>
-        <tbody id="coAdminsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px">No co-admins yet.</td></tr></tbody>
+        <tbody id="coAdminsTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px" data-i18n="coAdmin.none">No co-admins yet.</td></tr></tbody>
       </table></div>
       <div id="coAdminCardsContainer"></div>
     </div>
@@ -2620,8 +2620,8 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h3>Create Admin Account</h3>
     <div id="createAdminMsg"></div>
     <div class="form-group"><label>Full Name</label><input type="text" id="newAdminName" placeholder="Jane Smith"></div>
-    <div class="form-group"><label>Email</label><input type="email" id="newAdminEmail" placeholder="admin@company.com"></div>
-    <div class="form-group"><label>Password</label><div class="pw-wrap"><input type="password" id="newAdminPass" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('newAdminPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="form-group"><label data-i18n="col.email">Email</label><input type="email" id="newAdminEmail" placeholder="admin@company.com"></div>
+    <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="newAdminPass" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('newAdminPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <div class="form-group"><label>Plan Tier</label>
       <select id="newAdminPlan">
         <option value="free">Free</option>
@@ -2631,7 +2631,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <option value="unlimited">Unlimited</option>
       </select>
     </div>
-    <div class="form-group"><label>Role</label>
+    <div class="form-group"><label data-i18n="col.role">Role</label>
       <select id="newAdminRole" onchange="document.getElementById('saExpiryGroup').style.display=this.value==='super_admin'?'block':'none'">
         <option value="admin">Admin</option>
         <option value="super_admin">Super Admin</option>
@@ -2642,7 +2642,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <input type="date" id="newAdminExpires">
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('createAdminModal')">Cancel</button>
+      <button class="btn-secondary" onclick="closeModal('createAdminModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveCreateAdmin()">Create</button>
     </div>
   </div>
@@ -2699,7 +2699,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="siteManagersCheckboxes" style="display:flex;flex-direction:column;gap:6px;margin:14px 0"></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('siteManagersModal')" data-i18n="modal.cancel">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSiteManagers()">Save</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveSiteManagers()" data-i18n="modal.save">Save</button>
     </div>
   </div>
 </div>
@@ -2711,7 +2711,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div id="promoteToManagerMsg"></div>
     <div style="background:rgba(124,92,191,.08);border:1px solid rgba(124,92,191,.25);border-radius:var(--r-md);padding:14px 16px;margin-bottom:16px">
       <p style="font-size:13px;color:var(--text);line-height:1.6;margin:0 0 8px" id="promoteToManagerDesc"></p>
-      <p style="font-size:12px;color:var(--text2);margin:0;line-height:1.5"><strong>Note:</strong> <span data-i18n="emp.promoteNote">This does not remove them as an employee — they keep all punch records and time tracking.</span></p>
+      <p style="font-size:12px;color:var(--text2);margin:0;line-height:1.5"><strong data-i18n="common.noteLabel">Note:</strong> <span data-i18n="emp.promoteNote">This does not remove them as an employee — they keep all punch records and time tracking.</span></p>
     </div>
     <div class="form-group">
       <label data-i18n="emp.promoteEmail">Email Address</label>
@@ -2733,15 +2733,15 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- MANAGER WELCOME MODAL (shown once, right after a manager accepts an invitation) -->
 <div class="modal-overlay" id="managerWelcomeModal">
   <div class="modal" style="max-width:440px">
-    <h3 style="display:flex;align-items:center;gap:8px"><span style="color:var(--green)"><svg class="ic" style="width:20px;height:20px"><use href="#i-party"/></svg></span><span id="managerWelcomeTitle">Welcome to the Manager portal!</span></h3>
-    <p style="font-size:14px;color:var(--text2);line-height:1.6;margin:6px 0 16px" id="managerWelcomeIntro">You're all set. Here's what you can do from here:</p>
+    <h3 style="display:flex;align-items:center;gap:8px"><span style="color:var(--green)"><svg class="ic" style="width:20px;height:20px"><use href="#i-party"/></svg></span><span id="managerWelcomeTitle" data-i18n="mgrWelcome.titleNoName">Welcome to the Manager portal!</span></h3>
+    <p style="font-size:14px;color:var(--text2);line-height:1.6;margin:6px 0 16px" id="managerWelcomeIntro" data-i18n="mgrWelcome.intro">You're all set. Here's what you can do from here:</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:6px">
-      <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:0 0 auto;color:var(--accent)"><svg class="ic" style="width:16px;height:16px"><use href="#i-users"/></svg></span><span style="font-size:13px;color:var(--text);line-height:1.5"><strong>Manage employees</strong> for your assigned sites from the Admin panel.</span></div>
-      <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:0 0 auto;color:var(--accent)"><svg class="ic" style="width:16px;height:16px"><use href="#i-bar-chart"/></svg></span><span style="font-size:13px;color:var(--text);line-height:1.5"><strong>See reports</strong> and review activity logs.</span></div>
-      <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:0 0 auto;color:var(--accent)"><svg class="ic" style="width:16px;height:16px"><use href="#i-calendar"/></svg></span><span style="font-size:13px;color:var(--text);line-height:1.5"><strong>Manage scheduling</strong> for your team.</span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:0 0 auto;color:var(--accent)"><svg class="ic" style="width:16px;height:16px"><use href="#i-users"/></svg></span><span style="font-size:13px;color:var(--text);line-height:1.5" data-i18n-html="mgrWelcome.l1"><strong>Manage employees</strong> for your assigned sites from the Admin panel.</span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:0 0 auto;color:var(--accent)"><svg class="ic" style="width:16px;height:16px"><use href="#i-bar-chart"/></svg></span><span style="font-size:13px;color:var(--text);line-height:1.5" data-i18n-html="mgrWelcome.l2"><strong>See reports</strong> and review activity logs.</span></div>
+      <div style="display:flex;align-items:flex-start;gap:10px"><span style="flex:0 0 auto;color:var(--accent)"><svg class="ic" style="width:16px;height:16px"><use href="#i-calendar"/></svg></span><span style="font-size:13px;color:var(--text);line-height:1.5" data-i18n-html="mgrWelcome.l3"><strong>Manage scheduling</strong> for your team.</span></div>
     </div>
     <div class="modal-footer" style="margin-top:18px">
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="closeModal('managerWelcomeModal')" id="managerWelcomeBtn">Get started</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="closeModal('managerWelcomeModal')" id="managerWelcomeBtn" data-i18n="mgrWelcome.btn">Get started</button>
     </div>
   </div>
 </div>
@@ -2749,33 +2749,33 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- EDIT CO-ADMIN MODAL -->
 <div class="modal-overlay" id="editCoAdminModal">
   <div class="modal">
-    <h3>Edit Co-Admin</h3>
+    <h3 data-i18n="coAdmin.editTitle">Edit Co-Admin</h3>
     <div id="editCoAdminMsg"></div>
     <input type="hidden" id="editCoAdminId">
-    <div class="form-group"><label>Name</label><input type="text" id="editCoAdminName"></div>
-    <div class="form-group"><label>Email</label><input type="email" id="editCoAdminEmailDisp" readonly style="opacity:.6;cursor:default"></div>
+    <div class="form-group"><label data-i18n="col.name">Name</label><input type="text" id="editCoAdminName"></div>
+    <div class="form-group"><label data-i18n="col.email">Email</label><input type="email" id="editCoAdminEmailDisp" readonly style="opacity:.6;cursor:default"></div>
     <div class="form-group">
-      <label>Role</label>
+      <label data-i18n="col.role">Role</label>
       <select id="editCoAdminRole" onchange="toggleEditCoAdminSites()">
-        <option value="admin">Full Admin</option>
-        <option value="manager">Manager</option>
+        <option value="admin" data-i18n="coAdmin.fullAdmin">Full Admin</option>
+        <option value="manager" data-i18n="coAdmin.manager">Manager</option>
       </select>
     </div>
     <div id="editManagerSitesSection" style="display:none;margin-bottom:12px">
-      <label style="font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:6px">Assigned Sites</label>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Select the sites this manager can access.</p>
+      <label style="font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:6px" data-i18n="coAdmin.assignedSites">Assigned Sites</label>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px" data-i18n="coAdmin.selectSites">Select the sites this manager can access.</p>
       <div id="editManagerSiteCheckboxes" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding-right:4px"></div>
     </div>
     <div class="form-group">
-      <label>Status</label>
+      <label data-i18n="col.status">Status</label>
       <select id="editCoAdminStatus">
-        <option value="active">Active</option>
-        <option value="suspended">Suspended</option>
+        <option value="active" data-i18n="status.active">Active</option>
+        <option value="suspended" data-i18n="status.suspended">Suspended</option>
       </select>
     </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('editCoAdminModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditCoAdmin()">Save Changes</button>
+      <button class="btn-secondary" onclick="closeModal('editCoAdminModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditCoAdmin()" data-i18n="modal.saveChanges">Save Changes</button>
     </div>
   </div>
 </div>
@@ -2785,9 +2785,9 @@ border-top:1px solid var(--border);margin:18px 0;}
   <div class="modal">
     <h3>Edit Admin Account</h3>
     <div id="editAdminMsg"></div>
-    <div class="form-group"><label>Name</label><input type="text" id="editAdminName"></div>
-    <div class="form-group"><label>Email</label><input type="email" id="editAdminEmail" readonly style="opacity:.6;cursor:default"></div>
-    <div class="form-group"><label>Role</label>
+    <div class="form-group"><label data-i18n="col.name">Name</label><input type="text" id="editAdminName"></div>
+    <div class="form-group"><label data-i18n="col.email">Email</label><input type="email" id="editAdminEmail" readonly style="opacity:.6;cursor:default"></div>
+    <div class="form-group"><label data-i18n="col.role">Role</label>
       <select id="editAdminRole">
         <option value="admin">Admin</option>
         <option value="super_admin">Super Admin</option>
@@ -2802,16 +2802,16 @@ border-top:1px solid var(--border);margin:18px 0;}
         <option value="unlimited">Unlimited</option>
       </select>
     </div>
-    <div class="form-group"><label>Status</label>
+    <div class="form-group"><label data-i18n="col.status">Status</label>
       <select id="editAdminStatus">
         <option value="active" data-i18n="admin.active">Active</option>
-        <option value="suspended">Suspended</option>
+        <option value="suspended" data-i18n="status.suspended">Suspended</option>
       </select>
     </div>
     <input type="hidden" id="editAdminId">
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal('editAdminModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditAdmin()">Save Changes</button>
+      <button class="btn-secondary" onclick="closeModal('editAdminModal')" data-i18n="modal.cancel">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditAdmin()" data-i18n="modal.saveChanges">Save Changes</button>
     </div>
   </div>
 </div>
@@ -2819,9 +2819,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- ═══════════════ REPORTS PAGE ═══════════════ -->
 <div class="page" id="page-reports">
   <div class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
-    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="missed.requestsTitle">Missed Punch Requests</span></h3>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+      <thead><tr><th data-i18n="missed.employee">Employee</th><th data-i18n="missed.type">Type</th><th data-i18n="missed.date">Date</th><th data-i18n="missed.time">Time</th><th data-i18n="missed.reason">Reason</th><th data-i18n="col.actions">Actions</th></tr></thead>
       <tbody class="missedPunchRequestsBody"></tbody>
     </table></div>
     <div class="missedPunchCardsContainer"></div>
@@ -2886,7 +2886,7 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <div id="reportCardsContainer" class="mcards"></div>
   <div id="reportTimeOffWrap" style="display:none"></div>
-  <div class="empty" id="reportEmpty" style="display:none"><p>No punch records found for selected filters.</p></div>
+  <div class="empty" id="reportEmpty" style="display:none"><p data-i18n="reports.noRecords">No punch records found for selected filters.</p></div>
 
   <!-- VISITOR CHECK-INS REPORT — generated alongside the hours report above, same company/site/
        date filters, its own export set. Hidden entirely for companies without the feature. -->
@@ -3062,9 +3062,9 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- ═══════════════ ACTIVITY LOG ═══════════════ -->
 <div class="page" id="page-activity">
   <div class="missedPunchSection" style="display:none;margin-bottom:18px;background:var(--surface);border:1.5px solid rgba(245,158,11,0.35);border-radius:var(--radius);padding:14px 16px">
-    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg>Missed Punch Requests</h3>
+    <h3 style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="missed.requestsTitle">Missed Punch Requests</span></h3>
     <div class="table-wrap"><table>
-      <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead>
+      <thead><tr><th data-i18n="missed.employee">Employee</th><th data-i18n="missed.type">Type</th><th data-i18n="missed.date">Date</th><th data-i18n="missed.time">Time</th><th data-i18n="missed.reason">Reason</th><th data-i18n="col.actions">Actions</th></tr></thead>
       <tbody class="missedPunchRequestsBody"></tbody>
     </table></div>
     <div class="missedPunchCardsContainer"></div>
@@ -3700,37 +3700,37 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- SEND REPORT MODAL -->
 <div class="modal-overlay" id="sendReportModal">
   <div class="modal" style="max-width:420px">
-    <h3 style="display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-mail"/></svg>Send Report to Employee</h3>
+    <h3 style="display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px"><use href="#i-mail"/></svg><span data-i18n="sendReport.title">Send Report to Employee</span></h3>
     <div id="sendReportMsg"></div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 16px;margin-bottom:18px">
       <div style="font-size:13px;font-weight:600;color:var(--text)" id="sendReportEmpName"></div>
       <div style="font-size:12px;color:var(--text2);margin-top:3px" id="sendReportEmpEmail"></div>
     </div>
     <div class="form-group">
-      <label>Select Period to Send</label>
+      <label data-i18n="sendReport.selectPeriod">Select Period to Send</label>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px" id="sendReportPeriodList">
         <label class="send-period-option" onclick="selectSendPeriod(this,'last_period')">
           <input type="radio" name="sendPeriod" value="last_period" checked style="accent-color:var(--accent)">
           <div>
-            <div style="font-weight:600;font-size:13px">Last Pay Period</div>
-            <div style="font-size:11px;color:var(--text2)" id="lastPeriodLabel">Based on company payroll settings</div>
+            <div style="font-weight:600;font-size:13px" data-i18n="sendReport.lastPeriod">Last Pay Period</div>
+            <div style="font-size:11px;color:var(--text2)" id="lastPeriodLabel" data-i18n="sendReport.basedOn">Based on company payroll settings</div>
           </div>
         </label>
         <label class="send-period-option" onclick="selectSendPeriod(this,'last_month')">
           <input type="radio" name="sendPeriod" value="last_month" style="accent-color:var(--accent)">
           <div>
-            <div style="font-weight:600;font-size:13px">Last Month</div>
+            <div style="font-weight:600;font-size:13px" data-i18n="sendReport.lastMonth">Last Month</div>
             <div style="font-size:11px;color:var(--text2)" id="lastMonthLabel"></div>
           </div>
         </label>
         <label class="send-period-option" onclick="selectSendPeriod(this,'custom')">
           <input type="radio" name="sendPeriod" value="custom" style="accent-color:var(--accent)">
           <div style="flex:1">
-            <div style="font-weight:600;font-size:13px">Custom Range</div>
+            <div style="font-weight:600;font-size:13px" data-i18n="sendReport.custom">Custom Range</div>
             <div id="customRangeInputs" style="display:none;margin-top:8px">
               <div class="form-row">
-                <div class="form-group" style="margin-bottom:0"><label>Start</label><input type="date" id="sendReportStart"></div>
-                <div class="form-group" style="margin-bottom:0"><label>End</label><input type="date" id="sendReportEnd"></div>
+                <div class="form-group" style="margin-bottom:0"><label data-i18n="sendReport.start">Start</label><input type="date" id="sendReportStart"></div>
+                <div class="form-group" style="margin-bottom:0"><label data-i18n="sendReport.end">End</label><input type="date" id="sendReportEnd"></div>
               </div>
             </div>
           </div>
@@ -4090,28 +4090,28 @@ border-top:1px solid var(--border);margin:18px 0;}
 <!-- EDIT PUNCH MODAL -->
 <div class="modal-overlay" id="editPunchModal">
   <div class="modal">
-    <h3 id="editPunchTitle">Edit Punch Record</h3>
+    <h3 id="editPunchTitle" data-i18n="editPunch.title">Edit Punch Record</h3>
     <div id="editPunchMsg"></div>
-    <div class="msg info" style="margin-bottom:14px"><svg class="ic" style="margin-right:5px"><use href="#i-warn"/></svg>Admin override — changes are permanent and reflected in all reports.</div>
-    <div class="form-group"><label>Employee</label><input type="text" id="editPunchEmpName" readonly style="opacity:.7;cursor:default"></div>
+    <div class="msg info" style="margin-bottom:14px"><svg class="ic" style="margin-right:5px"><use href="#i-warn"/></svg><span data-i18n="editPunch.warn">Admin override — changes are permanent and reflected in all reports.</span></div>
+    <div class="form-group"><label data-i18n="missed.employee">Employee</label><input type="text" id="editPunchEmpName" readonly style="opacity:.7;cursor:default"></div>
     <div class="form-row">
-      <div class="form-group"><label>Type</label>
+      <div class="form-group"><label data-i18n="missed.type">Type</label>
         <select id="editPunchType" onchange="_syncEditPunchLabelRow()">
-          <option value="IN">IN</option>
-          <option value="OUT">OUT</option>
+          <option value="IN" data-i18n="punch.inShort">IN</option>
+          <option value="OUT" data-i18n="punch.outShort">OUT</option>
         </select>
       </div>
-      <div class="form-group"><label>Date</label><input type="date" id="editPunchDate"></div>
+      <div class="form-group"><label data-i18n="missed.date">Date</label><input type="date" id="editPunchDate"></div>
     </div>
-    <div class="form-group"><label>Time (HH:MM:SS)</label><input type="text" id="editPunchTime" placeholder="09:00:00" maxlength="8"></div>
-    <div class="form-group"><label>Site</label><select id="editPunchSite"></select></div>
+    <div class="form-group"><label data-i18n="editPunch.time">Time (HH:MM:SS)</label><input type="text" id="editPunchTime" placeholder="09:00:00" maxlength="8"></div>
+    <div class="form-group"><label data-i18n="admin.col.site">Site</label><select id="editPunchSite"></select></div>
     <div class="form-group" id="editPunchLabelRow" style="display:none"><label><span data-i18n="labels.shiftField">Label</span> <span style="color:var(--text3);font-weight:400" data-i18n="labels.optional">(optional)</span></label><select id="editPunchLabel"></select></div>
     <input type="hidden" id="editPunchId">
     <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn-danger" onclick="deletePunch()">Delete Record</button>
+      <button class="btn-danger" onclick="deletePunch()" data-i18n="editPunch.delete">Delete Record</button>
       <div style="display:flex;gap:9px">
-        <button class="btn-secondary" onclick="closeModal('editPunchModal')">Cancel</button>
-        <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="savePunchEdit()">Save Changes</button>
+        <button class="btn-secondary" onclick="closeModal('editPunchModal')" data-i18n="modal.cancel">Cancel</button>
+        <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="savePunchEdit()" data-i18n="modal.saveChanges">Save Changes</button>
       </div>
     </div>
   </div>
@@ -4269,7 +4269,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <p style="font-size:13px;color:var(--text2);margin-bottom:16px" id="kioskQRSubtitle">Scan with a phone or tablet to open the punch page directly.</p>
     <div id="kioskQRCode" style="background:#fff;padding:16px;border-radius:var(--r-md);display:inline-block;margin-bottom:14px"></div>
     <p style="font-size:11px;color:var(--text3)" id="kioskQRUrl"></p>
-    <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeModal('kioskQRModal')">Close</button>
+    <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeModal('kioskQRModal')" data-i18n="common.close">Close</button>
   </div>
 </div>
 
@@ -4352,8 +4352,8 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="form-group"><label data-i18n="addPunch.type">Type</label>
         <select id="addPunchType" onchange="_onAddPunchTypeChange();_syncAddPunchLabelRow()">
           <option value="SHIFT" data-i18n="addPunch.typeShift">Full shift (IN + OUT)</option>
-          <option value="IN">IN</option>
-          <option value="OUT">OUT</option>
+          <option value="IN" data-i18n="punch.inShort">IN</option>
+          <option value="OUT" data-i18n="punch.outShort">OUT</option>
         </select>
       </div>
       <div class="form-group"><label data-i18n="addPunch.date">Date</label><input type="date" id="addPunchDate"></div>
@@ -5200,8 +5200,8 @@ function showCompanyPicker(){
 
   if(!C.companies.length){
     grid.innerHTML=`<div style="text-align:center;color:var(--text2);grid-column:1/-1;padding:20px">
-      <p>No company found.</p>
-      ${logged?'<p style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6">Your company was set up during registration.<br>Contact support if you need help.</p><button class="btn-primary" style="margin-top:12px;width:auto;padding:9px 20px" onclick="closePicker();openAddSiteModal()">Add Your First Site &rarr;</button>':'<p style="font-size:12px;margin-top:6px">Ask an admin to set up a company first.</p>'}
+      <p>${t('ui.noCompany')}</p>
+      ${logged?'<p style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6">'+t('ui.noCompanyLogged')+'</p><button class="btn-primary" style="margin-top:12px;width:auto;padding:9px 20px" onclick="closePicker();openAddSiteModal()">'+esc(t('ui.addFirstSite'))+'</button>':'<p style="font-size:12px;margin-top:6px">'+esc(t('ui.askAdminCompany'))+'</p>'}
     </div>`;
     hints.style.display=logged?'none':'flex';
     return;
@@ -5218,14 +5218,14 @@ function showCompanyPicker(){
       </div>
       <h3 style="color:${col}">${esc(co.name)}</h3>
       <p>${esc(co.industry||'')}${co.industry&&co.description?' · ':''}${esc(co.description||'')}</p>
-      <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} employees · ${siteCnt} site${siteCnt!==1?'s':''}</p>
+      <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} ${empCnt!==1?t('site.employees'):t('site.employee')} · ${siteCnt} site${siteCnt!==1?'s':''}</p>
     </div>`;
   }).join('');
   hints.style.display=logged?'none':'flex';
   if(logged){
     hints.style.display='flex';
-    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'sites\')"><svg class="ic" style="margin-right:5px"><use href="#i-nav-sites"/></svg>Manage sites</span>'
-      +'<span class="picker-hint" style="color:var(--red)" onclick="logout()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>Logout</span>';
+    hints.innerHTML='<span class="picker-hint" onclick="closePicker();navigate(\'sites\')"><svg class="ic" style="margin-right:5px"><use href="#i-nav-sites"/></svg>'+esc(t('ui.manageSites'))+'</span>'
+      +'<span class="picker-hint" style="color:var(--red)" onclick="logout()"><svg class="ic" style="margin-right:5px"><use href="#i-x"/></svg>'+esc(t('nav.logout'))+'</span>';
   }
 }
 
@@ -5267,7 +5267,7 @@ function showSitePicker(co,sites){
       <div class="pick-icon" style="color:var(--accent)"><svg style="width:26px;height:26px"><use href="#i-pin"/></svg></div>
       <h3 style="color:${col}">${esc(s.name)}</h3>
       <p>${esc(s.description||'')}</p>
-      <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} employee${empCnt!==1?'s':''}</p>
+      <p style="margin-top:7px;font-weight:600;color:${col}">${empCnt} ${empCnt!==1?t('site.employees'):t('site.employee')}</p>
     </div>`;
   }).join('');
 }
@@ -6870,13 +6870,13 @@ async function doLogin(){
 // SET INVITE PASSWORD (first login for co-admin invites)
 // ═══════════════════════════════════════════════════
 async function doSetInvitePassword(){
-  if(!pendingInviteAdmin){showMsg('setpassMsg','Session expired. Please log in again.','error');return;}
+  if(!pendingInviteAdmin){showMsg('setpassMsg',t('setpass.expired'),'error');return;}
   const pw=document.getElementById('setpassNew').value;
   const pw2=document.getElementById('setpassConfirm').value;
   if(!pw||pw.length<8){showMsg('setpassMsg',t('msg.shortPassword8'),'error');return;}
   if(pw!==pw2){showMsg('setpassMsg',t('msg.passMismatch')||'Passwords do not match.','error');return;}
   try{
-    showMsg('setpassMsg','Saving...','info');
+    showMsg('setpassMsg',t('common.saving'),'info');
     const act=await DB.rpc('activate_invited_admin',{p_id:pendingInviteAdmin.id,p_curpass:pendingInviteAdmin._tmp||'',p_newpass:pw});
     if(!act||!act.ok){
       const map={weak_password:t('msg.shortPassword8'),too_many_attempts:t('msg.loginLocked'),not_pending:'This invitation is no longer valid. Please log in.',not_found:'Account not found.'};
@@ -6915,9 +6915,9 @@ async function showAcceptInvitePage(inv, co){
   pendingInvitation=inv;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-accept-invite').classList.add('active');
-  const roleLabelEn=inv.role==='manager'?'Manager':'Co-Admin';
-  document.getElementById('acceptInviteTitle').textContent=`Join ${co?.name||'your company'} on PunchClock Crew`;
-  document.getElementById('acceptInviteSubtitle').textContent=`You've been invited as a ${roleLabelEn}. Set up your account below.`;
+  const roleLabelEn=inv.role==='manager'?t('role.manager'):t('role.coAdmin');
+  document.getElementById('acceptInviteTitle').textContent=t('invite.joinTitle').replace('{company}',co?.name||t('invite.yourCompany'));
+  document.getElementById('acceptInviteSubtitle').textContent=t('invite.subtitle').replace('{role}',roleLabelEn);
   document.getElementById('acceptInviteMsg').innerHTML='';
   ['acceptFirstName','acceptLastName','acceptPass','acceptPassConfirm'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // Prefill name from the invitation's matching employee (company-scoped, supplied server-side
@@ -6935,15 +6935,15 @@ async function showAcceptInvitePage(inv, co){
   updateNav();
 }
 async function doAcceptInvite(){
-  if(!pendingInvitation){showToast('Session expired. Please use the original invitation link.','error');return;}
+  if(!pendingInvitation){showToast(t('invite.sessionExpired'),'error');return;}
   const inv=pendingInvitation;
   const firstName=document.getElementById('acceptFirstName').value.trim();
   const lastName=document.getElementById('acceptLastName').value.trim();
   const pass=document.getElementById('acceptPass').value;
   const passConfirm=document.getElementById('acceptPassConfirm').value;
-  if(!firstName||!lastName){showMsg('acceptInviteMsg','Please enter your first and last name.','error');return;}
-  if(pass.length<6){showMsg('acceptInviteMsg','Password must be at least 6 characters.','error');return;}
-  if(pass!==passConfirm){showMsg('acceptInviteMsg','Passwords do not match.','error');return;}
+  if(!firstName||!lastName){showMsg('acceptInviteMsg',t('invite.nameRequired'),'error');return;}
+  if(pass.length<6){showMsg('acceptInviteMsg',t('pw.tooShort6'),'error');return;}
+  if(pass!==passConfirm){showMsg('acceptInviteMsg',t('msg.passMismatch'),'error');return;}
   try{
     const acc=await DB.rpc('accept_invitation',{p_token:inv.token,p_first_name:firstName,p_last_name:lastName,p_pass:pass});
     if(!acc||!acc.ok){
@@ -6967,11 +6967,11 @@ async function doAcceptInvite(){
     await refreshCache();
     updateNav();
     navigate('admin');
-    showToast(`Welcome to PunchClock Crew, ${firstName}!`,'success');
+    showToast(t('invite.welcome').replace('{name}',firstName),'success');
     // Managers get a short orientation modal on first landing
     if(inv.role==='manager'){
       const titleEl=document.getElementById('managerWelcomeTitle');
-      if(titleEl)titleEl.textContent=`Welcome to the Manager portal, ${firstName}!`;
+      if(titleEl)titleEl.textContent=t('mgrWelcome.title').replace('{name}',firstName);
       openModal('managerWelcomeModal');
     }
   }catch(e){showMsg('acceptInviteMsg',e.message,'error');}
@@ -7189,7 +7189,7 @@ async function doRegister(){
         return;
       }
     }catch(e){
-      showMsg('registerMsg','Network error sending verification email. Please try again.','error');
+      showMsg('registerMsg',t('msg.verifyNetwork'),'error');
       return;
     }
     document.getElementById('regEmailSent').textContent = email;
@@ -7207,7 +7207,7 @@ async function resendVerificationCode(){
     const name=(pendingVerify.firstName||'')+' '+(pendingVerify.lastName||'');
     await DB.requestRegistrationCode(pendingVerify.email, name.trim());
     showMsg('registerMsg', t('msg.newCodeSent')||'✓ New code sent to your email.','success');
-  }catch(e){ showMsg('registerMsg','Could not resend the code. Please try again.','error'); }
+  }catch(e){ showMsg('registerMsg',t('msg.resendFailed'),'error'); }
 }
 
 async function doVerify(){
@@ -7330,7 +7330,7 @@ async function startCheckout(plan){
   const s=Sess.get();
   if(!s){navigate('login');return;}
   if(s.plan===plan){showToast(t('toast.alreadyOnPlan')||'You are already on this plan.');return;}
-  showToast('Redirecting to secure checkout...');
+  showToast(t('toast.redirectCheckout'));
   try{
     const res=await fetch(`${EDGE_URL}/checkout`,{
       method:'POST',
@@ -7708,10 +7708,10 @@ async function quickAddEmployee(coId){
   const name=document.getElementById('quickEmpName')?.value.trim();
   const pin=document.getElementById('quickEmpPin')?.value.trim();
   const msgEl=document.getElementById('quickEmpMsg');
-  if(!name){if(msgEl)msgEl.innerHTML='<div class="msg error">Name is required.</div>';return;}
-  if(!pin||!/^\d{4}$/.test(pin)){if(msgEl)msgEl.innerHTML='<div class="msg error">PIN must be exactly 4 digits.</div>';return;}
+  if(!name){if(msgEl)msgEl.innerHTML='<div class="msg error">'+esc(t('msg.nameRequired'))+'</div>';return;}
+  if(!pin||!/^\d{4}$/.test(pin)){if(msgEl)msgEl.innerHTML='<div class="msg error">'+esc(t('msg.pin4'))+'</div>';return;}
   const co=C.companies.find(c=>c.id===coId);
-  if(!co){if(msgEl)msgEl.innerHTML='<div class="msg error">Company not found.</div>';return;}
+  if(!co){if(msgEl)msgEl.innerHTML='<div class="msg error">'+esc(t('msg.companyNotFound'))+'</div>';return;}
   const sites=C.sites.filter(s=>s.company_id===coId);
   if(!sites.length){
     document.getElementById('activationOverlay').remove();
@@ -7726,7 +7726,7 @@ async function quickAddEmployee(coId){
     document.getElementById('activationOverlay').remove();
     await refreshCache();
     navigate('admin');
-    showToast(`✓ ${name} added successfully!`,'success');
+    showToast(t('toast.empAdded').replace('{name}',name),'success');
   }catch(e){
     if(msgEl)msgEl.innerHTML=`<div class="msg error">Error: ${esc(e.message)}</div>`;
   }
@@ -8044,7 +8044,7 @@ function refreshClockedIn(){
       :`<div class="avatar" style="width:28px;height:28px;font-size:10px;flex-shrink:0">${ini}</div>`;
     const dur=elapsed(last.punched_at);
     const over=last.punch_date!==today;
-    const warn=over?`<span style="color:var(--red);font-size:10px;font-weight:600;margin-left:4px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>since ${last.punch_date}</span>`:'';
+    const warn=over?`<span style="color:var(--red);font-size:10px;font-weight:600;margin-left:4px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>${t('dash.since')} ${last.punch_date}</span>`:'';
     return `<div class="ci-row" style="${over?'border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.05)':''}">
       ${ciAvatar}
       <div style="flex:1;min-width:0"><div class="ci-name">${esc(emp.name)}${warn}</div>
@@ -8783,14 +8783,14 @@ async function searchGeoAddress() {
       );
       const data = await r.json();
       if (!data.length) {
-        res.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:13px">No results found</div>';
+        res.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:13px">'+esc(t('geo.noResults'))+'</div>';
         return;
       }
       res.innerHTML = data.map(item =>
         `<div class="geo-search-result" onclick="placeGeoResult(${Number(item.lat)},${Number(item.lon)})">${esc(item.display_name)}</div>`
       ).join('');
     } catch {
-      res.innerHTML = '<div style="padding:8px 12px;color:var(--red);font-size:13px">Search failed. Try again.</div>';
+      res.innerHTML = '<div style="padding:8px 12px;color:var(--red);font-size:13px">'+esc(t('geo.searchFailed'))+'</div>';
     }
   }, 300);
 }
@@ -8809,7 +8809,7 @@ async function useMyGeoLocation() {
     const pos = await getCurrentPosition();
     if (!_geoMap) initGeoMap();
     setGeoPin(pos.coords.latitude, pos.coords.longitude);
-    showToast(`✓ Location detected (±${Math.round(pos.coords.accuracy)}m)`, 'success');
+    showToast(t('geo.detected').replace('{m}',Math.round(pos.coords.accuracy)), 'success');
   } catch {
     showToast(t('geo.locationError') || 'Could not get location. Please search for an address.', 'error');
   } finally {
@@ -9386,7 +9386,7 @@ async function bulkToggleActive(activate){
     }
     clearEmpSelection();
     renderEmployees();
-    showToast(`${ids.length} employee(s) ${activate?'activated':'deactivated'}.`,'success');
+    showToast(t(activate?'toast.empsActivated':'toast.empsDeactivated').replace('{n}',ids.length),'success');
   }catch(e){showToast(e.message,'error');}
 }
 
@@ -9440,7 +9440,7 @@ async function bulkDelete(){
     }
     clearEmpSelection();
     renderEmployees();
-    showToast(`${ids.length} employee(s) deleted.`,'success');
+    showToast(t('toast.empsDeleted').replace('{n}',ids.length),'success');
     if(linkedMgrCount>0){
       setTimeout(()=>showToast(
         _appLang==='fr'
@@ -9457,7 +9457,7 @@ async function bulkSendReport(){
   const withEmail = emps.filter(e=>e.email&&e.send_report);
   const noEmail = emps.filter(e=>!e.email||!e.send_report);
   if(!withEmail.length){
-    showToast('None of the selected employees have a report email configured. Edit employees to add emails and enable reports.','info');
+    showToast(t('toast.noReportEmails'),'info');
     return;
   }
   const msg = withEmail.length===emps.length
@@ -9638,8 +9638,8 @@ async function renderSitesAdmin(){
     const co=C.companies.find(c=>c.id===s.company_id);
     const hasGeo=!!(s.geo_lat&&s.geo_lng);
     const geoBadge=hasGeo
-      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius"><svg class="ic"><use href="#i-pin"/></svg>${s.geo_radius_m||25}m</span>`
-      :`<span class="geo-status-badge geo-none" title="No geofence set"><svg class="ic"><use href="#i-pin"/></svg>No geofence</span>`;
+      ?`<span class="geo-status-badge geo-ok" title="${esc(t('geo.activeTitle').replace('{m}',s.geo_radius_m||25))}"><svg class="ic"><use href="#i-pin"/></svg>${s.geo_radius_m||25}m</span>`
+      :`<span class="geo-status-badge geo-none" title="${esc(t('geo.noneSet'))}"><svg class="ic"><use href="#i-pin"/></svg>${esc(t('geo.none'))}</span>`;
     const mgrIds=allMgrSites.filter(r=>r.site_id===s.id).map(r=>r.manager_id);
     const siteMgrs=managers.filter(a=>mgrIds.includes(a.id));
     const mgrPills=siteMgrs.length
@@ -9740,18 +9740,18 @@ async function sendPromotionInvite(){
   const sess=Sess.get();if(!sess)return;
   const email=document.getElementById('promoteEmail').value.trim().toLowerCase();
   const siteIds=[...document.querySelectorAll('#promoteSiteCheckboxes input:checked')].map(cb=>cb.value);
-  if(!email){showMsg('promoteToManagerMsg','Email is required.','error');return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('promoteToManagerMsg','Please enter a valid email address.','error');return;}
-  if(!siteIds.length){showMsg('promoteToManagerMsg','Please assign at least one site.','error');return;}
+  if(!email){showMsg('promoteToManagerMsg',t('msg.emailRequired'),'error');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('promoteToManagerMsg',t('msg.emailInvalid'),'error');return;}
+  if(!siteIds.length){showMsg('promoteToManagerMsg',t('msg.assignSite'),'error');return;}
   try{
     const primaryAdminId=sess.parent_admin_id||sess.id;
     // Suspended ex-managers go through the full invite flow (accept_invitation handles reactivation server-side)
     const existing=await DB.all('admins',`email=eq.${email}&status=neq.suspended`);
-    if(existing?.length){showMsg('promoteToManagerMsg','This email already has an admin account.','error');return;}
+    if(existing?.length){showMsg('promoteToManagerMsg',t('msg.emailHasAccount'),'error');return;}
     const existingInv=await DB.all('invitations',`email=eq.${email}&status=eq.pending`);
-    if(existingInv?.length){showMsg('promoteToManagerMsg','An invitation has already been sent to this email.','error');return;}
+    if(existingInv?.length){showMsg('promoteToManagerMsg',t('msg.inviteAlreadySent'),'error');return;}
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
-    if(!myCo){showMsg('promoteToManagerMsg','No company found.','error');return;}
+    if(!myCo){showMsg('promoteToManagerMsg',t('ui.noCompany'),'error');return;}
     const token=crypto.randomUUID();
     await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role:'manager',site_ids:siteIds,expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     try{
@@ -9811,22 +9811,22 @@ async function saveInvite(){
   const sess=Sess.get();if(!sess)return;
   const email=document.getElementById('inviteEmail').value.trim().toLowerCase();
   const role=document.querySelector('input[name="inviteRole"]:checked')?.value||'co_admin';
-  if(!email){showMsg('inviteMsg','Email is required.','error');return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('inviteMsg','Please enter a valid email address.','error');return;}
+  if(!email){showMsg('inviteMsg',t('msg.emailRequired'),'error');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showMsg('inviteMsg',t('msg.emailInvalid'),'error');return;}
   if(email===sess.email){showMsg('inviteMsg',t('msg.ownEmail'),'error');return;}
   let siteIds=[];
   if(role==='manager'){
     siteIds=[...document.querySelectorAll('#inviteSiteCheckboxes input[type=checkbox]:checked')].map(cb=>cb.value);
-    if(!siteIds.length){showMsg('inviteMsg','Please assign at least one site for the manager.','error');return;}
+    if(!siteIds.length){showMsg('inviteMsg',t('coAdmin.needSite'),'error');return;}
   }
   try{
     const existing=await DB.all('admins',`email=eq.${email}&status=neq.suspended`);
     if(existing?.length){showMsg('inviteMsg',t('msg.emailTaken'),'error');return;}
     const existingInv=await DB.all('invitations',`email=eq.${email}&status=eq.pending`);
-    if(existingInv?.length){showMsg('inviteMsg','An invitation has already been sent to this email.','error');return;}
+    if(existingInv?.length){showMsg('inviteMsg',t('msg.inviteAlreadySent'),'error');return;}
     const primaryAdminId=sess.parent_admin_id||sess.id;
     const myCo=C.companies.find(c=>c.admin_id===primaryAdminId)||C.companies[0];
-    if(!myCo){showMsg('inviteMsg','No company found. Please contact support.','error');return;}
+    if(!myCo){showMsg('inviteMsg',t('msg.noCompanySupport'),'error');return;}
     const token=crypto.randomUUID();
     await DB.insert('invitations',{token,inviter_admin_id:sess.id,company_id:myCo.id,email,role,site_ids:siteIds,expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()});
     try{
@@ -9912,9 +9912,9 @@ async function loadCoAdmins(){
     </tr>`).join('');
     if(cards) cards.innerHTML=allRows.map(a=>`
       <div class="mobile-card-row">
-        <div class="mc-name"><span${a._isInvitation?' style="color:var(--text2);font-style:italic"':''}>${esc(a.name)}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">(you)</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
-        <div class="mc-row"><span>Email</span><span style="font-size:12px">${esc(a.email)}</span></div>
-        <div class="mc-row"><span>Role</span><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></div>
+        <div class="mc-name"><span${a._isInvitation?' style="color:var(--text2);font-style:italic"':''}>${esc(a.name)}${isMe(a)?' <span style="font-size:10px;color:var(--text3)">('+esc(t('common.you'))+')</span>':''}</span><span class="pill ${statusClass(a.status)}">${statusLabel(a.status)}</span></div>
+        <div class="mc-row"><span>${t('col.email')}</span><span style="font-size:12px">${esc(a.email)}</span></div>
+        <div class="mc-row"><span>${t('col.role')}</span><span class="pill ${a._isPrimary?'admin':'site'}" style="font-size:10px">${roleLabel(a)}</span></div>
         ${actionsCellMobile(a)}
       </div>`).join('');
   }catch(e){tbody.innerHTML=`<tr><td colspan="5" style="color:var(--red);padding:16px">Error: ${esc(e.message)}</td></tr>`;}
@@ -9966,7 +9966,7 @@ async function saveEditCoAdmin(){
   if(!name){showMsg('editCoAdminMsg',t('msg.allRequired'),'error');return;}
   if(role==='manager'){
     const checked=[...document.querySelectorAll('#editManagerSiteCheckboxes input:checked')];
-    if(!checked.length){showMsg('editCoAdminMsg','Assign at least one site for the manager.','error');return;}
+    if(!checked.length){showMsg('editCoAdminMsg',t('coAdmin.needSite'),'error');return;}
   }
   try{
     await DB.update('admins',`id=eq.${id}`,{name,role,status});
@@ -9988,7 +9988,7 @@ async function deleteCoAdmin(id,name){
   try{
     await DB.del('admins',`id=eq.${id}`);
     await loadCoAdmins();
-    showToast(`✓ ${name} removed.`,'success');
+    showToast(t('toast.removed').replace('{name}',name),'success');
   }catch(e){showToast(e.message,'error');}
 }
 
@@ -9996,19 +9996,19 @@ async function resendCoAdminInvite(id, email, name) {
   try {
     const sess = Sess.get();
     if(!id || !id.startsWith('_inv_')){
-      showToast('This invitation has already been accepted or is no longer pending.','error');
+      showToast(t('toast.inviteNotPending'),'error');
       return;
     }
     const invId = id.slice(5);
     const rows = await DB.all('invitations', `id=eq.${invId}&select=token,role,company_id,status,expires_at`);
     const inv = rows?.[0];
     if(!inv || inv.status !== 'pending'){
-      showToast('Invitation not found or no longer pending.','error');
+      showToast(t('toast.inviteNotFound'),'error');
       await loadCoAdmins();
       return;
     }
     if(new Date(inv.expires_at) < new Date()){
-      showToast('This invitation has expired. Cancel it and send a new one.','error');
+      showToast(t('toast.inviteExpired'),'error');
       return;
     }
     await sendAppEmail('invitation', { token: inv.token });
@@ -10315,8 +10315,8 @@ async function renderJoinRequests(){
       <td style="font-size:12px;color:var(--text2)">${esc(r.target_admin_email)}</td>
       <td style="font-size:12px;color:var(--text2)">${new Date(r.created_at).toLocaleDateString()}</td>
       <td><div style="display:flex;gap:6px">
-        <button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${jsq(r.requester_id)}')">✓ Approve</button>
-        <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${jsq(r.requester_id)}')">✗ Deny</button>
+        <button class="btn-primary" style="width:auto;padding:5px 12px;font-size:11px" onclick="approveJoinRequest('${r.id}','${jsq(r.requester_id)}')">✓ ${t('common.approve')}</button>
+        <button class="btn-danger" style="padding:5px 12px;font-size:11px" onclick="denyJoinRequest('${r.id}','${jsq(r.requester_id)}')">✗ ${t('common.deny')}</button>
       </div></td>
     </tr>`).join('');
   }catch(e){console.error('Join requests error:',e);}
@@ -10360,8 +10360,8 @@ async function renderMissedPunchRequests(){
     sections.forEach(s=>s.style.display='');
     const rowsHtml=visible.map(r=>{
       const typePill=r.type==='IN'
-        ?'<span class="pill in" style="font-size:10px">IN</span>'
-        :'<span class="pill out" style="font-size:10px">OUT</span>';
+        ?'<span class="pill in" style="font-size:10px">'+t('punch.inShort')+'</span>'
+        :'<span class="pill out" style="font-size:10px">'+t('punch.outShort')+'</span>';
       const reason=esc(r.reason||'');
       const timeStr=(r.requested_time||'').slice(0,5);
       return `<tr>
@@ -10372,16 +10372,16 @@ async function renderMissedPunchRequests(){
         <td style="font-size:12px;color:var(--text2);max-width:160px">${reason||'<span style="color:var(--text3)">—</span>'}</td>
         <td>
           <div class="mpr-actions" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-            <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Approve</button>
-            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch(this)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit+Approve</button>
-            <button class="btn-danger" style="padding:4px 11px;font-size:11px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>Deny</button>
+            <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>${t('common.approve')}</button>
+            <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch(this)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>${t('missed.editApprove')}</button>
+            <button class="btn-danger" style="padding:4px 11px;font-size:11px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>${t('common.deny')}</button>
           </div>
           <div class="mpr-edit" style="display:none;margin-top:6px">
             <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
               <input type="date" class="mpr-date-input" value="${r.requested_date}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:inherit">
               <input type="time" class="mpr-time-input" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:inherit">
-              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited(this,'${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
-              <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px" onclick="toggleEditMissedPunch(this)">Cancel</button>
+              <button class="btn-primary" style="width:auto;padding:4px 11px;font-size:11px" onclick="approveMissedPunchEdited(this,'${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>${t('common.confirm')}</button>
+              <button class="btn-secondary" style="width:auto;padding:4px 11px;font-size:11px" onclick="toggleEditMissedPunch(this)">${t('common.cancel')}</button>
             </div>
           </div>
         </td>
@@ -10389,19 +10389,19 @@ async function renderMissedPunchRequests(){
     }).join('');
     const cardsHtml=visible.map(r=>{
       const typePill=r.type==='IN'
-        ?'<span class="pill in" style="font-size:10px">IN</span>'
-        :'<span class="pill out" style="font-size:10px">OUT</span>';
+        ?'<span class="pill in" style="font-size:10px">'+t('punch.inShort')+'</span>'
+        :'<span class="pill out" style="font-size:10px">'+t('punch.outShort')+'</span>';
       const reason=esc(r.reason||'');
       const timeStr=(r.requested_time||'').slice(0,5);
       return `<div class="mobile-card-row">
         <div class="mc-name"><span style="font-weight:500">${esc(r.emp_name)}</span>${typePill}</div>
-        <div class="mc-row"><span>Date</span><span>${r.requested_date}</span></div>
-        <div class="mc-row"><span>Time</span><span>${timeStr}</span></div>
-        ${reason?`<div class="mc-row"><span>Reason</span><span style="font-size:12px">${reason}</span></div>`:''}
+        <div class="mc-row"><span>${t('missed.date')}</span><span>${r.requested_date}</span></div>
+        <div class="mc-row"><span>${t('missed.time')}</span><span>${timeStr}</span></div>
+        ${reason?`<div class="mc-row"><span>${t('missed.reason')}</span><span style="font-size:12px">${reason}</span></div>`:''}
         <div class="mc-actions mpr-actions">
-          <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Approve</button>
-          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch(this)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>Edit</button>
-          <button class="btn-danger" style="font-size:12px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>Deny</button>
+          <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>${t('common.approve')}</button>
+          <button class="btn-secondary" style="font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="toggleEditMissedPunch(this)"><svg class="ic" style="margin-right:4px"><use href="#i-edit"/></svg>${t('common.edit')}</button>
+          <button class="btn-danger" style="font-size:12px" onclick="denyMissedPunch('${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-x"/></svg>${t('common.deny')}</button>
         </div>
         <div class="mpr-edit" style="display:none;padding:4px 0">
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px">
@@ -10409,8 +10409,8 @@ async function renderMissedPunchRequests(){
             <input type="time" class="mpr-time-input" value="${timeStr}" style="padding:5px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:inherit">
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited(this,'${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>Confirm</button>
-            <button class="btn-secondary" style="font-size:12px" onclick="toggleEditMissedPunch(this)">Cancel</button>
+            <button class="btn-primary" style="font-size:12px" onclick="approveMissedPunchEdited(this,'${r.id}')"><svg class="ic" style="margin-right:4px"><use href="#i-check"/></svg>${t('common.confirm')}</button>
+            <button class="btn-secondary" style="font-size:12px" onclick="toggleEditMissedPunch(this)">${t('common.cancel')}</button>
           </div>
         </div>
       </div>`;
@@ -10469,7 +10469,7 @@ async function approveMissedPunchEdited(btn,id){
   const container=btn.closest('.mpr-edit');
   const dateEl=container.querySelector('.mpr-date-input');
   const timeEl=container.querySelector('.mpr-time-input');
-  if(!dateEl?.value||!timeEl?.value){showToast('Please enter a date and time.','error');return;}
+  if(!dateEl?.value||!timeEl?.value){showToast(t('missed.needDateTime'),'error');return;}
   const req=_missedPunchRequests.find(r=>r.id===id);
   if(!req)return;
   await _doApproveMissedPunch(req,dateEl.value,timeEl.value);
@@ -10505,7 +10505,7 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
       reviewed_at:new Date().toISOString(),
       punch_id:punchId
     });
-    showToast(`✓ Punch approved for ${req.emp_name}`,'success');
+    showToast(t('missed.approvedToast').replace('{name}',req.emp_name),'success');
     notifyDecision('notify-missed-punch', req.id);
     await renderMissedPunchRequests();
   }catch(e){showToast(e.message,'error');}
@@ -10514,7 +10514,7 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
 async function denyMissedPunch(id){
   const req=_missedPunchRequests.find(r=>r.id===id);
   if(!req)return;
-  if(!(await uiConfirm(`Deny missed punch request for ${req.emp_name}?`)))return;
+  if(!(await uiConfirm(t('missed.denyConfirm').replace('{name}',req.emp_name))))return;
   const sess=Sess.get();
   try{
     await DB.update('missed_punch_requests',`id=eq.${id}`,{
@@ -10522,7 +10522,7 @@ async function denyMissedPunch(id){
       reviewed_by:sess?.id||null,
       reviewed_at:new Date().toISOString()
     });
-    showToast(`Request denied for ${req.emp_name}`,'info');
+    showToast(t('missed.deniedToast').replace('{name}',req.emp_name),'info');
     notifyDecision('notify-missed-punch', id);
     await renderMissedPunchRequests();
   }catch(e){showToast(e.message,'error');}
@@ -10573,7 +10573,7 @@ async function denyJoinRequest(reqId, adminId){
       sendAppEmail('join_denied',{request_id:reqId}).catch(()=>{});
     }
     if(isSuperAdmin()) await renderAdmins(); else await loadCoAdmins();
-    showToast('Access request denied.','info');
+    showToast(t('toast.accessDenied'),'info');
   }catch(e){uiAlert(e.message);}
 }
 
@@ -10859,7 +10859,7 @@ function editEmployee(id){
   resetPhotoUpload(e.photo_url||null);
   document.getElementById('pinPreview').style.display='none';
   document.getElementById('editEmpUid').value=e.id;
-  document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">No PIN set — employee can't clock in/out until one is assigned.</div>`;
+  document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">${esc(t('emp.noPinSet'))}</div>`;
   setEmailToggle(!!(e.send_report&&e.email));
   setEmpRemotePunchToggle(!!e.remote_punch_enabled);
   _refreshEmpRemotePunchRowState(e.company_id||ctx?.co?.id);
@@ -10967,7 +10967,7 @@ async function loadEmpPortalStatus(emp) {
       inviteBtn.onclick = () => revokeEmpPortalAccess(emp.id);
     }
   } catch(e) {
-    statusEl.textContent = 'Error loading status';
+    statusEl.textContent = t('portal.statusError');
     inviteBtn.disabled = false;
   }
 }
@@ -11085,7 +11085,7 @@ async function saveEmployee(opts){
       const {ok,current,max,plan}=canAddEmployee(ctx.co);
       if(!ok){
         showMsg('empModalMsg','','error');
-        showUpgradePrompt('empModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} active employees</strong>. You have ${current}. Upgrade to add more.`);
+        showUpgradePrompt('empModalMsg',t('limit.employees').replace('{plan}',esc(plan.name)).replace('{max}',max).replace('{current}',current));
         return null;
       }
       const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,remote_punch_enabled,photo_url});
@@ -11223,7 +11223,7 @@ async function loadCompaniesPage(){
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <h3 style="${isCur?'color:'+col:''}">${esc(co.name)}</h3>
-            ${isCur?`<span class="pill admin" style="font-size:10px;padding:1px 7px">Active</span>`:''}
+            ${isCur?`<span class="pill admin" style="font-size:10px;padding:1px 7px">${t('status.active')}</span>`:''}
             ${getPlanBadgeHtml(co)}
           </div>
         </div>
@@ -11273,8 +11273,8 @@ async function loadSitesPage(){
     const activeEmp=C.employees.filter(e=>e.site_id===s.id&&e.active).length;
     const hasGeo=!!(s.geo_lat&&s.geo_lng);
     const geoBadge=hasGeo
-      ?`<span class="geo-status-badge geo-ok" title="Geofence active — ${s.geo_radius_m||25}m radius"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${s.geo_radius_m||25}m</span>`
-      :`<span class="geo-status-badge geo-none" title="No geofence set"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>No geofence</span>`;
+      ?`<span class="geo-status-badge geo-ok" title="${esc(t('geo.activeTitle').replace('{m}',s.geo_radius_m||25))}"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${s.geo_radius_m||25}m</span>`
+      :`<span class="geo-status-badge geo-none" title="${esc(t('geo.noneSet'))}"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${esc(t('geo.none'))}</span>`;
     const payrollLine=co?`${freqLabel[co.payroll_frequency]||'—'} · ${weekLabel[co.week_start]||'—'}`:'';
     const companyLine=superAdmin&&co?`<div class="meta" style="margin-bottom:3px;color:var(--accent)">${esc(co.name)}</div>`:'';
     return`<div class="company-card">
@@ -11557,7 +11557,7 @@ async function saveCompany(){
   const punch_label_mode=(document.getElementById('punchLabelModeRow').style.display!=='none')
     ? document.getElementById('companyPunchLabelMode').value
     : ((editId && (C.companies.find(c=>c.id===editId)||{}).punch_label_mode) || 'off');
-  if(!name){showMsg('companyModalMsg','Company name is required.','error');return;}
+  if(!name){showMsg('companyModalMsg',t('msg.companyNameRequired'),'error');return;}
   const evOn=paidOk&&document.getElementById('companyEveningOn').checked;
   const evStartV=document.getElementById('companyEveningStart').value||'17:00';
   const evEndV=document.getElementById('companyEveningEnd').value||'';
@@ -11571,7 +11571,7 @@ async function saveCompany(){
   if(!editId){
     const {ok,current,max,plan}=canAddCompany();
     if(!ok){
-      showUpgradePrompt('companyModalMsg',`Your <strong>${plan.name}</strong> plan allows up to <strong>${max} compan${max===1?'y':'ies'}</strong>. You have ${current}. Upgrade to add more.`);
+      showUpgradePrompt('companyModalMsg',t('limit.companies').replace('{plan}',esc(plan.name)).replace('{max}',max).replace('{unit}',t(max===1?'unit.company':'unit.companies')).replace('{current}',current));
       return;
     }
   }
@@ -11596,7 +11596,7 @@ async function saveCompany(){
           const _lu=await uploadImage(_newLogoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`,{companyId:r[0].id});
           await DB.update('companies',`id=eq.${r[0].id}`,{logo_url:_lu});
           r[0].logo_url=viewUrl(_lu);
-        }catch(e){ console.warn('Logo upload failed:',e); showToast('The company was created, but its logo could not be uploaded. You can add it in Settings.','error'); }
+        }catch(e){ console.warn('Logo upload failed:',e); showToast(t('toast.logoFailed'),'error'); }
       }
       if(r?.[0])C.companies.push(r[0]);
       // Always auto-select new company and prompt for first site
@@ -12244,14 +12244,14 @@ async function generateReport(){
 
   document.getElementById('reportStats').style.display='grid';
   document.getElementById('reportStats').innerHTML=`
-    <div class="stat-card"><div class="lbl">Total Sessions</div><div class="val blue">${dataRows.length}</div></div>
-    <div class="stat-card"><div class="lbl">Total Hours</div><div class="val green">${totalH.toFixed(2)}</div></div>
-    ${hasOT?`<div class="stat-card"><div class="lbl">Overtime Hours</div><div class="val amber">${grandOT.toFixed(2)}</div></div>`:''}
+    <div class="stat-card"><div class="lbl">${t('reports.statSessions')}</div><div class="val blue">${dataRows.length}</div></div>
+    <div class="stat-card"><div class="lbl">${t('reports.statHours')}</div><div class="val green">${totalH.toFixed(2)}</div></div>
+    ${hasOT?`<div class="stat-card"><div class="lbl">${t('reports.statOT')}</div><div class="val amber">${grandOT.toFixed(2)}</div></div>`:''}
     ${EV?`<div class="stat-card"><div class="lbl">${t('reports.col.evening')||'Evening Hrs'}</div><div class="val amber">${grandEv.toFixed(2)}</div></div>`:''}
     ${hasBreaks?`<div class="stat-card"><div class="lbl">${t('reports.breakTime')||'Break Time'}</div><div class="val amber">${(grandBreakMin/60).toFixed(2)}</div></div>`:''}
     ${offDays?`<div class="stat-card"><div class="lbl">${t('to.paidLeaveHours')||'Paid Leave Hours'}</div><div class="val amber">${offHours.toFixed(2)}</div></div>`:''}
-    <div class="stat-card"><div class="lbl">Employees</div><div class="val purple">${selEmps.length}</div></div>
-    <div class="stat-card"><div class="lbl">Avg Hrs / Session</div><div class="val">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
+    <div class="stat-card"><div class="lbl">${t('reports.statEmps')}</div><div class="val purple">${selEmps.length}</div></div>
+    <div class="stat-card"><div class="lbl">${t('reports.statAvg')}</div><div class="val">${doneRows.length?(totalH/doneRows.length).toFixed(2):'0'}</div></div>`;
 
   renderReportTimeOff(start,end);
 
@@ -12279,7 +12279,7 @@ async function generateReport(){
        r.trackOT&&r.otHours>0 ? [t('reports.ot')||'Overtime', `<span style="color:var(--amber)">${r.otHours.toFixed(2)}</span>`] : null,
        r.evHours>0 ? [t('reports.col.evening')||'Evening Hrs', `<span style="color:var(--amber)">${r.evHours.toFixed(2)}</span>`] : null]);
     return mcard(
-      esc(r.empName||'') + (r.isManual?' <span class="manual-badge">MANUAL</span>':'') + (r.isPaidBreak?' <span class="break-badge">PAID BREAK</span>':''),
+      esc(r.empName||'') + (r.isManual?' <span class="manual-badge">'+t('reports.manual')+'</span>':'') + (r.isPaidBreak?' <span class="break-badge">PAID BREAK</span>':''),
       [r.siteName!=='—' ? [t('admin.col.site')||'Site', esc(r.siteName)] : null,
        r.labelId ? [t('labels.shiftField')||'Label', labelBadge({label_id:r.labelId})] : null,
        [t('reports.date')||'Date', r.date],
@@ -12316,13 +12316,13 @@ async function generateReport(){
       ?`<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:600">${r.otHours.toFixed(2)}</span>`
       :`<span style="color:var(--text3)">—</span>`;
     return`<tr ${r.trackOT&&r.otHours>0?'style="background:rgba(245,158,11,.04)"':''}>
-      <td><span style="font-weight:500">${esc(r.empName)}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${esc(r.empCode)}</span>`:''}${r.isManual?`<span class="manual-badge">MANUAL</span>`:''}${r.isPaidBreak?`<span class="break-badge">PAID BREAK</span>`:''}</td>
+      <td><span style="font-weight:500">${esc(r.empName)}</span>${r.empCode?`<span style="color:var(--text2);font-size:11px;margin-left:6px">${esc(r.empCode)}</span>`:''}${r.isManual?`<span class="manual-badge">${t('reports.manual')}</span>`:''}${r.isPaidBreak?`<span class="break-badge">${t('reports.paidBreak')}</span>`:''}</td>
       <td style="font-size:12px;color:var(--text2)">${r.siteName!=='—'?`<span class="pill site" style="font-size:10px"><svg class="ic" style="margin-right:4px"><use href="#i-pin"/></svg>${esc(r.siteName)}</span>`:''}</td>
       ${LC?`<td>${labelBadge({label_id:r.labelId}).replace('margin-left:6px','')||''}</td>`:''}
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${r.date}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${r.punchIn}</td>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">${r.punchOut!=='—'?r.punchOut:'<span style="color:var(--text3)">—</span>'}</td>
-      <td class="num" style="font-family:'DM Mono',monospace;font-weight:600">${r.hours!==null?(r.trackOT?(r.hours-(r.otHours||0)).toFixed(2):r.hours.toFixed(2)):'<span style="color:var(--text3)">Still in</span>'}</td>
+      <td class="num" style="font-family:'DM Mono',monospace;font-weight:600">${r.hours!==null?(r.trackOT?(r.hours-(r.otHours||0)).toFixed(2):r.hours.toFixed(2)):'<span style="color:var(--text3)">'+t('reports.stillIn')+'</span>'}</td>
       <td class="num">${r.hours!==null?otCell:'<span style="color:var(--text3)">—</span>'}</td>
       ${EV?`<td class="num" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--amber)">${r.evHours>0?r.evHours.toFixed(2):'<span style="color:var(--text3)">—</span>'}</td>`:''}
     </tr>`;
@@ -12790,7 +12790,7 @@ async function loadActivityPage(){
     const site=C.sites.find(s2=>s2.id===p.site_id);
     const pill=`<span class="pill ${p.type.toLowerCase()}">${p.type==='IN'?t('punch.in').replace('✓ ',''):t('punch.out').replace('✕ ','')}</span>`;
     return mcard(
-      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">MANUAL</span>':'') + channelBadge(p) + reviewBadges(p) + breakBadge(p) + switchBadge(p) + labelBadge(p) + punchMapBtn(p),
+      esc(p.emp_name||'') + (p.is_manual?' <span class="manual-badge">'+t('reports.manual')+'</span>':'') + channelBadge(p) + reviewBadges(p) + breakBadge(p) + switchBadge(p) + labelBadge(p) + punchMapBtn(p),
       [[t('admin.col.site')||'Site', esc([pco?.name,site?.name].filter(Boolean).join(' · ')||'—')],
        [t('admin.col.type')||'Type', pill],
        [t('reports.date')||'Date', p.punch_date],
@@ -12807,7 +12807,7 @@ async function loadActivityPage(){
     const coSite=[pco?.name,site?.name].filter(Boolean).join(' · ');
     return`<tr class="${p.is_manual?'edited-row':''}">
       <td><input type="checkbox" class="act-row-check" data-punch-id="${p.id}" onclick="onActivityRowCheckChange()" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer"></td>
-      <td style="font-weight:500">${esc(p.emp_name)}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${esc(emp.emp_code)}</span>`:''}${p.is_manual?`<span class="manual-badge">MANUAL</span>`:''}${channelBadge(p)}${reviewBadges(p)}${breakBadge(p)}${switchBadge(p)}${labelBadge(p)}${punchMapBtn(p)}${geoNoteLine(p)}</td>
+      <td style="font-weight:500">${esc(p.emp_name)}${emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${esc(emp.emp_code)}</span>`:''}${p.is_manual?`<span class="manual-badge">${t('reports.manual')}</span>`:''}${channelBadge(p)}${reviewBadges(p)}${breakBadge(p)}${switchBadge(p)}${labelBadge(p)}${punchMapBtn(p)}${geoNoteLine(p)}</td>
       <td style="font-size:12px">${esc(coSite||'—')}</td>
       <td><span class="pill ${p.type.toLowerCase()}">${p.type==="IN"?t("punch.in").replace("✓ ",""):t("punch.out").replace("✕ ","")}</span></td>
       <td style="color:var(--text2);font-size:12px;font-family:'DM Mono',monospace">${p.punch_date}</td>
@@ -12875,7 +12875,7 @@ async function bulkDeletePunches(){
     const allowed=new Set(C.punches.filter(p=>managerSiteIds.includes(p.site_id)).map(p=>p.id));
     const filtered=ids.filter(i=>allowed.has(i));
     if(filtered.length!==ids.length){
-      showToast('Some selected punches are outside your assigned sites and were skipped.','error');
+      showToast(t('toast.punchesSkipped'),'error');
     }
     if(filtered.length===0)return;
     ids.length=0;filtered.forEach(i=>ids.push(i));
@@ -12904,7 +12904,7 @@ function openBulkReassignSite(){
   const _coIds=new Set(selPunches.map(p=>p.company_id).filter(Boolean));
   let sites=C.sites.filter(s=>_coIds.size===0||_coIds.has(s.company_id));
   if(managerSiteIds!==null)sites=sites.filter(s=>managerSiteIds.includes(s.id));
-  if(sites.length===0){showToast('No sites available for reassignment.','error');return;}
+  if(sites.length===0){showToast(t('toast.noSitesReassign'),'error');return;}
   const sel=document.getElementById('bulkReassignSiteSelect');
   sel.innerHTML=sites.map(s=>{
     const co=C.companies.find(c=>c.id===s.company_id);
@@ -12925,7 +12925,7 @@ async function confirmBulkReassignSite(){
     const allowed=new Set(C.punches.filter(p=>managerSiteIds.includes(p.site_id)).map(p=>p.id));
     const filtered=ids.filter(i=>allowed.has(i));
     if(filtered.length!==ids.length){
-      showToast('Some selected punches are outside your assigned sites and were skipped.','error');
+      showToast(t('toast.punchesSkipped'),'error');
     }
     if(filtered.length===0)return;
     ids.length=0;filtered.forEach(i=>ids.push(i));
@@ -13104,7 +13104,7 @@ async function openEditPunch(id){
     );
     return;
   }
-  document.getElementById('editPunchTitle').textContent='Edit Punch — '+p.emp_name;
+  document.getElementById('editPunchTitle').textContent=t('editPunch.titleFor')+p.emp_name;
   document.getElementById('editPunchEmpName').value=p.emp_name;
   document.getElementById('editPunchType').value=p.type;
   document.getElementById('editPunchDate').value=p.punch_date;
@@ -13116,7 +13116,7 @@ async function openEditPunch(id){
   const coId=p.company_id||emp?.company_id;
   const sites=coId?C.sites.filter(s=>s.company_id===coId):C.sites;
   const sel=document.getElementById('editPunchSite');
-  sel.innerHTML='<option value="">No Site</option>'+sites.map(s=>`<option value="${s.id}"${s.id===p.site_id?' selected':''}>${esc(s.name)}</option>`).join('');
+  sel.innerHTML='<option value="">'+esc(t('editPunch.noSite'))+'</option>'+sites.map(s=>`<option value="${s.id}"${s.id===p.site_id?' selected':''}>${esc(s.name)}</option>`).join('');
   await loadAllWorkLabels();
   _fillEditPunchLabel(p);
   openModal('editPunchModal');
@@ -13147,8 +13147,8 @@ async function savePunchEdit(){
   const punch_date=document.getElementById('editPunchDate').value;
   const punch_time=document.getElementById('editPunchTime').value.trim();
   const site_id=document.getElementById('editPunchSite').value||null;
-  if(!punch_date||!punch_time){showMsg('editPunchMsg','Date and time are required.','error');return;}
-  if(!/^\d{2}:\d{2}(:\d{2})?$/.test(punch_time)){showMsg('editPunchMsg','Time must be HH:MM or HH:MM:SS format.','error');return;}
+  if(!punch_date||!punch_time){showMsg('editPunchMsg',t('editPunch.needDateTime'),'error');return;}
+  if(!/^\d{2}:\d{2}(:\d{2})?$/.test(punch_time)){showMsg('editPunchMsg',t('editPunch.timeFormat'),'error');return;}
   const fullTime=punch_time.length===5?punch_time+':00':punch_time;
   const punched_at=new Date(`${punch_date}T${fullTime}`).toISOString();
   const site=C.sites.find(s=>s.id===site_id);
@@ -13775,7 +13775,7 @@ async function confirmDelete(type,id,name){
             const r=await demoteManager(linkedMgr.id);
             if(r&&r.ok){ await loadCoAdmins(); }
             showToast(_appLang==='fr'?'✓ Compte gestionnaire suspendu.':'✓ Manager account suspended.','success');
-          }catch(err){ showToast('Manager removal error: '+err.message,'error'); }
+          }catch(err){ showToast(t('toast.mgrRemovalError')+err.message,'error'); }
         }
         // Reset warn row after delete
         if(warnRow){warnRow.style.display='none';}
@@ -13993,16 +13993,16 @@ function openSendReportModal(empId, isBulk){
     const names = bulkIds.map(id=>C.employees.find(e=>e.id===id)).filter(Boolean).map(e=>esc(e.name));
     emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>${names.join(', ')}`;
   } else if(emp.email){
-    emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>Will be sent to <strong style="color:var(--text)">${esc(emp.email)}</strong>`;
+    emailEl.innerHTML = `<svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg>${esc(t('sendReport.willSendTo'))} <strong style="color:var(--text)">${esc(emp.email)}</strong>`;
   } else {
-    emailEl.innerHTML = `<span style="color:var(--red)"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>No email address on file — please edit this employee and add one first.</span>`;
+    emailEl.innerHTML = `<span style="color:var(--red)"><svg class="ic" style="margin-right:4px"><use href="#i-warn"/></svg>${esc(t('sendReport.noEmailOnFile'))}</span>`;
   }
 
   // Populate period labels
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth();
   const freq = co?.payroll_frequency||'biweekly';
-  const freqLabel = {weekly:'Weekly',biweekly:'Bi-Weekly',monthly:'Monthly'};
+  const freqLabel = {weekly:t('modal.weekly'),biweekly:t('modal.biweekly'),monthly:t('modal.monthly')};
 
   const lp = getSendPeriodDates('last_period', co);
   document.getElementById('lastPeriodLabel').textContent =
@@ -14051,8 +14051,8 @@ async function executeSendReport(){
 
   const empId = document.getElementById('sendReportEmpId').value;
   const emp = C.employees.find(e=>e.id===empId);
-  if(!emp){showMsg('sendReportMsg','Employee not found.','error');return;}
-  if(!emp.email){showMsg('sendReportMsg','This employee has no email address. Edit the employee and add one first.','error');return;}
+  if(!emp){showMsg('sendReportMsg',t('sendReport.empNotFound'),'error');return;}
+  if(!emp.email){showMsg('sendReportMsg',t('sendReport.empNoEmail'),'error');return;}
 
   // Bulk selection from the employees table: one period choice, sent to everyone queued.
   const targets = _bulkReportQueue.length>1
@@ -14067,11 +14067,11 @@ async function executeSendReport(){
     start = document.getElementById('sendReportStart').value;
     end = document.getElementById('sendReportEnd').value;
     if(!start||!end){showMsg('sendReportMsg',t('msg.selectDates'),'error');return;}
-    if(start>end){showMsg('sendReportMsg','Start date must be before end date.','error');return;}
+    if(start>end){showMsg('sendReportMsg',t('sendReport.startBeforeEnd'),'error');return;}
     periodLabel = `${start} → ${end}`;
   } else {
     const pd = getSendPeriodDates(periodVal, co);
-    if(!pd){showMsg('sendReportMsg','Could not calculate period dates.','error');return;}
+    if(!pd){showMsg('sendReportMsg',t('sendReport.periodError'),'error');return;}
     start = pd.start; end = pd.end; periodLabel = pd.label;
   }
 
@@ -14116,12 +14116,12 @@ async function executeSendReport(){
       btn.innerHTML = t('sendReport.closeWindow')||'✓ Close Window';
       btn.disabled = false;
     } else {
-      showMsg('sendReportMsg','Send failed: '+(failed[0]?.err||'Unknown error'),'error');
+      showMsg('sendReportMsg',t('sendReport.failed')+(failed[0]?.err||t('common.unknownError')),'error');
       btn.dataset.state = 'idle';
       btn.innerHTML = t('sendReport.send')||'Send Now'; btn.disabled = false;
     }
   }catch(e){
-    showMsg('sendReportMsg','Network error: '+e.message,'error');
+    showMsg('sendReportMsg',t('common.networkError')+e.message,'error');
     btn.dataset.state = 'idle';
     btn.innerHTML = t('sendReport.send')||'Send Now'; btn.disabled = false;
   }
@@ -14176,13 +14176,13 @@ function _healStaleClient(){
 
 async function triggerPWAInstall(){
   if(!_pwaInstallPrompt){
-    showToast('Installation not available in this browser. Use the manual steps below.', 'info');
+    showToast(t('toast.pwaUnavailable'), 'info');
     return;
   }
   _pwaInstallPrompt.prompt();
   const result = await _pwaInstallPrompt.userChoice;
   if(result.outcome === 'accepted'){
-    showToast('✓ App installed! A shortcut has been added to your desktop.', 'success');
+    showToast(t('toast.pwaInstalled'), 'success');
     closeModal('kioskShortcutModal');
   }
   _pwaInstallPrompt = null;
@@ -14431,8 +14431,8 @@ function copyKioskUrl(){
   if(navigator.clipboard){
     navigator.clipboard.writeText(url).then(()=>{
       const btn = document.getElementById('kioskCopyBtn');
-      if(btn){ btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent='Copy URL', 2000); }
-      showToast('✓ Kiosk URL copied to clipboard!', 'success');
+      if(btn){ const prev=btn.innerHTML; btn.textContent=t('kw.copied'); setTimeout(()=>{btn.innerHTML=prev;}, 2000); }
+      showToast(t('toast.kioskCopied'), 'success');
     }).catch(()=>fallbackCopy(url));
   } else {
     fallbackCopy(url);
@@ -14443,8 +14443,8 @@ function fallbackCopy(text){
   const ta = document.createElement('textarea');
   ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
   document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); showToast('✓ URL copied!', 'success'); }
-  catch(e){ showToast('Could not copy — please copy the URL manually.', 'info'); }
+  try{ document.execCommand('copy'); showToast(t('toast.urlCopied'), 'success'); }
+  catch(e){ showToast(t('toast.copyFailed'), 'info'); }
   document.body.removeChild(ta);
 }
 
@@ -14965,7 +14965,7 @@ async function init(){
         document.getElementById('loadingOverlay').classList.add('hidden');
         updateNav();
         showLanding();
-        showToast('Kiosk URL not found. Please contact your administrator.','error');
+        showToast(t('toast.kioskNotFound'),'error');
         return;
       }
       const co = boot.company;
@@ -15028,7 +15028,7 @@ async function init(){
       if(!inv||(inv.expires_at&&new Date(inv.expires_at)<new Date())){
         document.getElementById('loadingOverlay').classList.add('hidden');
         updateNav();showLanding();
-        showToast('This invitation link is invalid or has expired. Please ask your administrator to send a new one.','error');
+        showToast(t('toast.inviteInvalid'),'error');
         return;
       }
       const co={id:inv.company_id,name:inv.company_name};
@@ -16692,6 +16692,152 @@ var _appLang='en';
 var _punchLang='en';
 var TRANSLATIONS={
 en:{
+'priv.li1':'Admin account information: name, email address, password (hashed)',
+'priv.li2':'Company information: company name, industry, payroll settings',
+'priv.li3':'Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)',
+'priv.li4':'Time and attendance records: clock-in/out times, dates, site locations',
+'ui.connecting':'Connecting to database...',
+'ui.selectCompany':'Select your company',
+'ui.adminLogin':'Admin Login',
+'ui.back':'← Back',
+'ui.manageSites':'Manage sites',
+'ui.noCompany':'No company found.',
+'ui.noCompanyLogged':'Your company was set up during registration.<br>Contact support if you need help.',
+'ui.addFirstSite':'Add Your First Site →',
+'ui.askAdminCompany':'Ask an admin to set up a company first.',
+'pw.new':'New Password',
+'pw.confirm':'Confirm Password',
+'pw.min6':'Min 6 characters',
+'pw.repeat':'Repeat password',
+'pw.repeatNew':'Repeat new password',
+'pw.tooShort6':'Password must be at least 6 characters.',
+'msg.passMismatch':'Passwords do not match.',
+'setpass.title':'Welcome to PunchClock Crew',
+'setpass.desc':'You\'ve been invited as a co-admin. Please set your password to activate your account.',
+'setpass.activate':'Activate Account',
+'setpass.expired':'Session expired. Please log in again.',
+'common.saving':'Saving...',
+'forgot.sentTo':'We sent a 6-digit code to',
+'forgot.codeLabel':'Verification Code',
+'forgot.noCode':'Didn\'t receive it?',
+'forgot.resend':'Resend',
+'forgot.almost':'Almost there! Set your new password for',
+'invite.title':'You\'ve been invited',
+'invite.joinTitle':'Join {company} on PunchClock Crew',
+'invite.yourCompany':'your company',
+'invite.subtitle':'You\'ve been invited as a {role}. Set up your account below.',
+'invite.create':'Create Account',
+'invite.sessionExpired':'Session expired. Please use the original invitation link.',
+'invite.welcome':'Welcome to PunchClock Crew, {name}!',
+'invite.nameRequired':'Please enter your first and last name.',
+'toast.alreadyOnPlan':'You are already on this plan.',
+'admin.suspended':'Suspended',
+'common.you':'you',
+'common.confirm':'Confirm',
+'common.noteLabel':'Note:',
+'mgrWelcome.title':'Welcome to the Manager portal, {name}!',
+'mgrWelcome.titleNoName':'Welcome to the Manager portal!',
+'mgrWelcome.intro':'You\'re all set. Here\'s what you can do from here:',
+'mgrWelcome.l1':'<strong>Manage employees</strong> for your assigned sites from the Admin panel.',
+'mgrWelcome.l2':'<strong>See reports</strong> and review activity logs.',
+'mgrWelcome.l3':'<strong>Manage scheduling</strong> for your team.',
+'mgrWelcome.btn':'Get started',
+'punch.inShort':'IN',
+'punch.outShort':'OUT',
+'missed.requestsTitle':'Missed Punch Requests',
+'missed.reason':'Reason',
+'missed.editApprove':'Edit+Approve',
+'missed.needDateTime':'Please enter a date and time.',
+'missed.denyConfirm':'Deny missed punch request for {name}?',
+'missed.approvedToast':'✓ Punch approved for {name}',
+'missed.deniedToast':'Request denied for {name}',
+'coAdmin.none':'No co-admins yet.',
+'coAdmin.editTitle':'Edit Co-Admin',
+'coAdmin.fullAdmin':'Full Admin',
+'coAdmin.manager':'Manager',
+'coAdmin.assignedSites':'Assigned Sites',
+'coAdmin.selectSites':'Select the sites this manager can access.',
+'coAdmin.needSite':'Assign at least one site for the manager.',
+'reports.noRecords':'No punch records found for selected filters.',
+'reports.statSessions':'Total Sessions',
+'reports.statHours':'Total Hours',
+'reports.statOT':'Overtime Hours',
+'reports.statEmps':'Employees',
+'reports.statAvg':'Avg Hrs / Session',
+'reports.manual':'MANUAL',
+'reports.paidBreak':'PAID BREAK',
+'sendReport.title':'Send Report to Employee',
+'sendReport.selectPeriod':'Select Period to Send',
+'sendReport.lastPeriod':'Last Pay Period',
+'sendReport.basedOn':'Based on company payroll settings',
+'sendReport.lastMonth':'Last Month',
+'sendReport.custom':'Custom Range',
+'sendReport.start':'Start',
+'sendReport.end':'End',
+'sendReport.willSendTo':'Will be sent to',
+'sendReport.noEmailOnFile':'No email address on file — please edit this employee and add one first.',
+'sendReport.empNotFound':'Employee not found.',
+'sendReport.empNoEmail':'This employee has no email address. Edit the employee and add one first.',
+'sendReport.startBeforeEnd':'Start date must be before end date.',
+'sendReport.periodError':'Could not calculate period dates.',
+'sendReport.failed':'Send failed: ',
+'common.networkError':'Network error: ',
+'common.unknownError':'Unknown error',
+'editPunch.title':'Edit Punch Record',
+'editPunch.titleFor':'Edit Punch — ',
+'editPunch.warn':'Admin override — changes are permanent and reflected in all reports.',
+'editPunch.time':'Time (HH:MM:SS)',
+'editPunch.delete':'Delete Record',
+'editPunch.noSite':'No Site',
+'editPunch.needDateTime':'Date and time are required.',
+'editPunch.timeFormat':'Time must be HH:MM or HH:MM:SS format.',
+'geo.none':'No geofence',
+'geo.noneSet':'No geofence set',
+'geo.activeTitle':'Geofence active — {m}m radius',
+'geo.noResults':'No results found',
+'geo.searchFailed':'Search failed. Try again.',
+'geo.detected':'✓ Location detected (±{m}m)',
+'emp.noPinSet':'No PIN set — employee can\'t clock in/out until one is assigned.',
+'portal.statusError':'Error loading status',
+'limit.employees':'Your <strong>{plan}</strong> plan allows up to <strong>{max} active employees</strong>. You have {current}. Upgrade to add more.',
+'limit.companies':'Your <strong>{plan}</strong> plan allows up to <strong>{max} {unit}</strong>. You have {current}. Upgrade to add more.',
+'unit.company':'company',
+'unit.companies':'companies',
+'msg.nameRequired':'Name is required.',
+'msg.pin4':'PIN must be exactly 4 digits.',
+'msg.companyNotFound':'Company not found.',
+'msg.companyNameRequired':'Company name is required.',
+'msg.emailRequired':'Email is required.',
+'msg.emailInvalid':'Please enter a valid email address.',
+'msg.assignSite':'Please assign at least one site.',
+'msg.emailHasAccount':'This email already has an admin account.',
+'msg.inviteAlreadySent':'An invitation has already been sent to this email.',
+'msg.noCompanySupport':'No company found. Please contact support.',
+'msg.verifyNetwork':'Network error sending verification email. Please try again.',
+'msg.resendFailed':'Could not resend the code. Please try again.',
+'kw.copied':'✓ Copied!',
+'toast.redirectCheckout':'Redirecting to secure checkout...',
+'toast.noReportEmails':'None of the selected employees have a report email configured. Edit employees to add emails and enable reports.',
+'toast.inviteNotPending':'This invitation has already been accepted or is no longer pending.',
+'toast.inviteNotFound':'Invitation not found or no longer pending.',
+'toast.inviteExpired':'This invitation has expired. Cancel it and send a new one.',
+'toast.accessDenied':'Access request denied.',
+'toast.logoFailed':'The company was created, but its logo could not be uploaded. You can add it in Settings.',
+'toast.punchesSkipped':'Some selected punches are outside your assigned sites and were skipped.',
+'toast.noSitesReassign':'No sites available for reassignment.',
+'toast.mgrRemovalError':'Manager removal error: ',
+'toast.pwaUnavailable':'Installation not available in this browser. Use the manual steps below.',
+'toast.pwaInstalled':'✓ App installed! A shortcut has been added to your desktop.',
+'toast.kioskCopied':'✓ Kiosk URL copied to clipboard!',
+'toast.urlCopied':'✓ URL copied!',
+'toast.copyFailed':'Could not copy — please copy the URL manually.',
+'toast.kioskNotFound':'Kiosk URL not found. Please contact your administrator.',
+'toast.inviteInvalid':'This invitation link is invalid or has expired. Please ask your administrator to send a new one.',
+'toast.empAdded':'✓ {name} added successfully!',
+'toast.empsActivated':'{n} employee(s) activated.',
+'toast.empsDeactivated':'{n} employee(s) deactivated.',
+'toast.empsDeleted':'{n} employee(s) deleted.',
+'toast.removed':'✓ {name} removed.',
 'sched.previewNote':'Sample week — these shifts are an example, not your real schedule. Nothing here is saved.',
 'sched.previewTitle':'Build this for your team',
 'sched.previewBody':'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.','sched.trialBtn':'Try it free for 14 days','sched.trialNote':'No card needed. It starts now and stops by itself after 14 days.','sched.trialEnded':'Your free trial ended on {date}.','sched.trialOwnerOnly':'The account owner can start the free 14-day trial or add Scheduling.','sched.trialStarted':'Trial started: Scheduling is yours until {date}.','sched.trialLeft':'Free trial: {n} days left (ends {date}).','sched.trialKeep':'Keep it — $14.95/mo','addon.trial':'Trial',
@@ -17607,6 +17753,152 @@ en:{
 'sched.saveEmail':'Save email for future use',
 },
 fr:{
+'priv.li1':'Renseignements du compte administrateur : nom, adresse courriel, mot de passe (haché)',
+'priv.li2':'Renseignements sur l\'entreprise : nom de l\'entreprise, secteur d\'activité, paramètres de paie',
+'priv.li3':'Données des employés : noms, numéros d\'employé, service, sites assignés, adresses courriel, NIP à 4 chiffres (conservés tels quels)',
+'priv.li4':'Registres de présence : heures d\'entrée et de sortie, dates, emplacements des sites',
+'ui.connecting':'Connexion en cours...',
+'ui.selectCompany':'Sélectionnez votre entreprise',
+'ui.adminLogin':'Connexion admin',
+'ui.back':'← Retour',
+'ui.manageSites':'Gérer les sites',
+'ui.noCompany':'Aucune entreprise trouvée.',
+'ui.noCompanyLogged':'Votre entreprise a été créée à l\'inscription.<br>Écrivez au soutien si vous avez besoin d\'aide.',
+'ui.addFirstSite':'Ajouter votre premier site →',
+'ui.askAdminCompany':'Demandez d\'abord à un admin de créer une entreprise.',
+'pw.new':'Nouveau mot de passe',
+'pw.confirm':'Confirmer le mot de passe',
+'pw.min6':'Min. 6 caractères',
+'pw.repeat':'Répétez le mot de passe',
+'pw.repeatNew':'Répétez le nouveau mot de passe',
+'pw.tooShort6':'Le mot de passe doit contenir au moins 6 caractères.',
+'msg.passMismatch':'Les mots de passe ne correspondent pas.',
+'setpass.title':'Bienvenue sur PunchClock Crew',
+'setpass.desc':'Vous avez été invité comme co-admin. Choisissez un mot de passe pour activer votre compte.',
+'setpass.activate':'Activer le compte',
+'setpass.expired':'Session expirée. Reconnectez-vous.',
+'common.saving':'Enregistrement...',
+'forgot.sentTo':'Nous avons envoyé un code à 6 chiffres à',
+'forgot.codeLabel':'Code de vérification',
+'forgot.noCode':'Vous ne l\'avez pas reçu?',
+'forgot.resend':'Renvoyer',
+'forgot.almost':'Presque terminé! Choisissez votre nouveau mot de passe pour',
+'invite.title':'Vous avez été invité',
+'invite.joinTitle':'Rejoignez {company} sur PunchClock Crew',
+'invite.yourCompany':'votre entreprise',
+'invite.subtitle':'Vous avez été invité comme {role}. Créez votre compte ci-dessous.',
+'invite.create':'Créer le compte',
+'invite.sessionExpired':'Session expirée. Utilisez le lien d\'invitation d\'origine.',
+'invite.welcome':'Bienvenue sur PunchClock Crew, {name}!',
+'invite.nameRequired':'Entrez votre prénom et votre nom.',
+'toast.alreadyOnPlan':'Vous êtes déjà sur ce forfait.',
+'admin.suspended':'Suspendu',
+'common.you':'vous',
+'common.confirm':'Confirmer',
+'common.noteLabel':'Remarque :',
+'mgrWelcome.title':'Bienvenue dans le portail gestionnaire, {name}!',
+'mgrWelcome.titleNoName':'Bienvenue dans le portail gestionnaire!',
+'mgrWelcome.intro':'Tout est prêt. Voici ce que vous pouvez faire :',
+'mgrWelcome.l1':'<strong>Gérez les employés</strong> de vos sites assignés depuis le panneau Admin.',
+'mgrWelcome.l2':'<strong>Consultez les rapports</strong> et le journal d\'activité.',
+'mgrWelcome.l3':'<strong>Gérez les horaires</strong> de votre équipe.',
+'mgrWelcome.btn':'Commencer',
+'punch.inShort':'ENTRÉE',
+'punch.outShort':'SORTIE',
+'missed.requestsTitle':'Demandes de pointage manqué',
+'missed.reason':'Raison',
+'missed.editApprove':'Modifier et approuver',
+'missed.needDateTime':'Entrez une date et une heure.',
+'missed.denyConfirm':'Refuser la demande de pointage manqué de {name}?',
+'missed.approvedToast':'✓ Pointage approuvé pour {name}',
+'missed.deniedToast':'Demande refusée pour {name}',
+'coAdmin.none':'Aucun co-admin pour le moment.',
+'coAdmin.editTitle':'Modifier le co-admin',
+'coAdmin.fullAdmin':'Admin complet',
+'coAdmin.manager':'Gestionnaire',
+'coAdmin.assignedSites':'Sites assignés',
+'coAdmin.selectSites':'Choisissez les sites auxquels ce gestionnaire a accès.',
+'coAdmin.needSite':'Assignez au moins un site au gestionnaire.',
+'reports.noRecords':'Aucun pointage trouvé pour ces filtres.',
+'reports.statSessions':'Sessions totales',
+'reports.statHours':'Heures totales',
+'reports.statOT':'Heures supplémentaires',
+'reports.statEmps':'Employés',
+'reports.statAvg':'Moy. h / session',
+'reports.manual':'MANUEL',
+'reports.paidBreak':'PAUSE PAYÉE',
+'sendReport.title':'Envoyer le rapport à l\'employé',
+'sendReport.selectPeriod':'Période à envoyer',
+'sendReport.lastPeriod':'Dernière période de paie',
+'sendReport.basedOn':'Selon les paramètres de paie de l\'entreprise',
+'sendReport.lastMonth':'Mois dernier',
+'sendReport.custom':'Période personnalisée',
+'sendReport.start':'Début',
+'sendReport.end':'Fin',
+'sendReport.willSendTo':'Sera envoyé à',
+'sendReport.noEmailOnFile':'Aucun courriel au dossier — modifiez l\'employé pour en ajouter un.',
+'sendReport.empNotFound':'Employé introuvable.',
+'sendReport.empNoEmail':'Cet employé n\'a pas de courriel. Modifiez l\'employé pour en ajouter un.',
+'sendReport.startBeforeEnd':'La date de début doit précéder la date de fin.',
+'sendReport.periodError':'Impossible de calculer les dates de la période.',
+'sendReport.failed':'Échec de l\'envoi : ',
+'common.networkError':'Erreur réseau : ',
+'common.unknownError':'Erreur inconnue',
+'editPunch.title':'Modifier le pointage',
+'editPunch.titleFor':'Modifier le pointage — ',
+'editPunch.warn':'Modification admin — les changements sont permanents et apparaissent dans tous les rapports.',
+'editPunch.time':'Heure (HH:MM:SS)',
+'editPunch.delete':'Supprimer le pointage',
+'editPunch.noSite':'Aucun site',
+'editPunch.needDateTime':'La date et l\'heure sont requises.',
+'editPunch.timeFormat':'L\'heure doit être au format HH:MM ou HH:MM:SS.',
+'geo.none':'Aucun géorepérage',
+'geo.noneSet':'Aucun géorepérage défini',
+'geo.activeTitle':'Géorepérage actif — rayon de {m} m',
+'geo.noResults':'Aucun résultat',
+'geo.searchFailed':'La recherche a échoué. Réessayez.',
+'geo.detected':'✓ Position détectée (±{m} m)',
+'emp.noPinSet':'Aucun NIP — l\'employé ne peut pas pointer tant qu\'un NIP n\'est pas assigné.',
+'portal.statusError':'Erreur de chargement du statut',
+'limit.employees':'Votre forfait <strong>{plan}</strong> permet jusqu\'à <strong>{max} employés actifs</strong>. Vous en avez {current}. Passez à un forfait supérieur pour en ajouter.',
+'limit.companies':'Votre forfait <strong>{plan}</strong> permet jusqu\'à <strong>{max} {unit}</strong>. Vous en avez {current}. Passez à un forfait supérieur pour en ajouter.',
+'unit.company':'entreprise',
+'unit.companies':'entreprises',
+'msg.nameRequired':'Le nom est requis.',
+'msg.pin4':'Le NIP doit contenir exactement 4 chiffres.',
+'msg.companyNotFound':'Entreprise introuvable.',
+'msg.companyNameRequired':'Le nom de l\'entreprise est requis.',
+'msg.emailRequired':'Le courriel est requis.',
+'msg.emailInvalid':'Entrez une adresse courriel valide.',
+'msg.assignSite':'Assignez au moins un site.',
+'msg.emailHasAccount':'Ce courriel a déjà un compte admin.',
+'msg.inviteAlreadySent':'Une invitation a déjà été envoyée à ce courriel.',
+'msg.noCompanySupport':'Aucune entreprise trouvée. Écrivez au soutien.',
+'msg.verifyNetwork':'Erreur réseau lors de l\'envoi du courriel de vérification. Réessayez.',
+'msg.resendFailed':'Impossible de renvoyer le code. Réessayez.',
+'kw.copied':'✓ Copié!',
+'toast.redirectCheckout':'Redirection vers le paiement sécurisé...',
+'toast.noReportEmails':'Aucun des employés sélectionnés n\'a de courriel de rapport. Modifiez les employés pour ajouter un courriel et activer les rapports.',
+'toast.inviteNotPending':'Cette invitation a déjà été acceptée ou n\'est plus en attente.',
+'toast.inviteNotFound':'Invitation introuvable ou plus en attente.',
+'toast.inviteExpired':'Cette invitation a expiré. Annulez-la et envoyez-en une nouvelle.',
+'toast.accessDenied':'Demande d\'accès refusée.',
+'toast.logoFailed':'L\'entreprise a été créée, mais son logo n\'a pas pu être téléversé. Vous pourrez l\'ajouter dans les paramètres.',
+'toast.punchesSkipped':'Certains pointages sélectionnés sont hors de vos sites assignés et ont été ignorés.',
+'toast.noSitesReassign':'Aucun site disponible pour la réaffectation.',
+'toast.mgrRemovalError':'Erreur lors du retrait du gestionnaire : ',
+'toast.pwaUnavailable':'Installation non disponible dans ce navigateur. Suivez les étapes manuelles ci-dessous.',
+'toast.pwaInstalled':'✓ Application installée! Un raccourci a été ajouté à votre bureau.',
+'toast.kioskCopied':'✓ Lien du kiosque copié!',
+'toast.urlCopied':'✓ Lien copié!',
+'toast.copyFailed':'Impossible de copier — copiez le lien manuellement.',
+'toast.kioskNotFound':'Lien de kiosque introuvable. Contactez votre administrateur.',
+'toast.inviteInvalid':'Ce lien d\'invitation est invalide ou a expiré. Demandez à votre administrateur de vous en envoyer un nouveau.',
+'toast.empAdded':'✓ {name} ajouté avec succès!',
+'toast.empsActivated':'{n} employé(s) activé(s).',
+'toast.empsDeactivated':'{n} employé(s) désactivé(s).',
+'toast.empsDeleted':'{n} employé(s) supprimé(s).',
+'toast.removed':'✓ {name} retiré.',
 'sched.previewNote':'Semaine d’exemple — ces quarts sont une illustration, pas votre horaire réel. Rien n’est enregistré ici.',
 'sched.previewTitle':'Construisez le vôtre pour votre équipe',
 'sched.previewBody':'Planifiez la semaine, voyez les heures de chacun au fur et à mesure, et envoyez l’horaire à votre équipe en une seule action. 14,95 $/mois sur tout forfait payant.','sched.trialBtn':'Essayer gratuitement pendant 14 jours','sched.trialNote':'Sans carte de crédit. L\'essai commence maintenant et s\'arrête de lui-même après 14 jours.','sched.trialEnded':'Votre essai gratuit a pris fin le {date}.','sched.trialOwnerOnly':'Le propriétaire du compte peut démarrer l\'essai gratuit de 14 jours ou ajouter la planification.','sched.trialStarted':'Essai démarré : la planification est à vous jusqu\'au {date}.','sched.trialLeft':'Essai gratuit : {n} jours restants (se termine le {date}).','sched.trialKeep':'La garder — 14,95$/mois','addon.trial':'Essai',

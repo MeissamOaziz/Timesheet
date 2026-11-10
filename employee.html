@@ -637,6 +637,7 @@ function escHtml(v) {
 // ══════════════════════════════════════════════════════
 const T = {
   en: {
+    pageTitle: 'PunchClock Crew — Employee Portal', repeatPasswordPh: 'Repeat password',
     loading: 'Loading...', loginTitle: 'Employee Portal', loginSub: 'Sign in to view your schedule and hours.',
     forgotLink:'Forgot your password?',
     fgTitle:'Reset your password', fgSub:'We will email you a 6-digit code.',
@@ -720,6 +721,7 @@ const T = {
     punchLocDenied: '(location not shared)',
   },
   fr: {
+    pageTitle: 'PunchClock Crew — Portail employé', repeatPasswordPh: 'Répétez le mot de passe',
     loading: 'Chargement...', loginTitle: 'Portail employé', loginSub: 'Connectez-vous pour voir votre horaire et vos heures.',
     forgotLink:'Mot de passe oublié?',
     fgTitle:'Réinitialiser votre mot de passe', fgSub:'Nous vous enverrons un code à 6 chiffres.',
@@ -843,8 +845,11 @@ function applyTranslations() {
     availTitle:'availTitle', availSub:'availSub',
     recurringLabel:'recurringLabel', recurringDesc:'recurringDesc',
     specificLabel:'specificLabel', specificDesc:'specificDesc',
-    addDateBtn:'addDateBtn', loading:'loadingMsg',
+    addDateBtn:'addDateBtn', loading:'loadingMsg', punchLogLabel:'punchLogLabel',
   };
+  document.title = t('pageTitle');
+  const setPassConfirm = document.getElementById('setPassConfirm');
+  if (setPassConfirm) setPassConfirm.placeholder = t('repeatPasswordPh');
   for (const [key, id] of Object.entries(ids)) {
     const el = document.getElementById(id);
     if (el) el.textContent = t(key);
