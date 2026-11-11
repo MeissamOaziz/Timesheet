@@ -399,7 +399,9 @@ function isPreAuthAllowed(table: string, filter: string): boolean {
 // onboarding bookkeeping: nothing in the apps reads them back, and invite_token is a bearer credential.
 // Stripe fields and the unsubscribe token are kept only on the caller's OWN row (decided per returned
 // row, not by looking for the caller's id inside the request's filter text).
-function stripAdminRows(rows: unknown[], sessionId: string | null): unknown[] {
+// A super admin (the owner) also keeps the Stripe ids on every row: the Accounts tab needs them to tell a
+// paying account from a comped one. Nobody else gets another account's.
+function stripAdminRows(rows: unknown[], sessionId: string | null, callerIsSuper = false): unknown[] {
   return rows.map(row => {
     if (typeof row !== 'object' || row === null) return row;
     const r = { ...(row as Record<string, unknown>) };
@@ -411,8 +413,10 @@ function stripAdminRows(rows: unknown[], sessionId: string | null): unknown[] {
     delete r['invite_site_ids'];
     delete r['onboarding_emails_sent'];
     if (!isSelf) {
-      delete r['stripe_customer_id'];
-      delete r['stripe_subscription_id'];
+      if (!callerIsSuper) {
+        delete r['stripe_customer_id'];
+        delete r['stripe_subscription_id'];
+      }
       // The unsubscribe token silences that admin's digest from an unauthenticated link, so a
       // co-admin reading the team list must not be able to lift their owner's out of the API.
       delete r['unsub_token'];
@@ -2185,7 +2189,7 @@ Deno.serve(async (req: Request) => {
     // Prefer: return=representation, so renaming a co-admin was handing the caller that person's
     // bcrypt hash -- the same secret the GET path has always been careful to remove.
     if (table === 'admins' && Array.isArray(data)) {
-      data = stripAdminRows(data, authedAdminId);
+      data = stripAdminRows(data, authedAdminId, caller?.role === 'super_admin');
       if (!authedAdminId) data = preAuthAdminRows(data, filter);
     }
     if (table === 'employee_portal' && Array.isArray(data)) {

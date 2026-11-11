@@ -2568,6 +2568,8 @@ border-top:1px solid var(--border);margin:18px 0;}
         </table></div>
         <div id="joinReqCardsContainer" class="mcards"></div>
       </div>
+      <!-- Performance dashboard (super admin only): filled by renderPerformance() from the same account list as the table below. -->
+      <div id="perfPanel" style="margin-bottom:26px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <h3 style="font-size:14px;font-weight:600" data-i18n="admin.accountsOverview">Accounts Overview</h3>
       </div>
@@ -10075,6 +10077,86 @@ function toggleAdminDetail(id){
   if(!row)return;
   row.style.display=row.style.display==='none'?'':'none';
 }
+// Super-admin Performance dashboard. Everything is computed from the owner rows already loaded for the
+// table (so no extra requests, no Stripe key). Limits, stated on the page itself: the database has no
+// "became paid on" or "cancelled" date, so "new paying" means signed up in the window AND paying now,
+// and a cancellation scheduled in Stripe is not visible here.
+function renderPerformance(rows, recentCoIds){
+  const host=document.getElementById('perfPanel'); if(!host) return;
+  const DAY=86400000, now=Date.now();
+  const ts=r=>new Date(r.a.created_at).getTime();
+  const paying=rows.filter(r=>r.cls==='paying');
+  const free=rows.filter(r=>r.cls==='free');
+  const mrrOf=a=>((PLANS[a.plan]||{}).price||0)+Number(a.extra_seats||0)*4.90+(a.scheduling_addon?14.95:0);
+  const mrr=paying.reduce((s,r)=>s+mrrOf(r.a),0);
+  const since=d=>rows.filter(r=>now-ts(r)<d*DAY);
+  const new7=since(7), new30=since(30);
+  const newPaid30=new30.filter(r=>r.cls==='paying');
+  const conv=(paying.length+free.length)?Math.round(100*paying.length/(paying.length+free.length)):0;
+  const cos=rows.flatMap(r=>r.cos);
+  const activeCos=cos.filter(c=>recentCoIds.has(c.id)).length;
+  // Billing ids are hidden from the browser by older server versions: say so rather than show wrong money.
+  const idsHidden=rows.some(r=>r.cls!=='free'&&!r.isMe)&&!rows.some(r=>r.a.stripe_subscription_id);
+
+  const tile=(label,val,sub,color)=>`<div class="card"><div style="font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600">${label}</div><div style="font-size:22px;font-weight:700;margin-top:5px;color:${color||'var(--text)'}">${val}</div>${sub?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${sub}</div>`:''}</div>`;
+
+  // Revenue by plan (what is being billed now).
+  const byPlan={};
+  paying.forEach(r=>{const k=r.a.plan; byPlan[k]=byPlan[k]||{n:0,amt:0}; byPlan[k].n++; byPlan[k].amt+=(PLANS[k]||{}).price||0;});
+  const addons=paying.filter(r=>r.a.scheduling_addon).length;
+  const seats=paying.reduce((s,r)=>s+Number(r.a.extra_seats||0),0);
+  const planLines=Object.keys(byPlan).sort().map(k=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0"><span>${esc((PLANS[k]||{}).name||k)} × ${byPlan[k].n}</span><span>$${byPlan[k].amt.toFixed(2)}</span></div>`).join('')
+    +(addons?`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0"><span>Scheduling add-on × ${addons}</span><span>$${(addons*14.95).toFixed(2)}</span></div>`:'')
+    +(seats?`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0"><span>Extra seats × ${seats}</span><span>$${(seats*4.90).toFixed(2)}</span></div>`:'');
+
+  // Signups per week, last 8 weeks, split paying / not.
+  const weeks=[];
+  for(let i=7;i>=0;i--){
+    const end=now-i*7*DAY, start=end-7*DAY;
+    const inW=rows.filter(r=>ts(r)>=start&&ts(r)<end);
+    weeks.push({label:new Date(start).toLocaleDateString(undefined,{month:'short',day:'numeric'}),n:inW.length,p:inW.filter(r=>r.cls==='paying').length});
+  }
+  const maxW=Math.max(1,...weeks.map(w=>w.n));
+  const bars=weeks.map((w,wi)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0">
+      <div style="font-size:10.5px;color:var(--text2)">${w.n}</div>
+      <div style="width:100%;max-width:34px;height:70px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="height:${Math.round(70*(w.n-w.p)/maxW)}px;background:var(--accent);opacity:.55;border-radius:3px 3px 0 0"></div>
+        <div style="height:${Math.round(70*w.p/maxW)}px;background:var(--green);${w.n===w.p?'border-radius:3px 3px 0 0':''}"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);white-space:nowrap;height:12px;visibility:${wi%2?'hidden':'visible'}">${esc(w.label)}</div></div>`).join('');
+
+  // Where signups came from, all accounts (utm source, else referrer host, else unknown).
+  const grp=(keyFn)=>{const m={}; rows.forEach(r=>{const k=keyFn(r.a)||''; if(!k) return; m[k]=m[k]||{n:0,p:0}; m[k].n++; if(r.cls==='paying') m[k].p++;}); return Object.entries(m).sort((a,b)=>b[1].n-a[1].n).slice(0,8);};
+  const src=grp(a=>a.signup_utm_source||a.signup_referrer_host||'');
+  const unknownN=rows.length-rows.filter(r=>r.a.signup_utm_source||r.a.signup_referrer_host).length;
+  const heard=grp(a=>a.signup_heard||'');
+  const listRows=(arr,unk)=>arr.map(([k,v])=>`<tr><td style="padding:3px 8px 3px 0;font-size:12.5px;overflow-wrap:anywhere">${esc(k)}</td><td style="text-align:right;font-size:12.5px;padding:3px 0 3px 8px">${v.n}</td><td style="text-align:right;font-size:12.5px;padding:3px 0 3px 8px;color:var(--green)">${v.p||''}</td></tr>`).join('')
+    +(unk?`<tr><td style="padding:3px 8px 3px 0;font-size:12.5px;color:var(--text3)">direct / unknown</td><td style="text-align:right;font-size:12.5px;padding:3px 0 3px 8px;color:var(--text3)">${unk}</td><td></td></tr>`:'');
+  const head=`<tr><th style="text-align:left;font-size:10.5px;color:var(--text3);font-weight:600;padding-bottom:3px">&nbsp;</th><th style="text-align:right;font-size:10.5px;color:var(--text3);font-weight:600;padding-bottom:3px">Signups</th><th style="text-align:right;font-size:10.5px;color:var(--text3);font-weight:600;padding-bottom:3px">Paying</th></tr>`;
+  const box=(title,inner)=>`<div class="card"><div style="font-size:12px;font-weight:600;margin-bottom:8px">${title}</div>${inner}</div>`;
+
+  host.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+      <h3 style="font-size:14px;font-weight:600">Performance</h3>
+      <span style="font-size:11px;color:var(--text3)">Customer accounts only (co-admins and managers not counted). Money is in CAD, before Stripe fees.</span>
+    </div>
+    ${idsHidden?`<div class="card" style="border-color:var(--amber);margin-bottom:10px;font-size:12.5px">Billing ids are not reaching this page yet (the server update is not deployed), so every paid account reads as comped and revenue shows $0.</div>`:''}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:12px">
+      ${tile('MRR','$'+mrr.toFixed(2),paying.length+' paying',  'var(--green)')}
+      ${tile('Signups · 7 days',new7.length,'30 days: '+new30.length)}
+      ${tile('New paying · 30 days',newPaid30.length,'signed up in 30 days, paying now','var(--green)')}
+      ${tile('Free → paid',conv+'%',paying.length+' of '+(paying.length+free.length)+' non-comped')}
+      ${tile('Companies punching',activeCos,'of '+cos.length+' in the last 7 days')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+      ${box('Signups per week <span style="font-weight:400;color:var(--text3)">(green = paying now)</span>',`<div style="display:flex;gap:4px;align-items:flex-end">${bars}</div>`)}
+      ${box('MRR by plan',planLines||'<div style="font-size:12.5px;color:var(--text3)">No paying accounts.</div>')}
+      ${box('Signup source',`<table style="width:100%;border-collapse:collapse">${head}${listRows(src,unknownN)}</table>`)}
+      ${heard.length?box('"How did you hear about us"',`<table style="width:100%;border-collapse:collapse">${head}${listRows(heard,0)}</table>`):''}
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">Not available here: when an account became paid, cancellations and cancellations scheduled in Stripe (the database does not record them).</div>`;
+}
+
 async function renderAdmins(){
   const superAdmin = isSuperAdmin();
   document.getElementById('superAdminPanel').style.display = superAdmin ? '' : 'none';
@@ -10124,6 +10206,8 @@ async function renderAdmins(){
       const teammates = admins.filter(x=>x.parent_admin_id===a.id);
       return {a, isMe, status, ini, coCount:cos.length, siteCount, empCount, cos, cls, activeThisWeek, needsAttention, teammates};
     });
+
+    renderPerformance(rows, recentCoIds);
 
     if(statsGrid){
       const totalAccounts=rows.length;

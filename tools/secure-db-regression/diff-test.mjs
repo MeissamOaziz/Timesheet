@@ -870,6 +870,8 @@ const cases = [
     r => r.status === 200 && r.obj.length === 2 && r.obj.every(x => !('password' in x) && !('invite_token' in x) && !('invite_expires_at' in x) && !('onboarding_emails_sent' in x)) && r.obj.find(x => x.id === 'a1').stripe_customer_id === 'cus' && !('stripe_customer_id' in r.obj.find(x => x.id === 'a2')) && !('unsub_token' in r.obj.find(x => x.id === 'a2'))),
   R('admins-out', 'a request that merely mentions the caller id in another clause does not unlock other rows', { table: 'admins', method: 'GET', filter: 'marker=eq.1&name=neq.id=eq.a1', ...own },
     r => r.status === 200 && !('stripe_customer_id' in r.obj.find(x => x.id === 'a2'))),
+  R('admins-out', 'super admin keeps the billing ids on every account row (the Accounts tab needs them) but still no password, token or unsubscribe link', { table: 'admins', method: 'GET', filter: 'marker=eq.1', ...sup },
+    r => r.status === 200 && r.obj.length === 2 && r.obj.every(x => !('password' in x) && !('invite_token' in x) && !('unsub_token' in x && x.id === 'a2')) && r.obj.find(x => x.id === 'a2').stripe_customer_id === 'cus2' && r.obj.find(x => x.id === 'a1').stripe_subscription_id === 'sub'),
   // ---- the pre-login admin lookup ----
   R('preauth', 'anon: by e-mail only says the address exists', { table: 'admins', method: 'GET', filter: 'email=eq.o@x.ca&select=stripe_customer_id' }, r => r.status === 200 && r.obj.every(x => Object.keys(x).join() === 'email')),
   R('preauth', 'anon: by id gives only the sign-in columns', { table: 'admins', method: 'GET', filter: 'id=eq.a1&select=id,name,email,role,plan,status,parent_admin_id,extra_seats,stripe_customer_id,stripe_subscription_id,scheduling_addon' },
