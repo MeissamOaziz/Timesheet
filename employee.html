@@ -334,7 +334,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <div class="form-group">
           <label id="fgPassLabel">New password</label>
           <div class="pw-wrap">
-            <input type="password" id="fgPass" class="form-input" placeholder="Min 6 characters"
+            <input type="password" id="fgPass" class="form-input" placeholder="Min 8 characters"
                    onkeydown="if(event.key==='Enter')doEmpReset()">
             <button type="button" class="pw-toggle" onclick="togglePw('fgPass',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
@@ -361,7 +361,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="form-group">
         <label id="setPassLabel">New Password</label>
         <div class="pw-wrap">
-          <input type="password" id="setPassNew" class="form-input" placeholder="Min 6 characters">
+          <input type="password" id="setPassNew" class="form-input" placeholder="Min 8 characters">
           <button type="button" class="pw-toggle" onclick="togglePw('setPassNew',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
       </div>
@@ -638,6 +638,8 @@ function escHtml(v) {
 const T = {
   en: {
     pageTitle: 'PunchClock Crew — Employee Portal', repeatPasswordPh: 'Repeat password',
+    min8Ph: 'Min 8 characters', min6Ph: 'Min 6 characters', themeToggle: 'Toggle theme',
+    paidBreak: 'PAID BREAK', errPrefix: 'Error', emailPh: 'you@company.com',
     loading: 'Loading...', loginTitle: 'Employee Portal', loginSub: 'Sign in to view your schedule and hours.',
     forgotLink:'Forgot your password?',
     fgTitle:'Reset your password', fgSub:'We will email you a 6-digit code.',
@@ -722,6 +724,8 @@ const T = {
   },
   fr: {
     pageTitle: 'PunchClock Crew — Portail employé', repeatPasswordPh: 'Répétez le mot de passe',
+    min8Ph: '8 caractères minimum', min6Ph: '6 caractères minimum', themeToggle: 'Changer le thème',
+    paidBreak: 'PAUSE PAYÉE', errPrefix: 'Erreur', emailPh: 'vous@entreprise.com',
     loading: 'Chargement...', loginTitle: 'Portail employé', loginSub: 'Connectez-vous pour voir votre horaire et vos heures.',
     forgotLink:'Mot de passe oublié?',
     fgTitle:'Réinitialiser votre mot de passe', fgSub:'Nous vous enverrons un code à 6 chiffres.',
@@ -815,7 +819,8 @@ function setEmpLang(lang) {
   document.querySelectorAll('.lang-sw button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   // Re-render active tab content
   if (_session) {
-    const activeTab = document.querySelector('.tab-btn.active')?.id?.replace('tab','').toLowerCase();
+    // Button id → tab. The Availability button is "tabAvail", so a plain lower-casing never matched it.
+    const activeTab = { tabSchedule:'schedule', tabTeam:'team', tabReports:'reports', tabAvail:'availability' }[document.querySelector('.tab-btn.active')?.id];
     if (activeTab === 'schedule') renderSchedule();
     else if (activeTab === 'team') renderTeamSchedule();
     else if (activeTab === 'reports') renderReports();
@@ -850,6 +855,15 @@ function applyTranslations() {
   document.title = t('pageTitle');
   const setPassConfirm = document.getElementById('setPassConfirm');
   if (setPassConfirm) setPassConfirm.placeholder = t('repeatPasswordPh');
+  // Reset and invite need 8 characters; changing a password while signed in needs 6 (server rule).
+  [['fgPass','min8Ph'],['setPassNew','min8Ph'],['cpNew','min6Ph'],['loginEmail','emailPh'],['fgEmail','emailPh']].forEach(([id, key]) => {
+    const el = document.getElementById(id); if (el) el.placeholder = t(key);
+  });
+  ['empThemeBtn','authThemeBtn'].forEach(id => {
+    const el = document.getElementById(id); if (el) { el.title = t('themeToggle'); el.setAttribute('aria-label', t('themeToggle')); }
+  });
+  const avatar = document.getElementById('navEmpAvatar');
+  if (avatar) avatar.title = t('cpLink');
   for (const [key, id] of Object.entries(ids)) {
     const el = document.getElementById(id);
     if (el) el.textContent = t(key);
@@ -930,6 +944,10 @@ function showTab(name) {
   else if (name === 'timeoff') renderTimeOff();
 }
 function dateStr(d) { return d.toISOString().slice(0,10); }
+// Hours shown to the employee: a decimal comma in French (9,5), a point in English (9.5).
+function fmtNum(x, digits) {
+  return Number(x).toLocaleString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
 function fmtDate(str) {
   const d = new Date(str + 'T12:00:00');
   return d.toLocaleDateString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -982,7 +1000,7 @@ async function doSetEmpPassword() {
     // Pass session_token so loginWithPortal can call portal_get_me (no direct anon reads)
     await loginWithPortal({ portal_id: acct.portal_id, employee_id: acct.employee_id, email: acct.email, session_token: acct.session_token });
   } catch(e) {
-    showMsg('setPassMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : /password_too_short/.test(e.message) ? t('passShort') : 'Error: ' + e.message, 'error');
+    showMsg('setPassMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : /password_too_short/.test(e.message) ? t('passShort') : t('errPrefix') + ': ' + escHtml(e.message), 'error');
     btn.disabled = false; btn.textContent = t('setPassBtn');
   }
 }
@@ -1088,7 +1106,7 @@ async function doEmpLogin() {
     }
     await loginWithPortal(rows[0]); // rows[0] = {portal_id, employee_id, email, session_token}
   } catch(e) {
-    showMsg('loginMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : /too_many_attempts/.test(e.message) ? t('loginLocked') : 'Error: ' + e.message, 'error');
+    showMsg('loginMsg', /portal_plan_locked/.test(e.message) ? t('planLocked') : /too_many_attempts/.test(e.message) ? t('loginLocked') : t('errPrefix') + ': ' + escHtml(e.message), 'error');
     btn.disabled = false; btn.textContent = t('loginBtn');
   }
 }
@@ -1412,7 +1430,7 @@ async function renderSchedule() {
     html += '</div>';
     wrap.innerHTML = html;
   } catch(e) {
-    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">Error: ${escHtml(e.message)}</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">${t('errPrefix')}: ${escHtml(e.message)}</p></div>`;
   }
 }
 
@@ -1497,7 +1515,7 @@ async function renderTeamSchedule() {
     }
     wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">${dayBlocks.join('')}</div>`;
   } catch(e) {
-    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">Error: ${escHtml(e.message)}</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">${t('errPrefix')}: ${escHtml(e.message)}</p></div>`;
   }
 }
 
@@ -1615,9 +1633,9 @@ async function loadPeriodData(period) {
     const regHours = totalHours - otHours;
 
     statsEl.innerHTML = `
-      <div class="stat-card"><div class="stat-val">${totalHours.toFixed(1)}</div><div class="stat-label">${t('totalHours')}</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${regHours.toFixed(1)}</div><div class="stat-label">${t('regularHours')}</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${otHours.toFixed(1)}</div><div class="stat-label">${t('overtimeHours')}</div></div>
+      <div class="stat-card"><div class="stat-val">${fmtNum(totalHours, 1)}</div><div class="stat-label">${t('totalHours')}</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${fmtNum(regHours, 1)}</div><div class="stat-label">${t('regularHours')}</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${fmtNum(otHours, 1)}</div><div class="stat-label">${t('overtimeHours')}</div></div>
       <div class="stat-card"><div class="stat-val" style="color:var(--accent2)">${pairCount}</div><div class="stat-label">${t('totalPunches')}</div></div>
     `;
 
@@ -1638,7 +1656,7 @@ async function loadPeriodData(period) {
       const col = /^#[0-9a-fA-F]{6}$/.test(p.labelColor) ? p.labelColor : '#6b7280';
       return `<span style="display:inline-flex;align-items:center;gap:6px;font-weight:500"><span style="width:9px;height:9px;border-radius:50%;background:${col};flex:none"></span>${escHtml(p.label)}</span>`;
     };
-    const breakTag = `<span style="font-size:9.5px;font-weight:700;background:rgba(124,92,191,.18);color:#7c5cbf;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle">${t('paidBreak')||'PAID BREAK'}</span>`;
+    const breakTag = `<span style="font-size:9.5px;font-weight:700;background:rgba(124,92,191,.18);color:#7c5cbf;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle">${t('paidBreak')}</span>`;
     const cardsEl = document.getElementById('punchCards');
     if(cardsEl) cardsEl.innerHTML = pairs.map(p => `
       <div class="pcard">
@@ -1646,7 +1664,7 @@ async function loadPeriodData(period) {
         <div class="pcard-row"><span>${t('thIn')||'Clock In'}</span><span class="punch-type-in">${p.in}</span></div>
         <div class="pcard-row"><span>${t('thOut')||'Clock Out'}</span><span>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '—'}</span></div>
         ${hasLabels ? `<div class="pcard-row"><span>${t('thLabel')||'Job'}</span><span>${labelChip(p)}</span></div>` : ''}
-        <div class="pcard-row"><span>${t('thHours')||'Hours'}</span><span style="font-family:'DM Mono',monospace">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</span></div>
+        <div class="pcard-row"><span>${t('thHours')||'Hours'}</span><span style="font-family:'DM Mono',monospace">${p.hours ? fmtNum(p.hours, 2) + 'h' : '—'}</span></div>
       </div>`).join('');
 
     bodyEl.innerHTML = pairs.map(p => `
@@ -1655,11 +1673,11 @@ async function loadPeriodData(period) {
         <td><span class="punch-type-in">${p.in}</span></td>
         <td>${p.out !== '—' ? `<span class="punch-type-out">${p.out}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
         ${hasLabels ? `<td>${labelChip(p)}</td>` : ''}
-        <td style="font-family:\'DM Mono\',monospace;font-size:12px">${p.hours ? p.hours.toFixed(2) + 'h' : '—'}</td>
+        <td style="font-family:\'DM Mono\',monospace;font-size:12px">${p.hours ? fmtNum(p.hours, 2) + 'h' : '—'}</td>
       </tr>
     `).join('');
   } catch(e) {
-    statsEl.innerHTML = `<p style="color:var(--red);grid-column:1/-1">Error: ${escHtml(e.message)}</p>`;
+    statsEl.innerHTML = `<p style="color:var(--red);grid-column:1/-1">${t('errPrefix')}: ${escHtml(e.message)}</p>`;
   }
 }
 
