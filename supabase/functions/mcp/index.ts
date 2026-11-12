@@ -137,11 +137,30 @@ function background(job: Promise<unknown>): void {
   if (typeof g.EdgeRuntime !== 'undefined') g.EdgeRuntime.waitUntil(quiet);
 }
 
+// At most MAX_BODY bytes are kept. A larger upload is refused (null), but it is still read to the end and thrown away
+// (up to DRAIN_MAX, then cut) before the answer goes out: answering while the upload was still in flight made the gateway
+// time out now and then (a 504 instead of the 413). Nothing of an oversized upload is kept in memory.
+const DRAIN_MAX = 1048576;
 async function readBody(req: Request): Promise<string | null> {
-  const declared = Number(req.headers.get('content-length') || '0');
-  if (declared > MAX_BODY) return null;
-  const buf = new Uint8Array(await req.arrayBuffer());
-  if (buf.byteLength > MAX_BODY) return null;
+  let tooBig = Number(req.headers.get('content-length') || '0') > MAX_BODY;
+  const reader = req.body ? req.body.getReader() : null;
+  if (!reader) return tooBig ? null : '';
+  let chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY) { tooBig = true; chunks = []; }
+      if (size > DRAIN_MAX) { await reader.cancel().catch(() => {}); break; }
+      if (!tooBig) chunks.push(value);
+    }
+  } catch { return null; }
+  if (tooBig) return null;
+  const buf = new Uint8Array(size);
+  let at = 0;
+  for (const c of chunks) { buf.set(c, at); at += c.byteLength; }
   return dec.decode(buf);
 }
 
@@ -414,6 +433,28 @@ async function authenticate(req: Request): Promise<Session | 'unavailable' | nul
   return { grantId, adminId: grantRow.admin_id, ownerId: who.ownerId, app: grantRow.client };
 }
 
+// AI apps are part of the Growth plan and up (or a grandfathered company: same list as secure-db). The owner's plan is
+// read on EVERY tool call and never remembered: the moment a subscription ends (the account goes back to Free) or
+// drops below Growth, tools stop answering, with no need to cancel anything. If the plan cannot be read, the answer
+// is "no". Every tool goes through this, so a tool added later cannot forget it.
+const GRANDFATHERED_COMPANIES = ['Oaziz Extracts', 'Connoisseur Culture'];
+const PLAN_NOTICE = 'AI apps are part of the PunchClock Crew Growth plan and up. This account is not on such a plan right now, '
+  + 'so no data is available here. The account owner can change the plan at https://www.punchclock.ca/#pricing.';
+async function planIncluded(ownerId: string): Promise<boolean> {
+  if (!UUID_RE.test(ownerId)) return false;
+  try {
+    const r = await fetch(`${BASE}/rest/v1/rpc/admin_plan_rank`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_admin: ownerId }),
+    });
+    const rank = r.ok ? await r.json().catch(() => null) : null;
+    if (typeof rank === 'number' && rank >= 2) return true;
+  } catch { /* not answered: only a grandfathered company can still say yes */ }
+  const cos = await db('GET', `companies?admin_id=eq.${ownerId}&select=name&limit=500`);
+  return cos.ok && cos.rows.some((c) => GRANDFATHERED_COMPANIES.includes(String(c.name)));
+}
+
 const TOOLS = [{
   name: 'ping',
   title: 'Connection check',
@@ -464,6 +505,10 @@ async function mcp(req: Request): Promise<Response> {
       return reply({ tools: TOOLS });
     case 'tools/call':
       if (msg.params?.name !== 'ping') return error(-32602, 'Unknown tool');
+      if (!(await planIncluded(session.ownerId))) {
+        log('mcp_plan_refused', req, { app: session.app });
+        return reply({ content: [{ type: 'text', text: PLAN_NOTICE }], isError: true });
+      }
       return reply({
         content: [{ type: 'text', text: 'pong. PunchClock Crew is connected. The tools for hours, time off and schedules are not available yet.' }],
         isError: false,

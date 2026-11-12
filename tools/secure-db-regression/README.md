@@ -46,7 +46,9 @@ nothing is deployed without both of these.
      database that enforces the real table rules, and plays the attacks: foreign and look-alike callbacks, altered or
      forged sign-in requests, missing / empty / wrong PKCE verifier, reused and expired codes, a replayed refresh
      token, another tenant's connections, a manager or co-admin flipping the owner's switch, the super admin, a
-     suspended or expired account, and a scan proving no code or token is ever stored or logged in the clear.
+     suspended or expired account, an account whose subscription ended or dropped below Growth (no tool answers from
+     the next call on), oversized and endless uploads, and a scan proving no code or token is ever stored or logged
+     in the clear.
      With `MCP_URL=<deployed address>` it sends only requests that must be refused (nothing is created).
    - diff-test group `mcp`: the new actions turn away callers without a session and the connector tables stay
      unreachable through the table path. Run with `mcp` as the group allowed to differ.

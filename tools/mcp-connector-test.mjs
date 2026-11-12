@@ -44,6 +44,7 @@ const APP = { claude: { id: CLAUDE_ID, cb: CLAUDE_CB }, chatgpt: { id: CHATGPT_I
 const T = { admins: [], admin_sessions: [], companies: [], sites: [], manager_sites: [], mcp_grants: [], mcp_tokens: [], mcp_auth_codes: [], audit_log: [] };
 const dbLog = [];            // every database call the functions made: "METHOD table?query"
 let dbDown = false;          // simulate the database not answering
+let planDown = false;        // simulate only the plan lookup not answering
 const logLines = [];         // everything the functions wrote to their log
 const secrets = new Set();   // every raw code and token handed out during the run (to prove none is stored or logged)
 
@@ -142,6 +143,7 @@ async function fakeFetch(u, init = {}) {
   if (dbDown) return jr({ message: 'upstream unavailable' }, 503);
   const wantRows = (init.headers?.Prefer || '').includes('return=representation');
   if (table === 'rpc/admin_plan_rank') {
+    if (planDown) return jr({ message: 'plan lookup unavailable' }, 500);
     const a = T.admins.find((x) => x.id === JSON.parse(init.body).p_admin);
     if (!a) return jr(null);
     if (a.role === 'super_admin') return jr(4);
@@ -378,6 +380,38 @@ out('\nToken endpoint: refusals that need no account');
   check('a malformed bearer -> 401', await pingStatus('abc') === 401);
   check('revoking a token nobody issued -> plain 200', (await mcpCall('/revoke', form({ token: rt }))).status === 200);
   check('an oversized body -> 413', (await mcpCall('/token', form({ grant_type: 'refresh_token', pad: 'x'.repeat(70000) }))).status === 413);
+  if (!LIVE) {
+    // An upload sent piece by piece: how much of it the function read, and whether it cut the upload off.
+    const upload = (pieces, declared) => {
+      const seen = { pulled: 0, cancelled: false };
+      const kb = new TextEncoder().encode('x'.repeat(1024));
+      const body = new ReadableStream({
+        pull(c) { if (seen.pulled >= pieces) c.close(); else { seen.pulled++; c.enqueue(kb); } },
+        cancel() { seen.cancelled = true; },
+      }, { highWaterMark: 0 });
+      const headers = { 'Content-Type': 'application/x-www-form-urlencoded', ...(declared ? { 'Content-Length': String(declared) } : {}) };
+      return { seen, init: { method: 'POST', headers, body, duplex: 'half' } };
+    };
+    for (const path of ['/token', '/revoke']) {
+      const u = upload(70, 70 * 1024);
+      const s = (await mcpCall(path, u.init)).status;
+      check(`oversized upload to ${path} -> 413, read to the end first`, s === 413 && u.seen.pulled === 70 && !u.seen.cancelled, `${s} ${u.seen.pulled}`);
+    }
+    let u = upload(70, 70 * 1024);
+    r = (await mcpCall('', u.init)).status;
+    check('oversized upload to the MCP endpoint without a connection -> 401, nothing read', r === 401 && u.seen.pulled === 0, `${r} ${u.seen.pulled}`);
+    u = upload(70, 0);
+    r = (await mcpCall('/token', u.init)).status;
+    check('oversized upload that declares no size -> 413', r === 413 && u.seen.pulled === 70, `${r} ${u.seen.pulled}`);
+    u = upload(1, 70 * 1024);
+    check('a small upload that declares an oversized one -> 413', (await mcpCall('/token', u.init)).status === 413);
+    u = upload(4096, 0);
+    r = (await mcpCall('/token', u.init)).status;
+    check('an endless upload is cut off after 1 MB -> 413', r === 413 && u.seen.cancelled && u.seen.pulled <= 1026, `${r} ${u.seen.pulled} ${u.seen.cancelled}`);
+    u = upload(64, 0);
+    r = (await mcpCall('/token', u.init)).status;
+    check('an upload of exactly the limit is read, not called too large', r !== 413 && u.seen.pulled === 64, `${r} ${u.seen.pulled}`);
+  }
 }
 
 if (LIVE) {
@@ -659,6 +693,44 @@ out('\nCalling the server');
   await flip('temporary access ran out -> refused', () => { admin(MGR).expires_at = PAST; }, () => { admin(MGR).expires_at = null; });
   await flip('the owner\'s temporary access ran out -> refused', () => { admin(OWNER).expires_at = PAST; }, () => { admin(OWNER).expires_at = null; });
   check('back to normal -> works again', await pingStatus(mgr.tok.access_token) === 200);
+  const big = await mcpCall('', jsonPost({ jsonrpc: '2.0', id: 1, method: 'ping', pad: 'x'.repeat(70000) }, { Authorization: 'Bearer ' + mgr.tok.access_token }));
+  check('a connected app sending an oversized request -> 413', big.status === 413, big.status);
+
+  // The plan, read on every tool call. A cancelled subscription puts the account back on Free (stripe-handler does
+  // exactly that): from the next call on, no tool answers, for the owner and for everyone under them.
+  const tool = async (access) => (await (await rpc(access, 'tools/call', { name: 'ping', arguments: {} })).json()).result;
+  const refused = (r) => r?.isError === true && /Growth plan/.test(r.content[0].text) && !/pong|Acme|Olivia|@/.test(JSON.stringify(r));
+  const answered = (r) => r?.isError === false && /^pong\./.test(r.content[0].text);
+  check('Growth: the owner\'s and the manager\'s tools answer', answered(await tool(owner.tok.access_token)) && answered(await tool(mgr.tok.access_token)));
+  for (const plan of ['free', 'starter']) {
+    admin(OWNER).plan = plan;
+    check(`owner now on ${plan} -> the owner's very next tool call gets the plan notice, no data`, refused(await tool(owner.tok.access_token)));
+    check(`owner now on ${plan} -> same for the manager under them`, refused(await tool(mgr.tok.access_token)));
+    check(`owner now on ${plan} -> same for the co-admin under them`, refused(await tool(co.tok.access_token)));
+  }
+  admin(OWNER).plan = 'business';
+  check('subscribed again (Business) -> tools answer again, no reconnecting', answered(await tool(owner.tok.access_token)) && answered(await tool(mgr.tok.access_token)));
+  admin(OWNER).plan = 'growth';
+  planDown = true;
+  check('plan cannot be read -> the answer is no', refused(await tool(owner.tok.access_token)));
+  planDown = false;
+  admin(MGR).plan = 'unlimited';   // a plan written on the manager's own row means nothing: the owner's plan decides
+  admin(OWNER).plan = 'free';
+  check('a plan on the manager\'s own row does not count', refused(await tool(mgr.tok.access_token)));
+  admin(MGR).plan = 'free'; admin(OWNER).plan = 'growth';
+  // grandfathered company on Free, and an ordinary Free account with a live connection
+  admin(GF).ai_apps_enabled = true; admin(OTHER).ai_apps_enabled = true;
+  const gfConn = await connect('claude', 'tokGf'), freeConn = await connect('claude', 'tokOther');
+  check('grandfathered company on Free -> tools answer', gfConn.status === 200 && answered(await tool(gfConn.tok.access_token)));
+  check('Free account -> may connect, every tool call gets the plan notice', freeConn.status === 200 && refused(await tool(freeConn.tok.access_token)));
+  T.companies.find((c) => c.admin_id === GF).name = 'Some Other Co';
+  check('...and the grandfathered company renamed -> no longer included', refused(await tool(gfConn.tok.access_token)));
+  T.companies.find((c) => c.admin_id === GF).name = 'Oaziz Extracts';
+  planDown = true;
+  check('grandfathered company still answers while the plan lookup is down', answered(await tool(gfConn.tok.access_token)));
+  planDown = false;
+  for (const c of [gfConn, freeConn]) { const gid = grantOf(c.tok.access_token); T.mcp_tokens = T.mcp_tokens.filter((t) => t.grant_id !== gid); T.mcp_grants = T.mcp_grants.filter((x) => x.id !== gid); }
+  admin(GF).ai_apps_enabled = false; admin(OTHER).ai_apps_enabled = false;
 
   // a connection marked cancelled whose tokens were, for whatever reason, not removed
   const cgr = grantRow(grantOf(co.tok.access_token));
