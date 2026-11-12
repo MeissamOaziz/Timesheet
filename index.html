@@ -15381,6 +15381,14 @@ async function init(){
     document.getElementById('loadingOverlay').classList.add('hidden');
     updateNav();
     showLanding();
+    // ?signup=1 opens the sign-up form directly (links from the topic pages under /fr/ and /en/ use it).
+    try{
+      if(new URLSearchParams(window.location.search).get('signup')==='1'){
+        const _sl=getUrlLang();
+        window.history.replaceState({},'',window.location.pathname+(_sl?'?lang='+_sl:''));
+        hideLanding(); navigate('register');
+      }
+    }catch(_){}
     return;
   }
 

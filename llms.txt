@@ -1,0 +1,29 @@
+# PunchClock Crew
+
+> Time-and-attendance software made in Québec, Canada: employees clock in and out with a PIN on a shared tablet or computer (or from their phone with remote clock-in), and owners get hours, overtime, time off, schedules and payroll reports. Fully bilingual (French and English). Prices in Canadian dollars. Website: https://www.punchclock.ca
+
+Key facts:
+- Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds lunch breaks and visitor check-in); Business $79.49 (unlimited).
+- Starter and up add geofencing, remote clock-in with GPS, the employee self-service portal, time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
+- Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click.
+- Every new account previews the paid features free for 14 days. No credit card for the Free plan.
+- Works in a web browser; no app install needed for the clock-in terminal.
+- Operated by 9317-3516 Québec Inc. Support: support@punchclock.ca
+
+## Pages (English)
+- [A punch clock app made in Québec, for Québec businesses](https://www.punchclock.ca/en/time-clock-app-quebec/): A bilingual punch clock and time-tracking app made in Québec: PIN clock-in on a tablet, multi-site, overtime, payroll reports and Québec statutory holidays. Free plan available.
+- [Time clock with GPS and geofencing](https://www.punchclock.ca/en/gps-geofencing-time-clock/): Stop clock-ins from home or the parking lot: per-site geofencing, remote clock-in from the employee’s phone with the GPS location recorded on each punch. Included from the Starter plan.
+- [A free time clock app for small teams](https://www.punchclock.ca/en/free-time-clock-app/): A free punch clock for small teams: 1 site, up to 10 employees, PIN clock-in on a tablet, dashboard, activity log and PDF reports. No credit card, no time limit.
+- [Employee scheduling in the same app as your punch clock](https://www.punchclock.ca/en/employee-scheduling-app/): Build weekly shift schedules, email them to your team, add Québec statutory holidays in one click and see time off in the same app as your punch clock. $14.95/month CAD, 14-day free trial.
+- [PunchClock Crew pricing](https://www.punchclock.ca/en/pricing/): PunchClock Crew plans in Canadian dollars: Free, Starter $19.49, Growth $39.49 and Business $79.49 per month, plus the Scheduling add-on at $14.95.
+
+## Pages (français)
+- [Une application de pointage conçue au Québec, pour les entreprises d’ici](https://www.punchclock.ca/fr/application-pointage-quebec/): Une application de pointage et de suivi des heures conçue au Québec : pointage par NIP sur tablette, multi-sites, heures supplémentaires, rapports de paie et jours fériés du Québec. Plan gratuit offert.
+- [Pointage avec GPS et géorepérage](https://www.punchclock.ca/fr/pointage-gps-georeperage/): Empêchez le pointage à partir de la maison ou du stationnement : géorepérage par site, pointage à distance depuis le téléphone de l’employé avec la position GPS enregistrée. Inclus dès le plan Débutant.
+- [Une application de pointage gratuite pour les petites équipes](https://www.punchclock.ca/fr/application-pointage-gratuite/): Un pointage gratuit pour les petites équipes : 1 site, jusqu’à 10 employés, pointage par NIP sur tablette, tableau de bord, journal d’activité et rapports PDF. Sans carte de crédit, sans limite de temps.
+- [Les horaires de vos employés dans la même application que le pointage](https://www.punchclock.ca/fr/logiciel-horaires-employes/): Créez les horaires de la semaine, envoyez-les à votre équipe par courriel, ajoutez les jours fériés du Québec en un clic et voyez les congés dans la même application que le pointage. 14,95 $/mois, essai gratuit de 14 jours.
+- [Tarifs PunchClock Crew](https://www.punchclock.ca/fr/tarifs/): Les plans PunchClock Crew en dollars canadiens : Gratuit, Débutant 19,49 $, Croissance 39,49 $ et Entreprise 79,49 $ par mois, plus le module Planification à 14,95 $.
+
+## Start
+- [Create a free account](https://www.punchclock.ca/?signup=1)
+- [Live demo with sample data](https://www.punchclock.ca/?demo=1)
