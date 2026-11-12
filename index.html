@@ -347,6 +347,10 @@ body.nav-sidebar.nav-authed .page{margin-left:216px;margin-right:0;max-width:non
 /* The action banner is a full-width bar outside .page, so the fixed sidebar (which .page
    dodges via margin-left above) was drawing over its left edge instead of pushing it aside. */
 body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
+/* Super admin, while managing one customer (filled by _syncSideNav). */
+#manageBar{background:#6d4fc2;color:#fff;font-size:13px;padding:8px clamp(14px,3vw,28px);align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+#manageBar button{background:#fff;color:#4b2fa0;border:none;border-radius:var(--r-sm);font-family:inherit;font-size:12px;font-weight:700;padding:5px 13px;cursor:pointer;white-space:nowrap;}
+body.nav-sidebar.nav-authed #manageBar{margin-left:216px;}
 .sn-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:none;color:var(--text2);font-family:inherit;font-size:13.5px;font-weight:500;padding:9px 11px;border-radius:var(--r-sm);cursor:pointer;transition:background .12s,color .12s;}
 .sn-item:hover{background:var(--surface2);color:var(--text);}
 .sn-item.active{background:rgba(79,142,247,.14);color:var(--accent);font-weight:600;}
@@ -360,6 +364,14 @@ body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
 .sn-chev{margin-left:auto;font-size:11px;color:var(--text3);transition:transform .18s;}
 .sn-group.open .sn-chev{transform:rotate(180deg);}
 .sn-label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:12px 11px 5px;}
+/* Super admin only: platform items lead the sidebar. With no customer selected ("platform mode")
+   the customer navigation is hidden; it comes back, under the customer's name, once one is opened.
+   Their old Admins tab moved to the Accounts page, so its entry goes. Classes are set in _syncSideNav. */
+#sideNav [data-plat],#snCustLabel{display:none;}
+body.is-super #sideNav [data-plat]{display:flex;}
+body.is-super:not(.plat-mode) #snCustLabel{display:block;overflow-wrap:anywhere;}
+body.is-super #sideNav [data-nav="admins"]{display:none;}
+body.is-super.plat-mode #sideNav > :not([data-plat]){display:none;}
 /* Classic top-tab mode needs ~1350px for logo + context pill + 7 tabs + the right-hand controls.
    Below that it used to overflow and force the whole page to scroll sideways, so hand over to the
    hamburger menu, which already lists every page. Sidebar mode is unaffected. */
@@ -373,6 +385,7 @@ body.nav-sidebar.nav-authed #actionBanner{margin-left:216px;}
   body.nav-sidebar.nav-authed #sideNav{display:none;}
   body.nav-sidebar.nav-authed .page{margin-left:auto;}
   body.nav-sidebar.nav-authed #actionBanner{margin-left:0;}
+  body.nav-sidebar.nav-authed #manageBar{margin-left:0;}
   /* Sidebar is hidden here too, so this mode also falls back to the hamburger. */
   .hamburger{display:flex;}
 }
@@ -2138,10 +2151,13 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ACTION REQUIRED BANNER — sits under the nav on every page so an approval waiting on the
      admin cannot be missed by simply being on a different tab. -->
+<div id="manageBar" style="display:none"></div>
 <div id="actionBanner" style="display:none"></div>
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-nav-btn" onclick="mobileNav('platform')" id="mobileNavPlatform" style="display:none"><svg><use href="#i-nav-reports"/></svg><span>Performance</span></button>
+  <button class="mobile-nav-btn" onclick="mobileNav('accounts')" id="mobileNavAccounts" style="display:none"><svg><use href="#i-nav-admins"/></svg><span>Accounts</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('dashboard')" id="mobileNavDashboard" style="display:none"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
@@ -2162,6 +2178,11 @@ border-top:1px solid var(--border);margin:18px 0;}
 <aside id="sideNav">
   <!-- Daily view first (what happened), then the management section (what to plan).
        Schedule sits directly above Time Off because the two are used together. -->
+  <div class="sn-label" data-plat>Platform</div>
+  <button class="sn-item" data-plat data-nav="platform" onclick="navigate('platform')"><svg><use href="#i-nav-reports"/></svg><span>Performance</span></button>
+  <button class="sn-item" data-plat data-nav="accounts" onclick="navigate('accounts')"><svg><use href="#i-nav-admins"/></svg><span>Accounts</span><span id="snJoinBadgePlat" style="display:none;margin-left:auto;background:#ef4444;color:#fff;border-radius:var(--r-sm);font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
+  <button class="sn-item" data-plat onclick="openAnnouncementsModal()"><svg><use href="#i-mail"/></svg><span>Announcements</span></button>
+  <div class="sn-label" id="snCustLabel"></div>
   <button class="sn-item" data-nav="dashboard" onclick="navigate('dashboard')"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
   <button class="sn-item" data-nav="punch" onclick="navigate('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="sn-item" data-nav="activity" onclick="navigate('activity')"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
@@ -2557,46 +2578,6 @@ border-top:1px solid var(--border);margin:18px 0;}
   </div>
   <!-- ADMINS TAB (Super Admin only) -->
   <div id="tab-admins" data-admin-only style="display:none">
-    <div id="superAdminPanel">
-      <div id="joinRequestsSection" style="display:none;margin-bottom:24px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <h3 style="font-size:14px;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="admin.pendingRequests">Pending Access Requests</span></h3>
-        </div>
-        <div class="table-wrap"><table>
-          <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.requestedAdmin">Requested Admin</th><th data-i18n="col.date">Date</th><th data-i18n="col.actions">Actions</th></tr></thead>
-          <tbody id="joinRequestsBody"></tbody>
-        </table></div>
-        <div id="joinReqCardsContainer" class="mcards"></div>
-      </div>
-      <!-- Performance dashboard (super admin only): filled by renderPerformance() from the same account list as the table below. -->
-      <div id="perfPanel" style="margin-bottom:26px"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <h3 style="font-size:14px;font-weight:600" data-i18n="admin.accountsOverview">Accounts Overview</h3>
-      </div>
-      <div id="adminStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-bottom:22px"></div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">Customer Accounts</h3>
-        <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer">
-          <input type="checkbox" id="adminAttentionOnly" onchange="renderAdmins()" style="width:14px;height:14px;accent-color:var(--accent)">
-          <span data-i18n="admin.attentionOnly">Needs attention only</span>
-        </label>
-      </div>
-      <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1000px">
-        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="admin.col.billing">Billing</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Signed up</th><th data-i18n="admin.col.activeWeek">Active this week</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
-        <tbody id="adminsTableBody"></tbody>
-      </table></div>
-      <div id="adminCardsContainer"></div>
-
-      <!-- Survey Feedback (churned-trial feedback) -->
-      <div id="surveyFeedbackSection" style="margin-top:30px;border-top:1px solid var(--border);padding-top:22px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <h3 style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-mail"/></svg>Survey Feedback <span id="surveyFeedbackCount" style="font-size:11px;color:var(--text3);font-weight:400"></span></h3>
-          <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="loadSurveyFeedback()">↻ Refresh</button>
-        </div>
-        <div id="surveyFeedbackList"><div class="empty" style="padding:20px;color:var(--text3);font-size:13px">Click Refresh to load feedback.</div></div>
-      </div>
-    </div>
     <div id="regularAdminPanel" style="display:none">
       <!-- Co-admin management for regular admins -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -3042,6 +3023,62 @@ border-top:1px solid var(--border);margin:18px 0;}
 
 <!-- ═══════════════ COMPANIES PAGE ═══════════════ -->
 <!-- ═══════════════ SITES PAGE ═══════════════ -->
+<!-- ═══════════════ SUPER ADMIN: PLATFORM PAGES ═══════════════
+     Reached only by a super admin (navigate() sends anyone else away, and the server decides what
+     data comes back in any case). Both are filled by renderAdmins(). -->
+<div class="page" id="page-platform">
+  <div class="page-header">
+    <div><h1>Performance</h1><p>How PunchClock Crew is doing</p></div>
+    <button class="btn-secondary" style="width:auto;padding:9px 18px" onclick="renderAdmins()">↻ Refresh</button>
+  </div>
+  <div id="perfPanel"></div>
+</div>
+<div class="page" id="page-accounts">
+  <div class="page-header">
+    <div><h1>Accounts</h1><p>Customer accounts, access requests and feedback. "Manage" opens a customer's own screens.</p></div>
+    <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="openCreateAdminModal()">+ Create Admin</button>
+  </div>
+  <div id="superAdminPanel">
+    <div id="joinRequestsSection" style="display:none;margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="font-size:14px;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-hourglass"/></svg><span data-i18n="admin.pendingRequests">Pending Access Requests</span></h3>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="col.requestedAdmin">Requested Admin</th><th data-i18n="col.date">Date</th><th data-i18n="col.actions">Actions</th></tr></thead>
+        <tbody id="joinRequestsBody"></tbody>
+      </table></div>
+      <div id="joinReqCardsContainer" class="mcards"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="font-size:14px;font-weight:600" data-i18n="admin.accountsOverview">Accounts Overview</h3>
+    </div>
+    <div id="adminStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-bottom:22px"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <h3 style="font-size:14px;font-weight:600" data-i18n="admin.allAdminAccounts">Customer Accounts</h3>
+      <input type="search" id="adminSearch" oninput="filterAccounts()" placeholder="Search name, email or company" autocomplete="off" style="flex:1;min-width:180px;max-width:320px;padding:7px 11px;font-size:13px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer">
+        <input type="checkbox" id="adminAttentionOnly" onchange="renderAdmins()" style="width:14px;height:14px;accent-color:var(--accent)">
+        <span data-i18n="admin.attentionOnly">Needs attention only</span>
+      </label>
+    </div>
+    <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1000px">
+      <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="admin.col.billing">Billing</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Signed up</th><th data-i18n="admin.col.activeWeek">Active this week</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
+      <tbody id="adminsTableBody"></tbody>
+    </table></div>
+    <div id="adminCardsContainer"></div>
+
+    <!-- Survey Feedback (churned-trial feedback) -->
+    <div id="surveyFeedbackSection" style="margin-top:30px;border-top:1px solid var(--border);padding-top:22px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h3 style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px"><use href="#i-mail"/></svg>Survey Feedback <span id="surveyFeedbackCount" style="font-size:11px;color:var(--text3);font-weight:400"></span></h3>
+        <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="loadSurveyFeedback()">↻ Refresh</button>
+      </div>
+      <div id="surveyFeedbackList"><div class="empty" style="padding:20px;color:var(--text3);font-size:13px">Click Refresh to load feedback.</div></div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-sites">
   <div class="page-header">
     <div><h1 data-i18n="sites.title">Sites</h1><p data-i18n="sites.subtitle">Manage your work locations</p></div>
@@ -5031,6 +5068,12 @@ async function refreshCache(opts={}){
   const superAdmin=isSuperAdmin();
   const adminId=sess?.parent_admin_id||sess?.id;
   const ctx=Ctx.get();
+  // A super admin who has opened one customer ("Manage") loads that customer's rows only, as its owner
+  // would, so every page shows one company instead of every tenant at once. With no customer open
+  // they span all tenants (the Accounts page needs that). C.scopedTo tells navigate() to reload on exit.
+  const managedCo=(superAdmin&&sess&&ctx&&ctx.co)?ctx.co.id:null;
+  const allTenants=superAdmin&&!managedCo;
+  C.scopedTo=managedCo;
   if(!sess&&!ctx){C.companies=[];C.sites=[];C.employees=[];C.punches=[];return;}
   // Kiosk (no admin session): company/site come from Ctx (set at bootstrap). Read only this
   // site's employees + punches — both permitted by the kiosk auth path — and never the
@@ -5076,24 +5119,25 @@ async function refreshCache(opts={}){
   // STEP 1: Fetch companies first — IDs are needed to scope all subsequent queries
   let companiesFilter='order=name.asc';
   if(!sess&&ctx){companiesFilter+=`&id=eq.${ctx.co.id}`;}
+  else if(managedCo){companiesFilter+=`&id=eq.${managedCo}`;}
   else if(!superAdmin&&adminId){companiesFilter+=`&admin_id=eq.${adminId}`;}
   C.companies=await DB.all('companies',companiesFilter)||[];
   const visibleCoIds=new Set(C.companies.map(c=>c.id));
 
   // STEP 2: Non-super-admins with no companies get empty caches — skip all further fetches
-  if(!superAdmin&&visibleCoIds.size===0){C.sites=[];C.employees=[];C.punches=[];return;}
+  if(!allTenants&&visibleCoIds.size===0){C.sites=[];C.employees=[];C.punches=[];return;}
 
   // STEP 3: Fetch sites, employees, and punches in parallel, all scoped at the DB level.
   // Super admin gets unfiltered queries (they need full visibility across all tenants).
   // Regular admins get company_id=in.(...) at the DB level — no cross-tenant rows ever sent.
   const coIdList=[...visibleCoIds].join(',');
-  const sitesFilter=superAdmin?'order=name.asc':`company_id=in.(${coIdList})&order=name.asc`;
-  const empsFilter=superAdmin?'order=name.asc':`company_id=in.(${coIdList})&order=name.asc`;
+  const sitesFilter=allTenants?'order=name.asc':`company_id=in.(${coIdList})&order=name.asc`;
+  const empsFilter=allTenants?'order=name.asc':`company_id=in.(${coIdList})&order=name.asc`;
   // Punch filter: always by company, never by site (full punch history needed per employee)
   const parts=['order=punched_at.desc'];
   if(opts.coId){
     parts.push(`company_id=eq.${opts.coId}`);
-  }else if(!superAdmin){
+  }else if(!allTenants){
     parts.push(`company_id=in.(${coIdList})`);
   }
   const ranged=!!(opts.startDate||opts.endDate);
@@ -5106,13 +5150,13 @@ async function refreshCache(opts={}){
     // each having to fetch. Failure is non-fatal — the rest of the app must still work.
     DB.all('time_off','order=start_date.desc').catch(()=>[]),
   ]);
-  _timeOff=(timeOff||[]).filter(r=>superAdmin||visibleCoIds.has(r.company_id));
+  _timeOff=(timeOff||[]).filter(r=>allTenants||visibleCoIds.has(r.company_id));
   // Client-side guards — belt-and-suspenders in case DB returns unexpected rows
-  C.sites=(sites||[]).filter(s=>superAdmin||visibleCoIds.has(s.company_id));
-  C.employees=(employees||[]).filter(e=>superAdmin||visibleCoIds.has(e.company_id));
-  C.punches=(punches||[]).filter(p=>superAdmin||visibleCoIds.has(p.company_id));
+  C.sites=(sites||[]).filter(s=>allTenants||visibleCoIds.has(s.company_id));
+  C.employees=(employees||[]).filter(e=>allTenants||visibleCoIds.has(e.company_id));
+  C.punches=(punches||[]).filter(p=>allTenants||visibleCoIds.has(p.company_id));
   // Superadmin also loads orphaned employees (company deleted when admin was removed)
-  if(superAdmin){
+  if(allTenants){
     const orphaned=await DB.all('employees',`company_id=is.null&dept=eq.${encodeURIComponent('Admin Deleted')}&order=name.asc`);
     if(orphaned?.length) C.employees=[...C.employees,...orphaned];
   }
@@ -5343,6 +5387,8 @@ function closePicker(){
 
 function handleContextClick(){
   if(!isLoggedIn()&&!isDemo())return;
+  // A super admin picks a customer from the Accounts table, not from a wall of every tenant's cards.
+  if(isSuperAdmin()){navigate('accounts');return;}
   if(C.companies.length===1){onCompanyPicked(C.companies[0].id);return;}
   showCompanyPicker();
 }
@@ -5372,8 +5418,16 @@ function navigate(page){
   if(window._kioskUrlMode && !isLoggedIn() && !['punch','login','landing'].includes(page)) return;
   // Redirect legacy 'companies' references to the new sites page
   if(page==='companies'){navigate('sites');return;}
-  const adminPages=['dashboard','admin','reports','sites','activity','schedule','timeoff'];
+  const adminPages=['dashboard','admin','reports','sites','activity','schedule','timeoff','platform','accounts'];
   if(adminPages.includes(page)&&!isLoggedIn()&&!isDemo()){navigate('login');return;}
+  // Super admin has two modes. Platform (Performance, Accounts): no customer selected, so opening
+  // one of these pages leaves whichever customer was being managed. Customer: entered with "Manage"
+  // on an account, which sets the context first. With no customer there is no customer page to show.
+  // This is navigation only: what a caller may read or change is decided by the server.
+  if(page==='platform'||page==='accounts'){
+    if(!isSuperAdmin()){navigate('dashboard');return;}
+    Ctx.clear();updateContextPill();
+  }else if(isSuperAdmin()&&!Ctx.get()&&(adminPages.includes(page)||page==='punch')){navigate('platform');return;}
   // Onboarding is guided, not blocking: new admins can explore every page immediately and
   // finish setup from the Dashboard checklist (renderSetupChecklist). Only a genuinely
   // company-less account is routed to step 1, since most pages are meaningless without one.
@@ -5392,6 +5446,10 @@ function navigate(page){
   else if(page==='activity'){loadActivityPage();renderMissedPunchRequests();}
   else if(page==='schedule')loadSchedulePage();
   else if(page==='timeoff')loadTimeOffPage();
+  else if(page==='platform'||page==='accounts'){
+    // Coming back from a managed customer, the cache holds that one company: reload all tenants first.
+    if(C.scopedTo) refreshCache().catch(()=>{}).then(renderAdmins); else renderAdmins();
+  }
   refreshPendingCounts();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
   _syncSideNav(page);
@@ -5411,6 +5469,20 @@ function navigate(page){
 // gives way to the hamburger, which already lists every page.
 function getNavMode(){ return 'sidebar'; }
 
+// Company id -> its owner's plan, filled by renderAdmins() (super admin only) for the "Managing" bar.
+const _acctPlanByCo={};
+// Super admin: open one customer's own screens. The cache is reloaded for that company alone (see
+// refreshCache) so nothing from another tenant is on the page while working in this one.
+async function manageCustomer(coId){
+  if(!isSuperAdmin()) return;
+  const co=C.companies.find(c=>c.id===coId); if(!co) return;
+  const sites=C.sites.filter(s=>s.company_id===coId);
+  Ctx.set({co,site:sites.length===1?sites[0]:null});
+  updateContextPill();
+  try{ await refreshCache(); }catch(e){ console.warn('manageCustomer: reload failed:',e); }
+  navigate('dashboard');
+}
+
 function _syncSideNav(page){
   const key=page;
   document.querySelectorAll('#sideNav .sn-item[data-nav]').forEach(b=>{
@@ -5418,6 +5490,22 @@ function _syncSideNav(page){
   });
   const g=document.getElementById('snTeamGroup');
   if(g && ['admin','sites','admins'].includes(key)) g.classList.add('open');
+  // Super admin chrome (see the #sideNav [data-plat] rules): platform mode when no customer is selected.
+  const sup=isSuperAdmin(), cx=sup?Ctx.get():null;
+  document.body.classList.toggle('is-super', sup);
+  document.body.classList.toggle('plat-mode', sup&&!cx);
+  const cl=document.getElementById('snCustLabel');
+  if(cl) cl.textContent=cx&&cx.co?('Managing · '+cx.co.name):'';
+  // The bar that says whose data is on screen, on every customer page, with the way out.
+  const mb=document.getElementById('manageBar');
+  if(mb){
+    if(cx&&cx.co){
+      const pl=_acctPlanByCo[cx.co.id];
+      mb.innerHTML=`<span>Managing <strong>${esc(cx.co.name)}</strong>${pl?' · '+esc((PLANS[pl]||{}).name||pl):''}. Changes you make here are made in this customer's account.</span><button onclick="navigate('accounts')">Exit to Accounts</button>`;
+      mb.style.display='flex';
+    }else{ mb.style.display='none'; mb.innerHTML=''; }
+  }
+  ['mobileNavPlatform','mobileNavAccounts'].forEach(id=>{const el=document.getElementById(id); if(el) el.style.display=sup?'':'none';});
   if(typeof _syncTeamBadge==='function') _syncTeamBadge();
 }
 function toggleSideGroup(id){
@@ -6037,7 +6125,7 @@ function renderDashboard(){
         <div style="font-size:15px;font-weight:700;margin-bottom:6px">${t('dash.saNoCoTitle')||'No company selected'}</div>
         <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:420px;margin:0 auto 16px">${t('dash.saNoCoDesc')||'Pick a company to see its live activity here, or check account-level metrics (subscriptions, signups, who has gone quiet) in the Accounts Overview.'}</div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button class="btn-primary" style="width:auto;padding:9px 20px;font-size:13px" onclick="goAdminTab('admins')">${t('dash.saOpenOverview')||'Open Accounts Overview'}</button>
+          <button class="btn-primary" style="width:auto;padding:9px 20px;font-size:13px" onclick="navigate('accounts')">${t('dash.saOpenOverview')||'Open Accounts Overview'}</button>
           <button class="btn-secondary" style="width:auto;padding:9px 20px;font-size:13px" onclick="navigate('companies')">${t('dash.saBrowseCos')||'Browse companies'}</button>
         </div>
       </div>`;
@@ -6863,8 +6951,9 @@ async function doLogin(){
     // set the kiosk up again afterwards.
     window._kioskUrlMode = false;
     updateNav();
+    if(isSuperAdmin()) Ctx.clear();   // start on the platform pages, not inside the last customer opened
     await refreshCache();
-    navigate('dashboard');
+    navigate(isSuperAdmin()?'platform':'dashboard');
   }catch(e){showMsg('loginMsg',/too_many_attempts/.test((e&&(e._raw||e.message))||'')?t('msg.loginLocked'):t('msg.connError')+': '+e.message,'error');}
 }
 
@@ -10136,10 +10225,7 @@ function renderPerformance(rows, recentCoIds){
   const box=(title,inner)=>`<div class="card"><div style="font-size:12px;font-weight:600;margin-bottom:8px">${title}</div>${inner}</div>`;
 
   host.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-      <h3 style="font-size:14px;font-weight:600">Performance</h3>
-      <span style="font-size:11px;color:var(--text3)">Customer accounts only (co-admins and managers not counted). Money is in CAD, before Stripe fees.</span>
-    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Customer accounts only (co-admins and managers not counted). Money is in CAD, before Stripe fees.</div>
     ${idsHidden?`<div class="card" style="border-color:var(--amber);margin-bottom:10px;font-size:12.5px">Billing ids are not reaching this page yet (the server update is not deployed), so every paid account reads as comped and revenue shows $0.</div>`:''}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:12px">
       ${tile('MRR','$'+mrr.toFixed(2),paying.length+' paying',  'var(--green)')}
@@ -10157,11 +10243,25 @@ function renderPerformance(rows, recentCoIds){
     <div style="font-size:11px;color:var(--text3);margin-top:8px">Not available here: when an account became paid, cancellations and cancellations scheduled in Stripe (the database does not record them).</div>`;
 }
 
+// Accounts search: hides rows in place (no refetch). The key is the account's name, e-mail and company names.
+function _acctKey(a,cos){ return esc(((a.name||'')+' '+(a.email||'')+' '+(cos||[]).map(c=>c.name||'').join(' ')).toLowerCase()); }
+function filterAccounts(){
+  const q=(document.getElementById('adminSearch')?.value||'').trim().toLowerCase();
+  document.querySelectorAll('#adminsTableBody tr[data-acct], #adminCardsContainer [data-acct]').forEach(el=>{
+    el.style.display=(!q||el.getAttribute('data-acct').includes(q))?'':'none';
+  });
+  // An opened detail row would otherwise stay behind after its account is filtered out.
+  if(q) document.querySelectorAll('#adminsTableBody tr[id^="adminDetail_"]').forEach(el=>{el.style.display='none';});
+}
+
 async function renderAdmins(){
   const superAdmin = isSuperAdmin();
   document.getElementById('superAdminPanel').style.display = superAdmin ? '' : 'none';
   document.getElementById('regularAdminPanel').style.display = superAdmin ? 'none' : '';
   if(!superAdmin){ await loadCoAdmins(); return; }
+  // While one customer is being managed the Accounts page is not on screen and the cache holds that
+  // company alone, so there is nothing correct to draw here (navigate() reloads before showing it).
+  if(C.scopedTo) return;
   loadSurveyFeedback();
 
   const tbody=document.getElementById('adminsTableBody');
@@ -10196,6 +10296,7 @@ async function renderAdmins(){
       const status = a.status||'active';
       const ini = initialsOf(a.name);
       const cos=C.companies.filter(c=>c.admin_id===a.id);
+      cos.forEach(c=>{_acctPlanByCo[c.id]=a.plan||'free';});
       const coIds=new Set(cos.map(c=>c.id));
       const siteCount=C.sites.filter(s=>coIds.has(s.company_id)).length;
       const empCount=C.employees.filter(e=>coIds.has(e.company_id)).length;
@@ -10249,13 +10350,13 @@ async function renderAdmins(){
         const cSites=C.sites.filter(s=>s.company_id===c.id);
         return `<div style="margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
           <div><strong style="color:var(--text1)">${esc(c.name)}</strong><div style="margin-left:16px;color:var(--text2);font-size:12px">${cSites.length?cSites.map(s=>'• '+esc(s.name)).join('<br>'):'<em>No sites</em>'}</div></div>
-          <button class="btn-secondary" style="padding:4px 10px;font-size:11px;flex-shrink:0" onclick="selectCtxFromCompany('${c.id}')">${t('admin.manage')||'Manage'}</button>
+          <button class="btn-secondary" style="padding:4px 10px;font-size:11px;flex-shrink:0" onclick="manageCustomer('${c.id}')">${t('admin.manage')||'Manage'}</button>
         </div>`;
       }).join('');
       const teamLine = teammates.length
         ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">${t('admin.team')||'Team'}: ${teammates.map(m=>esc(m.name)+' ('+(m.role==='manager'?(t('role.manager')||'manager'):(t('role.coAdmin')||'co-admin'))+')').join(', ')}</div>`
         : '';
-      return `<tr${needsAttention?' style="background:rgba(239,68,68,.06)"':''}>
+      return `<tr data-acct="${_acctKey(a,cos)}"${needsAttention?' style="background:rgba(239,68,68,.06)"':''}>
         <td style="min-width:120px;max-width:150px"><div class="emp-row" style="cursor:pointer" onclick="toggleAdminDetail('${a.id}')">
           <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf);width:28px;height:28px;min-width:28px;font-size:10px">${ini}</div>
           <div><span style="font-weight:500">${esc(a.name)}</span><span style="font-size:10px;color:var(--text3);margin-left:4px">▸</span>${isMe?'<span style="font-size:10px;color:var(--text3);margin-left:5px">(you)</span>':''}</div>
@@ -10273,7 +10374,8 @@ async function renderAdmins(){
         <td style="text-align:center;font-size:13px">${empCount}</td>
         <td style="white-space:nowrap;min-width:120px;display:flex;gap:6px;align-items:center">${isMe
           ? '<span style="font-size:11px;color:var(--text3)">—</span>'
-          : '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">' + (t('common.edit')||'Edit') + '</button>'
+          : (cos.length===1 ? '<button class="btn-primary" style="width:auto;padding:5px 11px;font-size:11px" onclick="manageCustomer(\'' + cos[0].id + '\')">' + (t('admin.manage')||'Manage') + '</button>' : '')
+          + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px" onclick="openEditAdminModal(\'' + a.id + '\')">' + (t('common.edit')||'Edit') + '</button>'
           + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + jsq(a.name) + '\')">' + (t('common.delete')||'Delete') + '</button>'
         }</td>
       </tr>
@@ -10281,8 +10383,8 @@ async function renderAdmins(){
     }).join('');
 
     // Mobile cards
-    if(cards) cards.innerHTML = visibleRows.map(({a,isMe,status,ini,coCount,siteCount,empCount,activeThisWeek,needsAttention})=>`
-      <div class="mobile-card-row"${needsAttention?' style="background:rgba(239,68,68,.06)"':''}>
+    if(cards) cards.innerHTML = visibleRows.map(({a,isMe,status,ini,coCount,siteCount,empCount,cos,activeThisWeek,needsAttention})=>`
+      <div class="mobile-card-row" data-acct="${_acctKey(a,cos)}"${needsAttention?' style="background:rgba(239,68,68,.06)"':''}>
         <div class="mc-name">
           <div style="display:flex;align-items:center;gap:8px">
             <div class="avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c5cbf)">${ini}</div>
@@ -10297,10 +10399,13 @@ async function renderAdmins(){
         <div class="mc-row"><span>Last Login</span><span style="font-size:12px">${a.last_login?relativeTime(a.last_login):'Never'}</span></div>
         <div class="mc-row"><span>Companies / Sites / Emp.</span><span style="font-size:12px">${coCount} / ${siteCount} / ${empCount}</span></div>
         ${!isMe ? '<div class="mc-actions">'
+          + (cos.length===1 ? '<button class="btn-primary" style="width:auto;font-size:12px" onclick="manageCustomer(\'' + cos[0].id + '\')">Manage</button>' : '')
           + '<button class="btn-secondary" style="font-size:12px" onclick="openEditAdminModal(\'' + a.id + '\')">Edit</button>'
           + '<button class="btn-secondary" style="font-size:12px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + jsq(a.name) + '\')">Delete</button>'
           + '</div>' : ''}
       </div>`).join('');
+
+    filterAccounts();
 
     // Load join requests
     await renderJoinRequests();
@@ -10359,6 +10464,7 @@ function _setBadge(id, count, inline){
 function updateJoinRequestBadge(count){
   _setBadge('joinReqBadgeMobile', count, true);
   _setBadge('snJoinBadge', count);
+  _setBadge('snJoinBadgePlat', count);
   _syncTeamBadge();
 }
 // Below 768px every <table> is display:none and these cards are what is actually on screen.
@@ -12099,15 +12205,17 @@ async function generateReport(){
   try{
     // Scope to this admin's companies — never fetch cross-tenant punches
     const _rptCoIds=C.companies.map(c=>c.id);
-    if(!isSuperAdmin()&&!_rptCoIds.length){punches=[];}else{
+    // A super admin managing one customer is scoped like its owner (C.companies is that one company).
+    const _rptAll=isSuperAdmin()&&!C.scopedTo;
+    if(!_rptAll&&!_rptCoIds.length){punches=[];}else{
       // Narrow to the selected company at the database (the employee/site grouping below still
       // applies): an admin with several companies used to pull all of them for every report.
       let pf='order=punched_at.asc';
       if(coId&&coId!=='all')pf+=`&company_id=eq.${coId}`;
-      else if(!isSuperAdmin()&&_rptCoIds.length)pf+=`&company_id=in.(${_rptCoIds.join(',')})`;
+      else if(!_rptAll&&_rptCoIds.length)pf+=`&company_id=in.(${_rptCoIds.join(',')})`;
       punches=await fetchPunchRange(pf,start,end,true);
       // Client-side guard in case DB returns unexpected rows
-      if(!isSuperAdmin())punches=(punches||[]).filter(p=>_rptCoIds.includes(p.company_id));
+      if(!_rptAll)punches=(punches||[]).filter(p=>_rptCoIds.includes(p.company_id));
     }
   }catch(e){uiAlert(e.message);return;}
 
@@ -13504,11 +13612,13 @@ function renderActionBanner(){
   if(!host) return;
   const sess=Sess.get();
   // Only approvers see it, and never on the landing/login/punch screens.
-  if(!sess||isDemo()||['landing','login','register','punch','setpassword'].includes(currentPage)){
+  if(!sess||isDemo()||['landing','login','register','punch','setpassword','platform','accounts'].includes(currentPage)){
     host.style.display='none'; return;
   }
   // Prefer the dedicated pending fetch; fall back to the main cache before it has run.
   let pendingTO=(_pendingTimeOff.length?_pendingTimeOff:(_timeOff||[])).filter(r=>r.status==='pending');
+  // A super admin's fetch spans every tenant: count only the customer being managed.
+  if(isSuperAdmin()){const cx=Ctx.get(); pendingTO=pendingTO.filter(r=>cx&&cx.co&&r.company_id===cx.co.id);}
   if(managerSiteIds!==null) pendingTO=pendingTO.filter(r=>!r.site_id||managerSiteIds.includes(r.site_id));
   const pendingMP=(_missedPunchRequests||[]).length;
 
@@ -13583,6 +13693,8 @@ async function refreshTimeOff(){
   try{
     _timeOff=await DB.all('time_off','order=start_date.desc')||[];
   }catch(e){ _timeOff=[]; }
+  // A super admin's read spans every tenant: keep only the customer being managed.
+  if(isSuperAdmin()&&C.scopedTo) _timeOff=_timeOff.filter(r=>r.company_id===C.scopedTo);
   if(managerSiteIds!==null) _timeOff=_timeOff.filter(r=>!r.site_id||managerSiteIds.includes(r.site_id));
 }
 
@@ -15135,6 +15247,7 @@ async function init(){
 
   // Logged in — fetch data then restore session
   try{
+    if(isSuperAdmin()) Ctx.clear();   // a super admin always starts on the platform pages (all tenants)
     await refreshCache();
     document.getElementById('loadingOverlay').classList.add('hidden');
     updateNav();
@@ -15143,7 +15256,10 @@ async function init(){
     await handleStripeReturn();
 
     const ctx=Ctx.get();
-    if(!ctx){
+    if(isSuperAdmin()){
+      // Always start on the platform pages, never inside whichever customer was open last time.
+      navigate('platform');
+    }else if(!ctx){
       showCompanyPicker();
     }else{
       // Validate stored context is still valid
