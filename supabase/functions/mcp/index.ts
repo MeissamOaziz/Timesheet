@@ -163,6 +163,20 @@ async function readBody(req: Request): Promise<string | null> {
   for (const c of chunks) { buf.set(c, at); at += c.byteLength; }
   return dec.decode(buf);
 }
+// The same for answers that never look at the upload (the 401 that starts sign-in, a 404, a 405): what was sent is read
+// and thrown away first, cut off after DRAIN_MAX.
+async function drain(req: Request): Promise<void> {
+  try {
+    if (!req.body || req.bodyUsed) return;
+    const reader = req.body.getReader();
+    for (let size = 0;;) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      size += value.byteLength;
+      if (size > DRAIN_MAX) { await reader.cancel().catch(() => {}); return; }
+    }
+  } catch { /* the answer goes out anyway */ }
+}
 
 // ── database (service key; these tables are closed to everyone else) ─────────────────────────
 interface DbResult { ok: boolean; rows: any[] }
@@ -520,6 +534,11 @@ async function mcp(req: Request): Promise<Response> {
 
 // ── router ───────────────────────────────────────────────────────────────────────────────────
 export async function handler(req: Request): Promise<Response> {
+  const res = await route(req);
+  await drain(req);
+  return res;
+}
+async function route(req: Request): Promise<Response> {
   try {
     if (!BASE || !SERVICE_KEY) return text('Not configured', 500);
     const url = new URL(req.url);

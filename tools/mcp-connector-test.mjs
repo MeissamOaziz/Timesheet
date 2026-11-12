@@ -399,7 +399,13 @@ out('\nToken endpoint: refusals that need no account');
     }
     let u = upload(70, 70 * 1024);
     r = (await mcpCall('', u.init)).status;
-    check('oversized upload to the MCP endpoint without a connection -> 401, nothing read', r === 401 && u.seen.pulled === 0, `${r} ${u.seen.pulled}`);
+    check('oversized upload to the MCP endpoint without a connection -> 401, read to the end first', r === 401 && u.seen.pulled === 70 && !u.seen.cancelled, `${r} ${u.seen.pulled}`);
+    u = upload(3, 0);
+    r = (await mcpCall('/register', u.init)).status;
+    check('an upload to an address that does not exist -> 404, read to the end first', r === 404 && u.seen.pulled === 3, `${r} ${u.seen.pulled}`);
+    u = upload(4096, 0);
+    r = (await mcpCall('', u.init)).status;
+    check('an endless upload without a connection is cut off after 1 MB -> 401', r === 401 && u.seen.cancelled && u.seen.pulled <= 1026, `${r} ${u.seen.pulled} ${u.seen.cancelled}`);
     u = upload(70, 0);
     r = (await mcpCall('/token', u.init)).status;
     check('oversized upload that declares no size -> 413', r === 413 && u.seen.pulled === 70, `${r} ${u.seen.pulled}`);

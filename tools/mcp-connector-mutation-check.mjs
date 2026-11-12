@@ -59,6 +59,8 @@ const M = [
   ['mcp', 'declared body size capped', "let tooBig = Number(req.headers.get('content-length') || '0') > MAX_BODY;", "let tooBig = false;"],
   ['mcp', 'oversized upload read to the end before answering', "if (!reader) return tooBig ? null : '';", "if (!reader || tooBig) return tooBig ? null : '';"],
   ['mcp', 'endless upload cut off', "if (size > DRAIN_MAX) { await reader.cancel().catch(() => {}); break; }", ""],
+  ['mcp', 'unread upload read before any answer', "  await drain(req);\n", ""],
+  ['mcp', 'endless unread upload cut off', "if (size > DRAIN_MAX) { await reader.cancel().catch(() => {}); return; }", ""],
   ['sdb', 'request signature checked', "  if (diff !== 0) return null;\n  try {\n    const bin = atob(payload", "  try {\n    const bin = atob(payload"],
   ['sdb', 'request expiry', "|| p.exp <= Math.floor(Date.now() / 1000)) return null;\n    const allowed", ") return null;\n    const allowed"],
   ['sdb', 'second callback lock', "|| !allowed(p.r)) return null;", ") return null;"],
