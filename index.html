@@ -1968,7 +1968,7 @@ border-top:1px solid var(--border);margin:18px 0;}
     <h2 data-i18n="priv.h4">4. Employee PIN Security</h2>
     <p data-i18n="priv.p4">Employee PINs are stored in the database and used solely for clock-in/out authentication. Admins should treat PINs as confidential and share them only with the respective employee. We recommend changing PINs if an employee leaves the organization.</p>
     <h2 data-i18n="priv.h5">5. Email Communications</h2>
-    <p data-i18n="priv.p5">When the automated email report feature is enabled for an employee, we will send periodic hours summary emails to the email address on file. These emails are sent via Resend, our email delivery provider. Employees can be removed from automated emails at any time by an admin.</p>
+    <p data-i18n="priv.p5">When the automated email report feature is enabled for an employee, we will send periodic hours summary emails to the email address on file. These emails are sent via Resend, our email delivery provider. Employees can be removed from automated emails at any time by an admin. We may also email account owners occasional product updates through the same provider; every such email includes an unsubscribe link.</p>
     <h2 data-i18n="priv.h6">6. Data Sharing</h2>
     <p data-i18n="priv.p6">We do not sell, trade, or rent your personal information to third parties. We may share data with: (a) Supabase for data storage and hosting; (b) Resend for email delivery; (c) law enforcement when required by law. All third-party providers are bound by confidentiality agreements.</p>
     <h2 data-i18n="priv.h7">7. Data Retention</h2>
@@ -2473,6 +2473,7 @@ border-top:1px solid var(--border);margin:18px 0;}
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
         <div class="form-group"><label for="regHeard" data-i18n="reg.heardLabel">How did you hear about us? (optional)</label><select id="regHeard"><option value="" data-i18n="reg.heardNone">Choose…</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="linkedin">LinkedIn</option><option value="google" data-i18n="reg.heardGoogle">Google search</option><option value="friend" data-i18n="reg.heardFriend">A friend or colleague</option><option value="accountant" data-i18n="reg.heardAccountant">My accountant or bookkeeper</option><option value="other" data-i18n="reg.heardOther">Other</option></select></div>
         <p style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:2px" data-i18n="reg.settingsLater">Address, payroll schedule, overtime and your logo are all in Settings once you're in — with sensible defaults until you change them.</p>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:2px" data-i18n="reg.updatesNote">We'll email you occasional product updates. You can unsubscribe anytime.</p>
       <button class="btn-primary" style="margin-top:20px" onclick="withBusy(this,doRegister)" data-i18n="reg.continue">Continue →</button>
     </div>
 
@@ -3062,8 +3063,8 @@ border-top:1px solid var(--border);margin:18px 0;}
         <span data-i18n="admin.attentionOnly">Needs attention only</span>
       </label>
     </div>
-    <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1000px">
-      <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="admin.col.billing">Billing</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Signed up</th><th data-i18n="admin.col.activeWeek">Active this week</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
+    <div class="table-wrap" style="overflow-x:auto"><table style="min-width:1080px">
+      <thead><tr><th data-i18n="col.name">Name</th><th data-i18n="col.email">Email</th><th data-i18n="admin.col.billing">Billing</th><th title="Product-update emails (copied from Resend when the list is refreshed)">News</th><th data-i18n="col.status">Status</th><th data-i18n="col.registered">Signed up</th><th data-i18n="admin.col.activeWeek">Active this week</th><th>Last Login</th><th>Co.</th><th>Sites</th><th>Emp.</th><th data-i18n="col.actions">Actions</th></tr></thead>
       <tbody id="adminsTableBody"></tbody>
     </table></div>
     <div id="adminCardsContainer"></div>
@@ -10154,6 +10155,13 @@ function billingBadge(a){
   }
   return `<span class="plan-badge plan-free">${t('plan.free')||'Free'}</span>`;
 }
+// Newsletter state as last copied from Resend (admins.newsletter_status). Never set means not on the list.
+function newsBadge(a){
+  const s=a.newsletter_status;
+  if(s==='subscribed') return '<span class="pill in" title="Copied from Resend'+(a.newsletter_synced_at?' on '+esc(new Date(a.newsletter_synced_at).toLocaleDateString()):'')+'">Subscribed</span>';
+  if(s==='unsubscribed') return '<span class="pill out">Unsubscribed</span>';
+  return '<span style="font-size:11px;color:var(--text3)">—</span>';
+}
 function tenureStr(createdAt){
   const days=Math.floor((Date.now()-new Date(createdAt).getTime())/86400000);
   if(days<1)return t('admin.tenureToday')||'today';
@@ -10272,7 +10280,7 @@ async function renderAdmins(){
     const admins=await DB.all('admins','order=created_at.asc');
     const sess = Sess.get();
     if(!admins.length){
-      tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:28px">No admins yet.</td></tr>`;
       if(statsGrid) statsGrid.innerHTML='';
       return;
     }
@@ -10338,7 +10346,7 @@ async function renderAdmins(){
     const cards = document.getElementById('adminCardsContainer');
 
     if(!visibleRows.length){
-      tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:28px">${attentionOnly?(t('admin.noneNeedAttention')||'Nothing needs attention right now.'):(t('admin.noAdmins')||'No admins yet.')}</td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:28px">${attentionOnly?(t('admin.noneNeedAttention')||'Nothing needs attention right now.'):(t('admin.noAdmins')||'No admins yet.')}</td></tr>`;
       if(cards) cards.innerHTML='';
       await renderJoinRequests();
       return;
@@ -10363,6 +10371,7 @@ async function renderAdmins(){
         </div></td>
         <td style="font-size:13px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(a.email)}">${esc(a.email)}</td>
         <td style="white-space:nowrap">${billingBadge(a)}</td>
+        <td style="white-space:nowrap">${newsBadge(a)}</td>
         <td style="white-space:nowrap"><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?(t('status.active')||'Active'):status==='pending_approval'?(t('status.pending')||'Pending'):(t('status.suspended')||'Suspended')}</span></td>
         <td style="color:var(--text2);font-size:12px;white-space:nowrap">${new Date(a.created_at).toLocaleDateString()}<div style="font-size:10.5px;color:var(--text3)">${tenureStr(a.created_at)}</div></td>
         <td style="text-align:center;white-space:nowrap">${activeThisWeek
@@ -10379,7 +10388,7 @@ async function renderAdmins(){
           + '<button class="btn-secondary" style="padding:5px 11px;font-size:11px;background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="deleteAdmin(\'' + a.id + '\',\'' + jsq(a.name) + '\')">' + (t('common.delete')||'Delete') + '</button>'
         }</td>
       </tr>
-      <tr id="adminDetail_${a.id}" style="display:none"><td colspan="11" style="background:var(--surface2);padding:12px 20px;font-size:13px">${detailRows||'<em style="color:var(--text3)">No companies</em>'}${teamLine}</td></tr>`;
+      <tr id="adminDetail_${a.id}" style="display:none"><td colspan="12" style="background:var(--surface2);padding:12px 20px;font-size:13px">${detailRows||'<em style="color:var(--text3)">No companies</em>'}${teamLine}</td></tr>`;
     }).join('');
 
     // Mobile cards
@@ -10394,6 +10403,7 @@ async function renderAdmins(){
         </div>
         <div class="mc-row"><span>Email</span><span style="font-size:12px">${esc(a.email)}</span></div>
         <div class="mc-row"><span>Billing</span><span>${billingBadge(a)}</span></div>
+        <div class="mc-row"><span>News</span><span>${newsBadge(a)}</span></div>
         <div class="mc-row"><span>Status</span><span class="pill ${status==='active'?'in':status==='pending_approval'?'site':'out'}">${status==='active'?'Active':status==='pending_approval'?'Pending':'Suspended'}</span></div>
         <div class="mc-row"><span>Signed up</span><span style="font-size:12px">${new Date(a.created_at).toLocaleDateString()} (${tenureStr(a.created_at)})</span></div>
         <div class="mc-row"><span>Last Login</span><span style="font-size:12px">${a.last_login?relativeTime(a.last_login):'Never'}</span></div>
@@ -10410,7 +10420,7 @@ async function renderAdmins(){
     // Load join requests
     await renderJoinRequests();
 
-  }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);padding:16px">Error: ${esc(e.message)}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);padding:16px">Error: ${esc(e.message)}</td></tr>`;}
 }
 
 async function deleteAdmin(id, name){
@@ -17079,6 +17089,7 @@ en:{
 'dc.s4b':'Every punch lands here. Pick a date range and export to Excel, CSV or PDF — nothing to add up by hand.',
 'dc.exitTag':'Before you go','dc.exitTitle':'Set this up with your own team',
 'dc.exitBody':'The free plan covers up to 10 employees, with no time limit and no card. Takes about two minutes.',
+'reg.updatesNote':'We’ll email you occasional product updates. You can unsubscribe anytime.',
 'reg.settingsLater':'Address, payroll schedule, overtime and your logo are all in Settings once you’re in — with sensible defaults until you change them.',
 'payroll.promptTitle':'Check your payroll settings before your first payroll',
 'payroll.promptBody':'Your pay period, week start and overtime rules are on their defaults. Confirm them so your reports come out right.',
@@ -17561,7 +17572,7 @@ en:{
 'priv.h2':'2. How We Use Your Information','priv.p2':'We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.',
 'priv.h3':'3. Data Storage and Security','priv.p3':'Your data is stored in Supabase, a secure cloud database platform hosted on AWS infrastructure. We implement industry-standard security measures including encrypted connections (TLS/SSL) for all data in transit. However, no method of transmission over the internet is 100% secure.',
 'priv.h4':'4. Employee PIN Security','priv.p4':'Employee PINs are stored in the database and used solely for clock-in/out authentication. Admins should treat PINs as confidential and share them only with the respective employee. We recommend changing PINs if an employee leaves the organization.',
-'priv.h5':'5. Email Communications','priv.p5':'When the automated email report feature is enabled for an employee, we will send periodic hours summary emails to the email address on file. These emails are sent via Resend, our email delivery provider. Employees can be removed from automated emails at any time by an admin.',
+'priv.h5':'5. Email Communications','priv.p5':'When the automated email report feature is enabled for an employee, we will send periodic hours summary emails to the email address on file. These emails are sent via Resend, our email delivery provider. Employees can be removed from automated emails at any time by an admin. We may also email account owners occasional product updates through the same provider; every such email includes an unsubscribe link.',
 'priv.h6':'6. Data Sharing','priv.p6':'We do not sell, trade, or rent your personal information to third parties. We may share data with: (a) Supabase for data storage and hosting; (b) Resend for email delivery; (c) law enforcement when required by law. All third-party providers are bound by confidentiality agreements.',
 'priv.h7':'7. Data Retention','priv.p7':'We retain your data for as long as your account is active. Upon cancellation, data is retained for 30 days before permanent deletion. You may request immediate deletion by contacting us.','priv.p7b':'Punch records and visitor check-ins older than 18 months are automatically moved to a secure archive. They are no longer shown in the application, but remain stored until your account is deleted, and can be provided to you on request.',
 'priv.h8':'8. Your Rights (PIPEDA / Quebec Law 25)','priv.p8':'Under Canadian privacy law, you have the right to: access the personal information we hold about you; correct inaccurate information; withdraw consent for certain processing; request deletion of your data; and file a complaint with the Office of the Privacy Commissioner of Canada.',
@@ -18141,6 +18152,7 @@ fr:{
 'dc.s4b':'Chaque pointage aboutit ici. Choisissez une période et exportez en Excel, CSV ou PDF — rien à additionner à la main.',
 'dc.exitTag':'Avant de partir','dc.exitTitle':'Configurez-le avec votre propre équipe',
 'dc.exitBody':'Le forfait gratuit couvre jusqu’à 10 employés, sans limite de durée et sans carte. Ça prend environ deux minutes.',
+'reg.updatesNote':'Nous vous enverrons à l’occasion des nouvelles du produit. Vous pouvez vous désabonner en tout temps.',
 'reg.settingsLater':'L’adresse, le calendrier de paie, les heures supp. et votre logo sont dans les paramètres une fois connecté — avec des valeurs par défaut sensées en attendant.',
 'payroll.promptTitle':'Vérifiez vos paramètres de paie avant votre première paie',
 'payroll.promptBody':'Votre période de paie, le début de semaine et les règles d’heures supplémentaires sont aux valeurs par défaut. Confirmez-les pour que vos rapports soient justes.',
@@ -18621,7 +18633,7 @@ fr:{
 'priv.h2':'2. Utilisation de vos informations','priv.p2':'Nous utilisons les informations collectées pour : fournir et maintenir le Service; envoyer des courriels de résumé de période automatisés aux employés (si activé); générer des rapports de présence; améliorer et développer le Service; et respecter les obligations légales.',
 'priv.h3':'3. Stockage et sécurité des données','priv.p3':'Vos données sont stockées dans Supabase, une plateforme de base de données sécurisée hébergée sur l\'infrastructure AWS. Nous appliquons des mesures de sécurité standard de l\'industrie, notamment des connexions chiffrées (TLS/SSL).',
 'priv.h4':'4. Sécurité des NIP des employés','priv.p4':'Les NIP des employés sont stockés dans la base de données et utilisés uniquement pour l\'authentification de pointage. Les admins doivent traiter les NIP comme confidentiels. Nous recommandons de les modifier si un employé quitte l\'organisation.',
-'priv.h5':'5. Communications par courriel','priv.p5':'Lorsque la fonction de rapport automatisé est activée, nous envoyons des courriels de résumé d\'heures à l\'adresse enregistrée. Ces courriels sont envoyés via Resend. Les employés peuvent être retirés des envois automatiques à tout moment par un admin.',
+'priv.h5':'5. Communications par courriel','priv.p5':'Lorsque la fonction de rapport automatisé est activée, nous envoyons des courriels de résumé d\'heures à l\'adresse enregistrée. Ces courriels sont envoyés via Resend. Les employés peuvent être retirés des envois automatiques à tout moment par un admin. Nous pouvons aussi envoyer à l\'occasion des nouvelles du produit aux titulaires de compte, par le même fournisseur; chacun de ces courriels contient un lien de désabonnement.',
 'priv.h6':'6. Partage des données','priv.p6':'Nous ne vendons, n\'échangeons ni ne louons vos informations personnelles à des tiers. Nous pouvons partager des données avec : (a) Supabase pour l\'hébergement; (b) Resend pour la livraison des courriels; (c) les autorités si requis par la loi.',
 'priv.h7':'7. Conservation des données','priv.p7':'Nous conservons vos données aussi longtemps que votre compte est actif. À l\'annulation, elles sont conservées 30 jours avant suppression définitive. Vous pouvez demander une suppression immédiate en nous contactant.','priv.p7b':'Les pointages et les enregistrements de visiteurs de plus de 18 mois sont automatiquement déplacés vers une archive sécurisée. Ils ne sont plus affichés dans l\'application, mais restent conservés jusqu\'à la suppression de votre compte et peuvent vous être fournis sur demande.',
 'priv.h8':'8. Vos droits (LPRPDE / Loi 25 du Québec)','priv.p8':'En vertu de la loi canadienne sur la protection de la vie privée, vous avez le droit d\'accéder à vos informations personnelles, de les corriger, de retirer votre consentement, de demander leur suppression et de déposer une plainte auprès du Commissariat à la protection de la vie privée du Canada.',
