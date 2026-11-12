@@ -1615,6 +1615,247 @@ async function roleViolation(
   }
 }
 
+// ── AI connector (Claude / ChatGPT): consent, connections, the owner's switch ─────────────────
+// The `mcp` function is the sign-in service the two apps talk to. It never sees a website session. The consent
+// page (connect.html) and the "AI apps" card come here instead, with the signed-in person's session token:
+//   mcp_consent_info   what the consent page shows (which app, the person's role, the companies or sites in scope)
+//   mcp_consent        Allow: writes a one-time code (hash only, 60 s) and answers where to send the person back.
+//                      Cancel: answers the same address with error=access_denied. Needs no session.
+//   mcp_list_grants    the connections of the account (owner) or of the caller (co-admin, manager)
+//   mcp_revoke_grant   Disconnect: one's own connection, or anyone's on the account for the owner
+//   set_ai_apps        the owner's "Allow AI apps" switch; switching off cancels every connection on the account
+// The sign-in request arrives as a value signed by the mcp function (same key derivation there): nobody can alter
+// which app is named or where the code will be sent. The callback allowlist is checked again here anyway.
+// The mcp_* tables are deliberately not in APP_TABLES: these actions are the only way a page reaches them.
+const MCP_ISSUER = `${SUPABASE_URL}/functions/v1/mcp`;
+const MCP_CODE_TTL_MS = 60_000;
+const MCP_CONSENTS_PER_HOUR = 20;
+const MCP_MAX_STATE = 2000;
+const MCP_REDIRECTS: Record<string, (u: string) => boolean> = {
+  claude: (u) => u === 'https://claude.ai/api/mcp/auth_callback' || u === 'https://claude.com/api/mcp/auth_callback',
+  chatgpt: (u) => u === 'https://chatgpt.com/connector_platform_oauth_redirect'
+    || /^https:\/\/chatgpt\.com\/connector\/oauth\/[A-Za-z0-9_-]{1,200}$/.test(u),
+};
+const MCP_CHALLENGE_RE = /^[A-Za-z0-9_-]{43}$/;
+const MCP_REQUEST_GONE = 'This connection request is not valid any more. Start again from Claude or ChatGPT.';
+
+let _mcpKeyP: Promise<CryptoKey> | null = null;
+function mcpKey(): Promise<CryptoKey> {
+  if (!_mcpKeyP) {
+    _mcpKeyP = crypto.subtle.importKey('raw', new TextEncoder().encode('mcp-connector-v1:' + SERVICE_KEY),
+      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  }
+  return _mcpKeyP;
+}
+interface McpRequest { app: string; redirect: string; challenge: string; state: string | null }
+async function mcpOpenRequest(value: unknown): Promise<McpRequest | null> {
+  if (typeof value !== 'string' || !value || value.length > 6000) return null;
+  const dot = value.indexOf('.');
+  if (dot < 1 || dot !== value.lastIndexOf('.')) return null;
+  const payload = value.slice(0, dot), got = value.slice(dot + 1);
+  if (!/^[A-Za-z0-9_-]+$/.test(payload)) return null;
+  const want = b64url(await crypto.subtle.sign('HMAC', await mcpKey(), new TextEncoder().encode(`req.${payload}`)));
+  if (got.length !== want.length) return null;
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ got.charCodeAt(i);
+  if (diff !== 0) return null;
+  try {
+    const bin = atob(payload.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((payload.length + 3) % 4));
+    const p = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
+    if (!p || typeof p !== 'object' || typeof p.exp !== 'number' || p.exp <= Math.floor(Date.now() / 1000)) return null;
+    const allowed = typeof p.c === 'string' && Object.prototype.hasOwnProperty.call(MCP_REDIRECTS, p.c) ? MCP_REDIRECTS[p.c] : null;
+    if (!allowed || typeof p.r !== 'string' || p.r.length > 400 || !allowed(p.r)) return null;
+    if (typeof p.ch !== 'string' || !MCP_CHALLENGE_RE.test(p.ch)) return null;
+    if (!(p.s === null || (typeof p.s === 'string' && p.s.length <= MCP_MAX_STATE))) return null;
+    return { app: p.c, redirect: p.r, challenge: p.ch, state: p.s };
+  } catch { return null; }
+}
+function mcpReturnUrl(rq: McpRequest, params: Record<string, string>): string {
+  const to = new URL(rq.redirect);
+  for (const [k, v] of Object.entries(params)) to.searchParams.set(k, v);
+  if (rq.state !== null) to.searchParams.set('state', rq.state);
+  to.searchParams.set('iss', MCP_ISSUER);
+  return to.toString();
+}
+async function svcWrite(method: string, path: string, body?: unknown, wantRows = false): Promise<{ ok: boolean; rows: any[] }> {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      method,
+      headers: {
+        'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`,
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        'Prefer': wantRows ? 'return=representation' : 'return=minimal',
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    if (!r.ok) return { ok: false, rows: [] };
+    if (!wantRows) return { ok: true, rows: [] };
+    const j = await r.json().catch(() => null);
+    return { ok: Array.isArray(j), rows: Array.isArray(j) ? j : [] };
+  } catch { return { ok: false, rows: [] }; }
+}
+// The signed-in person and their account owner, read now. A session alone is not enough for the connector: the
+// person must be fully active (not a pending invitation), and neither they nor the owner may be the super admin,
+// whose view spans every customer and must never reach a chat.
+interface McpPerson { id: string; name: string; kind: 'owner' | 'admin' | 'manager'; ownerId: string; enabled: boolean; superAdmin: boolean; active: boolean }
+async function mcpPerson(caller: Caller): Promise<McpPerson | null> {
+  if (!UUID_RE.test(caller.adminId) || !UUID_RE.test(caller.primaryAdminId)) return null;
+  const cols = 'id,parent_admin_id,role,status,name,expires_at,ai_apps_enabled';
+  const me = (await restJson(`admins?id=eq.${caller.adminId}&select=${cols}&limit=1`))?.[0];
+  const owner = caller.primaryAdminId === caller.adminId ? me
+    : (await restJson(`admins?id=eq.${caller.primaryAdminId}&select=${cols}&limit=1`))?.[0];
+  // Temporary accounts carry an end date. The website only checks it when signing in; for the connector it always counts.
+  const current = (row: any): boolean => row.status === 'active' && (!row.expires_at || new Date(row.expires_at).getTime() > Date.now());
+  if (!me || !owner) return null;
+  return {
+    id: caller.adminId, name: typeof me.name === 'string' ? me.name : '',
+    kind: caller.adminId === caller.primaryAdminId ? 'owner' : me.role === 'manager' ? 'manager' : 'admin',
+    ownerId: caller.primaryAdminId,
+    enabled: owner.ai_apps_enabled === true,
+    superAdmin: me.role === 'super_admin' || owner.role === 'super_admin',
+    active: current(me) && current(owner),
+  };
+}
+// Growth and up (or a grandfathered company). Only used to tell the person what to expect: the mcp function decides
+// on every call. An unanswered lookup reads as "not included".
+async function mcpPlanIncluded(ownerId: string, companyNames: string[]): Promise<boolean> {
+  if (companyNames.some((n) => GRANDFATHERED_COMPANIES.includes(n))) return true;
+  const rank = await planRpc('admin_plan_rank', { p_admin: ownerId });
+  return typeof rank === 'number' && rank >= 2;
+}
+async function mcpAccountAdmins(ownerId: string): Promise<{ id: string; name: string }[]> {
+  const rows = await restJson(`admins?or=(id.eq.${ownerId},parent_admin_id.eq.${ownerId})&select=id,name&limit=500`);
+  return (rows || []).filter((r: { id: unknown }) => typeof r.id === 'string' && UUID_RE.test(r.id as string));
+}
+async function mcpRevokeGrants(grantFilter: string, reason: string): Promise<number> {
+  const done = await svcWrite('PATCH', `mcp_grants?${grantFilter}&revoked_at=is.null`,
+    { revoked_at: new Date().toISOString(), revoked_reason: reason }, true);
+  const ids = done.rows.map((r: { id: unknown }) => r.id).filter((id: unknown) => typeof id === 'string' && UUID_RE.test(id as string));
+  if (ids.length) await svcWrite('DELETE', `mcp_tokens?grant_id=in.(${ids.join(',')})`);
+  return ids.length;
+}
+
+async function mcpAction(action: string, caller: Caller | null, rawBody: unknown): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' && !Array.isArray(rawBody) ? rawBody : {}) as Record<string, unknown>;
+
+  if (action === 'mcp_consent_info' || action === 'mcp_consent') {
+    const rq = await mcpOpenRequest(b.request);
+    if (!rq) return jsonResp({ ok: false, error: MCP_REQUEST_GONE, code: 'request_invalid' }, 400);
+    // Cancel needs no account: it only sends the person back to the app that asked, saying "no".
+    if (action === 'mcp_consent' && b.decision === 'deny') {
+      return jsonResp({ ok: true, redirect: mcpReturnUrl(rq, { error: 'access_denied', error_description: 'The request was cancelled' }) });
+    }
+    if (action === 'mcp_consent' && b.decision !== 'allow') return errResp('Invalid decision', 400);
+    if (!caller) return errResp('Unauthorized', 401);
+    const me = await mcpPerson(caller);
+    if (!me || !me.active) return errResp('Unauthorized', 401);
+    const refused = me.superAdmin ? 'super_admin' : !me.enabled ? 'ai_apps_off' : null;
+
+    if (action === 'mcp_consent_info') {
+      if (me.superAdmin) return jsonResp({ ok: true, app: rq.app, refused });
+      // What this person would be sharing: every company of the account, or for a manager their own sites only.
+      const cos = (await restJson(`companies?admin_id=eq.${me.ownerId}&select=id,name&order=name.asc&limit=200`)) || [];
+      let companies = cos.map((c: { name: unknown }) => String(c.name ?? ''));
+      let sites: string[] | null = null;
+      if (me.kind === 'manager') {
+        const mine = [...(await managerSiteSet(me.id))].filter((id) => UUID_RE.test(id));
+        const rows = mine.length ? (await restJson(`sites?id=in.(${mine.join(',')})&select=id,name,company_id&order=name.asc&limit=200`)) || [] : [];
+        const coIds = new Set(cos.map((c: { id: string }) => c.id));
+        const own = rows.filter((s: { company_id: string }) => coIds.has(s.company_id));
+        sites = own.map((s: { name: unknown }) => String(s.name ?? ''));
+        const used = new Set(own.map((s: { company_id: string }) => s.company_id));
+        companies = cos.filter((c: { id: string }) => used.has(c.id)).map((c: { name: unknown }) => String(c.name ?? ''));
+      }
+      return jsonResp({
+        ok: true, app: rq.app, refused, person: me.name, role: me.kind, companies, sites,
+        plan_included: await mcpPlanIncluded(me.ownerId, cos.map((c: { name: unknown }) => String(c.name ?? ''))),
+      });
+    }
+
+    if (refused) {
+      logAudit(me.id, 'mcp_consent_refused', 'mcp_grants', undefined, `${rq.app}:${refused}`);
+      return jsonResp({ ok: false, code: refused, error: refused === 'ai_apps_off'
+        ? 'AI apps are switched off for this account. The account owner can allow them in the AI apps settings.'
+        : 'This account cannot be connected to an AI app.' }, 403);
+    }
+    // The one-time code: random, kept here only as a hash, tied to this person, the app, its callback and its PKCE
+    // challenge. Written BEFORE the hourly limit is counted, so a burst of parallel requests cannot slip under it.
+    const code = 'pcc_ac_' + b64url(crypto.getRandomValues(new Uint8Array(32)).buffer);
+    const codeHash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))), (x) => x.toString(16).padStart(2, '0')).join('');
+    const made = await svcWrite('POST', 'mcp_auth_codes', {
+      code_hash: codeHash, admin_id: me.id, client: rq.app, redirect_uri: rq.redirect, code_challenge: rq.challenge,
+      expires_at: new Date(Date.now() + MCP_CODE_TTL_MS).toISOString(),
+    });
+    if (!made.ok) return errResp('Could not connect. Please try again.', 503);
+    const recent = await restJson(`mcp_auth_codes?admin_id=eq.${me.id}&created_at=gt.${encodeURIComponent(new Date(Date.now() - 3600_000).toISOString())}&select=code_hash&limit=${MCP_CONSENTS_PER_HOUR + 1}`);
+    if (recent === null || recent.length > MCP_CONSENTS_PER_HOUR) {
+      await svcWrite('DELETE', `mcp_auth_codes?code_hash=eq.${codeHash}`);
+      logAudit(me.id, 'mcp_consent_rate_limited', 'mcp_grants', undefined, rq.app);
+      return jsonResp({ ok: false, code: 'rate_limited', error: 'Too many connection attempts. Please wait an hour and try again.' }, 429);
+    }
+    logAudit(me.id, 'mcp_consent', 'mcp_grants', undefined, rq.app);
+    return jsonResp({ ok: true, redirect: mcpReturnUrl(rq, { code }) });
+  }
+
+  if (!caller) return errResp('Unauthorized', 401);
+  const me = await mcpPerson(caller);
+  if (!me || !me.active) return errResp('Unauthorized', 401);
+
+  if (action === 'mcp_list_grants') {
+    if (me.superAdmin) return jsonResp({ ok: true, refused: 'super_admin', enabled: false, is_owner: false, plan_included: false, url: MCP_ISSUER, grants: [] });
+    const people = me.kind === 'owner' ? await mcpAccountAdmins(me.ownerId) : [{ id: me.id, name: me.name }];
+    const nameOf = new Map(people.map((p) => [p.id, typeof p.name === 'string' ? p.name : '']));
+    const rows = people.length
+      ? (await restJson(`mcp_grants?admin_id=in.(${people.map((p) => p.id).join(',')})&revoked_at=is.null&select=id,admin_id,client,created_at,last_used_at&order=created_at.desc&limit=200`)) || []
+      : [];
+    const cos = (await restJson(`companies?admin_id=eq.${me.ownerId}&select=name&limit=200`)) || [];
+    return jsonResp({
+      ok: true, enabled: me.enabled, is_owner: me.kind === 'owner', url: MCP_ISSUER,
+      plan_included: await mcpPlanIncluded(me.ownerId, cos.map((c: { name: unknown }) => String(c.name ?? ''))),
+      grants: rows.map((r: Record<string, unknown>) => ({
+        id: r.id, app: r.client, person: nameOf.get(r.admin_id as string) ?? '', mine: r.admin_id === me.id,
+        connected_at: r.created_at, last_used_at: r.last_used_at ?? null,
+      })),
+    });
+  }
+
+  if (action === 'mcp_revoke_grant') {
+    const gid = b.grant_id;
+    if (typeof gid !== 'string' || !UUID_RE.test(gid)) return errResp('Invalid connection', 400);
+    const grant = (await restJson(`mcp_grants?id=eq.${gid}&revoked_at=is.null&select=id,admin_id&limit=1`))?.[0];
+    // Unknown, already cancelled and somebody else's all answer the same, so there is nothing to probe.
+    const notFound = () => errResp('Connection not found', 404);
+    if (!grant || typeof grant.admin_id !== 'string') return notFound();
+    const mine = grant.admin_id === me.id;
+    if (!mine) {
+      if (me.kind !== 'owner' || me.superAdmin) return notFound();
+      if (!(await mcpAccountAdmins(me.ownerId)).some((p) => p.id === grant.admin_id)) return notFound();
+    }
+    const n = await mcpRevokeGrants(`id=eq.${gid}`, mine ? 'user' : 'owner');
+    if (n) logAudit(me.id, 'mcp_grant_revoked', 'mcp_grants', undefined, mine ? 'user' : 'owner');
+    return jsonResp({ ok: true });
+  }
+
+  if (action === 'set_ai_apps') {
+    // The owner decides whether employee data may go to an AI service. Not a co-admin, not a manager, not support.
+    if (me.kind !== 'owner' || me.superAdmin || caller.role !== 'admin') return errResp('Only the account owner can change this setting', 403);
+    if (typeof b.enabled !== 'boolean') return errResp('Invalid value', 400);
+    const upd = await svcWrite('PATCH', `admins?id=eq.${me.ownerId}`, { ai_apps_enabled: b.enabled }, true);
+    if (!upd.ok || !upd.rows.length) return errResp('Could not save. Please try again.', 503);
+    let cancelled = 0;
+    if (!b.enabled) {
+      const ids = (await mcpAccountAdmins(me.ownerId)).map((p) => p.id);
+      if (ids.length) {
+        cancelled = await mcpRevokeGrants(`admin_id=in.(${ids.join(',')})`, 'ai_apps_off');
+        await svcWrite('DELETE', `mcp_auth_codes?admin_id=in.(${ids.join(',')})`);
+      }
+    }
+    logAudit(me.id, b.enabled ? 'ai_apps_on' : 'ai_apps_off', 'admins', 'PATCH', String(cancelled));
+    return jsonResp({ ok: true, enabled: b.enabled, cancelled });
+  }
+  return errResp('Unknown action', 400);
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
@@ -1903,6 +2144,12 @@ Deno.serve(async (req: Request) => {
     if (!r.ok || !out) return errResp('Could not update this manager', 502);
     if (out.ok) logAudit(caller.adminId, 'demote_manager', `admins:${mgrId}`);
     return jsonResp(out);
+  }
+
+  // The AI connector's consent page and "AI apps" card (see the section above the handler).
+  if (action === 'mcp_consent_info' || action === 'mcp_consent' || action === 'mcp_list_grants'
+    || action === 'mcp_revoke_grant' || action === 'set_ai_apps') {
+    return await mcpAction(action, caller, body);
   }
 
   // An `action` that none of the handlers above recognised must stop here. It used to fall through

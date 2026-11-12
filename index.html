@@ -2085,6 +2085,14 @@ border-top:1px solid var(--border);margin:18px 0;}
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="nav.dd.companyInfoSub">Edit company details &amp; payroll</div>
           </div>
         </button>
+        <!-- AI apps (Claude / ChatGPT connector): shown only where the preview is switched on, see aiAppsOn() -->
+        <button class="user-dd-item" id="ddAiAppsBtn" onclick="closeUserMenu();openAiApps()" style="display:none">
+          <div class="dd-icon" style="background:rgba(124,92,191,.14)"><svg style="width:16px;height:16px;color:var(--accent2)"><use href="#i-sparkle"/></svg></div>
+          <div>
+            <div data-i18n="ai.menu">AI apps</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="ai.menuSub">Claude &amp; ChatGPT (read-only)</div>
+          </div>
+        </button>
         <!-- Subscription -->
         <button class="user-dd-item" id="ddSubscriptionBtn" onclick="closeUserMenu();closeUserMenu();showUpgradePlans()" style="display:none">
           <div class="dd-icon" style="background:rgba(34,197,94,.12)"><svg style="width:16px;height:16px;color:var(--green)"><use href="#i-upload"/></svg></div>
@@ -2760,6 +2768,17 @@ border-top:1px solid var(--border);margin:18px 0;}
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('editCoAdminModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditCoAdmin()" data-i18n="modal.saveChanges">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI APPS MODAL (Claude / ChatGPT connector): drawn by renderAiApps() -->
+<div class="modal-overlay" id="aiAppsModal">
+  <div class="modal" style="max-width:540px">
+    <h3 style="display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px;color:var(--accent2)"><use href="#i-sparkle"/></svg><span data-i18n="ai.title">AI apps</span></h3>
+    <div id="aiAppsBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('aiAppsModal')" data-i18n="ai.close">Close</button>
     </div>
   </div>
 </div>
@@ -4518,6 +4537,113 @@ async function sendAppEmail(type, data){
   if(!r||r.ok===false) throw new Error((r&&r.error)||'Could not send the email');
   return r;
 }
+// ── AI apps: the Claude / ChatGPT connector (read-only) ──────────────────────────────────────
+// The card lists the AI apps connected to this account and holds the owner's "Allow AI apps" switch. Everything
+// goes through secure-db actions with the session: the server decides who the caller is, what they may see and
+// whether they may flip the switch. Nothing here is a permission check, only what to draw.
+// Preview: the menu entry appears only in a browser where ?aiapps=1 was opened once (?aiapps=0 hides it again),
+// until the connector is announced. The server rules do not depend on it.
+function aiAppsOn(){
+  try{
+    const q=new URLSearchParams(window.location.search).get('aiapps');
+    if(q==='1') localStorage.setItem('pc_ai_apps','1');
+    else if(q==='0') localStorage.removeItem('pc_ai_apps');
+    return localStorage.getItem('pc_ai_apps')==='1';
+  }catch(_){ return false; }
+}
+let _aiApps=null;
+async function openAiApps(){
+  if(isDemo()||isSuperAdmin()) return;
+  openModal('aiAppsModal');
+  const body=document.getElementById('aiAppsBody');
+  if(body) body.innerHTML=`<p style="color:var(--text2);font-size:13px">${esc(t('ai.loading'))}</p>`;
+  await loadAiApps();
+}
+async function loadAiApps(){
+  const body=document.getElementById('aiAppsBody');
+  try{
+    _aiApps=await supaFetch('POST','admins',{action:'mcp_list_grants'});
+    renderAiApps();
+  }catch(e){
+    _aiApps=null;
+    if(body) body.innerHTML=`<div class="msg error">${esc(t('ai.error'))}</div>`;
+  }
+}
+function renderAiApps(){
+  const body=document.getElementById('aiAppsBody');
+  const d=_aiApps;
+  if(!body||!d) return;
+  const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const appName=a=>a==='chatgpt'?'ChatGPT':a==='claude'?'Claude':'';
+  const when=v=>{
+    if(!v) return t('ai.never');
+    const dt=new Date(v);
+    return isNaN(dt)?'':dt.toLocaleDateString(_appLang==='fr'?'fr-CA':'en-CA',{year:'numeric',month:'short',day:'numeric'});
+  };
+  const small='font-size:12.5px;color:var(--text2);line-height:1.5';
+  let h=`<p style="font-size:13.5px;color:var(--text2);line-height:1.55;margin:0 0 14px">${esc(t('ai.intro'))}</p>`;
+  if(d.refused==='super_admin'){ body.innerHTML=h+`<div class="msg info">${esc(t('ai.superNo'))}</div>`; return; }
+  if(d.plan_included===false){
+    h+=`<div class="msg info" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span style="flex:1;min-width:200px">${esc(t('ai.planNote'))}</span>`
+      +(d.is_owner?`<button class="btn-primary" style="width:auto;padding:6px 12px;font-size:12px" onclick="closeModal('aiAppsModal');showUpgradePlans()">${esc(t('profile.upgrade'))}</button>`:'')+`</div>`;
+  }
+  if(d.is_owner){
+    h+=`<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;background:var(--surface2);border-radius:var(--r-md);padding:12px 14px;margin-bottom:14px">
+      <input type="checkbox" id="aiAppsSwitch" ${d.enabled?'checked':''} onchange="aiAppsToggle(this.checked)" style="width:16px;height:16px;margin-top:2px;accent-color:var(--accent);flex-shrink:0">
+      <span><span style="font-size:13.5px;font-weight:600;color:var(--text)">${esc(t('ai.allow'))}</span><br><span style="${small}">${esc(t('ai.allowHelp'))}</span></span>
+    </label>`;
+  } else {
+    h+=`<div class="msg ${d.enabled?'success':'info'}">${esc(t(d.enabled?'ai.onByOwner':'ai.offByOwner'))}</div>`;
+  }
+  if(d.enabled){
+    h+=`<div style="margin-bottom:16px"><div style="${small};margin-bottom:6px">${esc(t('ai.how'))}</div>
+      <div style="display:flex;gap:8px"><input type="text" id="aiAppsUrl" readonly value="${esc(d.url||'')}" onclick="this.select()" style="flex:1;min-width:0;padding:8px 10px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-sm)">
+      <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px;white-space:nowrap" onclick="aiAppsCopy()">${esc(t('ai.copy'))}</button></div></div>`;
+  }
+  const gs=(Array.isArray(d.grants)?d.grants:[]).filter(x=>x&&UUID.test(String(x.id)));
+  h+=`<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${esc(t('ai.connections'))}</div>`;
+  if(!gs.length){
+    h+=`<p style="${small};margin:0">${esc(t('ai.none'))}</p>`;
+  } else {
+    h+=gs.map(x=>`<div class="ai-apps-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border)">
+      <div style="min-width:0"><div style="font-size:13.5px;font-weight:600;color:var(--text);overflow-wrap:anywhere">${esc(appName(x.app))}${d.is_owner?` · <span style="font-weight:500">${esc(x.person)}</span>${x.mine?` (${esc(t('ai.you'))})`:''}`:''}</div>
+      <div style="${small}">${esc(t('ai.connected'))} ${esc(when(x.connected_at))} · ${esc(t('ai.lastUsed'))} ${esc(when(x.last_used_at))}</div></div>
+      <button class="btn-danger" style="width:auto;padding:6px 12px;font-size:12px;white-space:nowrap;flex-shrink:0" onclick="aiAppsDisconnect('${jsq(x.id)}')">${esc(t('ai.disconnect'))}</button>
+    </div>`).join('');
+  }
+  body.innerHTML=h;
+}
+async function aiAppsToggle(on){
+  const sw=document.getElementById('aiAppsSwitch');
+  const n=(_aiApps&&Array.isArray(_aiApps.grants))?_aiApps.grants.length:0;
+  const ok=await uiConfirm(on?t('ai.confirmOn'):(n?t('ai.confirmOffN').replace('{n}',n):t('ai.confirmOff')),
+    {title:t(on?'ai.confirmOnTitle':'ai.confirmOffTitle'),confirmLabel:t(on?'ai.allowBtn':'ai.turnOff'),danger:!on});
+  if(!ok){ if(sw) sw.checked=!on; return; }
+  try{
+    await supaFetch('POST','admins',{action:'set_ai_apps',body:{enabled:!!on}});
+    showToast(t(on?'ai.nowOn':'ai.nowOff'),'success');
+  }catch(e){ showToast(t('ai.saveError'),'error'); }
+  await loadAiApps();
+}
+async function aiAppsDisconnect(id){
+  const ok=await uiConfirm(t('ai.disconnectMsg'),{title:t('ai.disconnectTitle'),confirmLabel:t('ai.disconnect')});
+  if(!ok) return;
+  try{
+    await supaFetch('POST','admins',{action:'mcp_revoke_grant',body:{grant_id:id}});
+    showToast(t('ai.disconnected'),'success');
+  }catch(e){ showToast(t('ai.saveError'),'error'); }
+  await loadAiApps();
+}
+function aiAppsCopy(){
+  const inp=document.getElementById('aiAppsUrl');
+  if(!inp) return;
+  const done=()=>showToast(t('ai.copied'),'success');
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(done,()=>{ inp.select(); }); }
+    else { inp.select(); document.execCommand('copy'); done(); }
+  }catch(_){ inp.select(); }
+}
+
 // HTML-escape for values interpolated into innerHTML. This used to exist only as a local inside
 // renderDashboard, so any other function calling esc() threw ReferenceError and killed the render.
 // Declared with `function` so it is hoisted above every caller regardless of file order.
@@ -6835,6 +6961,9 @@ function updateNav(){
       // Company Info — visible to role='admin' only (primary + co-admin), not super admin or managers
       const ddCoInfo=document.getElementById('ddCompanyInfoBtn');
       if(ddCoInfo) ddCoInfo.style.display=(a.role==='admin'&&!isSuperAdmin())?'':'none';
+      // AI apps: owners, co-admins and managers (never the super admin, never the demo), while the preview is on
+      const ddAi=document.getElementById('ddAiAppsBtn');
+      if(ddAi) ddAi.style.display=(aiAppsOn()&&!isSuperAdmin()&&!isDemo())?'':'none';
       // Managers: hide all nav except Admin (employees only)
       if(isManager()){
         const mel=document.getElementById('mobileNavCompanies');if(mel)mel.style.display='none';
@@ -17062,6 +17191,20 @@ en:{
 'land.costNote':'Per-employee column assumes $5.50 per employee per month, a common rate in this category. Our prices are the actual plan prices, in Canadian dollars.',
 
 'dlg.confirmTitle':'Are you sure?','dlg.confirm':'Confirm','dlg.noticeTitle':'Heads up','dlg.ok':'OK',
+'ai.menu':'AI apps','ai.menuSub':'Claude & ChatGPT (read-only)','ai.title':'AI apps','ai.close':'Close','ai.loading':'Loading…',
+'ai.intro':'Ask Claude or ChatGPT about your own PunchClock Crew data: who is clocked in, hours, time off, schedules. Read-only: an AI app can never change anything.',
+'ai.planNote':'The connector is included from the Growth plan. On your current plan an AI app can connect, but it will only be told that an upgrade is needed.',
+'ai.allow':'Allow AI apps for this account',
+'ai.allowHelp':'Off by default. When on, you, your co-admins and your managers can each connect Claude or ChatGPT with the access they already have here (managers: their own sites only). Employee names, punches, hours, time off and schedules are then handled by Anthropic or OpenAI under each person’s own account with them. PINs, emails, phone numbers, photos and GPS locations are never shared. Switching off disconnects everyone at once.',
+'ai.onByOwner':'The account owner allows AI apps. You can connect Claude or ChatGPT with the access you have here.',
+'ai.offByOwner':'AI apps are switched off for this account. Only the account owner can allow them.',
+'ai.how':'In Claude or ChatGPT, add a custom connector and paste this address. You will be sent to PunchClock Crew to sign in and approve.',
+'ai.copy':'Copy','ai.copied':'Address copied','ai.connections':'Connections','ai.none':'No AI app is connected.',
+'ai.you':'you','ai.connected':'Connected','ai.lastUsed':'last used','ai.never':'never',
+'ai.disconnect':'Disconnect','ai.disconnectTitle':'Disconnect this AI app?','ai.disconnectMsg':'It will stop being able to read PunchClock Crew data at once. It can be connected again later.','ai.disconnected':'Disconnected',
+'ai.confirmOnTitle':'Allow AI apps?','ai.confirmOn':'Employee names, punches, hours, time off and schedules can then be read by Claude or ChatGPT for the people on this account who connect them, and are handled by Anthropic or OpenAI. You can switch this off at any time.','ai.allowBtn':'Allow',
+'ai.confirmOffTitle':'Switch AI apps off?','ai.confirmOff':'Nobody on this account will be able to connect an AI app.','ai.confirmOffN':'This disconnects every AI app on this account at once ({n} connected).','ai.turnOff':'Switch off',
+'ai.nowOn':'AI apps are allowed','ai.nowOff':'AI apps are switched off','ai.error':'Could not load. Please try again.','ai.saveError':'Could not save. Please try again.','ai.superNo':'Not available for this account.',
 'fb.title':'Welcome back — can we ask one question?','fb.body':'It has been {n} days. What got in the way?',
 'fb.thanks':'Thank you — that helps.','fb.more':'Anything you want to add? (optional)','fb.placeholder':'Optional',
 'fb.send':'Send','fb.noThanks':'No thanks','fb.sent':'Thanks — we read every one of these.',
@@ -18125,6 +18268,20 @@ fr:{
 'land.costNote':'La colonne par employé suppose 5,50 $ par employé par mois, un tarif courant dans cette catégorie. Nos prix sont les prix réels des forfaits, en dollars canadiens.',
 
 'dlg.confirmTitle':'Êtes-vous sûr?','dlg.confirm':'Confirmer','dlg.noticeTitle':'Avis','dlg.ok':'OK',
+'ai.menu':'Applications IA','ai.menuSub':'Claude et ChatGPT (lecture seule)','ai.title':'Applications IA','ai.close':'Fermer','ai.loading':'Chargement…',
+'ai.intro':'Posez vos questions à Claude ou à ChatGPT sur vos propres données PunchClock Crew : qui est présent, les heures, les congés, les horaires. En lecture seule : une application IA ne peut jamais rien modifier.',
+'ai.planNote':'Le connecteur est inclus à partir du forfait Croissance. Avec votre forfait actuel, une application IA peut se connecter, mais elle saura seulement qu’un forfait supérieur est nécessaire.',
+'ai.allow':'Autoriser les applications IA pour ce compte',
+'ai.allowHelp':'Désactivé par défaut. Une fois ce réglage activé, vous, vos coadministrateurs et vos gestionnaires pouvez chacun connecter Claude ou ChatGPT avec l’accès que vous avez déjà ici (gestionnaires : leurs propres sites seulement). Les noms des employés, les pointages, les heures, les congés et les horaires sont alors traités par Anthropic ou OpenAI dans le compte de chaque personne. Les NIP, les courriels, les numéros de téléphone, les photos et les positions GPS ne sont jamais transmis. La désactivation déconnecte tout le monde d’un coup.',
+'ai.onByOwner':'Le propriétaire du compte autorise les applications IA. Vous pouvez connecter Claude ou ChatGPT avec l’accès que vous avez ici.',
+'ai.offByOwner':'Les applications IA sont désactivées pour ce compte. Seul le propriétaire du compte peut les autoriser.',
+'ai.how':'Dans Claude ou ChatGPT, ajoutez un connecteur personnalisé et collez cette adresse. Vous serez dirigé vers PunchClock Crew pour vous connecter et approuver.',
+'ai.copy':'Copier','ai.copied':'Adresse copiée','ai.connections':'Connexions','ai.none':'Aucune application IA n’est connectée.',
+'ai.you':'vous','ai.connected':'Connectée le','ai.lastUsed':'dernière utilisation :','ai.never':'jamais',
+'ai.disconnect':'Déconnecter','ai.disconnectTitle':'Déconnecter cette application IA?','ai.disconnectMsg':'Elle ne pourra plus lire les données PunchClock Crew, dès maintenant. Elle pourra être reconnectée plus tard.','ai.disconnected':'Déconnectée',
+'ai.confirmOnTitle':'Autoriser les applications IA?','ai.confirmOn':'Les noms des employés, les pointages, les heures, les congés et les horaires pourront alors être lus par Claude ou ChatGPT pour les personnes de ce compte qui les connectent, et seront traités par Anthropic ou OpenAI. Vous pouvez désactiver ce réglage en tout temps.','ai.allowBtn':'Autoriser',
+'ai.confirmOffTitle':'Désactiver les applications IA?','ai.confirmOff':'Personne sur ce compte ne pourra connecter une application IA.','ai.confirmOffN':'Toutes les applications IA de ce compte seront déconnectées d’un coup ({n} connectées).','ai.turnOff':'Désactiver',
+'ai.nowOn':'Les applications IA sont autorisées','ai.nowOff':'Les applications IA sont désactivées','ai.error':'Chargement impossible. Veuillez réessayer.','ai.saveError':'Enregistrement impossible. Veuillez réessayer.','ai.superNo':'Non disponible pour ce compte.',
 'fb.title':'Content de vous revoir — une seule question?','fb.body':'Ça fait {n} jours. Qu’est-ce qui vous a bloqué?',
 'fb.thanks':'Merci — c’est utile.','fb.more':'Souhaitez-vous ajouter quelque chose? (optionnel)','fb.placeholder':'Optionnel',
 'fb.send':'Envoyer','fb.noThanks':'Non merci','fb.sent':'Merci — nous lisons chacun de ces messages.',

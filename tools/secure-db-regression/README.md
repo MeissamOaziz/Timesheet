@@ -40,5 +40,18 @@ nothing is deployed without both of these.
    `update storage.buckets set public = true where id in ('avatars','logos');`
 6. **Spreadsheet formula injection** is covered by `tools/export-formula-test.mjs` (index.html exports, real SheetJS) and
    by the CSV attachment of send-period-summary (`csvText`).
+7. **AI connector (Claude / ChatGPT)**: the `mcp` function (sign-in service + MCP server) and the secure-db actions
+   `mcp_consent_info`, `mcp_consent`, `mcp_list_grants`, `mcp_revoke_grant`, `set_ai_apps`.
+   - `tools/mcp-connector-test.mjs` (before deploying either function): loads BOTH functions against an in-memory
+     database that enforces the real table rules, and plays the attacks: foreign and look-alike callbacks, altered or
+     forged sign-in requests, missing / empty / wrong PKCE verifier, reused and expired codes, a replayed refresh
+     token, another tenant's connections, a manager or co-admin flipping the owner's switch, the super admin, a
+     suspended or expired account, and a scan proving no code or token is ever stored or logged in the clear.
+     With `MCP_URL=<deployed address>` it sends only requests that must be refused (nothing is created).
+   - diff-test group `mcp`: the new actions turn away callers without a session and the connector tables stay
+     unreachable through the table path. Run with `mcp` as the group allowed to differ.
+   - `tools/ai-apps-test.mjs`: the consent page (`connect.html`) and the "AI apps" card, network stubbed.
+   - The mcp_* tables are deliberately NOT in `APP_TABLES`. The trigger function added by
+     `20261112_mcp_revoke_trigger.sql` is not callable by anon, so the allowlist stays as it is.
 
 Needs Node 22 or newer (runs the TypeScript directly).

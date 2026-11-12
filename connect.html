@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<!-- This page only ever talks to our own backend. Nothing is loaded from anywhere else. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://uziwymrwaeojhqaagqcm.supabase.co; base-uri 'none'; form-action 'none'">
+<title>Connect an AI app | PunchClock Crew</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f5f7fa;--surface:#fff;--surface2:#f0f2f7;--border:#d1d5e0;--accent:#4f8ef7;--green:#16a34a;--red:#dc2626;--amber:#b45309;--text:#1a1d2e;--text2:#4a5568;--text3:#718096;--shadow:0 4px 16px rgba(15,23,42,.08)}
+html[data-theme="dark"]{--bg:#0f1117;--surface:#1a1d27;--surface2:#222535;--border:#2e3347;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e8eaf0;--text2:#8b92a8;--text3:#6b7490;--shadow:0 4px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+/* Nothing is shown until the script has checked that the page is not framed by another site. */
+html:not(.ready) body>*:not(noscript){display:none}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px}
+.top{width:100%;max-width:500px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:var(--text);text-decoration:none}
+.brand svg{width:34px;height:34px;border-radius:9px}
+.lang{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+.card{width:100%;max-width:500px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:24px}
+h1{font-size:20px;line-height:1.3;margin:0 0 8px}
+p{margin:0 0 12px;color:var(--text2)}
+p.lead{color:var(--text)}
+.who{background:var(--surface2);border-radius:10px;padding:12px 14px;margin:0 0 14px}
+.who .name{font-weight:600;color:var(--text)}
+.who .switch{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;text-decoration:underline}
+.scope{margin:0 0 14px}
+.scope h2,.cols h2{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin:0 0 6px;font-weight:600}
+ul{margin:0;padding:0;list-style:none}
+.scope li{padding:3px 0;font-weight:600;overflow-wrap:anywhere}
+.scope li small{font-weight:400;color:var(--text3)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 14px}
+.cols li{padding:2px 0 2px 20px;position:relative;font-size:14px;color:var(--text2)}
+.cols li::before{position:absolute;left:0;top:2px;font-weight:700}
+.cols .yes li::before{content:"\2713";color:var(--green)}
+.cols .no li::before{content:"\2715";color:var(--red)}
+.note{border-radius:10px;padding:11px 13px;font-size:13.5px;margin:0 0 12px;border:1px solid var(--border);color:var(--text2);background:var(--surface2)}
+.note.warn{border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.09);color:var(--text)}
+.note.err{border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);color:var(--text)}
+.note a{color:var(--accent)}
+label.tick{display:flex;gap:10px;align-items:flex-start;margin:0 0 14px;font-size:14px;color:var(--text);cursor:pointer}
+label.tick input{width:17px;height:17px;margin-top:2px;flex-shrink:0;accent-color:var(--accent)}
+.field{margin:0 0 12px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text2)}
+.field input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font:inherit}
+.field input:focus{outline:none;border-color:var(--accent)}
+.actions{display:flex;gap:10px;margin-top:16px}
+button.primary,button.secondary{flex:1;padding:11px 14px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;border:1.5px solid transparent}
+button.primary{background:var(--accent);color:#fff}
+button.primary:disabled{opacity:.5;cursor:not-allowed}
+button.secondary{background:var(--surface);border-color:var(--border);color:var(--text)}
+button:focus-visible,.lang:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.small{font-size:13px;color:var(--text3);margin:12px 0 0}
+.small a{color:var(--accent)}
+.foot{max-width:500px;font-size:12px;color:var(--text3);text-align:center;margin-top:16px}
+@media (max-width:420px){.cols{grid-template-columns:1fr}.card{padding:18px}.actions{flex-direction:column-reverse}}
+</style>
+</head>
+<body>
+<noscript><p style="max-width:460px;margin:60px auto;font-family:sans-serif">This page needs JavaScript to connect an AI app to PunchClock Crew. / Cette page a besoin de JavaScript.</p></noscript>
+<div class="top">
+  <a class="brand" href="https://www.punchclock.ca/" id="brandLink">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="28" fill="#1B2A5C"/><rect x=".75" y=".75" width="118.5" height="118.5" rx="27.25" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.5"/><circle cx="60" cy="26" r="8" fill="#FFB020"/><circle cx="77" cy="30.6" r="5.5" fill="#fff"/><circle cx="89.4" cy="43" r="5.5" fill="#fff"/><circle cx="94" cy="60" r="5.5" fill="#fff"/><circle cx="89.4" cy="77" r="5.5" fill="#fff"/><circle cx="77" cy="89.4" r="5.5" fill="#fff"/><circle cx="60" cy="94" r="5.5" fill="#fff"/><circle cx="43" cy="89.4" r="5.5" fill="#fff"/><circle cx="30.6" cy="77" r="5.5" fill="#fff"/><circle cx="26" cy="60" r="5.5" fill="#fff"/><circle cx="30.6" cy="43" r="5.5" fill="#fff"/><circle cx="43" cy="30.6" r="5.5" fill="#fff"/><path d="M60 60V43" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+    <span>PunchClock Crew</span>
+  </a>
+  <button class="lang" id="langBtn" type="button"></button>
+</div>
+<main class="card" id="card" aria-live="polite"></main>
+<div class="foot" id="foot"></div>
+
+<script>
+(function(){
+'use strict';
+var doc=document, root=doc.documentElement;
+
+// A page that asks "may this app read your data?" must never be drawn inside somebody else's page, where a click
+// could be steered. A static host cannot send the header that forbids framing, so the page refuses by itself.
+if(window.top!==window.self){
+  root.className='ready';
+  doc.body.textContent='For your safety this page cannot be shown inside another page. / Par sécurité, cette page ne peut pas être affichée dans une autre page.';
+  return;
+}
+try{ if(localStorage.getItem('pc_theme')==='dark') root.setAttribute('data-theme','dark'); }catch(_){}
+
+var SUPA_URL='https://uziwymrwaeojhqaagqcm.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6aXd5bXJ3YWVvamhxYWFncWNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjEyNzcsImV4cCI6MjA4NzQ5NzI3N30.xEtBRHD-pJT5N9lvZjxIT-1z51ufHxHQs9EJTtf-Nj4';   // the public key every page of the site carries; it opens nothing by itself
+var HOME='https://www.punchclock.ca/';
+var TOKEN_RE=/^[A-Za-z0-9_-]{1,200}$/;
+
+var APPS={
+  claude:{name:'Claude',host:'claude.ai',company:'Anthropic'},
+  chatgpt:{name:'ChatGPT',host:'chatgpt.com',company:'OpenAI'}
+};
+// The only places this page will ever send the person on to. The server builds the address from a signed request and
+// checks the same list twice; this is the third lock, in case an answer is ever not what it should be.
+function safeReturn(u){
+  try{
+    var x=new URL(u);
+    if(x.protocol!=='https:'||x.username||x.password||x.port||x.hash) return false;
+    var p=x.origin+x.pathname;
+    return p==='https://claude.ai/api/mcp/auth_callback'||p==='https://claude.com/api/mcp/auth_callback'
+      ||p==='https://chatgpt.com/connector_platform_oauth_redirect'||/^https:\/\/chatgpt\.com\/connector\/oauth\/[A-Za-z0-9_-]{1,200}$/.test(p);
+  }catch(_){return false;}
+}
+
+var STR={
+en:{
+  title:'Connect an AI app | PunchClock Crew', other:'Français', anyApp:'Claude or ChatGPT',
+  h1:'Connect {app} to PunchClock Crew', wait:'One moment…',
+  noReqH:'Nothing to connect', noReq:'This page opens when you add PunchClock Crew in Claude or ChatGPT. Start from there.', home:'Go to PunchClock Crew',
+  goneH:'This request has expired', gone:'Go back to {app} and press Connect again.',
+  loginH:'Sign in to continue', loginP:'Sign in to your PunchClock Crew admin account to choose what {app} may read.',
+  email:'Email', password:'Password', signIn:'Sign in', signingIn:'Signing in…',
+  loginBad:'Wrong email or password, or too many attempts. Wait a few minutes and try again.',
+  forgot:'Forgot your password?', empNote:'For account owners, admins and managers. Employee portal accounts cannot connect an AI app.',
+  asking:'{app} ({host}) is asking for read-only access to your PunchClock Crew data.',
+  signedAs:'Signed in as', notYou:'Use another account',
+  role_owner:'account owner', role_admin:'admin', role_manager:'manager',
+  scopeAll:'It would read everything in', scopeSites:'It would read only your sites', noSites:'You have no site assigned yet, so there is nothing to read.',
+  canH:'It can read', can:['Employee names','Punches and hours','Time-off and missed-punch requests','Schedules'],
+  neverH:'It never sees', never:['PINs','Emails and phone numbers','Photos','GPS locations','Billing details'],
+  cannot:'It cannot add, change or delete anything.',
+  processor:'What you ask and the answers are handled by {company} under your own {app} account and its terms.',
+  beware:'Only continue if you started this yourself from {app} a moment ago. If someone sent you a link to this page, press Cancel.',
+  plan:'Your plan does not include the connector yet. You can connect, but {app} will only be told that it is included from the Growth plan.', seePlans:'See plans',
+  offOwner:'AI apps are switched off for your account, which is the default. As the account owner, you decide whether employee data may go to an AI service.',
+  offTick:'Allow AI apps for my account. My co-admins and managers can then connect too, each with the access they already have. I can switch this off at any time, which disconnects everyone.',
+  offOther:'AI apps are switched off for this account. Ask the account owner to allow them (account menu, then AI apps), then start again from {app}.',
+  superNo:'This account cannot be connected to an AI app.',
+  allow:'Allow read-only access', cancel:'Cancel', working:'Connecting…', returning:'Returning to {app}…',
+  errGeneric:'Something went wrong. Please try again.', errRate:'Too many attempts. Please wait an hour and try again.', errNet:'No connection. Check your internet and try again.',
+  foot:'PunchClock Crew never shares your password with an AI app.'
+},
+fr:{
+  title:'Connecter une application IA | PunchClock Crew', other:'English', anyApp:'Claude ou ChatGPT',
+  h1:'Connecter {app} à PunchClock Crew', wait:'Un instant…',
+  noReqH:'Rien à connecter', noReq:'Cette page s’ouvre lorsque vous ajoutez PunchClock Crew dans Claude ou ChatGPT. Commencez à partir de là.', home:'Aller à PunchClock Crew',
+  goneH:'Cette demande a expiré', gone:'Retournez dans {app} et appuyez de nouveau sur Connecter.',
+  loginH:'Connectez-vous pour continuer', loginP:'Connectez-vous à votre compte administrateur PunchClock Crew pour choisir ce que {app} peut lire.',
+  email:'Courriel', password:'Mot de passe', signIn:'Se connecter', signingIn:'Connexion…',
+  loginBad:'Courriel ou mot de passe incorrect, ou trop de tentatives. Attendez quelques minutes et réessayez.',
+  forgot:'Mot de passe oublié?', empNote:'Pour les propriétaires de compte, les administrateurs et les gestionnaires. Les comptes du portail employé ne peuvent pas connecter une application IA.',
+  asking:'{app} ({host}) demande un accès en lecture seule à vos données PunchClock Crew.',
+  signedAs:'Connecté en tant que', notYou:'Utiliser un autre compte',
+  role_owner:'propriétaire du compte', role_admin:'administrateur', role_manager:'gestionnaire',
+  scopeAll:'Il pourrait tout lire dans', scopeSites:'Il pourrait lire seulement vos sites', noSites:'Aucun site ne vous est encore attribué : il n’y a donc rien à lire.',
+  canH:'Il peut lire', can:['Les noms des employés','Les pointages et les heures','Les demandes de congé et de pointage manqué','Les horaires'],
+  neverH:'Il ne voit jamais', never:['Les NIP','Les courriels et les numéros de téléphone','Les photos','Les positions GPS','Les renseignements de facturation'],
+  cannot:'Il ne peut rien ajouter, modifier ni supprimer.',
+  processor:'Vos questions et les réponses sont traitées par {company} dans votre propre compte {app}, selon ses conditions.',
+  beware:'Continuez seulement si vous avez vous-même lancé cette connexion depuis {app} il y a un instant. Si quelqu’un vous a envoyé un lien vers cette page, appuyez sur Annuler.',
+  plan:'Votre forfait n’inclut pas encore le connecteur. Vous pouvez vous connecter, mais {app} saura seulement qu’il est inclus à partir du forfait Croissance.', seePlans:'Voir les forfaits',
+  offOwner:'Les applications IA sont désactivées pour votre compte : c’est le réglage par défaut. En tant que propriétaire du compte, c’est vous qui décidez si les données des employés peuvent être envoyées à un service d’IA.',
+  offTick:'Autoriser les applications IA pour mon compte. Mes coadministrateurs et mes gestionnaires pourront alors se connecter eux aussi, chacun avec l’accès qu’il a déjà. Je peux désactiver ce réglage en tout temps, ce qui déconnecte tout le monde.',
+  offOther:'Les applications IA sont désactivées pour ce compte. Demandez au propriétaire du compte de les autoriser (menu du compte, puis Applications IA), puis recommencez depuis {app}.',
+  superNo:'Ce compte ne peut pas être connecté à une application IA.',
+  allow:'Autoriser l’accès en lecture seule', cancel:'Annuler', working:'Connexion…', returning:'Retour à {app}…',
+  errGeneric:'Une erreur est survenue. Veuillez réessayer.', errRate:'Trop de tentatives. Veuillez attendre une heure et réessayer.', errNet:'Pas de connexion. Vérifiez votre accès Internet et réessayez.',
+  foot:'PunchClock Crew ne transmet jamais votre mot de passe à une application IA.'
+}};
+
+var lang='en';
+try{ var sl=localStorage.getItem('pc_admin_lang'); lang=(sl==='fr'||sl==='en')?sl:((navigator.language||'').toLowerCase().indexOf('fr')===0?'fr':'en'); }catch(_){ lang=(navigator.language||'').toLowerCase().indexOf('fr')===0?'fr':'en'; }
+
+// ── state ──
+var S={view:'wait',request:null,appKey:null,token:null,info:null,error:null,busy:false,tick:false,loginError:false};
+
+function appLabel(){ return S.appKey&&APPS[S.appKey]?APPS[S.appKey].name:STR[lang].anyApp; }
+function tr(key){
+  var a=S.appKey&&APPS[S.appKey]?APPS[S.appKey]:null;
+  return String(STR[lang][key]).split('{app}').join(appLabel()).split('{host}').join(a?a.host:'').split('{company}').join(a?a.company:'');
+}
+// Every piece of text goes in as text, never as HTML: names come from the customer's own account.
+function el(tag,cls,text){ var e=doc.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function list(items){ var ul=el('ul'); items.forEach(function(x){ ul.appendChild(el('li',null,x)); }); return ul; }
+function button(cls,label,fn){ var b=el('button',cls,label); b.type='button'; b.addEventListener('click',fn); return b; }
+function note(kind,text){ return el('div','note'+(kind?' '+kind:''),text); }
+
+function api(action,body,token){
+  var ctl=new AbortController(), timer=setTimeout(function(){ctl.abort();},15000);
+  return fetch(SUPA_URL+'/functions/v1/secure-db',{
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPA_KEY},
+    body:JSON.stringify({action:action,body:body||null,sessionToken:token||null,kioskV:2}), signal:ctl.signal
+  }).then(function(res){ return res.json().catch(function(){return null;}).then(function(data){ clearTimeout(timer); return {status:res.status,data:data}; }); },
+    function(){ clearTimeout(timer); return {status:0,data:null}; });
+}
+function storedToken(){
+  var raw=null;
+  try{ raw=localStorage.getItem('pc_sess')||sessionStorage.getItem('pc_sess'); }catch(_){}
+  try{ var t=raw?JSON.parse(raw).token:null; return (typeof t==='string'&&TOKEN_RE.test(t))?t:null; }catch(_){ return null; }
+}
+function leaveTo(u){
+  if(!safeReturn(u)){ S.error='errGeneric'; S.busy=false; render(); return; }
+  S.view='returning'; render();
+  window.location.replace(u);
+}
+
+function load(){
+  if(!S.token){ S.view='login'; render(); return; }
+  S.view='wait'; render();
+  api('mcp_consent_info',{request:S.request},S.token).then(function(r){
+    if(r.status===200&&r.data&&r.data.ok){ S.info=r.data; if(APPS[r.data.app]) S.appKey=r.data.app; S.view='consent'; S.error=null; }
+    else if(r.status===401){ S.token=null; S.view='login'; }
+    else if(r.status===400){ S.view='gone'; }
+    else { S.view='consent'; S.info=null; S.error=r.status===0?'errNet':'errGeneric'; }
+    render();
+  });
+}
+function signIn(email,pass){
+  if(S.busy) return;
+  S.busy=true; S.loginError=false; render();
+  fetch(SUPA_URL+'/rest/v1/rpc/mint_admin_session',{
+    method:'POST', headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({p_email:String(email||'').trim().toLowerCase(),p_pass:String(pass||'')})
+  }).then(function(res){ return res.json().catch(function(){return null;}); },function(){ return null; }).then(function(m){
+    S.busy=false;
+    // The token stays in this page's memory only: signing in here does not sign the browser in to the app.
+    if(m&&m.ok&&typeof m.session_token==='string'&&TOKEN_RE.test(m.session_token)){ S.token=m.session_token; load(); }
+    else { S.loginError=true; render(); }
+  });
+}
+function decide(decision){
+  if(S.busy) return;
+  S.busy=true; S.error=null; render();
+  var go=function(){
+    api('mcp_consent',{request:S.request,decision:decision},decision==='allow'?S.token:null).then(function(r){
+      if(r.status===200&&r.data&&r.data.ok&&typeof r.data.redirect==='string'){ leaveTo(r.data.redirect); return; }
+      S.busy=false;
+      if(r.status===400&&r.data&&r.data.code==='request_invalid'){ S.view='gone'; }
+      else if(r.status===401){ S.token=null; S.view='login'; }
+      else if(r.status===429){ S.error='errRate'; }
+      else if(r.status===403){ load(); return; }
+      else { S.error=r.status===0?'errNet':'errGeneric'; }
+      render();
+    });
+  };
+  // The owner ticked "Allow AI apps for my account": that switch is set first, by its own owner-only action.
+  if(decision==='allow'&&S.info&&S.info.refused==='ai_apps_off'&&S.info.role==='owner'&&S.tick){
+    api('set_ai_apps',{enabled:true},S.token).then(function(r){
+      if(r.status===200&&r.data&&r.data.ok){ go(); }
+      else { S.busy=false; S.error=r.status===0?'errNet':'errGeneric'; render(); }
+    });
+  } else go();
+}
+
+// ── drawing ──
+function render(){
+  var card=doc.getElementById('card'); card.textContent='';
+  doc.title=STR[lang].title; root.lang=lang;
+  doc.getElementById('langBtn').textContent=STR[lang].other;
+  doc.getElementById('foot').textContent=STR[lang].foot;
+  var v=S.view;
+  if(v==='wait'||v==='returning'){ card.appendChild(el('p','lead',tr(v==='wait'?'wait':'returning'))); return; }
+  if(v==='none'){
+    card.appendChild(el('h1',null,tr('noReqH'))); card.appendChild(el('p',null,tr('noReq')));
+    var a=el('a',null,tr('home')); a.href=HOME; var p=el('p','small'); p.appendChild(a); card.appendChild(p); return;
+  }
+  if(v==='gone'){ card.appendChild(el('h1',null,tr('goneH'))); card.appendChild(el('p',null,tr('gone'))); return; }
+  card.appendChild(el('h1',null,tr('h1')));
+  if(v==='login'){ renderLogin(card); return; }
+  renderConsent(card);
+}
+function renderLogin(card){
+  card.appendChild(el('p',null,tr('loginP')));
+  if(S.loginError) card.appendChild(note('err',tr('loginBad')));
+  var form=el('form'); form.setAttribute('novalidate','');
+  var f1=el('div','field'), l1=el('label',null,tr('email')), i1=el('input'); i1.type='email'; i1.id='cEmail'; i1.autocomplete='username'; l1.htmlFor='cEmail'; f1.appendChild(l1); f1.appendChild(i1);
+  var f2=el('div','field'), l2=el('label',null,tr('password')), i2=el('input'); i2.type='password'; i2.id='cPass'; i2.autocomplete='current-password'; l2.htmlFor='cPass'; f2.appendChild(l2); f2.appendChild(i2);
+  form.appendChild(f1); form.appendChild(f2);
+  var acts=el('div','actions');
+  acts.appendChild(button('secondary',tr('cancel'),function(){ decide('deny'); }));
+  var go=el('button','primary',S.busy?tr('signingIn'):tr('signIn')); go.type='submit'; go.disabled=S.busy; acts.appendChild(go);
+  form.appendChild(acts);
+  form.addEventListener('submit',function(ev){ ev.preventDefault(); if(i1.value&&i2.value) signIn(i1.value,i2.value); });
+  card.appendChild(form);
+  var sm=el('p','small'), fa=el('a',null,tr('forgot')); fa.href=HOME; sm.appendChild(fa); card.appendChild(sm);
+  card.appendChild(el('p','small',tr('empNote')));
+  if(!S.busy) setTimeout(function(){ try{i1.focus();}catch(_){} },0);
+}
+function renderConsent(card){
+  var I=S.info;
+  if(S.error) card.appendChild(note('err',tr(S.error)));
+  if(!I){ var again=el('div','actions'); again.appendChild(button('secondary',tr('cancel'),function(){ decide('deny'); })); card.appendChild(again); return; }
+  card.appendChild(el('p','lead',tr('asking')));
+
+  if(I.refused==='super_admin'){
+    card.appendChild(note('warn',tr('superNo')));
+    var a0=el('div','actions'); a0.appendChild(button('secondary',tr('cancel'),function(){ decide('deny'); })); card.appendChild(a0); return;
+  }
+  var who=el('div','who');
+  var line=el('div'); line.appendChild(doc.createTextNode(tr('signedAs')+' ')); line.appendChild(el('span','name',I.person||''));
+  line.appendChild(doc.createTextNode(' ('+tr('role_'+(I.role==='owner'||I.role==='manager'?I.role:'admin'))+')')); who.appendChild(line);
+  who.appendChild(button('switch',tr('notYou'),function(){ S.token=null; S.info=null; S.view='login'; S.loginError=false; render(); }));
+  card.appendChild(who);
+
+  var sc=el('div','scope');
+  var isMgr=I.role==='manager', sites=Array.isArray(I.sites)?I.sites:[], cos=Array.isArray(I.companies)?I.companies:[];
+  sc.appendChild(el('h2',null,tr(isMgr?'scopeSites':'scopeAll')));
+  if(isMgr&&!sites.length) sc.appendChild(el('p',null,tr('noSites')));
+  else sc.appendChild(list(isMgr?sites:cos));
+  if(isMgr&&cos.length){ var sm=el('p','small',cos.join(', ')); sm.style.marginTop='4px'; sc.appendChild(sm); }
+  card.appendChild(sc);
+
+  var cols=el('div','cols');
+  var yes=el('div','yes'); yes.appendChild(el('h2',null,tr('canH'))); yes.appendChild(list(STR[lang].can)); cols.appendChild(yes);
+  var no=el('div','no'); no.appendChild(el('h2',null,tr('neverH'))); no.appendChild(list(STR[lang].never)); cols.appendChild(no);
+  card.appendChild(cols);
+  card.appendChild(el('p',null,tr('cannot')+' '+tr('processor')));
+
+  if(I.plan_included===false){
+    var pn=note('',tr('plan')+' '), pl=el('a',null,tr('seePlans')); pl.href=HOME+'#pricing'; pl.target='_blank'; pl.rel='noopener'; pn.appendChild(pl); card.appendChild(pn);
+  }
+  var canAllow=true;
+  if(I.refused==='ai_apps_off'){
+    if(I.role==='owner'){
+      card.appendChild(note('',tr('offOwner')));
+      var lab=el('label','tick'), cb=el('input'); cb.type='checkbox'; cb.id='cTick'; cb.checked=!!S.tick;
+      cb.addEventListener('change',function(){ S.tick=cb.checked; var b=doc.getElementById('cAllow'); if(b) b.disabled=!S.tick||S.busy; });
+      lab.appendChild(cb); lab.appendChild(el('span',null,tr('offTick'))); card.appendChild(lab);
+      canAllow=!!S.tick;
+    } else {
+      card.appendChild(note('warn',tr('offOther')));
+      var a1=el('div','actions'); a1.appendChild(button('secondary',tr('cancel'),function(){ decide('deny'); })); card.appendChild(a1); return;
+    }
+  }
+  card.appendChild(note('warn',tr('beware')));
+  var acts=el('div','actions');
+  var c=button('secondary',tr('cancel'),function(){ decide('deny'); }); c.disabled=S.busy; acts.appendChild(c);
+  var ok=button('primary',S.busy?tr('working'):tr('allow'),function(){ decide('allow'); }); ok.id='cAllow'; ok.disabled=S.busy||!canAllow; acts.appendChild(ok);
+  card.appendChild(acts);
+}
+
+doc.getElementById('langBtn').addEventListener('click',function(){
+  lang=lang==='fr'?'en':'fr';
+  try{ localStorage.setItem('pc_admin_lang',lang); }catch(_){}
+  render();
+});
+
+// ── start ──
+// The request arrives after the "#", so it is never sent to the web host. It is taken out of the address bar and
+// the history at once, and kept in memory only.
+var m=/(?:^#|&)r=([A-Za-z0-9_.-]{20,6000})(?:&|$)/.exec(window.location.hash||'');
+try{ history.replaceState(null,'',window.location.pathname); }catch(_){}
+root.className='ready';
+if(!m){ S.view='none'; render(); return; }
+S.request=m[1];
+// Which app is asking is read from the request for the wording only; the server decides everything from its signature.
+try{
+  var part=S.request.split('.')[0].replace(/-/g,'+').replace(/_/g,'/');
+  var c=JSON.parse(atob(part+'==='.slice((part.length+3)%4))).c;
+  if(c==='claude'||c==='chatgpt') S.appKey=c;
+}catch(_){}
+S.token=storedToken();
+load();
+})();
+</script>
+</body>
+</html>

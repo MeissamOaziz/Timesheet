@@ -878,6 +878,19 @@ const cases = [
     r => r.status === 200 && r.obj.every(x => Object.keys(x).every(k => ['id', 'name', 'email', 'role', 'plan', 'status', 'parent_admin_id', 'extra_seats', 'scheduling_addon', 'scheduling_trial_ends_at'].includes(k)))),
   R('preauth', 'anon: a compound lookup is still refused', { table: 'admins', method: 'GET', filter: 'email=eq.o@x.ca&role=eq.admin' }, r => r.status === 401),
   R('preauth', 'anon: a bulk read is still refused', { table: 'admins', method: 'GET', filter: 'status=eq.active' }, r => r.status === 401),
+  // ---- AI connector actions (added 2026-11-12). The old code answers "Unknown action" to all of these. What they do
+  // with a real account, a real signed request and a database that remembers is proven in tools/mcp-connector-test.mjs;
+  // here only that nothing is written or read for a caller who should be turned away. ----
+  R('mcp', 'consent info: no request', { action: 'mcp_consent_info', body: {}, ...own }, r => r.status === 400 && r.obj.code === 'request_invalid' && !r.calls.some(c => /mcp_|companies|sites/.test(c))),
+  R('mcp', 'consent: a made-up request', { action: 'mcp_consent', body: { request: 'eyJjIjoiY2xhdWRlIn0.AAAA', decision: 'allow' }, ...own }, r => r.status === 400 && !r.calls.some(c => /mcp_/.test(c))),
+  R('mcp', 'consent: cancel with a made-up request sends nobody anywhere', { action: 'mcp_consent', body: { request: 'x.y', decision: 'deny' } }, r => r.status === 400 && !('redirect' in r.obj)),
+  R('mcp', 'list connections: no session', { action: 'mcp_list_grants' }, r => r.status === 401 && !r.calls.some(c => /mcp_/.test(c))),
+  R('mcp', 'list connections: expired session', { action: 'mcp_list_grants', sessionToken: 'tokExpired' }, r => r.status === 401 && !r.calls.some(c => /mcp_/.test(c))),
+  R('mcp', 'disconnect: no session', { action: 'mcp_revoke_grant', body: { grant_id: '77777777-7777-4777-8777-777777777771' } }, r => r.status === 401 && !r.calls.some(c => /^(PATCH|DELETE) /.test(c))),
+  R('mcp', 'owner switch: no session', { action: 'set_ai_apps', body: { enabled: true } }, r => r.status === 401 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('mcp', 'owner switch: a caller whose id is not a real account id is turned away before any write', { action: 'set_ai_apps', body: { enabled: true }, ...mgr }, r => r.status === 401 && !r.calls.some(c => /^PATCH /.test(c))),
+  R('mcp', 'the connector tables are not reachable through the table path', { table: 'mcp_tokens', method: 'GET', filter: '', ...own }, r => r.status === 403 && r.calls.every(c => !/mcp_tokens/.test(c))),
+  R('mcp', 'the owner switch is not a field an owner may write through the table path', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { ai_apps_enabled: true }, ...own }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
 ];
 
 async function run(handler) {
