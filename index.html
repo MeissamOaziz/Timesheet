@@ -3032,6 +3032,13 @@ border-top:1px solid var(--border);margin:18px 0;}
       </div>
       <div class="form-group"><label data-i18n="to.hours">Hours per day</label><input type="number" id="toHours" value="8" min="0.5" max="24" step="0.5"></div>
     </div>
+    <div class="form-group"><label data-i18n="to.statusField">Status</label>
+      <select id="toStatus">
+        <option value="pending" data-i18n="to.statusPending">Pending</option>
+        <option value="approved" data-i18n="to.approved">Approved</option>
+        <option value="denied" data-i18n="to.denied">Denied</option>
+      </select>
+    </div>
     <div class="form-group"><label data-i18n="to.note">Note (optional)</label><input type="text" id="toReason" data-i18n="to.notePlaceholder" placeholder="Booked in advance"></div>
     <div id="toConflictWarn" style="display:none"></div>
     <div class="modal-footer">
@@ -13990,6 +13997,12 @@ function openTimeOffModal(id){
   document.getElementById('toKind').value=r?r.kind:'vacation';
   document.getElementById('toHours').value=r?r.hours_per_day:8;
   document.getElementById('toReason').value=r?(r.reason||''):'';
+  // An admin can record a request that is not decided yet. A cancelled entry (withdrawn by the employee)
+  // keeps its status unless the admin picks another one.
+  const st=document.getElementById('toStatus');
+  st.querySelectorAll('option[value="cancelled"]').forEach(o=>o.remove());
+  if(r&&r.status==='cancelled') st.insertAdjacentHTML('beforeend',`<option value="cancelled">${esc(t('to.cancelled')||'Cancelled')}</option>`);
+  st.value=r?(r.status||'approved'):'approved';
   applyAllTranslations();
   openModal('timeOffModal');
 }
@@ -14016,14 +14029,20 @@ async function saveTimeOff(){
   }
   const payload={company_id:emp.company_id,site_id:emp.site_id||null,emp_id:empId,emp_name:emp.name,
                  kind,start_date:start,end_date:end,hours_per_day:hours,reason:reason||null};
+  // Status chosen in the form. Approved or denied records who decided and when; pending clears it, so the
+  // entry shows in "Pending requests" with Approve / Deny like an employee's own request.
+  const status=document.getElementById('toStatus').value||'approved';
+  const sess=Sess.get();
+  const prev=_toEditId?_timeOff.find(x=>x.id===_toEditId):null;
+  const decided=(status==='approved'||status==='denied');
+  const review=(!prev||prev.status!==status)
+    ? (decided?{reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()}:{reviewed_by:null,reviewed_at:null})
+    : {};
   try{
     if(_toEditId){
-      await DB.update('time_off',`id=eq.${_toEditId}`,payload);
+      await DB.update('time_off',`id=eq.${_toEditId}`,{...payload,status,...review});
     }else{
-      // Added by an admin, so it is already decided — no self-approval step.
-      const sess=Sess.get();
-      await DB.insert('time_off',{...payload,status:'approved',requested_by:'admin',
-                                  reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()});
+      await DB.insert('time_off',{...payload,status,requested_by:'admin',...review});
     }
     closeModal('timeOffModal');
     await refreshTimeOff(); renderTimeOff();
@@ -17524,7 +17543,7 @@ en:{
 'to.filterWhen':'Period','to.filterKind':'Type','to.fUpcoming':'Upcoming & current','to.fYear':'This year','to.fPast':'Past','to.fAll':'All',
 'to.offToday':'Off today','to.offTodayLabel':'Off today','to.until':'until','to.next7':'Starting in 7 days',
 'to.pendingCount':'Awaiting approval','to.ytdDays':'Days off this year','to.now':'off now',
-'to.approved':'Approved','to.statusPending':'Pending','to.denied':'Denied','to.cancelled':'Cancelled',
+'to.statusField':'Status','to.approved':'Approved','to.statusPending':'Pending','to.denied':'Denied','to.cancelled':'Cancelled',
 'to.none':'No time off recorded for this filter.','to.saved':'Time off saved.','to.deleted':'Time off deleted.',
 'to.okApproved':'Time off approved.','to.okDenied':'Request denied.',
 'to.confirmDelete':'Delete this time off for {name}?',
@@ -18601,7 +18620,7 @@ fr:{
 'to.filterWhen':'Période','to.filterKind':'Type','to.fUpcoming':'À venir et en cours','to.fYear':'Cette année','to.fPast':'Passés','to.fAll':'Tous',
 'to.offToday':'Absents aujourd\'hui','to.offTodayLabel':'Absents aujourd\'hui','to.until':'jusqu\'au','to.next7':'Débutent dans 7 jours',
 'to.pendingCount':'En attente d\'approbation','to.ytdDays':'Jours de congé cette année','to.now':'absent maintenant',
-'to.approved':'Approuvé','to.statusPending':'En attente','to.denied':'Refusé','to.cancelled':'Annulé',
+'to.statusField':'Statut','to.approved':'Approuvé','to.statusPending':'En attente','to.denied':'Refusé','to.cancelled':'Annulé',
 'to.none':'Aucun congé enregistré pour ce filtre.','to.saved':'Congé enregistré.','to.deleted':'Congé supprimé.',
 'to.okApproved':'Congé approuvé.','to.okDenied':'Demande refusée.',
 'to.confirmDelete':'Supprimer ce congé pour {name}?',
