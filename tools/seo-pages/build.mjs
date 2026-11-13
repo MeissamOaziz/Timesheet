@@ -252,6 +252,7 @@ const PAGES = [
         ['Do I need a credit card to start?', 'No. The Free plan needs no credit card.'],
         ['Can I change plans later?', 'Yes, from your account at any time. Your data stays where it is.'],
         ['Is the Scheduling add-on included?', 'No. It is $14.95/month CAD on any paid plan, and you can try it free for 14 days.'],
+        ['Can I get a refund?', 'No. Payments are not refundable, including partial months, so try the paid features free for 14 days first. If you cancel, you keep your plan until the end of the month already paid and are not charged again.'],
       ],
     },
     fr: {
@@ -266,6 +267,7 @@ const PAGES = [
         ['Faut-il une carte de crédit pour commencer?', 'Non. Le plan Gratuit ne demande aucune carte de crédit.'],
         ['Puis-je changer de plan plus tard?', 'Oui, à partir de votre compte, en tout temps. Vos données restent en place.'],
         ['Le module Planification est-il inclus?', 'Non. Il coûte 14,95 $/mois sur tout plan payant, et vous pouvez l’essayer gratuitement pendant 14 jours.'],
+        ['Puis-je obtenir un remboursement?', 'Non. Les paiements ne sont pas remboursables, y compris pour un mois partiel : essayez d’abord les fonctions payantes gratuitement pendant 14 jours. Si vous annulez, vous gardez votre forfait jusqu’à la fin du mois déjà payé et vous n’êtes plus facturé.'],
       ],
     },
   },

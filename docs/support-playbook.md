@@ -147,6 +147,12 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
   and time-off entries are still saved; overtime and evening hours need to be switched on again).
 - A small number of grandfathered accounts have unlimited limits (the owner's own company and one partner account). Never grant or promise this to a customer.
 - Counts (employees, sites, companies, admins) are enforced in the app; extra seats are $4.90 each.
+- **Refunds: none (owner decision, 2026-11-12; Terms of Service section 4).** Every payment is final, including the
+  first one and a plan cancelled an hour after paying: customers had the free 14-day preview to evaluate. Answer a
+  refund request politely: no refund, as stated in the Terms; cancelling stops any further charge; they keep the paid
+  plan until the end of the period already paid; the account then returns to the Free plan with nothing deleted.
+  Never promise, hint at or process a refund or credit, and never say "exceptionally". If the customer insists,
+  disputes the charge or mentions a chargeback, escalate to the owner and send only a holding reply.
 
 ## Features and how to explain them
 
