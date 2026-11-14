@@ -107,12 +107,14 @@ const PAGES = [
         ]],
         ['For crews on the road', [
           'Turn on remote clock-in and grant it to the employees who need it. They punch in from their own phone through the employee portal, and you see where each punch was made.',
+          'Location required, from anywhere: set the site to Strict mode and leave its address empty. Every phone punch must then carry a location, wherever the employee is; a punch with location refused or switched off is blocked.',
           'A fixed tablet at the entrance is still the simplest option for teams who all work at one place.',
         ]],
       ],
       faq: [
         ['Which plan includes geofencing?', 'Geofencing and remote clock-in are included from the Starter plan ($19.49/month CAD). New accounts can try them for 14 days.'],
         ['What if an employee turns off location?', 'In lenient mode the punch goes through with a warning. In strict mode it is blocked. You choose per site.'],
+        ['Our technicians work at a different client site every day. Can we still require location?', 'Yes. Set the site to Strict mode with no address: location is required on every phone punch, from anywhere, with no distance limit, and each punch shows on a map where it was made.'],
         ['Do employees need to install an app?', 'No. Employees use the web on a shared device or, for remote clock-in, their own phone through the employee portal.'],
       ],
     },
@@ -130,12 +132,14 @@ const PAGES = [
         ]],
         ['Pour les équipes sur la route', [
           'Activez le pointage à distance et accordez-le aux employés qui en ont besoin. Ils pointent depuis leur propre téléphone par le portail employé, et vous voyez où chaque pointage a été fait.',
+          'Localisation exigée, de n’importe où : mettez le site en mode strict et laissez son adresse vide. Chaque pointage sur téléphone doit alors être accompagné d’une position, peu importe où se trouve l’employé; un pointage dont la localisation est refusée ou désactivée est bloqué.',
           'Une tablette fixe à l’entrée reste l’option la plus simple pour une équipe qui travaille au même endroit.',
         ]],
       ],
       faq: [
         ['Quel plan inclut le géorepérage?', 'Le géorepérage et le pointage à distance sont inclus dès le plan Débutant (19,49 $/mois). Les nouveaux comptes peuvent les essayer pendant 14 jours.'],
         ['Que se passe-t-il si un employé désactive sa localisation?', 'En mode souple, le pointage est accepté avec un avertissement. En mode strict, il est bloqué. Vous choisissez pour chaque site.'],
+        ['Nos techniciens travaillent chez un client différent chaque jour. Peut-on quand même exiger la localisation?', 'Oui. Mettez le site en mode strict sans adresse : la localisation est exigée à chaque pointage sur téléphone, de n’importe où, sans limite de distance, et chaque pointage s’affiche sur une carte à l’endroit où il a été fait.'],
         ['Les employés doivent-ils installer une application?', 'Non. Les employés utilisent le web sur un appareil partagé ou, pour le pointage à distance, leur propre téléphone par le portail employé.'],
       ],
     },
@@ -375,7 +379,7 @@ function llmsTxt() {
 
 Key facts:
 - Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds lunch breaks and visitor check-in); Business $79.49 (unlimited).
-- Starter and up add geofencing, remote clock-in with GPS, the employee self-service portal, time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
+- Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal, time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
 - Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
 - Works in a web browser; no app install needed for the clock-in terminal.

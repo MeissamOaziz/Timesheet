@@ -81,13 +81,17 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
 - Remote clock-in needs BOTH the company's Remote Access switch and a per-employee Remote Clock-In
   grant (set individually or in bulk from Employees). Employees activate the portal from an email
   invitation. Nothing to install: it runs in the phone's browser and can be saved to the home screen.
-  The phone must allow location access.
+  By default an employee who refuses location access can still clock in (the punch has no pin and is
+  flagged "no location" when the site has an address). To make location mandatory, use Strict mode.
 - Geofence: each site can have a location and a radius of 25 to 500 m, in Lenient mode (the punch goes
   through with a warning if GPS is unavailable) or Strict mode (blocked outside the radius or without
   GPS). The kiosk blocks a punch outside the radius. Portal punches only block in Strict mode.
-- Caveat for crews that move between job sites: a portal punch always counts against the employee's
-  assigned site, so Strict mode would block them anywhere else. For roaming crews, do not enable Strict
-  mode; the recorded GPS pin per punch is the proof of where they started and finished.
+- Crews that move between job sites (location required, clock in from anywhere): edit the site, open
+  Set Geofence, choose Strict and do NOT set an address (or press Remove Geofence first, then choose
+  Strict). Every phone punch then needs a location, with no distance limit, and each punch carries its
+  GPS pin. Do not combine Strict with an address for a roaming crew: a portal punch counts against the
+  employee's assigned site, so they would be blocked anywhere else. The kiosk is not affected by Strict
+  when the site has no address.
 - Plans: Free (1 site, 10 employees), Starter $19.49/month CAD (2 sites, 25 employees), Growth $39.49
   (6 sites, 60 employees), Business $79.49 (unlimited). Flat price per account, not per employee. Remote
   clock-in and geofencing are Starter-and-up features (Free previews them 14 days; see the plan table below).
