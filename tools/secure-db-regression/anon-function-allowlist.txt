@@ -31,6 +31,9 @@ kiosk_device_checkin
 mint_admin_session
 portal_add_availability
 portal_app_config
+portal_calendar_feed_create
+portal_calendar_feed_revoke
+portal_calendar_feed_status
 portal_cancel_time_off
 portal_change_password
 portal_delete_availability
