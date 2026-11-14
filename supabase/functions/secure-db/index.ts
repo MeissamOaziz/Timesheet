@@ -1735,6 +1735,36 @@ async function mcpRevokeGrants(grantFilter: string, reason: string): Promise<num
   return ids.length;
 }
 
+// ── Calendar links ("Add my shifts to my calendar") ───────────────────────────────────────────────
+// An employee makes, replaces and turns off their own calendar link in the portal (database functions that check
+// the portal session). An account's admins get two things here, for ONE employee of their own account (a manager:
+// an employee at one of their sites): whether a link exists (calendar_feed_status) and cancelling it
+// (calendar_feed_cancel). Nobody can create a link for someone else, and the link's hash never leaves the database.
+// The calendar_feeds table is deliberately not in APP_TABLES: these actions are the only way a page reaches it.
+// An employee of another account, or outside a manager's sites, gets the same answer as one that does not exist.
+async function calendarFeedAction(action: string, caller: Caller | null, rawBody: unknown): Promise<Response> {
+  if (!caller) return errResp('Unauthorized', 401);
+  const b = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as Record<string, unknown>;
+  const empId = typeof b.employee_id === 'string' ? b.employee_id : '';
+  if (!UUID_RE.test(empId)) return errResp('Invalid employee', 400);
+  const emp = (await restJson(`employees?id=eq.${empId}&select=id,company_id,site_id&limit=1`))?.[0];
+  if (!emp || !emp.company_id) return errResp('Not found', 404);
+  if (!(await ownedCompanyIds(caller.primaryAdminId)).includes(emp.company_id)) return errResp('Not found', 404);
+  if (caller.role === 'manager') {
+    if (!emp.site_id || !(await managerSiteSet(caller.adminId)).has(emp.site_id)) return errResp('Not found', 404);
+  }
+  if (action === 'calendar_feed_status') {
+    const rows = await restJson(`calendar_feeds?employee_id=eq.${empId}&select=created_at,last_read_at&limit=1`);
+    if (rows === null) return errResp('Could not read the calendar link', 502);
+    const feed = rows[0];
+    return jsonResp({ ok: true, active: !!feed, created_at: feed?.created_at ?? null, last_read_at: feed?.last_read_at ?? null });
+  }
+  const del = await svcWrite('DELETE', `calendar_feeds?employee_id=eq.${empId}&select=employee_id`, undefined, true);
+  if (!del.ok) return errResp('Could not cancel the calendar link', 502);
+  if (del.rows.length) logAudit(caller.adminId, 'calendar_feed_removed', 'calendar_feeds', 'DELETE', `employee_id=eq.${empId}`);
+  return jsonResp({ ok: true, cancelled: del.rows.length > 0 });
+}
+
 async function mcpAction(action: string, caller: Caller | null, rawBody: unknown): Promise<Response> {
   const b = (rawBody && typeof rawBody === 'object' && !Array.isArray(rawBody) ? rawBody : {}) as Record<string, unknown>;
 
@@ -2150,6 +2180,11 @@ Deno.serve(async (req: Request) => {
   if (action === 'mcp_consent_info' || action === 'mcp_consent' || action === 'mcp_list_grants'
     || action === 'mcp_revoke_grant' || action === 'set_ai_apps') {
     return await mcpAction(action, caller, body);
+  }
+
+  // Calendar links: an admin sees whether an employee has one, and can cancel it.
+  if (action === 'calendar_feed_status' || action === 'calendar_feed_cancel') {
+    return await calendarFeedAction(action, caller, body);
   }
 
   // An `action` that none of the handlers above recognised must stop here. It used to fall through

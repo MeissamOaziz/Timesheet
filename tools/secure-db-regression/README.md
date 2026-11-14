@@ -55,5 +55,20 @@ nothing is deployed without both of these.
    - `tools/ai-apps-test.mjs`: the consent page (`connect.html`) and the "AI apps" card, network stubbed.
    - The mcp_* tables are deliberately NOT in `APP_TABLES`. The trigger function added by
      `20261112_mcp_revoke_trigger.sql` is not callable by anon, so the allowlist stays as it is.
+8. **Calendar links** ("Add my shifts to my calendar"): the `calendar-feed` function and the secure-db actions
+   `calendar_feed_status` and `calendar_feed_cancel`.
+   - `tools/calendar-feed-test.mjs` (before deploying the function): the calendar text (escaping of people's text,
+     folding, time zones), addresses that are not a link never reaching the database, one answer for every link
+     that does not work, 503 (never "not found") when the database is down, and no secret in logs or answers.
+     With `FEED_URL=<deployed address>` it sends only requests that must be refused. `tools/calendar-feed-mutation-check.mjs`
+     breaks each rule in a copy and expects the suite to notice.
+   - The database side (a link returns only its own employee's shifts; plan, Scheduling, portal account and
+     employee checked on every read; 60 reads an hour; 5 new links an hour) is proven by a rolled-back run on the
+     database, described in the header of `supabase/migrations/20261113_calendar_feeds.sql`.
+   - diff-test group `calfeed`: no session, another account, the super admin, a manager outside their sites, ids
+     carrying filter text, and the table path. Run with `calfeed` as the group allowed to differ.
+   - `tools/calendar-card-test.mjs`: the portal card, network stubbed.
+   - `calendar_feeds` is deliberately NOT in `APP_TABLES`. The three `portal_calendar_feed_*` functions are in
+     `anon-function-allowlist.txt` (the portal calls them); `calendar_feed_read` is service-only.
 
 Needs Node 22 or newer (runs the TypeScript directly).

@@ -128,7 +128,7 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
 | Tablet terminal with PINs, dashboard and activity log, PDF reports, missed clock-out alerts | yes | yes | yes | yes |
 | Geofencing, remote clock-in, employee portal, time off, Excel and CSV export, add / edit / delete punches, overtime tracking, evening hours, automatic email reports (employees and the accountant's payroll summary) | no | yes | yes | yes |
 | Lunch breaks, visitor check-in | no | no | yes | yes |
-| Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels), 14-day trial | paid plans only | | | |
+| Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels, calendar sync for employees), 14-day trial | paid plans only | | | |
 
 - Every Free account previews the Starter features until **14 days after it was created, and in any case until
   2026-11-06**. The lock starts at midnight Eastern at the start of 6 November (the screens and the portal lock at once;
@@ -195,6 +195,32 @@ Evening hours (added 2026-10-22, all plans). For customers who pay an evening/ni
   total, per site total) and a stat card. Regular and overtime hours do NOT change, and punch rounding is
   applied the same way as the hour totals. Not in the employee portal or the emailed period summaries.
 - It does not price the premium: we store no wages, so customers apply their own rate to the hours.
+
+Calendar sync, "Add my shifts to my calendar" (added 2026-11-14, Scheduling add-on or its trial, plus the employee
+portal, so Starter and up). In the employee portal, My Schedule, the employee presses "Get my calendar link" and
+adds it once to Google Calendar, Apple Calendar or Outlook. Their own shifts then show there: time, work label,
+site name and the note. Nothing else is in the calendar, and nobody else's shifts.
+- It is a private link per employee, read-only. It is shown once, when it is made. To add it to a second
+  calendar the employee presses "Get a new link"; the old one stops working at once, so the first calendar
+  needs the new link too. Up to 5 new links an hour.
+- **"I changed a shift and the calendar still shows the old one."** Normal. Calendar apps re-read a link on their
+  own timetable and we cannot hurry them: Google Calendar about once or twice a day, Apple and Outlook usually
+  within a few hours. The portal and the emailed schedule are always current. Do not promise same-day updates.
+- **"Add to Google Calendar" does nothing on a phone.** Google only adds a calendar by link on a computer
+  (calendar.google.com, Other calendars, +, From URL). Once added there it shows in the phone app (if not, in
+  the app: Settings, the calendar's name, turn Sync on).
+- **The calendar stopped updating or went empty.** Check, in this order: the employee pressed "Get a new link" or
+  "Turn off"; an admin cancelled it (employee dialog, "Calendar link: on ... Cancel link") or revoked portal
+  access; the employee was made inactive; the Scheduling add-on or trial ended, or the account went back to
+  Free. In the last case the same link works again when the plan is back; in the others the employee makes a
+  new link.
+- An owner, co-admin or the site's manager can see that a link exists and when a calendar last read it, and can
+  cancel it. Nobody but the employee can see or create the link. If a link was shared by mistake: cancel it or
+  have the employee get a new one.
+- Not included: a company-wide calendar, co-workers' shifts, time off or holidays in the calendar, instant
+  updates, and changing a shift from the calendar. Log requests for those in the deferred list.
+- Gemini / Google Workspace AI: asked on 2026-11-13. Google does not let a Workspace account add its own
+  connector today, so the answer is "not yet"; the Claude and ChatGPT connector is the one in progress.
 
 Quebec statutory holidays (added 2026-10-22, Scheduling add-on). Schedule, Holidays, "Add Quebec
 statutory holidays": adds the 8 statutory holidays for the chosen year for all sites, skipping dates that

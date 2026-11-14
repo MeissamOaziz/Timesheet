@@ -37,6 +37,11 @@ const empRows = {
   [E_THROTTLED]: { id: E_THROTTLED, name: 'Busy Bee', email: null, company_id: 'c1', site_id: 's1', pin: '3333' },
   [E_OTHER]: { id: E_OTHER, name: 'Other Tenant', email: 'o@other.ca', company_id: 'c9', site_id: 's9', pin: '9999' },
 };
+const E_S2 = '00000000-0000-4000-8000-0000000000e5', E_GHOST = '00000000-0000-4000-8000-0000000000ee';
+empRows[E_S2] = { id: E_S2, name: 'Site Two', email: null, company_id: 'c1', site_id: 's2', pin: '5555' };
+const feedRows = { [E_OWN]: { employee_id: E_OWN, token_hash: 'f'.repeat(64), created_at: '2026-11-10T12:00:00Z', last_read_at: '2026-11-13T08:00:00Z' },
+  [E_S2]: { employee_id: E_S2, token_hash: 'e'.repeat(64), created_at: '2026-11-11T12:00:00Z', last_read_at: null },
+  [E_OTHER]: { employee_id: E_OTHER, token_hash: 'd'.repeat(64), created_at: '2026-11-12T12:00:00Z', last_read_at: null } };
 empRows.e1 = { id: 'e1', company_id: 'c1', site_id: 's1' }; empRows.e9 = { id: 'e9', company_id: 'c9', site_id: 's9' };
 const invRows = {
   [T_OK]: { token: T_OK, email: 'inv@x.ca', role: 'manager', company_id: 'c1', status: 'pending', expires_at: FUTURE },
@@ -279,6 +284,13 @@ function makeFetch() {
       if (p.q.has('parent_admin_id')) rows = rows.filter(r => r.parent_admin_id === eq('parent_admin_id'));
       if (orv) rows = rows.filter(r => ids.includes(r.id) || (par && r.parent_admin_id === par));
       return j(rows.map(r => ({ id: r.id, role: r.role, parent_admin_id: r.parent_admin_id })));
+    }
+    // ---- calendar links (added 2026-11-14) ----
+    if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id,company_id,site_id' && p.q.has('id')) return j(pick(empRows, eq('id')).map(r => ({ id: r.id, company_id: r.company_id, site_id: r.site_id })));
+    if (t === 'calendar_feeds' && (method === 'GET' || method === 'DELETE')) {
+      const cols = (p.q.get('select') || '*').split(',');
+      const rows = (p.q.has('employee_id') ? pick(feedRows, eq('employee_id')) : Object.values(feedRows)).map(r => cols[0] === '*' ? r : Object.fromEntries(cols.map(c => [c, r[c]])));
+      return j(rows);
     }
     if (t === 'manager_sites' && method === 'GET' && p.q.has('manager_id')) return j(eq('manager_id') === 'a2' ? [{ site_id: 's1' }] : eq('manager_id') === 'fm' ? [{ site_id: 'sF1' }] : []);
     if (t === 'punches' && method === 'GET' && p.q.has('id') && p.q.has('company_id')) return j(eq('id') === 'pOwn' ? [{ id: 'pOwn' }] : []);
@@ -891,6 +903,44 @@ const cases = [
   R('mcp', 'owner switch: a caller whose id is not a real account id is turned away before any write', { action: 'set_ai_apps', body: { enabled: true }, ...mgr }, r => r.status === 401 && !r.calls.some(c => /^PATCH /.test(c))),
   R('mcp', 'the connector tables are not reachable through the table path', { table: 'mcp_tokens', method: 'GET', filter: '', ...own }, r => r.status === 403 && r.calls.every(c => !/mcp_tokens/.test(c))),
   R('mcp', 'the owner switch is not a field an owner may write through the table path', { table: 'admins', method: 'PATCH', filter: 'id=eq.a1', body: { ai_apps_enabled: true }, ...own }, r => r.status === 403 && !r.calls.some(c => /^PATCH /.test(c))),
+  // ---- calendar links: an admin sees whether ONE employee of their own account has a link, and can cancel it ----
+  R('calfeed', 'status: no session', { action: 'calendar_feed_status', body: { employee_id: E_OWN } }, r => r.status === 401 && r.calls.length === 0),
+  R('calfeed', 'status: expired session', { action: 'calendar_feed_status', body: { employee_id: E_OWN }, sessionToken: 'tokExpired' }, r => r.status === 401 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: a kiosk is not an admin', { action: 'calendar_feed_status', body: { employee_id: E_OWN }, kioskSiteId: 's1' }, r => r.status === 401 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: owner, own employee with a link', { action: 'calendar_feed_status', body: { employee_id: E_OWN }, ...own },
+    r => r.status === 200 && r.obj.ok === true && r.obj.active === true && r.obj.created_at === '2026-11-10T12:00:00Z' && r.obj.last_read_at === '2026-11-13T08:00:00Z'
+      && Object.keys(r.obj).sort().join() === 'active,created_at,last_read_at,ok' && !r.body.includes('ffff')
+      && r.calls.filter(c => /calendar_feeds/.test(c)).length === 1 && r.calls.some(c => c.startsWith(`GET /rest/v1/calendar_feeds?employee_id=eq.${E_OWN}&select=created_at,last_read_at&limit=1`))),
+  R('calfeed', 'status: owner, own employee without a link', { action: 'calendar_feed_status', body: { employee_id: E_NOMAIL }, ...own }, r => r.status === 200 && r.obj.active === false && r.obj.created_at === null && r.obj.last_read_at === null),
+  R('calfeed', 'status: owner, an employee of another account', { action: 'calendar_feed_status', body: { employee_id: E_OTHER }, ...own }, r => r.status === 404 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: another account asks about this account\'s employee', { action: 'calendar_feed_status', body: { employee_id: E_OWN }, ...other }, r => r.status === 404 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: the super admin is not let into a customer\'s account', { action: 'calendar_feed_status', body: { employee_id: E_OWN }, ...sup }, r => r.status === 404 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: manager, employee at one of their sites', { action: 'calendar_feed_status', body: { employee_id: E_OWN }, ...mgr }, r => r.status === 200 && r.obj.active === true),
+  R('calfeed', 'status: manager, employee at a site that is not theirs', { action: 'calendar_feed_status', body: { employee_id: E_S2 }, ...mgr }, r => r.status === 404 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: an employee that does not exist answers like one of another account', { action: 'calendar_feed_status', body: { employee_id: E_GHOST }, ...own }, r => r.status === 404 && r.body === JSON.stringify({ error: 'Not found' }) && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'status: no employee id', { action: 'calendar_feed_status', body: {}, ...own }, r => r.status === 400 && !r.calls.some(c => /employees|calendar_feeds/.test(c))),
+  R('calfeed', 'status: an id carrying extra filter text', { action: 'calendar_feed_status', body: { employee_id: E_OWN + '&select=*' }, ...own }, r => r.status === 400 && !r.calls.some(c => /employees|calendar_feeds/.test(c))),
+  R('calfeed', 'status: an id that is a list', { action: 'calendar_feed_status', body: { employee_id: [E_OWN, E_OTHER] }, ...own }, r => r.status === 400 && !r.calls.some(c => /employees|calendar_feeds/.test(c))),
+  R('calfeed', 'status: a filter in the id position', { action: 'calendar_feed_status', body: { employee_id: 'not.is.null' }, ...own }, r => r.status === 400 && !r.calls.some(c => /employees|calendar_feeds/.test(c))),
+  R('calfeed', 'cancel: no session', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN } }, r => r.status === 401 && r.calls.length === 0),
+  R('calfeed', 'cancel: a kiosk is not an admin', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN }, kioskSiteId: 's1' }, r => r.status === 401 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('calfeed', 'cancel: owner, own employee', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN }, ...own },
+    r => r.status === 200 && r.obj.ok === true && r.obj.cancelled === true && !r.body.includes('ffff')
+      && r.calls.filter(c => /^DELETE /.test(c)).length === 1 && r.calls.some(c => c.startsWith(`DELETE /rest/v1/calendar_feeds?employee_id=eq.${E_OWN}&select=employee_id`))
+      && r.audit.length === 1),
+  R('calfeed', 'cancel: owner, own employee without a link', { action: 'calendar_feed_cancel', body: { employee_id: E_NOMAIL }, ...own }, r => r.status === 200 && r.obj.cancelled === false && r.audit.length === 0),
+  R('calfeed', 'cancel: an employee of another account', { action: 'calendar_feed_cancel', body: { employee_id: E_OTHER }, ...own }, r => r.status === 404 && !r.calls.some(c => /^DELETE /.test(c)) && r.audit.length === 0),
+  R('calfeed', 'cancel: another account cancels this account\'s link', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN }, ...other }, r => r.status === 404 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('calfeed', 'cancel: the super admin is not let into a customer\'s account', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN }, ...sup }, r => r.status === 404 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('calfeed', 'cancel: manager, employee at one of their sites', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN }, ...mgr }, r => r.status === 200 && r.obj.cancelled === true),
+  R('calfeed', 'cancel: manager, employee at a site that is not theirs', { action: 'calendar_feed_cancel', body: { employee_id: E_S2 }, ...mgr }, r => r.status === 404 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('calfeed', 'cancel: no employee id deletes nothing', { action: 'calendar_feed_cancel', body: {}, ...own }, r => r.status === 400 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('calfeed', 'cancel: an id carrying extra filter text deletes nothing', { action: 'calendar_feed_cancel', body: { employee_id: E_OWN + ',employee_id=not.is.null' }, ...own }, r => r.status === 400 && !r.calls.some(c => /^DELETE /.test(c))),
+  R('calfeed', 'there is no action to create a link for someone', { action: 'calendar_feed_create', body: { employee_id: E_OWN }, ...own }, r => r.status === 400 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'the table is not reachable through the table path (read)', { table: 'calendar_feeds', method: 'GET', filter: '', ...own }, r => r.status === 403 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'the table is not reachable through the table path (write)', { table: 'calendar_feeds', method: 'POST', body: { employee_id: E_OWN, token_hash: 'a'.repeat(64) }, ...own }, r => r.status === 403 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'the table is not reachable through the table path (delete)', { table: 'calendar_feeds', method: 'DELETE', filter: 'employee_id=not.is.null', ...own }, r => r.status === 403 && !r.calls.some(c => /calendar_feeds/.test(c))),
+  R('calfeed', 'the table is not reachable from a kiosk', { table: 'calendar_feeds', method: 'GET', filter: '', kioskSiteId: 's1' }, r => r.status !== 200 && !r.calls.some(c => /calendar_feeds/.test(c))),
 ];
 
 async function run(handler) {

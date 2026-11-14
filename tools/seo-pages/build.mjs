@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SITE = 'https://www.punchclock.ca';
-const UPDATED = '2026-11-11';
+const UPDATED = '2026-11-14';
 
 // ── Plans (keep identical to the pricing page) ────────────────────────────────────────────────────
 const PLANS = {
@@ -194,13 +194,14 @@ const PAGES = [
     en: {
       slug: 'employee-scheduling-app',
       title: 'Employee scheduling app with time clock | PunchClock Crew',
-      desc: 'Build weekly shift schedules, email them to your team, add Québec statutory holidays in one click and see time off in the same app as your punch clock. $14.95/month CAD, 14-day free trial.',
+      desc: 'Build weekly shift schedules, email them to your team, let employees add their shifts to Google Calendar, Apple Calendar or Outlook, and add Québec statutory holidays in one click. $14.95/month CAD, 14-day free trial.',
       h1: 'Employee scheduling in the same app as your punch clock',
       lead: 'The Scheduling add-on puts weekly shift planning next to clock-in, time off and hours, so you are not copying names between two tools.',
       sections: [
         ['What it does', [
           'Build a weekly schedule per company and add shifts with start and end times.',
           'Email the schedule to your team from the grid. Employees can also see their upcoming shifts in their portal.',
+          'Calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link from their portal. The shifts then show there on their own, with the work label, the site and the note.',
           'Add holidays, including the Québec statutory holidays in one click, and tag shifts with work labels.',
           'Approved time off shows up where you plan, so you do not schedule someone who is away.',
         ]],
@@ -210,20 +211,22 @@ const PAGES = [
       ],
       faq: [
         ['Do I need a separate scheduling tool?', 'No. Schedules, punches, time off and hours are in the same app and the same account.'],
-        ['Can employees see their schedule?', 'Yes, in their employee portal, and by email when you send the schedule.'],
+        ['Can employees see their schedule?', 'Yes, in their employee portal, by email when you send the schedule, and in their own calendar.'],
+        ['Does the schedule sync with Google Calendar, Apple Calendar or Outlook?', 'Yes. In the employee portal, each employee chooses “Add my shifts to my calendar” and adds a private link once. It shows only that person’s shifts, and they can replace it or turn it off at any time. Calendar apps re-read the schedule on their own timetable (Google Calendar about once or twice a day), so a same-day change can show up late; the portal is always up to date.'],
         ['Is there a free trial?', 'Yes, 14 days, started with one click from the Schedule tab.'],
       ],
     },
     fr: {
       slug: 'logiciel-horaires-employes',
       title: 'Logiciel d’horaires pour employés, avec pointage | PunchClock Crew',
-      desc: 'Créez les horaires de la semaine, envoyez-les à votre équipe par courriel, ajoutez les jours fériés du Québec en un clic et voyez les congés dans la même application que le pointage. 14,95 $/mois, essai gratuit de 14 jours.',
+      desc: 'Créez les horaires de la semaine, envoyez-les à votre équipe par courriel, laissez les employés ajouter leurs quarts à Google Agenda, au Calendrier Apple ou à Outlook, et ajoutez les jours fériés du Québec en un clic. 14,95 $/mois, essai gratuit de 14 jours.',
       h1: 'Les horaires de vos employés dans la même application que le pointage',
       lead: 'Le module Planification place les horaires de la semaine à côté du pointage, des congés et des heures. Plus besoin de recopier les noms d’un outil à l’autre.',
       sections: [
         ['Ce qu’il fait', [
           'Créez l’horaire de la semaine par compagnie et ajoutez des quarts avec heure de début et de fin.',
           'Envoyez l’horaire à votre équipe par courriel à partir de la grille. Les employés voient aussi leurs prochains quarts dans leur portail.',
+          'Synchronisation du calendrier : chaque employé peut ajouter ses propres quarts à Google Agenda, au Calendrier Apple ou à Outlook au moyen d’un lien privé obtenu dans son portail. Ses quarts s’y affichent ensuite d’eux-mêmes, avec l’étiquette de travail, le site et la note.',
           'Ajoutez les jours fériés, dont ceux du Québec en un clic, et identifiez les quarts avec des étiquettes de travail.',
           'Les congés approuvés apparaissent là où vous planifiez, pour ne pas mettre à l’horaire une personne absente.',
         ]],
@@ -233,7 +236,8 @@ const PAGES = [
       ],
       faq: [
         ['Ai-je besoin d’un autre outil pour les horaires?', 'Non. Horaires, pointages, congés et heures sont dans la même application et le même compte.'],
-        ['Les employés peuvent-ils voir leur horaire?', 'Oui, dans leur portail employé, et par courriel quand vous envoyez l’horaire.'],
+        ['Les employés peuvent-ils voir leur horaire?', 'Oui, dans leur portail employé, par courriel quand vous envoyez l’horaire, et dans leur propre calendrier.'],
+        ['L’horaire se synchronise-t-il avec Google Agenda, le Calendrier Apple ou Outlook?', 'Oui. Dans le portail employé, chaque employé choisit « Ajouter mes quarts à mon calendrier » et ajoute un lien privé une seule fois. Le lien ne montre que ses quarts, et il peut le remplacer ou le désactiver en tout temps. Les applications de calendrier relisent l’horaire à leur propre rythme (Google Agenda environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Le portail, lui, est toujours à jour.'],
         ['Y a-t-il un essai gratuit?', 'Oui, 14 jours, lancé en un clic à partir de l’onglet Horaires.'],
       ],
     },
@@ -372,7 +376,7 @@ function llmsTxt() {
 Key facts:
 - Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds lunch breaks and visitor check-in); Business $79.49 (unlimited).
 - Starter and up add geofencing, remote clock-in with GPS, the employee self-service portal, time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
-- Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click.
+- Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
 - Works in a web browser; no app install needed for the clock-in terminal.
 - Operated by 9317-3516 Québec Inc. Support: support@punchclock.ca

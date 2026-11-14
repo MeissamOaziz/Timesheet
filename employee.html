@@ -168,6 +168,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
 .btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 18px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.calfeed{margin-top:22px;padding:18px 20px;}
+.calfeed-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:8px;}
+.calfeed-h .ic{width:18px;height:18px;flex-shrink:0;color:var(--accent);}
+.calfeed-locked .calfeed-h .ic{color:var(--text3);}
+.calfeed-p{font-size:13.5px;color:var(--text2);margin-bottom:12px;line-height:1.5;}
+.calfeed-note{font-size:12.5px;color:var(--text2);margin-top:10px;line-height:1.5;}
+.calfeed-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.calfeed-actions a{text-decoration:none;display:inline-block;text-align:center;flex:1 1 180px;}
+.calfeed-link{display:flex;gap:8px;align-items:stretch;}
+.calfeed-link input{flex:1;min-width:0;font-family:'DM Mono',monospace;font-size:12px;}
+.calfeed-link button{white-space:nowrap;}
+.calfeed-how{margin-top:12px;font-size:12.5px;color:var(--text2);}
+.calfeed-how summary{cursor:pointer;color:var(--accent);font-weight:600;}
+.calfeed-how p{margin-top:8px;line-height:1.5;}
+.calfeed-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
 .msg{padding:10px 14px;border-radius:var(--r-sm);font-size:13px;margin-bottom:12px;}
 .msg.error{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);}
 .msg.success{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25);}
@@ -466,6 +481,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <h1 class="page-title" id="schedTitle">My Schedule</h1>
       <p class="page-sub" id="schedSub">Your upcoming shifts for the next 2 weeks</p>
       <div id="schedContent"></div>
+      <div id="calFeedCard"></div>
     </div>
 
     <!-- TEAM SCHEDULE TAB -->
@@ -686,6 +702,32 @@ const T = {
     toErr_no_company: 'Your account is not linked to a company. Contact your manager.',
     schedTitle: 'My Schedule', schedSub: 'Your upcoming shifts for the next 2 weeks',
     noShifts: 'No shifts scheduled in the next 2 weeks.',
+    calTitle: "Add my shifts to my calendar",
+    calIntro: "Get a private link and add it once to Google Calendar, Apple Calendar or Outlook. Your shifts then appear there on their own.",
+    calGet: "Get my calendar link",
+    calReady: "Your link is ready. Add it to your calendar now: for your safety we show it only this once.",
+    calGoogle: "Add to Google Calendar",
+    calApple: "Add to Apple Calendar",
+    calCopy: "Copy link",
+    calCopied: "Link copied.",
+    calPrivate: "Keep this link to yourself. Anyone who has it can see your shifts (nothing else). If it gets out, get a new link and the old one stops working.",
+    calDelay: "Calendar apps check for changes on their own schedule. Google Calendar does it about once or twice a day, so a change made today may show up late. This page is always up to date.",
+    calHow: "Other ways to add it",
+    calHowGoogle: "Google Calendar (on a computer): next to \"Other calendars\" choose +, then \"From URL\", paste the link and choose \"Add calendar\". It then shows on your phone too.",
+    calHowApple: "iPhone or iPad: open Calendar, tap Calendars, then Add Calendar, then Add Subscription Calendar, and paste the link.",
+    calHowOutlook: "Outlook: in the calendar, choose Add calendar, then Subscribe from web, and paste the link.",
+    calOn: "Your calendar link is on.",
+    calCreated: "Created",
+    calLastRead: "Last read by your calendar",
+    calNever: "not yet",
+    calOnce: "We show a link only once. To add your shifts to another calendar, get a new link. The old one stops working, so update any calendar that used it.",
+    calNew: "Get a new link",
+    calOff: "Turn off",
+    calConfirmNew: "Get a new link? The current link stops working right away. Calendars that use it will stop updating until you add the new link.",
+    calConfirmOff: "Turn off your calendar link? Calendars that use it will stop updating.",
+    calOffDone: "Calendar link turned off.",
+    calTooMany: "Too many new links in the last hour. Please try again later.",
+    calLocked: "Calendar sync is part of Scheduling, which is not turned on for your company. Ask your admin about it.",
     tabTeam: 'Team Schedule', teamTitle: 'Team Schedule', teamSub: "Everyone's shifts at your site, grouped by day",
     teamPrev: 'Previous', teamNext: 'Next',
     noTeamShifts: 'No shifts scheduled at your site this week.',
@@ -772,6 +814,32 @@ const T = {
     toErr_no_company: 'Votre compte n\'est lié à aucune compagnie. Contactez votre gestionnaire.',
     schedTitle: 'Mon horaire', schedSub: 'Vos prochains quarts de travail pour les 2 prochaines semaines',
     noShifts: 'Aucun quart prévu dans les 2 prochaines semaines.',
+    calTitle: "Ajouter mes quarts à mon calendrier",
+    calIntro: "Obtenez un lien privé et ajoutez-le une seule fois à Google Agenda, au Calendrier Apple ou à Outlook. Vos quarts s'y affichent ensuite d'eux-mêmes.",
+    calGet: "Obtenir mon lien de calendrier",
+    calReady: "Votre lien est prêt. Ajoutez-le à votre calendrier maintenant : par sécurité, nous ne l'affichons que cette fois-ci.",
+    calGoogle: "Ajouter à Google Agenda",
+    calApple: "Ajouter au Calendrier Apple",
+    calCopy: "Copier le lien",
+    calCopied: "Lien copié.",
+    calPrivate: "Gardez ce lien pour vous. Toute personne qui l'a peut voir vos quarts (rien d'autre). S'il circule, obtenez un nouveau lien : l'ancien cesse de fonctionner.",
+    calDelay: "Les applications de calendrier vérifient les changements à leur propre rythme. Google Agenda le fait environ une ou deux fois par jour : un changement fait aujourd'hui peut donc apparaître en retard. Cette page est toujours à jour.",
+    calHow: "Autres façons de l'ajouter",
+    calHowGoogle: "Google Agenda (sur un ordinateur) : à côté de « Autres agendas », choisissez +, puis « À partir de l'URL », collez le lien et choisissez « Ajouter l'agenda ». Il s'affiche ensuite aussi sur votre téléphone.",
+    calHowApple: "iPhone ou iPad : ouvrez Calendrier, touchez Calendriers, puis Ajouter un calendrier, puis Ajouter un calendrier avec abonnement, et collez le lien.",
+    calHowOutlook: "Outlook : dans le calendrier, choisissez Ajouter un calendrier, puis S'abonner à partir du Web, et collez le lien.",
+    calOn: "Votre lien de calendrier est actif.",
+    calCreated: "Créé le",
+    calLastRead: "Dernière lecture par votre calendrier",
+    calNever: "pas encore",
+    calOnce: "Nous n'affichons un lien qu'une seule fois. Pour ajouter vos quarts à un autre calendrier, obtenez un nouveau lien. L'ancien cesse de fonctionner : mettez à jour tout calendrier qui l'utilisait.",
+    calNew: "Obtenir un nouveau lien",
+    calOff: "Désactiver",
+    calConfirmNew: "Obtenir un nouveau lien? Le lien actuel cesse de fonctionner immédiatement. Les calendriers qui l'utilisent ne se mettront plus à jour tant que vous n'aurez pas ajouté le nouveau lien.",
+    calConfirmOff: "Désactiver votre lien de calendrier? Les calendriers qui l'utilisent cesseront de se mettre à jour.",
+    calOffDone: "Lien de calendrier désactivé.",
+    calTooMany: "Trop de nouveaux liens dans la dernière heure. Réessayez plus tard.",
+    calLocked: "La synchronisation du calendrier fait partie de la planification, qui n'est pas activée pour votre compagnie. Parlez-en à votre administrateur.",
     tabTeam: 'Horaire d\'équipe', teamTitle: 'Horaire d\'équipe', teamSub: 'Les quarts de tout le monde à votre site, groupés par jour',
     teamPrev: 'Précédent', teamNext: 'Suivant',
     noTeamShifts: 'Aucun quart prévu à votre site cette semaine.',
@@ -1172,7 +1240,7 @@ async function doChangePw() {
 async function doEmpLogout() {
   try{ if(_session?.token) await rpc('portal_logout', { p_session: _session.token }); }catch(e){}
   clearSession();
-  _session = null; _employee = null;
+  _session = null; _employee = null; _calFeedToken = null;
   showScreen('screenLogin');
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPass').value = '';
@@ -1400,6 +1468,7 @@ function labelChip(sh) {
 
 async function renderSchedule() {
   const wrap = document.getElementById('schedContent');
+  renderCalFeed();
   wrap.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)"><span class="mini-spin"></span></div>';
   const today = dateStr(new Date());
   const twoWeeks = dateStr(new Date(Date.now() + 14*24*60*60*1000));
@@ -1432,6 +1501,113 @@ async function renderSchedule() {
   } catch(e) {
     wrap.innerHTML = `<div class="empty-state"><p style="color:var(--red)">${t('errPrefix')}: ${escHtml(e.message)}</p></div>`;
   }
+}
+
+// ══════════════════════════════════════════════════════
+// CALENDAR LINK — "Add my shifts to my calendar" (part of Scheduling).
+// The employee gets a private link that Google Calendar, Apple Calendar or Outlook re-read on their own. The server
+// keeps only a hash of the link's secret, so the link can be shown once, right after it is made: it lives in this
+// variable until the page is closed and is never written to storage. Losing it just means getting a new one.
+// ══════════════════════════════════════════════════════
+let _calFeedToken = null;
+const CAL_FEED_RE = /^pcf_[A-Za-z0-9_-]{43}$/;
+function calFeedUrl(scheme) {
+  return scheme + '://' + SUPA_URL.replace(/^https:\/\//, '') + '/functions/v1/calendar-feed/' + _calFeedToken + '.ics';
+}
+function calFeedWhen(iso) {
+  // Only a real timestamp is turned into a date (the browser's date parser accepts almost any text).
+  if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(iso)) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleString(_empLang === 'fr' ? 'fr-CA' : 'en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+async function renderCalFeed() {
+  const card = document.getElementById('calFeedCard');
+  if (!card) return;
+  if (!_session) { card.innerHTML = ''; return; }
+  let st = null;
+  try { st = asRows(await rpc('portal_calendar_feed_status', { p_session: _session.token }))[0] || null; } catch (e) { st = null; }
+  if (!st) { card.innerHTML = ''; return; }          // not signed in any more, or the server does not offer it: show nothing
+  const head = `<div class="calfeed-h"><svg class="ic"><use href="#${st.allowed ? 'i-calendar' : 'i-lock'}"/></svg><span>${escHtml(t('calTitle'))}</span></div>`;
+  if (!st.allowed) {
+    _calFeedToken = null;
+    card.innerHTML = `<div class="card calfeed calfeed-locked">${head}<p class="calfeed-p">${escHtml(t('calLocked'))}</p></div>`;
+    return;
+  }
+  if (!st.active) _calFeedToken = null;              // turned off or cancelled since it was made
+  if (!st.active) {
+    card.innerHTML = `<div class="card calfeed">${head}<p class="calfeed-p">${escHtml(t('calIntro'))}</p>
+      <button type="button" class="btn-secondary" id="calFeedGet" onclick="calFeedCreate(false)">${escHtml(t('calGet'))}</button></div>`;
+    return;
+  }
+  if (_calFeedToken && CAL_FEED_RE.test(_calFeedToken)) {
+    card.innerHTML = `<div class="card calfeed">${head}<p class="calfeed-p">${escHtml(t('calReady'))}</p>
+      <div class="calfeed-actions">
+        <a class="btn-secondary" id="calFeedGoogle" target="_blank" rel="noopener noreferrer">${escHtml(t('calGoogle'))}</a>
+        <a class="btn-secondary" id="calFeedApple">${escHtml(t('calApple'))}</a>
+      </div>
+      <div class="calfeed-link"><input class="form-input" id="calFeedLink" type="text" readonly aria-label="${escHtml(t('calTitle'))}" onfocus="this.select()">
+        <button type="button" class="btn-secondary" id="calFeedCopy" onclick="calFeedCopy()">${escHtml(t('calCopy'))}</button></div>
+      <p class="calfeed-note">${escHtml(t('calPrivate'))}</p>
+      <p class="calfeed-note">${escHtml(t('calDelay'))}</p>
+      <details class="calfeed-how"><summary>${escHtml(t('calHow'))}</summary>
+        <p>${escHtml(t('calHowGoogle'))}</p><p>${escHtml(t('calHowApple'))}</p><p>${escHtml(t('calHowOutlook'))}</p></details>
+      <div class="calfeed-foot"><button type="button" class="btn-pw" id="calFeedOff" onclick="calFeedOff()">${escHtml(t('calOff'))}</button></div></div>`;
+    // The link is put in place through properties, never through markup.
+    document.getElementById('calFeedLink').value = calFeedUrl('https');
+    document.getElementById('calFeedApple').href = calFeedUrl('webcal');
+    document.getElementById('calFeedGoogle').href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(calFeedUrl('webcal'));
+    return;
+  }
+  const created = calFeedWhen(st.created_at), read = calFeedWhen(st.last_read_at);
+  card.innerHTML = `<div class="card calfeed">${head}<p class="calfeed-p"><strong>${escHtml(t('calOn'))}</strong></p>
+    <p class="calfeed-note">${created ? escHtml(t('calCreated')) + ' ' + escHtml(created) + '<br>' : ''}${escHtml(t('calLastRead'))}: ${escHtml(read || t('calNever'))}</p>
+    <p class="calfeed-note">${escHtml(t('calOnce'))}</p>
+    <div class="calfeed-foot"><button type="button" class="btn-secondary" id="calFeedNew" onclick="calFeedCreate(true)">${escHtml(t('calNew'))}</button>
+      <button type="button" class="btn-pw" id="calFeedOff" onclick="calFeedOff()">${escHtml(t('calOff'))}</button></div></div>`;
+}
+
+async function calFeedCreate(replacing) {
+  if (!_session) return;
+  if (replacing && !confirm(t('calConfirmNew'))) return;
+  document.querySelectorAll('#calFeedCard button').forEach(b => { b.disabled = true; });
+  try {
+    const row = asRows(await rpc('portal_calendar_feed_create', { p_session: _session.token, p_lang: _empLang === 'fr' ? 'fr' : 'en' }))[0];
+    if (!row) showToast(t('toErr_not_authenticated'), 'error');
+    else if (row.status === 'ok' && CAL_FEED_RE.test(row.token || '')) _calFeedToken = row.token;
+    else if (row.status === 'too_many') showToast(t('calTooMany'), 'error');
+    else if (row.status === 'locked') showToast(t('calLocked'), 'error');
+    else showToast(t('errorSaving'), 'error');
+  } catch (e) {
+    showToast(t('errorSaving'), 'error');
+  }
+  renderCalFeed();
+}
+
+async function calFeedOff() {
+  if (!_session) return;
+  if (!confirm(t('calConfirmOff'))) return;
+  try {
+    await rpc('portal_calendar_feed_revoke', { p_session: _session.token });
+    _calFeedToken = null;
+    showToast(t('calOffDone'), 'success');
+  } catch (e) {
+    showToast(t('errorSaving'), 'error');
+  }
+  renderCalFeed();
+}
+
+async function calFeedCopy() {
+  const input = document.getElementById('calFeedLink');
+  if (!input) return;
+  try {
+    await navigator.clipboard.writeText(input.value);
+  } catch (e) {
+    input.focus(); input.select();
+    try { document.execCommand('copy'); } catch (e2) { return; }   // the link stays selected for a manual copy
+  }
+  showToast(t('calCopied'), 'success');
 }
 
 function calcDuration(start, end) {
