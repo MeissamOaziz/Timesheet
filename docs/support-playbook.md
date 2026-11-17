@@ -14,6 +14,17 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   they draft and the owner reviews and sends. Automated triage follows its own prompt and drafts
   everything it is not explicitly allowed to send.
 - Reply in the customer's language (French or English).
+- Phone calls (owner's rule, 2026-11-16). Never refuse a call, and never write that we prefer email, that we
+  reply by email only, or anything else about how we would rather be contacted. Still answer the question
+  as fully as possible by email in the same reply: the call comes on top of the answer, never instead of it.
+  A call is wanted when the customer asks to be called or to speak with someone, gives a phone number so we
+  can reach them, or accepts a call we offered. Offer one yourself when email is clearly not getting there:
+  a second follow-up on the same question, a need we still do not understand, a prospect deciding whether we
+  fit. In the reply, say we will gladly call, repeat the number they gave (or ask for one) and ask what time
+  suits them; never promise an exact time or day. Only the owner makes calls, so he must know every time:
+  the summary email's subject and first line start with "CALL REQUESTED", followed by the name, company,
+  number, language, plan or prospect, and what the call should cover. Never file a call request under
+  "optional" or "nothing needed".
 - Before trusting a triage summary, check whether a draft or reply already exists in that thread and
   when it was written. A concurrent session may already have changed the facts (a customer once got a
   "not a feature yet" reply on the day the feature shipped).
@@ -37,6 +48,14 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
 - There is no native phone app yet (an Expo app is planned and not released). A punch made from the
   employee portal on a phone is tagged MOBILE in Activity. Portal punches always use the employee's
   assigned site: there is no site picker, so geofence distance is measured against that one site.
+- Sales: a prospect who asks about "the terminal" (how to get it, who supplies it) may not want a fixed
+  device at all: staff placed at client sites, crews on the road. Do not answer with kiosk steps only.
+  Give both ways in the same reply, then ask how their people work. (1) Employees punch on their own
+  phones through the employee portal: nothing to buy or install, each punch carries its time and GPS pin,
+  Starter and up (a new Free account can try it during its 14-day preview). (2) A shared kiosk at a fixed
+  place: any tablet or spare phone they already own, included in every plan; we sell no hardware. Both can
+  be used in one account. (Recruiting-agency prospect, 2026-11-16: three kiosk-only replies in a row missed
+  what they were really asking.)
 
 ## Wrong hours on a phone punch (clinic customer, 2026-10-14)
 
