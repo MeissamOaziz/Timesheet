@@ -278,6 +278,8 @@ async function newPage(browser, { width, height, theme, lang, url }) {
     // product shot — and the coach in particular would put "STEP 1 OF 4" over the marketing
     // hero, advertising the demo walkthrough rather than the product.
     const b = document.getElementById('demoBanner'); if (b) b.remove();
+    // The page reserves room for the banner above its top bar and sidebar: release it.
+    if (typeof _syncDemoBannerH === 'function') _syncDemoBannerH();
     const dc = document.getElementById('demoCoach'); if (dc) dc.remove();
     try { sessionStorage.setItem('pc_demo_coach', 'off'); } catch (e) {}
     const style = document.createElement('style');

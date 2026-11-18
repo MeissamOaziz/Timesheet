@@ -279,7 +279,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .picker-hint:hover{color:var(--text2);}
 
 /* NAV */
-.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:6px;height:60px;position:sticky;top:0;z-index:100;}
+/* --demo-h is the height of the demo banner (0 outside the demo); see _syncDemoBannerH. */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:6px;height:60px;position:sticky;top:var(--demo-h,0px);z-index:100;}
 .nav-logo{color:var(--accent);margin-right:4px;display:flex;align-items:center;flex-shrink:0;}
 .nav-logo svg{width:27px;height:27px;}
 /* Every header control shares --h-md so the bar reads as one row of equal-height pills.
@@ -336,7 +337,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .page{display:none;padding:28px 22px;max-width:1120px;margin:0 auto;}
 .page.active{display:block;}
 /* ── Left sidebar navigation (opt-in via body.nav-sidebar) ── */
-#sideNav{display:none;position:fixed;top:60px;left:0;bottom:0;width:216px;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;z-index:90;flex-direction:column;gap:2px;}
+#sideNav{display:none;position:fixed;top:calc(60px + var(--demo-h,0px));left:0;bottom:0;width:216px;background:var(--surface);border-right:1px solid var(--border);padding:14px 10px;overflow-y:auto;z-index:90;flex-direction:column;gap:2px;}
 body.nav-sidebar.nav-authed #sideNav{display:flex;}
 /* The sidebar already exposes Employees/Sites/Admins, so the in-page tab strip is a second
    copy of the same navigation. Hide it here; the H1 names the active section instead. */
@@ -610,10 +611,14 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
    top and the very bottom. */
 .land-sticky-cta{display:none;}
 @media(max-width:760px){
+  /* Shown only once the hero's own buttons have scrolled away (body.land-cta-stuck): at the top
+     of the page it repeated the button right above it and covered the live demo button. */
   .land-sticky-cta{display:block;position:fixed;left:0;right:0;bottom:0;z-index:900;
+    transform:translateY(110%);transition:transform .2s ease;
     padding:10px 14px calc(10px + env(safe-area-inset-bottom));
     background:var(--surface);border-top:1px solid var(--border);box-shadow:0 -4px 18px rgba(0,0,0,.10);}
   .land-sticky-cta button{width:100%;}
+  body.land-cta-stuck .land-sticky-cta{transform:none;}
   body.landing-open{padding-bottom:74px;}
   /* The sticky bar carries this action already; a second identical button in the section
      just stacks two of the same thing. */
@@ -682,7 +687,12 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .land-nav-links{display:flex;gap:10px;align-items:center;min-width:0;}
 /* overflow:hidden is the last-resort guard — without it the links overflowed their box and the
    theme toggle rendered on top of "Contact" instead of the links simply collapsing. */
-.land-nav-sections{display:flex;gap:2px;align-items:center;min-width:0;overflow:hidden;}
+.land-nav-sections{display:flex;gap:2px;align-items:center;min-width:0;overflow:hidden;flex-wrap:wrap;max-height:34px;}
+.land-nav-sections a{line-height:20px;}
+/* Wrapping inside a one-row box drops a link that does not fit whole instead of cutting it in
+   half (French needs about 90px more than English). Below 1240px the links go entirely: the
+   rule further up that was meant to do this came before the display:flex above and never applied. */
+@media(max-width:1240px){.land-nav-sections{display:none;}}
 .land-nav-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 /* nowrap matters: without it "Connexion Admin" broke onto two lines and burst the 64px bar. */
 .land-nav-links a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:var(--r-sm);transition:all .15s;cursor:pointer;display:inline-block;white-space:nowrap;}
@@ -995,12 +1005,17 @@ border-top:1px solid var(--border);margin:18px 0;}
 /* ═══ HAMBURGER MENU ═══ */
 .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border:none;background:none;}
 .hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:all .3s;}
-.mobile-menu{display:none;position:fixed;inset:0;top:60px;background:var(--surface);z-index:99;flex-direction:column;padding:16px;gap:4px;border-top:1px solid var(--border);}
+.mobile-menu{display:none;position:fixed;inset:0;top:calc(60px + var(--demo-h,0px));overflow-y:auto;background:var(--surface);z-index:99;flex-direction:column;padding:16px;gap:4px;border-top:1px solid var(--border);}
 .mobile-menu.open{display:flex;}
 .mobile-nav-btn{background:none;border:none;color:var(--text2);padding:14px 16px;border-radius:var(--r-md);cursor:pointer;font-family:inherit;font-size:15px;font-weight:500;text-align:left;transition:all .15s;width:100%;display:flex;align-items:center;gap:10px;}
 .mobile-nav-btn:hover,.mobile-nav-btn.active{background:rgba(79,142,247,.12);color:var(--accent);}
 .mobile-nav-btn svg{width:18px;height:18px;flex-shrink:0;}
 .mobile-nav-divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+.mobile-nav-tools{display:none;align-items:center;gap:10px;padding:10px 16px 2px;}
+body.nav-authed .mobile-nav-tools{display:flex;}
+/* The demo coach card floats above everything at the bottom; with the phone menu open it covered
+   the menu's last rows. */
+body:has(.mobile-menu.open) #demoCoach{display:none;}
 
 /* ═══ MOBILE CARD TABLES ═══ */
 .mobile-card-row{display:none;}
@@ -1010,6 +1025,14 @@ border-top:1px solid var(--border);margin:18px 0;}
   /* Nav */
   .hamburger{display:flex;}
   .nav{padding:0 14px;}
+  /* Signed in (or in the demo) a phone top bar holds the logo, the company, the account menu,
+     the bell and the menu button. Help, theme and language are in the menu instead: with them
+     up here the menu button was pushed past the right edge and no page could be reached. */
+  body.nav-authed #mainNav #navHelpBtn,
+  body.nav-authed #mainNav [data-theme-toggle],
+  body.nav-authed #mainNav #navLangSwitcher{display:none!important;}
+  body.nav-authed .context-pill{flex-shrink:1;min-width:0;max-width:none;}
+  body.nav-authed #contextPillText{overflow:hidden;text-overflow:ellipsis;}
   .nav-right .btn-secondary{display:none;}
   #adminBadge{font-size:10px;padding:2px 6px;}
 
@@ -1505,7 +1528,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
         <div class="feature-icon"><svg style="color:#22c55e"><use href="#i-shield-pin"/></svg></div>
         <h3><span data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
+        <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 25 m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg><use href="#i-smartphone"/></svg></div>
@@ -1652,7 +1675,8 @@ border-top:1px solid var(--border);margin:18px 0;}
         <button class="price-cta ghost" onclick="hideLanding();navigate('register')" data-i18n="land.getStartedFree">Get started free</button>
       </div>
       <!-- STARTER -->
-      <div class="price-card">
+      <div class="price-card popular">
+        <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
         <div class="price-name" data-i18n="plan.starter">Starter</div>
         <div class="price-amount">$19.49<span>/mo CAD</span></div>
         <div class="price-sub" data-i18n-html="land.starterSub">1 company · 2 sites · 25 employees · 2 admins<br>+$4.90/mo per extra employee or admin</div>
@@ -1672,11 +1696,10 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li class="dim" data-i18n="land.f.start9">Lunch break tracking (Growth+)</li>
           <li class="dim" data-i18n="land.f.start10">Visitor check-in (Growth+)</li>
         </ul>
-        <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
+        <button class="price-cta accent" onclick="isLoggedIn()?startCheckout('starter'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial">Get Starter</button>
       </div>
       <!-- GROWTH -->
-      <div class="price-card popular">
-        <div class="popular-badge" data-i18n="land.mostPopular">Most Popular</div>
+      <div class="price-card">
         <div class="price-name" data-i18n="plan.growth">Growth</div>
         <div class="price-amount">$39.49<span>/mo CAD</span></div>
         <div class="price-sub" data-i18n-html="land.growthSub">3 companies · 6 sites · 60 employees · 4 admins<br>+$4.90/mo per extra employee or admin</div>
@@ -1690,7 +1713,7 @@ border-top:1px solid var(--border);margin:18px 0;}
           <li data-i18n="land.f.grow7">Lunch break tracking</li>
           <li data-i18n="land.f.grow8">Visitor check-in</li>
         </ul>
-        <button class="price-cta accent" onclick="isLoggedIn()?startCheckout('growth'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial2">Get Growth</button>
+        <button class="price-cta ghost" onclick="isLoggedIn()?startCheckout('growth'):(hideLanding(),navigate('register'))" data-i18n="land.freeTrial2">Get Growth</button>
       </div>
       <!-- BUSINESS -->
       <div class="price-card">
@@ -1768,7 +1791,7 @@ border-top:1px solid var(--border);margin:18px 0;}
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
         <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-nav-building"/></svg></div>
         <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how1Title">1. Create Your Account</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register with your name, email, and company details — payroll settings included. Verify your email and add your first site.</p>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register with your name, email and company name. Verify your email and add your first site.</p>
       </div>
       <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
         <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-map-pin"/></svg></div>
@@ -2177,6 +2200,11 @@ border-top:1px solid var(--border);margin:18px 0;}
   <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
   <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
   <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa"><svg><use href="#i-nav-schedule"/></svg> <span id="mobileSchedulingLabel"></span></button>
+  <!-- Language and theme: on a phone they are here, not in the top bar. -->
+  <div class="mobile-nav-tools">
+    <div class="lang-switcher"><button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button><button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button></div>
+    <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
+  </div>
   <hr class="mobile-nav-divider">
   <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> <span data-i18n="ui.adminLogin">Admin Login</span></button>
   <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)"><svg><use href="#i-nav-logout"/></svg> Logout</button>
@@ -5072,6 +5100,15 @@ function hideLanding() {
   document.getElementById('landingPage').classList.remove('show');
   document.getElementById('mainNav').style.display = '';
 }
+// Phone only (see .land-sticky-cta): the bottom button slides in once the hero's two buttons
+// are out of view. Without IntersectionObserver it simply stays visible, as before.
+(function(){
+  const grp=document.querySelector('#landingPage .land-cta-group');
+  if(!grp||!('IntersectionObserver' in window)){ document.body.classList.add('land-cta-stuck'); return; }
+  new IntersectionObserver(function(es){
+    document.body.classList.toggle('land-cta-stuck',!es[es.length-1].isIntersecting);
+  }).observe(grp);
+})();
 function showLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.add('show');
 }
@@ -5776,7 +5813,8 @@ function startDemo(){
   _dcStep=0; _dcExitAsked=false;
   navigate('dashboard');
   renderDemoCoach();
-  showToast(t('demo.started')||'Demo mode — this is sample data. Nothing is saved.','info');
+  // No toast here: the banner already says it is sample data, and on a phone the toast landed
+  // on top of the coach card's button.
 }
 // ── Demo coach ───────────────────────────────────────────────────────────────
 // Three steps that mirror the actual daily loop: someone clocks in, the dashboard moves,
@@ -5866,11 +5904,20 @@ function exitDemo(){
   try{ sessionStorage.removeItem('pc_demo'); }catch(_){}
   Ctx.clear(); C.companies=[];C.sites=[];C.employees=[];C.punches=[];
   const b=document.getElementById('demoBanner'); if(b) b.remove();
+  _syncDemoBannerH();
   const dc=document.getElementById('demoCoach'); if(dc) dc.innerHTML='';
   updateNav(); showLanding();
 }
+// The banner sits above the top bar, and wraps to two lines on a phone. The top bar, the sidebar
+// and the phone menu are positioned from the top of the window, so they are told how tall it is;
+// without this the sidebar's first link (Dashboard) sat underneath the top bar.
+function _syncDemoBannerH(){
+  const b=document.getElementById('demoBanner');
+  document.documentElement.style.setProperty('--demo-h',(b?b.offsetHeight:0)+'px');
+}
+window.addEventListener('resize',_syncDemoBannerH);
 function _renderDemoBanner(){
-  if(document.getElementById('demoBanner')) return;
+  if(document.getElementById('demoBanner')){ _syncDemoBannerH(); return; }
   const bar=document.createElement('div');
   bar.id='demoBanner';
   bar.style.cssText='position:sticky;top:0;z-index:9500;background:linear-gradient(90deg,var(--accent),#7c5cbf);color:#fff;padding:9px 16px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)';
@@ -5878,6 +5925,7 @@ function _renderDemoBanner(){
     <button onclick="exitDemo();navigate('register')" style="background:#fff;color:var(--accent);border:none;border-radius:var(--r-sm);padding:6px 15px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">${t('demo.cta')||'Create my free account'}</button>
     <button onclick="exitDemo()" style="background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:var(--r-sm);padding:6px 13px;font-size:12.5px;cursor:pointer;font-family:inherit">${t('demo.exit')||'Exit demo'}</button>`;
   document.body.insertBefore(bar,document.body.firstChild);
+  _syncDemoBannerH();
 }
 // Visitor check-in's own tiny in-memory store for the demo — self-contained rather than routed
 // through C.* (nothing else reads visitors globally), since every caller re-fetches the current
@@ -7726,8 +7774,8 @@ function showUpgradePlans(){
   const s=Sess.get();
   const cur=s?.plan||'free';
   const plans=[
-    {key:'starter', nameKey:'plan.starter', price:'$19.49/mo CAD', descKey:'upgrade.desc.starter'},
-    {key:'growth',  nameKey:'plan.growth',  price:'$39.49/mo CAD', descKey:'upgrade.desc.growth', popular:true},
+    {key:'starter', nameKey:'plan.starter', price:'$19.49/mo CAD', descKey:'upgrade.desc.starter', popular:true},
+    {key:'growth',  nameKey:'plan.growth',  price:'$39.49/mo CAD', descKey:'upgrade.desc.growth'},
     {key:'business',nameKey:'plan.business',price:'$79.49/mo CAD', descKey:'upgrade.desc.business'},
   ];
   const html=plans.map(p=>`
@@ -17922,7 +17970,7 @@ en:{
 'help.s11title':'Co-Admins & Team Access',
 'help.s11desc':'In <strong>Admin → Admins</strong>, invite co-admins or managers to help manage your account. Co-admins have full access; managers are limited to their assigned sites. Extra seats are $4.90/mo.',
 'land.howTitle':'How It Works','land.howSub':'Up and running in under 10 minutes.',
-'land.how1Title':'1. Create Your Account','land.how1Desc':'Register with your name, email, and company details — payroll settings included. Verify your email and add your first site.',
+'land.how1Title':'1. Create Your Account','land.how1Desc':'Register with your name, email and company name. Verify your email and add your first site.',
 'land.how2Title':'2. Add Sites','land.how2Desc':'Create one or more physical locations — stores, warehouses, offices.',
 'land.how3Title':'3. Add Employees','land.how3Desc':'Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.',
 'land.how4Title':'4. Start Tracking','land.how4Desc':'Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.',
@@ -17979,7 +18027,7 @@ en:{
 'faq.q15':'Is PunchClock Crew available in French and suitable for Quebec businesses?',
 'faq.a15':'Yes — fully. PunchClock Crew is entirely bilingual (French and English) and built with Quebec businesses in mind. The entire interface, all reports, and all automated emails can be used in French. Pricing is in Canadian dollars (CAD). The software respects Quebec Law 25 (Loi 25) requirements for personal data protection — data is stored securely, employees are only asked for what\'s necessary, and you can request data deletion at any time. Whether you run a restaurant in Montreal, a retail store in Quebec City, or a warehouse in Laval, PunchClock Crew is built for you.',
 'faq.q16':'What is Geofencing and how does it prevent employees from punching in remotely?',
-'faq.a16':'Geofencing creates an invisible GPS boundary around each of your sites. When an employee tries to clock in or out, their device\'s GPS position is checked silently. If they\'re inside the allowed radius (e.g. 25m for a restaurant), the punch goes through. If they\'re outside — at home, in a car, or anywhere else — the punch is blocked and they see a message showing exactly how far away they are. You set the radius per site: as tight as 10m for a small store, up to 500m for a large facility. Each punch also records the GPS coordinates and distance in the audit trail so you can review location data at any time. Geofencing is included on the Starter plan and above.',
+'faq.a16':'Geofencing creates an invisible GPS boundary around each of your sites. When an employee tries to clock in or out, their device\'s GPS position is checked silently. If they\'re inside the allowed radius (e.g. 25m for a restaurant), the punch goes through. If they\'re outside — at home, in a car, or anywhere else — the punch is blocked and they see a message showing exactly how far away they are. You set the radius per site: as tight as 25 m for a small store, up to 500 m for a large facility. Each punch also records the GPS coordinates and distance in the audit trail so you can review location data at any time. Geofencing is included on the Starter plan and above.',
 'faq.q17':'What happens if an employee\'s phone has GPS turned off or they deny location access?',
 'faq.a17':'It depends on the mode you choose per site. In <strong>Lenient Mode</strong> (the default), if GPS is unavailable the employee sees a warning but the punch still goes through — good for sites with poor indoor signal. In <strong>Strict Mode</strong>, if GPS is unavailable or denied, the punch is blocked entirely — best when you need zero exceptions. You set this per site in the Geofence settings.',
 'faq.q18':'What is the Kiosk Shortcut and how do I set it up so employees can always find the punch page?',
@@ -18040,7 +18088,7 @@ en:{
 'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
 'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal, and can add them to Google Calendar, Apple Calendar or Outlook. $14.95/mo on any paid plan, and you can try it free for 14 days from the Schedule tab.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
-'land.feat10Desc':'Set a GPS boundary per site (as tight as 10m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
+'land.feat10Desc':'Set a GPS boundary per site (as tight as 25 m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
 'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
 'land.feat11Desc':'Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.',
 'land.feat12Title':'Employee Self-Service Portal',
@@ -19005,7 +19053,7 @@ fr:{
 'help.s11title':'Co-admins et accès d\'équipe',
 'help.s11desc':'Dans <strong>Admin → Admins</strong>, invitez des co-administrateurs ou des gestionnaires pour vous aider. Les co-admins ont un accès complet; les gestionnaires sont limités à leurs sites assignés. Sièges supplémentaires: 4,90$/mois.',
 'land.howTitle':'Comment ça marche','land.howSub':'Opérationnel en moins de 10 minutes.',
-'land.how1Title':'1. Créez votre compte','land.how1Desc':'Inscrivez-vous avec vos informations personnelles et celles de votre entreprise — paramètres de paie inclus. Vérifiez votre courriel et ajoutez votre premier site.',
+'land.how1Title':'1. Créez votre compte','land.how1Desc':'Inscrivez-vous avec votre nom, votre courriel et le nom de votre entreprise. Vérifiez votre courriel et ajoutez votre premier site.',
 'land.how2Title':'2. Ajouter des sites','land.how2Desc':'Créez un ou plusieurs emplacements physiques — magasins, entrepôts, bureaux.',
 'land.how3Title':'3. Ajouter des employés','land.how3Desc':'Enregistrez le personnel avec un nom, un site et un NIP à 4 chiffres. Ajoutez optionnellement les courriels pour les rapports automatiques.',
 'land.how4Title':'4. Commencer le suivi','land.how4Desc':'Pointez n\'importe quelle tablette ou PC vers la page de pointage, déconnectez-vous de l\'admin, et les employés pointent avec leur NIP.',
@@ -19062,7 +19110,7 @@ fr:{
 'faq.q15':'PunchClock Crew est-il disponible en français et adapté aux entreprises québécoises?',
 'faq.a15':'Oui — entièrement. PunchClock Crew est complètement bilingue (français et anglais) et conçu en pensant aux entreprises québécoises. L\'interface, les rapports et les communications par courriel sont tous disponibles en français. Les prix sont en dollars canadiens (CAD). Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des renseignements personnels — les données sont stockées de façon sécurisée, on ne demande aux employés que le strict nécessaire, et vous pouvez demander la suppression de vos données en tout temps. Que vous gériez un restaurant à Montréal, un commerce au détail à Québec ou un entrepôt à Laval, PunchClock Crew est fait pour vous.',
 'faq.q16':'Qu\'est-ce que le géorepérage et comment empêche-t-il les employés de pointer à distance?',
-'faq.a16':'Le géorepérage crée une frontière GPS invisible autour de chacun de vos sites. Quand un employé tente de pointer, la position GPS de son appareil est vérifiée silencieusement. S\'il est dans le rayon autorisé (ex. 25m pour un restaurant), le pointage passe. S\'il est hors zone — à la maison, dans la voiture ou ailleurs — le pointage est bloqué et il voit un message indiquant sa distance exacte. Vous définissez le rayon par site : aussi précis que 10m pour un petit commerce, jusqu\'à 500m pour un grand site. Chaque pointage enregistre les coordonnées GPS et la distance dans le journal d\'audit. Le géorepérage est inclus dans le forfait Débutant et plus.',
+'faq.a16':'Le géorepérage crée une frontière GPS invisible autour de chacun de vos sites. Quand un employé tente de pointer, la position GPS de son appareil est vérifiée silencieusement. S\'il est dans le rayon autorisé (ex. 25m pour un restaurant), le pointage passe. S\'il est hors zone — à la maison, dans la voiture ou ailleurs — le pointage est bloqué et il voit un message indiquant sa distance exacte. Vous définissez le rayon par site : aussi précis que 25 m pour un petit commerce, jusqu\'à 500 m pour un grand site. Chaque pointage enregistre les coordonnées GPS et la distance dans le journal d\'audit. Le géorepérage est inclus dans le forfait Débutant et plus.',
 'faq.q17':'Que se passe-t-il si le GPS d\'un employé est désactivé ou s\'il refuse l\'accès à la localisation?',
 'faq.a17':'Cela dépend du mode configuré par site. En <strong>Mode tolérant</strong> (par défaut), si le GPS est indisponible, l\'employé voit un avertissement mais le pointage passe quand même — adapté aux sites avec un mauvais signal GPS intérieur. En <strong>Mode strict</strong>, si le GPS est indisponible ou refusé, le pointage est bloqué — idéal quand vous exigez zéro exception. Ce paramètre se configure par site dans les réglages du géorepérage.',
 'faq.q18':'Qu\'est-ce que le raccourci kiosque et comment le configurer pour que les employés trouvent toujours la page de pointage?',
@@ -19127,7 +19175,7 @@ fr:{
 'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
 'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail, et peuvent les ajouter à Google Agenda, au Calendrier Apple ou à Outlook. 14,95$/mois sur tout forfait payant, avec un essai gratuit de 14 jours à partir de l\'onglet Horaires.',
 'land.feat10Title':'Géorepérage — Pointage verrouillé par localisation',
-'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 10m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
+'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 25 m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
 'land.feat11Title':'Raccourci kiosque — Pointer en un tap',
 'land.feat11Desc':'Générez une URL spécifique au site ou installez l\'app PunchClock comme icône bureau/écran d\'accueil. Les employés appuient et arrivent directement sur la page de pointage — sans connexion, sans navigation. Les gestionnaires configurent ça une seule fois par appareil.',
 'land.feat12Title':'Portail employé libre-service',
