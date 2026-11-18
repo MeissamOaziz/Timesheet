@@ -535,7 +535,9 @@ body.is-super.plat-mode #sideNav > :not([data-plat]){display:none;}
 .page-header p{color:var(--text2);font-size:14px;margin-top:3px;}
 
 /* TABLE */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+/* A table wider than its box (mid-width screens with the sidebar open) scrolls sideways instead of being cut off:
+   with overflow:hidden the right-hand columns, Actions included, could not be reached. */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;overflow-y:hidden;}
 table{width:100%;border-collapse:collapse;}
 th{background:var(--surface2);padding:11px 15px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);}
 td{padding:12px 15px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
@@ -567,6 +569,9 @@ th.sort-th:hover{color:var(--text);}
 .tab[data-admin-only]{display:none;}
 body.role-resolved.role-admin .tab[data-admin-only]{display:inline-flex;}
 body.role-resolved.role-admin [data-admin-only]{display:block;}
+/* The phone menu entry is a flex row like its siblings; the rule above made it a block (icon against the label). Managers do not get it. */
+.mobile-nav-btn[data-admin-only]{display:none;}
+body.role-resolved.role-admin .mobile-nav-btn[data-admin-only]{display:flex;}
 /* That generic rule wins on specificity over .sn-item{display:flex}, which left the Admins
    sidebar row rendering as a block and its icon, label and badge no longer aligned. */
 body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}

@@ -127,6 +127,46 @@ console.log('\n── When the hourly email limit is reached ──────�
   await p.context().close();
 }
 
+console.log('\n── Mid-width screens: tables are reachable ──────');
+{
+  // 800 to 1,250 px with the sidebar open is where a 966 px table is wider than its box. The right-hand columns
+  // (Phone, Status, Actions) must be reachable by scrolling, never cut off.
+  for (const W of [800, 900, 1100, 1250]) {
+    const p = await demoPage(W, 800, 'en');
+    for (const pg of ['admin', 'activity', 'reports', 'timeoff']) {
+      await p.evaluate(x => navigate(x), pg); await sleep(900);
+      if (pg === 'reports') { await p.evaluate(() => { try { generateReport(); } catch (e) {} }); await sleep(900); }
+      const r = await p.evaluate(() => {
+        const wraps = [...document.querySelectorAll('.page.active .table-wrap')].filter(w => w.offsetParent !== null && w.querySelector('table') && w.querySelector('table').offsetParent !== null);
+        return wraps.map(w => {
+          const t = w.querySelector('table'); const over = t.getBoundingClientRect().width > w.clientWidth + 1;
+          const ox = getComputedStyle(w).overflowX;
+          w.scrollLeft = w.scrollWidth;
+          const ths = [...t.querySelectorAll('thead th')]; const last = ths[ths.length - 1].getBoundingClientRect(); const box = w.getBoundingClientRect();
+          return { over, ox, lastReachable: last.right <= box.right + 1 };
+        });
+      });
+      ok(`${W} px, ${pg}: every column can be reached`, r.length === 0 || r.every(x => x.lastReachable && (!x.over || /auto|scroll/.test(x.ox))), JSON.stringify(r));
+    }
+    await p.evaluate(() => navigate('admin')); await sleep(600);
+    const emp = await p.evaluate(() => { const w = document.querySelector('#tab-employees .table-wrap'); w.scrollLeft = w.scrollWidth; const b = [...document.querySelectorAll('#empTableBody tr:first-child .icon-btn')].map(x => x.getBoundingClientRect().right); return { editVisible: b.length > 0 && Math.max(...b) <= w.getBoundingClientRect().right + 1, phone: !!document.querySelector('#empTableBody .ph-cell') }; });
+    ok(`${W} px: the Employees Actions buttons can be scrolled into view`, emp.editVisible, JSON.stringify(emp));
+    if (W === 900) ok('900 px: the Employees table really is wider than its box here (so the checks above are not vacuous)', await p.evaluate(() => { const w = document.querySelector('#tab-employees .table-wrap'); return w.querySelector('table').getBoundingClientRect().width > w.clientWidth + 1; }));
+    ok(`${W} px: no page errors`, p._errs.length === 0, p._errs.join(' / '));
+    await p.context().close();
+  }
+}
+
+console.log('\n── Phone menu entry ─────────────────────────────');
+{
+  const p = await demoPage(390, 844, 'en');
+  const r = await p.evaluate(() => { const d = id => getComputedStyle(document.getElementById(id)).display; return { phone: d('mobileNavPhone'), sites: d('mobileNavCompanies'), sched: d('mobileNavSchedule') }; });
+  ok('Phone clock-in is a flex row like the other entries', r.phone === 'flex' && r.sites === 'flex', JSON.stringify(r));
+  await p.evaluate(() => document.body.classList.remove('role-admin'));   // a manager: no entry at all
+  ok('and a manager does not get it', await p.evaluate(() => getComputedStyle(document.getElementById('mobileNavPhone')).display === 'none'));
+  await p.context().close();
+}
+
 console.log('\n── Not on a paid plan ──────────────────────────');
 {
   const p = await demoPage(1440, 900, 'en');

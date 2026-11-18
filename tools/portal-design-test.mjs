@@ -97,6 +97,40 @@ ok('the tab bar can scroll when it overflows', mob.tabsScroll==='auto'||mob.tabs
 ok('no horizontal page scroll', await page.evaluate(()=>
    document.documentElement.scrollWidth<=window.innerWidth+1));
 ok('no page errors', errs.length===0, errs.join(' / '));
+console.log('\n── signed-in header on a phone ─────────────────');
+// The header was 436 px wide in English, 479 in French and 513 with a long name: on every phone the page scrolled
+// sideways and Sign Out was cut off. Checked signed in, in both languages, with a short and a long name.
+for (const lang of ['en', 'fr']) {
+  for (const name of ['Sam', 'Marie-Christine Tremblay-Beauchemin']) {
+    for (const W of [360, 375, 390, 430, 500, 700, 768, 1100]) {
+      const c2 = await browser.newContext({ viewport: { width: W, height: 700 } });
+      await c2.route(u => !u.href.startsWith(BASE) && !/fonts\./.test(u.href), r => r.abort());
+      const pg = await c2.newPage();
+      await pg.goto(BASE + '/employee.html', { waitUntil: 'load' }); await pg.waitForTimeout(300);
+      const r = await pg.evaluate(([n, l]) => {
+        try { setEmpLang(l); } catch (e) {}
+        document.getElementById('navEmpName').textContent = n;
+        document.getElementById('navEmpAvatar').textContent = n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        showScreen('screenApp');
+        const lo = document.getElementById('logoutBtn').getBoundingClientRect();
+        return { sideways: document.documentElement.scrollWidth > innerWidth + 1, logoutVisible: lo.right <= innerWidth + 0.5 && lo.left >= 0 && lo.width > 0 };
+      }, [name, lang]);
+      ok(`${lang}, ${W} px, ${name.length > 5 ? 'long' : 'short'} name: no sideways scroll and Sign Out fully visible`, !r.sideways && r.logoutVisible, JSON.stringify(r));
+      await c2.close();
+    }
+  }
+}
+{
+  // On a phone the initials still open Change password, and the avatar is reachable without the name block.
+  const c3 = await browser.newContext({ viewport: { width: 390, height: 700 } });
+  await c3.route(u => !u.href.startsWith(BASE) && !/fonts\./.test(u.href), r => r.abort());
+  const pg = await c3.newPage();
+  await pg.goto(BASE + '/employee.html', { waitUntil: 'load' }); await pg.waitForTimeout(300);
+  const r = await pg.evaluate(() => { showScreen('screenApp'); const a = document.getElementById('navEmpAvatar').getBoundingClientRect(); return { avatar: a.width > 0 && a.right <= innerWidth, info: getComputedStyle(document.querySelector('.nav-emp-info')).display }; });
+  ok('on a phone the avatar is there and the name block steps aside', r.avatar && r.info === 'none', JSON.stringify(r));
+  await c3.close();
+}
+
 await page.close();
 await browser.close(); server.close();
 console.log(`\n${pass} passed, ${fail} failed`);

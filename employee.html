@@ -65,7 +65,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
 .nav-logo{font-weight:700;font-size:17px;color:var(--accent);display:flex;align-items:center;gap:7px;}
 .nav-right{display:flex;align-items:center;gap:10px;}
-.nav-emp-name{font-size:13px;font-weight:600;color:var(--text);}
+.nav-emp-name{font-size:13px;font-weight:600;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav-logo{flex-shrink:0;}
+.nav-right{min-width:0;}
 .nav-emp-sub{font-size:11px;color:var(--text3);}
 .emp-avatar{width:32px;height:32px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
 .btn-logout{background:none;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text2);padding:6px 12px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
@@ -240,6 +242,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   .tabs-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .tabs-bar::-webkit-scrollbar{display:none;}
   .tab-btn{flex-shrink:0;}
+}
+/* The header was 436 px wide in English and 479 px in French (513 with a long name), so on every phone the page
+   scrolled sideways and Sign Out was cut off. Below 700 px the name block goes (the avatar still shows the initials
+   and opens Change password), below 480 px the wordmark goes too (the mark stays), and the controls tighten. */
+@media(max-width:700px){
+  .nav-emp-info{display:none;}
+}
+@media(max-width:480px){
+  .nav{padding:0 12px;}
+  .nav-logo-text{display:none;}
+  .nav-right{gap:6px;}
+  .btn-logout{padding:6px 10px;}
 }
 /* TABLE WRAP */
 .table-wrap{overflow-x:auto;}
@@ -433,7 +447,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <nav class="nav">
     <div class="nav-logo">
       <svg class="crew-mark" aria-hidden="true"><use href="#i-crew-mark"/></svg>
-      PunchClock Crew
+      <span class="nav-logo-text">PunchClock Crew</span>
     </div>
     <div class="nav-right">
       <button class="theme-btn" onclick="toggleEmpTheme()" id="empThemeBtn" aria-label="Toggle theme" title="Toggle theme"><svg class="ic"><use href="#i-sun"/></svg></button>
@@ -441,7 +455,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
         <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
       </div>
-      <div style="text-align:right">
+      <div class="nav-emp-info" style="text-align:right">
         <div class="nav-emp-name" id="navEmpName">Employee</div>
         <div class="nav-emp-sub" id="navEmpSub">Employee Portal</div>
       </div>

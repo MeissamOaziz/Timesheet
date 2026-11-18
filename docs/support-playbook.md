@@ -124,11 +124,13 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   portal, is asked "What are you working on?" when work labels are on, and the punch appears in Activity with a Mobile tag.
   When the phone or browser gives no location and the site is not Strict, the punch still goes through and is tagged
   "No location". The invitation email itself and the map pin were not part of that check.
-- **Known display problem (found 2026-11-17, fix in progress):** in a window wider than a phone but narrower than about
+- **Display problem at mid widths (found and fixed 2026-11-17):** in a window wider than a phone but narrower than about
   1,250 px (a small laptop, a tablet held sideways, a half-width browser window) the right-hand columns of the Employees
-  list (Phone, Status, Actions with Edit) are cut off and cannot be scrolled to. Nothing is missing or lost. Until the fix
-  ships: make the window wider, or zoom the browser out (Ctrl and the minus key; Cmd and minus on a Mac). If a customer
-  says they "cannot find the Edit button" or "the Phone column is empty", ask about the window size first.
+  list (Phone, Status, Actions with Edit) used to be cut off. Tables now scroll sideways at those widths, so every column
+  can be reached; Reports had the same problem at about 800 px and is fixed too. A customer on a copy opened before the
+  fix may need to reload the page (or fully close and reopen the app on a tablet). If someone still says they "cannot find
+  the Edit button" or "the Phone column is empty", ask about the window size, tell them to scroll the table sideways, and
+  check they are on the current version.
 
 ## GPS and geofencing (sales questions come up often)
 
