@@ -652,14 +652,27 @@ async function db(method, table, filter = '', body = null) {
   if (method === 'DELETE' || method === 'PATCH') return true;
   const text = await res.text(); return text ? JSON.parse(text) : [];
 }
-async function rpc(fn, params) {
-  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  });
-  if (!res.ok) throw new Error(await res.text());
-  const text = await res.text(); return text ? JSON.parse(text) : null;
+async function rpc(fn, params, opts) {
+  // opts.timeoutMs: give up on a request that never answers (a weak connection can leave one hanging for minutes).
+  // A failure with no usable answer (no connection, timeout, server error) is marked retryable.
+  const ctl = (opts && opts.timeoutMs && typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), opts.timeoutMs) : null;
+  let res, text;
+  try {
+    res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+      signal: ctl ? ctl.signal : undefined
+    });
+    text = await res.text();
+  } catch (e) {
+    if (timer) clearTimeout(timer);
+    const err = new Error(e && e.message ? e.message : 'Network error'); err.retryable = true; throw err;
+  }
+  if (timer) clearTimeout(timer);
+  if (!res.ok) { const err = new Error(text); err.retryable = res.status >= 500; throw err; }
+  return text ? JSON.parse(text) : null;
 }
 function asRows(r) { return Array.isArray(r) ? r : (r ? [r] : []); }
 // HTML-escape anything interpolated into innerHTML. Declared with `function` so it hoists above
@@ -781,6 +794,7 @@ const T = {
     punchErr_label_required: 'Please choose what you are working on.',
     punchLabelTitle: 'What are you working on?', punchLabelSkip: 'Skip', punchLabelCancel: 'Cancel',
     punchErr_generic: 'Could not record punch. Please try again.',
+    punchErr_network: 'No connection. Your punch was NOT recorded. Please try again.', punchRetrying: 'Weak connection, trying again...',
     punchOk_in: 'Clocked in.', punchOk_out: 'Clocked out.',
     punchLocDenied: '(location not shared)',
   },
@@ -893,6 +907,7 @@ const T = {
     punchErr_label_required: 'Veuillez choisir sur quoi vous travaillez.',
     punchLabelTitle: 'Sur quoi travaillez-vous?', punchLabelSkip: 'Passer', punchLabelCancel: 'Annuler',
     punchErr_generic: 'Impossible d\'enregistrer le pointage. Veuillez réessayer.',
+    punchErr_network: 'Pas de connexion. Votre pointage n\'a PAS été enregistré. Veuillez réessayer.', punchRetrying: 'Connexion faible, nouvel essai...',
     punchOk_in: 'Entrée enregistrée.', punchOk_out: 'Sortie enregistrée.',
     punchLocDenied: '(localisation non partagée)',
   }
@@ -1351,6 +1366,7 @@ async function initPunchBar() {
 }
 
 async function refreshPunchStatus() {
+  let fetched = true;
   try {
     const to = dateStr(new Date());
     const from = dateStr(new Date(Date.now() - 2*24*60*60*1000));
@@ -1359,8 +1375,9 @@ async function refreshPunchStatus() {
     _lastPunchType = last ? last.type : null;
     _lastPunchAt = last ? new Date(last.punched_at) : null;
     _lastPunchLabel = last && last.type === 'IN' ? (last.label_name || '') : '';
-  } catch(e) { _lastPunchType = null; _lastPunchAt = null; _lastPunchLabel = ''; }
+  } catch(e) { fetched = false; }   // keep what the screen already shows rather than guess
   renderPunchStatus();
+  return fetched;
 }
 
 function renderPunchStatus() {
@@ -1415,6 +1432,16 @@ function clearPunchError() {
   el.innerHTML = '';
 }
 
+// One id per tap, sent with the punch: if the answer is lost on the way back (weak signal), asking again with the same
+// id makes the server hand back the first result instead of recording a second punch.
+function newPunchOpId() {
+  try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+  const h = n => Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  return `${h(8)}-${h(4)}-4${h(3)}-${'89ab'[Math.floor(Math.random() * 4)]}${h(3)}-${h(12)}`;
+}
+let _punchTimeoutMs = 20000;
+const _sleepMs = ms => new Promise(r => setTimeout(r, ms));
+
 async function doPunch() {
   if (_punching || !_session.siteId) return;
   _punching = true;
@@ -1427,24 +1454,24 @@ async function doPunch() {
   clearPunchError();
 
   const type = _lastPunchType === 'IN' ? 'OUT' : 'IN';
-  // The job is chosen on the way IN (an OUT never carries one). Asked before the time and location
-  // are taken, so the punch is stamped when it is actually sent, not while someone reads the list.
-  let labelId = null;
-  if (type === 'IN' && _punchLabels.length && _punchLabelMode !== 'off') {
-    const picked = await pickPunchLabel();
-    if (!picked) {          // cancelled: nothing recorded
-      _punching = false;
-      label.textContent = prevLabel;
-      renderPunchStatus();
-      return;
-    }
-    labelId = picked.labelId;
-  }
-  const now = new Date();
-  const geo = geoIfFresh(await getGeolocation(), now.getTime(), Date.now());
-
   try {
-    const rows = asRows(await rpc('portal_punch', {
+    // The job is chosen on the way IN (an OUT never carries one). Asked before the time and location
+    // are taken, so the punch is stamped when it is actually sent, not while someone reads the list.
+    let labelId = null;
+    if (type === 'IN' && _punchLabels.length && _punchLabelMode !== 'off') {
+      const picked = await pickPunchLabel();
+      if (!picked) {          // cancelled: nothing recorded
+        _punching = false;
+        label.textContent = prevLabel;
+        renderPunchStatus();
+        return;
+      }
+      labelId = picked.labelId;
+    }
+    const now = new Date();
+    const geo = geoIfFresh(await getGeolocation(), now.getTime(), Date.now());
+    const opId = newPunchOpId();
+    const params = {
       p_session: _session.token,
       p_type: type,
       p_site_id: _session.siteId,
@@ -1457,19 +1484,44 @@ async function doPunch() {
       p_lat: geo ? geo.lat : null,
       p_lng: geo ? geo.lng : null,
       p_accuracy_m: geo ? geo.acc : null,
+      p_client_op_id: opId,
       ...(labelId ? { p_label_id: labelId } : {}),
-    }));
-    const res = rows.length ? rows[0] : null;
+    };
+
+    // Up to three tries with the SAME id when there is no answer (weak connection): the first may have been stored
+    // even though its reply never arrived, and the id makes a repeat harmless.
+    let res = null, failed = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const rows = asRows(await rpc('portal_punch', params, { timeoutMs: _punchTimeoutMs }));
+        res = rows.length ? rows[0] : null; failed = false; break;
+      } catch (e) {
+        failed = true;
+        if (!e.retryable) break;
+        if (attempt < 2) { label.textContent = t('punchRetrying'); await _sleepMs(1200 * (attempt + 1)); }
+      }
+    }
+
     if (res && res.ok) {
       showToast(type === 'IN' ? t('punchOk_in') : t('punchOk_out'), 'success');
       await refreshPunchStatus();
       if (document.getElementById('tabContentReports')?.style.display === '') renderReports();
-    } else {
-      const code = res?.error_code || 'generic';
+    } else if (res) {
+      // The server answered no: show why, and bring the screen back in line with what the server has.
+      const code = res.error_code || 'generic';
       const dict = T[_empLang] || T.en;
       showPunchError(dict['punchErr_' + code] || dict.punchErr_generic);
+      await refreshPunchStatus();
+    } else {
+      // No usable answer. Ask the server what it has: the punch may well have gone through.
+      const known = await refreshPunchStatus();
+      if (known && _lastPunchType === type) {
+        showToast(type === 'IN' ? t('punchOk_in') : t('punchOk_out'), 'success');
+      } else {
+        showPunchError(t(failed ? 'punchErr_network' : 'punchErr_generic'));
+      }
     }
-  } catch(e) {
+  } catch (e) {
     showPunchError(t('punchErr_generic'));
   }
   _punching = false;

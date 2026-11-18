@@ -122,6 +122,13 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   has it on). The bulk invite turns the switch on for each company among the people chosen. The Phone clock-in window
   manages one company, and names it at the top when the account has more than one; "Set up phone clock-in" in Company Info
   opens it for the company being edited.
+- **"Could not record punch" on a phone, then "You are not clocked in yet" (fixed 2026-11-18):** on a weak connection the server could
+  store the punch while its reply never reached the phone, so the portal showed an error and stayed on the old state. The
+  portal now sends one id per tap and retries up to three times with the same id (the server answers the first result, never
+  a second punch), gives up a silent request after 20 s, and always re-reads the punches afterwards so the screen matches the
+  server. If the punch did go through it says "Clocked in/out"; if not it says "No connection. Your punch was NOT recorded".
+  Before that fix: ask the employee to reload the portal (the punch is usually already recorded) and check Activity; add a
+  missed punch only if it is really absent.
 - **Language of the invitation email (2026-11-18):** the admin picks it when sending: an "Email language" choice (English / Français)
   beside the invitation button in the Edit employee window and above the Send button in the Phone clock-in window; the
   confirmation names the language. It defaults to the admin's screen language and is remembered in that browser. There is
