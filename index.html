@@ -9238,7 +9238,7 @@ function geoColor(p) { return GEO_COLORS[p.geo_status] || GEO_COLORS.ok; }
 function geoTypeWord(p) { return String(t(p.type === 'IN' ? 'punch.in' : 'punch.out') || p.type).replace(/^[✓✕]\s*/, ''); }
 function geoPunchMarker(p, radius) {
   const c = geoColor(p), isIn = p.type === 'IN';
-  return L.circleMarker([p.geo_lat, p.geo_lng], { radius: radius || 8, color: c, fillColor: c, fillOpacity: isIn ? 0.95 : 0.15, weight: isIn ? 2 : 3 });
+  return L.circleMarker([p.geo_lat, p.geo_lng], { radius: (radius || 8) + (isIn ? 0 : 4), color: c, fillColor: c, fillOpacity: isIn ? 0.95 : 0.15, weight: isIn ? 2 : 3 });
 }
 function geoLegendHtml(withAccuracy) {
   const d = (c, ring) => `<span class="dot${ring ? ' ring' : ''}" style="background:${c};border-color:${c}"></span>`;
