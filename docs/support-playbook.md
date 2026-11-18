@@ -37,6 +37,42 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
 - If a ticket reveals something this playbook does not cover (a new cause, a feature question, a
   trap), add a short "Playbook suggestion:" line to the summary email so it can be added.
 
+## What changed on 2026-11-17 and 2026-11-18 (read first: new releases, symptoms and what to do)
+
+Many changes shipped in two days while customers were using the product. Nothing here is known to be broken, but a ticket
+that matches one of the symptoms below is probably about one of these changes. **If a ticket could be caused by one of
+them, put "POSSIBLE REGRESSION: <the change>" as the first line of that ticket's entry in the digest and quote what the
+customer saw**, so the owner can look the same day. A customer or employee who cannot clock in or out is CRITICAL as always: follow
+the CRITICAL steps first. Never edit punch rows to fix these (see the ground rules); draft the reply and put the exact row in
+the summary.
+
+| What the customer says | What changed / most likely cause | What to do |
+|---|---|---|
+| "Where is Phone clock-in?" / "I do not see the Phone column" | Since 2026-11-17 phone clock-in is hidden until it is in use (company Remote Access switch on, someone granted it, or the owner chose phones/both in the first-run question) | Not on for them yet. Path: profile menu, Company Info, Remote Access, "Set up phone clock-in". See "Phone clock-in: the quick way" |
+| "Why do I have Phone clock-in? Can my employees punch from their phones? I do not want that" | Same change: the owner no longer sees it unless it is in use | No: nothing lets anyone punch from a phone unless the owner switches it on AND grants it person by person. Reassure, no action needed |
+| Manager: "Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on." | Only owners and co-admins turn the company switch on; managers can invite and grant at their own sites once it is on | Expected message, not a bug. The owner turns it on |
+| Several companies on one account: an employee shows "Portal only" although phone clock-in is on | Each person is judged by their own company's switch; the window manages one company and names it at the top | Open Phone clock-in for that company (Company Info of that company, "Set up phone clock-in") |
+| Invitation arrived in the wrong language | The admin picks the language when sending (Email language: English / Francais, default = the admin's screen language, remembered in that browser). The set-password page has its own EN/FR switch | Resend the invitation with the right language. An employee who already activated must be revoked first (Edit employee, Revoke Access), then invited again |
+| "Invited" but no email arrived | The invitation row is now removed/restored when the email fails to send, so this should not appear any more. Spam folders and the hourly email limit are the usual causes | Check the spam folder, then the employee's email address; if the screen says "too many emails", wait an hour |
+| Portal on a phone: "Could not record punch", still shows Clocked in, then "You are not clocked in yet" (before 2026-11-18 evening) | A weak connection lost the server's reply, the punch WAS stored (found 2026-11-18). Fixed in cache v101: the portal retries safely and re-checks | Tell the employee to reload the portal: the punch is almost always there. Check Activity first; add a missed punch only if it is really absent |
+| Portal on a phone after the fix: "No connection. Your punch was NOT recorded" | Nothing reached the server | Retry when the signal is back; if it persists, take the exact time and report it |
+| Tablet: "Error saving punch: Failed to fetch" | Weak Wi-Fi; before cache v103 the punch could be stored with the reply lost | Check Activity: if the punch is there do not add another one. Tap again only if it is absent |
+| Activity "Map" button / colours on the punch map (new 2026-11-18) | Map shows located punches in the current filter, green inside the geofence, orange outside, grey no position; filled dot = IN, ring = OUT; the pin on a row opens one punch with its GPS accuracy and distance | A punch without a dot had no position: a fixed kiosk tablet does not save one, and a phone that refused location has none. It is not an error |
+| "Blocked / outside the geofence while standing at the door" | Phones are often 10 to 30 m off indoors; a 25 m radius in Strict mode turns people away (the editor now advises 50 to 100 m and warns under 50 m in Strict) | Edit the site, Set Geofence, raise the radius to 50 to 100 m; offer Lenient if they only want a warning |
+| Homepage: "the login button disappeared" (phone or half-width window) | The links moved into the menu button (three lines) at the top right | Open that menu: Admin Login and Employee Portal are inside |
+| A table is cut off or scrolls sideways at a mid-width window; employee portal header looks different on a phone | Layout fixes of 2026-11-17: tables scroll sideways, the portal header shrinks | Expected; ask for a screenshot and the window width if something is really unreachable |
+| Something looks like the old version | Tablets and installed pages update only when the service worker version changes (current: v103 on 2026-11-18); a page left open can be a day behind | Reload (hard refresh) or close and reopen the app; on a kiosk tablet reload the page once |
+
+**Not yet seen with real customers** (so a ticket here is more likely to be a real bug, flag it): an invitation email that
+fails to send, a French invitation email, an account with several companies using phone clock-in, a manager signed in to the
+phone clock-in screens, and a tablet on very bad Wi-Fi. Also new and used by nobody yet: the Activity crew map on busy
+accounts (it draws at most the latest 300 located punches).
+
+Quick checks the owner's tools can do for a suspected regression: the punch list for that employee (is the punch there?),
+two punches of the same type in a row, and the audit log events plan_write_blocked, role_write_blocked, cross_tenant_write_blocked.
+As of 2026-11-18 evening none of these showed anything unusual after the releases, and no same-type-in-a-row punches existed in
+the previous 48 hours.
+
 ## How punching works (the usual source of confusion)
 
 - The kiosk is a shared tablet, phone or PC set up per site (Sites, Kiosk Shortcut). Staff tap their
@@ -179,7 +215,7 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   dot = IN, ring = OUT; tap a dot for name, time, status and distance. The pin on a row opens that single punch with a light
   circle for the GPS accuracy, a dashed line to the site with the distance, and an IN/OUT + time label. The radius editor now
   advises 50 to 100 m (phones are often 10 to 30 m off indoors) and warns under 50 m in Strict mode; site cards show radius and
-  mode, e.g. "75 m · Strict". A punch with no dot on the map had no position (grey status), tablets only save one when the site has a geofence.
+  mode, e.g. "75 m · Strict". A punch with no dot on the map had no position (grey status), a fixed kiosk tablet does not save one.
 - Geofence: each site can have a location and a radius of 25 to 500 m, in Lenient mode (the punch goes
   through with a warning if GPS is unavailable) or Strict mode (blocked outside the radius or without
   GPS). The kiosk blocks a punch outside the radius. Portal punches only block in Strict mode.
