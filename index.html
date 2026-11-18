@@ -997,6 +997,18 @@ body.land-menu-open .land-sticky-cta{display:none;}
 .geo-mode-card.active .geo-mode-title{color:var(--accent);}
 .geo-mode-desc{font-size:11px;color:var(--text3);line-height:1.4;}
 #geoMapContainer .leaflet-container{background:#0f1117;}
+/* Punch map and crew map: bigger window, labels on the map, full screen on a phone */
+#punchMapModal .modal,#crewMapModal .modal{max-width:860px;width:100%;}
+#punchMapContainer,#crewMapContainer{height:min(62vh,520px);min-height:300px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);}
+.map-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--text3);align-items:center;}
+.map-legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
+.map-legend .ring{background:transparent!important;border:2px solid;box-sizing:border-box;}
+.leaflet-tooltip.geo-lbl{font-family:inherit;font-size:12px;font-weight:600;padding:3px 7px;}
+.leaflet-tooltip.geo-dist{font-family:inherit;font-size:11.5px;font-weight:700;padding:2px 6px;background:#fff;color:#1f2937;border:1px solid #d1d5db;}
+@media(max-width:600px){
+  #punchMapModal .modal,#crewMapModal .modal{max-width:none;width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;display:flex;flex-direction:column;}
+  #punchMapContainer,#crewMapContainer{flex:1 1 auto;height:auto;min-height:260px;}
+}
 /* ── KIOSK SHORTCUT ── */
 .kiosk-url-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:13px 16px;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);word-break:break-all;margin:12px 0;cursor:pointer;transition:border-color .15s;user-select:all;}
 .kiosk-url-box:hover{border-color:var(--accent);}
@@ -3276,6 +3288,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div><label data-i18n="common.endDate">End Date</label><input type="date" id="actEnd" onchange="actDatesEdited()"></div>
     <div class="filter-action">
       <button class="btn-primary" onclick="loadActivityPage()" data-i18n="common.filter">Filter</button>
+      <button class="btn-secondary" id="actMapBtn" onclick="openCrewMap()" style="margin-left:6px"><svg class="ic" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><use href="#i-map-pin"/></svg><span data-i18n="crewMap.btn">Map</span></button>
     </div>
   </div>
   <div class="stats-grid" id="activityStats"></div>
@@ -3992,6 +4005,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           </div>
           <input type="range" id="geoRadiusSlider" class="geo-slider" min="25" max="500" step="25" value="100"
                  oninput="onGeoRadiusChange(this.value)">
+          <div id="geoRadiusHint" style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.5" data-i18n="geo.radiusHint">50 to 100 m works for most workplaces. Phones are often 10 to 30 m off indoors, so a very small radius can turn people away who are standing at the door.</div>
+          <div id="geoRadiusWarn" style="display:none;font-size:11.5px;color:var(--amber,#d97706);margin-top:4px;line-height:1.5" data-i18n="geo.radiusSmallWarn">With Strict mode, a radius under 50 m can block people who are really on site.</div>
         </div>
 
         <!-- Mode cards -->
@@ -4324,16 +4339,26 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
      the circle and retune the radius accordingly (mobile app punches; the kiosk's own geo
      capture uses this same view). -->
 <div class="modal-overlay" id="punchMapModal">
-  <div class="modal" style="max-width:520px">
+  <div class="modal">
     <h3 data-i18n="punchMap.title">Punch Location</h3>
     <div id="punchMapSummary" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
-    <div id="punchMapContainer" style="height:280px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border)"></div>
-    <div style="display:flex;gap:14px;margin-top:10px;font-size:12px;color:var(--text3)">
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#4f8ef7;margin-right:5px"></span><span data-i18n="punchMap.site">Site (registered)</span></span>
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:5px"></span><span data-i18n="punchMap.punch">Punch location</span></span>
-    </div>
+    <div id="punchMapContainer"></div>
+    <div class="map-legend" id="punchMapLegend"></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="destroyPunchMap();closeModal('punchMapModal')" data-i18n="common.close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREW MAP: every punch with a location in the Activity filter, on one map -->
+<div class="modal-overlay" id="crewMapModal">
+  <div class="modal">
+    <h3 data-i18n="crewMap.title">Where punches happened</h3>
+    <div id="crewMapSummary" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
+    <div id="crewMapContainer"></div>
+    <div class="map-legend" id="crewMapLegend"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="destroyCrewMap();closeModal('crewMapModal')" data-i18n="common.close">Close</button>
     </div>
   </div>
 </div>
@@ -9066,6 +9091,7 @@ function resetSiteGeoFields(site) {
   _applyGeoLock((Ctx.get()||{}).co ? C.companies.find(c=>c.id===Ctx.get().co.id) || Ctx.get().co : null);
   destroyGeoMap();
   _selectedGeoMode = site?.geo_strict ? 'strict' : 'lenient';
+  setTimeout(geoRadiusWarnSync, 0);
 
   const section = document.getElementById('geoExpandedSection');
   const arrow   = document.getElementById('geoCollapseArrow');
@@ -9152,13 +9178,23 @@ function setGeoPin(lat, lng, center = true) {
   if (center) _geoMap.setView([lat, lng], 16);
 }
 
+function geoRadiusWarnSync() {
+  const w = document.getElementById('geoRadiusWarn'); if (!w) return;
+  const r = parseInt((document.getElementById('geoRadiusSlider') || {}).value) || 100;
+  w.style.display = (_selectedGeoMode === 'strict' && r < 50) ? '' : 'none';
+}
 function onGeoRadiusChange(value) {
   document.getElementById('geoRadiusLabel').textContent = value + 'm';
   if (_geoCircle) _geoCircle.setRadius(parseInt(value));
+  geoRadiusWarnSync();
+}
+function geoBadgeLabel(s) {
+  return (s.geo_radius_m || 25) + ' m · ' + (s.geo_strict ? (t('geo.strict') || 'Strict') : (t('geo.lenient') || 'Lenient'));
 }
 
 function selectGeoMode(mode) {
   _selectedGeoMode = mode;
+  geoRadiusWarnSync();
   const lEl = document.getElementById('geoModeLenient');
   const sEl = document.getElementById('geoModeStrict');
   if (lEl) lEl.classList.toggle('active', mode === 'lenient');
@@ -9194,6 +9230,38 @@ function destroyPunchMap() {
   if (_punchMap) { _punchMap.remove(); _punchMap = null; }
 }
 
+// ── Maps of where people punched ────────────────────────────────────────────────────────────
+// Colour says whether the punch was where it should be: green inside the geofence, orange outside, grey when the
+// phone gave no position. A filled dot is an IN, a ring is an OUT.
+const GEO_COLORS = { ok: '#22c55e', outside: '#f59e0b', unavailable: '#94a3b8', skipped: '#22c55e' };
+function geoColor(p) { return GEO_COLORS[p.geo_status] || GEO_COLORS.ok; }
+function geoTypeWord(p) { return String(t(p.type === 'IN' ? 'punch.in' : 'punch.out') || p.type).replace(/^[✓✕]\s*/, ''); }
+function geoPunchMarker(p, radius) {
+  const c = geoColor(p), isIn = p.type === 'IN';
+  return L.circleMarker([p.geo_lat, p.geo_lng], { radius: radius || 8, color: c, fillColor: c, fillOpacity: isIn ? 0.95 : 0.15, weight: isIn ? 2 : 3 });
+}
+function geoLegendHtml(withAccuracy) {
+  const d = (c, ring) => `<span class="dot${ring ? ' ring' : ''}" style="background:${c};border-color:${c}"></span>`;
+  return `<span>${d('#4f8ef7')}${esc(t('punchMap.site') || 'Site (registered)')}</span>` +
+    `<span>${d(GEO_COLORS.ok)}${esc(t('punchMap.statusOk') || 'Inside the geofence')}</span>` +
+    `<span>${d(GEO_COLORS.outside)}${esc(t('punchMap.statusOutside') || 'Outside the geofence')}</span>` +
+    `<span>${d(GEO_COLORS.unavailable)}${esc(t('punchMap.statusUnavailable') || 'Location unavailable when punched')}</span>` +
+    `<span>${d('#6b7280')}${esc(t('punchMap.legendIn') || 'Filled = IN')}</span>` +
+    `<span>${d('#6b7280', true)}${esc(t('punchMap.legendOut') || 'Ring = OUT')}</span>` +
+    (withAccuracy ? `<span>${esc(t('punchMap.legendAccuracy') || 'Light circle = GPS accuracy')}</span>` : '');
+}
+function geoSiteLayers(map, site) {
+  if (!site || site.geo_lat == null || site.geo_lng == null) return null;
+  L.circle([site.geo_lat, site.geo_lng], { radius: site.geo_radius_m || 25, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.12, weight: 2 }).addTo(map);
+  return L.circleMarker([site.geo_lat, site.geo_lng], { radius: 6, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 1, weight: 2 })
+    .addTo(map).bindTooltip(esc(site.name || '') + (site.geo_radius_m ? ' · ' + (site.geo_radius_m) + ' m' : ''), { direction: 'top' });
+}
+function geoBaseMap(el, center, zoom) {
+  const m = L.map(el).setView(center, zoom);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(m);
+  return m;
+}
+
 function openPunchLocationMap(punchId) {
   const p = C.punches.find(x => x.id === punchId);
   if (!p || p.geo_lat == null || p.geo_lng == null) return;
@@ -9208,38 +9276,73 @@ function openPunchLocationMap(punchId) {
   const distanceLine = (p.geo_distance_m != null)
     ? (t('punchMap.distance') || 'Distance from site: {m} m').replace('{m}', Math.round(p.geo_distance_m))
     : '';
+  const acc = Number(p.geo_accuracy_m) > 0 ? Math.round(Number(p.geo_accuracy_m)) : 0;
+  const accLine = acc ? (t('punchMap.accuracy') || 'GPS accuracy: ±{m} m').replace('{m}', acc) : '';
   document.getElementById('punchMapSummary').innerHTML =
-    `<strong>${esc(p.emp_name || '')}</strong> — ${esc(p.punch_date)} ${esc(String(p.punch_time || '').slice(0, 5))}<br>` +
-    `${esc(statusLabel)}${distanceLine ? ' · ' + esc(distanceLine) : ''}`;
+    `<strong>${esc(p.emp_name || '')}</strong> — ${esc(geoTypeWord(p))} ${esc(p.punch_date)} ${esc(String(p.punch_time || '').slice(0, 5))}<br>` +
+    `<span style="color:${geoColor(p)};font-weight:600">${esc(statusLabel)}</span>${distanceLine ? ' · ' + esc(distanceLine) : ''}${accLine ? ' · ' + esc(accLine) : ''}`;
+  document.getElementById('punchMapLegend').innerHTML = geoLegendHtml(!!acc);
 
   openModal('punchMapModal');
   destroyPunchMap();
   // The modal must already be visible (display:flex) before Leaflet measures the container,
   // or it initializes at 0×0 and the map never renders — a timeout hands it one paint frame.
   setTimeout(() => {
-    const container = document.getElementById('punchMapContainer');
-    _punchMap = L.map(container).setView([p.geo_lat, p.geo_lng], 17);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors', maxZoom: 19,
-    }).addTo(_punchMap);
-
+    _punchMap = geoBaseMap(document.getElementById('punchMapContainer'), [p.geo_lat, p.geo_lng], 17);
     const bounds = [[p.geo_lat, p.geo_lng]];
-    if (site && site.geo_lat != null && site.geo_lng != null) {
-      L.circle([site.geo_lat, site.geo_lng], {
-        radius: site.geo_radius_m || 25, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 0.12, weight: 2,
-      }).addTo(_punchMap);
-      L.circleMarker([site.geo_lat, site.geo_lng], {
-        radius: 6, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 1, weight: 2,
-      }).addTo(_punchMap).bindTooltip(t('punchMap.site') || 'Site (registered)');
+    const hasSite = site && site.geo_lat != null && site.geo_lng != null;
+    if (hasSite) {
+      geoSiteLayers(_punchMap, site);
       bounds.push([site.geo_lat, site.geo_lng]);
+      // dashed line from the site to where the punch happened, with the distance written on it
+      const line = L.polyline([[site.geo_lat, site.geo_lng], [p.geo_lat, p.geo_lng]], { color: geoColor(p), weight: 2, dashArray: '6 6', opacity: 0.9 }).addTo(_punchMap);
+      if (p.geo_distance_m != null) line.bindTooltip(Math.round(p.geo_distance_m) + ' m', { permanent: true, direction: 'center', className: 'geo-dist' });
     }
-    L.circleMarker([p.geo_lat, p.geo_lng], {
-      radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1, weight: 2,
-    }).addTo(_punchMap).bindTooltip(t('punchMap.punch') || 'Punch location');
+    if (acc) L.circle([p.geo_lat, p.geo_lng], { radius: acc, color: geoColor(p), fillColor: geoColor(p), fillOpacity: 0.1, weight: 1 }).addTo(_punchMap);
+    geoPunchMarker(p, 9).addTo(_punchMap)
+      .bindTooltip(esc(geoTypeWord(p) + ' ' + String(p.punch_time || '').slice(0, 5) + ' · ' + (p.emp_name || '')), { permanent: true, direction: 'top', offset: [0, -8], className: 'geo-lbl' });
 
-    if (bounds.length > 1) _punchMap.fitBounds(bounds, { padding: [30, 30] });
+    if (bounds.length > 1) _punchMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
     _punchMap.invalidateSize();
   }, 50);
+}
+
+// Crew map: all punches with a location in the Activity filter. Capped so the map stays readable and fast.
+let _crewMap = null;
+const CREW_MAP_MAX = 300;
+function destroyCrewMap() { if (_crewMap) { _crewMap.remove(); _crewMap = null; } }
+function openCrewMap() {
+  const located = (_actFiltered || []).filter(p => p.geo_lat != null && p.geo_lng != null)
+    .sort((a, b) => new Date(b.punched_at) - new Date(a.punched_at));
+  if (!located.length) { showToast(t('crewMap.none') || 'No punches with a location in this filter. Phone punches and tablets with a geofence save one.', 'info'); return; }
+  const shown = located.slice(0, CREW_MAP_MAX);
+  const outside = shown.filter(p => p.geo_status === 'outside').length;
+  let sum = (t('crewMap.summary') || '{n} punches with a location, {o} outside the geofence.').replace('{n}', shown.length).replace('{o}', outside);
+  if (located.length > shown.length) sum += ' ' + (t('crewMap.capped') || 'Showing the latest {n}; narrow the dates or site to see the rest.').replace('{n}', CREW_MAP_MAX);
+  document.getElementById('crewMapSummary').textContent = sum;
+  document.getElementById('crewMapLegend').innerHTML = geoLegendHtml(false);
+  openModal('crewMapModal');
+  destroyCrewMap();
+  setTimeout(() => {
+    _crewMap = geoBaseMap(document.getElementById('crewMapContainer'), [shown[0].geo_lat, shown[0].geo_lng], 15);
+    const bounds = [];
+    const siteIds = [...new Set(shown.map(p => p.site_id))];
+    siteIds.forEach(id => {
+      const site = C.sites.find(x => x.id === id);
+      if (geoSiteLayers(_crewMap, site)) bounds.push([site.geo_lat, site.geo_lng]);
+    });
+    shown.slice().reverse().forEach(p => {   // oldest first, so the newest ends up on top
+      const when = esc(String(p.punch_date || '') + ' ' + String(p.punch_time || '').slice(0, 5));
+      const st = { ok: t('punchMap.statusOk') || 'Inside the geofence', outside: t('punchMap.statusOutside') || 'Outside the geofence',
+        unavailable: t('punchMap.statusUnavailable') || 'Location unavailable when punched', skipped: t('punchMap.statusSkipped') || 'No geofence configured for this site' }[p.geo_status] || '';
+      const dist = p.geo_distance_m != null ? ' · ' + esc((t('punchMap.distance') || 'Distance from site: {m} m').replace('{m}', Math.round(p.geo_distance_m))) : '';
+      geoPunchMarker(p, 7).addTo(_crewMap).bindPopup(
+        `<strong>${esc(p.emp_name || '')}</strong><br>${esc(geoTypeWord(p))} · ${when}<br><span style="color:${geoColor(p)};font-weight:600">${esc(st)}</span>${dist}`);
+      bounds.push([p.geo_lat, p.geo_lng]);
+    });
+    if (bounds.length > 1) _crewMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 });
+    _crewMap.invalidateSize();
+  }, 60);
 }
 
 async function searchGeoAddress() {
@@ -10381,7 +10484,7 @@ async function renderSitesAdmin(){
     const co=C.companies.find(c=>c.id===s.company_id);
     const hasGeo=!!(s.geo_lat&&s.geo_lng);
     const geoBadge=hasGeo
-      ?`<span class="geo-status-badge geo-ok" title="${esc(t('geo.activeTitle').replace('{m}',s.geo_radius_m||25))}"><svg class="ic"><use href="#i-pin"/></svg>${s.geo_radius_m||25}m</span>`
+      ?`<span class="geo-status-badge geo-ok" title="${esc(t('geo.activeTitle').replace('{m}',s.geo_radius_m||25))}"><svg class="ic"><use href="#i-pin"/></svg>${esc(geoBadgeLabel(s))}</span>`
       :`<span class="geo-status-badge geo-none" title="${esc(t('geo.noneSet'))}"><svg class="ic"><use href="#i-pin"/></svg>${esc(t('geo.none'))}</span>`;
     const mgrIds=allMgrSites.filter(r=>r.site_id===s.id).map(r=>r.manager_id);
     const siteMgrs=managers.filter(a=>mgrIds.includes(a.id));
@@ -12162,7 +12265,7 @@ async function loadSitesPage(){
     const activeEmp=C.employees.filter(e=>e.site_id===s.id&&e.active).length;
     const hasGeo=!!(s.geo_lat&&s.geo_lng);
     const geoBadge=hasGeo
-      ?`<span class="geo-status-badge geo-ok" title="${esc(t('geo.activeTitle').replace('{m}',s.geo_radius_m||25))}"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${s.geo_radius_m||25}m</span>`
+      ?`<span class="geo-status-badge geo-ok" title="${esc(t('geo.activeTitle').replace('{m}',s.geo_radius_m||25))}"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${esc(geoBadgeLabel(s))}</span>`
       :`<span class="geo-status-badge geo-none" title="${esc(t('geo.noneSet'))}"><svg class="ic" style="width:11px;height:11px;margin-right:3px;vertical-align:-1px"><use href="#i-map-pin"/></svg>${esc(t('geo.none'))}</span>`;
     const payrollLine=co?`${freqLabel[co.payroll_frequency]||'—'} · ${weekLabel[co.week_start]||'—'}`:'';
     const companyLine=superAdmin&&co?`<div class="meta" style="margin-bottom:3px;color:var(--accent)">${esc(co.name)}</div>`:'';
@@ -13555,6 +13658,7 @@ function punchMapBtn(p){
 // where a period starts and ends. "All companies" has no single payroll setting, so it falls back
 // to the first company, as Reports does.
 let _actPeriodOffset=0;
+let _actFiltered=[];
 function _actPayrollCompany(){
   const coId=document.getElementById('actCoFilter')?.value;
   return (coId&&coId!=='all')?C.companies.find(c=>c.id===coId):C.companies[0];
@@ -13649,6 +13753,7 @@ async function loadActivityPage(){
   if(empId!=='all')all=all.filter(p=>p.emp_id===empId);
   const labelF=document.getElementById('actLabelFilter')?.value||'all';
   if(labelF!=='all')all=all.filter(p=>labelF==='__none__'?!p.label_id:p.label_id===labelF);
+  _actFiltered=all;   // what the Activity "Map" button shows
   const today=new Date().toLocaleDateString('en-CA');
   const todayN=all.filter(p=>p.punch_date===today).length;
   const scopeEmps=(coId==='all'?C.employees:C.employees.filter(e=>e.company_id===coId)).filter(e=>e.active);
@@ -18160,7 +18265,7 @@ en:{
 'activity.mobile':'MOBILE','activity.viewLocation':'View location','activity.break':'BREAK',
 'punchMap.title':'Punch Location','punchMap.site':'Site (registered)','punchMap.punch':'Punch location',
 'punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
-'punchMap.distance':'Distance from site: {m} m',
+'punchMap.distance':'Distance from site: {m} m','geo.radiusHint':'50 to 100 m works for most workplaces. Phones are often 10 to 30 m off indoors, so a very small radius can turn people away who are standing at the door.','geo.radiusSmallWarn':'With Strict mode, a radius under 50 m can block people who are really on site.','punchMap.accuracy':'GPS accuracy: ±{m} m','punchMap.legendIn':'Filled = IN','punchMap.legendOut':'Ring = OUT','punchMap.legendAccuracy':'Light circle = GPS accuracy','crewMap.btn':'Map','crewMap.title':'Where punches happened','crewMap.none':'No punches with a location in this filter. Phone punches and tablets with a geofence save one.','crewMap.summary':'{n} punches with a location, {o} outside the geofence.','crewMap.capped':'Showing the latest {n}; narrow the dates or site to see the rest.',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
 'sites.title':'Sites','sites.subtitle':'Manage your work locations','sites.noSites':'No sites yet. Add your first site.',
@@ -18426,7 +18531,7 @@ en:{
 'help.s5title':'Save a Kiosk Shortcut (Recommended)',
 'help.s5desc':'In <strong>Admin → Sites</strong>, click <strong>Kiosk Shortcut</strong> on any site card. You can: (1) <strong>Install the PunchClock app</strong> as a desktop/home screen icon — employees tap it and land directly on that site\'s punch page; (2) <strong>Copy the kiosk URL</strong> and bookmark it or save it as a desktop shortcut; (3) <strong>Scan the QR code</strong> with a tablet or phone. The shortcut works without any admin login — employees just tap and punch. Set it up once, and you never have to log back in just to restore the punch page.',
 'help.s6title':'Set Up Geofencing (Optional)',
-'help.s6desc':'Geofencing prevents employees from clocking in/out when they are not physically at the site. To enable it: (1) Go to <strong>Admin → Sites</strong> and click <strong>Edit</strong> on a site. (2) Scroll to the <strong>Geofence</strong> section and toggle it ON. (3) Click <strong>"Use my current location"</strong> while standing at the site — this sets the GPS centre point. (4) Adjust the <strong>radius slider</strong> (25m for a small shop; 100–200m for a warehouse). (5) Save. From that moment, every punch attempt checks GPS silently. Employees outside the boundary see a clear error showing how far away they are. Punches inside go through instantly. Each punch record stores the GPS coordinates for your audit trail.',
+'help.s6desc':'Geofencing prevents employees from clocking in/out when they are not physically at the site. To enable it: (1) Go to <strong>Admin → Sites</strong> and click <strong>Edit</strong> on a site. (2) Scroll to the <strong>Geofence</strong> section and toggle it ON. (3) Click <strong>"Use my current location"</strong> while standing at the site — this sets the GPS centre point. (4) Adjust the <strong>radius slider</strong> (50–100m suits most workplaces, because phones are often 10–30m off indoors; 100–200m for a warehouse). (5) Save. From that moment, every punch attempt checks GPS silently. Employees outside the boundary see a clear error showing how far away they are. Punches inside go through instantly. Each punch record stores the GPS coordinates for your audit trail.',
 'help.s7title':'Device Token — Extra Security Layer (Optional)',
 'help.s7desc':'If you want the strongest protection, enable <strong>"Require registered device token"</strong> in the Geofence settings for a site. Then open the <strong>Kiosk Shortcut</strong> modal for that site on each authorised kiosk device and click <strong>"Register This Device"</strong>. After that, punches only work on devices that have been explicitly registered — even someone standing at the right location on an unregistered phone will be blocked. To remove a device, open the Kiosk Shortcut modal and click <strong>"Revoke"</strong>.',
 'help.s8title':'Generate Reports',
@@ -18434,7 +18539,7 @@ en:{
 'help.s9title':'Automated Email Reports',
 'help.s9desc':'At the end of each pay period, employees with a registered email automatically receive a PDF summary of their hours. The period is determined by the payroll frequency set in your company settings (weekly, bi-weekly, or monthly).',
 'help.s10title':'Audit Logs & Manual Corrections',
-'help.s10desc':'The <strong>Activity</strong> tab shows every clock-in and clock-out event, including GPS status for geofenced sites. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
+'help.s10desc':'The <strong>Activity</strong> tab shows every clock-in and clock-out event, including GPS status for geofenced sites. Press <strong>Map</strong> above the list to see where the punches in your filter happened, coloured green inside the geofence and orange outside; the pin on a row opens that one punch with its GPS accuracy and its distance from the site. You can edit any punch manually — useful for forgotten clock-outs, early departures, or corrections after the fact.',
 'help.s11title':'Co-Admins & Team Access',
 'help.s11desc':'In <strong>Admin → Admins</strong>, invite co-admins or managers to help manage your account. Co-admins have full access; managers are limited to their assigned sites. Extra seats are $4.90/mo.',
 'land.howTitle':'How It Works','land.howSub':'Up and running in under 10 minutes.',
@@ -19262,7 +19367,7 @@ fr:{
 'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement','activity.break':'PAUSE',
 'punchMap.title':'Emplacement du pointage','punchMap.site':'Site (enregistré)','punchMap.punch':'Emplacement du pointage',
 'punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
-'punchMap.distance':'Distance du site : {m} m',
+'punchMap.distance':'Distance du site : {m} m','geo.radiusHint':'De 50 à 100 m convient à la plupart des lieux de travail. Un téléphone se trompe souvent de 10 à 30 m à l’intérieur : un rayon très petit peut refuser quelqu’un qui est à la porte.','geo.radiusSmallWarn':'En mode Strict, un rayon sous 50 m peut bloquer des personnes qui sont vraiment sur place.','punchMap.accuracy':'Précision GPS : ±{m} m','punchMap.legendIn':'Plein = ENTRÉE','punchMap.legendOut':'Anneau = SORTIE','punchMap.legendAccuracy':'Cercle pâle = précision GPS','crewMap.btn':'Carte','crewMap.title':'Où les pointages ont eu lieu','crewMap.none':'Aucun pointage avec position pour ce filtre. Les pointages par téléphone et les tablettes avec une zone en enregistrent une.','crewMap.summary':'{n} pointages avec position, {o} hors de la zone.','crewMap.capped':'Les {n} plus récents sont affichés; réduisez les dates ou le site pour voir le reste.',
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
 'sites.title':'Sites','sites.subtitle':'Gérer vos emplacements','sites.noSites':'Aucun site. Ajoutez votre premier site.',
@@ -19526,7 +19631,7 @@ fr:{
 'help.s5title':'Enregistrer un raccourci kiosque (recommandé)',
 'help.s5desc':'Dans <strong>Admin → Sites</strong>, cliquez sur <strong>Raccourci kiosque</strong> sur la fiche d\'un site. Vous pouvez : (1) <strong>Installer l\'app PunchClock</strong> comme icône sur le bureau/écran d\'accueil ; (2) <strong>Copier l\'URL kiosque</strong> et la sauvegarder en favori ou raccourci bureau ; (3) <strong>Scanner le code QR</strong> avec une tablette ou un téléphone. Le raccourci fonctionne sans connexion admin. Configurez une seule fois, et vous n\'aurez plus jamais besoin de vous reconnecter pour restaurer la page de pointage.',
 'help.s6title':'Configurer le géorepérage (optionnel)',
-'help.s6desc':'Le géorepérage empêche les employés de pointer lorsqu\'ils ne sont pas physiquement sur le site. Pour l\'activer : (1) Allez dans <strong>Admin → Sites</strong> et cliquez <strong>Modifier</strong>. (2) Activez la section <strong>Géorepérage</strong>. (3) Cliquez <strong>«Utiliser ma position actuelle»</strong> en étant sur place. (4) Ajustez le rayon (25m pour un petit commerce ; 100–200m pour un entrepôt). (5) Sauvegardez. Chaque pointage vérifie le GPS silencieusement. Les employés hors zone voient leur distance exacte. Les coordonnées GPS sont enregistrées dans chaque pointage pour l\'audit.',
+'help.s6desc':'Le géorepérage empêche les employés de pointer lorsqu\'ils ne sont pas physiquement sur le site. Pour l\'activer : (1) Allez dans <strong>Admin → Sites</strong> et cliquez <strong>Modifier</strong>. (2) Activez la section <strong>Géorepérage</strong>. (3) Cliquez <strong>«Utiliser ma position actuelle»</strong> en étant sur place. (4) Ajustez le rayon (50–100m convient à la plupart des lieux, car un téléphone se trompe souvent de 10–30m à l\'intérieur ; 100–200m pour un entrepôt). (5) Sauvegardez. Chaque pointage vérifie le GPS silencieusement. Les employés hors zone voient leur distance exacte. Les coordonnées GPS sont enregistrées dans chaque pointage pour l\'audit.',
 'help.s7title':'Jeton d\'appareil — sécurité supplémentaire (optionnel)',
 'help.s7desc':'Activez <strong>«Exiger un jeton d\'appareil»</strong> dans les paramètres du géorepérage d\'un site. Ouvrez ensuite <strong>Raccourci kiosque</strong> sur chaque appareil autorisé et cliquez <strong>«Enregistrer cet appareil»</strong>. Seuls les appareils enregistrés peuvent pointer — même quelqu\'un au bon endroit sur un téléphone non enregistré est bloqué. Pour supprimer un appareil, cliquez <strong>«Révoquer»</strong> dans le raccourci kiosque.',
 'help.s8title':'Générer des rapports',
@@ -19534,7 +19639,7 @@ fr:{
 'help.s9title':'Rapports par courriel automatiques',
 'help.s9desc':'À la fin de chaque période de paie, les employés avec un courriel enregistré reçoivent automatiquement un PDF de leurs heures. La période est déterminée par la fréquence de paie de votre compagnie.',
 'help.s10title':'Journaux d\'audit et corrections manuelles',
-'help.s10desc':'L\'onglet <strong>Activité</strong> affiche tous les pointages, y compris le statut GPS pour les sites géofencés. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections.',
+'help.s10desc':'L\'onglet <strong>Activité</strong> affiche tous les pointages, y compris le statut GPS pour les sites géofencés. Touchez <strong>Carte</strong> au-dessus de la liste pour voir où les pointages de votre filtre ont eu lieu, en vert à l\'intérieur de la zone et en orange à l\'extérieur ; l\'épingle d\'une ligne ouvre ce pointage avec la précision GPS et la distance du site. Vous pouvez modifier n\'importe quel pointage manuellement — utile pour les oublis, les départs anticipés ou les corrections.',
 'help.s11title':'Co-admins et accès d\'équipe',
 'help.s11desc':'Dans <strong>Admin → Admins</strong>, invitez des co-administrateurs ou des gestionnaires pour vous aider. Les co-admins ont un accès complet; les gestionnaires sont limités à leurs sites assignés. Sièges supplémentaires: 4,90$/mois.',
 'land.howTitle':'Comment ça marche','land.howSub':'Opérationnel en moins de 10 minutes.',

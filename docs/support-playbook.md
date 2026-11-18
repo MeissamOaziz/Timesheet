@@ -163,6 +163,12 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   invitation. Nothing to install: it runs in the phone's browser and can be saved to the home screen.
   By default an employee who refuses location access can still clock in (the punch has no pin and is
   flagged "no location" when the site has an address). To make location mandatory, use Strict mode.
+- Maps (2026-11-18): Activity has a **Map** button next to Filter that shows every punch with a location in the current filter
+  on one map (latest 300), with the site circles; dot colour = status (green inside, orange outside, grey no position), filled
+  dot = IN, ring = OUT; tap a dot for name, time, status and distance. The pin on a row opens that single punch with a light
+  circle for the GPS accuracy, a dashed line to the site with the distance, and an IN/OUT + time label. The radius editor now
+  advises 50 to 100 m (phones are often 10 to 30 m off indoors) and warns under 50 m in Strict mode; site cards show radius and
+  mode, e.g. "75 m · Strict". A punch with no dot on the map had no position (grey status), tablets only save one when the site has a geofence.
 - Geofence: each site can have a location and a radius of 25 to 500 m, in Lenient mode (the punch goes
   through with a warning if GPS is unavailable) or Strict mode (blocked outside the radius or without
   GPS). The kiosk blocks a punch outside the radius. Portal punches only block in Strict mode.
