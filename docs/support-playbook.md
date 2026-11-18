@@ -112,6 +112,23 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   checklist asks again.
 - It writes only settings that already existed, so every old way (Company Info, the employee's Edit window, the bulk
   buttons) still works and agrees with it.
+- **"N could not be sent" or "Stopped: the hourly limit on emails was reached"** (since 2026-11-17): an account can send
+  30 invitations and other one-off emails per hour (schedule emails have their own, higher limit). At the limit the window
+  stops, says why, and leaves the people it did not reach ticked; the bulk button says how many went out before it stopped.
+  Answer: wait an hour and press Send again, nothing is lost. The one person whose invitation was refused at the limit can
+  show **Invited** although no email arrived: press **Resend** in the Phone column. In the window, any other reason shown
+  after the count (for example a bad email address) concerns that person only and the others were still sent; the bulk
+  button on the Employees list stops at the first failure of any kind and says how many went out before it.
+- **Checked on the live site on 2026-11-17** with a real owner account and a test employee: the Phone column and the window
+  show the right state for every person, and an employee who "Can clock in" sees the Clock In button at the top of the
+  portal, is asked "What are you working on?" when work labels are on, and the punch appears in Activity with a Mobile tag.
+  When the phone or browser gives no location and the site is not Strict, the punch still goes through and is tagged
+  "No location". The invitation email itself and the map pin were not part of that check.
+- **Known display problem (found 2026-11-17, fix in progress):** in a window wider than a phone but narrower than about
+  1,250 px (a small laptop, a tablet held sideways, a half-width browser window) the right-hand columns of the Employees
+  list (Phone, Status, Actions with Edit) are cut off and cannot be scrolled to. Nothing is missing or lost. Until the fix
+  ships: make the window wider, or zoom the browser out (Ctrl and the minus key; Cmd and minus on a Mac). If a customer
+  says they "cannot find the Edit button" or "the Phone column is empty", ask about the window size first.
 
 ## GPS and geofencing (sales questions come up often)
 
