@@ -102,7 +102,7 @@ console.log('\n── signed-in header on a phone ──────────
 // sideways and Sign Out was cut off. Checked signed in, in both languages, with a short and a long name.
 for (const lang of ['en', 'fr']) {
   for (const name of ['Sam', 'Marie-Christine Tremblay-Beauchemin']) {
-    for (const W of [360, 375, 390, 430, 500, 700, 768, 1100]) {
+    for (const W of [320, 360, 375, 390, 430, 500, 700, 768, 1100]) {
       const c2 = await browser.newContext({ viewport: { width: W, height: 700 } });
       await c2.route(u => !u.href.startsWith(BASE) && !/fonts\./.test(u.href), r => r.abort());
       const pg = await c2.newPage();

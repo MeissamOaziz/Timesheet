@@ -97,6 +97,65 @@ ok('the clipped nav CTA is hidden', !mob.navCta);
 const overflow = await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1);
 ok('no horizontal scroll on a phone', overflow);
 
+console.log('\n── homepage header and menu, 320 px and up ─────');
+// The section links hide below 1240 px and on a phone so do Employee Portal, Admin Login and Get Started Free: a menu
+// button must hold them all, reachable in one or two taps, with nothing cut off and no sideways scroll (the landing
+// scrolls inside #landingPage, so that is the element to measure).
+{
+  const BASE = `http://127.0.0.1:${server.address().port}/index.html`;
+  const MENU = ['Features', 'Geofencing', 'Pricing', 'How It Works', 'FAQ', 'Contact', 'Employee Portal', 'Admin Login', 'Get Started Free'];
+  for (const lang of ['en', 'fr']) {
+    for (const W of [320, 375, 430, 768, 1024, 1240, 1280]) {
+      const ctx = await browser.newContext({ viewport: { width: W, height: 800 } });
+      await ctx.route(u => !u.href.startsWith(BASE.replace('/index.html', '')) && !/fonts\./.test(u.href), r => r.abort());
+      const pg = await ctx.newPage(); const e2 = []; pg.on('pageerror', e => e2.push(e.message));
+      await pg.goto(BASE, { waitUntil: 'load' }); await pg.waitForTimeout(400);
+      await pg.evaluate(l => setLang(l), lang);
+      const h = await pg.evaluate(() => {
+        const nav = document.querySelector('.land-nav');
+        const kids = [...nav.querySelectorAll('.land-logo, .land-nav-actions > *, .land-nav-sections')].filter(e => e.offsetParent !== null);
+        const cut = kids.filter(e => { const r = e.getBoundingClientRect(); return r.right > innerWidth + 0.5 || r.left < -0.5; }).map(e => e.className || e.tagName);
+        const btn = document.getElementById('landMenuBtn');
+        return { sideways: document.getElementById('landingPage').scrollWidth > innerWidth + 1, cut, btnShown: btn.offsetParent !== null, sections: document.querySelector('.land-nav-sections').offsetParent !== null };
+      });
+      const tag = `${lang}, ${W} px`;
+      ok(`${tag}: nothing in the header is cut off, and the page does not scroll sideways`, !h.sideways && h.cut.length === 0, JSON.stringify(h));
+      if (W <= 1240) {
+        ok(`${tag}: a menu button is there (the section links are hidden)`, h.btnShown && !h.sections);
+        await pg.click('#landMenuBtn'); await pg.waitForTimeout(200);
+        const m = await pg.evaluate(() => {
+          const items = [...document.querySelectorAll('#landMenu .lm-item')].filter(e => e.offsetParent !== null);
+          return { open: document.getElementById('landMenu').classList.contains('open'), n: items.length, bad: items.filter(e => { const r = e.getBoundingClientRect(); return r.right > innerWidth + 0.5 || r.left < -0.5; }).length,
+                   adminTop: Math.round((items.find(e => /onclick|Admin|Connexion/.test(e.outerHTML) && /navigate\('login'\)/.test(e.getAttribute('onclick') || '')) || { getBoundingClientRect: () => ({ top: 9999 }) }).getBoundingClientRect().top),
+                   expanded: document.getElementById('landMenuBtn').getAttribute('aria-expanded'), sticky: getComputedStyle(document.querySelector('.land-sticky-cta')).display };
+        });
+        ok(`${tag}: the menu opens with all ten entries fully on screen`, m.open && m.n === 10 && m.bad === 0 && m.expanded === 'true', JSON.stringify(m));
+        ok(`${tag}: Admin Login is in the menu, within the first screen`, m.adminTop < 700, String(m.adminTop));
+        ok(`${tag}: the bottom Start button steps aside while the menu is open`, m.sticky === 'none');
+        await pg.keyboard.press('Escape'); await pg.waitForTimeout(150);
+        ok(`${tag}: Escape closes it`, await pg.evaluate(() => !document.getElementById('landMenu').classList.contains('open')));
+        if (W === 320 || W === 1024) {
+          await pg.click('#landMenuBtn'); await pg.waitForTimeout(150);
+          await pg.click('#landMenu [onclick="landMenuGo(\'landingPricing\')"]'); await pg.waitForTimeout(600);
+          ok(`${tag}: choosing a section closes the menu and scrolls there`, await pg.evaluate(() => !document.getElementById('landMenu').classList.contains('open') && document.getElementById('landingPage').scrollTop > 300));
+          await pg.evaluate(() => { document.getElementById('landingPage').scrollTop = 0; });
+          await pg.click('#landMenuBtn'); await pg.waitForTimeout(150);
+          await pg.click('#landMenu [onclick*="navigate(\'login\')"]'); await pg.waitForTimeout(500);
+          ok(`${tag}: Admin Login from the menu opens the sign-in page`, await pg.evaluate(() => !document.getElementById('landingPage').classList.contains('show') && document.getElementById('page-login').classList.contains('active')));
+        }
+      } else {
+        ok(`${tag}: wide screens keep the full links and no menu button`, !h.btnShown && h.sections);
+      }
+      if (lang === 'fr' && W === 320) {
+        const labels = await pg.evaluate(() => [...document.querySelectorAll('#landMenu .lm-item')].map(e => e.innerText.trim()));
+        ok('fr: the menu is in French', labels.includes('Tarifs') && labels.includes('Portail employé') && labels.includes('Connexion Admin'), labels.join(' | '));
+      }
+      ok(`${tag}: no page errors`, e2.length === 0, e2.join(' / '));
+      await ctx.close();
+    }
+  }
+}
+
 ok('no page errors', errs.length===0, errs.join(' / '));
 await page.close();
 await browser.close(); server.close();

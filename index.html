@@ -598,7 +598,7 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
    itself. Padding comes from the spacing scale rather than being eyeballed per instance. */
 /* Pricing comparison. The flat-rate argument is the strongest thing this product has and it
    was buried in a trust chip; it gets a table because the point is arithmetic. */
-.cmp-wrap{max-width:660px;margin:26px auto 0;}
+.cmp-wrap{max-width:660px;margin:26px auto 0;overflow-x:auto;}
 .cmp-table{width:100%;border-collapse:collapse;font-size:14.5px;}
 .cmp-table th,.cmp-table td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--border);}
 .cmp-table th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;}
@@ -611,6 +611,13 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 @media(max-width:560px){
   .cmp-table th,.cmp-table td{padding:11px 8px;font-size:13px;}
   .cmp-table th:first-child,.cmp-table td:first-child{white-space:nowrap;}
+}
+/* On the narrowest phones (320 px, and French up to about 360) the table was wider than the screen and the whole
+   page scrolled sideways: let the labels wrap and the cells tighten; the box scrolls only as a last resort. */
+@media(max-width:400px){
+  .cmp-table th,.cmp-table td{padding:10px 5px;font-size:12.5px;}
+  .cmp-table th{font-size:10.5px;letter-spacing:.2px;}
+  .cmp-table th:first-child,.cmp-table td:first-child{white-space:normal;}
 }
 /* Sticky mobile CTA: the page is long, and on a phone the only call to action was at the very
    top and the very bottom. */
@@ -714,6 +721,23 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .land-wordmark{font-size:21px;font-weight:700;color:var(--text);letter-spacing:-.5px;white-space:nowrap;}
 .land-wordmark span{font-weight:500;color:var(--text2);}
 .land-nav-links{display:flex;gap:10px;align-items:center;min-width:0;}
+/* HOMEPAGE MENU. The six section links hide below 1240px and on a phone so do Employee Portal, Admin Login and Get
+   Started Free: this button holds all of them, with the theme switch. */
+.land-menu-btn{display:none;width:var(--h-md);height:var(--h-md);flex-shrink:0;box-sizing:border-box;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface2);color:var(--text2);cursor:pointer;align-items:center;justify-content:center;transition:all .15s;padding:0;}
+.land-menu-btn:hover,.land-menu-btn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent);}
+.land-menu-btn svg{width:18px;height:18px;}
+.land-menu{display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 14px 30px rgba(0,0,0,.18);padding:10px 14px 16px;flex-direction:column;gap:2px;max-height:calc(100vh - 64px);max-height:calc(100dvh - 64px);overflow-y:auto;}
+.land-menu.open{display:flex;}
+.lm-item{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:13px 12px;border:none;border-radius:var(--r-md);background:none;color:var(--text);font-family:inherit;font-size:15px;font-weight:500;text-align:left;text-decoration:none;cursor:pointer;}
+.lm-item:hover{background:var(--surface2);}
+.lm-item svg{width:18px;height:18px;flex-shrink:0;color:var(--text2);}
+.lm-sep{height:1px;background:var(--border);margin:8px 0;}
+.lm-cta{background:var(--accent);color:#fff!important;justify-content:center;font-weight:600;margin-top:6px;}
+.lm-cta:hover{background:var(--accent);opacity:.9;}
+@media(max-width:1240px){.land-menu-btn{display:inline-flex;}}
+@media(min-width:1241px){.land-menu{display:none!important;}}
+@media(max-width:380px){.land-wordmark{display:none;}}
+body.land-menu-open .land-sticky-cta{display:none;}
 /* overflow:hidden is the last-resort guard — without it the links overflowed their box and the
    theme toggle rendered on top of "Contact" instead of the links simply collapsing. */
 .land-nav-sections{display:flex;gap:2px;align-items:center;min-width:0;overflow:hidden;flex-wrap:wrap;max-height:34px;}
@@ -1133,6 +1157,12 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
   .features-grid{grid-template-columns:1fr !important;}
 }
 
+@media(max-width:360px){
+  /* The admin top bar at 320 px left the company picker two letters wide. */
+  .nav{padding:0 10px;gap:4px;}
+  .nav-right{gap:4px;}
+  .user-menu-caret{display:none;}
+}
 @media(max-width:480px){
   /* Narrowest phones: keep only the primary CTA and the language switch in the landing header. */
   .land-nav-actions .lnb-ghost{display:none!important;}
@@ -1400,7 +1430,21 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <a class="lnb lnb-ghost lnb-portal" href="employee.html" data-i18n="land.portalLogin">Employee Portal</a>
         <a class="lnb lnb-ghost" onclick="hideLanding();navigate('login')" data-i18n="nav.login">Login</a>
         <a class="lnb lnb-cta" onclick="hideLanding();navigate('register')" data-i18n="land.getStarted">Get Started Free</a>
+        <button class="land-menu-btn" id="landMenuBtn" type="button" onclick="toggleLandMenu()" aria-expanded="false" aria-controls="landMenu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
       </div>
+    </div>
+    <div class="land-menu" id="landMenu">
+      <button type="button" class="lm-item" onclick="landMenuGo('landingFeatures')" data-i18n="land.features">Features</button>
+      <button type="button" class="lm-item" onclick="landMenuGo('landingGeofencing')" data-i18n="land.geoNav">Geofencing</button>
+      <button type="button" class="lm-item" onclick="landMenuGo('landingPricing')" data-i18n="land.pricing">Pricing</button>
+      <button type="button" class="lm-item" onclick="landMenuGo('landingHowItWorks')" data-i18n="land.howNav">How It Works</button>
+      <button type="button" class="lm-item" onclick="landMenuGo('landingFAQ')" data-i18n="land.faqNav">FAQ</button>
+      <button type="button" class="lm-item" onclick="landMenuGo('landingContact')" data-i18n="land.contactNav">Contact</button>
+      <div class="lm-sep"></div>
+      <a class="lm-item" href="employee.html" data-i18n="land.portalLogin">Employee Portal</a>
+      <button type="button" class="lm-item" onclick="closeLandMenu();hideLanding();navigate('login')" data-i18n="nav.login">Admin Login</button>
+      <button type="button" class="lm-item" data-theme-toggle onclick="toggleTheme()"><svg class="tt-icon"><use href="#i-sun"/></svg><span data-i18n="land.themeNav">Light / dark mode</span></button>
+      <button type="button" class="lm-item lm-cta" onclick="closeLandMenu();hideLanding();navigate('register')" data-i18n="land.getStarted">Get Started Free</button>
     </div>
   </nav>
 
@@ -5139,7 +5183,24 @@ function showLanding() {
   if(typeof applyAllTranslations==='function') applyAllTranslations();
   renderFAQ();
 }
+// The homepage menu (see .land-menu): opens from the header button, closes on a choice, outside click or Escape.
+function toggleLandMenu(){
+  const m=document.getElementById('landMenu'); if(!m) return;
+  const open=!m.classList.contains('open');
+  m.classList.toggle('open',open);
+  const b=document.getElementById('landMenuBtn'); if(b) b.setAttribute('aria-expanded',String(open));
+  document.body.classList.toggle('land-menu-open',open);
+}
+function closeLandMenu(){
+  const m=document.getElementById('landMenu'); if(m) m.classList.remove('open');
+  const b=document.getElementById('landMenuBtn'); if(b) b.setAttribute('aria-expanded','false');
+  document.body.classList.remove('land-menu-open');
+}
+function landMenuGo(id){ closeLandMenu(); const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth'}); }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLandMenu(); });
+document.addEventListener('click',function(e){ if(!e.target.closest('#landMenu,#landMenuBtn')) closeLandMenu(); });
 function hideLanding() {
+  closeLandMenu();
   document.body.classList.remove('landing-open');
   const nav = document.getElementById('mainNav');
   if(nav) nav.style.display = '';
@@ -18033,7 +18094,7 @@ en:{
 'common.startDate':'Start Date','common.endDate':'End Date',
 'reports.selectEmployees':'SELECT EMPLOYEES',
 'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
-'land.features':'Features','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
+'land.features':'Features','land.themeNav':'Light / dark mode','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.geoNav':'Geofencing',
 'land.getStarted':'Get Started Free','land.badge':'Now with automated payroll period reports',
 'land.pill1':'Tablet terminal clock-in','land.pill2':'Automated payroll reports','land.pill3':'Excel & CSV export','land.pill4':'Employee scheduling','land.pillAddon':'Add-On',
@@ -19135,7 +19196,7 @@ fr:{
 'common.startDate':'Date de début','common.endDate':'Date de fin',
 'reports.selectEmployees':'SÉLECTIONNER LES EMPLOYÉS',
 'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
-'land.features':'Fonctionnalités','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
+'land.features':'Fonctionnalités','land.themeNav':'Mode clair / sombre','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.geoNav':'Géorepérage',
 'land.getStarted':'Commencer gratuitement','land.badge':'Maintenant avec rapports de paie automatisés',
 'land.pill1':'Pointage sur terminal tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export Excel et CSV','land.pill4':'Planification des employés','land.pillAddon':'Complément',
