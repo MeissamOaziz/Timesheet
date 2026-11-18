@@ -88,6 +88,45 @@ console.log('\n── Phone clock-in window ────────────
   await p.context().close();
 }
 
+console.log('\n── When the hourly email limit is reached ───────');
+{
+  const LIMIT = 'Too many emails sent in the last hour. Please try again later.';
+  // First window: Send stops at the first refusal, keeps the message, and leaves the rest ticked.
+  const p = await demoPage(1440, 900, 'en');
+  await p.evaluate(() => navigate('admin')); await sleep(700);
+  await p.evaluate(() => { window._mailCalls = 0; sendAppEmail = async () => { window._mailCalls++; if (window._mailCalls === 2) { const e = new Error('Too many emails sent in the last hour. Please try again later.'); e._raw = '{"ok":false}'; throw e; } return { ok: true }; }; });
+  await p.evaluate(() => { for (const id of ['demo-e1', 'demo-e3', 'demo-e4']) { const e = C.employees.find(x => x.id === id); if (!e.email) e.email = id + '@example.com'; } });
+  await p.evaluate(() => openPhoneSetup()); await sleep(900);
+  await p.evaluate(() => { for (const id of ['demo-e1', 'demo-e3', 'demo-e4']) document.getElementById('ph-cb-' + id).click(); });
+  await p.click('#phSendBtn'); await sleep(500);
+  await p.locator('button', { hasText: /^Confirm$/ }).last().click(); await sleep(1500);
+  const r = await p.evaluate(() => ({ msg: (document.querySelector('#phoneSetupBody [role=status]') || {}).innerText || '', calls: window._mailCalls, ticked: [..._phSel].sort().join(','), row4: (window._demoPortal || []).some(x => x.employee_id === 'demo-e4') }));
+  ok('the first invitation goes out', /1 invitation\(s\) sent/.test(r.msg), r.msg);
+  ok('the failure keeps its reason on screen', r.msg.includes(LIMIT) && /1 could not be sent/.test(r.msg), r.msg);
+  ok('it says the run stopped, and why', /Stopped: the hourly limit/.test(r.msg));
+  ok('nothing further is attempted after the limit', r.calls === 2 && !r.row4, JSON.stringify({ calls: r.calls, row4: r.row4 }));
+  ok('the person who failed and the person not reached stay ticked', r.ticked === 'demo-e3,demo-e4', r.ticked);
+  ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
+  await p.context().close();
+}
+{
+  // The bulk bar: how many went out before it stopped, and why.
+  const p = await demoPage(1440, 900, 'en');
+  await p.evaluate(() => navigate('admin')); await sleep(700);
+  await p.evaluate(() => {
+    window._mailCalls = 0;
+    sendAppEmail = async () => { window._mailCalls++; if (window._mailCalls === 2) throw new Error('Too many emails sent in the last hour. Please try again later.'); return { ok: true }; };
+    for (const id of ['demo-e1', 'demo-e3', 'demo-e4']) { const e = C.employees.find(x => x.id === id); if (!e.email) e.email = id + '@example.com'; toggleEmpSelect(id, true); }
+  });
+  await p.evaluate(() => { bulkInvitePhone(); }); await sleep(600);
+  await p.locator('button', { hasText: /^Confirm$/ }).last().click(); await sleep(1500);
+  const r = await p.evaluate(() => ({ toast: document.body.innerText, calls: window._mailCalls }));
+  ok('the bulk invite says how many went out and why it stopped', /1 invitation\(s\) sent before it stopped: Too many emails sent in the last hour/.test(r.toast));
+  ok('and stops there', r.calls === 2, String(r.calls));
+  ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
+  await p.context().close();
+}
+
 console.log('\n── Not on a paid plan ──────────────────────────');
 {
   const p = await demoPage(1440, 900, 'en');
@@ -133,6 +172,8 @@ console.log('\n── French, on a phone ─────────────
   await p.evaluate(() => openPhoneSetup()); await sleep(700);
   const fr = await p.evaluate(() => document.getElementById('phoneSetupModal').innerText);
   ok('the window is in French', /Pointage par téléphone/.test(fr) && /Qui peut pointer avec son téléphone/.test(fr) && /Courriel requis/.test(fr));
+  ok('the plan is called Débutant in French, as everywhere else', await p.evaluate(() => TRANSLATIONS.fr['ph.lock'].includes('Débutant') && TRANSLATIONS.fr['ph.lockNote'].includes('Débutant') && !/Starter/.test(TRANSLATIONS.fr['ph.lock'] + TRANSLATIONS.fr['ph.lockNote'])));
+  ok('and the help text names the real button', await p.evaluate(() => /Envoyer N invitation\(s\)/.test(TRANSLATIONS.fr['help.remoteDesc']) && /Send N invitation\(s\)/.test(TRANSLATIONS.en['help.remoteDesc']) && !/Envoyer les invitations|Send invitations/.test(TRANSLATIONS.fr['help.remoteDesc'] + TRANSLATIONS.en['help.remoteDesc'])));
   ok('and does not scroll sideways', await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
   await p.context().close();
