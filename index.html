@@ -682,6 +682,17 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .pill.site{background:rgba(245,158,11,.15);color:var(--amber);}
 /* Phone clock-in state on the Employees list and in the Phone clock-in window. */
 .pill.ph-wait{background:rgba(245,158,11,.15);color:var(--amber);}
+/* Phone clock-in stays out of sight until it is in use (the company switch is on, someone was granted it, or the
+   owner said their team clocks in on phones), so an owner who does not want it never wonders what it is. body.phone-on
+   is set by syncPhoneFeature(). */
+.ph-nav{display:none!important;}
+body.phone-on:not(.role-manager) .ph-nav{display:flex!important;}
+#tab-employees .ph-col{display:none;}
+body.phone-on #tab-employees .ph-col{display:table-cell;}
+.ph-card{display:none;}
+body.phone-on .ph-card{display:block;}
+.ph-bulk{display:none!important;}
+body.phone-on .ph-bulk{display:inline-flex!important;}
 .pill.ph-info{background:rgba(79,142,247,.15);color:var(--accent);}
 .pill.ph-off{background:var(--surface2);color:var(--text2);}
 .ph-cell{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}
@@ -2269,7 +2280,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('admin')" id="mobileNavAdmin" style="display:none"><svg><use href="#i-nav-admin"/></svg><span data-i18n="nav.admin">Admin</span><span id="joinReqBadgeMobile" style="display:none;background:#ef4444;color:#fff;border-radius:var(--r-sm);font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:8px;vertical-align:middle"></span><span id="missedPunchBadgeMobile" style="display:none;background:#f59e0b;color:#fff;border-radius:var(--r-sm);font-size:10px;font-weight:700;padding:0 5px;min-width:17px;height:17px;line-height:17px;text-align:center;margin-left:4px;vertical-align:middle"></span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('sites')" id="mobileNavCompanies" style="display:none"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-  <button class="mobile-nav-btn" id="mobileNavPhone" data-admin-only onclick="closeMobileMenu();openPhoneSetup()" style="display:none"><svg><use href="#i-tablet"/></svg><span data-i18n="ph.title">Phone clock-in</span></button>
+  <button class="mobile-nav-btn ph-nav" id="mobileNavPhone" data-admin-only onclick="closeMobileMenu();openPhoneSetup()" style="display:none"><svg><use href="#i-tablet"/></svg><span data-i18n="ph.title">Phone clock-in</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('timeoff')" id="mobileNavTimeOff" style="display:none"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
@@ -2304,7 +2315,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div class="sn-sub">
       <button class="sn-item" data-nav="admin" onclick="goAdminTab('employees')"><svg><use href="#i-user"/></svg><span data-i18n="admin.tabs.employees">Employees</span><span id="snMissedBadge" style="display:none;margin-left:auto;background:#f59e0b;color:#fff;border-radius:var(--r-sm);font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
       <button class="sn-item" id="snSites" data-nav="sites" onclick="navigate('sites')"><svg><use href="#i-nav-sites"/></svg><span data-i18n="nav.sites">Sites</span></button>
-      <button class="sn-item" data-admin-only onclick="openPhoneSetup()"><svg><use href="#i-tablet"/></svg><span data-i18n="ph.title">Phone clock-in</span></button>
+      <button class="sn-item ph-nav" data-admin-only onclick="openPhoneSetup()"><svg><use href="#i-tablet"/></svg><span data-i18n="ph.title">Phone clock-in</span></button>
       <button class="sn-item" data-admin-only data-nav="admins" onclick="goAdminTab('admins')"><svg><use href="#i-nav-admins"/></svg><span data-i18n="admin.tabs.admins">Admins</span><span id="snJoinBadge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;border-radius:var(--r-sm);font-size:10px;font-weight:700;padding:0 6px;min-width:17px;height:17px;line-height:17px;text-align:center"></span></button>
     </div>
   </div>
@@ -2664,7 +2675,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       <button class="btn-amber" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkSendReport()"><svg class="ic" style="margin-right:5px"><use href="#i-mail"/></svg><span data-i18n="bulk.sendReport">Send Report</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--amber);border-color:var(--amber)" onclick="bulkToggleActive(false)"><svg class="ic" style="margin-right:5px"><use href="#i-pause"/></svg><span data-i18n="admin.deactivate">Deactivate</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;color:var(--green);border-color:var(--green)" onclick="bulkToggleActive(true)"><svg class="ic" style="margin-right:5px"><use href="#i-play"/></svg><span data-i18n="admin.activate">Activate</span></button>
-      <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkInvitePhone()"><svg class="ic" style="margin-right:5px"><use href="#i-tablet"/></svg><span data-i18n="ph.bulk">Invite to phone clock-in</span></button>
+      <button class="btn-secondary ph-bulk" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkInvitePhone()"><svg class="ic" style="margin-right:5px"><use href="#i-tablet"/></svg><span data-i18n="ph.bulk">Invite to phone clock-in</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkToggleRemotePunch(true)"><svg class="ic" style="margin-right:5px"><use href="#i-clock"/></svg><span data-i18n="bulk.enableRemote">Enable Remote Clock-In</span></button>
       <button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkToggleRemotePunch(false)"><svg class="ic" style="margin-right:5px"><use href="#i-clock"/></svg><span data-i18n="bulk.disableRemote">Disable Remote Clock-In</span></button>
       <button class="btn-danger" style="width:auto;padding:6px 14px;font-size:12px" onclick="bulkDelete()"><svg class="ic" style="margin-right:5px"><use href="#i-trash"/></svg><span data-i18n="bulk.delete">Delete</span></button>
@@ -2678,7 +2689,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <th class="sort-th" style="width:11%" onclick="sortEmps('dept')"><span data-i18n="admin.col.dept">Department</span><span class="sort-arrow" id="sa-dept">▲</span></th>
         <th style="width:8%" data-i18n="admin.col.code">Code</th>
         <th style="width:7%" data-i18n="admin.col.pin">PIN</th>
-        <th style="width:17%;min-width:104px" data-i18n="ph.col">Phone</th>
+        <th class="ph-col" style="width:17%;min-width:104px" data-i18n="ph.col">Phone</th>
         <th class="sort-th" style="width:9%" onclick="sortEmps('status')"><span data-i18n="admin.col.status">Status</span><span class="sort-arrow" id="sa-status">▲</span></th>
         <th style="width:9%" data-i18n="admin.col.actions">Actions</th>
       </tr></thead>
@@ -4164,6 +4175,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <div id="remotePunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
       </div>
     </div>
+    <div id="remotePunchSetupRow" style="display:none;margin-top:8px"><button type="button" class="ph-link" onclick="var cid=document.getElementById('editCompanyUid').value;closeModal('addCompanyModal');openPhoneSetup(cid)" data-i18n="setup.s6">Set up phone clock-in</button></div>
     <hr class="divider" style="margin:14px 0">
     <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="modal.scheduleSettings">Schedule</p>
     <div id="mgrAllSitesToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleMgrAllSitesOpt()">
@@ -5736,6 +5748,7 @@ function navigate(page){
   refreshPendingCounts();
   if(typeof applyAllTranslations==='function')applyAllTranslations();
   _syncSideNav(page);
+  syncPhoneFeature();
   if(typeof _dcOnNav==='function')_dcOnNav(page);
 }
 
@@ -6229,6 +6242,7 @@ function setupTabletFromChecklist(){
 function _setupMode(){ try{ const m=localStorage.getItem('pc_setup_mode'); return (m==='tablet'||m==='phones'||m==='both')?m:null; }catch(_){ return null; } }
 function setSetupMode(m){
   try{ if(m) localStorage.setItem('pc_setup_mode',m); else localStorage.removeItem('pc_setup_mode'); }catch(_){}
+  syncPhoneFeature();
   renderSetupChecklist();
 }
 function _checklistDismissed(){try{return localStorage.getItem('pc_setup_done')==='1';}catch(_){return false;}}
@@ -6445,6 +6459,7 @@ function renderPlanPreviewBanner(){
 }
 
 function renderDashboard(){
+  syncPhoneFeature();
   renderPlanPreviewBanner();
   renderSetupChecklist();
   renderPayrollPrompt();
@@ -7104,6 +7119,7 @@ function getCompanyPlanForCurrentAdmin(co) {
 // AUTH — updateNav, login, register, verify, logout
 // ═══════════════════════════════════════════════════
 function updateNav(){
+  syncPhoneFeature();
   // Mark resolved role on body so role-gated UI can show/hide cleanly
   const sess = Sess.get();
   document.body.classList.add('role-resolved');
@@ -9993,8 +10009,25 @@ async function loadPortalStatuses(emps){
   _portalMap=map;
 }
 function phCompany(){ return (Ctx.get()||{}).co||(C.companies||[])[0]||null; }
-function phoneState(e){
+// On an account with several companies the list shows everyone, so each person is judged against THEIR company's
+// Remote Access switch, not against whichever company happens to be selected or first.
+function phCompanyOf(e){ return (C.companies||[]).find(c=>c.id===e.company_id)||phCompany(); }
+// The Phone clock-in window manages one company: the one it was opened for, else the selected or first one.
+let _phForCo=null;
+function phWinCompany(){ return (_phForCo&&(C.companies||[]).find(c=>c.id===_phForCo))||phCompany(); }
+// Is phone clock-in in use? Then its menu entries, the Phone column and the bulk button are shown; otherwise they are
+// not, and the way in is Company Info (Remote Access) or the "how will your team clock in" question.
+function phoneFeatureOn(){
+  if((C.companies||[]).some(c=>c.remote_punch_enabled)) return true;
   const co=phCompany();
+  if(co&&co.remote_punch_enabled) return true;
+  if((C.employees||[]).some(e=>e.remote_punch_enabled)) return true;
+  const m=_setupMode();
+  return m==='phones'||m==='both';
+}
+function syncPhoneFeature(){ try{ document.body.classList.toggle('phone-on',phoneFeatureOn()); }catch(_){} }
+function phoneState(e){
+  const co=phCompanyOf(e);
   if(!featureEntitled('paid',co)) return {k:'lock',cls:'ph-off',label:t('ph.lock')||'Starter and up'};
   if(!e.email) return {k:'noemail',cls:'ph-off',label:t('ph.noEmail')||'Needs an email',btn:t('ph.addEmail')||'Add email',fn:`editEmployee('${e.id}')`};
   if(_portalMap===null) return {k:'load',cls:'ph-off',label:'…'};
@@ -10032,9 +10065,13 @@ async function invitePhoneFromList(id){
   }catch(err){ showToast(err.message,'error'); }
 }
 async function allowPhoneClockIn(id){
-  const co=phCompany();
-  if(!co||!co.remote_punch_enabled){ openPhoneSetup(); return; }
   const e=(C.employees||[]).find(x=>x.id===id); if(!e) return;
+  const co=phCompanyOf(e);
+  if(!co||!co.remote_punch_enabled){
+    // Turning the company switch on is the owner's: say so plainly instead of a permission error.
+    if(isManager()){ showToast(t('ph.askOwner')||'Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on.','info'); return; }
+    openPhoneSetup(co&&co.id); return;
+  }
   const msg=(t('ph.allowConfirm')||'{name} will be able to clock in and out from anywhere, on any device they have. Continue?').replace('{name}',e.name);
   if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
   try{
@@ -10045,22 +10082,28 @@ async function allowPhoneClockIn(id){
 }
 async function bulkInvitePhone(){
   if(!_selectedEmps.size) return;
-  const co=phCompany();
-  if(!featureEntitled('paid',co)){ showToast(t('emp.paidLock')||'The employee portal and remote clock-in are part of the Starter plan and above.','error'); showUpgradePlans(); return; }
   const chosen=[..._selectedEmps].map(id=>C.employees.find(e=>e.id===id)).filter(Boolean);
   const ok=chosen.filter(e=>e.email), skipped=chosen.length-ok.length;
+  // The companies the chosen people belong to (one, unless the account has several and the list shows them all).
+  const cos=[...new Set(ok.map(e=>e.company_id))].map(id=>(C.companies||[]).find(c=>c.id===id)).filter(Boolean);
+  if(!cos.length&&phCompany()) cos.push(phCompany());
+  if(!featureEntitled('paid',cos[0]||phCompany())){ showToast(t('emp.paidLock')||'The employee portal and remote clock-in are part of the Starter plan and above.','error'); showUpgradePlans(); return; }
   if(!ok.length){ showToast((t('ph.skippedNoEmail')||'{n} skipped: no email on file.').replace('{n}',skipped),'error'); return; }
+  const off=cos.filter(c=>!c.remote_punch_enabled);
+  // Turning a company's switch on is the owner's: a manager gets a plain message, not the server's refusal.
+  if(isManager()&&off.length){ showToast(t('ph.askOwner')||'Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on.','info'); return; }
   const msg=(t('ph.confirm')||'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?').replace('{n}',ok.length);
   if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
   let sent=0;
   try{
-    if(co && !co.remote_punch_enabled){ await DB.update('companies',`id=eq.${co.id}`,{remote_punch_enabled:true}); co.remote_punch_enabled=true; const x=Ctx.get(); if(x&&x.co&&x.co.id===co.id){ x.co.remote_punch_enabled=true; Ctx.set(x); } }
+    for(const co of off){ await DB.update('companies',`id=eq.${co.id}`,{remote_punch_enabled:true}); co.remote_punch_enabled=true; const x=Ctx.get(); if(x&&x.co&&x.co.id===co.id){ x.co.remote_punch_enabled=true; Ctx.set(x); } }
     for(const e of ok){
       if(!(_portalMap&&_portalMap[e.id]&&_portalMap[e.id].status!=='invited')) await portalInviteCore(e.id,e.email);
       if(!e.remote_punch_enabled){ await DB.update('employees',`id=eq.${e.id}`,{remote_punch_enabled:true}); e.remote_punch_enabled=true; }
       sent++;
     }
     clearEmpSelection();
+    syncPhoneFeature();
     renderEmployees();
     showToast((t('ph.sent')||'{n} invitation(s) sent.').replace('{n}',ok.length)+(skipped?' '+(t('ph.skippedNoEmail')||'{n} skipped: no email on file.').replace('{n}',skipped):''),'success');
   }catch(err){
@@ -10072,9 +10115,10 @@ async function bulkInvitePhone(){
 
 // ── The "Phone clock-in" window ─────────────────────────────────────────────
 let _phSel=new Set(), _phEmails={}, _phBusy=false, _phMsg='';
-async function openPhoneSetup(){
+async function openPhoneSetup(coId){
   if(isManager()){ showToast(t('msg.noPermission')||'You do not have permission to do that.','error'); return; }
-  const co=phCompany();
+  _phForCo=(typeof coId==='string'&&coId)?coId:null;
+  const co=phWinCompany();
   if(!co){ showToast(t('ph.needCompany')||'Add your company first.','info'); return; }
   _phSel=new Set(); _phEmails={}; _phMsg=''; _phBusy=false;
   openModal('phoneSetupModal');
@@ -10091,7 +10135,7 @@ function phSelectAll(on){
 function phEmail(id,v){ _phEmails[id]=v.trim(); phUpdateSend(); }
 const _PH_EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 function phReady(){
-  const co=phCompany(); if(!co) return [];
+  const co=phWinCompany(); if(!co) return [];
   return [..._phSel].map(id=>C.employees.find(e=>e.id===id)).filter(e=>e&&(e.email||_PH_EMAIL.test(_phEmails[e.id]||'')));
 }
 function phUpdateSend(){
@@ -10110,7 +10154,7 @@ async function phSiteRule(siteId,v){
 // Every later invitation in the same run would fail the same way, so the loops stop there.
 function _isMailLimit(err){ return /too many emails/i.test(String((err&&err.message)||'')+' '+String((err&&err._raw)||'')); }
 async function phSend(){
-  const co=phCompany(); if(!co||_phBusy) return;
+  const co=phWinCompany(); if(!co||_phBusy) return;
   const ready=phReady();
   if(!ready.length){ _phMsg=t('ph.none')||'Pick at least one person with an email.'; renderPhoneSetup(); return; }
   const msg=(t('ph.confirm')||'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?').replace('{n}',ready.length);
@@ -10137,6 +10181,7 @@ async function phSend(){
     }
   }catch(err){ showToast(err.message,'error'); }
   _phBusy=false;
+  syncPhoneFeature();
   _phMsg=(t('ph.sent')||'{n} invitation(s) sent.').replace('{n}',done)
     +(failed?' '+(t('ph.failed')||'{n} could not be sent.').replace('{n}',failed)+(why?' '+why:''):'')
     +(limited?' '+(t('ph.stopped')||'Stopped: the hourly limit on emails was reached. The people not reached are still ticked; try again in an hour.'):'');
@@ -10145,7 +10190,7 @@ async function phSend(){
 }
 function renderPhoneSetup(){
   const host=document.getElementById('phoneSetupBody'); if(!host) return;
-  const co=phCompany(); if(!co){ host.innerHTML=''; return; }
+  const co=phWinCompany(); if(!co){ host.innerHTML=''; return; }
   if(!featureEntitled('paid',co)){
     host.innerHTML=`<div class="ph-note">${esc(t('ph.lockNote')||'Phone clock-in is part of the Starter plan and above.')} <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('phoneSetupModal');showUpgradePlans()">${esc(t('modal.upgradeLink')||'Upgrade now')}</a></div>`;
     return;
@@ -10168,6 +10213,7 @@ function renderPhoneSetup(){
   };
   const anyPending=emps.some(e=>phoneState(e).k!=='can');
   host.innerHTML=`
+    ${(C.companies||[]).length>1?`<div class="ph-note" style="margin-top:12px">${esc((t('ph.forCompany')||'Company: {name}').replace('{name}',co.name||''))}</div>`:''}
     <div class="ph-sec"><h4>${esc(t('ph.s1')||'Who can clock in from their phone?')}</h4>
       <p>${esc(t('ph.s1h')||'Each person needs an email to receive their link.')}${anyPending?` <button class="ph-link" onclick="phSelectAll(true)">${esc(t('ph.selectAll')||'Select all')}</button>`:''}</p>
       <div style="margin-top:8px">${emps.length?emps.map(rowOf).join(''):`<div class="ph-note">${esc(t('ph.noEmployees')||'Add your employees first.')}</div>`}</div></div>
@@ -10180,6 +10226,7 @@ function renderPhoneSetup(){
 }
 
 function renderEmployees(){
+  syncPhoneFeature();
   const ctx=Ctx.get();
   const _isMgr=isManager();
 
@@ -10238,7 +10285,7 @@ function renderEmployees(){
       <td style="font-size:12px;color:var(--text2)">${isOrphaned?'<span style="color:#ef4444;font-size:11px"><svg class="ic" style="margin-right:3px"><use href="#i-warn"/></svg>Deleted</span>':esc(e.dept||'—')}</td>
       <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${esc(e.emp_code||'—')}</td>
       <td>${pin}</td>
-      <td>${emailStatus}</td>
+      <td class="ph-col">${emailStatus}</td>
       <td><span class="pill ${e.active?'in':'out'}" style="font-size:10px">${e.active?(t('admin.active')||'Active'):(t('admin.inactive')||'Inactive')}</span></td>
       <td><div style="display:flex;gap:4px;flex-wrap:nowrap">
         <button class="icon-btn" title="${t('common.edit')||'Edit'}" onclick="editEmployee('${e.id}')"><svg class="ic"><use href="#i-edit"/></svg></button>
@@ -10269,7 +10316,7 @@ function renderEmployees(){
         <div style="background:var(--surface2);border-radius:var(--r-sm);padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">PIN</div><div style="margin-top:3px">${pin}</div></div>
         <div style="background:var(--surface2);border-radius:var(--r-sm);padding:7px 10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Code</div><div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px">${esc(e.emp_code||'—')}</div></div>
       </div>
-      <div style="margin-bottom:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${esc(t('ph.col')||'Phone')}</div>${emailStatus}</div>
+      <div class="ph-card" style="margin-bottom:10px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${esc(t('ph.col')||'Phone')}</div>${emailStatus}</div>
       <div class="mc-actions">
         <button class="btn-secondary" style="font-size:12px" onclick="editEmployee('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#i-edit"/></svg>${t('common.edit')||'Edit'}</button>
         <button class="btn-secondary" style="font-size:12px;color:${e.active?'var(--amber)':'var(--green)'}" onclick="toggleEmp('${e.id}')"><svg class="ic" style="margin-right:5px"><use href="#${e.active?'i-pause':'i-play'}"/></svg>${e.active?(t('admin.deactivate')||'Deactivate'):(t('admin.activate')||'Activate')}</button>
@@ -12126,6 +12173,7 @@ function openAddCompanyModal(){
   const {ok, current, max, plan} = canAddCompany();
   document.getElementById('companyModalTitle').textContent=t('modal.newCompany');
   document.getElementById('editCompanyUid').value='';
+  { const r=document.getElementById('remotePunchSetupRow'); if(r) r.style.display='none'; }
   const form = document.getElementById('companyFormBody');
   const saveBtn = document.getElementById('companySaveBtn');
   if(!ok){
@@ -12197,6 +12245,7 @@ function editCompany(id){
   document.getElementById('companyLunchPaidMinutes').value=String(co.lunch_break_paid_minutes||0);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
   setRemotePunchToggle(!!co.remote_punch_enabled);
+  { const r=document.getElementById('remotePunchSetupRow'); if(r) r.style.display=featureEntitled('paid',co)&&!isManager()?'':'none'; }
   setMgrAllSitesToggle(!!co.managers_see_all_sites);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
   document.getElementById('companyPunchLabelMode').value=co.punch_label_mode||'off';
@@ -12417,7 +12466,7 @@ async function saveCompany(){
       navigate('dashboard');
       return;
     }
-    closeModal('addCompanyModal');loadSitesPage();
+    closeModal('addCompanyModal');syncPhoneFeature();loadSitesPage();
   }catch(e){showMsg('companyModalMsg',e.message,'error');}
 }
 
@@ -17999,7 +18048,7 @@ en:{
 'ph.s2':'Where can they clock in?','ph.s2h':'Set per site. With Anywhere, the location is saved when the phone allows it.','ph.optAny':'Anywhere','ph.optReq':'Anywhere, location required',
 'ph.geoOn':'Only within {r} m of this site{strict}','ph.geoStrict':', location required','ph.change':'Change',
 'ph.s3':'Send their links','ph.s3h':'Each person gets an email, sets a password and sees a Clock In button. They can save it to their home screen.',
-'ph.send':'Send {n} invitation(s)','ph.sent':'{n} invitation(s) sent.','ph.failed':'{n} could not be sent.','ph.stopped':'Stopped: the hourly limit on emails was reached. The people not reached are still ticked; try again in an hour.','ph.partial':'{n} invitation(s) sent before it stopped: {why}','ph.stoppedShort':'Try again in an hour.','ph.none':'Pick at least one person with an email.',
+'ph.send':'Send {n} invitation(s)','ph.sent':'{n} invitation(s) sent.','ph.failed':'{n} could not be sent.','ph.askOwner':'Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on.','ph.forCompany':'Company: {name}','ph.stopped':'Stopped: the hourly limit on emails was reached. The people not reached are still ticked; try again in an hour.','ph.partial':'{n} invitation(s) sent before it stopped: {why}','ph.stoppedShort':'Try again in an hour.','ph.none':'Pick at least one person with an email.',
 'ph.skippedNoEmail':'{n} skipped: no email on file.',
 'ph.confirm':'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?',
 'ph.lockNote':'Phone clock-in is part of the Starter plan and above.','ph.bulk':'Invite to phone clock-in',
@@ -18329,7 +18378,7 @@ en:{
 'help.visitorTitle':'Visitor Check-In',
 'help.visitorDesc':'Available on the <strong>Growth plan and above</strong>. In <strong>your profile menu → Company Info → Visitor Check-In</strong>, turn on <strong>Enable Visitor Check-In</strong> — every clock-in screen then gets a <strong>Visitor Check In</strong> button, no PIN or employee record required. A visitor taps it, enters their full name, company, phone and email, and checks in. To leave, they tap the same button and pick their name off the <strong>Currently in the building</strong> list — no need to fill out the form again. Useful for front-desk sign-in and knowing exactly who\'s on-site alongside your staff.',
 'help.remoteTitle':'Remote Clock-In',
-'help.remoteDesc':'<strong>The quick way:</strong> open <strong>Phone clock-in</strong> in the left menu (under Team). Tick the people who may clock in from their phone, add any email that is missing, choose where they can clock in, then press <em>Send N invitation(s)</em> (N is how many you ticked). That one window turns on remote clock-in for your company, invites each person and grants it. The <em>Phone</em> column on the Employees list then shows where each person stands: <em>Needs an email</em>, <em>Not invited</em>, <em>Invited</em>, <em>Portal only</em> or <em>Can clock in</em>, with the next step as a button. The explanation below is what the window does for you, for anyone who prefers to go one step at a time. Available on <strong>every paid plan</strong> (Starter and above). It\'s a two-step grant, on purpose: nobody gets remote access just because they have a portal login. Step 1 — in <strong>your profile menu → Company Info → Remote Access</strong>, turn on <strong>Allow Remote Clock-In</strong>; this only makes the feature available for your account, it doesn\'t turn it on for anyone yet. Step 2 — in <strong>Employees</strong>, open an employee and turn on their <strong>Remote Clock-In</strong> toggle (you\'ll see a confirmation explaining what it grants), or select several employees — e.g. filter to one site first — and use the bulk <strong>Enable Remote Clock-In</strong> button. Once granted, that employee sees a Clock In/Out bar at the top of their Employee Portal and can punch from their own phone or computer; punches are logged the same way a kiosk punch is, and show a mobile badge in the Activity log so you can tell them apart. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location) and shows as a map pin in Activity. Remote punches count against the employee\'s assigned site and are only blocked outside the boundary when that site is set to Strict mode; Lenient mode just records the distance. For crews that move between job sites, open the site, choose <strong>Strict</strong> and leave the address empty: location is then required on every phone punch, from anywhere. A punch with location refused or switched off is blocked, and every punch shows where it was made. Employees must allow location access on their phone.',
+'help.remoteDesc':'<strong>The quick way:</strong> open <strong>Company Info</strong> from your profile menu, scroll to <strong>Remote Access</strong> and press <em>Set up phone clock-in</em> (once phone clock-in is on, it also appears as <strong>Phone clock-in</strong> under Team in the left menu; until then it stays out of sight). Tick the people who may clock in from their phone, add any email that is missing, choose where they can clock in, then press <em>Send N invitation(s)</em> (N is how many you ticked). That one window turns on remote clock-in for your company, invites each person and grants it. The <em>Phone</em> column on the Employees list then shows where each person stands: <em>Needs an email</em>, <em>Not invited</em>, <em>Invited</em>, <em>Portal only</em> or <em>Can clock in</em>, with the next step as a button. The explanation below is what the window does for you, for anyone who prefers to go one step at a time. Available on <strong>every paid plan</strong> (Starter and above). It\'s a two-step grant, on purpose: nobody gets remote access just because they have a portal login. Step 1 — in <strong>your profile menu → Company Info → Remote Access</strong>, turn on <strong>Allow Remote Clock-In</strong>; this only makes the feature available for your account, it doesn\'t turn it on for anyone yet. Step 2 — in <strong>Employees</strong>, open an employee and turn on their <strong>Remote Clock-In</strong> toggle (you\'ll see a confirmation explaining what it grants), or select several employees — e.g. filter to one site first — and use the bulk <strong>Enable Remote Clock-In</strong> button. Once granted, that employee sees a Clock In/Out bar at the top of their Employee Portal and can punch from their own phone or computer; punches are logged the same way a kiosk punch is, and show a mobile badge in the Activity log so you can tell them apart. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location) and shows as a map pin in Activity. Remote punches count against the employee\'s assigned site and are only blocked outside the boundary when that site is set to Strict mode; Lenient mode just records the distance. For crews that move between job sites, open the site, choose <strong>Strict</strong> and leave the address empty: location is then required on every phone punch, from anywhere. A punch with location refused or switched off is blocked, and every punch shows where it was made. Employees must allow location access on their phone.',
 'help.s1title':'Set Up Your Account',
 'help.s1desc':'During registration, enter your company name, address, industry, and payroll settings. Verify your email, then add your first site to get started.',
 'help.s2title':'Create a Site',
@@ -18436,7 +18485,7 @@ en:{
 'faq.a29':"Yes. With the Scheduling add-on, each employee can add their own shifts to the calendar they already use. In the employee portal, under <strong>My Schedule</strong>, they choose <strong>Add my shifts to my calendar</strong>, then <strong>Add to Google Calendar</strong> or <strong>Add to Apple Calendar</strong>, or copy the link into Outlook. It is done once; after that their shifts appear on their own, with the time, the work label, the site and the note. Each link is private to one employee and shows only that person's shifts. They can replace it or turn it off at any time, and an admin can cancel it from the employee's profile. Good to know: calendar apps re-read the schedule on their own timetable (Google Calendar about once or twice a day), so a same-day change can show up late; the portal is always up to date. Included with the Scheduling add-on ($14.95/month, 14-day free trial) on any paid plan.",
 'faq.a28':"Yes. With the Scheduling add-on you create your own labels — a task, a job, a project, a client, whatever you track — and put one on each shift. Filter the schedule by label to see who is doing what and how many hours are planned for each. One person can have several shifts in a day with different labels (for example snow removal in the morning, transport in the afternoon). Employees see the label on their shifts in their portal and in the schedule email. You can also have employees pick what they are working on when they clock in, switch tasks during a shift, filter the Activity page by label, and get hours per label in Reports. Labels are available on paid plans with the Scheduling add-on ($14.95/month).",
 'faq.q27':'We have remote or field staff — can they clock in from their phone, with GPS showing where?',
-'faq.a27':'Yes, on <strong>every paid plan</strong> (Starter and above; free accounts have it during their 14-day preview). Turn on <strong>Allow Remote Clock-In</strong> in Company Info, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location), shown as a map pin in Activity, so you can see where they clocked in and out. Remote punches count against the employee\'s assigned site; they are only blocked outside the boundary when that site is set to Strict mode, while Lenient mode just records the distance. For crews that move between job sites, open the site, choose <strong>Strict</strong> and leave the address empty: location is then required on every phone punch, from anywhere. A punch with location refused or switched off is blocked, and every punch shows where it was made. Employees need to allow location access on their phone. The quickest way to set it up is <strong>Phone clock-in</strong> in the left menu: tick the people, choose where they can clock in, and send their links.',
+'faq.a27':'Yes, on <strong>every paid plan</strong> (Starter and above; free accounts have it during their 14-day preview). Turn on <strong>Allow Remote Clock-In</strong> in Company Info, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location), shown as a map pin in Activity, so you can see where they clocked in and out. Remote punches count against the employee\'s assigned site; they are only blocked outside the boundary when that site is set to Strict mode, while Lenient mode just records the distance. For crews that move between job sites, open the site, choose <strong>Strict</strong> and leave the address empty: location is then required on every phone punch, from anywhere. A punch with location refused or switched off is blocked, and every punch shows where it was made. Employees need to allow location access on their phone. The quickest way to set it up: open Company Info from your profile menu, go to Remote Access and press <strong>Set up phone clock-in</strong>, then tick the people, choose where they can clock in, and send their links.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
 'upgrade.desc.growth':'3 companies · 6 sites · 60 employees · 4 admins',
 'upgrade.desc.business':'Unlimited companies, sites & employees · 6 admins',
@@ -19101,7 +19150,7 @@ fr:{
 'ph.s2':'Où peut-on pointer?','ph.s2h':'Réglage propre à chaque site. Avec Partout, la position est enregistrée si le téléphone le permet.','ph.optAny':'Partout','ph.optReq':'Partout, position obligatoire',
 'ph.geoOn':'Seulement à moins de {r} m de ce site{strict}','ph.geoStrict':', position obligatoire','ph.change':'Modifier',
 'ph.s3':'Envoyer les liens','ph.s3h':'Chaque personne reçoit un courriel, choisit un mot de passe et voit un bouton Pointer. Elle peut l’ajouter à son écran d’accueil.',
-'ph.send':'Envoyer {n} invitation(s)','ph.sent':'{n} invitation(s) envoyée(s).','ph.failed':'{n} n’ont pas pu être envoyées.','ph.stopped':'Arrêt : la limite horaire de courriels est atteinte. Les personnes non traitées restent cochées; réessayez dans une heure.','ph.partial':'{n} invitation(s) envoyée(s) avant l’arrêt : {why}','ph.stoppedShort':'Réessayez dans une heure.','ph.none':'Choisissez au moins une personne ayant un courriel.',
+'ph.send':'Envoyer {n} invitation(s)','ph.sent':'{n} invitation(s) envoyée(s).','ph.failed':'{n} n’ont pas pu être envoyées.','ph.askOwner':'Le pointage par téléphone n’est pas encore activé pour votre entreprise. Demandez au propriétaire du compte de l’activer.','ph.forCompany':'Entreprise : {name}','ph.stopped':'Arrêt : la limite horaire de courriels est atteinte. Les personnes non traitées restent cochées; réessayez dans une heure.','ph.partial':'{n} invitation(s) envoyée(s) avant l’arrêt : {why}','ph.stoppedShort':'Réessayez dans une heure.','ph.none':'Choisissez au moins une personne ayant un courriel.',
 'ph.skippedNoEmail':'{n} ignoré(s) : aucun courriel.',
 'ph.confirm':'Ces {n} employé(s) pourront pointer à l’arrivée et au départ de n’importe où, sur n’importe quel appareil, et chaque pointage comportera l’heure et la position. Ils recevront une invitation par courriel. Continuer?',
 'ph.lockNote':'Le pointage par téléphone est inclus dans le forfait Débutant et plus.','ph.bulk':'Inviter au pointage par téléphone',
@@ -19429,7 +19478,7 @@ fr:{
 'help.visitorTitle':'Pointage visiteur',
 'help.visitorDesc':'Disponible à partir du <strong>plan Croissance</strong>. Dans <strong>votre menu de profil → Info compagnie → Pointage visiteur</strong>, activez <strong>Activer le pointage visiteur</strong> — chaque écran de pointage obtient alors un bouton <strong>Pointage visiteur</strong>, sans NIP ni dossier employé requis. Un visiteur appuie dessus, inscrit son nom complet, son entreprise, son téléphone et son courriel, puis pointe son arrivée. Pour partir, il appuie sur le même bouton et choisit son nom dans la liste <strong>Actuellement dans l\'immeuble</strong> — pas besoin de remplir le formulaire à nouveau. Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en plus de votre personnel.',
 'help.remoteTitle':'Pointage à distance',
-'help.remoteDesc':'<strong>Le plus simple :</strong> ouvrez <strong>Pointage par téléphone</strong> dans le menu de gauche (sous Équipe). Cochez les personnes qui peuvent pointer avec leur téléphone, ajoutez les courriels manquants, choisissez où elles peuvent pointer, puis touchez <em>Envoyer N invitation(s)</em> (N est le nombre de personnes cochées). Cette fenêtre active le pointage à distance pour votre entreprise, invite chaque personne et le lui accorde. La colonne <em>Téléphone</em> de la liste des employés montre ensuite où en est chacun : <em>Courriel requis</em>, <em>Non invité</em>, <em>Invité</em>, <em>Portail seulement</em> ou <em>Peut pointer</em>, avec la prochaine étape en bouton. L\'explication ci-dessous décrit ce que la fenêtre fait pour vous, pour ceux qui préfèrent procéder une étape à la fois. Disponible sur <strong>tous les forfaits payants</strong> (Débutant et plus). C\'est un octroi en deux étapes, volontairement : personne n\'obtient l\'accès à distance juste parce qu\'il a un accès au portail. Étape 1 — dans <strong>votre menu de profil → Info compagnie → Accès à distance</strong>, activez <strong>Permettre le pointage à distance</strong>; ceci rend seulement la fonction disponible pour votre compte, ça ne l\'active pour personne encore. Étape 2 — dans <strong>Employés</strong>, ouvrez un employé et activez son bouton <strong>Pointage à distance</strong> (une confirmation vous explique ce que ça accorde), ou sélectionnez plusieurs employés — par exemple en filtrant par site d\'abord — et utilisez le bouton en lot <strong>Activer le pointage à distance</strong>. Une fois accordé, cet employé voit une barre Entrée/Sortie en haut de son portail employé et peut pointer depuis son propre téléphone ou ordinateur; les pointages sont enregistrés de la même façon qu\'un pointage au pointeau, et affichent un badge mobile dans le journal d\'activité pour les distinguer. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement) et s\'affiche comme une épingle sur la carte dans Activité. Les pointages à distance comptent pour le site assigné à l\'employé et ne sont bloqués hors de la limite que si ce site est en mode Strict; le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, ouvrez le site, choisissez <strong>Strict</strong> et laissez l\'adresse vide : la localisation est alors exigée à chaque pointage sur téléphone, de n\'importe où. Un pointage dont la localisation est refusée ou désactivée est bloqué, et chaque pointage montre où il a été fait. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone.',
+'help.remoteDesc':'<strong>Le plus simple :</strong> ouvrez <strong>Info compagnie</strong> depuis votre menu de profil, descendez à <strong>Accès à distance</strong> et touchez <em>Configurer le pointage par téléphone</em> (une fois le pointage par téléphone activé, il apparaît aussi sous Équipe dans le menu de gauche : <strong>Pointage par téléphone</strong>; d\'ici là, il reste caché). Cochez les personnes qui peuvent pointer avec leur téléphone, ajoutez les courriels manquants, choisissez où elles peuvent pointer, puis touchez <em>Envoyer N invitation(s)</em> (N est le nombre de personnes cochées). Cette fenêtre active le pointage à distance pour votre entreprise, invite chaque personne et le lui accorde. La colonne <em>Téléphone</em> de la liste des employés montre ensuite où en est chacun : <em>Courriel requis</em>, <em>Non invité</em>, <em>Invité</em>, <em>Portail seulement</em> ou <em>Peut pointer</em>, avec la prochaine étape en bouton. L\'explication ci-dessous décrit ce que la fenêtre fait pour vous, pour ceux qui préfèrent procéder une étape à la fois. Disponible sur <strong>tous les forfaits payants</strong> (Débutant et plus). C\'est un octroi en deux étapes, volontairement : personne n\'obtient l\'accès à distance juste parce qu\'il a un accès au portail. Étape 1 — dans <strong>votre menu de profil → Info compagnie → Accès à distance</strong>, activez <strong>Permettre le pointage à distance</strong>; ceci rend seulement la fonction disponible pour votre compte, ça ne l\'active pour personne encore. Étape 2 — dans <strong>Employés</strong>, ouvrez un employé et activez son bouton <strong>Pointage à distance</strong> (une confirmation vous explique ce que ça accorde), ou sélectionnez plusieurs employés — par exemple en filtrant par site d\'abord — et utilisez le bouton en lot <strong>Activer le pointage à distance</strong>. Une fois accordé, cet employé voit une barre Entrée/Sortie en haut de son portail employé et peut pointer depuis son propre téléphone ou ordinateur; les pointages sont enregistrés de la même façon qu\'un pointage au pointeau, et affichent un badge mobile dans le journal d\'activité pour les distinguer. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement) et s\'affiche comme une épingle sur la carte dans Activité. Les pointages à distance comptent pour le site assigné à l\'employé et ne sont bloqués hors de la limite que si ce site est en mode Strict; le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, ouvrez le site, choisissez <strong>Strict</strong> et laissez l\'adresse vide : la localisation est alors exigée à chaque pointage sur téléphone, de n\'importe où. Un pointage dont la localisation est refusée ou désactivée est bloqué, et chaque pointage montre où il a été fait. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone.',
 'help.s1title':'Configurez votre compte',
 'help.s1desc':'Lors de l\'inscription, entrez le nom de votre entreprise, l\'adresse, le secteur d\'activité et les paramètres de paie. Vérifiez votre courriel, puis ajoutez votre premier site.',
 'help.s2title':'Créer un site',
@@ -19536,7 +19585,7 @@ fr:{
 'faq.a29':"Oui. Avec le module Planification, chaque employé peut ajouter ses propres quarts au calendrier qu'il utilise déjà. Dans le portail employé, sous <strong>Mon horaire</strong>, il choisit <strong>Ajouter mes quarts à mon calendrier</strong>, puis <strong>Ajouter à Google Agenda</strong> ou <strong>Ajouter au Calendrier Apple</strong>, ou il copie le lien dans Outlook. C'est à faire une seule fois; ses quarts s'affichent ensuite d'eux-mêmes, avec l'heure, l'étiquette de travail, le site et la note. Chaque lien est privé, propre à un employé, et ne montre que ses quarts. Il peut le remplacer ou le désactiver en tout temps, et un administrateur peut l'annuler à partir de la fiche de l'employé. À savoir : les applications de calendrier relisent l'horaire à leur propre rythme (Google Agenda environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Le portail, lui, est toujours à jour. Inclus avec le module Planification (14,95 $/mois, essai gratuit de 14 jours) sur tout forfait payant.",
 'faq.a28':"Oui. Avec le module complémentaire Horaires, vous créez vos propres étiquettes — une tâche, un chantier, un projet, un client, tout ce que vous suivez — et vous en mettez une sur chaque quart. Filtrez l'horaire par étiquette pour voir qui fait quoi et combien d'heures sont prévues pour chacune. Une même personne peut avoir plusieurs quarts dans une journée avec des étiquettes différentes (par exemple déneigement le matin, transport l'après-midi). Les employés voient l'étiquette sur leurs quarts dans leur portail et dans le courriel d'horaire. Vous pouvez aussi demander aux employés de choisir sur quoi ils travaillent en pointant leur entrée, de changer de tâche en cours de quart, filtrer la page Activité par étiquette et obtenir les heures par étiquette dans les rapports. Les étiquettes sont offertes avec les forfaits payants qui incluent le module Horaires (14,95 $/mois).",
 'faq.q27':'Nos employés travaillent à distance ou sur le terrain — peuvent-ils pointer depuis leur téléphone, avec le GPS pour voir où?',
-'faq.a27':'Oui, sur <strong>tous les forfaits payants</strong> (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Activez <strong>Permettre le pointage à distance</strong> dans Info compagnie, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement), affichée sous forme d\'épingle sur la carte dans Activité : vous voyez où l\'employé a pointé son entrée et sa sortie. Les pointages à distance comptent pour le site assigné à l\'employé; ils ne sont bloqués hors de la limite que si ce site est en mode Strict, alors que le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, ouvrez le site, choisissez <strong>Strict</strong> et laissez l\'adresse vide : la localisation est alors exigée à chaque pointage sur téléphone, de n\'importe où. Un pointage dont la localisation est refusée ou désactivée est bloqué, et chaque pointage montre où il a été fait. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone. Le plus simple pour la configurer est <strong>Pointage par téléphone</strong> dans le menu de gauche : cochez les personnes, choisissez où elles peuvent pointer et envoyez-leur leur lien.',
+'faq.a27':'Oui, sur <strong>tous les forfaits payants</strong> (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Activez <strong>Permettre le pointage à distance</strong> dans Info compagnie, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement), affichée sous forme d\'épingle sur la carte dans Activité : vous voyez où l\'employé a pointé son entrée et sa sortie. Les pointages à distance comptent pour le site assigné à l\'employé; ils ne sont bloqués hors de la limite que si ce site est en mode Strict, alors que le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, ouvrez le site, choisissez <strong>Strict</strong> et laissez l\'adresse vide : la localisation est alors exigée à chaque pointage sur téléphone, de n\'importe où. Un pointage dont la localisation est refusée ou désactivée est bloqué, et chaque pointage montre où il a été fait. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone. Le plus simple pour la configurer : ouvrez Info compagnie depuis votre menu de profil, allez à Accès à distance et touchez <strong>Configurer le pointage par téléphone</strong>, puis cochez les personnes, choisissez où elles peuvent pointer et envoyez-leur leur lien.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
 'land.starterSub':'1 compagnie · 2 sites · 25 employés · 2 admins<br>+4,90$/mois par employé ou admin supplémentaire',
 'land.f.start8':'1 co-admin inclus',

@@ -95,7 +95,14 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
 
 ## Phone clock-in: the quick way (since 2026-11-17)
 
-- **Where:** left menu, Team, **Phone clock-in** (owners and co-admins; managers do not see it). One window: tick who may
+- **It stays out of sight until it is in use (2026-11-17, owner's request).** The Team menu entry (and the phone menu entry),
+  the Phone column on Employees and the bulk "Invite to phone clock-in" button only appear once the company's Remote Access
+  switch is on, someone has been granted remote clock-in, or the owner chose "their own phones" or "both" in the first-run
+  question. Everyone else never sees the word "phone" in the admin screens, so nobody wonders whether their employees can
+  suddenly punch from phones: they cannot unless the owner switches it on and grants it person by person. The way in is
+  profile menu, **Company Info**, **Remote Access**, **Set up phone clock-in** (owners and co-admins; managers do not see
+  it). If a customer says "I do not see Phone clock-in": it is not on for them yet, send them that path.
+- **Where (once it is on):** left menu, Team, **Phone clock-in**. One window: tick who may
   clock in from their phone, type any missing email, choose where they can clock in for each site, press **Send N
   invitations**. It turns on the company's Remote Access switch if it is off, writes the email if one was typed, sends
   the portal invitation, and grants the employee's Remote Clock-In, in that order. A confirmation explains the grant first.
@@ -106,6 +113,15 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   invited (Invite), Invited (Resend), Portal only (Allow clock-in) or Can clock in. Free accounts past their preview see
   "Starter and up". The bulk bar has **Invite to phone clock-in**. Whether an employee gets the automatic email report is
   still set in their Edit window.
+- **A manager** can invite people and grant phone clock-in at their own sites once the company's Remote Access switch is on.
+  Turning that switch on is the owner's: if a manager presses Invite or Allow clock-in while it is off, the screen says
+  "Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on." (nothing is written). Managers
+  do not see the Phone clock-in menu entry or window.
+- **Several companies on one account:** the Employees list shows everyone together, and each person is judged by THEIR
+  company's Remote Access switch (an employee of a company where it is off reads "Portal only" even if another company
+  has it on). The bulk invite turns the switch on for each company among the people chosen. The Phone clock-in window
+  manages one company, and names it at the top when the account has more than one; "Set up phone clock-in" in Company Info
+  opens it for the company being edited.
 - **First-run question:** a new account with no punches is asked on the dashboard "How will your team clock in?" (tablet,
   their own phones, both). The checklist then lists the matching steps; for phones the last step is the first punch from a
   phone (a punch whose source is mobile). The answer is kept on that browser only; "Change how your team clocks in" on the
@@ -295,6 +311,9 @@ Not available yet (say so plainly; see the deferred-requests memory): authorized
 kiosk, payroll integrations such as ADP (exports only), leave balances, wages and premium amounts.
 
 Other recent changes
+- Homepage on a phone or a half-width window (since 2026-11-17): the section links, Employee Portal, **Admin Login**, the
+  light/dark switch and Get Started Free are inside the menu button (three lines) at the top right of the header, below
+  about 1,240 px. Customers who say "the login disappeared" just need to open that menu.
 - Reports and Activity: Previous / Next / Current period buttons that step through pay periods.
 - Schedule: "Clear week" for one employee; copy a shift to other employees; a company setting lets
   site managers see and schedule staff from all sites (off means only their own sites).

@@ -162,8 +162,136 @@ console.log('\n── Phone menu entry ─────────────�
   const p = await demoPage(390, 844, 'en');
   const r = await p.evaluate(() => { const d = id => getComputedStyle(document.getElementById(id)).display; return { phone: d('mobileNavPhone'), sites: d('mobileNavCompanies'), sched: d('mobileNavSchedule') }; });
   ok('Phone clock-in is a flex row like the other entries', r.phone === 'flex' && r.sites === 'flex', JSON.stringify(r));
-  await p.evaluate(() => document.body.classList.remove('role-admin'));   // a manager: no entry at all
+  await p.evaluate(() => { document.body.classList.remove('role-admin'); document.body.classList.add('role-manager'); });   // a manager: no entry at all
   ok('and a manager does not get it', await p.evaluate(() => getComputedStyle(document.getElementById('mobileNavPhone')).display === 'none'));
+  await p.context().close();
+}
+
+console.log('\n── Hidden until phone clock-in is in use ────────');
+// An owner who never asked for it must not see it: no Team menu entry, no phone-menu entry, no Phone column, no bulk
+// button, no card line. It appears when the company switch is on, someone was granted it, or the owner said their
+// team clocks in on phones; the way in is Company Info > Remote Access > Set up phone clock-in.
+{
+  const shown = p => p.evaluate(() => {
+    const d = el => !!el && getComputedStyle(el).display !== 'none';
+    const th = document.querySelector('#tab-employees thead th.ph-col'), td = document.querySelector('#empTableBody td.ph-col');
+    return { on: document.body.classList.contains('phone-on'), side: d([...document.querySelectorAll('#sideNav .sn-item')].find(b => /openPhoneSetup/.test(b.getAttribute('onclick') || ''))),
+             menu: d(document.getElementById('mobileNavPhone')), th: d(th), td: d(td), bulk: d(document.querySelector('.ph-bulk')), card: d(document.querySelector('#empCardsContainer .ph-card')) };
+  });
+  const off = p => p.evaluate(() => { C.companies.forEach(c => { c.remote_punch_enabled = false; }); const x = Ctx.get(); if (x && x.co) { x.co.remote_punch_enabled = false; Ctx.set(x); } C.employees.forEach(e => { e.remote_punch_enabled = false; }); try { localStorage.removeItem('pc_setup_mode'); } catch (e) {} navigate('admin'); });
+  const p = await demoPage(1440, 900, 'en');
+  await off(p); await sleep(900);
+  let v = await shown(p);
+  ok('not in use: nothing about phone clock-in is shown (menu, column, bulk button, card line)', !v.on && !v.side && !v.menu && !v.th && !v.td && !v.bulk && !v.card, JSON.stringify(v));
+  ok('not in use: the Employees list has no "Phone" word in its header', !(await p.evaluate(() => [...document.querySelectorAll('#tab-employees thead th')].filter(t => getComputedStyle(t).display !== 'none').some(t => /Phone/i.test(t.innerText)))));
+  // the way in
+  await p.evaluate(() => editCompany(C.companies[0].id)); await sleep(600);
+  ok('Company Info offers "Set up phone clock-in" next to Remote Access', await p.evaluate(() => { const r = document.getElementById('remotePunchSetupRow'); return !!r && getComputedStyle(r).display !== 'none' && /Set up phone clock-in/.test(r.innerText); }));
+  await p.evaluate(() => document.querySelector('#remotePunchSetupRow button').click()); await sleep(700);
+  ok('and it opens the window (and closes Company Info)', await p.evaluate(() => document.getElementById('phoneSetupModal').classList.contains('open') && !document.getElementById('addCompanyModal').classList.contains('open')));
+  // sending turns it on, and the entries appear
+  await p.evaluate(() => { const e = C.employees.find(x => x.id === 'demo-e1'); if (!e.email) e.email = 'david.pham@example.com'; renderPhoneSetup(); document.getElementById('ph-cb-demo-e1').click(); });
+  await p.click('#phSendBtn'); await sleep(500);
+  await p.locator('button', { hasText: /^Confirm$/ }).last().click(); await sleep(1500);
+  v = await shown(p);
+  ok('after the first invitations are sent it is in use: the entries and the Phone column appear', v.on && v.side && v.th && v.td, JSON.stringify(v));
+  await p.context().close();
+}
+{
+  const p = await demoPage(1440, 900, 'en');
+  await p.evaluate(() => { C.companies.forEach(c => { c.remote_punch_enabled = false; }); const x = Ctx.get(); if (x && x.co) { x.co.remote_punch_enabled = false; Ctx.set(x); } C.employees.forEach(e => { e.remote_punch_enabled = false; }); try { localStorage.removeItem('pc_setup_mode'); } catch (e) {} navigate('admin'); });
+  await sleep(700);
+  ok('"their own phones" in the first-run question turns it on', await p.evaluate(() => { setSetupMode('phones'); return document.body.classList.contains('phone-on'); }));
+  ok('"a tablet at the door" does not', await p.evaluate(() => { setSetupMode('tablet'); return !document.body.classList.contains('phone-on'); }));
+  ok('"both" turns it on', await p.evaluate(() => { setSetupMode('both'); return document.body.classList.contains('phone-on'); }));
+  ok('one granted employee is enough', await p.evaluate(() => { setSetupMode(''); const hidden = !document.body.classList.contains('phone-on'); C.employees[0].remote_punch_enabled = true; syncPhoneFeature(); return hidden && document.body.classList.contains('phone-on'); }));
+  ok('a manager never gets the menu entry, even when it is in use', await p.evaluate(() => { document.body.classList.add('role-manager'); const side = getComputedStyle([...document.querySelectorAll('#sideNav .sn-item')].find(b => /openPhoneSetup/.test(b.getAttribute('onclick') || ''))).display; const menu = getComputedStyle(document.getElementById('mobileNavPhone')).display; document.body.classList.remove('role-manager'); return side === 'none' && menu === 'none'; }));
+  ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
+  await p.context().close();
+}
+{
+  const p = await demoPage(390, 844, 'en');
+  await p.evaluate(() => { C.companies.forEach(c => { c.remote_punch_enabled = false; }); const x = Ctx.get(); if (x && x.co) { x.co.remote_punch_enabled = false; Ctx.set(x); } C.employees.forEach(e => { e.remote_punch_enabled = false; }); try { localStorage.removeItem('pc_setup_mode'); } catch (e) {} navigate('admin'); });
+  await sleep(900);
+  const r = await p.evaluate(() => ({ menu: getComputedStyle(document.getElementById('mobileNavPhone')).display, cards: document.querySelectorAll('#empCardsContainer .ph-card').length, cardShown: [...document.querySelectorAll('#empCardsContainer .ph-card')].some(c => getComputedStyle(c).display !== 'none') }));
+  ok('on a phone, not in use: no menu entry and no Phone line on the employee cards', r.menu === 'none' && r.cards > 0 && !r.cardShown, JSON.stringify(r));
+  await p.context().close();
+}
+
+console.log('\n── A manager, and the company switch ────────────');
+// Turning a company's Remote Access switch on is the owner's. A manager who presses Invite or Allow with it off gets a
+// plain sentence, and no write to companies is even attempted; with it on they can still invite and grant.
+{
+  const ASK = 'Ask the account owner to turn it on.';
+  const setup = (p, switchOn) => p.evaluate(on => {
+    C.companies.forEach(c => { c.remote_punch_enabled = on; }); const x = Ctx.get(); if (x && x.co) { x.co.remote_punch_enabled = on; Ctx.set(x); }
+    C.employees.forEach(e => { e.remote_punch_enabled = false; });
+    for (const id of ['demo-e1', 'demo-e3']) { const e = C.employees.find(q => q.id === id); if (!e.email) e.email = id + '@example.com'; }
+    window._calls = []; const orig = DB.update; DB.update = async (t, f, b) => { window._calls.push(t); return orig(t, f, b); };
+    Sess.get = () => ({ id: 'm1', name: 'Mgr', email: 'm@example.com', role: 'manager', plan: 'business' }); document.body.classList.add('role-manager'); navigate('admin');   // a signed-in manager (the real isManager() reads the session)
+  }, switchOn);
+  {
+    const p = await demoPage(1440, 900, 'en');
+    await setup(p, false); await sleep(800);
+    await p.evaluate(() => { toggleEmpSelect('demo-e1', true); }); await p.evaluate(() => { bulkInvitePhone(); }); await sleep(600);
+    const r = await p.evaluate(() => ({ text: document.body.innerText, dialog: document.getElementById('uiDialog') && document.getElementById('uiDialog').classList.contains('open'), calls: window._calls.join(',') }));
+    ok('manager, switch off, bulk invite: a plain message, no confirmation, no write to companies', r.text.includes(ASK) && !r.dialog && !/companies/.test(r.calls), JSON.stringify({ dialog: r.dialog, calls: r.calls }));
+    await p.evaluate(() => { _portalMap = _portalMap || {}; _portalMap['demo-e0'] = { employee_id: 'demo-e0', status: 'active' }; allowPhoneClockIn('demo-e0'); }); await sleep(500);
+    const a = await p.evaluate(() => ({ modal: document.getElementById('phoneSetupModal').classList.contains('open'), text: document.body.innerText, calls: window._calls.join(',') }));
+    ok('manager, switch off, Allow clock-in: the same plain message, not "no permission"', a.text.includes(ASK) && !a.modal && !/companies/.test(a.calls) && !/permission/i.test(a.text.replace(ASK, '')), JSON.stringify({ modal: a.modal, calls: a.calls }));
+    ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
+    await p.context().close();
+  }
+  {
+    const p = await demoPage(1440, 900, 'en');
+    await setup(p, true); await sleep(800);
+    await p.evaluate(() => { toggleEmpSelect('demo-e1', true); toggleEmpSelect('demo-e3', true); bulkInvitePhone(); }); await sleep(600);
+    await p.locator('button', { hasText: /^Confirm$/ }).last().click(); await sleep(1500);
+    const r = await p.evaluate(() => ({ text: document.body.innerText, calls: window._calls.join(','), granted: C.employees.filter(e => e.remote_punch_enabled).map(e => e.id).sort().join(',') }));
+    ok('manager, switch on: the invitations go through and the grants are written', /2 invitation\(s\) sent/.test(r.text) && r.granted === 'demo-e1,demo-e3', JSON.stringify({ granted: r.granted }));
+    ok('and no write to companies is attempted', !/companies/.test(r.calls), r.calls);
+    await p.context().close();
+  }
+}
+
+console.log('\n── Several companies ───────────────────────────');
+// Everyone is listed together, and the company selected (or first) must not decide for the others: each person is
+// judged by their own company's switch.
+{
+  const addSecond = p => p.evaluate(() => {
+    Ctx.clear();
+    const base = C.companies[0]; base.remote_punch_enabled = true;
+    C.companies.push(Object.assign({}, base, { id: 'demo-co2', name: 'Second Co', remote_punch_enabled: false }));
+    C.employees.push({ id: 'demo-x1', name: 'Zed Other', site_id: 'demo-s1', company_id: 'demo-co2', active: true, email: 'zed@example.com', remote_punch_enabled: true, pin: '9999', dept: '', emp_code: 'X1' });
+    C.employees.push({ id: 'demo-x2', name: 'Yan Other', site_id: 'demo-s1', company_id: 'demo-co2', active: true, email: 'yan@example.com', remote_punch_enabled: false, pin: '9998', dept: '', emp_code: 'X2' });
+    window._demoPortal.push({ id: 'pt-x1', employee_id: 'demo-x1', email: 'zed@example.com', status: 'active' });
+    _portalMap = { 'demo-e0': { employee_id: 'demo-e0', status: 'active' }, 'demo-x1': { employee_id: 'demo-x1', status: 'active' } };
+  });
+  const p = await demoPage(1440, 900, 'en');
+  await addSecond(p);
+  const states = () => p.evaluate(() => ({ first: C.companies[0].name, e0: phoneState(C.employees.find(e => e.id === 'demo-e0')).k, x1: phoneState(C.employees.find(e => e.id === 'demo-x1')).k, feature: phoneFeatureOn() }));
+  let st = await states();
+  ok('the "on" company first: its employee can clock in, the other company\'s reads Portal only', st.e0 === 'can' && st.x1 === 'portal', JSON.stringify(st));
+  await p.evaluate(() => { C.companies.reverse(); });
+  st = await states();
+  ok('and the same with the companies the other way round', st.e0 === 'can' && st.x1 === 'portal' && st.first === 'Second Co', JSON.stringify(st));
+  ok('phone clock-in counts as in use when any company has the switch on, whichever is first', await p.evaluate(() => { C.employees.forEach(e => { e.remote_punch_enabled = false; }); try { localStorage.removeItem('pc_setup_mode'); } catch (e) {} return phoneFeatureOn(); }));
+  // Allow clock-in for the "off" company's person opens the window for THAT company
+  await p.evaluate(() => { _portalMap['demo-x2'] = { employee_id: 'demo-x2', status: 'active' }; allowPhoneClockIn('demo-x2'); }); await sleep(900);
+  const w = await p.evaluate(() => ({ open: document.getElementById('phoneSetupModal').classList.contains('open'), text: document.getElementById('phoneSetupBody').innerText }));
+  ok('Allow clock-in for the other company opens the window on that company, and names it', w.open && /Company: Second Co/.test(w.text) && /Yan Other/.test(w.text) && !/Aïsha/.test(w.text), w.text.slice(0, 120));
+  await p.evaluate(() => closeModal('phoneSetupModal'));
+  // Bulk invite across both companies turns on each switch that is off
+  await p.evaluate(() => {
+    C.companies.forEach(c => { c.remote_punch_enabled = false; });
+    for (const id of ['demo-e1', 'demo-x2']) { const e = C.employees.find(q => q.id === id); if (!e.email) e.email = id + '@example.com'; toggleEmpSelect(id, true); }
+    window._calls = []; const orig = DB.update; DB.update = async (t, f, b) => { window._calls.push(t + ':' + f); return orig(t, f, b); };
+    bulkInvitePhone();
+  }); await sleep(600);
+  await p.locator('button', { hasText: /^Confirm$/ }).last().click(); await sleep(1500);
+  const b = await p.evaluate(() => ({ calls: window._calls.filter(c => c.startsWith('companies')).join(' '), on: C.companies.map(c => c.remote_punch_enabled).join(',') }));
+  ok('a bulk invite across two companies turns the switch on for each one that was off', /demo-co\b/.test(b.calls) && /demo-co2/.test(b.calls) && b.on === 'true,true', JSON.stringify(b));
+  ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
   await p.context().close();
 }
 
