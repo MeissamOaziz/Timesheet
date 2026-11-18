@@ -3846,6 +3846,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           </div>
           <!-- No inline onclick: the handler is assigned per employee so it can never fire with
                stale or missing arguments. -->
+          <span id="empInviteLangWrap" style="display:none"></span>
           <button type="button" id="empPortalInviteBtn" style="background:rgba(124,92,191,.2);border:1px solid rgba(124,92,191,.4);border-radius:var(--r-sm);color:#a78bfa;font-family:inherit;font-size:12px;font-weight:600;padding:6px 13px;cursor:pointer;white-space:nowrap;transition:all .15s"></button>
         </div>
         <div id="empPortalInviteMsg" style="margin-top:8px"></div>
@@ -10043,16 +10044,45 @@ function phoneCellHtml(e){
   return `<div class="ph-cell"><span class="pill ${st.cls}" style="font-size:12px">${esc(st.label)}</span>${st.btn?`<button class="ph-link" onclick="${st.fn}">${esc(st.btn)}</button>`:''}</div>`;
 }
 // One invitation: a fresh seven-day token, the portal row, then the email (the server takes the address and the link from the row).
-async function portalInviteCore(empId,email){
+// The language of an invitation email is chosen when it is sent (an English-speaking admin often invites a French-speaking
+// employee, and the employee has no account yet, so there is no preference to read). Remembered per browser; defaults to
+// the language the admin is using.
+function inviteLang(){
+  try{ const v=localStorage.getItem('pc_invite_lang'); if(v==='fr'||v==='en') return v; }catch(_){}
+  return (typeof _appLang!=='undefined'&&_appLang==='fr')?'fr':'en';
+}
+function setInviteLang(v){
+  v=(v==='fr')?'fr':'en';
+  try{ localStorage.setItem('pc_invite_lang',v); }catch(_){}
+  document.querySelectorAll('select.invite-lang').forEach(x=>{ x.value=v; });
+}
+function inviteLangSelect(id){
+  const v=inviteLang();
+  return `<label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)">${esc(t('emp.inviteLang')||'Email language')}`+
+    `<select class="invite-lang"${id?` id="${id}"`:''} onchange="setInviteLang(this.value)" style="font-family:inherit;font-size:12px;padding:4px 8px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text)">`+
+    `<option value="en"${v==='en'?' selected':''}>English</option><option value="fr"${v==='fr'?' selected':''}>Français</option></select></label>`;
+}
+async function portalInviteCore(empId,email,lang){
   const token=crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Math.random().toString(36).slice(2)+Date.now().toString(36);
   const expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
   const existing=await DB.all('employee_portal',`employee_id=eq.${empId}`);
-  if(existing?.[0]){
-    await DB.update('employee_portal',`id=eq.${existing[0].id}`,{email,invite_token:token,token_expires_at:expires,status:'invited'});
+  const prev=existing?.[0]||null;
+  if(prev){
+    await DB.update('employee_portal',`id=eq.${prev.id}`,{email,invite_token:token,token_expires_at:expires,status:'invited'});
   }else{
     await DB.insert('employee_portal',{employee_id:empId,email,invite_token:token,token_expires_at:expires,status:'invited'});
   }
-  await sendAppEmail('employee_invite',{employee_id:empId,lang:_appLang||'en'});
+  try{
+    await sendAppEmail('employee_invite',{employee_id:empId,lang:(lang==='fr'||lang==='en')?lang:inviteLang()});
+  }catch(err){
+    // The server reads the invitation from this row, so it is written first. If the email did not go out, put the row
+    // back as it was: otherwise the person shows as "Invited" with no email, and an active account would be knocked back.
+    try{
+      if(prev) await DB.update('employee_portal',`id=eq.${prev.id}`,{email:prev.email,invite_token:prev.invite_token,token_expires_at:prev.token_expires_at,status:prev.status});
+      else await DB.del('employee_portal',`employee_id=eq.${empId}`);
+    }catch(_){}
+    throw err;
+  }
   if(_portalMap) _portalMap[empId]={employee_id:empId,status:'invited',last_login:null};
 }
 async function invitePhoneFromList(id){
@@ -10092,7 +10122,7 @@ async function bulkInvitePhone(){
   const off=cos.filter(c=>!c.remote_punch_enabled);
   // Turning a company's switch on is the owner's: a manager gets a plain message, not the server's refusal.
   if(isManager()&&off.length){ showToast(t('ph.askOwner')||'Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on.','info'); return; }
-  const msg=(t('ph.confirm')||'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?').replace('{n}',ok.length);
+  const msg=(t('ph.confirm')||'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?').replace('{n}',ok.length)+' ('+(t('emp.inviteLang')||'Email language')+(_appLang==='fr'?' : ':': ')+(inviteLang()==='fr'?'Français':'English')+')';
   if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
   let sent=0;
   try{
@@ -10157,7 +10187,7 @@ async function phSend(){
   const co=phWinCompany(); if(!co||_phBusy) return;
   const ready=phReady();
   if(!ready.length){ _phMsg=t('ph.none')||'Pick at least one person with an email.'; renderPhoneSetup(); return; }
-  const msg=(t('ph.confirm')||'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?').replace('{n}',ready.length);
+  const msg=(t('ph.confirm')||'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?').replace('{n}',ready.length)+' ('+(t('emp.inviteLang')||'Email language')+(_appLang==='fr'?' : ':': ')+(inviteLang()==='fr'?'Français':'English')+')';
   if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
   _phBusy=true; phUpdateSend();
   let done=0, failed=0, why='', limited=false;
@@ -10220,6 +10250,7 @@ function renderPhoneSetup(){
     ${sites.length?`<div class="ph-sec"><h4>${esc(t('ph.s2')||'Where can they clock in?')}</h4><p>${esc(t('ph.s2h')||'Set per site. With Anywhere, the location is saved when the phone allows it.')}</p><div style="margin-top:8px">${sites.map(siteRow).join('')}</div></div>`:''}
     <div class="ph-sec"><h4>${esc(t('ph.s3')||'Send their links')}</h4>
       <p>${esc(t('ph.s3h')||'Each person gets an email, sets a password and sees a Clock In button. They can save it to their home screen.')}</p>
+      <div style="margin-top:12px">${inviteLangSelect('phInviteLang')}</div>
       <div style="margin-top:12px"><button class="btn-primary" id="phSendBtn" style="width:auto;padding:9px 18px" onclick="phSend()" disabled>${esc((t('ph.send')||'Send {n} invitation(s)').replace('{n}',0))}</button></div>
       ${_phMsg?`<div class="ph-note" role="status">${esc(_phMsg)}</div>`:''}</div>`;
   phUpdateSend();
@@ -11761,6 +11792,8 @@ async function loadEmpPortalStatus(emp) {
   if(!inviteRow) return;
   resetEmpCalFeedRow();
   inviteBtn.onclick = null;   // drop any handler left from the previously opened employee
+  const langWrap = document.getElementById('empInviteLangWrap'); if(langWrap){ langWrap.style.display='none'; langWrap.innerHTML=''; }
+  const showLang = () => { if(langWrap){ langWrap.innerHTML=inviteLangSelect('empInviteLang'); langWrap.style.display=''; } };
   if(!emp.email) { inviteRow.style.display='none'; return; }
   inviteRow.style.display='';
   if(msgEl) msgEl.innerHTML='';
@@ -11773,11 +11806,13 @@ async function loadEmpPortalStatus(emp) {
       statusEl.textContent = t('emp.portalNotInvited')||'No portal access yet';
       inviteBtn.textContent = t('emp.portalSendInvite')||'Send Invitation';
       inviteBtn.disabled = false;
+      showLang();
       inviteBtn.onclick = () => sendEmpPortalInvite(emp.id, emp.email, emp.name);
     } else if(portal.status === 'invited') {
       statusEl.textContent = t('emp.portalInviteSent')||'Invitation sent — awaiting activation';
       inviteBtn.textContent = t('emp.portalResend')||'Resend Invitation';
       inviteBtn.disabled = false;
+      showLang();
       inviteBtn.onclick = () => sendEmpPortalInvite(emp.id, emp.email, emp.name);
     } else {
       statusEl.textContent = (t('emp.portalActive')||'Active') + (portal.last_login ? ` · ${t('emp.lastLogin')||'Last login'}: ${new Date(portal.last_login).toLocaleDateString()}` : '');
@@ -11855,7 +11890,8 @@ async function sendEmpPortalInvite(empId, email, empName) {
   btn.disabled = true; btn.innerHTML = '<span class="mini-spin"></span>';
   if(msgEl) msgEl.innerHTML='';
   try {
-    await portalInviteCore(empId, email);
+    const langSel = document.getElementById('empInviteLang');
+    await portalInviteCore(empId, email, langSel ? langSel.value : undefined);
     renderEmployees();
 
     if(msgEl) msgEl.innerHTML=`<div style="font-size:11px;color:var(--green);margin-top:4px">✓ ${t('emp.inviteSentOk')||'Invitation sent to'} ${email}</div>`;
@@ -18048,7 +18084,7 @@ en:{
 'ph.s2':'Where can they clock in?','ph.s2h':'Set per site. With Anywhere, the location is saved when the phone allows it.','ph.optAny':'Anywhere','ph.optReq':'Anywhere, location required',
 'ph.geoOn':'Only within {r} m of this site{strict}','ph.geoStrict':', location required','ph.change':'Change',
 'ph.s3':'Send their links','ph.s3h':'Each person gets an email, sets a password and sees a Clock In button. They can save it to their home screen.',
-'ph.send':'Send {n} invitation(s)','ph.sent':'{n} invitation(s) sent.','ph.failed':'{n} could not be sent.','ph.askOwner':'Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on.','ph.forCompany':'Company: {name}','ph.stopped':'Stopped: the hourly limit on emails was reached. The people not reached are still ticked; try again in an hour.','ph.partial':'{n} invitation(s) sent before it stopped: {why}','ph.stoppedShort':'Try again in an hour.','ph.none':'Pick at least one person with an email.',
+'ph.send':'Send {n} invitation(s)','ph.sent':'{n} invitation(s) sent.','ph.failed':'{n} could not be sent.','emp.inviteLang':'Email language','ph.askOwner':'Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on.','ph.forCompany':'Company: {name}','ph.stopped':'Stopped: the hourly limit on emails was reached. The people not reached are still ticked; try again in an hour.','ph.partial':'{n} invitation(s) sent before it stopped: {why}','ph.stoppedShort':'Try again in an hour.','ph.none':'Pick at least one person with an email.',
 'ph.skippedNoEmail':'{n} skipped: no email on file.',
 'ph.confirm':'These {n} employee(s) will be able to clock in and out from anywhere, on any device they have, and each punch will carry its time and location. They will receive an email invitation. Continue?',
 'ph.lockNote':'Phone clock-in is part of the Starter plan and above.','ph.bulk':'Invite to phone clock-in',
@@ -19150,7 +19186,7 @@ fr:{
 'ph.s2':'Où peut-on pointer?','ph.s2h':'Réglage propre à chaque site. Avec Partout, la position est enregistrée si le téléphone le permet.','ph.optAny':'Partout','ph.optReq':'Partout, position obligatoire',
 'ph.geoOn':'Seulement à moins de {r} m de ce site{strict}','ph.geoStrict':', position obligatoire','ph.change':'Modifier',
 'ph.s3':'Envoyer les liens','ph.s3h':'Chaque personne reçoit un courriel, choisit un mot de passe et voit un bouton Pointer. Elle peut l’ajouter à son écran d’accueil.',
-'ph.send':'Envoyer {n} invitation(s)','ph.sent':'{n} invitation(s) envoyée(s).','ph.failed':'{n} n’ont pas pu être envoyées.','ph.askOwner':'Le pointage par téléphone n’est pas encore activé pour votre entreprise. Demandez au propriétaire du compte de l’activer.','ph.forCompany':'Entreprise : {name}','ph.stopped':'Arrêt : la limite horaire de courriels est atteinte. Les personnes non traitées restent cochées; réessayez dans une heure.','ph.partial':'{n} invitation(s) envoyée(s) avant l’arrêt : {why}','ph.stoppedShort':'Réessayez dans une heure.','ph.none':'Choisissez au moins une personne ayant un courriel.',
+'ph.send':'Envoyer {n} invitation(s)','ph.sent':'{n} invitation(s) envoyée(s).','ph.failed':'{n} n’ont pas pu être envoyées.','emp.inviteLang':'Langue du courriel','ph.askOwner':'Le pointage par téléphone n’est pas encore activé pour votre entreprise. Demandez au propriétaire du compte de l’activer.','ph.forCompany':'Entreprise : {name}','ph.stopped':'Arrêt : la limite horaire de courriels est atteinte. Les personnes non traitées restent cochées; réessayez dans une heure.','ph.partial':'{n} invitation(s) envoyée(s) avant l’arrêt : {why}','ph.stoppedShort':'Réessayez dans une heure.','ph.none':'Choisissez au moins une personne ayant un courriel.',
 'ph.skippedNoEmail':'{n} ignoré(s) : aucun courriel.',
 'ph.confirm':'Ces {n} employé(s) pourront pointer à l’arrivée et au départ de n’importe où, sur n’importe quel appareil, et chaque pointage comportera l’heure et la position. Ils recevront une invitation par courriel. Continuer?',
 'ph.lockNote':'Le pointage par téléphone est inclus dans le forfait Débutant et plus.','ph.bulk':'Inviter au pointage par téléphone',

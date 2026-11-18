@@ -65,7 +65,7 @@ console.log('\n── Phone clock-in window ────────────
   await p.evaluate(() => navigate('admin')); await sleep(700);
   ok('the sidebar has a Phone clock-in entry', await p.evaluate(() => [...document.querySelectorAll('#sideNav .sn-item')].some(b => /Phone clock-in/.test(b.innerText))));
   await p.evaluate(() => openPhoneSetup()); await sleep(800);
-  const m = await p.evaluate(() => ({ open: document.getElementById('phoneSetupModal').classList.contains('open'), boxes: document.querySelectorAll('#phoneSetupBody .ph-cb').length, selects: document.querySelectorAll('#phoneSetupBody select').length, dis: document.getElementById('phSendBtn').disabled }));
+  const m = await p.evaluate(() => ({ open: document.getElementById('phoneSetupModal').classList.contains('open'), boxes: document.querySelectorAll('#phoneSetupBody .ph-cb').length, selects: document.querySelectorAll('#phoneSetupBody select:not(.invite-lang)').length, dis: document.getElementById('phSendBtn').disabled }));
   ok('opens with a checkbox per person who is not set up yet, one rule per site, and nothing to send', m.open && m.boxes === 5 && m.selects === 2 && m.dis, JSON.stringify(m));
   await p.evaluate(() => document.getElementById('ph-cb-demo-e2').click());
   await p.fill('#ph-em-demo-e2', 'sofia.ricci@example.com');
@@ -293,6 +293,79 @@ console.log('\n── Several companies ─────────────�
   ok('a bulk invite across two companies turns the switch on for each one that was off', /demo-co\b/.test(b.calls) && /demo-co2/.test(b.calls) && b.on === 'true,true', JSON.stringify(b));
   ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
   await p.context().close();
+}
+
+console.log('\n── An invitation whose email fails ───────────────');
+// The invitation row is written before the email (the server reads it). If the email does not go out, the row must be put
+// back: no "Invited" for someone who got nothing, and an active account must not be knocked back to "invited".
+{
+  const p = await demoPage(1440, 900, 'en');
+  await p.evaluate(() => { const e = C.employees.find(x => x.id === 'demo-e3'); e.email = 'new.person@example.com'; sendAppEmail = async () => { throw new Error('Too many emails'); }; });
+  const r1 = await p.evaluate(async () => {
+    let msg = ''; try { await portalInviteCore('demo-e3', 'new.person@example.com'); } catch (e) { msg = e.message; }
+    return { msg, rows: window._demoPortal.filter(x => x.employee_id === 'demo-e3').length, mapped: !!(_portalMap && _portalMap['demo-e3']) };
+  });
+  ok('new invitation, email fails: the error is raised and no portal row is left behind', r1.msg === 'Too many emails' && r1.rows === 0 && !r1.mapped, JSON.stringify(r1));
+  const r2 = await p.evaluate(async () => {
+    const row = window._demoPortal.find(x => x.employee_id === 'demo-e0'); const before = JSON.stringify(row);
+    let msg = ''; try { await portalInviteCore('demo-e0', row.email); } catch (e) { msg = e.message; }
+    const after = window._demoPortal.find(x => x.employee_id === 'demo-e0');
+    return { msg, same: JSON.stringify(after) === before, status: after && after.status };
+  });
+  ok('re-invite of an active account, email fails: the account stays exactly as it was (still active)', r2.msg && r2.same && r2.status === 'active', JSON.stringify(r2));
+  const r3 = await p.evaluate(async () => { sendAppEmail = async () => ({ ok: true }); await portalInviteCore('demo-e3', 'new.person@example.com'); return { rows: window._demoPortal.filter(x => x.employee_id === 'demo-e3').length, st: window._demoPortal.find(x => x.employee_id === 'demo-e3').status }; });
+  ok('and when the email does go out, the row is written as invited', r3.rows === 1 && r3.st === 'invited', JSON.stringify(r3));
+  ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
+  await p.context().close();
+}
+
+console.log('\n── Language of the invitation ───────────────────');
+// An English-speaking admin often invites a French-speaking employee: the language is chosen when sending, and the
+// set-password page (reached from the email) has its own EN/FR switch.
+{
+  const p = await demoPage(1440, 900, 'en');
+  await p.evaluate(() => { try { localStorage.removeItem('pc_invite_lang'); } catch (e) {} const e = C.employees.find(x => x.id === 'demo-e3'); e.email = 'lang.test@example.com'; e.send_report = true; window._sent = []; sendAppEmail = async (t, d) => { window._sent.push(Object.assign({ t }, d)); return { ok: true }; }; editEmployee('demo-e3'); });
+  await sleep(1200);
+  let r = await p.evaluate(() => { const sel = document.getElementById('empInviteLang'); return { has: !!sel, shown: !!sel && sel.offsetParent !== null, val: sel && sel.value, opts: sel && [...sel.options].map(o => o.text).join('/') }; });
+  ok('Edit employee: an "Email language" choice sits beside the invitation button, English by default in an English screen', r.has && r.shown && r.val === 'en' && r.opts === 'English/Français', JSON.stringify(r));
+  await p.evaluate(() => { const s = document.getElementById('empInviteLang'); s.value = 'fr'; s.dispatchEvent(new Event('change')); document.getElementById('empPortalInviteBtn').click(); });
+  await sleep(800);
+  r = await p.evaluate(() => ({ sent: window._sent.map(x => x.t + ':' + x.lang).join(','), stored: localStorage.getItem('pc_invite_lang') }));
+  ok('choosing Français sends the invitation email in French (and remembers the choice)', r.sent === 'employee_invite:fr' && r.stored === 'fr', JSON.stringify(r));
+  await p.evaluate(() => closeModal('empModal') || 0).catch(() => {});
+  await p.context().close();
+}
+{
+  const p = await demoPage(1440, 900, 'fr');
+  await p.evaluate(() => { try { localStorage.removeItem('pc_invite_lang'); } catch (e) {} window._sent = []; sendAppEmail = async (t, d) => { window._sent.push(Object.assign({ t }, d)); return { ok: true }; }; });
+  const r = await p.evaluate(() => inviteLang());
+  ok('in a French screen the default is French', r === 'fr');
+  await p.evaluate(() => { for (const id of ['demo-e3']) { const e = C.employees.find(q => q.id === id); e.email = 'lang.test@example.com'; } C.companies.forEach(c => { c.remote_punch_enabled = true; }); openPhoneSetup(); }); await sleep(900);
+  const w = await p.evaluate(() => { renderPhoneSetup(); const s = document.getElementById('phInviteLang'); return { has: !!s, val: s && s.value }; });
+  ok('the phone clock-in window has the same choice, French here', w.has && w.val === 'fr', JSON.stringify(w));
+  await p.evaluate(() => { const s = document.getElementById('phInviteLang'); s.value = 'en'; s.dispatchEvent(new Event('change')); document.getElementById('ph-cb-demo-e3').click(); });
+  await p.click('#phSendBtn'); await sleep(500);
+  const txt = await p.evaluate(() => document.body.innerText);
+  ok('the confirmation names the language the emails will be in', /Langue du courriel : English/.test(txt), txt.slice(txt.indexOf('Langue du courriel') - 20, txt.indexOf('Langue du courriel') + 60));
+  await p.locator('button', { hasText: /^Confirmer$/ }).last().click(); await sleep(1500);
+  const sent = await p.evaluate(() => window._sent.map(x => x.lang).join(','));
+  ok('and that is the language that goes out (English, although the screen is French)', sent === 'en', sent);
+  ok('no page errors', p._errs.length === 0, p._errs.join(' / '));
+  await p.context().close();
+}
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'en-CA' });
+  await ctx.route(u => !u.href.startsWith(BASE) && !/fonts\.(googleapis|gstatic)\.com/.test(u.href) && !u.href.startsWith('data:'), r => r.abort());
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto(BASE + 'employee.html', { waitUntil: 'load' }); await sleep(800);
+  await p.evaluate(() => { showScreen('screenSetPassword'); });
+  const r = await p.evaluate(() => { const sw = document.querySelector('#screenSetPassword .lang-sw'); return { has: !!sw && sw.offsetParent !== null, title: document.getElementById('setPassTitle').innerText }; });
+  ok('set-password page: an EN/FR switch is shown', r.has, JSON.stringify(r));
+  await p.click('#screenSetPassword .lang-sw button[data-lang="fr"]'); await sleep(300);
+  const f = await p.evaluate(() => ({ title: document.getElementById('setPassTitle').innerText, btn: document.getElementById('setPassBtn').innerText, active: document.querySelector('#screenSetPassword .lang-sw button.active').dataset.lang }));
+  ok('pressing FR puts the whole page in French', /Bienvenue/.test(f.title) && f.active === 'fr', JSON.stringify(f));
+  ok('no page errors', errs.length === 0, errs.join(' / '));
+  await ctx.close();
 }
 
 console.log('\n── Not on a paid plan ──────────────────────────');

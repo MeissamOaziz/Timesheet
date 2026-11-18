@@ -384,6 +384,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="auth-logo"><svg class="crew-mark" aria-hidden="true"><use href="#i-crew-mark"/></svg>PunchClock Crew</div>
+      <div style="display:flex;justify-content:center;margin-bottom:20px">
+        <div class="lang-sw">
+          <button onclick="setEmpLang('en')" data-lang="en" class="active">EN</button>
+          <button onclick="setEmpLang('fr')" data-lang="fr">FR</button>
+        </div>
+      </div>
       <h2 class="auth-title" id="setPassTitle">Welcome! Set your password</h2>
       <p class="auth-sub" id="setPassSub">You've been invited to the employee portal. Choose a password to activate your account.</p>
       <div id="setPassMsg"></div>

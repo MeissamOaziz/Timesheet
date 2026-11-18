@@ -122,6 +122,12 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   has it on). The bulk invite turns the switch on for each company among the people chosen. The Phone clock-in window
   manages one company, and names it at the top when the account has more than one; "Set up phone clock-in" in Company Info
   opens it for the company being edited.
+- **Language of the invitation email (2026-11-18):** the admin picks it when sending: an "Email language" choice (English / Français)
+  beside the invitation button in the Edit employee window and above the Send button in the Phone clock-in window; the
+  confirmation names the language. It defaults to the admin's screen language and is remembered in that browser. There is
+  no per-employee language stored yet (that would need a database column). The set-password page the employee reaches from
+  the email has its own EN/FR switch; the portal otherwise starts in the phone's/browser's language. If a French-speaking
+  employee got an English email, resend the invitation with Français selected.
 - **First-run question:** a new account with no punches is asked on the dashboard "How will your team clock in?" (tablet,
   their own phones, both). The checklist then lists the matching steps; for phones the last step is the first punch from a
   phone (a punch whose source is mobile). The answer is kept on that browser only; "Change how your team clocks in" on the
