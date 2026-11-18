@@ -70,6 +70,24 @@ knowing: pick a clocked-**out** employee before opening the PIN pad (otherwise t
 the "already clocked in" warning instead), and call `generateReport()` before shooting Reports
 (the results table is empty until then).
 
+## How-to videos
+
+`make-videos.mjs` records the short how-to videos (clock in with a PIN, set up the tablet, set up phone
+clock-in, add an employee, fix a forgotten clock-out, export payroll hours) in English and French, wide
+(16:9, 1280x720) and vertical (9:16, 1080x1920, for Reels, Shorts and Stories):
+
+```bash
+cd tools
+node make-videos.mjs                          # everything: 6 videos x 2 languages x 2 formats
+node make-videos.mjs pin phone                # only ids containing "pin" or "phone"
+node make-videos.mjs --lang fr --format wide
+```
+
+Output goes to `tools/_videos/` (gitignored, so the files are never published with the site). It needs
+`ffmpeg` on the PATH. Like the screenshots it drives the real `index.html` in demo mode with every outside
+request blocked, so no real customer data can appear; it adds a cursor, a click ripple, numbered captions and
+title and end cards. To add a video, add an entry to `VIDEOS` in the script. Re-record after any UI change.
+
 ## Keep this tree public-safe
 
 This repository is public and every tracked file is served at www.punchclock.ca. Never commit kiosk site ids,

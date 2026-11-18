@@ -41,6 +41,8 @@ async function setup(page, { company=true, site=true, emps=true, punch=false, ki
     DB.all = async (table)=> table==='kiosk_devices' ? (st.kiosk?[{id:'k1'}]:[]) : [];
     _kioskSeen = st.kiosk;
     localStorage.removeItem('pc_setup_done');
+    // These checks are about the tablet steps; the how-will-your-team-clock-in question has its own test.
+    localStorage.setItem('pc_setup_mode','tablet');
     renderSetupChecklist();
   }, { company, site, emps, punch, kiosk, sites });
   await page.waitForTimeout(120);

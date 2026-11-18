@@ -93,6 +93,26 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   code". If none exists there, no code was generated for that address.
 - Admin workaround when someone is locked out: Admin, Employees, resend the portal invitation.
 
+## Phone clock-in: the quick way (since 2026-11-17)
+
+- **Where:** left menu, Team, **Phone clock-in** (owners and co-admins; managers do not see it). One window: tick who may
+  clock in from their phone, type any missing email, choose where they can clock in for each site, press **Send N
+  invitations**. It turns on the company's Remote Access switch if it is off, writes the email if one was typed, sends
+  the portal invitation, and grants the employee's Remote Clock-In, in that order. A confirmation explains the grant first.
+- **Where can they clock in** (per site, only for a site with no address): "Anywhere" (location saved when the phone allows
+  it) or "Anywhere, location required" (Strict, no address: the roaming-crew setup). A site that has a geofence shows its
+  radius and a Change button that opens the site's own geofence settings.
+- **The Phone column** on Employees replaced the old "Email report" column. It reads: Needs an email (Add email), Not
+  invited (Invite), Invited (Resend), Portal only (Allow clock-in) or Can clock in. Free accounts past their preview see
+  "Starter and up". The bulk bar has **Invite to phone clock-in**. Whether an employee gets the automatic email report is
+  still set in their Edit window.
+- **First-run question:** a new account with no punches is asked on the dashboard "How will your team clock in?" (tablet,
+  their own phones, both). The checklist then lists the matching steps; for phones the last step is the first punch from a
+  phone (a punch whose source is mobile). The answer is kept on that browser only; "Change how your team clocks in" on the
+  checklist asks again.
+- It writes only settings that already existed, so every old way (Company Info, the employee's Edit window, the bulk
+  buttons) still works and agrees with it.
+
 ## GPS and geofencing (sales questions come up often)
 
 - Phone punches (employee portal, "Remote clock-in") record GPS latitude/longitude, accuracy and, when the

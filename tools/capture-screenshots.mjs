@@ -246,6 +246,16 @@ const SHOTS = [
         text: T("Paid leave feeds the hours on\nyour payroll report", "Les congés payés alimentent les\nheures de votre rapport de paie") },
     ],
   },
+  {
+    id: '16-phone-clock-in', kind: 'help', page: 'admin',
+    before: async p => { await p.evaluate(() => openPhoneSetup()); await sleep(900); await p.evaluate(() => { document.getElementById('ph-cb-demo-e2').click(); }); await sleep(200); },
+    title: T('Let your team clock in from their phone', 'Laissez votre équipe pointer avec son téléphone'),
+    annotate: [
+      { fn:'ring',  sel:'#phSendBtn' },
+      { fn:'arrow', sel:'#phSendBtn', side:'right',
+        text: T('Tick the people, then press here\nto send their phone links', 'Cochez les personnes, puis touchez ici\npour envoyer les liens') },
+    ],
+  },
   // ---------- Landing: clean product shots ----------
   { id:'hero-dashboard', kind:'landing', page:'dashboard' },
   { id:'product-punch',  kind:'landing', page:'punch' },
