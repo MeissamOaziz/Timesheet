@@ -129,6 +129,10 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   server. If the punch did go through it says "Clocked in/out"; if not it says "No connection. Your punch was NOT recorded".
   Before that fix: ask the employee to reload the portal (the punch is usually already recorded) and check Activity; add a
   missed punch only if it is really absent.
+- **Tablet shows "Error saving punch: Failed to fetch" (weak Wi-Fi), 2026-11-18:** the punch may be stored with only its reply lost.
+  The terminal now re-reads the server before reporting a failure and shows the normal green confirmation if the punch is there;
+  it never re-sends a punch by itself. If a red error stays, nothing reached the server: tap again once the Wi-Fi is back. Before
+  this fix an employee who tapped again got "Already clocked in": the first punch was real, do not add a second one.
 - **Language of the invitation email (2026-11-18):** the admin picks it when sending: an "Email language" choice (English / Français)
   beside the invitation button in the Edit employee window and above the Send button in the Phone clock-in window; the
   confirmation names the language. It defaults to the admin's screen language and is remembered in that browser. There is

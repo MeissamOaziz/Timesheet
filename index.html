@@ -9518,6 +9518,18 @@ async function executePunch(empId,type,isBreak,opts){
       document.getElementById('empSelect').value='';
       refreshClockedIn();
     }catch(e){
+      // No answer at all (weak signal, timeout) does not mean nothing was saved: the punch may be stored with only its
+      // reply lost. Ask the server before telling anyone it failed, so a person is not sent to punch twice. A punch is
+      // never re-sent from here: a kiosk punch carries no id the server could use to drop a repeat.
+      if(!switchOutDone && !isSwitch && !e._raw && await kioskPunchLanded(empId,type,isBreak)){
+        const tStr=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+        showPunchMsg(isBreak
+          ? (type==='OUT' ? `&#10003; ${esc(emp.name)} ${t('punch.breakStarted')||'started their break'} ${tStr}` : `&#10003; ${esc(emp.name)} ${t('punch.breakEnded')||'ended their break'} ${tStr}`)
+          : `&#10003; ${esc(emp.name)} clocked ${type} at ${tStr}`,'success');
+        document.getElementById('empSelect').value='';
+        refreshClockedIn();
+        return;
+      }
       showPunchMsg(switchOutDone
         ? (t('plabel.switchFailed')||'The switch did not finish and {name} is now clocked OUT. Please clock IN again.').replace('{name}',emp.name)
         : t('msg.errorSaving')+': '+e.message,'error');
@@ -9526,6 +9538,19 @@ async function executePunch(empId,type,isBreak,opts){
   } finally {
     _punchInFlight.delete(empId);
   }
+}
+// After a punch got no answer: is it on the server? Reads the terminal's punches again (twice, a moment apart) and looks
+// for this person's newest punch being the one just attempted, made in the last two minutes. Only for terminals.
+async function kioskPunchLanded(empId,type,isBreak){
+  if(Sess.get()||!Ctx.get()?.site) return false;
+  for(let i=0;i<2;i++){
+    if(i) await new Promise(r=>setTimeout(r,1500));
+    _kioskLastFreshPunches=0;
+    try{ await kioskFreshenPunches(0); }catch(_){}
+    const {last}=getEmpStatus(empId);
+    if(last && last.type===type && !!last.is_break===!!isBreak && last.punched_at && (Date.now()-new Date(last.punched_at).getTime())<120000) return true;
+  }
+  return false;
 }
 
 function showPunchMsg(msg,type){
