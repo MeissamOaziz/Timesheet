@@ -48,10 +48,11 @@ the summary.
 
 | What the customer says | What changed / most likely cause | What to do |
 |---|---|---|
-| "Where is Phone clock-in?" / "I do not see the Phone column" | Since 2026-11-17 phone clock-in is hidden until it is in use (company Remote Access switch on, someone granted it, or the owner chose phones/both in the first-run question) | Not on for them yet. Path: profile menu, Company Info, Remote Access, "Set up phone clock-in". See "Phone clock-in: the quick way" |
+| "Where is Company Info?" / "I cannot find overtime, rounding, alerts, the logo" (from 2026-11-20) | The long Company Info window became a **Settings** page, same fields saved the same way: left menu Settings (also in the profile menu and the phone menu) with four tabs: **Company** (name, address, phone, industry, logo), **Pay and hours** (week start, pay frequency, rounding, overtime, evening hours), **Clocking** (remote and phone clock-in, work labels, lunch breaks, visitor check-in), **Managers and alerts** (managers see all sites, alerts). A company picker shows at the top when the account has several companies. Managers do not have it, as before | Point them to the tab. Changes are saved with the **Save changes** bar at the bottom; leaving with unsaved edits asks first. The New company window is unchanged. If a value "did not save": ask whether they pressed Save changes and whether an error showed above the form; a Free account past its preview still sees overtime, evening hours and remote clock-in locked, as before |
+| "Where is Phone clock-in?" / "I do not see the Phone column" | Since 2026-11-17 phone clock-in is hidden until it is in use (company Remote Access switch on, someone granted it, or the owner chose phones/both in the first-run question) | Not on for them yet. Path: Settings (left menu or profile menu), Clocking tab, Remote Access, "Set up phone clock-in". See "Phone clock-in: the quick way" |
 | "Why do I have Phone clock-in? Can my employees punch from their phones? I do not want that" | Same change: the owner no longer sees it unless it is in use | No: nothing lets anyone punch from a phone unless the owner switches it on AND grants it person by person. Reassure, no action needed |
 | Manager: "Phone clock-in is not turned on for your company yet. Ask the account owner to turn it on." | Only owners and co-admins turn the company switch on; managers can invite and grant at their own sites once it is on | Expected message, not a bug. The owner turns it on |
-| Several companies on one account: an employee shows "Portal only" although phone clock-in is on | Each person is judged by their own company's switch; the window manages one company and names it at the top | Open Phone clock-in for that company (Company Info of that company, "Set up phone clock-in") |
+| Several companies on one account: an employee shows "Portal only" although phone clock-in is on | Each person is judged by their own company's switch; the window manages one company and names it at the top | Open Phone clock-in for that company (Settings, pick that company at the top, Clocking tab, "Set up phone clock-in") |
 | Invitation arrived in the wrong language | The admin picks the language when sending (Email language: English / Francais, default = the admin's screen language, remembered in that browser). The set-password page has its own EN/FR switch | Resend the invitation with the right language. An employee who already activated must be revoked first (Edit employee, Revoke Access), then invited again |
 | "Invited" but no email arrived | The invitation row is now removed/restored when the email fails to send, so this should not appear any more. Spam folders and the hourly email limit are the usual causes | Check the spam folder, then the employee's email address; if the screen says "too many emails", wait an hour |
 | Portal on a phone: "Could not record punch", still shows Clocked in, then "You are not clocked in yet" (before 2026-11-18 evening) | A weak connection lost the server's reply, the punch WAS stored (found 2026-11-18). Fixed in cache v101: the portal retries safely and re-checks | Tell the employee to reload the portal: the punch is almost always there. Check Activity first; add a missed punch only if it is really absent |
@@ -136,8 +137,8 @@ the previous 48 hours.
   switch is on, someone has been granted remote clock-in, or the owner chose "their own phones" or "both" in the first-run
   question. Everyone else never sees the word "phone" in the admin screens, so nobody wonders whether their employees can
   suddenly punch from phones: they cannot unless the owner switches it on and grants it person by person. The way in is
-  profile menu, **Company Info**, **Remote Access**, **Set up phone clock-in** (owners and co-admins; managers do not see
-  it). If a customer says "I do not see Phone clock-in": it is not on for them yet, send them that path.
+  **Settings** (left menu or profile menu), the **Clocking** tab, **Remote Access**, **Set up phone clock-in** (owners and
+  co-admins; managers do not see it). If a customer says "I do not see Phone clock-in": it is not on for them yet, send them that path.
 - **Where (once it is on):** left menu, Team, **Phone clock-in**. One window: tick who may
   clock in from their phone, type any missing email, choose where they can clock in for each site, press **Send N
   invitations**. It turns on the company's Remote Access switch if it is off, writes the email if one was typed, sends
@@ -156,7 +157,7 @@ the previous 48 hours.
 - **Several companies on one account:** the Employees list shows everyone together, and each person is judged by THEIR
   company's Remote Access switch (an employee of a company where it is off reads "Portal only" even if another company
   has it on). The bulk invite turns the switch on for each company among the people chosen. The Phone clock-in window
-  manages one company, and names it at the top when the account has more than one; "Set up phone clock-in" in Company Info
+  manages one company, and names it at the top when the account has more than one; "Set up phone clock-in" in Settings
   opens it for the company being edited.
 - **"Could not record punch" on a phone, then "You are not clocked in yet" (fixed 2026-11-18):** on a weak connection the server could
   store the punch while its reply never reached the phone, so the portal showed an error and stayed on the old state. The
@@ -179,7 +180,7 @@ the previous 48 hours.
   their own phones, both). The checklist then lists the matching steps; for phones the last step is the first punch from a
   phone (a punch whose source is mobile). The answer is kept on that browser only; "Change how your team clocks in" on the
   checklist asks again.
-- It writes only settings that already existed, so every old way (Company Info, the employee's Edit window, the bulk
+- It writes only settings that already existed, so every old way (Settings, the employee's Edit window, the bulk
   buttons) still works and agrees with it.
 - **"N could not be sent" or "Stopped: the hourly limit on emails was reached"** (since 2026-11-17): an account can send
   30 invitations and other one-off emails per hour (schedule emails have their own, higher limit). At the limit the window
@@ -325,7 +326,7 @@ a job, a project, a client) with a colour.
   To give someone a second trial by hand, set the end date back to null (or in the future) on their owner row.
 
 Evening hours (added 2026-10-22, all plans). For customers who pay an evening/night premium.
-- Setup: profile menu, Company Info, "Evening Hours": tick "Report evening hours separately", then From
+- Setup: Settings, Pay and hours tab, "Evening Hours": tick "Report evening hours separately", then From
   (default 17:00), Until (empty = end of day) and the weekdays. The window cannot cross midnight (a shift
   running past midnight counts the part before midnight; the part after is judged against the next day).
 - Result: Reports on screen, Excel, CSV and PDF get an "Evening Hrs" column (per punch, per employee

@@ -170,7 +170,7 @@ console.log('\n── Phone menu entry ─────────────�
 console.log('\n── Hidden until phone clock-in is in use ────────');
 // An owner who never asked for it must not see it: no Team menu entry, no phone-menu entry, no Phone column, no bulk
 // button, no card line. It appears when the company switch is on, someone was granted it, or the owner said their
-// team clocks in on phones; the way in is Company Info > Remote Access > Set up phone clock-in.
+// team clocks in on phones; the way in is Settings > Clocking > Remote Access > Set up phone clock-in.
 {
   const shown = p => p.evaluate(() => {
     const d = el => !!el && getComputedStyle(el).display !== 'none';
@@ -185,10 +185,10 @@ console.log('\n── Hidden until phone clock-in is in use ──────�
   ok('not in use: nothing about phone clock-in is shown (menu, column, bulk button, card line)', !v.on && !v.side && !v.menu && !v.th && !v.td && !v.bulk && !v.card, JSON.stringify(v));
   ok('not in use: the Employees list has no "Phone" word in its header', !(await p.evaluate(() => [...document.querySelectorAll('#tab-employees thead th')].filter(t => getComputedStyle(t).display !== 'none').some(t => /Phone/i.test(t.innerText)))));
   // the way in
-  await p.evaluate(() => editCompany(C.companies[0].id)); await sleep(600);
-  ok('Company Info offers "Set up phone clock-in" next to Remote Access', await p.evaluate(() => { const r = document.getElementById('remotePunchSetupRow'); return !!r && getComputedStyle(r).display !== 'none' && /Set up phone clock-in/.test(r.innerText); }));
+  await p.evaluate(() => openSettings(C.companies[0].id, 'clock')); await sleep(600);
+  ok('Settings, Clocking tab offers "Set up phone clock-in" next to Remote Access', await p.evaluate(() => { const r = document.getElementById('remotePunchSetupRow'); return !!r && r.offsetParent !== null && /Set up phone clock-in/.test(r.innerText); }));
   await p.evaluate(() => document.querySelector('#remotePunchSetupRow button').click()); await sleep(700);
-  ok('and it opens the window (and closes Company Info)', await p.evaluate(() => document.getElementById('phoneSetupModal').classList.contains('open') && !document.getElementById('addCompanyModal').classList.contains('open')));
+  ok('and it opens the window (the company window stays closed)', await p.evaluate(() => document.getElementById('phoneSetupModal').classList.contains('open') && !document.getElementById('addCompanyModal').classList.contains('open')));
   // sending turns it on, and the entries appear
   await p.evaluate(() => { const e = C.employees.find(x => x.id === 'demo-e1'); if (!e.email) e.email = 'david.pham@example.com'; renderPhoneSetup(); document.getElementById('ph-cb-demo-e1').click(); });
   await p.click('#phSendBtn'); await sleep(500);
