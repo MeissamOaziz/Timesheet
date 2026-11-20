@@ -696,7 +696,7 @@ const T = {
     fgPassLabel:'New password', fgResetBtn:'Set new password', fgBackLink:'Back to sign in',
     cpLink:'Change password', cpTitle:'Change your password', cpCurLabel:'Current password', cpNewLabel:'New password', cpConfLabel:'Confirm new password',
     cpSaveBtn:'Save password', cpCancelBtn:'Cancel', cpDone:'Your password has been changed.', cpWrong:'Your current password is not correct.',
-    cpShort:'The new password must be at least 8 characters.', cpMismatch:'The new passwords do not match.', cpSame:'Choose a password different from the current one.',
+    cpShort:'The new password must be at least 8 characters.', cpLocked:'Too many wrong attempts. Wait 15 minutes and try again.', cpMismatch:'The new passwords do not match.', cpSame:'Choose a password different from the current one.',
     cpExpired:'Your session has expired. Please sign in again.', cpError:'Could not change the password. Please try again.',
     fgNeedEmail:'Enter your email address.',
     fgSent:'If that address has a portal account, a code is on its way. It expires in 15 minutes.',
@@ -809,7 +809,7 @@ const T = {
     fgPassLabel:'Nouveau mot de passe', fgResetBtn:'Définir le mot de passe', fgBackLink:'Retour à la connexion',
     cpLink:'Changer le mot de passe', cpTitle:'Changer votre mot de passe', cpCurLabel:'Mot de passe actuel', cpNewLabel:'Nouveau mot de passe', cpConfLabel:'Confirmer le nouveau mot de passe',
     cpSaveBtn:'Enregistrer', cpCancelBtn:'Annuler', cpDone:'Votre mot de passe a été changé.', cpWrong:"Votre mot de passe actuel n'est pas correct.",
-    cpShort:'Le nouveau mot de passe doit contenir au moins 8 caractères.', cpMismatch:'Les nouveaux mots de passe ne correspondent pas.', cpSame:"Choisissez un mot de passe différent de l'actuel.",
+    cpShort:'Le nouveau mot de passe doit contenir au moins 8 caractères.', cpLocked:'Trop de tentatives incorrectes. Patientez 15 minutes puis réessayez.', cpMismatch:'Les nouveaux mots de passe ne correspondent pas.', cpSame:"Choisissez un mot de passe différent de l'actuel.",
     cpExpired:'Votre session a expiré. Veuillez vous reconnecter.', cpError:'Impossible de changer le mot de passe. Veuillez réessayer.',
     fgNeedEmail:'Entrez votre adresse courriel.',
     fgSent:'Si cette adresse a un compte portail, un code est en route. Il expire dans 15 minutes.',
@@ -1266,6 +1266,7 @@ async function doChangePw() {
       setTimeout(closeChangePw, 1800);
     } else if (res && res.error === 'wrong_current') showMsg('cpMsg', t('cpWrong'), 'error');
     else if (res && res.error === 'weak_password') showMsg('cpMsg', t('cpShort'), 'error');
+    else if (res && res.error === 'too_many_attempts') showMsg('cpMsg', t('cpLocked'), 'error');
     else if (res && res.error === 'no_session') showMsg('cpMsg', t('cpExpired'), 'error');
     else showMsg('cpMsg', t('cpError'), 'error');
   } catch (e) { showMsg('cpMsg', t('cpError'), 'error'); }
