@@ -373,6 +373,8 @@ body.is-super #sideNav [data-plat]{display:flex;}
 body.is-super:not(.plat-mode) #snCustLabel{display:block;overflow-wrap:anywhere;}
 body.is-super #sideNav [data-nav="admins"]{display:none;}
 body.is-super.plat-mode #sideNav > :not([data-plat]){display:none;}
+/* Same on a phone: in platform mode the hamburger menu lists only the platform pages (customer pages need a customer). */
+body.is-super.plat-mode #mobileMenu > .mobile-nav-btn:not([data-plat]){display:none !important;}
 /* Classic top-tab mode needs ~1350px for logo + context pill + 7 tabs + the right-hand controls.
    Below that it used to overflow and force the whole page to scroll sideways, so hand over to the
    hamburger menu, which already lists every page. Sidebar mode is unaffected. */
@@ -2285,8 +2287,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-nav-btn" onclick="mobileNav('platform')" id="mobileNavPlatform" style="display:none"><svg><use href="#i-nav-reports"/></svg><span>Performance</span></button>
-  <button class="mobile-nav-btn" onclick="mobileNav('accounts')" id="mobileNavAccounts" style="display:none"><svg><use href="#i-nav-admins"/></svg><span>Accounts</span></button>
+  <button class="mobile-nav-btn" data-plat onclick="mobileNav('platform')" id="mobileNavPlatform" style="display:none"><svg><use href="#i-nav-reports"/></svg><span>Performance</span></button>
+  <button class="mobile-nav-btn" data-plat onclick="mobileNav('accounts')" id="mobileNavAccounts" style="display:none"><svg><use href="#i-nav-admins"/></svg><span>Accounts</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('punch')"><svg><use href="#i-nav-clock"/></svg><span data-i18n="nav.clockInOut">Clock In/Out</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('dashboard')" id="mobileNavDashboard" style="display:none"><svg><use href="#i-nav-dashboard"/></svg><span data-i18n="nav.dashboard">Dashboard</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('activity')" id="mobileNavActivity" style="display:none"><svg><use href="#i-nav-activity"/></svg><span data-i18n="nav.activity">Activity</span></button>
@@ -2296,8 +2298,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
   <button class="mobile-nav-btn" onclick="mobileNav('schedule')" id="mobileNavSchedule" style="display:none"><svg><use href="#i-nav-schedule"/></svg><span data-i18n="nav.schedule">Schedule</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('timeoff')" id="mobileNavTimeOff" style="display:none"><svg><use href="#i-calendar"/></svg><span data-i18n="to.title">Time Off</span></button>
   <button class="mobile-nav-btn" onclick="mobileNav('reports')" id="mobileNavReports" style="display:none"><svg><use href="#i-nav-reports"/></svg><span data-i18n="nav.reports">Reports</span></button>
-  <button class="mobile-nav-btn" id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
-  <button class="mobile-nav-btn" id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
+  <button class="mobile-nav-btn" data-plat id="mobileHelpBtn" onclick="showHelpModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-help"/></svg><span data-i18n="nav.dd.help">Help</span></button>
+  <button class="mobile-nav-btn" data-plat id="mobileSupportBtn" onclick="showSupportModal();closeMobileMenu();" style="display:none"><svg><use href="#i-nav-headset"/></svg><span data-i18n="nav.dd.support">Support</span></button>
   <button class="mobile-nav-btn" id="mobileSchedulingBtn" onclick="handleSchedulingAddonClick();closeMobileMenu();" style="display:none;color:#a78bfa"><svg><use href="#i-nav-schedule"/></svg> <span id="mobileSchedulingLabel"></span></button>
   <!-- Language and theme: on a phone they are here, not in the top bar. -->
   <div class="mobile-nav-tools">
@@ -2305,8 +2307,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <button class="theme-toggle-btn" data-theme-toggle onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme"><svg class="tt-icon"><use href="#i-sun"/></svg></button>
   </div>
   <hr class="mobile-nav-divider">
-  <button class="mobile-nav-btn" id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> <span data-i18n="ui.adminLogin">Admin Login</span></button>
-  <button class="mobile-nav-btn" id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)"><svg><use href="#i-nav-logout"/></svg> Logout</button>
+  <button class="mobile-nav-btn" data-plat id="mobileLoginBtn" onclick="mobileNav('login')"><svg><use href="#i-nav-login"/></svg> <span data-i18n="ui.adminLogin">Admin Login</span></button>
+  <button class="mobile-nav-btn" data-plat id="mobileLogoutBtn" onclick="logout();closeMobileMenu();" style="display:none;color:var(--red)"><svg><use href="#i-nav-logout"/></svg> Logout</button>
 </div>
 
 <!-- ═══════════════ LEFT SIDEBAR NAV (opt-in) ═══════════════ -->

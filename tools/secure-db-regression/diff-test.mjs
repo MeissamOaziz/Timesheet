@@ -135,12 +135,12 @@ const siteCompanyOf = { s1: 'c1', s2: 'c1', s9: 'c9', sF1: 'cF', sF2: 'cF' };
 sessions.tokMgrNoSites = 'a4'; // a4 is a manager under a1 with no assigned site
 // ---- plan limits (added 2026-11-05) ----
 // l1: Free, at its 10 employees and 1 site. l2: Starter with 2 extra seats (27 employees), 26 active, at its 2 sites.
-// l3: Free but its company is on the grandfathered list (30 employees). l4: Growth at its 6 sites, 1 of 3 companies.
+// l3: a comped account on the 'unlimited' plan (30 employees). l4: Growth at its 6 sites, 1 of 3 companies.
 for (const [id, tok] of [['l1', 'tokL1'], ['l2', 'tokL2'], ['l3', 'tokL3'], ['l4', 'tokL4']]) { admins[id] = { id, parent_admin_id: null, role: 'admin', status: 'active' }; sessions[tok] = id; }
 companiesOf.l1 = ['cL1']; companiesOf.l2 = ['cL2']; companiesOf.l3 = ['cG']; companiesOf.l4 = ['cL4'];
 sitesOf.cL1 = ['sL1']; sitesOf.cL2 = ['sL2a', 'sL2b']; sitesOf.cG = ['sG']; sitesOf.cL4 = ['sa', 'sb', 'sc', 'sd', 'se', 'sf'];
 employeesOf.cL1 = ['eL1']; employeesOf.cL2 = ['eL2']; employeesOf.cG = ['eG']; employeesOf.cL4 = ['eL4'];
-const planOf = { a1: 'business', f1: 'business', b1: 'free', l1: 'free', l2: 'starter', l3: 'free', l4: 'growth' };
+const planOf = { a1: 'business', f1: 'business', b1: 'free', l1: 'free', l2: 'starter', l3: 'unlimited', l4: 'growth' };
 const activeEmps = { cL1: 10, cL2: 26, cG: 30, cL4: 3 };
 const siteCounts = { cL1: 1, cL2: 2, cG: 1, cL4: 6 };
 const sr = (id, o) => ({ id, company_id: 'c1', ...o });
@@ -169,6 +169,14 @@ function makeFetch() {
     const method = (init.method || 'GET').toUpperCase();
     const p = parse(String(u));
     const dryHdr = !!(init.headers && init.headers['x-dry-run']);
+    // Since 2026-11-20 the session lookup is an RPC (tokens are stored hashed). Record it in the old REST shape so an old
+    // build and a new one compare like for like; the answer below is the same fake table either way.
+    if (p.kind === 'rest' && p.name === 'rpc/_admin_session_lookup') {
+      let b = {}; try { b = JSON.parse(init.body); } catch { }
+      upstream.push({ method: 'GET', url: `/rest/v1/admin_sessions?token=eq.${b.p_token}&select=admin_id,expires_at&limit=1`, body: null, prefer: null, dry: dryHdr });
+      const tok = String(b.p_token || ''); const aid = sessions[tok];
+      return new Response(JSON.stringify(aid ? [{ admin_id: aid, expires_at: tok === 'tokExpired' ? new Date(Date.now() - 1e3).toISOString() : FUTURE }] : []), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
     upstream.push({ method, url: String(u).replace('https://fake.supabase.co', ''), body: init.body ? String(init.body).slice(0, 60000) : null, prefer: (init.headers && init.headers.Prefer) || null, dry: dryHdr });
     const j = (data, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', ...extra } });
     if (/\/storage\/v1\/object\/sign\//.test(String(u))) {
@@ -213,7 +221,7 @@ function makeFetch() {
     if (t === 'companies' && method === 'GET' && p.q.has('managers_see_all_sites')) return j(eq('admin_id') === 'f1' ? [{ id: 'cF' }] : []);
     // ---- plan limits (added 2026-11-05): the owner's plan, company names, and how many are already there ----
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'plan,extra_seats') return j([{ plan: planOf[eq('id')] || 'free', extra_seats: eq('id') === 'l2' ? 2 : 0 }]);
-    if (t === 'companies' && method === 'GET' && p.q.get('select') === 'id,name' && p.q.has('admin_id')) { const a = eq('admin_id'); return j((companiesOf[a] || []).map(id => ({ id, name: a === 'l3' ? 'Connoisseur Culture' : 'Acme Fence' }))); }
+    if (t === 'companies' && method === 'GET' && ['id,name', 'id'].includes(p.q.get('select')) && p.q.has('admin_id')) { const a = eq('admin_id'); return j((companiesOf[a] || []).map(id => ({ id, name: 'Acme Fence' }))); }
     if (t === 'employees' && method === 'GET' && p.q.get('select') === 'id' && p.q.get('active') === 'eq.true') {
       const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(',');
       const n = cs.reduce((sum, c) => sum + (activeEmps[c] || 0), 0); const lim = parseInt(p.q.get('limit') || String(n), 10);
@@ -495,7 +503,7 @@ const cases = [
   R('plan-limits', 'free: clearing evening hours is fine', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', evening_start: null, evening_end: null, evening_days: null }, ...other }, r => r.status === 200),
   R('plan-limits', 'free: cannot switch lunch breaks on', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', track_lunch_breaks: true }, ...other }, r => r.status === 403),
   R('plan-limits', 'free: cannot switch visitor check-in on', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', visitor_checkin_enabled: true }, ...other }, r => r.status === 403),
-  R('plan-limits', 'free: a grandfathered company keeps overtime', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'Connoisseur Culture', track_overtime: true }, ...other }, r => r.status === 200),
+  R('plan-limits', 'free: a company name grants nothing', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'Comped Co', track_overtime: true }, ...other }, r => r.status === 403),
   R('plan-limits', 'free: a normal save with nothing gated', { table: 'companies', method: 'PATCH', filter: 'id=eq.c9', body: { name: 'X', address: 'Y', punch_rounding: 5 }, ...other }, r => r.status === 200),
   R('plan-limits', 'free: cannot add a payroll recipient', { table: 'report_recipients', method: 'POST', body: { company_id: 'c9', email: 'acct@x.ca' }, ...other }, r => r.status === 403),
   R('plan-limits', 'paid: overtime, evening, lunch and visitor all allowed', { table: 'companies', method: 'PATCH', filter: 'id=eq.c1', body: { name: 'X', track_overtime: true, evening_start: '17:00', track_lunch_breaks: true, visitor_checkin_enabled: true }, ...own }, r => r.status === 200),
@@ -739,7 +747,7 @@ const cases = [
       R(G, 'free account at 10 employees cannot add the 11th', { table: 'employees', method: 'POST', body: emp('cL1'), ...L1 }, no('POST', 'allows 10 active employees')),
       R(G, 'starter with 2 extra seats and 26 active can add one (27)', { table: 'employees', method: 'POST', body: emp('cL2'), ...L2 }, ok),
       R(G, 'starter with 2 extra seats cannot add two at once (28)', { table: 'employees', method: 'POST', body: [emp('cL2'), emp('cL2')], ...L2 }, no('POST', 'allows 27 active employees')),
-      R(G, 'a grandfathered company is unlimited', { table: 'employees', method: 'POST', body: emp('cG'), ...L3 }, ok),
+      R(G, 'a comped (unlimited) account has no employee cap', { table: 'employees', method: 'POST', body: emp('cG'), ...L3 }, ok),
       R(G, 'an inactive row does not count against the limit', { table: 'employees', method: 'POST', body: emp('cL1', { active: false }), ...L1 }, ok),
       R(G, 'business accounts have no limit', { table: 'employees', method: 'POST', body: emp('c1'), ...own }, ok),
       R(G, 'super admin has no limit', { table: 'employees', method: 'POST', body: emp('c1'), ...sup }, ok),
@@ -750,7 +758,7 @@ const cases = [
       R(G, 'free account with its 1 site cannot add a second', { table: 'sites', method: 'POST', body: { company_id: 'cL1', name: 'Two' }, ...L1 }, no('POST', 'allows 1 site')),
       R(G, 'starter with its 2 sites cannot add a third', { table: 'sites', method: 'POST', body: { company_id: 'cL2', name: 'Three' }, ...L2 }, no('POST', 'allows 2 sites')),
       R(G, 'growth with its 6 sites cannot add a seventh', { table: 'sites', method: 'POST', body: { company_id: 'cL4', name: 'Seven' }, ...L4 }, no('POST', 'allows 6 sites')),
-      R(G, 'a grandfathered company can add sites', { table: 'sites', method: 'POST', body: { company_id: 'cG', name: 'More' }, ...L3 }, ok),
+      R(G, 'a comped (unlimited) account can add sites', { table: 'sites', method: 'POST', body: { company_id: 'cG', name: 'More' }, ...L3 }, ok),
       R(G, 'editing a site at the limit still works', { table: 'sites', method: 'PATCH', filter: 'id=eq.sL1', body: { name: 'Renamed' }, ...L1 }, ok),
       R(G, 'free account with its 1 company cannot add another', { table: 'companies', method: 'POST', body: { name: 'Second Co' }, ...L1 }, no('POST', 'allows 1 company')),
       R(G, 'growth with 1 of 3 companies can add one', { table: 'companies', method: 'POST', body: { name: 'Second Co' }, ...L4 }, ok),
@@ -783,6 +791,18 @@ const cases = [
       rd('manager staff (flag off): own sites only', 'employees', 'active=eq.true', mgr, /site_id=in\.\(s1\)/),
       rd('manager availability: through the employees they may see', 'availability', 'avail_type=eq.recurring', mgr, /employee_id=in\.\(e1,e2\)/),
       rd('manager portal status: through the employees at their sites', 'employee_portal', 'employee_id=eq.e1', mgr, /employee_id=in\./),
+      // added 2026-11-20: the account's settings tables
+      rd('manager payroll recipients: own sites only', 'report_recipients', 'active=eq.true', mgr, /[?&]site_id=in\.\(s1\)(&|$)/),
+      rd('manager site assignments: own sites only', 'manager_sites', 'manager_id=eq.a2', mgr, /[?&]site_id=in\.\(s1\)(&|$)/),
+      rd('manager sites: own sites only', 'sites', 'order=name.asc', mgr, /[?&]id=in\.\(s1\)(&|$)/),
+      rd('manager companies: the companies of their sites', 'companies', 'order=name.asc', mgr, /[?&]id=in\.\(c1\)(&|$)/),
+      rd('manager holidays: company-wide or at own sites', 'holidays', 'holiday_date=gte.2026-01-01', mgr, /company_id=in\.\(c1\)&or=\(site_id\.is\.null,site_id\.in\.\(s1\)\)/),
+      rd('a manager with no site reads no payroll recipients', 'report_recipients', 'active=eq.true', nothing, /id=eq\.00000000-0000-0000-0000-000000000000/),
+      rd('a manager with no site reads no companies', 'companies', 'order=name.asc', nothing, /id=eq\.00000000-0000-0000-0000-000000000000/),
+      rd('a manager with no site reads no work labels', 'work_labels', 'active=eq.true', nothing, /id=eq\.00000000-0000-0000-0000-000000000000/),
+      rd('flag on: manager sites also cover the whole company', 'sites', 'order=name.asc', fm, /or=\(id\.in\.\(sF1\),company_id\.in\.\(cF\)\)/),
+      R(G, 'owner payroll recipients are not narrowed', { table: 'report_recipients', method: 'GET', filter: 'active=eq.true', ...own },
+        r => r.status === 200 && !r.calls.some(c => c.startsWith('GET /rest/v1/report_recipients?') && /site_id=in\./.test(c))),
       rd('flag on: manager shifts also cover the whole company', 'shifts', 'shift_date=gte.2026-11-01', fm, /or=\(site_id\.in\.\(sF1\),company_id\.in\.\(cF\)\)/),
       rd('flag on: manager staff list also covers the whole company', 'employees', 'active=eq.true', fm, /or=\(site_id\.in\.\(sF1\),company_id\.in\.\(cF\)\)/),
       R(G, 'flag on: punches are NOT widened by the flag', { table: 'punches', method: 'GET', filter: 'punch_date=gte.2026-11-01', ...fm },

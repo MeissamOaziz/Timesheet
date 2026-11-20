@@ -142,6 +142,10 @@ async function fakeFetch(u, init = {}) {
   dbLog.push(`${method} ${table}${url.search}`);
   if (dbDown) return jr({ message: 'upstream unavailable' }, 503);
   const wantRows = (init.headers?.Prefer || '').includes('return=representation');
+  if (table === 'rpc/_admin_session_lookup') {
+    const tok = JSON.parse(init.body).p_token;
+    return jr(T.admin_sessions.filter((x) => x.token === tok).slice(0, 1).map((x) => ({ admin_id: x.admin_id, expires_at: x.expires_at })));
+  }
   if (table === 'rpc/admin_plan_rank') {
     if (planDown) return jr({ message: 'plan lookup unavailable' }, 500);
     const a = T.admins.find((x) => x.id === JSON.parse(init.body).p_admin);
@@ -196,12 +200,12 @@ function seed() {
     A(PENDING, 'Pat Pending', { parent_admin_id: OWNER, status: 'pending_invite' }),
     A(OTHER, 'Rita Rival'),
     A(SUPER, 'Platform', { role: 'super_admin', plan: 'unlimited' }),
-    A(GF, 'Gina Grandfathered'),
+    A(GF, 'Gina Comped', { plan: 'unlimited' }),
     A(STARTER, 'Sam Starter', { plan: 'starter' }),
   ];
   T.companies = [
     { id: C1, admin_id: OWNER, name: 'Acme Fence' }, { id: C2, admin_id: OWNER, name: 'Acme Decks' },
-    { id: C9, admin_id: OTHER, name: 'Rival Roofing' }, { id: CG, admin_id: GF, name: 'Oaziz Extracts' }, { id: CS, admin_id: STARTER, name: 'Starter Co' },
+    { id: C9, admin_id: OTHER, name: 'Rival Roofing' }, { id: CG, admin_id: GF, name: 'Comped Co' }, { id: CS, admin_id: STARTER, name: 'Starter Co' },
   ];
   T.sites = [
     { id: S1, company_id: C1, name: 'Main yard' }, { id: S2, company_id: C1, name: 'North shop' },
@@ -507,7 +511,7 @@ out('\nConsent page: who may allow');
   check('no other tenant\'s name anywhere in it', !JSON.stringify(r.body).includes('Rival'));
   check('plan: Free -> not included', (await info('tokOther')).body.plan_included === false);
   check('plan: Starter -> not included', (await info('tokStarter')).body.plan_included === false);
-  check('plan: grandfathered company on Free -> included', (await info('tokGf')).body.plan_included === true);
+  check('plan: comped account (unlimited) -> included', (await info('tokGf')).body.plan_included === true);
   check('plan: co-admin inherits the owner\'s Growth', (await info('tokCo')).body.plan_included === true);
   check('the answer carries no e-mail, password or id', !/@example\.test|HASH-|"id"/.test(JSON.stringify((await info('tokOwner')).body)));
 }
@@ -724,16 +728,16 @@ out('\nCalling the server');
   admin(OWNER).plan = 'free';
   check('a plan on the manager\'s own row does not count', refused(await tool(mgr.tok.access_token)));
   admin(MGR).plan = 'free'; admin(OWNER).plan = 'growth';
-  // grandfathered company on Free, and an ordinary Free account with a live connection
+  // a comped account (plan 'unlimited'), and an ordinary Free account with a live connection
   admin(GF).ai_apps_enabled = true; admin(OTHER).ai_apps_enabled = true;
   const gfConn = await connect('claude', 'tokGf'), freeConn = await connect('claude', 'tokOther');
-  check('grandfathered company on Free -> tools answer', gfConn.status === 200 && answered(await tool(gfConn.tok.access_token)));
+  check('comped account (unlimited) -> tools answer', gfConn.status === 200 && answered(await tool(gfConn.tok.access_token)));
   check('Free account -> may connect, every tool call gets the plan notice', freeConn.status === 200 && refused(await tool(freeConn.tok.access_token)));
-  T.companies.find((c) => c.admin_id === GF).name = 'Some Other Co';
-  check('...and the grandfathered company renamed -> no longer included', refused(await tool(gfConn.tok.access_token)));
-  T.companies.find((c) => c.admin_id === GF).name = 'Oaziz Extracts';
+  T.companies.find((c) => c.admin_id === OTHER).name = 'Comped Co';
+  check('a Free account cannot get in by naming its company like a comped one', refused(await tool(freeConn.tok.access_token)));
+  T.companies.find((c) => c.admin_id === OTHER).name = 'Rival Roofing';
   planDown = true;
-  check('grandfathered company still answers while the plan lookup is down', answered(await tool(gfConn.tok.access_token)));
+  check('plan lookup down -> even the comped account gets the notice (fails closed)', refused(await tool(gfConn.tok.access_token)));
   planDown = false;
   for (const c of [gfConn, freeConn]) { const gid = grantOf(c.tok.access_token); T.mcp_tokens = T.mcp_tokens.filter((t) => t.grant_id !== gid); T.mcp_grants = T.mcp_grants.filter((x) => x.id !== gid); }
   admin(GF).ai_apps_enabled = false; admin(OTHER).ai_apps_enabled = false;

@@ -46,7 +46,9 @@ const src = fs.readFileSync(file, 'utf8')
   .replace(/^import \{ crypto \}.*$/m, 'const crypto = globalThis.__WC;');
 const out = path.join(scratch, 'h.ts');
 fs.writeFileSync(out, "globalThis.Deno={env:{get:(k)=>({STRIPE_SECRET_KEY:'sk_test_x',STRIPE_WEBHOOK_SECRET:'whsec_x',SUPABASE_URL:'https://fake.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'svc-key',RESEND_API_KEY:'re_x'}[k])}};\n" + src);
-globalThis.__FAKE_SB = { from: makeBuilder };
+globalThis.__FAKE_SB = { from: makeBuilder,
+  // session lookup through the database function (tokens are stored hashed since 2026-11-20)
+  async rpc(fn, args) { if (fn !== '_admin_session_lookup') return { data: null }; return { data: tables.admin_sessions.filter(x => x.token === args.p_token).map(x => ({ admin_id: x.admin_id, expires_at: x.expires_at })) }; } };
 globalThis.__WC = webcrypto;
 const stripeCalls = []; const mailCalls = [];
 globalThis.fetch = async (url, init = {}) => {

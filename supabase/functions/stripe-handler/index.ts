@@ -112,7 +112,9 @@ async function getAdminById(adminId) {
 const TOKEN_RE = /^[A-Za-z0-9_-]{1,200}$/;
 async function resolveBillingOwner(sessionToken: unknown): Promise<{ id: string; email: string } | { error: string; status: number }> {
   if (typeof sessionToken !== "string" || !TOKEN_RE.test(sessionToken)) return { error: "Please sign in again", status: 401 };
-  const { data: s } = await supabase.from("admin_sessions").select("admin_id, expires_at").eq("token", sessionToken).maybeSingle();
+  // Tokens are stored hashed (2026-11-20): the database function does the comparison.
+  const { data: rows } = await supabase.rpc("_admin_session_lookup", { p_token: sessionToken });
+  const s = Array.isArray(rows) ? rows[0] : null;
   if (!s || new Date(s.expires_at as string).getTime() <= Date.now()) return { error: "Please sign in again", status: 401 };
   const { data: a } = await supabase.from("admins").select("id, email, parent_admin_id, status").eq("id", s.admin_id).maybeSingle();
   if (!a || !(a.status === "active" || a.status === "pending_invite")) return { error: "Please sign in again", status: 401 };

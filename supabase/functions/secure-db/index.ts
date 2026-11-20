@@ -101,10 +101,13 @@ async function verifySite(siteId: string): Promise<boolean> {
 interface Caller { adminId: string; primaryAdminId: string; role: string; }
 async function resolveCaller(sessionToken: string | null): Promise<Caller | null> {
   if (!sessionToken) return null;
-  const sres = await fetch(
-    `${SUPABASE_URL}/rest/v1/admin_sessions?token=eq.${sessionToken}&select=admin_id,expires_at&limit=1`,
-    { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
-  );
+  // The database keeps only a SHA-256 of each session token (since 2026-11-20); _admin_session_lookup compares hashes,
+  // so this function never needs to know how tokens are stored.
+  const sres = await fetch(`${SUPABASE_URL}/rest/v1/rpc/_admin_session_lookup`, {
+    method: 'POST',
+    headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_token: sessionToken }),
+  });
   if (!sres.ok) return null;
   const srows = await sres.json();
   const srow = Array.isArray(srows) ? srows[0] : null;
@@ -184,7 +187,6 @@ async function planRpc(fn: string, args: Record<string, string>): Promise<unknow
     return res.ok ? await res.json() : null;
   } catch { return null; }
 }
-const GRANDFATHERED_COMPANIES = ['Oaziz Extracts', 'Connoisseur Culture'];
 async function validateWritePayload(
   table: string, body: unknown, caller: Caller,
 ): Promise<WriteViolation | null> {
@@ -283,7 +285,8 @@ async function validateWritePayload(
     if (table === 'companies') {
       const wantsPaid = row.track_overtime === true || (row.evening_start != null && row.evening_start !== '');
       const wantsGrowth = row.track_lunch_breaks === true || row.visitor_checkin_enabled === true;
-      if ((wantsPaid || wantsGrowth) && !GRANDFATHERED_COMPANIES.includes(String(row.name ?? ''))) {
+      // (Comped accounts carry the 'unlimited' plan. Exemptions by company name are gone: anyone could pick a name.)
+      if (wantsPaid || wantsGrowth) {
         if (wantsPaid && (await planRpc('has_paid_features', { p_admin: caller.primaryAdminId })) === false) {
           return { field: row.track_overtime === true ? 'track_overtime' : 'evening_start', reason: 'plan' };
         }
@@ -1380,15 +1383,20 @@ async function managerScopeViolation(
 // The scope matches what the website shows a manager: rows at their assigned sites. Time-off requests without a site stay
 // visible (the website shows them). The company setting "managers can schedule staff from all sites" widens only what
 // scheduling needs: shifts, the staff list and availability. Owners, co-admins and super admins are not narrowed.
+// Since 2026-11-20 also the account's settings tables: payroll recipients (their emails) and manager assignments only at
+// the manager's sites; sites, companies, work labels and holidays only for the companies the manager works in (their
+// sites' companies, plus any company that lets managers schedule all sites).
 const MANAGER_READ_SCOPED = new Set([
   'punches', 'employees', 'time_off', 'missed_punch_requests', 'shifts', 'availability', 'visitors', 'employee_portal', 'kiosk_devices',
+  'report_recipients', 'manager_sites', 'holidays', 'sites', 'companies', 'work_labels',
 ]);
 const MATCH_NOTHING = 'id=eq.00000000-0000-0000-0000-000000000000';
 
 // The extra filter to AND onto a manager's read. It always narrows: an unknown state yields "no rows", never "all rows".
 async function managerReadScope(table: string, caller: Caller): Promise<string> {
   const mine = [...(await managerSiteSet(caller.adminId))].filter(id => TOKEN_RE.test(id));
-  const scheduling = table === 'shifts' || table === 'availability' || table === 'employees';
+  const scheduling = table === 'shifts' || table === 'availability' || table === 'employees' ||
+    table === 'sites' || table === 'companies' || table === 'work_labels' || table === 'holidays';
   let wide: string[] = [];
   if (scheduling) {
     const cs = await restJson(`companies?admin_id=eq.${caller.primaryAdminId}&managers_see_all_sites=eq.true&select=id`);
@@ -1404,9 +1412,35 @@ async function managerReadScope(table: string, caller: Caller): Promise<string> 
     if (byCompany) return byCompany.replace('.in.', '=in.');
     return MATCH_NOTHING;
   };
+  // The companies a manager works in: their sites' companies plus the "schedule all sites" ones.
+  const myCompanies = async (): Promise<string[] | null> => {
+    const own = mine.length ? await restJson(`sites?id=in.(${mine.join(',')})&select=company_id&limit=1000`) : [];
+    if (own === null) return null;
+    const ids = new Set<string>(wide);
+    for (const r of own) if (typeof r.company_id === 'string' && TOKEN_RE.test(r.company_id)) ids.add(r.company_id);
+    return [...ids];
+  };
   switch (table) {
     case 'punches': case 'missed_punch_requests': case 'visitors': case 'kiosk_devices':
+    case 'report_recipients': case 'manager_sites':
       return mine.length ? `site_id=in.(${mine.join(',')})` : MATCH_NOTHING;
+    case 'sites': {
+      const byId = mine.length ? `id.in.(${mine.join(',')})` : '';
+      if (byId && byCompany) return `or=(${byId},${byCompany})`;
+      if (byId) return byId.replace('.in.', '=in.');
+      if (byCompany) return byCompany.replace('.in.', '=in.');
+      return MATCH_NOTHING;
+    }
+    case 'companies': case 'work_labels': case 'holidays': {
+      const cos = await myCompanies();
+      if (cos === null || !cos.length) return MATCH_NOTHING;
+      const col = table === 'companies' ? 'id' : 'company_id';
+      if (table !== 'holidays') return `${col}=in.(${cos.join(',')})`;
+      // a holiday for the whole company, or one at the manager's own sites
+      return mine.length
+        ? `company_id=in.(${cos.join(',')})&or=(site_id.is.null,site_id.in.(${mine.join(',')}))`
+        : `company_id=in.(${cos.join(',')})&site_id=is.null`;
+    }
     case 'time_off':
       return mine.length ? `or=(site_id.in.(${mine.join(',')}),site_id.is.null)` : 'site_id=is.null';
     case 'shifts': case 'employees':
@@ -1431,8 +1465,8 @@ async function managerReadScope(table: string, caller: Caller): Promise<string> 
 //   starter        25       2       1
 //   growth         60       6       3
 //   business / unlimited: no limit
-// The account owner's plan counts (co-admins and managers inherit it). A company on the grandfathered list is unlimited
-// for its employees and sites, as on the website. Only creating is limited: reactivating an employee counts as creating,
+// The account owner's plan counts (co-admins and managers inherit it). Comped accounts carry the 'unlimited' plan.
+// Only creating is limited: reactivating an employee counts as creating,
 // deleting never does, and an account that is already above a limit can still edit and deactivate, just not add.
 const PLAN_CAPS: Record<string, { employees: number; sites: number; companies: number }> = {
   free:      { employees: 10, sites: 1, companies: 1 },
@@ -1456,10 +1490,9 @@ async function planLimitViolation(
   if (!owner) return 'Forbidden: could not check your plan, please try again';
   const caps = PLAN_CAPS[String(owner.plan ?? 'free')] ?? PLAN_CAPS.free;
   const extraSeats = Math.max(0, Number(owner.extra_seats ?? 0)) || 0;
-  const cos = await restJson(`companies?admin_id=eq.${caller.primaryAdminId}&select=id,name&limit=500`);
+  const cos = await restJson(`companies?admin_id=eq.${caller.primaryAdminId}&select=id&limit=500`);
   if (cos === null) return 'Forbidden: could not check your plan, please try again';
   const ownedIds = cos.map((c: { id: string }) => c.id);
-  const grandfathered = new Set(cos.filter((c: { name: string }) => GRANDFATHERED_COMPANIES.includes(String(c.name))).map((c: { id: string }) => c.id));
 
   if (companies) {
     if (ownedIds.length + rows.length > caps.companies) {
@@ -1476,7 +1509,7 @@ async function planLimitViolation(
       perCompany.set(cid, (perCompany.get(cid) ?? 0) + 1);
     }
     for (const [cid, adding] of perCompany) {
-      const cap = grandfathered.has(cid) ? Infinity : caps.sites;
+      const cap = caps.sites;
       if (cap === Infinity) continue;
       const cur = await restJson(`sites?company_id=eq.${cid}&select=id&limit=${cap + 1}`);
       if (cur === null) return 'Forbidden: could not check your plan, please try again';
@@ -1503,7 +1536,6 @@ async function planLimitViolation(
   if (!adding) return null;
   const limit = caps.employees === Infinity ? Infinity : caps.employees + extraSeats;
   if (limit === Infinity) return null;
-  if ([...involved].every(id => grandfathered.has(id))) return null;
   if (!ownedIds.length) return null;
   const cur = await restJson(`employees?company_id=in.(${ownedIds.join(',')})&active=eq.true&select=id&limit=${limit + 1}`);
   if (cur === null) return 'Forbidden: could not check your plan, please try again';
@@ -1716,10 +1748,9 @@ async function mcpPerson(caller: Caller): Promise<McpPerson | null> {
     active: current(me) && current(owner),
   };
 }
-// Growth and up (or a grandfathered company). Only used to tell the person what to expect: the mcp function decides
+// Growth and up. Only used to tell the person what to expect: the mcp function decides
 // on every call. An unanswered lookup reads as "not included".
-async function mcpPlanIncluded(ownerId: string, companyNames: string[]): Promise<boolean> {
-  if (companyNames.some((n) => GRANDFATHERED_COMPANIES.includes(n))) return true;
+async function mcpPlanIncluded(ownerId: string, _companyNames: string[]): Promise<boolean> {
   const rank = await planRpc('admin_plan_rank', { p_admin: ownerId });
   return typeof rank === 'number' && rank >= 2;
 }

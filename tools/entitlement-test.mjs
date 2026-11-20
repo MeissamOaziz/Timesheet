@@ -71,8 +71,9 @@ for(const lang of ['en','fr']){
     await setup(page,{plan,created:'2026-01-01T12:00:00Z',now:'2026-11-20T12:00:00Z'});
     ok(`${plan}: paid features ${paid}, growth features ${growth}`, (await q(page,"featureEntitled('paid')"))===paid && (await q(page,"featureEntitled('growth')"))===growth);
   }
-  await setup(page,{plan:'free',created:'2026-01-01T12:00:00Z',now:'2026-11-20T12:00:00Z',coName:'Connoisseur Culture'});
-  ok('a grandfathered company keeps everything', await q(page,"featureEntitled('paid',C.companies[0])") && await q(page,"featureEntitled('growth',C.companies[0])"));
+  // Comped accounts carry the 'unlimited' plan; a company NAME grants nothing (anyone can pick a name).
+  await setup(page,{plan:'free',created:'2026-01-01T12:00:00Z',now:'2026-11-20T12:00:00Z',coName:'Comped Co'});
+  ok('a company name alone grants nothing', !(await q(page,"featureEntitled('paid',C.companies[0])")) && !(await q(page,"featureEntitled('growth',C.companies[0])")));
 
   // ── the screens: Free, after the preview
   await setup(page,{plan:'free',created:'2026-01-01T12:00:00Z',now:'2026-11-20T12:00:00Z'});

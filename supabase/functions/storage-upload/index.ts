@@ -42,7 +42,15 @@ async function rest(path: string): Promise<any[] | null> {
 
 // Same session lookup as secure-db: token -> admin_sessions -> active admin.
 async function resolveCaller(token: string): Promise<{ adminId: string; primaryAdminId: string; role: string } | null> {
-  const s = (await rest(`admin_sessions?token=eq.${token}&select=admin_id,expires_at&limit=1`))?.[0];
+  // Tokens are stored hashed (2026-11-20): the database function does the comparison.
+  let s: { admin_id: string; expires_at: string } | undefined;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/_admin_session_lookup`, {
+      method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: token }),
+    });
+    const j = r.ok ? await r.json() : null;
+    s = Array.isArray(j) ? j[0] : undefined;
+  } catch { s = undefined; }
   if (!s || new Date(s.expires_at) <= new Date()) return null;
   const a = (await rest(`admins?id=eq.${s.admin_id}&select=id,parent_admin_id,role,status&limit=1`))?.[0];
   if (!a || !(a.status === 'active' || a.status === 'pending_invite')) return null;
