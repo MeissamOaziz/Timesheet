@@ -2480,7 +2480,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <h2 data-i18n="setpass.title">Welcome to PunchClock Crew</h2>
     <p data-i18n="setpass.desc">You've been invited as a co-admin. Please set your password to activate your account.</p>
     <div id="setpassMsg"></div>
-    <div class="form-group"><label data-i18n="pw.new">New Password</label><div class="pw-wrap"><input type="password" id="setpassNew" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('setpassNew',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="form-group"><label data-i18n="pw.new">New Password</label><div class="pw-wrap"><input type="password" id="setpassNew" placeholder="Min 8 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('setpassNew',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <div class="form-group"><label data-i18n="pw.confirm">Confirm Password</label><div class="pw-wrap"><input type="password" id="setpassConfirm" placeholder="Repeat password" data-i18n="pw.repeat" onkeydown="if(event.key==='Enter')doSetInvitePassword()"><button type="button" class="pw-toggle" onclick="togglePw('setpassConfirm',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <button class="btn-primary" onclick="doSetInvitePassword()" data-i18n="setpass.activate">Activate Account</button>
   </div>
@@ -2505,7 +2505,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     </div>
     <div id="forgotStep3" style="display:none">
       <p style="font-size:13px;color:var(--text2);margin-bottom:16px"><span data-i18n="forgot.almost">Almost there! Set your new password for</span> <strong id="forgotEmailFinal"></strong></p>
-      <div class="form-group"><label data-i18n="pw.new">New Password</label><div class="pw-wrap"><input type="password" id="forgotNewPass" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('forgotNewPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-group"><label data-i18n="pw.new">New Password</label><div class="pw-wrap"><input type="password" id="forgotNewPass" placeholder="Min 8 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('forgotNewPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <div class="form-group"><label data-i18n="pw.confirm">Confirm Password</label><div class="pw-wrap"><input type="password" id="forgotConfirmPass" placeholder="Repeat new password" data-i18n="pw.repeatNew" onkeydown="if(event.key==='Enter')doPasswordReset()"><button type="button" class="pw-toggle" onclick="togglePw('forgotConfirmPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <button class="btn-primary" onclick="doPasswordReset()" data-i18n="forgot.setPassword">Set New Password</button>
     </div>
@@ -2525,7 +2525,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div class="form-group"><label data-i18n="reg.lastName">Last Name</label><input type="text" id="acceptLastName" placeholder="Smith" autocomplete="off"></div>
     <div class="form-group"><label data-i18n="login.password">Password</label>
       <div class="pw-wrap">
-        <input type="password" id="acceptPass" placeholder="Min 6 characters" data-i18n="pw.min6">
+        <input type="password" id="acceptPass" placeholder="Min 8 characters" data-i18n="pw.min6">
         <button type="button" class="pw-toggle" onclick="togglePw('acceptPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
     </div>
@@ -2603,7 +2603,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <div class="form-group"><label data-i18n="reg.lastName">Last Name</label><input type="text" id="regLastName" placeholder="Smith"></div>
       </div>
       <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" placeholder="admin@company.com"></div>
-      <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+      <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="regPass" placeholder="Min 8 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('regPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
       <hr class="divider">
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
@@ -2742,7 +2742,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div id="createAdminMsg"></div>
     <div class="form-group"><label>Full Name</label><input type="text" id="newAdminName" placeholder="Jane Smith"></div>
     <div class="form-group"><label data-i18n="col.email">Email</label><input type="email" id="newAdminEmail" placeholder="admin@company.com"></div>
-    <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="newAdminPass" placeholder="Min 6 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('newAdminPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+    <div class="form-group"><label data-i18n="login.password">Password</label><div class="pw-wrap"><input type="password" id="newAdminPass" placeholder="Min 8 characters" data-i18n="pw.min6"><button type="button" class="pw-toggle" onclick="togglePw('newAdminPass',this)" tabindex="-1" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <div class="form-group"><label>Plan Tier</label>
       <select id="newAdminPlan">
         <option value="free">Free</option>
@@ -5040,8 +5040,6 @@ const PLANS = {
   business: { name:'Business', maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:6, price:79.49 },
   unlimited:{ name:'Unlimited',maxCompanies:Infinity, maxSites:Infinity, maxEmployees:Infinity, maxCoAdmins:Infinity, price:0  },
 };
-// Grandfathered companies — always unlimited regardless of plan
-const GRANDFATHERED_NAMES = ['Oaziz Extracts','Connoisseur Culture'];
 
 // Growth-and-up gated add-ons (lunch/break tracking, visitor check-in): these are plan-tier
 // inclusions, not a separate purchase like scheduling, so the check is a simple tier compare
@@ -5083,7 +5081,6 @@ function paidPreviewEndText() {
 }
 
 function getCompanyPlan(co) {
-  if(co && GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
   if(isSuperAdmin()) return PLANS.unlimited;
   // The subscription is per-account, not per-company — use the logged-in admin's EFFECTIVE plan
   // (getAdminPlan handles co-admins inheriting the primary admin's plan). Don't depend on a
@@ -7136,7 +7133,6 @@ function getAdminPlan() {
 // Override getCompanyPlan to use admin plan for the currently logged in user
 function getCompanyPlanForCurrentAdmin(co) {
   if(!co) return PLANS.free;
-  if(GRANDFATHERED_NAMES.includes(co.name)) return PLANS.unlimited;
   if(isSuperAdmin()) return PLANS.unlimited;
   return getAdminPlan();
 }
@@ -7228,7 +7224,7 @@ function updateNav(){
       const ddBillBtn=document.getElementById('ddManageBillingBtn');
       if(!isCoAdmin){
         const isPaid=plan!=='free'&&plan!=='unlimited';
-        const isTop=plan==='business'||isSuperAdmin();
+        const isTop=plan==='business'||plan==='unlimited'||isSuperAdmin();
         if(ddUpBtn) ddUpBtn.style.display=isTop?'none':'';
         if(ddBillBtn) ddBillBtn.style.display=isPaid?'':'none';
       } else {
@@ -7440,12 +7436,12 @@ async function doAcceptInvite(){
   const pass=document.getElementById('acceptPass').value;
   const passConfirm=document.getElementById('acceptPassConfirm').value;
   if(!firstName||!lastName){showMsg('acceptInviteMsg',t('invite.nameRequired'),'error');return;}
-  if(pass.length<6){showMsg('acceptInviteMsg',t('pw.tooShort6'),'error');return;}
+  if(pass.length<8){showMsg('acceptInviteMsg',t('msg.shortPassword8'),'error');return;}
   if(pass!==passConfirm){showMsg('acceptInviteMsg',t('msg.passMismatch'),'error');return;}
   try{
     const acc=await DB.rpc('accept_invitation',{p_token:inv.token,p_first_name:firstName,p_last_name:lastName,p_pass:pass});
     if(!acc||!acc.ok){
-      const map={weak_password:'Password must be at least 6 characters.',missing_name:'Please enter your first and last name.',invalid_invite:'This invitation has already been used or has expired.',expired_invite:'This invitation has expired.',email_taken:'An account with this email already exists. Please log in instead.'};
+      const map={weak_password:t('msg.shortPassword8'),missing_name:'Please enter your first and last name.',invalid_invite:'This invitation has already been used or has expired.',expired_invite:'This invitation has expired.',email_taken:'An account with this email already exists. Please log in instead.'};
       showMsg('acceptInviteMsg', map[acc&&acc.error] || 'Could not accept invitation. Please try again.','error');
       return;
     }
@@ -7659,7 +7655,7 @@ async function doRegister(){
   const pass=document.getElementById('regPass').value;
 
   if(!firstName||!lastName||!email||!pass){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
-  if(pass.length<6){showMsg('registerMsg',t('msg.shortPassword'),'error');return;}
+  if(pass.length<8){showMsg('registerMsg',t('msg.shortPassword8'),'error');return;}
 
   const company=document.getElementById('regCompany').value.trim();
   if(!company){showMsg('registerMsg',t('msg.allRequired'),'error');return;}
@@ -7746,7 +7742,7 @@ async function doVerify(){
       else throw e;
     }
     if(!reg || !reg.ok){
-      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',no_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',weak_password:t('msg.shortPassword'),email_taken:t('msg.emailTaken')||'That email is already registered.',missing_name:t('msg.allRequired')};
+      const map={bad_code:t('msg.badCode')||'Incorrect or expired code.',no_code:t('msg.badCode')||'Incorrect or expired code.',expired:t('msg.codeExpired')||'Code expired. Please request a new one.',too_many_attempts:t('msg.tooManyAttempts')||'Too many attempts. Request a new code.',weak_password:t('msg.shortPassword8'),email_taken:t('msg.emailTaken')||'That email is already registered.',missing_name:t('msg.allRequired')};
       showMsg('registerMsg', map[reg&&reg.error] || (t('msg.resetFailed')||'Could not create account. Please try again.'),'error');
       return;
     }
@@ -8264,7 +8260,7 @@ function openProfile(){
     if(manageBtn)manageBtn.style.display='none';
   } else {
     const isPaid=plan!=='free'&&plan!=='unlimited';
-    const isTopPlan=plan==='business'||plan==='enterprise'||isSuperAdmin();
+    const isTopPlan=plan==='business'||plan==='unlimited'||isSuperAdmin();
     if(upgradeBtn)upgradeBtn.style.display=isTopPlan?'none':'';
     if(manageBtn)manageBtn.style.display=isPaid?'':'none';
   }
@@ -17758,10 +17754,10 @@ en:{
 'ui.askAdminCompany':'Ask an admin to set up a company first.',
 'pw.new':'New Password',
 'pw.confirm':'Confirm Password',
-'pw.min6':'Min 6 characters',
+'pw.min6':'Min 8 characters',
 'pw.repeat':'Repeat password',
 'pw.repeatNew':'Repeat new password',
-'pw.tooShort6':'Password must be at least 6 characters.',
+'pw.tooShort6':'Password must be at least 8 characters.',
 'msg.passMismatch':'Passwords do not match.',
 'setpass.title':'Welcome to PunchClock Crew',
 'setpass.desc':'You\'ve been invited as a co-admin. Please set your password to activate your account.',
@@ -18359,7 +18355,7 @@ en:{
 'msg.suspended':'Your account has been suspended. Contact support.',
 'msg.connError':'Connection error',
 'msg.loginLocked':'Too many failed attempts. Please wait 15 minutes and try again, or use "Forgot password".','msg.shortPassword8':'Password must be at least 8 characters.',
-'msg.allRequired':'All fields required.','msg.shortPassword':'Password must be at least 6 characters.',
+'msg.allRequired':'All fields required.','msg.shortPassword':'Password must be at least 8 characters.',
 'msg.enterAdminEmail':"Please enter your administrator's email address.",
 'msg.ownEmail':"That's your own email — please enter your administrator's email.",
 'msg.emailTaken':'Email already registered.','msg.adminNotFound':'No active admin account found with that email. Please ask your administrator for their registered email.',
@@ -18463,7 +18459,7 @@ en:{
 'coAdmin.desc':'Invite another admin to manage your companies. They will have the role you assign.',
 'coAdmin.role.admin':'Full Admin — same access as you (your companies only)',
 'coAdmin.role.manager':'Manager — can manage employees & view reports, cannot delete companies',
-'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email with login instructions.','coAdmin.inviteNote':'An email invitation will be sent.','coAdmin.inviteNoteTemp':'The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.','coAdmin.tempPass':'Temporary Password','coAdmin.tempPassHint':'(share this privately with the invitee)','coAdmin.tempPassRequired':'Please set a temporary password (min 6 characters).','coAdmin.accountActivated':'Account activated! Welcome to PunchClock Crew.','login.rememberMe':'Stay logged in','coAdmin.fullName':'Full Name','coAdmin.roleLabel':'Role',
+'coAdmin.sendInvite':'Send Invitation','coAdmin.inviteSent':'Invitation sent! They will receive an email with login instructions.','coAdmin.inviteNote':'An email invitation will be sent.','coAdmin.inviteNoteTemp':'The invitee logs in with the temporary password you set, then is immediately prompted to choose a new one.','coAdmin.tempPass':'Temporary Password','coAdmin.tempPassHint':'(share this privately with the invitee)','coAdmin.tempPassRequired':'Please set a temporary password (min 8 characters).','coAdmin.accountActivated':'Account activated! Welcome to PunchClock Crew.','login.rememberMe':'Stay logged in','coAdmin.fullName':'Full Name','coAdmin.roleLabel':'Role',
 'coAdmin.pendingInvite':'Pending Invite','coAdmin.resendInvite':'Resend Invite','coAdmin.inviteResent':'Invitation resent to',
 'coAdmin.cancelInvite':'Cancel','coAdmin.cancelConfirm':'Cancel the invitation sent to','coAdmin.cancelled':'Invitation cancelled.','coAdmin.pendingInviteeName':'(Pending — name set on accept)',
 'coAdmin.myCoAdmins':'My Co-Admins','coAdmin.noCoAdmins':'No co-admins yet. Invite someone to get started.',
@@ -18860,10 +18856,10 @@ fr:{
 'ui.askAdminCompany':'Demandez d\'abord à un admin de créer une entreprise.',
 'pw.new':'Nouveau mot de passe',
 'pw.confirm':'Confirmer le mot de passe',
-'pw.min6':'Min. 6 caractères',
+'pw.min6':'Min. 8 caractères',
 'pw.repeat':'Répétez le mot de passe',
 'pw.repeatNew':'Répétez le nouveau mot de passe',
-'pw.tooShort6':'Le mot de passe doit contenir au moins 6 caractères.',
+'pw.tooShort6':'Le mot de passe doit contenir au moins 8 caractères.',
 'msg.passMismatch':'Les mots de passe ne correspondent pas.',
 'setpass.title':'Bienvenue sur PunchClock Crew',
 'setpass.desc':'Vous avez été invité comme co-admin. Choisissez un mot de passe pour activer votre compte.',
@@ -19461,7 +19457,7 @@ fr:{
 'msg.suspended':'Votre compte a été suspendu. Contactez le support.',
 'msg.connError':'Erreur de connexion',
 'msg.loginLocked':'Trop de tentatives échouées. Veuillez patienter 15 minutes puis réessayer, ou utiliser « Mot de passe oublié ».','msg.shortPassword8':'Le mot de passe doit contenir au moins 8 caractères.',
-'msg.allRequired':'Tous les champs sont requis.','msg.shortPassword':'Le mot de passe doit contenir au moins 6 caractères.',
+'msg.allRequired':'Tous les champs sont requis.','msg.shortPassword':'Le mot de passe doit contenir au moins 8 caractères.',
 'msg.enterAdminEmail':'Veuillez entrer le courriel de votre administrateur.',
 'msg.ownEmail':'C\'est votre propre courriel — veuillez entrer celui de votre administrateur.',
 'msg.emailTaken':'Courriel déjà enregistré.','msg.adminNotFound':'Aucun compte admin actif trouvé avec ce courriel. Demandez le courriel enregistré de votre administrateur.',
@@ -19559,7 +19555,7 @@ fr:{
 'siteCode.invalid':'Code invalide. Vérifiez avec votre administrateur.',
 'siteCode.hint':'Demandez le code d\'accès à votre responsable de site.',
 'modal.siteCode':'Code d\'accès du site','modal.siteCodeNote':'Partagez uniquement avec les employés de ce site',
-'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','coAdmin.inviteNote':'Une invitation par courriel sera envoyée.','coAdmin.inviteNoteTemp':'L\'invité se connecte avec le mot de passe temporaire que vous définissez, puis est immédiatement invité à en choisir un nouveau.','coAdmin.tempPass':'Mot de passe temporaire','coAdmin.tempPassHint':'(à partager en privé avec l\'invité)','coAdmin.tempPassRequired':'Veuillez définir un mot de passe temporaire (6 caractères min.).','coAdmin.accountActivated':'Compte activé ! Bienvenue sur PunchClock Crew.','login.rememberMe':'Rester connecté','coAdmin.fullName':'Nom complet','coAdmin.roleLabel':'Rôle','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
+'coAdmin.inviteBtn':'+ Inviter un co-admin','coAdmin.title':'Inviter un co-admin','msg.pendingApproval':'Votre demande est en attente d\'approbation. Vous recevrez un courriel une fois approuvée par l\'administrateur.','coAdmin.limitReached':'Limite d\'admins atteinte pour votre forfait.','coAdmin.limitHint':'Mettez à niveau ou ajoutez un siège admin supplémentaire (4,90$/mois).','coAdmin.approved':'Co-admin approuvé avec succès.','coAdmin.inviteNote':'Une invitation par courriel sera envoyée.','coAdmin.inviteNoteTemp':'L\'invité se connecte avec le mot de passe temporaire que vous définissez, puis est immédiatement invité à en choisir un nouveau.','coAdmin.tempPass':'Mot de passe temporaire','coAdmin.tempPassHint':'(à partager en privé avec l\'invité)','coAdmin.tempPassRequired':'Veuillez définir un mot de passe temporaire (8 caractères min.).','coAdmin.accountActivated':'Compte activé ! Bienvenue sur PunchClock Crew.','login.rememberMe':'Rester connecté','coAdmin.fullName':'Nom complet','coAdmin.roleLabel':'Rôle','profile.admins':'Admins','coAdmin.pendingRequests':'Demandes d\'accès en attente','coAdmin.noRequests':'Aucune demande en attente.','coAdmin.approveBtn':'Approuver','coAdmin.denyBtn':'Refuser','coAdmin.primaryAdmin':'Admin principal','coAdmin.upgradeToApprove':'Votre forfait ne permet pas de co-admins. Mettez à niveau ou ajoutez un siège pour approuver cette demande.',
 'coAdmin.desc':'Invitez un autre admin pour gérer vos compagnies. Il aura le rôle que vous lui assignez.',
 'coAdmin.role.admin':'Admin complet — même accès que vous (vos compagnies seulement)',
 'coAdmin.role.manager':'Gestionnaire — peut gérer les employés et voir les rapports, ne peut pas supprimer les compagnies',
