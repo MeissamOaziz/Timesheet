@@ -175,7 +175,7 @@ const VIDEOS = [
       await v.cap(2, T('Choose the pay period', 'Choisissez la période de paie')); await v.wait(500);
       await v.glide('#reportPeriod, #page-reports select'); await v.wait(900);
       await v.cap(3, T('Press Generate', 'Touchez Générer'));              await v.wait(400);
-      await v.tap('#page-reports button[onclick="generateReport()"]', 1600);
+      await v.tap('#page-reports button[onclick*="generateReport"]', 1600);   // onclick is now withBusy(this,generateReport)
       await v.scrollPage(520);
       await v.cap(4, T('Total hours and overtime for each person', 'Heures totales et temps supplémentaire de chacun')); await v.wait(2800);
       await v.scrollPage(-2000);
