@@ -423,7 +423,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="form-group">
       <label id="cpNewLabel">New password</label>
-      <div class="pw-wrap"><input type="password" id="cpNew" class="form-input" autocomplete="new-password" placeholder="Min 6 characters"><button type="button" class="pw-toggle" onclick="togglePw('cpNew',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      <div class="pw-wrap"><input type="password" id="cpNew" class="form-input" autocomplete="new-password" placeholder="Min 8 characters"><button type="button" class="pw-toggle" onclick="togglePw('cpNew',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <div class="form-group">
       <label id="cpConfLabel">Confirm new password</label>
@@ -687,7 +687,7 @@ function escHtml(v) {
 const T = {
   en: {
     pageTitle: 'PunchClock Crew — Employee Portal', repeatPasswordPh: 'Repeat password',
-    min8Ph: 'Min 8 characters', min6Ph: 'Min 6 characters', themeToggle: 'Toggle theme',
+    min8Ph: 'Min 8 characters', themeToggle: 'Toggle theme',
     paidBreak: 'PAID BREAK', errPrefix: 'Error', emailPh: 'you@company.com',
     loading: 'Loading...', loginTitle: 'Employee Portal', loginSub: 'Sign in to view your schedule and hours.',
     forgotLink:'Forgot your password?',
@@ -696,7 +696,7 @@ const T = {
     fgPassLabel:'New password', fgResetBtn:'Set new password', fgBackLink:'Back to sign in',
     cpLink:'Change password', cpTitle:'Change your password', cpCurLabel:'Current password', cpNewLabel:'New password', cpConfLabel:'Confirm new password',
     cpSaveBtn:'Save password', cpCancelBtn:'Cancel', cpDone:'Your password has been changed.', cpWrong:'Your current password is not correct.',
-    cpShort:'The new password must be at least 6 characters.', cpMismatch:'The new passwords do not match.', cpSame:'Choose a password different from the current one.',
+    cpShort:'The new password must be at least 8 characters.', cpMismatch:'The new passwords do not match.', cpSame:'Choose a password different from the current one.',
     cpExpired:'Your session has expired. Please sign in again.', cpError:'Could not change the password. Please try again.',
     fgNeedEmail:'Enter your email address.',
     fgSent:'If that address has a portal account, a code is on its way. It expires in 15 minutes.',
@@ -800,7 +800,7 @@ const T = {
   },
   fr: {
     pageTitle: 'PunchClock Crew — Portail employé', repeatPasswordPh: 'Répétez le mot de passe',
-    min8Ph: '8 caractères minimum', min6Ph: '6 caractères minimum', themeToggle: 'Changer le thème',
+    min8Ph: '8 caractères minimum', themeToggle: 'Changer le thème',
     paidBreak: 'PAUSE PAYÉE', errPrefix: 'Erreur', emailPh: 'vous@entreprise.com',
     loading: 'Chargement...', loginTitle: 'Portail employé', loginSub: 'Connectez-vous pour voir votre horaire et vos heures.',
     forgotLink:'Mot de passe oublié?',
@@ -809,7 +809,7 @@ const T = {
     fgPassLabel:'Nouveau mot de passe', fgResetBtn:'Définir le mot de passe', fgBackLink:'Retour à la connexion',
     cpLink:'Changer le mot de passe', cpTitle:'Changer votre mot de passe', cpCurLabel:'Mot de passe actuel', cpNewLabel:'Nouveau mot de passe', cpConfLabel:'Confirmer le nouveau mot de passe',
     cpSaveBtn:'Enregistrer', cpCancelBtn:'Annuler', cpDone:'Votre mot de passe a été changé.', cpWrong:"Votre mot de passe actuel n'est pas correct.",
-    cpShort:'Le nouveau mot de passe doit contenir au moins 6 caractères.', cpMismatch:'Les nouveaux mots de passe ne correspondent pas.', cpSame:"Choisissez un mot de passe différent de l'actuel.",
+    cpShort:'Le nouveau mot de passe doit contenir au moins 8 caractères.', cpMismatch:'Les nouveaux mots de passe ne correspondent pas.', cpSame:"Choisissez un mot de passe différent de l'actuel.",
     cpExpired:'Votre session a expiré. Veuillez vous reconnecter.', cpError:'Impossible de changer le mot de passe. Veuillez réessayer.',
     fgNeedEmail:'Entrez votre adresse courriel.',
     fgSent:'Si cette adresse a un compte portail, un code est en route. Il expire dans 15 minutes.',
@@ -959,7 +959,7 @@ function applyTranslations() {
   const setPassConfirm = document.getElementById('setPassConfirm');
   if (setPassConfirm) setPassConfirm.placeholder = t('repeatPasswordPh');
   // Reset and invite need 8 characters; changing a password while signed in needs 6 (server rule).
-  [['fgPass','min8Ph'],['setPassNew','min8Ph'],['cpNew','min6Ph'],['loginEmail','emailPh'],['fgEmail','emailPh']].forEach(([id, key]) => {
+  [['fgPass','min8Ph'],['setPassNew','min8Ph'],['cpNew','min8Ph'],['loginEmail','emailPh'],['fgEmail','emailPh']].forEach(([id, key]) => {
     const el = document.getElementById(id); if (el) el.placeholder = t(key);
   });
   ['empThemeBtn','authThemeBtn'].forEach(id => {
@@ -1252,7 +1252,7 @@ async function doChangePw() {
   const nw = document.getElementById('cpNew').value;
   const conf = document.getElementById('cpConf').value;
   if (!cur) { showMsg('cpMsg', t('cpWrong'), 'error'); return; }
-  if (nw.length < 6) { showMsg('cpMsg', t('cpShort'), 'error'); return; }
+  if (nw.length < 8) { showMsg('cpMsg', t('cpShort'), 'error'); return; }
   if (nw !== conf) { showMsg('cpMsg', t('cpMismatch'), 'error'); return; }
   if (nw === cur) { showMsg('cpMsg', t('cpSame'), 'error'); return; }
   const btn = document.getElementById('cpSaveBtn');
