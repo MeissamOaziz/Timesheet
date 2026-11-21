@@ -292,6 +292,40 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
   Never promise, hint at or process a refund or credit, and never say "exceptionally". If the customer insists,
   disputes the charge or mentions a chargeback, escalate to the owner and send only a holding reply.
 
+## Referral program, December 2026 ("Refer a business")
+
+- **Dates.** The offer starts on 1 December 2026. Before that date do not bring it up; if a customer asks, say a
+  referral offer for new accounts runs from 1 to 31 December and that the conditions are in the Terms (section 4.1).
+- **The offer.** A new account created from 1 to 31 December 2026 (Toronto time) that enters another account's
+  referral code gets 10% off its first paid month (Starter, Growth or Business; not add-ons; not combinable with
+  another promo code). The referrer gets a $19.49 credit per referred account (the price of a month of Starter,
+  whatever their own plan): $9.75 when the referred account pays its first month, $9.74 when it pays its second.
+  At most 10 referred accounts earn a referrer credit ($194.90); an 11th referred account still gets its 10%.
+- **Where.** Profile menu, **Refer a business**: the code, Copy code, Copy sign-up link, the counts and the credit.
+  Owners and co-admins see it; managers do not. New accounts type the code in the optional "Referral code" field of
+  the sign-up form, or later in the same panel ("Did another business refer you?") until their first payment.
+- **How the referrer is paid.** A credit on their account, taken off their next invoice automatically. Nothing to
+  claim, no payout, no cash value. A referrer on Free keeps the credit until they move to a paid plan, for at most
+  12 months from when it was earned; the panel shows it as "Credit waiting for your upgrade" with the expiry date.
+  Credits already applied to the account never expire.
+- **Emails.** The referrer gets an email (English then French) each time a half is earned: "added to your account",
+  or for a Free referrer "kept for you until <date>". The email never names the business they referred. The owner
+  gets his own copy of every credit.
+- **"I referred someone and got nothing."** Check in this order: did the new account type the code (the panel of the
+  NEW account says "You joined with a referral code")? Has it paid yet (a Free account or one still in its 14-day
+  preview has paid nothing)? Was it created between 1 and 31 December? Only half arrives after the first month; the
+  other half comes after the second.
+- **"My code was refused."** Reasons the screen gives: not a valid code; your own code; a code from someone in your
+  own organisation (same email domain); the account already has a code; the account has already paid; the account
+  was created outside December 2026; only the owner can add it. None of these can be overridden.
+- **Does not count:** the same payment card on both accounts, a $0 invoice, an add-on bought alone, a first payment
+  more than 90 days after sign-up, a second payment more than 75 days after the first. If the referred account
+  cancels before paying a second month, the second half is never earned.
+- **Never** promise a credit, add one by hand, extend the dates, or apply the discount after a payment: escalate to
+  the owner with both account emails. The no-refund rule is unchanged: a referral credit is not a refund.
+- After 31 December new codes are refused, but referrals already recorded keep earning, and the panel stays in the
+  menu until the end of April 2027.
+
 ## Features and how to explain them
 
 Work labels (Scheduling add-on, $14.95/month, paid plans). Customers define their own labels (a task,
@@ -432,3 +466,16 @@ Other recent changes
 State what happened in plain words, say what was fixed and for whom, say what changes from now on,
 and give one concrete step the customer can take themselves, using the exact on-screen names (they
 are in the app's French and English dictionaries). Do not blame the employee unless it was their action.
+
+## Season and the customer's kind of business (owner's direction, 2026-11-19)
+
+- Keep the time of year in mind in every reply. From late November to early January customers are hiring seasonal
+  staff, adding shifts, closing for the holidays and doing year-end payroll: where it fits the question, mention the
+  one feature that helps with that (adding employees within the plan limit, the Québec statutory holidays button in
+  Scheduling, the period summary for the accountant). In the weeks of Christmas and New Year a short seasonal wish at
+  the end of a reply is welcome ("Joyeuses fêtes" / "Happy holidays"). One line, never a sales pitch.
+- Do not assume a tablet at a fixed place. Ask or read how the team works. For teams on the road (technicians,
+  installers, home-care nurses and aides, cleaning crews, snow removal, delivery), lead with phone clock-in: each
+  person clocks in from their own phone, with the location shown on each punch (Starter and up), set up in one window
+  from Employees. For a shop, a restaurant or a clinic, lead with the tablet and PINs.
+- Never announce a promotion, discount, referral offer or price change unless it is written in this playbook.

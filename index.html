@@ -1443,6 +1443,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
   <div class="land-sticky-cta">
     <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
   </div>
+  <!-- Referral program: holiday banner, drawn by renderReferralBanners() while the offer is open -->
+  <div id="referralLandBanner" style="display:none"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-tablet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
@@ -2064,7 +2066,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
   <div class="legal-content">
     <button class="legal-back" onclick="hideLegal('tos')" data-i18n="legal.back">← Back</button>
     <h1 data-i18n="tos.title">Terms of Service</h1>
-    <p class="meta" data-i18n="tos.updated">Last updated: November 12, 2026</p>
+    <p class="meta" data-i18n="tos.updated">Last updated: November 20, 2026</p>
     <h2 data-i18n="tos.h1">1. Acceptance of Terms</h2>
     <p data-i18n="tos.p1">By accessing or using PunchClock Crew ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
     <h2 data-i18n="tos.h2">2. Description of Service</h2>
@@ -2074,6 +2076,16 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <h2 data-i18n="tos.h4">4. Subscription Plans and Billing</h2>
     <p data-i18n="tos.p4">PunchClock Crew offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). An optional Scheduling Add-On is available for $14.95/month on any paid plan. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. All payments are final and non-refundable, including the first payment, partial months and unused time. Every new account can try the paid features free for 14 days before paying: please use that period to make sure the Service fits your needs. After you cancel, you are not charged again and you keep your paid plan until the end of the period already paid.</p>
     <p data-i18n="tos.p4b">Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan's included limit.</p>
+    <h3 data-i18n="tos.hRef">4.1 Referral program (December 2026)</h3>
+    <p data-i18n="tos.pRef1">From 1 December 2026 at 12:00 a.m. to 31 December 2026 at 11:59 p.m. (Eastern Time), a new PunchClock Crew account may enter the referral code of an existing account, at sign-up or at any time before its first payment. One code per account. A code cannot be added after a payment has been made.</p>
+    <p data-i18n="tos.pRef2">For the new account. The new account receives 10% off its first monthly payment for a Starter, Growth or Business plan. The discount applies once, to the plan only (not to add-ons), and cannot be combined with another promotional code.</p>
+    <p data-i18n="tos.pRef3">For the referrer. The referrer receives a credit of $19.49 CAD, the price of one month of the Starter plan, for each referred account, whatever the referrer's own plan. The credit is granted in two parts:</p>
+    <p data-i18n="tos.pRef4">1. $9.75 when the referred account makes its first monthly plan payment, within 90 days of its sign-up;</p>
+    <p data-i18n="tos.pRef5">2. $9.74 when the referred account makes its second monthly plan payment, between 25 and 75 days after the first.</p>
+    <p data-i18n="tos.pRef6">If the referred account cancels, or does not pay for a second month within that time, the second part is not earned. The first part, once granted, is kept. A referrer earns credits for at most 10 referred accounts; further referred accounts still receive their own discount.</p>
+    <p data-i18n="tos.pRef7">How the credit is paid. Each part is added to the referrer's account as a credit, normally within minutes of the referred account's payment, and is deducted automatically from the referrer's next PunchClock Crew invoice or invoices until it is used up. If the referrer is on the Free plan, the credit is held and is applied once the account subscribes to a paid plan; a credit held this way expires 12 months after it was earned if the account has not subscribed to a paid plan by then. A credit has no cash value. It cannot be paid out, refunded, transferred or exchanged, and it is not a refund of any payment.</p>
+    <p data-i18n="tos.pRef8">What does not qualify. Referring yourself; referring an account of your own organisation (same email domain, other than public email providers); a referred account paid with the same payment card as the referrer's account; an account created outside the dates above; a payment of $0.00.</p>
+    <p data-i18n="tos.pRef9">Other conditions. A referred account has its own referral code and can refer others under the same conditions. We may withhold or reverse a discount or a credit in case of abuse, a disputed payment, or an error, and we may end the program for new sign-ups at any time. Credits already earned before the end of the program are kept. All payments remain final and non-refundable as stated in section 4.</p>
     <h2 data-i18n="tos.h5">5. Employee Data</h2>
     <p data-i18n="tos.p5">You are responsible for obtaining any necessary consent from your employees to collect and store their time and attendance data. You represent that you have the legal authority to use the Service on behalf of your organization and to submit employee data through the platform.</p>
     <h2 data-i18n="tos.h6">6. Acceptable Use</h2>
@@ -2239,6 +2251,14 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           <div>
             <div data-i18n="ai.menu">AI apps</div>
             <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="ai.menuSub">Claude &amp; ChatGPT (read-only)</div>
+          </div>
+        </button>
+        <!-- Refer a business (referral program): shown while the program runs, see referralPanelOn() -->
+        <button class="user-dd-item" id="ddReferBtn" onclick="closeUserMenu();openRefer()" style="display:none">
+          <div class="dd-icon" style="background:rgba(34,197,94,.12)"><svg style="width:16px;height:16px;color:var(--green)"><use href="#i-users"/></svg></div>
+          <div>
+            <div data-i18n="ref.menu">Refer a business</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px" data-i18n="ref.menuSub">They save 10%, you earn a credit</div>
           </div>
         </button>
         <!-- Subscription -->
@@ -2637,6 +2657,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <p style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px" data-i18n="reg.companyInfo">Company Information</p>
         <div class="form-group"><label data-i18n="reg.companyName">Company Name</label><input type="text" id="regCompany" placeholder="Acme Corp"></div>
         <div class="form-group"><label for="regHeard" data-i18n="reg.heardLabel">How did you hear about us? (optional)</label><select id="regHeard"><option value="" data-i18n="reg.heardNone">Choose…</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="linkedin">LinkedIn</option><option value="google" data-i18n="reg.heardGoogle">Google search</option><option value="friend" data-i18n="reg.heardFriend">A friend or colleague</option><option value="accountant" data-i18n="reg.heardAccountant">My accountant or bookkeeper</option><option value="other" data-i18n="reg.heardOther">Other</option></select></div>
+        <!-- Referral program: shown only while the offer is open (referralSyncRegister) -->
+        <div class="form-group" id="regReferralGroup" style="display:none"><label for="regReferral" data-i18n="ref.regLabel">Referral code (optional)</label><input type="text" id="regReferral" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD2345" style="text-transform:uppercase;letter-spacing:1px"><p style="font-size:12px;color:var(--text3);margin-top:4px;margin-bottom:0" data-i18n="ref.regHelp">Have a code from another business? You get 10% off your first paid month.</p></div>
         <p style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:2px" data-i18n="reg.settingsLater">Address, payroll schedule, overtime and your logo are all in Settings once you're in — with sensible defaults until you change them.</p>
         <p style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:2px" data-i18n="reg.updatesNote">We'll email you occasional product updates. You can unsubscribe anytime.</p>
       <button class="btn-primary" style="margin-top:20px" onclick="withBusy(this,doRegister)" data-i18n="reg.continue">Continue →</button>
@@ -2665,6 +2687,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div><h1 data-i18n="dash.title">Dashboard</h1><p data-i18n="dash.subtitle">Your team at a glance</p></div>
     <button class="btn-secondary" style="width:auto;padding:9px 16px;font-size:13px" onclick="renderDashboard()"><span data-i18n="dash.refresh">↻ Refresh</span></button>
   </div>
+  <div id="referralDashBanner" style="display:none"></div>
   <div id="setupChecklist" style="display:none"></div>
   <div id="payrollPrompt" style="display:none"></div>
   <div id="feedbackPrompt" style="display:none"></div>
@@ -2926,6 +2949,17 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div class="modal-footer">
       <button class="btn-secondary" onclick="closeModal('editCoAdminModal')" data-i18n="modal.cancel">Cancel</button>
       <button class="btn-primary" style="width:auto;padding:9px 18px" onclick="saveEditCoAdmin()" data-i18n="modal.saveChanges">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- REFER A BUSINESS MODAL (referral program): drawn by renderRefer() -->
+<div class="modal-overlay" id="referModal">
+  <div class="modal" style="max-width:540px">
+    <h3 style="display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px;color:var(--green)"><use href="#i-users"/></svg><span data-i18n="ref.title">Refer a business</span></h3>
+    <div id="referBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('referModal')" data-i18n="ref.close">Close</button>
     </div>
   </div>
 </div>
@@ -4763,6 +4797,216 @@ async function sendAppEmail(type, data){
   if(!r||r.ok===false) throw new Error((r&&r.error)||'Could not send the email');
   return r;
 }
+// ── Referral program ("Refer a business"), December 2026 promotion ──────────────────────────────
+// Rules, fine print and the go-live order: docs/referral-program.md. Everything here is display only: the server
+// (secure-db referral_check / referral_apply / referral_info, and stripe-handler for the money) decides what is
+// valid, who may see what and what is earned.
+// Two switches, both needed: `on` below for the page, and referral_promotions.enabled for the server. With
+// on:false nothing of the program shows, whatever the date. With on:true the sign-up field and the banners show
+// only between `start` and `end`; the menu entry stays until `panelUntil` so referrers can follow their credits.
+// Preview before go-live: open the site once with ?referral=1 (that browser only; ?referral=0 turns it off).
+const REFERRAL_PROMO={
+  on:true,   // owner's go 2026-11-21: on ahead of time, the dates below do the rest
+  start:Date.parse('2026-12-01T05:00:00Z'),        // 1 Dec 2026, 00:00 in Toronto (UTC-5)
+  end:Date.parse('2027-01-01T05:00:00Z'),          // 1 Jan 2027, 00:00 in Toronto
+  panelUntil:Date.parse('2027-05-01T04:00:00Z')    // 1 May 2027, 00:00 in Toronto (UTC-4)
+};
+const REFERRAL_CODE_RE=/^[A-HJKMNP-Z2-9]{8}$/;
+function referralPreview(){
+  try{
+    const q=new URLSearchParams(window.location.search).get('referral');
+    if(q==='1') localStorage.setItem('pc_referral','1');
+    else if(q==='0') localStorage.removeItem('pc_referral');
+    return localStorage.getItem('pc_referral')==='1';
+  }catch(_){ return false; }
+}
+function referralOpen(now){
+  if(referralPreview()) return true;
+  const n=now||Date.now();
+  return REFERRAL_PROMO.on&&n>=REFERRAL_PROMO.start&&n<REFERRAL_PROMO.end;
+}
+function referralPanelOn(now){
+  if(referralPreview()) return true;
+  const n=now||Date.now();
+  return REFERRAL_PROMO.on&&n>=REFERRAL_PROMO.start&&n<REFERRAL_PROMO.panelUntil;
+}
+// What a person typed ("abcd-2345 ") as a code, or '' if it cannot be one.
+function referralClean(v){
+  const s=String(v==null?'':v).toUpperCase().replace(/[\s-]/g,'');
+  return REFERRAL_CODE_RE.test(s)?s:'';
+}
+function refMoney(cents){
+  const v=((Number(cents)||0)/100).toFixed(2);
+  return _appLang==='fr'?v.replace('.',',')+' $':'$'+v;
+}
+// A sign-up link carries the code (?ref=ABCD2345). It is kept for 30 days in this browser and pre-fills the field.
+function referralCaptureLink(){
+  try{
+    const c=referralClean(new URLSearchParams(window.location.search).get('ref'));
+    if(c) localStorage.setItem('pc_ref_code',JSON.stringify({c,at:Date.now()}));
+  }catch(_){}
+}
+function referralStoredCode(){
+  try{
+    const v=JSON.parse(localStorage.getItem('pc_ref_code')||'null');
+    if(v&&referralClean(v.c)&&Date.now()-v.at<30*864e5) return v.c;
+  }catch(_){}
+  return '';
+}
+// Sign-up form: the optional field exists only while the offer is open.
+function referralSyncRegister(){
+  const g=document.getElementById('regReferralGroup'); if(!g) return;
+  const open=referralOpen();
+  g.style.display=open?'':'none';
+  const inp=document.getElementById('regReferral');
+  if(inp){ if(!open) inp.value=''; else if(!inp.value){ const c=referralStoredCode(); if(c) inp.value=c; } }
+}
+// Called by doRegister. Returns {ok:true, code} ('' when no code was typed) or {ok:false} after showing why.
+async function referralCheckSignup(){
+  if(!referralOpen()) return {ok:true,code:''};
+  const typed=((document.getElementById('regReferral')||{}).value||'').trim();
+  if(!typed) return {ok:true,code:''};
+  const code=referralClean(typed);
+  if(!code){ showMsg('registerMsg',esc(t('ref.regInvalid')),'error'); return {ok:false}; }
+  try{
+    const r=await supaFetch('POST','email_codes',{action:'referral_check',body:{code}});
+    if(r&&r.ok&&r.valid!==true){ showMsg('registerMsg',esc(t('ref.regInvalid')),'error'); return {ok:false}; }
+  }catch(_){ /* could not check now: the code is checked again when the account is created */ }
+  return {ok:true,code};
+}
+// Called by doVerify once the account and its session exist. Never throws: a referral must not cost a sign-up.
+async function referralApplyAfterSignup(code,token){
+  if(!code||!token) return;
+  try{
+    const r=await supaFetch('POST','email_codes',{action:'referral_apply',body:{code},token});
+    if(r&&r.ok){ try{ localStorage.removeItem('pc_ref_code'); }catch(_){} window._referralNote=t('ref.applied'); }
+    else window._referralNote=t('ref.notApplied');
+  }catch(e){ console.warn('Referral code not applied:',e); window._referralNote=t('ref.notApplied'); }
+}
+// The panel (profile menu, "Refer a business"): owners and co-admins.
+let _refer=null;
+async function openRefer(){
+  if(isDemo()||isSuperAdmin()||isManager()) return;
+  openModal('referModal');
+  const body=document.getElementById('referBody');
+  if(body) body.innerHTML=`<p style="color:var(--text2);font-size:13px">${esc(t('ref.loading'))}</p>`;
+  await loadRefer();
+}
+async function loadRefer(){
+  const body=document.getElementById('referBody');
+  try{
+    _refer=await supaFetch('POST','admins',{action:'referral_info'});
+    if(!_refer||!_refer.ok||!referralClean(_refer.code)) throw new Error('no code');
+    renderRefer();
+  }catch(e){
+    _refer=null;
+    if(body) body.innerHTML=`<div class="msg error">${esc(t('ref.error'))}</div>`;
+  }
+}
+function renderRefer(){
+  const body=document.getElementById('referBody');
+  const d=_refer;
+  if(!body||!d) return;
+  const p=d.promo||{};
+  const pct=Number(p.discount_percent)||10, reward=Number(p.reward_cents)||1949;
+  const half1=Math.ceil(reward/2), half2=reward-half1;
+  const fill=s=>esc(String(s).replace('{pct}',pct).replace('{amt}',refMoney(reward)).replace('{half1}',refMoney(half1)).replace('{half2}',refMoney(half2)));
+  const small='font-size:12.5px;color:var(--text2);line-height:1.55';
+  const n=x=>Math.max(0,Number(x)||0);
+  const r=d.referred||{}, c=d.credit||{};
+  let h=`<p style="font-size:13.5px;color:var(--text2);line-height:1.55;margin:0 0 14px">${fill(t('ref.intro'))}</p>`;
+  if(!p.open) h+=`<div class="msg info">${esc(t('ref.notOpen'))}</div>`;
+  h+=`<div style="background:var(--surface2);border-radius:var(--r-md);padding:14px;margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${esc(t('ref.yourCode'))}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="referCode" readonly value="${esc(d.code)}" onclick="this.select()" aria-label="${esc(t('ref.yourCode'))}" style="flex:1;min-width:150px;padding:10px 12px;font-size:20px;font-weight:600;letter-spacing:3px;text-align:center;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:var(--r-sm)">
+      <button class="btn-primary" style="width:auto;padding:10px 14px;font-size:12.5px;white-space:nowrap" onclick="referCopy('code')">${esc(t('ref.copy'))}</button>
+      <button class="btn-secondary" style="width:auto;padding:10px 14px;font-size:12.5px;white-space:nowrap" onclick="referCopy('link')">${esc(t('ref.copyLink'))}</button>
+    </div>
+    <div style="${small};margin-top:8px">${esc(t('ref.window'))}</div>
+  </div>`;
+  h+=`<div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:6px">${esc(t('ref.howTitle'))}</div>
+    <ol style="${small};margin:0 0 6px;padding-left:20px">
+      <li>${fill(t('ref.how1'))}</li><li>${fill(t('ref.how2'))}</li>
+    </ol>
+    <p style="${small};margin:0 0 ${d.on_free_plan?'6':'16'}px">${esc(t('ref.how3'))}</p>`;
+  if(d.on_free_plan) h+=`<p style="${small};margin:0 0 16px"><strong>${esc(t('ref.howFree'))}</strong></p>`;
+  const total=n(r.pending)+n(r.first_paid)+n(r.completed);
+  h+=`<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${esc(t('ref.statsTitle'))}</div>`;
+  if(!total&&!n(c.delivered_cents)&&!n(c.waiting_cents)){
+    h+=`<p style="${small};margin:0 0 16px">${esc(t('ref.none'))}</p>`;
+  } else {
+    const row=(label,val)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--border);font-size:13px"><span style="color:var(--text2)">${esc(label)}</span><strong style="color:var(--text)">${esc(val)}</strong></div>`;
+    h+=`<div id="referStats" style="margin-bottom:16px">`+row(t('ref.statSigned'),n(r.pending))+row(t('ref.statFirst'),n(r.first_paid))+row(t('ref.statDone'),n(r.completed))
+      +row(t('ref.creditApplied'),refMoney(n(c.delivered_cents)))+(n(c.waiting_cents)?row(t('ref.creditWaiting'),refMoney(n(c.waiting_cents))):'')+`</div>`;
+    const _exp=c.waiting_first_expires_at?new Date(c.waiting_first_expires_at):null;
+    if(n(c.waiting_cents)&&_exp&&!isNaN(_exp)) h+=`<p id="referExpiry" style="${small};margin:-8px 0 16px">${esc(t('ref.waitingExpires').replace('{date}',_exp.toLocaleDateString(_appLang==='fr'?'fr-CA':'en-CA',{year:'numeric',month:'long',day:'numeric',timeZone:'America/Toronto'})))}</p>`;
+  }
+  if(d.mine){
+    const key=d.mine.status==='void'?'ref.mineVoid':(d.mine.discount_used?'ref.mineUsed':'ref.minePending');
+    h+=`<div class="msg ${d.mine.status==='void'?'info':'success'}">${fill(t(key))}</div>`;
+  } else if(d.can_enter){
+    h+=`<div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:6px">
+      <div style="font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:4px">${esc(t('ref.enterTitle'))}</div>
+      <div style="${small};margin-bottom:8px">${fill(t('ref.enterHelp'))}</div>
+      <div id="referMsg"></div>
+      <div style="display:flex;gap:8px"><input type="text" id="referEnter" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD2345" aria-label="${esc(t('ref.regLabel'))}" style="flex:1;min-width:0;text-transform:uppercase;letter-spacing:1px">
+      <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12.5px;white-space:nowrap" onclick="withBusy(this,referApply)">${esc(t('ref.apply'))}</button></div>
+    </div>`;
+  }
+  h+=`<details style="margin-top:14px"><summary style="font-size:12.5px;color:var(--text2);cursor:pointer">${esc(t('ref.termsTitle'))}</summary>
+    <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:8px 0 0">${esc(t('ref.terms'))}</p></details>`;
+  body.innerHTML=h;
+}
+function referCopy(what){
+  if(!_refer||!referralClean(_refer.code)) return;
+  const text=what==='link'?`https://www.punchclock.ca/?ref=${_refer.code}`:_refer.code;
+  const done=()=>showToast(t(what==='link'?'ref.linkCopied':'ref.copied'),'success');
+  const inp=document.getElementById('referCode');
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,()=>{ if(inp) inp.select(); }); }
+    else if(inp){ const keep=inp.value; inp.value=text; inp.select(); document.execCommand('copy'); inp.value=keep; done(); }
+  }catch(_){ if(inp) inp.select(); }
+}
+async function referApply(){
+  const code=referralClean((document.getElementById('referEnter')||{}).value);
+  if(!code){ showMsg('referMsg',esc(t('ref.err.invalid')),'error'); return; }
+  const KNOWN=['invalid','own_code','same_domain','already_used','already_paid','not_eligible','closed','not_owner'];
+  try{
+    const r=await supaFetch('POST','admins',{action:'referral_apply',body:{code}});
+    if(r&&r.ok){ showToast(t('ref.applied'),'success'); await loadRefer(); return; }
+    showMsg('referMsg',esc(t('ref.err.'+(KNOWN.includes(r&&r.code)?r.code:'other'))),'error');
+  }catch(e){ showMsg('referMsg',esc(t('ref.err.other')),'error'); }
+}
+// Holiday banners: one on the home page (for visitors), one on the dashboard (for owners and co-admins).
+function _refBannerHidden(k){ try{ return localStorage.getItem('pc_ref_ban_'+k)==='1'; }catch(_){ return false; } }
+function referralBannerHide(k){
+  try{ localStorage.setItem('pc_ref_ban_'+k,'1'); }catch(_){}
+  renderReferralBanners();
+}
+function renderReferralBanners(){
+  const open=referralOpen();
+  const strip=(k,text,cta,action)=>`<div class="ref-banner" role="note" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;padding:10px 16px;background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(79,142,247,.14));border:1px solid var(--border);color:var(--text);font-size:13.5px;line-height:1.45">
+    <svg style="width:18px;height:18px;color:var(--green);flex-shrink:0" aria-hidden="true"><use href="#i-party"/></svg>
+    <span style="flex:1;min-width:220px;max-width:760px">${esc(text)}</span>
+    <button class="btn-primary" style="width:auto;padding:7px 14px;font-size:12.5px;white-space:nowrap" onclick="${action}">${esc(cta)}</button>
+    <button class="link-btn" style="font-size:12px;color:var(--text2)" onclick="referralBannerHide('${k}')">${esc(t('ref.banDismiss'))}</button>
+  </div>`;
+  const land=document.getElementById('referralLandBanner');
+  if(land){
+    const show=open&&!isLoggedIn()&&!_refBannerHidden('land');
+    land.style.display=show?'':'none';
+    land.innerHTML=show?strip('land',t('ref.banLand'),t('ref.banLandCta'),"hideLanding();navigate('register')"):'';
+  }
+  const dash=document.getElementById('referralDashBanner');
+  if(dash){
+    const show=open&&isLoggedIn()&&!isDemo()&&!isSuperAdmin()&&!isManager()&&!_refBannerHidden('dash');
+    dash.style.display=show?'':'none';
+    dash.innerHTML=show?`<div style="margin-bottom:16px;border-radius:var(--r-md);overflow:hidden">${strip('dash',t('ref.banApp'),t('ref.banAppCta'),'openRefer()')}</div>`:'';
+  }
+}
+referralCaptureLink();
+
 // ── AI apps: the Claude / ChatGPT connector (read-only) ──────────────────────────────────────
 // The card lists the AI apps connected to this account and holds the owner's "Allow AI apps" switch. Everything
 // goes through secure-db actions with the session: the server decides who the caller is, what they may see and
@@ -5275,6 +5519,7 @@ function showLanding() {
   document.querySelectorAll('.picker-screen').forEach(p=>p.classList.add('hidden'));
   if(typeof applyAllTranslations==='function') applyAllTranslations();
   renderFAQ();
+  renderReferralBanners();
 }
 // The homepage menu (see .land-menu): opens from the header button, closes on a choice, outside click or Escape.
 function toggleLandMenu(){
@@ -5334,6 +5579,8 @@ function renderFAQ(){
   // locked-out customer would never think to look for on a sales page. Those moved to the
   // help centre; FAQ_SALES is what a prospect actually wants to know.
   let qs=FAQ_SALES.slice();
+  // Referral program: its question (30) is shown only while the offer is open (see REFERRAL_PROMO).
+  if(typeof referralOpen==='function'&&referralOpen()) qs.push(30);
   if(terms.length){
     qs=qs.filter(i=>{
       const hay=_helpNorm((t('faq.q'+i)||'')+' '+(t('faq.a'+i)||''));
@@ -5816,6 +6063,7 @@ function navigate(page){
   if(adminPages.includes(page)&&isLoggedIn()&&!isSuperAdmin()){
     if(needsOnboarding()&&page!=='dashboard'){showOnboardStep1();return;}
   }
+  if(page==='register') referralSyncRegister();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const el=document.getElementById('page-'+page);
@@ -6552,6 +6800,7 @@ function renderDashboard(){
   renderSetupChecklist();
   renderPayrollPrompt();
   renderFeedbackPrompt();
+  renderReferralBanners();
   // The tour used to auto-open here, 400ms after the checklist rendered, and land a modal
   // squarely on top of it — two onboarding systems competing on the same screen, with the
   // one the owner could act on hidden behind the one they could only read. The checklist
@@ -7303,6 +7552,9 @@ function updateNav(){
       // AI apps: owners, co-admins and managers (never the super admin, never the demo), while the preview is on
       const ddAi=document.getElementById('ddAiAppsBtn');
       if(ddAi) ddAi.style.display=(aiAppsOn()&&!isSuperAdmin()&&!isDemo())?'':'none';
+      // Refer a business: owners and co-admins, while the referral program runs
+      const ddRef=document.getElementById('ddReferBtn');
+      if(ddRef) ddRef.style.display=(referralPanelOn()&&!isSuperAdmin()&&!isDemo()&&!isManager())?'':'none';
       // Managers: hide all nav except Admin (employees only)
       if(isManager()){
         const mel=document.getElementById('mobileNavCompanies');if(mel)mel.style.display='none';
@@ -7736,12 +7988,17 @@ async function doRegister(){
   const weekStart='monday', payrollFreq='weekly', anchorDate=null;
   const trackOvertime=false, logoFile=null;
 
+  // Referral program: an optional code, checked before the verification email goes out so a typo is caught
+  // while the person can still fix it. The server checks it again when the code is attached to the account.
+  const _ref=await referralCheckSignup();
+  if(!_ref.ok) return;
+
   showMsg('registerMsg','<span style="color:var(--text2)"><span class="mini-spin"></span> Sending verification code...</span>','info');
 
   try{
 
     const heard=(document.getElementById('regHeard')||{}).value||'';
-    pendingVerify={firstName,lastName,email,pass,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile,heard};
+    pendingVerify={firstName,lastName,email,pass,company,address,phone,industry,weekStart,payrollFreq,anchorDate,trackOvertime,logoFile,heard,refCode:_ref.code};
     try{
       const rr = await DB.requestRegistrationCode(email, name);
       if(rr && rr.ok===false && rr.error==='email_taken'){
@@ -7829,13 +8086,15 @@ async function doVerify(){
       }catch(e){ console.warn('Logo upload failed:',e); }
     }
     sendAppEmail('new_account_notification').catch(e=>console.warn('New account notification failed:',e));
+    // Referral program: attach the code to the new account (best effort, never blocks the sign-up).
+    await referralApplyAfterSignup(pendingVerify.refCode,_tok);
     pendingVerify=null;
     try{ localStorage.removeItem(SIGNUP_SRC_KEY); }catch(_){}
     updateNav();
     await refreshCache();
     showMsg('registerMsg',t('msg.accountCreated'),'success');
     // Land on the Dashboard, where the guided setup checklist picks up from here.
-    setTimeout(()=>{ navigate('dashboard'); },1000);
+    setTimeout(()=>{ navigate('dashboard'); if(window._referralNote){ showToast(window._referralNote); window._referralNote=null; } },1000);
   }catch(e){showMsg('registerMsg',e.message,'error');}
 }
 
@@ -18070,6 +18329,7 @@ en:{
 'land.costNote':'Per-employee column assumes $5.50 per employee per month, a common rate in this category. Our prices are the actual plan prices, in Canadian dollars.',
 
 'dlg.confirmTitle':'Are you sure?','dlg.confirm':'Confirm','dlg.noticeTitle':'Heads up','dlg.ok':'OK',
+'ref.menu':'Refer a business','ref.menuSub':'They save 10%, you earn a credit','ref.title':'Refer a business','ref.close':'Close','ref.loading':'Loading…','ref.error':'Could not load your referral code. Please try again.','ref.intro':'Know a business that still tracks hours on paper? Give them your code. They get {pct}% off their first paid month, and you get a {amt} credit: the price of one month of Starter.','ref.yourCode':'Your referral code','ref.copy':'Copy code','ref.copyLink':'Copy sign-up link','ref.copied':'Code copied','ref.linkCopied':'Link copied','ref.window':'For new accounts created from 1 to 31 December 2026. Credits for up to 10 referred businesses.','ref.notOpen':'The referral offer is for new accounts created from 1 to 31 December 2026. It is not open right now. Your code and your credits stay here.','ref.howTitle':'How and when you are paid','ref.how1':'{half1} when the business you referred pays for its first month on a paid plan.','ref.how2':'{half2} when it pays for its second month.','ref.how3':'Each amount is added to your account as a credit and comes off your next PunchClock Crew invoice automatically. There is nothing to claim.','ref.howFree':'You are on the Free plan, so there is no invoice to reduce yet. Your credit is kept and applied when you move to a paid plan, within 12 months of being earned.','ref.waitingExpires':'Your oldest waiting credit expires on {date} if you have not moved to a paid plan by then.','ref.statsTitle':'Your referrals','ref.none':'Nobody has used your code yet.','ref.statSigned':'Signed up, not paying yet','ref.statFirst':'First month paid','ref.statDone':'Two months paid','ref.creditApplied':'Credit added to your account','ref.creditWaiting':'Credit waiting for your upgrade','ref.enterTitle':'Did another business refer you?','ref.enterHelp':'Enter their code before your first payment to get {pct}% off your first paid month.','ref.apply':'Apply code','ref.applied':'Referral code applied: 10% off your first paid month.','ref.notApplied':'Your account is ready, but the referral code could not be applied. You can add it under Refer a business, before your first payment.','ref.mineUsed':'You joined with a referral code. Your {pct}% discount was applied to your first paid month.','ref.minePending':'You joined with a referral code: {pct}% off your first paid month, applied automatically at checkout.','ref.mineVoid':'The referral code on this account could not be counted.','ref.termsTitle':'Conditions','ref.terms':'For new PunchClock Crew accounts created from 1 December 2026 at 12:00 a.m. to 31 December 2026 at 11:59 p.m. (Eastern Time) that enter a valid referral code before their first payment. One code per account. The new account gets 10% off its first monthly payment for a Starter, Growth or Business plan. Add-ons are not included and the discount cannot be combined with another promotional code. The referrer gets a credit of $19.49 CAD per referred account, in two parts: $9.75 after the referred account\'s first monthly plan payment, made within 90 days of sign-up, and $9.74 after its second monthly plan payment, made 25 to 75 days after the first. If the referred account cancels or does not pay for a second month, the second part is not earned. A referrer earns credits for at most 10 referred accounts; further referred accounts still get their own discount. Credits are applied automatically to the referrer\'s next PunchClock Crew invoices. For a referrer on the Free plan they are kept and applied once the account moves to a paid plan; a credit kept this way expires 12 months after it is earned if the account has not moved to a paid plan by then. Credits have no cash value and cannot be refunded, transferred or exchanged. Referring yourself, an account of your own organisation (same email domain) or an account paid with the same payment card does not count. We may withhold or reverse a credit in case of abuse, a disputed payment or an error, and may end the offer for new sign-ups at any time. Credits already earned are kept. All payments remain final and non-refundable (Terms of Service, section 4).','ref.err.invalid':'That code is not valid. Check it with the person who gave it to you.','ref.err.own_code':'You cannot use your own code.','ref.err.same_domain':'This code belongs to someone in your own organisation, so it cannot be used here.','ref.err.already_used':'This account already has a referral code.','ref.err.already_paid':'A referral code can only be added before the first payment.','ref.err.not_eligible':'The referral offer is for accounts created from 1 to 31 December 2026.','ref.err.closed':'The referral offer is not open right now.','ref.err.not_owner':'Only the account owner can add a referral code.','ref.err.other':'Could not apply the code. Please try again.','ref.regLabel':'Referral code (optional)','ref.regHelp':'Have a code from another business? You get 10% off your first paid month.','ref.regInvalid':'That referral code is not valid. Correct it, or clear the field to continue without one.','ref.banLand':'Holiday offer, 1 to 31 December: sign up with a referral code from a business you know and get 10% off your first paid month.','ref.banLandCta':'Start for free','ref.banApp':'Holiday offer until 31 December: refer a business. They get 10% off their first paid month, you get a $19.49 credit.','ref.banAppCta':'Get my code','ref.banDismiss':'Hide',
 'ai.menu':'AI apps','ai.menuSub':'Claude & ChatGPT (read-only)','ai.title':'AI apps','ai.close':'Close','ai.loading':'Loading…',
 'ai.intro':'Ask Claude or ChatGPT about your own PunchClock Crew data: who is clocked in, hours, time off, schedules. Read-only: an AI app can never change anything.',
 'ai.planNote':'The connector is included from the Growth plan. On your current plan an AI app can connect, but it will only be told that an upgrade is needed.',
@@ -18591,7 +18851,8 @@ en:{
 'land.f.biz1':'Unlimited companies','land.f.biz2':'Unlimited sites','land.f.biz3':'Unlimited employees',
 'land.f.biz4':'All Growth features','land.f.biz5':'Up to 6 admins per account','land.f.biz6':'Dedicated support','land.f.biz7':'Early access to new features','land.f.start8':'1 co-admin included','land.f.grow6':'Up to 4 admins per account',
 'legal.back':'← Back',
-'tos.title':'Terms of Service','tos.updated':'Last updated: November 12, 2026',
+'tos.title':'Terms of Service','tos.updated':'Last updated: November 20, 2026',
+'tos.hRef':'4.1 Referral program (December 2026)','tos.pRef1':'From 1 December 2026 at 12:00 a.m. to 31 December 2026 at 11:59 p.m. (Eastern Time), a new PunchClock Crew account may enter the referral code of an existing account, at sign-up or at any time before its first payment. One code per account. A code cannot be added after a payment has been made.','tos.pRef2':'For the new account. The new account receives 10% off its first monthly payment for a Starter, Growth or Business plan. The discount applies once, to the plan only (not to add-ons), and cannot be combined with another promotional code.','tos.pRef3':'For the referrer. The referrer receives a credit of $19.49 CAD, the price of one month of the Starter plan, for each referred account, whatever the referrer\'s own plan. The credit is granted in two parts:','tos.pRef4':'1. $9.75 when the referred account makes its first monthly plan payment, within 90 days of its sign-up;','tos.pRef5':'2. $9.74 when the referred account makes its second monthly plan payment, between 25 and 75 days after the first.','tos.pRef6':'If the referred account cancels, or does not pay for a second month within that time, the second part is not earned. The first part, once granted, is kept. A referrer earns credits for at most 10 referred accounts; further referred accounts still receive their own discount.','tos.pRef7':'How the credit is paid. Each part is added to the referrer\'s account as a credit, normally within minutes of the referred account\'s payment, and is deducted automatically from the referrer\'s next PunchClock Crew invoice or invoices until it is used up. If the referrer is on the Free plan, the credit is held and is applied once the account subscribes to a paid plan; a credit held this way expires 12 months after it was earned if the account has not subscribed to a paid plan by then. A credit has no cash value. It cannot be paid out, refunded, transferred or exchanged, and it is not a refund of any payment.','tos.pRef8':'What does not qualify. Referring yourself; referring an account of your own organisation (same email domain, other than public email providers); a referred account paid with the same payment card as the referrer\'s account; an account created outside the dates above; a payment of $0.00.','tos.pRef9':'Other conditions. A referred account has its own referral code and can refer others under the same conditions. We may withhold or reverse a discount or a credit in case of abuse, a disputed payment, or an error, and we may end the program for new sign-ups at any time. Credits already earned before the end of the program are kept. All payments remain final and non-refundable as stated in section 4.',
 'tos.h1':'1. Acceptance of Terms','tos.p1':'By accessing or using PunchClock Crew ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.',
 'tos.h2':'2. Description of Service','tos.p2':'PunchClock Crew is a time and attendance tracking software-as-a-service ("SaaS") platform that allows businesses to track employee work hours, manage multiple locations, generate reports, and integrate with payroll software.',
 'tos.h3':'3. Account Registration','tos.p3':'You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.',
@@ -18762,6 +19023,7 @@ en:{
 'support.subjectTech':'Technical issue','support.subjectAccount':'Account help',
 'support.messagePlaceholder':'Describe your issue or question...','support.replyNote':'We\'ll reply to the email address on your account.',
 'land.faqTitle':'Frequently Asked Questions','land.faqSub':'Everything you need to know before signing up.',
+'faq.q30':'Is there a referral offer?','faq.a30':'Yes, for new accounts created from 1 to 31 December 2026. Sign up with the referral code of a business that already uses PunchClock Crew and you get 10% off your first paid month. The business that referred you gets a $19.49 credit, the price of one month of Starter: $9.75 when you pay your first month and $9.74 when you pay your second. The credit comes off their next invoice automatically, for up to 10 referred businesses. Every account has its own code in the profile menu, under "Refer a business". Conditions are in the Terms of Service.',
 'faq.q1':'Do employees need smartphones or apps to clock in?',
 'faq.a1':'No. Employees clock in using a 4-digit PIN on any shared device — a tablet, desktop, or laptop. No app download or personal device required.',
 'faq.q2':'Can I manage multiple locations?',
@@ -19172,6 +19434,7 @@ fr:{
 'land.costNote':'La colonne par employé suppose 5,50 $ par employé par mois, un tarif courant dans cette catégorie. Nos prix sont les prix réels des forfaits, en dollars canadiens.',
 
 'dlg.confirmTitle':'Êtes-vous sûr?','dlg.confirm':'Confirmer','dlg.noticeTitle':'Avis','dlg.ok':'OK',
+'ref.menu':'Recommander une entreprise','ref.menuSub':'Elle économise 10 %, vous gagnez un crédit','ref.title':'Recommander une entreprise','ref.close':'Fermer','ref.loading':'Chargement…','ref.error':'Impossible de charger votre code de parrainage. Veuillez réessayer.','ref.intro':'Vous connaissez une entreprise qui note encore ses heures sur papier? Donnez-lui votre code. Elle obtient {pct} % de rabais sur son premier mois payé, et vous recevez un crédit de {amt} : le prix d\'un mois du forfait Débutant.','ref.yourCode':'Votre code de parrainage','ref.copy':'Copier le code','ref.copyLink':'Copier le lien d\'inscription','ref.copied':'Code copié','ref.linkCopied':'Lien copié','ref.window':'Pour les nouveaux comptes créés du 1er au 31 décembre 2026. Crédits pour au plus 10 entreprises recommandées.','ref.notOpen':'L\'offre de parrainage s\'adresse aux nouveaux comptes créés du 1er au 31 décembre 2026. Elle n\'est pas en cours en ce moment. Votre code et vos crédits restent ici.','ref.howTitle':'Comment et quand vous êtes payé','ref.how1':'{half1} lorsque l\'entreprise recommandée paie son premier mois d\'un forfait payant.','ref.how2':'{half2} lorsqu\'elle paie son deuxième mois.','ref.how3':'Chaque montant est ajouté à votre compte sous forme de crédit et se déduit automatiquement de votre prochaine facture PunchClock Crew. Vous n\'avez rien à réclamer.','ref.howFree':'Vous êtes au forfait Gratuit : il n\'y a donc pas encore de facture à réduire. Votre crédit est conservé et appliqué dès que vous passez à un forfait payant, dans les 12 mois suivant son obtention.','ref.waitingExpires':'Votre plus ancien crédit en attente expire le {date} si vous n\'êtes pas passé à un forfait payant d\'ici là.','ref.statsTitle':'Vos recommandations','ref.none':'Personne n\'a encore utilisé votre code.','ref.statSigned':'Inscrites, pas encore payantes','ref.statFirst':'Premier mois payé','ref.statDone':'Deux mois payés','ref.creditApplied':'Crédit ajouté à votre compte','ref.creditWaiting':'Crédit en attente de votre passage à un forfait payant','ref.enterTitle':'Une autre entreprise vous a recommandé?','ref.enterHelp':'Entrez son code avant votre premier paiement pour obtenir {pct} % de rabais sur votre premier mois payé.','ref.apply':'Appliquer le code','ref.applied':'Code de parrainage appliqué : 10 % de rabais sur votre premier mois payé.','ref.notApplied':'Votre compte est prêt, mais le code de parrainage n\'a pas pu être appliqué. Vous pouvez l\'ajouter dans Recommander une entreprise, avant votre premier paiement.','ref.mineUsed':'Vous vous êtes inscrit avec un code de parrainage. Votre rabais de {pct} % a été appliqué à votre premier mois payé.','ref.minePending':'Vous vous êtes inscrit avec un code de parrainage : {pct} % de rabais sur votre premier mois payé, appliqué automatiquement au paiement.','ref.mineVoid':'Le code de parrainage de ce compte n\'a pas pu être pris en compte.','ref.termsTitle':'Conditions','ref.terms':'Pour les nouveaux comptes PunchClock Crew créés du 1er décembre 2026 à 0 h au 31 décembre 2026 à 23 h 59 (heure de l\'Est) qui entrent un code de parrainage valide avant leur premier paiement. Un seul code par compte. Le nouveau compte obtient 10 % de rabais sur son premier paiement mensuel d\'un forfait Débutant, Croissance ou Entreprise. Les compléments ne sont pas inclus et le rabais ne peut pas être combiné à un autre code promotionnel. Le parrain reçoit un crédit de 19,49 $ CA par compte recommandé, en deux parties : 9,75 $ après le premier paiement mensuel du forfait par le compte recommandé, effectué dans les 90 jours suivant l\'inscription, et 9,74 $ après son deuxième paiement mensuel, effectué de 25 à 75 jours après le premier. Si le compte recommandé annule ou ne paie pas un deuxième mois, la deuxième partie n\'est pas acquise. Un parrain obtient des crédits pour au plus 10 comptes recommandés; les comptes recommandés au-delà obtiennent quand même leur propre rabais. Les crédits sont appliqués automatiquement aux prochaines factures PunchClock Crew du parrain. Pour un parrain au forfait Gratuit, ils sont conservés et appliqués dès que le compte passe à un forfait payant; un crédit ainsi conservé expire 12 mois après son obtention si le compte n\'est pas passé à un forfait payant d\'ici là. Les crédits n\'ont aucune valeur en argent et ne peuvent être ni remboursés, ni transférés, ni échangés. Se recommander soi-même, recommander un compte de sa propre organisation (même domaine de courriel) ou un compte payé avec la même carte de paiement ne compte pas. Nous pouvons retenir ou annuler un crédit en cas d\'abus, de paiement contesté ou d\'erreur, et mettre fin à l\'offre pour les nouvelles inscriptions en tout temps. Les crédits déjà acquis sont conservés. Tous les paiements demeurent finaux et non remboursables (Conditions d\'utilisation, article 4).','ref.err.invalid':'Ce code n\'est pas valide. Vérifiez-le auprès de la personne qui vous l\'a donné.','ref.err.own_code':'Vous ne pouvez pas utiliser votre propre code.','ref.err.same_domain':'Ce code appartient à une personne de votre propre organisation : il ne peut pas être utilisé ici.','ref.err.already_used':'Ce compte a déjà un code de parrainage.','ref.err.already_paid':'Un code de parrainage ne peut être ajouté qu\'avant le premier paiement.','ref.err.not_eligible':'L\'offre de parrainage s\'adresse aux comptes créés du 1er au 31 décembre 2026.','ref.err.closed':'L\'offre de parrainage n\'est pas en cours en ce moment.','ref.err.not_owner':'Seul le propriétaire du compte peut ajouter un code de parrainage.','ref.err.other':'Impossible d\'appliquer le code. Veuillez réessayer.','ref.regLabel':'Code de parrainage (facultatif)','ref.regHelp':'Vous avez le code d\'une autre entreprise? Vous obtenez 10 % de rabais sur votre premier mois payé.','ref.regInvalid':'Ce code de parrainage n\'est pas valide. Corrigez-le, ou videz le champ pour continuer sans code.','ref.banLand':'Offre des Fêtes, du 1er au 31 décembre : inscrivez-vous avec le code de parrainage d\'une entreprise que vous connaissez et obtenez 10 % de rabais sur votre premier mois payé.','ref.banLandCta':'Commencer gratuitement','ref.banApp':'Offre des Fêtes jusqu\'au 31 décembre : recommandez une entreprise. Elle obtient 10 % de rabais sur son premier mois payé, vous recevez un crédit de 19,49 $.','ref.banAppCta':'Obtenir mon code','ref.banDismiss':'Masquer',
 'ai.menu':'Applications IA','ai.menuSub':'Claude et ChatGPT (lecture seule)','ai.title':'Applications IA','ai.close':'Fermer','ai.loading':'Chargement…',
 'ai.intro':'Posez vos questions à Claude ou à ChatGPT sur vos propres données PunchClock Crew : qui est présent, les heures, les congés, les horaires. En lecture seule : une application IA ne peut jamais rien modifier.',
 'ai.planNote':'Le connecteur est inclus à partir du forfait Croissance. Avec votre forfait actuel, une application IA peut se connecter, mais elle saura seulement qu’un forfait supérieur est nécessaire.',
@@ -19691,7 +19954,8 @@ fr:{
 'land.f.biz1':'Compagnies illimitées','land.f.biz2':'Sites illimités','land.f.biz3':'Employés illimités',
 'land.f.biz4':'Toutes les fonctions Croissance','land.f.biz5':'Jusqu\'à 6 admins par compte','land.f.biz6':'Assistance dédiée','land.f.biz7':'Accès anticipé aux nouvelles fonctionnalités',
 'legal.back':'← Retour',
-'tos.title':'Conditions d\'utilisation','tos.updated':'Dernière mise à jour : 12 novembre 2026',
+'tos.title':'Conditions d\'utilisation','tos.updated':'Dernière mise à jour : 20 novembre 2026',
+'tos.hRef':'4.1 Programme de parrainage (décembre 2026)','tos.pRef1':'Du 1er décembre 2026 à 0 h au 31 décembre 2026 à 23 h 59 (heure de l\'Est), un nouveau compte PunchClock Crew peut entrer le code de parrainage d\'un compte existant, à l\'inscription ou à tout moment avant son premier paiement. Un seul code par compte. Un code ne peut pas être ajouté après un paiement.','tos.pRef2':'Pour le nouveau compte. Le nouveau compte obtient 10 % de rabais sur son premier paiement mensuel d\'un forfait Débutant, Croissance ou Entreprise. Le rabais s\'applique une seule fois, au forfait seulement (pas aux compléments), et ne peut pas être combiné à un autre code promotionnel.','tos.pRef3':'Pour le parrain. Le parrain reçoit un crédit de 19,49 $ CA, soit le prix d\'un mois du forfait Débutant, pour chaque compte recommandé, quel que soit son propre forfait. Le crédit est accordé en deux parties :','tos.pRef4':'1. 9,75 $ lorsque le compte recommandé effectue son premier paiement mensuel d\'un forfait, dans les 90 jours suivant son inscription;','tos.pRef5':'2. 9,74 $ lorsque le compte recommandé effectue son deuxième paiement mensuel d\'un forfait, de 25 à 75 jours après le premier.','tos.pRef6':'Si le compte recommandé annule, ou ne paie pas un deuxième mois dans ce délai, la deuxième partie n\'est pas acquise. La première partie, une fois accordée, est conservée. Un parrain obtient des crédits pour au plus 10 comptes recommandés; les comptes recommandés au-delà obtiennent quand même leur propre rabais.','tos.pRef7':'Comment le crédit est versé. Chaque partie est ajoutée au compte du parrain sous forme de crédit, normalement dans les minutes qui suivent le paiement du compte recommandé, et se déduit automatiquement de la ou des prochaines factures PunchClock Crew du parrain jusqu\'à épuisement. Si le parrain est au forfait Gratuit, le crédit est conservé et s\'applique dès que le compte passe à un forfait payant; un crédit ainsi conservé expire 12 mois après son obtention si le compte n\'est pas passé à un forfait payant d\'ici là. Un crédit n\'a aucune valeur en argent. Il ne peut être ni versé, ni remboursé, ni transféré, ni échangé, et il ne constitue pas le remboursement d\'un paiement.','tos.pRef8':'Ce qui ne compte pas. Se recommander soi-même; recommander un compte de sa propre organisation (même domaine de courriel, sauf les fournisseurs de courriel publics); un compte recommandé payé avec la même carte de paiement que le compte du parrain; un compte créé en dehors des dates ci-dessus; un paiement de 0,00 $.','tos.pRef9':'Autres conditions. Un compte recommandé a son propre code de parrainage et peut recommander d\'autres entreprises aux mêmes conditions. Nous pouvons retenir ou annuler un rabais ou un crédit en cas d\'abus, de paiement contesté ou d\'erreur, et mettre fin au programme pour les nouvelles inscriptions en tout temps. Les crédits acquis avant la fin du programme sont conservés. Tous les paiements demeurent finaux et non remboursables, comme l\'indique l\'article 4.',
 'tos.h1':'1. Acceptation des conditions','tos.p1':'En accédant au service PunchClock Crew (« le Service »), vous acceptez d\'être lié par ces Conditions d\'utilisation. Si vous n\'acceptez pas ces conditions, veuillez ne pas utiliser le Service.',
 'tos.h2':'2. Description du service','tos.p2':'PunchClock Crew est une plateforme logicielle de suivi du temps et des présences (SaaS) permettant aux entreprises de suivre les heures de travail des employés, gérer plusieurs sites, générer des rapports et s\'intégrer à un logiciel de paie.',
 'tos.h3':'3. Inscription au compte','tos.p3':'Vous devez fournir des informations exactes, actuelles et complètes lors de l\'inscription. Vous êtes responsable de la confidentialité de vos identifiants et de toutes les activités effectuées sous votre compte.',
@@ -19862,6 +20126,7 @@ fr:{
 'support.subjectTech':'Problème technique','support.subjectAccount':'Aide compte',
 'support.messagePlaceholder':'Décrivez votre problème ou question...','support.replyNote':'Nous vous répondrons à l\'adresse courriel de votre compte.',
 'land.faqTitle':'Questions fréquentes','land.faqSub':'Tout ce que vous devez savoir avant de vous inscrire.',
+'faq.q30':'Y a-t-il une offre de parrainage?','faq.a30':'Oui, pour les nouveaux comptes créés du 1er au 31 décembre 2026. Inscrivez-vous avec le code de parrainage d\'une entreprise qui utilise déjà PunchClock Crew et obtenez 10 % de rabais sur votre premier mois payé. L\'entreprise qui vous a recommandé reçoit un crédit de 19,49 $, soit le prix d\'un mois du forfait Débutant : 9,75 $ lorsque vous payez votre premier mois et 9,74 $ lorsque vous payez le deuxième. Le crédit se déduit automatiquement de sa prochaine facture, pour au plus 10 entreprises recommandées. Chaque compte a son propre code dans le menu du profil, sous « Recommander une entreprise ». Les conditions figurent dans les Conditions d\'utilisation.',
 'faq.q1':'Les employés ont-ils besoin d\'un téléphone ou d\'une application?',
 'faq.a1':'Non. Les employés pointent avec un NIP à 4 chiffres sur n\'importe quel appareil partagé — tablette, ordinateur de bureau ou portable. Aucune application ni appareil personnel requis.',
 'faq.q2':'Puis-je gérer plusieurs emplacements?',

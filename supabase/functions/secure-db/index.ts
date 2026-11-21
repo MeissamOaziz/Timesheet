@@ -1796,6 +1796,139 @@ async function calendarFeedAction(action: string, caller: Caller | null, rawBody
   return jsonResp({ ok: true, cancelled: del.rows.length > 0 });
 }
 
+// ── Referral program ("Refer a business") ────────────────────────────────────────────────────────
+// Rules and design: docs/referral-program.md. The four referral_* tables are deliberately not in APP_TABLES:
+// these three actions are the only way a page reaches them, and each answers with the least it can.
+//   referral_check  no session. "Is this code usable right now?" Yes or no, never whose code it is.
+//   referral_apply  the OWNER of a new account attaches one code to it, once, before any payment.
+//   referral_info   the owner or a co-admin reads the account's own code and its own totals.
+// The discount and the rewards themselves are stripe-handler's job; nothing here touches money.
+const REFERRAL_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no 0/O, 1/I/L
+const REFERRAL_CODE_RE = /^[A-HJKMNP-Z2-9]{8}$/;
+// Mailbox providers anyone can sign up with: sharing one of these domains says nothing about two accounts.
+const PUBLIC_MAIL_DOMAINS = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'outlook.fr', 'hotmail.com', 'hotmail.ca', 'hotmail.fr', 'live.com', 'live.ca',
+  'live.fr', 'msn.com', 'yahoo.com', 'yahoo.ca', 'yahoo.fr', 'ymail.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com',
+  'proton.me', 'protonmail.com', 'pm.me', 'gmx.com', 'gmx.fr', 'mail.com', 'zoho.com', 'fastmail.com', 'hey.com',
+  'videotron.ca', 'videotron.qc.ca', 'bell.net', 'sympatico.ca', 'rogers.com', 'shaw.ca', 'telus.net', 'cogeco.ca',
+  'cgocable.ca', 'globetrotter.net', 'eastlink.ca', 'sasktel.net', 'mts.net', 'teksavvy.com', 'ebox.ca',
+]);
+// What a person types ("7kq2-m9xa") reduced to the stored shape, or '' when it cannot be a code.
+function referralCodeOf(v: unknown): string {
+  const s = (typeof v === 'string' ? v : '').toUpperCase().replace(/[\s-]/g, '');
+  return REFERRAL_CODE_RE.test(s) ? s : '';
+}
+const mailDomain = (email: string): string => email.toLowerCase().split('@')[1] || '';
+// The same mailbox written two ways (a.b+promo@gmail.com and ab@gmail.com) is one person.
+function mailboxKey(email: string): string {
+  const [rawLocal, domain = ''] = email.toLowerCase().trim().split('@');
+  let local = (rawLocal || '').split('+')[0];
+  const d = domain === 'googlemail.com' ? 'gmail.com' : domain;
+  if (d === 'gmail.com') local = local.replace(/\./g, '');
+  return `${local}@${d}`;
+}
+function newReferralCode(): string {
+  let out = '';
+  while (out.length < 8) {
+    for (const b of crypto.getRandomValues(new Uint8Array(16))) {
+      if (b < 248 && out.length < 8) out += REFERRAL_ALPHABET[b % 31];   // 248 = 8 x 31: no bias
+    }
+  }
+  return out;
+}
+// The latest promotion row. "Open" = switched on and the given instant is inside its window.
+async function referralPromotion(): Promise<Record<string, any> | null> {
+  return (await restJson('referral_promotions?select=*&order=starts_at.desc&limit=1'))?.[0] ?? null;
+}
+function promoOpenAt(promo: Record<string, any> | null, whenMs: number): boolean {
+  return !!promo && promo.enabled === true && whenMs >= Date.parse(promo.starts_at) && whenMs < Date.parse(promo.ends_at);
+}
+async function referralCodeOwner(code: string): Promise<Record<string, any> | null> {
+  const row = (await restJson(`referral_codes?code=eq.${code}&select=admin_id&limit=1`))?.[0];
+  if (!row) return null;
+  const owner = (await restJson(`admins?id=eq.${row.admin_id}&select=id,email,status,parent_admin_id,role&limit=1`))?.[0];
+  if (!owner || owner.status !== 'active' || owner.parent_admin_id || owner.role === 'super_admin') return null;
+  return owner;
+}
+async function referralAction(action: string, caller: Caller | null, rawBody: unknown): Promise<Response> {
+  const b = (rawBody && typeof rawBody === 'object' && !Array.isArray(rawBody) ? rawBody : {}) as Record<string, unknown>;
+  const no = (code: string, status = 200) => jsonResp({ ok: false, code }, status);
+
+  if (action === 'referral_check') {
+    const promo = await referralPromotion();
+    if (!promoOpenAt(promo, Date.now())) return jsonResp({ ok: true, valid: false, open: false });
+    const code = referralCodeOf(b.code);
+    return jsonResp({ ok: true, open: true, valid: !!code && !!(await referralCodeOwner(code)) });
+  }
+
+  if (!caller) return errResp('Unauthorized', 401);
+  if (caller.role === 'super_admin' || caller.role === 'manager') return errResp('Forbidden', 403);
+  const ownerId = caller.primaryAdminId;
+  const me = (await restJson(`admins?id=eq.${ownerId}&select=id,email,created_at,plan,stripe_subscription_id&limit=1`))?.[0];
+  if (!me) return errResp('Account not found', 404);
+  const promo = await referralPromotion();
+  const mine = (await restJson(`referrals?referred_admin_id=eq.${ownerId}&select=status,discount_used_at&limit=1`))?.[0] ?? null;
+  const neverPaid = (!me.plan || me.plan === 'free') && !me.stripe_subscription_id;
+  // A code can be attached by an account created inside the window, that has no code yet and has not paid.
+  const createdInWindow = promoOpenAt(promo, Date.parse(me.created_at));
+
+  if (action === 'referral_apply') {
+    if (caller.adminId !== ownerId) return no('not_owner', 403);
+    if (!promo || promo.enabled !== true) return no('closed');
+    if (mine) return no('already_used');
+    if (!neverPaid) return no('already_paid');
+    if (!createdInWindow) return no('not_eligible');
+    const code = referralCodeOf(b.code);
+    const referrer = code ? await referralCodeOwner(code) : null;
+    if (!referrer) return no('invalid');
+    const myMail = String(me.email || ''), theirMail = String(referrer.email || '');
+    if (referrer.id === ownerId || mailboxKey(myMail) === mailboxKey(theirMail)) return no('own_code');
+    const dom = mailDomain(myMail);
+    if (dom && dom === mailDomain(theirMail) && !PUBLIC_MAIL_DOMAINS.has(dom)) return no('same_domain');
+    // referred_admin_id is unique: of two requests racing each other, exactly one row is written.
+    const made = await svcWrite('POST', 'referrals', {
+      promotion_id: promo.id, referrer_admin_id: referrer.id, referred_admin_id: ownerId, code,
+    }, true);
+    if (!made.ok) {
+      const again = (await restJson(`referrals?referred_admin_id=eq.${ownerId}&select=id&limit=1`))?.[0];
+      return again ? no('already_used') : errResp('Could not save the referral code. Please try again.', 503);
+    }
+    logAudit(caller.adminId, 'referral_applied', 'referrals', 'POST', promo.id);
+    return jsonResp({ ok: true, discount_percent: promo.discount_percent });
+  }
+
+  // referral_info: this account's code (made the first time it is asked for) and its own totals. Nothing about
+  // the referred accounts beyond how many there are and how far each one is.
+  let code = (await restJson(`referral_codes?admin_id=eq.${ownerId}&select=code&limit=1`))?.[0]?.code as string | undefined;
+  for (let i = 0; !code && i < 4; i++) {
+    const made = await svcWrite('POST', 'referral_codes', { admin_id: ownerId, code: newReferralCode() }, true);
+    // Refused = this account's row was written by a parallel request, or (very rarely) the code is taken.
+    code = made.ok ? made.rows[0]?.code : (await restJson(`referral_codes?admin_id=eq.${ownerId}&select=code&limit=1`))?.[0]?.code;
+  }
+  if (!code) return errResp('Could not load your referral code', 503);
+  const refs = (await restJson(`referrals?referrer_admin_id=eq.${ownerId}&select=status&limit=1000`)) || [];
+  const rewards = (await restJson(`referral_rewards?referrer_admin_id=eq.${ownerId}&select=status,amount_cents,earned_at&limit=2000`)) || [];
+  // A waiting credit expires 12 months after it was earned (stripe-handler voids it when it next looks at it).
+  const expiry = (earned: string) => { const d = new Date(earned); d.setUTCMonth(d.getUTCMonth() + 12); return d.getTime(); };
+  const live = rewards.filter((r: { status: string; earned_at: string }) => r.status !== 'waiting' || expiry(r.earned_at) > Date.now());
+  const count = (s: string) => refs.filter((r: { status: string }) => r.status === s).length;
+  const cents = (s: string) => live.filter((r: { status: string }) => r.status === s)
+    .reduce((n: number, r: { amount_cents: number }) => n + (Number(r.amount_cents) || 0), 0);
+  const waitingExpiries = live.filter((r: { status: string }) => r.status === 'waiting').map((r: { earned_at: string }) => expiry(r.earned_at));
+  return jsonResp({
+    ok: true, code, is_owner: caller.adminId === ownerId, on_free_plan: !me.plan || me.plan === 'free',
+    promo: promo ? {
+      open: promoOpenAt(promo, Date.now()), starts_at: promo.starts_at, ends_at: promo.ends_at,
+      discount_percent: promo.discount_percent, reward_cents: promo.reward_cents, currency: promo.currency,
+    } : null,
+    referred: { pending: count('pending'), first_paid: count('first_paid'), completed: count('completed') },
+    credit: { delivered_cents: cents('delivered'), waiting_cents: cents('waiting'),
+      waiting_first_expires_at: waitingExpiries.length ? new Date(Math.min(...waitingExpiries)).toISOString() : null },
+    mine: mine ? { status: mine.status, discount_used: !!mine.discount_used_at } : null,
+    can_enter: !!promo && promo.enabled === true && createdInWindow && !mine && neverPaid && caller.adminId === ownerId,
+  });
+}
+
 async function mcpAction(action: string, caller: Caller | null, rawBody: unknown): Promise<Response> {
   const b = (rawBody && typeof rawBody === 'object' && !Array.isArray(rawBody) ? rawBody : {}) as Record<string, unknown>;
 
@@ -2216,6 +2349,11 @@ Deno.serve(async (req: Request) => {
   // Calendar links: an admin sees whether an employee has one, and can cancel it.
   if (action === 'calendar_feed_status' || action === 'calendar_feed_cancel') {
     return await calendarFeedAction(action, caller, body);
+  }
+
+  // Referral program: check a code, attach one to a new account, read the account's own code and totals.
+  if (action === 'referral_check' || action === 'referral_apply' || action === 'referral_info') {
+    return await referralAction(action, caller, body);
   }
 
   // An `action` that none of the handlers above recognised must stop here. It used to fall through

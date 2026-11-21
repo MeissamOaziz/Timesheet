@@ -31,9 +31,11 @@ for(const lang of ['en','fr']){
   await page.waitForTimeout(250);
 
   const fields = await page.evaluate(()=>
-    [...document.querySelectorAll('#regStep1 input, #regStep1 select')].map(e=>e.id).filter(Boolean));
+    [...document.querySelectorAll('#regStep1 input, #regStep1 select')].filter(e=>e.offsetParent!==null).map(e=>e.id).filter(Boolean));
   ok('only the essential fields remain',
      // regHeard: the optional "How did you hear about us?" question (signup source, 2026-11-06).
+     // regReferral (referral program) is in the page but hidden unless the offer is open, so only fields a
+     // visitor can see are counted here; tools/referral-ui-test.mjs covers that field.
      JSON.stringify(fields)===JSON.stringify(['regFirstName','regLastName','regEmail','regPass','regCompany','regHeard']),
      fields.join(', '));
 

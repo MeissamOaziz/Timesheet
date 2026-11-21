@@ -261,6 +261,8 @@ const PAGES = [
         ['Can I change plans later?', 'Yes, from your account at any time. Your data stays where it is.'],
         ['Is the Scheduling add-on included?', 'No. It is $14.95/month CAD on any paid plan, and you can try it free for 14 days.'],
         ['Can I get a refund?', 'No. Payments are not refundable, including partial months, so try the paid features free for 14 days first. If you cancel, you keep your plan until the end of the month already paid and are not charged again.'],
+        // Referral program (owner-approved 2026-11-20). Only in a build made from 1 to 31 December 2026 (a build before or after leaves it out).
+        ["Is there a referral offer?", "Yes, for new accounts created from 1 to 31 December 2026. Sign up with the referral code of a business that already uses PunchClock Crew and you get 10% off your first paid month. The business that referred you gets a $19.49 credit, the price of one month of Starter: $9.75 when you pay your first month and $9.74 when you pay your second. The credit comes off their next invoice automatically, for up to 10 referred businesses. Every account has its own code in the profile menu, under \"Refer a business\". Conditions are in the Terms of Service.", { from: '2026-12-01T05:00:00Z', until: '2027-01-01T05:00:00Z' }],
       ],
     },
     fr: {
@@ -275,6 +277,8 @@ const PAGES = [
         ['Faut-il une carte de crédit pour commencer?', 'Non. Le plan Gratuit ne demande aucune carte de crédit.'],
         ['Puis-je changer de plan plus tard?', 'Oui, à partir de votre compte, en tout temps. Vos données restent en place.'],
         ['Le module Planification est-il inclus?', 'Non. Il coûte 14,95 $/mois sur tout plan payant, et vous pouvez l’essayer gratuitement pendant 14 jours.'],
+        // Programme de parrainage (approuvé 2026-11-20). Seulement dans une reconstruction faite du 1er au 31 décembre 2026.
+        ["Y a-t-il une offre de parrainage?", "Oui, pour les nouveaux comptes créés du 1er au 31 décembre 2026. Inscrivez-vous avec le code de parrainage d'une entreprise qui utilise déjà PunchClock Crew et obtenez 10 % de rabais sur votre premier mois payé. L'entreprise qui vous a recommandé reçoit un crédit de 19,49 $, soit le prix d'un mois du forfait Débutant : 9,75 $ lorsque vous payez votre premier mois et 9,74 $ lorsque vous payez le deuxième. Le crédit se déduit automatiquement de sa prochaine facture, pour au plus 10 entreprises recommandées. Chaque compte a son propre code dans le menu du profil, sous « Recommander une entreprise ». Les conditions figurent dans les Conditions d'utilisation.", { from: '2026-12-01T05:00:00Z', until: '2027-01-01T05:00:00Z' }],
         ['Puis-je obtenir un remboursement?', 'Non. Les paiements ne sont pas remboursables, y compris pour un mois partiel : essayez d’abord les fonctions payantes gratuitement pendant 14 jours. Si vous annulez, vous gardez votre forfait jusqu’à la fin du mois déjà payé et vous n’êtes plus facturé.'],
       ],
     },
@@ -300,13 +304,17 @@ function render(page, lang) {
     `<h2>${esc(h)}</h2>` + (items.length > 1 ? `<ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : `<p>${esc(items[0])}</p>`)).join('\n');
   const pricing = p.pricing ? `<h2>${t.plansH}</h2><div class="plans">${PLANS[lang].map(pl =>
     `<div class="plan"><h3>${esc(pl.name)}</h3><div class="price">${esc(pl.price.split('/')[0])}${pl.price.includes('/')?'<small>/'+esc(pl.price.split('/')[1])+'</small>':''}</div><p class="lim">${esc(pl.limits)}</p><p>${esc(pl.note)}</p></div>`).join('')}</div><h2>${t.addonH}</h2><p>${esc(ADDON[lang])}</p>` : '';
-  const faq = p.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('\n');
+  // An entry may carry { from, until }: a time-limited offer is only in a build made inside that window. These pages
+  // have no script, so a build made before `from` leaves it out (it does not appear by itself later).
+  const inWindow = (w) => !w || ((!w.from || Date.now() >= Date.parse(w.from)) && (!w.until || Date.now() < Date.parse(w.until)));
+  const faqItems = p.faq.filter((f) => inWindow(f[2]));
+  const faq = faqItems.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('\n');
   const ld = [
     { '@context': 'https://schema.org', '@type': 'WebPage', name: p.title, description: p.desc, url: urlOf(lang, p.slug), inLanguage: lang === 'fr' ? 'fr-CA' : 'en-CA', dateModified: UPDATED,
       isPartOf: { '@type': 'WebSite', name: 'PunchClock Crew', url: SITE },
       about: { '@type': 'SoftwareApplication', name: 'PunchClock Crew', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', url: SITE } },
     { '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang === 'fr' ? 'fr-CA' : 'en-CA',
-      mainEntity: p.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+      mainEntity: faqItems.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
   ];
   return `<!DOCTYPE html>
 <html lang="${lang === 'fr' ? 'fr-CA' : 'en-CA'}">
