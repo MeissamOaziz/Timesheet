@@ -301,6 +301,35 @@ console.log('\n── Terms 4.1 and the FAQ entry (owner-approved wording, 2026-
   await o.ctx.close();
 }
 
+console.log('\n── holiday greeting banner (owner-approved 2026-11-22) ──');
+{
+  const { page, st, ctx } = await open();
+  const at = (iso) => page.evaluate((iso) => holidayOpen(Date.parse(iso)), iso);
+  ok('13 Dec 2026 23:59 Toronto: hidden', (await at('2026-12-13T23:59:59-05:00')) === false);
+  ok('14 Dec 2026 00:00 Toronto: shown', (await at('2026-12-14T00:00:00-05:00')) === true);
+  ok('3 Jan 2027 23:59 Toronto: shown', (await at('2027-01-03T23:59:59-05:00')) === true);
+  ok('4 Jan 2027 00:00 Toronto: hidden', (await at('2027-01-04T00:00:00-05:00')) === false);
+  ok('today (before 14 December) nothing shows', Date.now() >= Date.parse('2026-12-14T05:00:00Z') || !(await visible(page, 'holidayLandBanner')));
+  ok('no page errors', st.errs.length === 0, st.errs.join(' / '));
+  await ctx.close();
+}
+for (const lang of ['en', 'fr']) {
+  const { page, st, ctx } = await open('?holiday=1&referral=1', { viewport: { width: 375, height: 800 } });
+  await page.evaluate((l) => { setLang(l); showLanding(); }, lang);
+  const txt = await page.evaluate(() => document.getElementById('holidayLandBanner').innerText);
+  ok(`${lang}: home page greeting, approved text`, lang === 'fr' ? /Toute l'équipe de PunchClock Crew vous souhaite de joyeuses Fêtes\. Merci de votre confiance cette année!/.test(txt) : /From all of us at PunchClock Crew, happy holidays to you and your team\. Thank you for being with us this year\./.test(txt), txt);
+  ok(`${lang}: no offer and no support-hours line in it`, !/10|%|\$|___|support|soutien/.test(txt), txt);
+  ok(`${lang}: shown together with the referral banner, no sideways scroll on a phone`, (await visible(page, 'referralLandBanner')) && await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
+  await page.evaluate(() => window.scrollTo(0, 0)); await shot(page, 'holiday-home-phone-' + lang);
+  await page.click('#holidayLandBanner .link-btn');
+  ok(`${lang}: Hide removes it and leaves the referral banner`, !(await visible(page, 'holidayLandBanner')) && (await visible(page, 'referralLandBanner')));
+  await signIn(page, MGR);
+  await page.evaluate(() => { navigate('dashboard'); renderReferralBanners(); });
+  ok(`${lang}: a manager sees the greeting on the dashboard (not the referral offer)`, (await visible(page, 'holidayDashBanner')) && !(await visible(page, 'referralDashBanner')));
+  ok(`${lang}: no page errors`, st.errs.length === 0, st.errs.join(' / '));
+  await ctx.close();
+}
+
 console.log('\n── translations ──');
 {
   const { page, ctx } = await open();
