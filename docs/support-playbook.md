@@ -89,7 +89,15 @@ the previous 48 hours.
   out remotely, but only when BOTH are on: the company's "Remote Access" switch and that employee's
   own "Remote Clock-In" grant (Employees, edit). "Can't find a punch button" is usually no kiosk set
   up, or one of those two switches being off.
-- There is no native phone app yet (an Expo app is planned and not released). A punch made from the
+- Phone apps (owner's answer, 2026-11-23). Nothing is in the App Store or Google Play yet, but when someone asks
+  "is there an app?" or "is one coming?", the answer is YES, one is coming: we are building two apps, one for
+  employees (clock in and out, hours, schedule, time off) and one for owners and managers, and we plan to
+  release both on the App Store and Google Play in January 2027. Say "planned for January 2027", never a
+  day, and never promise a feature of the apps that the website does not already have. Then say what works
+  today: everything runs in the browser, employees clock in from their own phone through the employee portal
+  (Starter and up), and the page can be added to the phone's home screen. Their account, employees and hours
+  will carry over to the apps; nothing to redo. Do not answer only "no app": that reads as a dead end.
+  A punch made from the
   employee portal on a phone is tagged MOBILE in Activity. Portal punches always use the employee's
   assigned site: there is no site picker, so geofence distance is measured against that one site.
 - Sales: a prospect who asks about "the terminal" (how to get it, who supplies it) may not want a fixed
