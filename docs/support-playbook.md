@@ -14,6 +14,13 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
   they draft and the owner reviews and sends. Automated triage follows its own prompt and drafts
   everything it is not explicitly allowed to send.
 - Reply in the customer's language (French or English).
+- We sell software, never hardware (owner's rule, 2026-11-23). Never write a feature so that it reads as an
+  object we hand over: not "clock-in tablet with PIN", "terminal included", "Tablette de pointage avec NIP" or
+  "terminal de pointage inclus". Always say whose device it is: "PIN clock-in on your own tablet or computer",
+  "vous configurez votre propre tablette ou ordinateur comme kiosque de pointage avec NIP". In any price list or
+  quote, add one plain sentence: the customer uses a tablet, computer or phone they already have; we do not
+  sell, lend or supply devices. If someone asks us to send or include a tablet, say so kindly and tell them any
+  recent tablet or spare phone with a browser works.
 - Phone calls (owner's rule, 2026-11-16). Never refuse a call, and never write that we prefer email, that we
   reply by email only, or anything else about how we would rather be contacted. Still answer the question
   as fully as possible by email in the same reply: the call comes on top of the answer, never instead of it.
@@ -263,7 +270,7 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
 | | Free | Starter $19.49 | Growth $39.49 | Business $79.49 |
 |---|---|---|---|---|
 | Company / sites / employees / admins | 1 / 1 / 10 / 1 | 1 / 2 / 25 / 2 | 3 / 6 / 60 / 4 | unlimited / unlimited / unlimited / 6 |
-| Tablet terminal with PINs, dashboard and activity log, PDF reports, missed clock-out alerts | yes | yes | yes | yes |
+| PIN clock-in on the customer's own tablet or computer (we supply no device), dashboard and activity log, PDF reports, missed clock-out alerts | yes | yes | yes | yes |
 | Geofencing, remote clock-in, employee portal, time off, Excel and CSV export, add / edit / delete punches, overtime tracking, evening hours, automatic email reports (employees and the accountant's payroll summary) | no | yes | yes | yes |
 | Lunch breaks, visitor check-in | no | no | yes | yes |
 | Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels, calendar sync for employees), 14-day trial | paid plans only | | | |

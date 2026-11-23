@@ -21,13 +21,13 @@ const UPDATED = '2026-11-14';
 // ── Plans (keep identical to the pricing page) ────────────────────────────────────────────────────
 const PLANS = {
   en: [
-    { name: 'Free', price: '$0', limits: '1 company, 1 site, up to 10 active employees', note: 'Clock-in terminal with PINs, dashboard, activity log, PDF reports. No credit card.' },
+    { name: 'Free', price: '$0', limits: '1 company, 1 site, up to 10 active employees', note: 'PIN clock-in on your own tablet or computer, dashboard, activity log, PDF reports. No credit card.' },
     { name: 'Starter', price: '$19.49/month', limits: '1 company, 2 sites, up to 25 employees', note: 'Adds geofencing, remote clock-in, the employee portal, time off, Excel and CSV export, punch corrections, overtime, evening hours and automatic email reports.' },
     { name: 'Growth', price: '$39.49/month', limits: '3 companies, 6 sites, up to 60 employees', note: 'Everything in Starter, plus lunch-break tracking and visitor check-in.' },
     { name: 'Business', price: '$79.49/month', limits: 'Unlimited companies, sites and employees', note: 'Everything in Growth.' },
   ],
   fr: [
-    { name: 'Gratuit', price: '0 $', limits: '1 compagnie, 1 site, jusqu’à 10 employés actifs', note: 'Terminal de pointage avec NIP, tableau de bord, journal d’activité, rapports PDF. Aucune carte de crédit.' },
+    { name: 'Gratuit', price: '0 $', limits: '1 compagnie, 1 site, jusqu’à 10 employés actifs', note: 'Pointage par NIP sur votre propre tablette ou ordinateur, tableau de bord, journal d’activité, rapports PDF. Aucune carte de crédit.' },
     { name: 'Débutant', price: '19,49 $/mois', limits: '1 compagnie, 2 sites, jusqu’à 25 employés', note: 'Ajoute le géorepérage, le pointage à distance, le portail employé, les congés, l’export Excel et CSV, la correction des pointages, les heures supplémentaires, les heures de soir et les rapports automatiques par courriel.' },
     { name: 'Croissance', price: '39,49 $/mois', limits: '3 compagnies, 6 sites, jusqu’à 60 employés', note: 'Tout le plan Débutant, plus le suivi des pauses repas et le pointage visiteur.' },
     { name: 'Entreprise', price: '79,49 $/mois', limits: 'Compagnies, sites et employés illimités', note: 'Tout le plan Croissance.' },
@@ -45,13 +45,13 @@ const PAGES = [
     en: {
       slug: 'time-clock-app-quebec',
       title: 'Punch clock app for Québec businesses | PunchClock Crew',
-      desc: 'A bilingual punch clock and time-tracking app made in Québec: PIN clock-in on a tablet, multi-site, overtime, payroll reports and Québec statutory holidays. Free plan available.',
+      desc: 'A bilingual punch clock and time-tracking app made in Québec: PIN clock-in on your own tablet, multi-site, overtime, payroll reports and Québec statutory holidays. Free plan available.',
       h1: 'A punch clock app made in Québec, for Québec businesses',
       lead: 'PunchClock Crew is a time-and-attendance app built in Québec. The whole app, every report and every automatic email work in French or English, and prices are in Canadian dollars.',
       sections: [
         ['What you get', [
           'Employees clock in and out with a 4-digit PIN on a shared tablet, computer or phone at your location. No app to install.',
-          'Several locations under one account, each with its own employees and clock-in terminal.',
+          'Several locations under one account, each with its own employees and its own clock-in page.',
           'Hours, overtime and evening hours calculated for you, then exported to PDF, Excel or CSV for payroll.',
           'Québec statutory holidays added to the schedule in one click (Scheduling add-on).',
           'Time-off requests, an employee portal and automatic pay-period emails, including a payroll summary for your accountant.',
@@ -69,13 +69,13 @@ const PAGES = [
     fr: {
       slug: 'application-pointage-quebec',
       title: 'Application de pointage pour les entreprises du Québec | PunchClock Crew',
-      desc: 'Une application de pointage et de suivi des heures conçue au Québec : pointage par NIP sur tablette, multi-sites, heures supplémentaires, rapports de paie et jours fériés du Québec. Plan gratuit offert.',
+      desc: 'Une application de pointage et de suivi des heures conçue au Québec : pointage par NIP sur votre tablette, multi-sites, heures supplémentaires, rapports de paie et jours fériés du Québec. Plan gratuit offert.',
       h1: 'Une application de pointage conçue au Québec, pour les entreprises d’ici',
       lead: 'PunchClock Crew est une application de pointage et de gestion des présences conçue au Québec. Toute l’application, chaque rapport et chaque courriel automatique fonctionnent en français ou en anglais, et les prix sont en dollars canadiens.',
       sections: [
         ['Ce que vous obtenez', [
           'Les employés pointent leur arrivée et leur départ avec un NIP à 4 chiffres sur une tablette, un ordinateur ou un téléphone partagé sur place. Aucune application à installer.',
-          'Plusieurs emplacements dans un seul compte, chacun avec ses employés et son terminal de pointage.',
+          'Plusieurs emplacements dans un seul compte, chacun avec ses employés et sa propre page de pointage.',
           'Heures, heures supplémentaires et heures de soir calculées pour vous, puis exportées en PDF, Excel ou CSV pour la paie.',
           'Les jours fériés du Québec ajoutés à l’horaire en un clic (module Planification).',
           'Demandes de congé, portail employé et courriels automatiques de fin de période, y compris un sommaire de paie pour votre comptable.',
@@ -108,7 +108,7 @@ const PAGES = [
         ['For crews on the road', [
           'Turn on remote clock-in and grant it to the employees who need it. They punch in from their own phone through the employee portal, and you see where each punch was made.',
           'Location required, from anywhere: set the site to Strict mode and leave its address empty. Every phone punch must then carry a location, wherever the employee is; a punch with location refused or switched off is blocked.',
-          'A fixed tablet at the entrance is still the simplest option for teams who all work at one place.',
+          'Your own tablet, fixed at the entrance, is still the simplest option for teams who all work at one place.',
         ]],
       ],
       faq: [
@@ -133,7 +133,7 @@ const PAGES = [
         ['Pour les équipes sur la route', [
           'Activez le pointage à distance et accordez-le aux employés qui en ont besoin. Ils pointent depuis leur propre téléphone par le portail employé, et vous voyez où chaque pointage a été fait.',
           'Localisation exigée, de n’importe où : mettez le site en mode strict et laissez son adresse vide. Chaque pointage sur téléphone doit alors être accompagné d’une position, peu importe où se trouve l’employé; un pointage dont la localisation est refusée ou désactivée est bloqué.',
-          'Une tablette fixe à l’entrée reste l’option la plus simple pour une équipe qui travaille au même endroit.',
+          'Votre propre tablette, fixée à l’entrée, reste l’option la plus simple pour une équipe qui travaille au même endroit.',
         ]],
       ],
       faq: [
@@ -149,13 +149,13 @@ const PAGES = [
     en: {
       slug: 'free-time-clock-app',
       title: 'Free time clock app for small teams in Canada | PunchClock Crew',
-      desc: 'A free punch clock for small teams: 1 site, up to 10 employees, PIN clock-in on a tablet, dashboard, activity log and PDF reports. No credit card, no time limit.',
+      desc: 'A free punch clock for small teams: 1 site, up to 10 employees, PIN clock-in on your own tablet, dashboard, activity log and PDF reports. No credit card, no time limit.',
       h1: 'A free time clock app for small teams',
       lead: 'The Free plan is free with no time limit and no credit card. It covers what a small team needs to stop using paper time sheets.',
       sections: [
         ['What the Free plan includes', [
           '1 company, 1 site and up to 10 active employees.',
-          'A clock-in terminal where employees punch in and out with a 4-digit PIN.',
+          'PIN clock-in on your own tablet or computer: employees punch in and out with a 4-digit PIN. No hardware to buy from us.',
           'A dashboard showing who is clocked in, an activity log, and PDF reports for any date range.',
         ]],
         ['When to move to a paid plan', [
@@ -172,13 +172,13 @@ const PAGES = [
     fr: {
       slug: 'application-pointage-gratuite',
       title: 'Application de pointage gratuite pour petites équipes | PunchClock Crew',
-      desc: 'Un pointage gratuit pour les petites équipes : 1 site, jusqu’à 10 employés, pointage par NIP sur tablette, tableau de bord, journal d’activité et rapports PDF. Sans carte de crédit, sans limite de temps.',
+      desc: 'Un pointage gratuit pour les petites équipes : 1 site, jusqu’à 10 employés, pointage par NIP sur votre tablette, tableau de bord, journal d’activité et rapports PDF. Sans carte de crédit, sans limite de temps.',
       h1: 'Une application de pointage gratuite pour les petites équipes',
       lead: 'Le plan Gratuit est gratuit, sans limite de temps et sans carte de crédit. Il couvre ce qu’une petite équipe doit avoir pour abandonner les feuilles de temps en papier.',
       sections: [
         ['Ce que comprend le plan Gratuit', [
           '1 compagnie, 1 site et jusqu’à 10 employés actifs.',
-          'Un terminal où les employés pointent leur arrivée et leur départ avec un NIP à 4 chiffres.',
+          'Le pointage par NIP sur votre propre tablette ou ordinateur : les employés pointent leur arrivée et leur départ avec un NIP à 4 chiffres. Aucun appareil à nous acheter.',
           'Un tableau de bord qui montre qui est pointé, un journal d’activité et des rapports PDF pour n’importe quelle période.',
         ]],
         ['Quand passer à un plan payant', [
@@ -390,7 +390,8 @@ Key facts:
 - Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal, time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
 - Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
-- Works in a web browser; no app install needed for the clock-in terminal.
+- Works in a web browser; no app install needed for the clock-in page.
+- Software only: PunchClock Crew does not sell, lend or supply tablets or any hardware. Customers use a tablet, computer or phone they already have.
 - Operated by 9317-3516 Québec Inc. Support: support@punchclock.ca
 
 ## Pages (English)
