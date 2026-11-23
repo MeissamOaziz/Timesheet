@@ -38,8 +38,11 @@ const T = (en, fr) => ({ en, fr });
 
 const FORMATS = {
   wide:     { viewport: { width: 1280, height: 720 }, size: { width: 1280, height: 720 } },
-  // A phone-shaped page (so the app shows its phone layout), recorded at 1080x1920 for Reels, Shorts and Stories.
-  vertical: { viewport: { width: 430, height: 764 },  size: { width: 1080, height: 1920 } },
+  // A phone-shaped page (so the app shows its phone layout) for Reels, Shorts and Stories. Playwright records at the
+  // page's own size and only ever scales DOWN to `size`: asking for 1080x1920 from a 430-wide page left the picture in
+  // the top-left corner of a grey frame (found 2026-11-22). So it records 432x768 (exactly 9:16) and ffmpeg scales the
+  // result up to `out` when encoding.
+  vertical: { viewport: { width: 432, height: 768 },  size: { width: 432, height: 768 }, out: { width: 1080, height: 1920 } },
 };
 
 // ── Videos ────────────────────────────────────────────────────────────────────
@@ -322,7 +325,7 @@ async function record(browser, base, video, lang, fmtName) {
 
   const out = join(OUT, tag + '.mp4');
   const r = spawnSync('ffmpeg', ['-loglevel', 'error', '-y', '-ss', String(cutStart), '-i', join(raw, 'raw.webm'), '-t', String(cutEnd - cutStart),
-    '-vf', 'fps=30,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '19', '-movflags', '+faststart', '-an', out], { encoding: 'utf8' });
+    '-vf', `fps=30,${fmt.out ? `scale=${fmt.out.width}:${fmt.out.height}:flags=lanczos,` : ''}format=yuv420p`, '-c:v', 'libx264', '-preset', 'slow', '-crf', '19', '-movflags', '+faststart', '-an', out], { encoding: 'utf8' });
   if (r.error || r.status !== 0) throw new Error('ffmpeg failed: ' + (r.error ? r.error.message : r.stderr));
   rmSync(raw, { recursive: true, force: true });
   return { out, seconds: Math.round(cutEnd - cutStart), errors };
