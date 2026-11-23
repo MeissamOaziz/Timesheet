@@ -5822,15 +5822,24 @@ async function refreshCache(opts={}){
   if(sess&&sess.id&&!sess.parent_admin_id&&!superAdmin){
     C.coAdmins=await DB.all('admins',`parent_admin_id=eq.${sess.id}&status=neq.suspended`)||[];
     C.primaryAdmin=null;
-    // When the account was created decides how long a Free account previews the paid features. Read once.
+    // When the account was created decides how long a Free account previews the paid features. Read once per page load.
     // Keyed by admin id so a second login in the same tab never inherits the first account's date.
-    if((!C.acctCreatedAt||C.acctCreatedFor!==sess.id)&&sess.plan!=='business'&&sess.plan!=='unlimited'){
+    // The same read refreshes the plan kept in this browser: a saved sign-in used to keep the plan it had on the
+    // day of the login, so a customer who paid from another device (or was upgraded by us) kept seeing "Free"
+    // and was sent back to the plan list until they signed out and in again.
+    if(!C.acctCreatedAt||C.acctCreatedFor!==sess.id){
       try{
-        const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at,scheduling_addon,scheduling_trial_ends_at`);
+        const me=await DB.all('admins',`id=eq.${sess.id}&select=created_at,plan,extra_seats,scheduling_addon,scheduling_trial_ends_at`);
         C.acctCreatedAt=me?.[0]?.created_at||null; C.acctCreatedFor=sess.id;
         if(me?.[0]){
           const cur=Sess.get();
-          if(cur&&cur.id===sess.id){ cur.scheduling_addon=!!me[0].scheduling_addon; cur.scheduling_trial_ends_at=me[0].scheduling_trial_ends_at||null; Sess.set(cur); }
+          if(cur&&cur.id===sess.id){
+            const planWas=cur.plan, seatsWas=Number(cur.extra_seats||0);
+            if(typeof me[0].plan==='string'&&me[0].plan) cur.plan=me[0].plan;
+            if(me[0].extra_seats!=null) cur.extra_seats=Number(me[0].extra_seats)||0;
+            cur.scheduling_addon=!!me[0].scheduling_addon; cur.scheduling_trial_ends_at=me[0].scheduling_trial_ends_at||null; Sess.set(cur);
+            if(cur.plan!==planWas||cur.extra_seats!==seatsWas){ try{ updateNav(); }catch(_){} }
+          }
         }
       }catch(_){}
     }

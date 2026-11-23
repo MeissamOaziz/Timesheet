@@ -292,6 +292,17 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
   Never promise, hint at or process a refund or credit, and never say "exceptionally". If the customer insists,
   disputes the charge or mentions a chargeback, escalate to the owner and send only a holding reply.
 
+## "I paid but it still says Free" (new customer, 2026-11-23)
+
+Symptom: the customer paid (they have the Stripe receipt), but the header still shows "Free" under their name, and "Add Scheduling" sends them back to the "Upgrade Your Plan" list.
+
+Cause: the plan was right on the server. The browser kept the plan it saved on the day that device signed in ("Remember me" keeps a sign-in for 30 days). A payment made from another device or browser, or a plan we changed for them, never reached that saved copy.
+
+- Fixed on 2026-11-23: every time the page loads it now re-reads the plan and extra seats from the server. A refresh of the page is enough.
+- If it still shows the old plan after a refresh: sign out and sign in again (this always worked, also before the fix).
+- Never tell a customer in this situation to pay again. First confirm the plan in the database (the owner's row: plan, subscription present). If the database also says Free and they have a receipt, that is a billing matter for the owner: escalate.
+- A paid plan and the Scheduling add-on are two separate purchases. Starter alone does not open the Schedule tab.
+
 ## Referral program, December 2026 ("Refer a business")
 
 - **Dates.** The offer starts on 1 December 2026. Before that date do not bring it up; if a customer asks, say a
