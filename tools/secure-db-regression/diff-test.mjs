@@ -96,6 +96,7 @@ const tables = {
 // ---- rows for the notify / period-summary / survey / role cases (added 2026-11-01) ----
 const NOW_ISO = new Date().toISOString(), HOUR_AGO = new Date(Date.now() - 36e5).toISOString();
 const MPR_OK = '33333333-3333-4333-8333-333333333331', MPR_S2 = '33333333-3333-4333-8333-333333333332', MPR_OLD = '33333333-3333-4333-8333-333333333333', MPR_DUP = '33333333-3333-4333-8333-333333333334', MPR_APPR = '33333333-3333-4333-8333-333333333335', MPR_OTHER = '33333333-3333-4333-8333-333333333336', MPR_E2 = '33333333-3333-4333-8333-333333333337';
+const MPR_PORTAL = '33333333-3333-4333-8333-333333333338', MPR_KIOSK_E1 = '33333333-3333-4333-8333-333333333339', MPR_PORTAL_OLD = '33333333-3333-4333-8333-33333333333a';
 const mprRows = {
   [MPR_OK]: { id: MPR_OK, company_id: 'c1', site_id: 's1', emp_id: 'e1', status: 'pending', created_at: NOW_ISO },
   [MPR_S2]: { id: MPR_S2, company_id: 'c1', site_id: 's2', emp_id: 'e1', status: 'pending', created_at: NOW_ISO },
@@ -104,6 +105,10 @@ const mprRows = {
   [MPR_APPR]: { id: MPR_APPR, company_id: 'c1', site_id: 's1', emp_id: 'e1', status: 'approved', created_at: HOUR_AGO },
   [MPR_OTHER]: { id: MPR_OTHER, company_id: 'c9', site_id: 's9', emp_id: 'e9', status: 'approved', created_at: HOUR_AGO },
   [MPR_E2]: { id: MPR_E2, company_id: 'c1', site_id: 's2', emp_id: 'e2', status: 'approved', created_at: HOUR_AGO },
+  // Filed by the employee from the app or portal (portal_request_missed_punch, 2026-11-24).
+  [MPR_PORTAL]: { id: MPR_PORTAL, company_id: 'c1', site_id: 's1', emp_id: E_OWN, status: 'pending', requested_by: 'employee', created_at: NOW_ISO },
+  [MPR_KIOSK_E1]: { id: MPR_KIOSK_E1, company_id: 'c1', site_id: 's1', emp_id: E_OWN, status: 'pending', created_at: NOW_ISO },
+  [MPR_PORTAL_OLD]: { id: MPR_PORTAL_OLD, company_id: 'c1', site_id: 's1', emp_id: E_OWN, status: 'pending', requested_by: 'employee', created_at: HOUR_AGO },
 };
 const TO_OK = '44444444-4444-4444-8444-444444444441', TO_ADMIN = '44444444-4444-4444-8444-444444444442';
 const toRows = {
@@ -620,6 +625,12 @@ const cases = [
   R('notify', 'portal: an admin-entered absence is not an employee request', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_ADMIN, mode: 'submitted', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
   R('notify', 'portal: cannot ask for a decision notice', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'decision', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
   R('notify', 'portal token with query syntax', { action: 'notify_request', body: { kind: 'time_off', request_id: TO_OK, mode: 'submitted', portal_token: 'x&y=z' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: missed punch just filed by this employee', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_PORTAL, mode: 'submitted', portal_token: 'ptokE1' } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].url.endsWith('/notify-missed-punch') && r.fn[0].body.requestId === MPR_PORTAL),
+  R('notify', 'portal: missed punch, session of another employee', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_PORTAL, mode: 'submitted', portal_token: 'ptokOther' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: missed punch, no session', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_PORTAL, mode: 'submitted' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: a tablet report cannot be triggered with a portal session', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_KIOSK_E1, mode: 'submitted', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: an old missed-punch request cannot be replayed', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_PORTAL_OLD, mode: 'submitted', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
+  R('notify', 'portal: no decision notice for a missed punch', { action: 'notify_request', body: { kind: 'missed_punch', request_id: MPR_PORTAL, mode: 'decision', portal_token: 'ptokE1' } }, r => r.status === 403 && r.fn.length === 0),
   R('notify', 'admin: time off decision for own company', { action: 'notify_request', ...own, body: { kind: 'time_off', request_id: TO_OK, mode: 'decision' } }, r => r.status === 200 && r.fn.length === 1 && r.fn[0].url.endsWith('/notify-time-off')),
   // survey team copy
   R('survey', 'answered survey: team copy built from the saved response', { action: 'survey_notify', body: { token: TOK_S_OK, email: 'evil@x.ca', reason: 'INJECTED' } },

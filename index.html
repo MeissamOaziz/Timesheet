@@ -11833,6 +11833,47 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
   // aborts silently, even for the warn case a real admin should be able to confirm past.
   const nb=await _punchNeighbours(req.emp_id,punched_at);
   const seq=_punchSequenceError(req.type,nb.prev,nb.next,punched_at);
+  // The shift may already have a punch of this type (a manager often adds the forgotten OUT by hand before the
+  // employee's request arrives). Instead of refusing, show both and let the admin pick the right one.
+  const twin=seq?await _missedTwin(req,nb,punched_at):null;
+  if(twin){
+    const typeLbl=String(t(req.type==='IN'?'punch.in':'punch.out')||req.type).replace(/^[✓✕]\s*/,'');
+    const oldTime=String(twin.punch.punch_time||'').slice(0,5);
+    const who=(twin.punch.is_manual||twin.punch.source==='admin')?t('missed.twinByManager'):twin.punch.source==='mobile'?t('missed.twinByPhone'):t('missed.twinByKiosk');
+    const pick=await uiChoose(
+      t('missed.twinBody').replace(/\{name\}/g,req.emp_name||'').replace(/\{type\}/g,typeLbl).replace('{req}',punch_time).replace('{when}',oldTime).replace('{date}',twin.punch.punch_date).replace('{who}',who),
+      {title:t('missed.twinTitle').replace('{type}',typeLbl),
+       options:[{label:t('missed.twinUse').replace('{time}',punch_time),value:'request',primary:true},{label:t('missed.twinKeep').replace('{time}',oldTime),value:'keep'}]});
+    if(!pick) return;
+    const sess=Sess.get();
+    if(pick==='keep'){
+      try{
+        await DB.update('missed_punch_requests',`id=eq.${req.id}`,{status:'denied',reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString()});
+        showToast(t('missed.deniedToast').replace('{name}',req.emp_name),'info');
+        notifyDecision('notify-missed-punch', req.id);
+        await renderMissedPunchRequests();
+      }catch(e){showToast(e.message,'error');}
+      return;
+    }
+    if(twin.after?.warn && !(await uiConfirm(twin.after.warn))) return;
+    try{
+      const payload={emp_id:req.emp_id,emp_name:req.emp_name,company_id:req.company_id,type:req.type,punch_date,punch_time:fullTime,punched_at,is_manual:true,source:'admin'};
+      if(req.site_id){payload.site_id=req.site_id;payload.site_name=site?.name||null;}
+      const ins=await DB.insert('punches',payload);
+      const newId=ins?.[0]?.id||null;
+      // New punch first, old one second; if the removal fails, take the new one back out so the day never ends up
+      // with two OUTs (or two INs).
+      try{ await DB.del('punches',`id=eq.${twin.punch.id}`); }
+      catch(e){ if(newId){ try{ await DB.del('punches',`id=eq.${newId}`); }catch(_){} } throw e; }
+      C.punches=C.punches.filter(p=>p.id!==twin.punch.id);
+      if(ins?.[0])C.punches.unshift(ins[0]);
+      await DB.update('missed_punch_requests',`id=eq.${req.id}`,{status:'approved',reviewed_by:sess?.id||null,reviewed_at:new Date().toISOString(),punch_id:newId});
+      showToast(t('missed.approvedToast').replace('{name}',req.emp_name),'success');
+      notifyDecision('notify-missed-punch', req.id);
+      await renderMissedPunchRequests();
+    }catch(e){showToast(e.message,'error');}
+    return;
+  }
   if(seq?.error){showToast(seq.error,'error');return;}
   if(seq?.warn && !(await uiConfirm(seq.warn))) return;
   try{
@@ -11854,6 +11895,19 @@ async function _doApproveMissedPunch(req,punch_date,punch_time_raw){
     notifyDecision('notify-missed-punch', req.id);
     await renderMissedPunchRequests();
   }catch(e){showToast(e.message,'error');}
+}
+
+// A same-type punch on the request's shift (within 16 hours), offered as a choice only when removing it leaves a
+// sequence that is valid (or merely doubtful). Mirrors findTwin in the admin app (src/lib/punchRules.ts).
+async function _missedTwin(req, nb, atIso){
+  const twinP = nb.prev && nb.prev.type===req.type ? nb.prev : (nb.next && nb.next.type===req.type ? nb.next : null);
+  if(!twinP) return null;
+  const gap=Math.abs(new Date(twinP.punched_at).getTime()-new Date(atIso).getTime());
+  if(!Number.isFinite(gap) || gap>16*3600*1000) return null;
+  const nb2=await _punchNeighbours(req.emp_id, atIso, twinP.id);
+  const after=_punchSequenceError(req.type, nb2.prev, nb2.next, atIso);
+  if(after?.error) return null;
+  return {punch:twinP, after};
 }
 
 async function denyMissedPunch(id){
@@ -15407,6 +15461,32 @@ function uiConfirm(message, opts){
     danger: opts.danger !== false,
   });
 }
+// A question with several answers: resolves to the chosen value, or null on Cancel / Escape. Same look and the same
+// escaping as _openDialog; the labels and message are escaped here too (they carry employee names).
+function uiChoose(message, opts){
+  opts = opts || {};
+  return new Promise(res=>{
+    let el = document.getElementById('uiChooseDlg');
+    if(!el){ el=document.createElement('div'); el.id='uiChooseDlg'; el.className='modal-overlay'; el.setAttribute('data-no-dismiss',''); document.body.appendChild(el); }
+    const esc = x => String(x==null?'':x).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const options = opts.options || [];
+    el.innerHTML = `<div class="modal" style="max-width:460px" role="alertdialog" aria-modal="true" aria-labelledby="uiChooseTitle">
+      <h3 id="uiChooseTitle" style="margin:0 0 8px;font-size:16px">${esc(opts.title||'')}</h3>
+      <p style="color:var(--text2);font-size:13.5px;line-height:1.55;margin:0 0 20px">${esc(message).replace(/\n/g,'<br>')}</p>
+      <div style="display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn-secondary" data-i="-1" style="width:auto;padding:8px 16px">${esc(opts.cancelLabel || t('common.cancel') || 'Cancel')}</button>
+        ${options.map((o,i)=>`<button class="${o.primary?'btn-primary':'btn-secondary'}" data-i="${i}" style="width:auto;padding:8px 16px">${esc(o.label)}</button>`).join('')}
+      </div>
+    </div>`;
+    const done = v => { el.classList.remove('open'); document.removeEventListener('keydown', onKey, true); res(v); };
+    const onKey = e => { if(e.key==='Escape'){ e.preventDefault(); done(null); } };
+    el.querySelectorAll('button[data-i]').forEach(b=>{ b.onclick=()=>{ const i=Number(b.getAttribute('data-i')); done(i<0?null:options[i].value); }; });
+    document.addEventListener('keydown', onKey, true);
+    el.classList.add('open');
+    setTimeout(()=>{ const b=el.querySelector('button[data-i="-1"]'); if(b) b.focus(); }, 30);
+  });
+}
+
 function uiAlert(message, opts){
   opts = opts || {};
   return _openDialog({
@@ -18272,7 +18352,7 @@ en:{
 'missed.editApprove':'Edit+Approve',
 'missed.needDateTime':'Please enter a date and time.',
 'missed.denyConfirm':'Deny missed punch request for {name}?',
-'missed.approvedToast':'✓ Punch approved for {name}',
+'missed.approvedToast':'✓ Punch approved for {name}','missed.twinTitle':'Two {type} punches for this shift','missed.twinBody':'{name} asks for {type} at {req}. There is already an {type} at {when} on {date} ({who}). Which one is correct?\n\nUsing the request removes the other punch. Keeping it declines the request.','missed.twinUse':'Use the request ({time})','missed.twinKeep':'Keep {time}','missed.twinByManager':'entered by a manager','missed.twinByPhone':'from the phone app','missed.twinByKiosk':'from the tablet',
 'missed.deniedToast':'Request denied for {name}',
 'coAdmin.none':'No co-admins yet.',
 'coAdmin.editTitle':'Edit Co-Admin',
@@ -19379,7 +19459,7 @@ fr:{
 'missed.editApprove':'Modifier et approuver',
 'missed.needDateTime':'Entrez une date et une heure.',
 'missed.denyConfirm':'Refuser la demande de pointage manqué de {name}?',
-'missed.approvedToast':'✓ Pointage approuvé pour {name}',
+'missed.approvedToast':'✓ Pointage approuvé pour {name}','missed.twinTitle':'Deux pointages {type} pour ce quart','missed.twinBody':'{name} demande {type} à {req}. Il y a déjà une {type} à {when} le {date} ({who}). Laquelle est la bonne ?\n\nUtiliser la demande retire l\'autre pointage. La garder refuse la demande.','missed.twinUse':'Utiliser la demande ({time})','missed.twinKeep':'Garder {time}','missed.twinByManager':'saisie par un gestionnaire','missed.twinByPhone':'depuis l\'application','missed.twinByKiosk':'depuis la tablette',
 'missed.deniedToast':'Demande refusée pour {name}',
 'coAdmin.none':'Aucun co-admin pour le moment.',
 'coAdmin.editTitle':'Modifier le co-admin',

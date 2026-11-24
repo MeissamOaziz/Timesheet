@@ -11,7 +11,7 @@
 # session token in code, except portal_app_config (returns only the minimum app version).
 # admin_app_config (20261123_admin_app_config.sql) is the admin app's version gate: no session, returns only the minimum version.
 # The admin mobile app (20261105_admin_push_tokens.sql) calls admin_register_push_token / admin_unregister_push_token
-# the same way, authenticating with the admin session token (56 functions in total).
+# the same way, authenticating with the admin session token (58 functions in total).
 accept_invitation
 activate_employee_portal
 activate_invited_admin
@@ -42,6 +42,7 @@ portal_delete_availability
 portal_get_availability
 portal_get_company_payroll
 portal_get_me
+portal_get_missed_punches
 portal_get_punch_labels
 portal_get_punches
 portal_get_schedule_status
@@ -54,6 +55,7 @@ portal_login
 portal_logout
 portal_punch
 portal_register_push_token
+portal_request_missed_punch
 portal_request_time_off
 portal_reset_password
 portal_revoke_session

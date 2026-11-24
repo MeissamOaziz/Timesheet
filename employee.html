@@ -520,6 +520,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div id="tabContentReports" style="display:none">
       <h1 class="page-title" id="reportsTitle">My Hours</h1>
       <p class="page-sub" id="reportsSub">View your punch records and hours worked</p>
+      <!-- Report a missed punch (2026-11-24). The forgot-to-clock-out email links here (#missed). Filled by
+           renderMissed() so the labels follow the language switch. -->
+      <div class="card" id="missed"></div>
       <div class="period-selector" id="periodSelector"></div>
       <div id="statsRow" class="stats-row"></div>
       <div class="card">
@@ -722,6 +725,14 @@ const T = {
     toKind_unpaid: 'Unpaid', toKind_other: 'Other',
     toStatus_pending: 'Pending', toStatus_approved: 'Approved', toStatus_denied: 'Denied', toStatus_cancelled: 'Cancelled',
     toDays: 'day(s)', toNone: 'No time off requested yet.',
+    mpTitle: 'Report a missed punch', mpSub: 'Forgot to clock in or out? Send the time you really started or left. Your manager approves it.',
+    mpType: 'Punch', mpIn: 'Clock in', mpOut: 'Clock out', mpDate: 'Day', mpTime: 'Time', mpNotePh: 'Note for your manager (optional)',
+    mpSend: 'Send', mpMine: 'My recent reports', mpSent: 'Sent. Your manager will review it.', mpErrFields: 'Choose the day and the time.',
+    mpErr_in_future: 'That time has not happened yet.', mpErr_too_old: 'Only the last 14 days can be reported here. Ask your manager.',
+    mpErr_already_requested: 'You already sent this one for that day. It is waiting for your manager.',
+    mpErr_too_many_pending: 'You have 5 reports waiting. Wait for your manager to answer them.',
+    mpErr_too_many: 'Too many reports today. Try again tomorrow or ask your manager.',
+    mpErr_invalid_time: 'Check the time.', mpErr_not_authenticated: 'Your session ended. Sign in again.',
     toSent: 'Request sent — your manager will review it.',
     toCancel: 'Withdraw request', toCancelled: 'Request withdrawn.',
     toConfirmCancel: 'Withdraw this request?',
@@ -835,6 +846,14 @@ const T = {
     toKind_unpaid: 'Sans solde', toKind_other: 'Autre',
     toStatus_pending: 'En attente', toStatus_approved: 'Approuvé', toStatus_denied: 'Refusé', toStatus_cancelled: 'Annulé',
     toDays: 'jour(s)', toNone: 'Aucune demande de congé pour l\'instant.',
+    mpTitle: 'Signaler un pointage oublié', mpSub: 'Vous avez oublié de pointer votre arrivée ou votre sortie ? Envoyez l\'heure réelle. Votre gestionnaire l\'approuve.',
+    mpType: 'Pointage', mpIn: 'Arrivée', mpOut: 'Sortie', mpDate: 'Jour', mpTime: 'Heure', mpNotePh: 'Note pour votre gestionnaire (optionnel)',
+    mpSend: 'Envoyer', mpMine: 'Mes signalements récents', mpSent: 'Envoyé. Votre gestionnaire va le vérifier.', mpErrFields: 'Choisissez le jour et l\'heure.',
+    mpErr_in_future: 'Cette heure n\'est pas encore passée.', mpErr_too_old: 'Seuls les 14 derniers jours peuvent être signalés ici. Demandez à votre gestionnaire.',
+    mpErr_already_requested: 'Vous avez déjà envoyé celui-ci pour ce jour. Il attend votre gestionnaire.',
+    mpErr_too_many_pending: 'Vous avez 5 signalements en attente. Attendez la réponse de votre gestionnaire.',
+    mpErr_too_many: 'Trop de signalements aujourd\'hui. Réessayez demain ou demandez à votre gestionnaire.',
+    mpErr_invalid_time: 'Vérifiez l\'heure.', mpErr_not_authenticated: 'Votre session a pris fin. Reconnectez-vous.',
     toSent: 'Demande envoyée — votre gestionnaire va la réviser.',
     toCancel: 'Retirer la demande', toCancelled: 'Demande retirée.',
     toConfirmCancel: 'Retirer cette demande?',
@@ -1042,7 +1061,7 @@ function showTab(name) {
   });
   if (name === 'schedule') renderSchedule();
   else if (name === 'team') renderTeamSchedule();
-  else if (name === 'reports') renderReports();
+  else if (name === 'reports') { renderReports(); renderMissed(); }
   else if (name === 'availability') renderAvailability();
   else if (name === 'timeoff') renderTimeOff();
 }
@@ -1294,7 +1313,13 @@ function showPortal() {
   document.getElementById('navEmpSub').textContent = t('navSub');
   document.getElementById('navEmpAvatar').textContent = initials;
   showScreen('screenApp');
-  showTab('schedule');
+  // The forgot-to-clock-out email links to #missed: open My Hours on the report form.
+  if (location.hash === '#missed') {
+    showTab('reports');
+    setTimeout(() => { const el = document.getElementById('missed'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+  } else {
+    showTab('schedule');
+  }
   loadAvailability();
   initPunchBar();
 }
@@ -2051,6 +2076,90 @@ async function submitTimeOff() {
     showToast(t('toSent'), 'success');
   } catch(e) {
     showToast(t('errorSaving'), 'error');
+  }
+}
+
+// ── Report a missed punch ────────────────────────────────────────────────────
+// The employee sends the time they really clocked in or out; the manager approves it (nothing is written to the
+// punches here). Identity is the portal session only; the server checks the date window, duplicates and limits.
+let _missed = [];
+async function renderMissed() {
+  const box = document.getElementById('missed');
+  if (!box) return;
+  const keep = {
+    type: document.getElementById('mpType')?.value || 'OUT',
+    date: document.getElementById('mpDate')?.value || '',
+    time: document.getElementById('mpTime')?.value || '',
+    note: document.getElementById('mpNote')?.value || '',
+  };
+  const today = new Date().toLocaleDateString('en-CA');
+  const minDay = new Date(Date.now() - 14 * 864e5).toLocaleDateString('en-CA');
+  const lbl = 'display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px';
+  box.innerHTML = `
+    <div class="card-title"><svg class="ic"><use href="#i-clock"/></svg> <span>${escHtml(t('mpTitle'))}</span></div>
+    <p style="font-size:13px;color:var(--text2);margin:0 0 12px;line-height:1.5">${escHtml(t('mpSub'))}</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:10px">
+      <div><label style="${lbl}" for="mpType">${escHtml(t('mpType'))}</label>
+        <select id="mpType" class="form-input"><option value="OUT">${escHtml(t('mpOut'))}</option><option value="IN">${escHtml(t('mpIn'))}</option></select></div>
+      <div><label style="${lbl}" for="mpDate">${escHtml(t('mpDate'))}</label>
+        <input type="date" id="mpDate" class="form-input" min="${minDay}" max="${today}"></div>
+      <div><label style="${lbl}" for="mpTime">${escHtml(t('mpTime'))}</label>
+        <input type="time" id="mpTime" class="form-input"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <input type="text" id="mpNote" class="form-input" maxlength="300" style="flex:2;min-width:160px" placeholder="${escHtml(t('mpNotePh'))}">
+      <button class="btn-secondary" id="mpSend" onclick="submitMissed()" style="white-space:nowrap">${escHtml(t('mpSend'))}</button>
+    </div>
+    <div id="mpList"></div>`;
+  document.getElementById('mpType').value = keep.type === 'IN' ? 'IN' : 'OUT';
+  document.getElementById('mpDate').value = keep.date || today;
+  document.getElementById('mpTime').value = keep.time;
+  document.getElementById('mpNote').value = keep.note;
+  try { _missed = asRows(await rpc('portal_get_missed_punches', { p_session: _session.token })); } catch (e) { _missed = []; }
+  const list = document.getElementById('mpList');
+  if (!list) return;
+  if (!_missed.length) { list.innerHTML = ''; return; }
+  const colours = { approved:'#22c55e', pending:'#f59e0b', denied:'#ef4444' };
+  list.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin:4px 0 6px">${escHtml(t('mpMine'))}</div>` +
+    _missed.slice(0, 10).map(r => {
+      const c = colours[r.status] || 'var(--text3)';
+      const what = (r.type === 'IN' ? t('mpIn') : t('mpOut')) + ' · ' + fmtDate(r.requested_date) + ' ' + String(r.requested_time || '').slice(0, 5);
+      return `<div class="avail-specific-row"><div><div class="avail-specific-date">${escHtml(what)}</div>${r.reason ? `<div class="avail-specific-note">${escHtml(r.reason)}</div>` : ''}</div>
+        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:var(--r-xl);border:1px solid ${c};color:${c};white-space:nowrap">${escHtml(t('toStatus_' + r.status) || r.status)}</span></div>`;
+    }).join('');
+}
+
+async function submitMissed() {
+  const type = document.getElementById('mpType').value === 'IN' ? 'IN' : 'OUT';
+  const date = document.getElementById('mpDate').value;
+  const time = (document.getElementById('mpTime').value || '').slice(0, 5);
+  const note = document.getElementById('mpNote').value.trim();
+  if (!date || !/^\d{2}:\d{2}$/.test(time)) { showToast(t('mpErrFields'), 'error'); return; }
+  const btn = document.getElementById('mpSend');
+  btn.disabled = true;
+  try {
+    const res = asRows(await rpc('portal_request_missed_punch',
+      { p_session: _session.token, p_type: type, p_date: date, p_time: time, p_reason: note || null }))[0];
+    if (res && res.err) { showToast(t('mpErr_' + res.err) !== 'mpErr_' + res.err ? t('mpErr_' + res.err) : t('errorSaving'), 'error'); return; }
+    if (res && res.id) {
+      try {
+        // Same as time off: secure-db checks this session filed the request, then the approvers are told.
+        const nr = await fetch(`${SUPA_URL}/functions/v1/secure-db`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` },
+          body: JSON.stringify({ action: 'notify_request', body: { kind: 'missed_punch', request_id: res.id, mode: 'submitted', portal_token: _session.token } })
+        });
+        if (!nr.ok) console.error('missed-punch notification failed', nr.status);
+      } catch (e) { console.error('missed-punch notification error', e); }
+    }
+    document.getElementById('mpTime').value = '';
+    document.getElementById('mpNote').value = '';
+    await renderMissed();
+    showToast(t('mpSent'), 'success');
+  } catch (e) {
+    showToast(t('errorSaving'), 'error');
+  } finally {
+    const b = document.getElementById('mpSend'); if (b) b.disabled = false;
   }
 }
 

@@ -81,6 +81,43 @@ function roundMs(iso: string, mins: number): number {
 
 interface Alert { type: 'forgot_out' | 'ot_daily'; empName: string; detail: string; detailFr: string }
 
+// The employee's own copy of a forgot-to-clock-out alert. Only to an employee with an active portal login (so the
+// link works and they expect mail from PunchClock), once per open IN (the same sent_alerts dedupe as the owners).
+// It says when they clocked in, in the company's time zone, and how to send the real clock-out time. Nothing here
+// writes a punch: the manager approves the request.
+function localWhen(iso: string, tz: string, lang: 'fr' | 'en'): string {
+  try {
+    return new Intl.DateTimeFormat(lang === 'fr' ? 'fr-CA' : 'en-CA', {
+      timeZone: tz, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false,
+    }).format(new Date(iso));
+  } catch {
+    return new Date(iso).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  }
+}
+function employeeForgotHtml(empName: string, companyName: string, inIso: string, tz: string): string {
+  const fr = localWhen(inIso, tz, 'fr'), en = localWhen(inIso, tz, 'en');
+  const link = 'https://www.punchclock.ca/employee.html#missed';
+  const btn = (label: string) => `<a href="${link}" style="display:inline-block;background:#1B2A5C;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 18px;border-radius:9px">${label}</a>`;
+  return `<!DOCTYPE html><html><body style="margin:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 16px"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+  <tr><td style="background:#ffffff;border-bottom:1px solid #e2e8f0;padding:20px 28px"><div style="font-size:18px;font-weight:700;color:#1B2A5C"><img src="https://www.punchclock.ca/icon-192.png" width="26" height="26" alt="" style="vertical-align:middle;border-radius:6px;margin-right:8px">PunchClock Crew</div></td></tr>
+  <tr><td style="padding:22px 28px">
+    <h1 style="margin:0 0 10px;font-size:18px;color:#1e293b">Toujours pointé ? Avez-vous oublié de pointer votre sortie ?</h1>
+    <p style="margin:0 0 12px;font-size:14px;color:#334155;line-height:1.6">Bonjour ${esc(empName)}, vous avez pointé votre arrivée chez ${esc(companyName)} le ${esc(fr)}, et aucune sortie n’est enregistrée.</p>
+    <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6">Si vous avez oublié, envoyez votre vraie heure de départ. Votre gestionnaire l’approuvera. Si vous travaillez encore, ignorez ce message.</p>
+    <p style="margin:0 0 6px">${btn('Signaler mon heure de sortie')}</p>
+    <p style="margin:0 0 4px;font-size:12px;color:#64748b">Ou dans l’application PunchClock Crew, à l’accueil.</p>
+    <div style="border-top:1px solid #e2e8f0;margin:20px 0 16px"></div>
+    <h1 style="margin:0 0 10px;font-size:18px;color:#1e293b">Still clocked in? Did you forget to clock out?</h1>
+    <p style="margin:0 0 12px;font-size:14px;color:#334155;line-height:1.6">Hi ${esc(empName)}, you clocked in at ${esc(companyName)} on ${esc(en)}, and no clock-out has been recorded.</p>
+    <p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6">If you forgot, send the time you actually left. Your manager will approve it. If you are still working, ignore this message.</p>
+    <p style="margin:0 0 6px">${btn('Report my clock-out time')}</p>
+    <p style="margin:0;font-size:12px;color:#64748b">Or in the PunchClock Crew app, on the Home screen.</p>
+  </td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 function alertEmailHtml(adminName: string, companyName: string, alerts: Alert[]): string {
   const ico = (t: string) => t === 'forgot_out' ? '⏱️' : '⚠️';
   const rowsFr = alerts.map((a) => `<tr><td style="padding:9px 0;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0">${ico(a.type)} <strong>${esc(a.empName)}</strong> — ${esc(a.detailFr)}</td></tr>`).join('');
@@ -126,7 +163,7 @@ Deno.serve(async (req) => {
     const now = Date.now();
     const sinceIso = new Date(now - 3 * 864e5).toISOString();
     const [coRes, empRes, punchRes] = await Promise.all([
-      rest('companies?select=id,name,admin_id,track_overtime,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours'),
+      rest('companies?select=id,name,admin_id,track_overtime,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,digest_timezone'),
       rest('employees?active=eq.true&select=id,name,company_id,site_id'),
       rest(`punches?punched_at=gte.${sinceIso}&select=id,emp_id,company_id,type,punch_date,punched_at&order=punched_at.asc`),
     ]);
@@ -235,7 +272,7 @@ Deno.serve(async (req) => {
             employee_ids: [c.emp_id],
             title: '⏱️ Still clocked in? / Toujours pointé?',
             body: "You're still clocked in — don't forget to clock out. / Oubli de pointer la sortie?",
-            data: { type: 'punch', v: 1 }, // the employee app opens Home, where the clock button is
+            data: { type: 'forgot_out', v: 1 }, // the employee app opens Home, where the "forgot to clock out?" card is
           }),
         }).catch(() => {})
       )
@@ -243,6 +280,31 @@ Deno.serve(async (req) => {
     // @ts-ignore EdgeRuntime is a Supabase Edge Functions global
     if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(pushJob);
     else await pushJob;
+
+    // The employee's own email for a forgot-to-clock-out alert (see employeeForgotHtml). Recipient and name come from
+    // the database, never from the request; one per open IN through the same `fresh` dedupe.
+    let empEmailed = 0;
+    const forgotFresh = fresh.filter((c) => c.alert_type === 'forgot_out');
+    if (forgotFresh.length) {
+      const ids = [...new Set(forgotFresh.map((c) => c.emp_id))].filter((x) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 200);
+      const portalRes = ids.length
+        ? await rest(`employee_portal?employee_id=in.(${ids.join(',')})&status=eq.active&select=employee_id,email`)
+        : null;
+      const portal: Array<{ employee_id: string; email: string | null }> = portalRes && portalRes.ok ? await portalRes.json() : [];
+      const mailOf: Record<string, string> = {};
+      for (const p of portal) if (p.email && /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(p.email)) mailOf[p.employee_id] = p.email;
+      for (const c of forgotFresh) {
+        const to = mailOf[c.emp_id];
+        const co = coById[c.company_id];
+        const last = byEmp[c.emp_id]?.find((p) => p.id === c.ref_key);
+        if (!to || !co || !last) continue;
+        try {
+          await sendEmail(to, `Toujours pointé ? / Still clocked in? — ${String(co.name ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 80)}`,
+            employeeForgotHtml(c.alert.empName, co.name, last.punched_at, (co as { digest_timezone?: string }).digest_timezone || 'America/Toronto'));
+          empEmailed++;
+        } catch (e) { console.error('punch-alerts: employee mail failed:', (e as Error).message.slice(0, 80)); }
+      }
+    }
 
     // Fan out per company: the owner and every co-admin see all of it; a manager sees only the
     // alerts for the sites assigned to them, so nobody gets another site's data.
@@ -305,7 +367,7 @@ Deno.serve(async (req) => {
       if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(adminPushAll);
       else await adminPushAll;
     }
-    return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, failed }),
+    return new Response(JSON.stringify({ ok: true, candidates: candidates.length, fresh: fresh.length, emailed, failed, empEmailed }),
       { headers: { ...CORS, 'Content-Type': 'application/json' } });
   } catch (e) {
     console.error('punch-alerts error:', (e as Error).message);

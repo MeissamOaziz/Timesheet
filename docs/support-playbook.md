@@ -189,6 +189,12 @@ the previous 48 hours.
   server. If the punch did go through it says "Clocked in/out"; if not it says "No connection. Your punch was NOT recorded".
   Before that fix: ask the employee to reload the portal (the punch is usually already recorded) and check Activity; add a
   missed punch only if it is really absent.
+- **Forgot to clock in or out (since 2026-11-24):** the employee reports the real time themselves: in the phone app (Home shows
+  "Still clocked in?" after 12 hours, or Hours > Report a missed punch) or in the employee portal (My Hours > Report a missed
+  punch). Up to 14 days back. The forgot-to-clock-out alert now also emails the employee (when they have a portal login) and
+  pushes to their phone, both leading to that form. The manager approves it under Requests. If a manager already added a punch
+  by hand for that shift, approving shows both times and asks which one is right (the other is removed, or the request is
+  declined). Older than 14 days: the manager adds it from Activity.
 - **Tablet shows "Error saving punch: Failed to fetch" (weak Wi-Fi), 2026-11-18:** the punch may be stored with only its reply lost.
   The terminal now re-reads the server before reporting a failure and shows the normal green confirmation if the punch is there;
   it never re-sends a punch by itself. If a red error stays, nothing reached the server: tap again once the Wi-Fi is back. Before

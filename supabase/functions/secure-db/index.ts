@@ -1119,8 +1119,9 @@ async function notifyRequestAction(
       // The report just filed at this terminal: same site, and the PIN proof of the employee who filed it.
       allowed = row.site_id === kioskSiteId && typeof row.emp_id === 'string' && TOKEN_RE.test(row.emp_id) &&
         await verifyPinProof(pinProof, row.emp_id as string, kioskSiteId);
-    } else if (kind === 'time_off') {
-      // The request just filed from the employee portal: the portal session must be that employee's.
+    } else if (kind === 'time_off' || kind === 'missed_punch') {
+      // The request just filed from the employee portal or app (requested_by 'employee', written only by
+      // portal_request_time_off / portal_request_missed_punch): the portal session must be that employee's.
       const tok = strOf(b.portal_token, 200);
       if (TOKEN_RE.test(tok) && row.requested_by === 'employee' && typeof row.emp_id === 'string') {
         const emp = await planRpc('_resolve_portal_session', { p_token: tok });
