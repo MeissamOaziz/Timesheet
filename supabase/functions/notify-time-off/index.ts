@@ -218,6 +218,7 @@ ${headFr}
             employee_ids: [row.emp_id],
             title: approved ? '✅ Time off approved / congé approuvé' : '❌ Time off not approved / refusé',
             body: `${dates2}. / ${dates2}.`,
+            data: { type: 'time_off', v: 1 }, // the employee app opens its Time off tab
           }),
         }).catch(() => {});
         // @ts-ignore EdgeRuntime is a Supabase Edge Functions global

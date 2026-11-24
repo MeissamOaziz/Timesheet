@@ -236,6 +236,7 @@ Deno.serve(async (req: Request) => {
             body: approved
               ? `Recorded ${recorded}. / Enregistré ${recorded}.`
               : `Your ${label} request was not approved. / Votre demande n'a pas été approuvée.`,
+            data: { type: 'missed_punch', v: 1 }, // the employee app opens its Hours tab
           }),
         }).catch(() => {});
         // @ts-ignore EdgeRuntime is a Supabase Edge Functions global

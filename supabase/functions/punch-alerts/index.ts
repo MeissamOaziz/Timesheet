@@ -235,6 +235,7 @@ Deno.serve(async (req) => {
             employee_ids: [c.emp_id],
             title: '⏱️ Still clocked in? / Toujours pointé?',
             body: "You're still clocked in — don't forget to clock out. / Oubli de pointer la sortie?",
+            data: { type: 'punch', v: 1 }, // the employee app opens Home, where the clock button is
           }),
         }).catch(() => {})
       )
