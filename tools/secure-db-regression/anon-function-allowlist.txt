@@ -71,3 +71,4 @@ unsubscribe_weekly_digest
 verify_admin_login
 verify_code_and_register
 verify_code_and_reset
+portal_issue_watch_session
