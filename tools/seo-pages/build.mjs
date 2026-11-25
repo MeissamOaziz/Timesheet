@@ -455,6 +455,236 @@ const PAGES = [
       ],
     },
   },
+  // ── Industry pages, added 2026-11-24 for the trades that show up in Search Console (restaurants, retail,
+  // factories). They describe how the product fits the trade. No customer names, no "used by N restaurants",
+  // nothing about a trade's labour rules (tips, decrees), and each says what the product does not do.
+  {
+    pair: 'restaurants',
+    en: {
+      slug: 'time-clock-for-restaurants',
+      title: 'Time clock app for restaurants and cafés | PunchClock Crew',
+      desc: 'A time clock for restaurants, cafés and bars: staff punch in with a PIN on your own tablet by the kitchen door, with breaks, evening hours, weekly schedules and hours ready for your accountant. Free for up to 10 employees.',
+      h1: 'A time clock for restaurants, cafés and bars',
+      lead: 'In a restaurant, shifts start at different times, people cover for each other, and nobody has time to fill in a time sheet. With PunchClock Crew, each person punches in with a PIN on your own tablet, and the hours add themselves up.',
+      sections: [
+        ['On the floor and in the kitchen', [
+          'One tablet you already own, by the kitchen door or the staff entrance. Each person picks their name, punches in or out and confirms with a 4-digit PIN.',
+          'The dashboard shows who is on shift right now, from any web browser.',
+          'Someone forgot to punch out after closing? A manager fixes it, and the correction stays in the audit log (Starter plan and up).',
+        ]],
+        ['Shifts, breaks and evenings', [
+          'Overtime follows the daily and weekly thresholds you set, and evening hours can be reported separately (Starter plan and up).',
+          'Meal breaks: a Break button on the clock-in screen, separate from punching out, and break time shows as its own line in reports (Growth plan and up).',
+          'Weekly schedule with the Scheduling add-on: build the week, email it to the team, and each person sees their shifts in their portal or in their own calendar.',
+          'Time-off requests come in through the employee portal, and approved time off shows where you plan (paid plans).',
+        ]],
+        ['At the end of the pay period', [
+          'Hours per employee for any date range as a PDF, and as Excel or CSV from the Starter plan.',
+          'An automatic end-of-period email with a payroll summary for your accountant (Starter plan and up).',
+        ]],
+        ['Two locations or more', [
+          'Each restaurant has its own clock-in page and its own staff, under one account: 2 sites on Starter, 6 on Growth, no limit on Business.',
+        ]],
+        ['What it does not do', [
+          'PunchClock Crew does not run payroll, does not handle tips or tip sharing, and does not connect to a point-of-sale system. It tracks hours, breaks, time off and schedules.',
+        ]],
+      ],
+      faq: [
+        ['Can a small café use it for free?', 'Yes. The Free plan covers 1 site and up to 10 active employees, with PIN clock-in, the dashboard, the activity log and PDF reports, with no credit card and no end date.'],
+        ['Do staff need a phone or an app?', 'No. They punch on the shared tablet with their PIN. Clock-in from a phone exists for those who need it, from the Starter plan.'],
+        ['Does it handle tips?', 'No. PunchClock Crew tracks hours, breaks and schedules. Tips are handled in your payroll or point-of-sale system.'],
+        ['Does it connect to my point-of-sale system?', 'No. Hours are exported as PDF, Excel or CSV, which your accountant or payroll software can read.'],
+      ],
+    },
+    fr: {
+      slug: 'pointage-restaurant',
+      title: 'Application de pointage pour restaurants et cafés | PunchClock Crew',
+      desc: 'Un punch pour les restaurants, cafés et bars : le personnel pointe par NIP sur votre propre tablette près de la cuisine, avec les pauses, les heures de soir, l’horaire de la semaine et les heures prêtes pour votre comptable. Gratuit jusqu’à 10 employés.',
+      h1: 'Le pointage pour les restaurants, les cafés et les bars',
+      lead: 'Dans un restaurant, les quarts commencent à des heures différentes, on se remplace entre collègues, et personne n’a le temps de remplir une feuille de temps. Avec PunchClock Crew, chacun pointe avec un NIP sur votre propre tablette, et les heures s’additionnent toutes seules.',
+      sections: [
+        ['En salle et en cuisine', [
+          'Une tablette que vous avez déjà, près de la porte de la cuisine ou de l’entrée du personnel. Chacun choisit son nom, pointe son arrivée ou son départ et confirme avec un NIP à 4 chiffres.',
+          'Le tableau de bord montre qui est en poste en ce moment, à partir de n’importe quel navigateur web.',
+          'Quelqu’un a oublié de pointer sa sortie à la fermeture? Un gestionnaire corrige, et la correction reste au journal d’audit (plan Débutant et plus).',
+        ]],
+        ['Quarts, pauses et soirées', [
+          'Les heures supplémentaires suivent les seuils par jour et par semaine que vous réglez, et les heures de soir peuvent être présentées à part (plan Débutant et plus).',
+          'Pauses repas : un bouton Pause à l’écran de pointage, distinct de la sortie, et le temps de pause a sa propre ligne dans les rapports (plan Croissance et plus).',
+          'Horaire de la semaine avec le module Planification : préparez la semaine, envoyez-la à l’équipe par courriel, et chacun voit ses quarts dans son portail ou dans son propre calendrier.',
+          'Les demandes de congé arrivent par le portail employé, et les congés approuvés apparaissent là où vous planifiez (plans payants).',
+        ]],
+        ['À la fin de la période de paie', [
+          'Les heures par employé pour n’importe quelle période en PDF, et en Excel ou CSV dès le plan Débutant.',
+          'Un courriel automatique de fin de période avec un sommaire de paie pour votre comptable (plan Débutant et plus).',
+        ]],
+        ['Deux établissements ou plus', [
+          'Chaque restaurant a sa propre page de pointage et son personnel, dans un même compte : 2 sites au plan Débutant, 6 au plan Croissance, sans limite au plan Entreprise.',
+        ]],
+        ['Ce qu’il ne fait pas', [
+          'PunchClock Crew ne produit pas la paie, ne gère pas les pourboires ni leur partage, et ne se connecte pas à un système de point de vente. Il suit les heures, les pauses, les congés et les horaires.',
+        ]],
+      ],
+      faq: [
+        ['Un petit café peut-il l’utiliser gratuitement?', 'Oui. Le plan Gratuit couvre 1 site et jusqu’à 10 employés actifs, avec le pointage par NIP, le tableau de bord, le journal d’activité et les rapports PDF, sans carte de crédit et sans date de fin.'],
+        ['Le personnel a-t-il besoin d’un téléphone ou d’une application?', 'Non. Chacun pointe sur la tablette partagée avec son NIP. Le pointage sur téléphone existe pour ceux qui en ont besoin, dès le plan Débutant.'],
+        ['Est-ce que ça gère les pourboires?', 'Non. PunchClock Crew suit les heures, les pauses et les horaires. Les pourboires se gèrent dans votre système de paie ou de point de vente.'],
+        ['Est-ce que ça se connecte à mon système de point de vente?', 'Non. Les heures sont exportées en PDF, Excel ou CSV, que votre comptable ou votre logiciel de paie peut lire.'],
+      ],
+    },
+  },
+  {
+    pair: 'retail',
+    en: {
+      slug: 'time-clock-for-retail-stores',
+      title: 'Time clock app for retail stores and boutiques | PunchClock Crew',
+      desc: 'A time clock for retail: a clock-in page at each store, every store’s hours in one account, schedules and time off for part-time staff, and reports ready for payroll. Free for one store and up to 10 employees.',
+      h1: 'A time clock for retail stores and boutiques',
+      lead: 'A store runs on part-time staff, changing shifts and often more than one location. PunchClock Crew keeps the hours of every store in one account, with a clock-in page at each one.',
+      sections: [
+        ['In each store', [
+          'A tablet you already own near the back door, or the computer in the back office: the clock-in page runs in any web browser.',
+          'Each employee picks their name, punches in or out and confirms with a 4-digit PIN.',
+          'The dashboard shows, store by store, who is at work right now.',
+        ]],
+        ['Several stores, one account', [
+          'Each store has its own clock-in page and its own staff: 2 sites on the Starter plan, 6 on Growth, no limit on Business.',
+          'Geofencing keeps punches at the store: with a zone around the address, a punch from outside it is blocked (Starter plan and up).',
+          'Several companies under one account from the Growth plan.',
+        ]],
+        ['Part-time staff and changing shifts', [
+          'Weekly schedule with the Scheduling add-on: build the week, email it to the team, and each person can add their shifts to their own calendar.',
+          'Each employee sees their own hours and schedule in the employee portal, and asks for time off there (paid plans).',
+          'Approved time off shows where you plan, so you do not schedule someone who is away.',
+        ]],
+        ['At the end of the pay period', [
+          'Hours per employee and per store for any date range as a PDF, and as Excel or CSV from the Starter plan.',
+          'Overtime, with the daily and weekly thresholds you set, is separated from regular hours (Starter plan and up).',
+        ]],
+        ['What it does not do', [
+          'PunchClock Crew does not run payroll and does not connect to a cash register or point-of-sale system.',
+        ]],
+      ],
+      faq: [
+        ['How many employees can I have?', 'Up to 10 active employees on the Free plan, 25 on Starter, 60 on Growth, and no limit on Business.'],
+        ['Can it run on the store computer?', 'Yes. The clock-in page runs in a web browser on a Windows PC, a Mac, an iPad or an Android tablet.'],
+        ['Can employees see their schedule on their phone?', 'Yes, with the Scheduling add-on: in their employee portal, by email when you send the schedule, and in their own calendar.'],
+        ['Does it connect to my cash register?', 'No. Hours are exported as PDF, Excel or CSV for your payroll software or your accountant.'],
+      ],
+    },
+    fr: {
+      slug: 'pointage-commerce-de-detail',
+      title: 'Application de pointage pour commerces et boutiques | PunchClock Crew',
+      desc: 'Un punch pour le commerce de détail : une page de pointage dans chaque magasin, les heures de tous les magasins dans un même compte, horaires et congés pour le personnel à temps partiel, et rapports prêts pour la paie. Gratuit pour un magasin et jusqu’à 10 employés.',
+      h1: 'Le pointage pour les commerces de détail et les boutiques',
+      lead: 'Un magasin fonctionne avec du personnel à temps partiel, des quarts qui changent et souvent plus d’une adresse. PunchClock Crew garde les heures de tous vos magasins dans un même compte, avec une page de pointage dans chacun.',
+      sections: [
+        ['Dans chaque magasin', [
+          'Une tablette que vous avez déjà près de la porte arrière, ou l’ordinateur de l’arrière-boutique : la page de pointage fonctionne dans n’importe quel navigateur web.',
+          'Chaque employé choisit son nom, pointe son arrivée ou son départ et confirme avec un NIP à 4 chiffres.',
+          'Le tableau de bord montre, magasin par magasin, qui est au travail en ce moment.',
+        ]],
+        ['Plusieurs magasins, un seul compte', [
+          'Chaque magasin a sa propre page de pointage et son personnel : 2 sites au plan Débutant, 6 au plan Croissance, sans limite au plan Entreprise.',
+          'Le géorepérage garde les pointages au magasin : avec une zone autour de l’adresse, un pointage fait à l’extérieur est bloqué (plan Débutant et plus).',
+          'Plusieurs compagnies dans un même compte dès le plan Croissance.',
+        ]],
+        ['Temps partiel et quarts qui changent', [
+          'Horaire de la semaine avec le module Planification : préparez la semaine, envoyez-la à l’équipe par courriel, et chacun peut ajouter ses quarts à son propre calendrier.',
+          'Chaque employé voit ses heures et son horaire dans le portail employé, et y fait ses demandes de congé (plans payants).',
+          'Les congés approuvés apparaissent là où vous planifiez, pour ne pas mettre à l’horaire une personne absente.',
+        ]],
+        ['À la fin de la période de paie', [
+          'Les heures par employé et par magasin pour n’importe quelle période en PDF, et en Excel ou CSV dès le plan Débutant.',
+          'Les heures supplémentaires, selon les seuils par jour et par semaine que vous réglez, sont séparées des heures normales (plan Débutant et plus).',
+        ]],
+        ['Ce qu’il ne fait pas', [
+          'PunchClock Crew ne produit pas la paie et ne se connecte pas à une caisse ni à un système de point de vente.',
+        ]],
+      ],
+      faq: [
+        ['Combien d’employés puis-je avoir?', 'Jusqu’à 10 employés actifs au plan Gratuit, 25 au plan Débutant, 60 au plan Croissance, et sans limite au plan Entreprise.'],
+        ['Est-ce que ça fonctionne sur l’ordinateur du magasin?', 'Oui. La page de pointage fonctionne dans un navigateur web, sur un PC Windows, un Mac, un iPad ou une tablette Android.'],
+        ['Les employés peuvent-ils voir leur horaire sur leur téléphone?', 'Oui, avec le module Planification : dans leur portail employé, par courriel quand vous envoyez l’horaire, et dans leur propre calendrier.'],
+        ['Est-ce que ça se connecte à ma caisse?', 'Non. Les heures sont exportées en PDF, Excel ou CSV pour votre logiciel de paie ou votre comptable.'],
+      ],
+    },
+  },
+  {
+    pair: 'factories',
+    en: {
+      slug: 'time-clock-for-manufacturing',
+      title: 'Time clock app for factories and workshops | PunchClock Crew',
+      desc: 'A time clock for plants and workshops: employees punch with a PIN on your own tablet at the entrance, overtime and evening hours are calculated, visitors sign in, and hours go to payroll. No punch machine, no cards, no badges.',
+      h1: 'A time clock for factories and workshops',
+      lead: 'A plant needs everyone punched in at the start of the shift, overtime counted properly, and a record of who is in the building. PunchClock Crew does this on your own tablet at the entrance, with no punch machine, cards or badges.',
+      sections: [
+        ['At the plant entrance', [
+          'A tablet or computer you already own at the door. Each employee picks their name, punches in or out and confirms with a 4-digit PIN.',
+          'The dashboard shows who is in right now, from the office.',
+          'Several buildings or plants: each site has its own clock-in page and its own employees, in the same account.',
+        ]],
+        ['Shifts and overtime', [
+          'Overtime follows the daily and weekly thresholds you set, and evening hours can be reported separately (Starter plan and up).',
+          'Meal breaks: a Break button separate from punching out, with break time on its own line in reports (Growth plan and up).',
+          'Shift schedules with the Scheduling add-on, including Québec statutory holidays in one click.',
+          'A manager fixes a forgotten punch, and every correction stays in the audit log (Starter plan and up).',
+        ]],
+        ['Visitors', [
+          'Visitor check-in on the same tablet: visitors sign in and out, and you see who is currently in the building (Growth plan and up).',
+        ]],
+        ['For payroll', [
+          'Hours per employee for any date range as a PDF, and as Excel or CSV from the Starter plan, with regular and overtime hours separated.',
+          'Up to 25 employees on Starter, 60 on Growth, and no limit on Business.',
+        ]],
+        ['What it does not do', [
+          'No badge reader, no fingerprint and no facial recognition: employees punch with a PIN. PunchClock Crew does not run payroll, and the clock-in page needs an internet connection.',
+        ]],
+      ],
+      faq: [
+        ['Do we need badges or a punch machine?', 'No. PunchClock Crew is software. Employees punch with a PIN on a tablet or computer you already have, and we do not sell any device.'],
+        ['Can it replace our punch cards?', 'Yes. Punches are recorded online and the hours are added up for you, so there are no cards to total at the end of the period.'],
+        ['What happens if the internet goes down?', 'The clock-in page needs an internet connection to record a punch. If the connection drops, a manager can add the missing punches afterwards (Starter plan and up).'],
+        ['Is it available in French?', 'Yes. The clock-in page, the app, the reports and the automatic emails work in French or English.'],
+      ],
+    },
+    fr: {
+      slug: 'pointage-usine-manufacturier',
+      title: 'Application de pointage pour usines et ateliers | PunchClock Crew',
+      desc: 'Un punch pour les usines et les ateliers : les employés pointent par NIP sur votre propre tablette à l’entrée, les heures supplémentaires et de soir sont calculées, les visiteurs s’enregistrent, et les heures vont à la paie. Sans pointeuse, sans cartes, sans badges.',
+      h1: 'Le pointage pour les usines et les ateliers',
+      lead: 'Une usine a besoin que tout le monde soit pointé au début du quart, que les heures supplémentaires soient bien comptées, et de savoir qui est dans le bâtiment. PunchClock Crew le fait sur votre propre tablette à l’entrée, sans pointeuse, sans cartes et sans badges.',
+      sections: [
+        ['À l’entrée de l’usine', [
+          'Une tablette ou un ordinateur que vous avez déjà, à la porte. Chaque employé choisit son nom, pointe son arrivée ou son départ et confirme avec un NIP à 4 chiffres.',
+          'Le tableau de bord montre qui est sur place en ce moment, à partir du bureau.',
+          'Plusieurs bâtiments ou usines : chaque site a sa propre page de pointage et ses employés, dans le même compte.',
+        ]],
+        ['Quarts et heures supplémentaires', [
+          'Les heures supplémentaires suivent les seuils par jour et par semaine que vous réglez, et les heures de soir peuvent être présentées à part (plan Débutant et plus).',
+          'Pauses repas : un bouton Pause distinct de la sortie, et le temps de pause a sa propre ligne dans les rapports (plan Croissance et plus).',
+          'Horaires de quarts avec le module Planification, y compris les jours fériés du Québec en un clic.',
+          'Un gestionnaire corrige un pointage oublié, et chaque correction reste au journal d’audit (plan Débutant et plus).',
+        ]],
+        ['Visiteurs', [
+          'Pointage des visiteurs sur la même tablette : les visiteurs s’enregistrent à l’arrivée et au départ, et vous voyez qui est dans le bâtiment (plan Croissance et plus).',
+        ]],
+        ['Pour la paie', [
+          'Les heures par employé pour n’importe quelle période en PDF, et en Excel ou CSV dès le plan Débutant, avec les heures normales et supplémentaires séparées.',
+          'Jusqu’à 25 employés au plan Débutant, 60 au plan Croissance, et sans limite au plan Entreprise.',
+        ]],
+        ['Ce qu’il ne fait pas', [
+          'Pas de lecteur de badges, pas d’empreinte digitale ni de reconnaissance faciale : les employés pointent avec un NIP. PunchClock Crew ne produit pas la paie, et la page de pointage a besoin d’une connexion Internet.',
+        ]],
+      ],
+      faq: [
+        ['Faut-il des badges ou une pointeuse?', 'Non. PunchClock Crew est un logiciel. Les employés pointent avec un NIP sur une tablette ou un ordinateur que vous avez déjà, et nous ne vendons aucun appareil.'],
+        ['Est-ce que ça remplace nos cartes de punch?', 'Oui. Les pointages sont enregistrés en ligne et les heures sont additionnées pour vous : plus de cartes à compiler à la fin de la période.'],
+        ['Que se passe-t-il si Internet tombe?', 'La page de pointage a besoin d’une connexion Internet pour enregistrer un pointage. Si la connexion tombe, un gestionnaire peut ajouter les pointages manquants par la suite (plan Débutant et plus).'],
+        ['Est-ce offert en français?', 'Oui. La page de pointage, l’application, les rapports et les courriels automatiques fonctionnent en français ou en anglais.'],
+      ],
+    },
+  },
   {
     pair: 'pricing',
     en: {
@@ -541,6 +771,34 @@ const HOME_FR = {
   },
 };
 
+// ── Screenshots. The images already exist in both languages under assets/screenshots (made by
+// tools/capture-screenshots.mjs from demo mode, so they never show a customer's data). A page shows up to two:
+// the first under the buttons, the second before the questions. Keyed by `pair` ('home' = /fr/).
+const SHOT_SIZE = { 'product-punch-mobile': [828, 1720], '12-geofence': [2880, 1780], '16-phone-clock-in': [2880, 1780], '15-time-off': [2880, 1048] }; // others 2880x1800
+const CAP = {
+  dashboard: { en: 'The dashboard: who is clocked in at each site, and the latest punches.', fr: 'Le tableau de bord : qui est pointé à chaque site, et les derniers pointages.' },
+  punch: { en: 'The clock-in page on your own tablet: pick your name, then IN or OUT.', fr: 'La page de pointage sur votre propre tablette : choisissez votre nom, puis ENTRÉE ou SORTIE.' },
+  reports: { en: 'A report for a pay period, with total and overtime hours, exported to Excel, CSV or PDF.', fr: 'Un rapport pour une période de paie, avec le total des heures et les heures supplémentaires, exporté en Excel, CSV ou PDF.' },
+  schedule: { en: 'The weekly schedule grid of the Scheduling add-on.', fr: 'La grille d’horaire de la semaine du module Planification.' },
+  activity: { en: 'The activity log: every punch, with Edit and Delete for a manager.', fr: 'Le journal d’activité : chaque pointage, avec Modifier et Supprimer pour un gestionnaire.' },
+  geofence: { en: 'A site’s settings: the zone on the map, its radius, and lenient or strict mode.', fr: 'Les réglages d’un site : la zone sur la carte, son rayon, et le mode souple ou strict.' },
+  phone: { en: 'Choosing who may clock in from their own phone, and from where.', fr: 'Choisir qui peut pointer avec son propre téléphone, et à partir d’où.' },
+  timeoff: { en: 'Adding time off for an employee.', fr: 'Ajouter un congé pour un employé.' },
+};
+const SHOTS = {
+  home: [['hero-dashboard', CAP.dashboard], ['product-punch', CAP.punch]],
+  quebec: [['hero-dashboard', CAP.dashboard]],
+  gps: [['12-geofence', CAP.geofence], ['16-phone-clock-in', CAP.phone]],
+  free: [['product-punch', CAP.punch]],
+  scheduling: [['product-schedule', CAP.schedule]],
+  software: [['hero-dashboard', CAP.dashboard], ['product-reports', CAP.reports]],
+  machine: [['product-punch', CAP.punch], ['product-activity', CAP.activity]],
+  field: [['16-phone-clock-in', CAP.phone], ['12-geofence', CAP.geofence]],
+  restaurants: [['product-punch', CAP.punch], ['product-schedule', CAP.schedule]],
+  retail: [['hero-dashboard', CAP.dashboard], ['15-time-off', CAP.timeoff]],
+  factories: [['product-punch', CAP.punch], ['product-reports', CAP.reports]],
+};
+
 // ── Rendering ─────────────────────────────────────────────────────────────────────────────────────
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const urlOf = (lang, slug) => `${SITE}/${lang}/${slug}/`;
@@ -559,6 +817,12 @@ function render(page, lang) {
   const signup = lang === 'fr' ? `${SITE}/?signup=1&lang=fr` : `${SITE}/?signup=1`;
   const demo = lang === 'fr' ? `${SITE}/?demo=1&lang=fr` : `${SITE}/?demo=1`;
   const related = PAGES.filter(x => x !== page).map(x => `<li><a href="${urlOf(lang, x[lang].slug)}">${esc(x[lang].h1)}</a></li>`).join('');
+  const shots = SHOTS[page.home ? 'home' : page.pair] || [];
+  const fig = i => {
+    if (!shots[i]) return '';
+    const [id, cap] = shots[i], [w, h] = SHOT_SIZE[id] || [2880, 1800];
+    return `  <figure><img src="/assets/screenshots/${id}-${lang}.webp" alt="${esc(cap[lang])}" width="${w}" height="${h}" loading="${i === 0 ? 'eager' : 'lazy'}" decoding="async"><figcaption>${esc(cap[lang])}</figcaption></figure>`;
+  };
   const sections = p.sections.map(([h, items]) =>
     `<h2>${esc(h)}</h2>` + (items.length > 1 ? `<ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : `<p>${esc(items[0])}</p>`)).join('\n');
   const pricing = p.pricing ? `<h2>${t.plansH}</h2><div class="plans">${PLANS[lang].map(pl =>
@@ -609,6 +873,7 @@ h1{font-size:clamp(26px,4.5vw,36px);line-height:1.2;margin:0 0 12px}h2{font-size
 .btn.primary{background:var(--accent);color:var(--accentText)}.btn.ghost{border:1px solid var(--line);color:var(--text)}
 ul{padding-left:20px}li{margin:4px 0}.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .plan{border:1px solid var(--line);border-radius:12px;padding:16px}.plan h3{margin:0}.price{font-size:20px;font-weight:800;margin:4px 0}.price small{font-size:13px;font-weight:600;color:var(--muted)}.lim{font-weight:600;font-size:14px}.plan p{font-size:14px;margin:6px 0 0}
+figure{margin:26px 0}figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:var(--bg)}figcaption{font-size:13px;color:var(--muted);margin-top:8px}
 footer{padding-top:24px;padding-bottom:40px;font-size:14px;color:var(--muted)}footer ul{list-style:none;padding:0}
 </style>
 </head>
@@ -622,8 +887,10 @@ footer{padding-top:24px;padding-bottom:40px;font-size:14px;color:var(--muted)}fo
   <h1>${esc(p.h1)}</h1>
   <p class="lead">${esc(p.lead)}</p>
   <div class="cta"><a class="btn primary" href="${signup}">${t.start}</a><a class="btn ghost" href="${demo}">${t.demo}</a></div>
+${fig(0)}
 ${sections}
 ${pricing}
+${fig(1)}
   <h2>${t.faq}</h2>
 ${faq}
   <div class="cta"><a class="btn primary" href="${signup}">${t.start}</a></div>
