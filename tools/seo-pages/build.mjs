@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SITE = 'https://www.punchclock.ca';
-const UPDATED = '2026-11-14';
+const UPDATED = '2026-11-24';
 
 // ── Plans (keep identical to the pricing page) ────────────────────────────────────────────────────
 const PLANS = {
@@ -285,9 +285,59 @@ const PAGES = [
   },
 ];
 
+// ── French home page (/fr/). Why: French used to exist only as the English page with ?lang=fr, translated in the
+// browser, so Google had no French page of its own to rank (Search Console, Nov 2026: 69% of impressions were French,
+// click rate 0.48%). Plain HTML like the topic pages; its buttons open the app in French. The English home stays `/`.
+// Same rules as above: only claims we can prove, prices identical to the pricing page, software only.
+const HOME_FR = {
+  home: true,
+  en: { slug: '' },
+  fr: {
+    slug: '',
+    title: 'Application de punch pour employés au Québec | PunchClock Crew',
+    desc: 'PunchClock Crew est une application de punch et de pointage des heures de travail pour les entreprises du Québec. Vos employés pointent par NIP sur votre propre tablette ou sur leur téléphone. Heures, heures supplémentaires, rapports de paie et horaires. Plan gratuit.',
+    h1: 'L’application de punch pour vos employés, conçue au Québec',
+    lead: 'PunchClock Crew est un logiciel de pointage des heures de travail. Vos employés pointent leur arrivée et leur sortie avec un NIP sur votre propre tablette, ou à partir de leur téléphone, et vous obtenez les heures prêtes pour la paie.',
+    pricing: true,
+    sections: [
+      ['Comment ça marche', [
+        'Ouvrez la page de pointage sur une tablette, un ordinateur ou un téléphone que vous avez déjà. Rien à acheter : PunchClock Crew est un logiciel.',
+        'Chaque employé pointe son arrivée et sa sortie avec un NIP à 4 chiffres.',
+        'Les heures sont calculées pour vous, et vous voyez en tout temps qui est au travail.',
+        'À la fin de la période, le rapport des heures est prêt pour la paie.',
+      ]],
+      ['Un système de pointage complet', [
+        'Plusieurs sites sous un même compte, chacun avec ses employés et sa propre page de pointage.',
+        'Pointage à distance sur le téléphone de l’employé, avec la position GPS et le géorepérage par site, pour les équipes sur la route ou sur les chantiers (plan Débutant et plus).',
+        'Portail employé : chacun voit ses heures et son horaire, demande un congé et signale un pointage oublié (plans payants).',
+        'Heures supplémentaires, correction des pointages et export Excel ou CSV pour la paie (plan Débutant et plus).',
+        'Suivi des pauses repas et pointage des visiteurs (plan Croissance et plus).',
+        'Horaires et quarts de travail avec le module Planification, y compris les jours fériés du Québec en un clic.',
+        'Tout fonctionne en français ou en anglais : l’application, les rapports et les courriels automatiques.',
+      ]],
+      ['Remplace la pointeuse et les feuilles de temps', [
+        'Pas d’horodateur mécanique, pas de cartes de punch, pas de feuilles de temps à retranscrire. Les pointages sont enregistrés en ligne, et chaque correction faite par un gestionnaire reste au journal d’audit.',
+      ]],
+      ['Pour qui', [
+        'Commerces, restaurants, cliniques, garages, fermes, entreprises d’entretien et autres équipes qui travaillent par quarts, au Québec et ailleurs au Canada.',
+      ]],
+    ],
+    faq: [
+      ['Est-ce que l’application de punch est gratuite?', 'Oui. Le plan Gratuit couvre 1 compagnie, 1 site et jusqu’à 10 employés actifs, sans carte de crédit. Les plans payants commencent à 19,49 $ par mois.'],
+      ['Faut-il acheter une pointeuse ou une tablette?', 'Non. PunchClock Crew est un logiciel : vous utilisez une tablette, un ordinateur ou un téléphone que vous avez déjà. Nous ne vendons aucun appareil.'],
+      ['Les employés peuvent-ils puncher avec leur téléphone?', 'Oui, avec le pointage à distance (plan Débutant et plus). La position GPS est enregistrée à chaque pointage, et vous pouvez définir une zone autour de chaque site.'],
+      ['Est-ce que le logiciel calcule les heures supplémentaires?', 'Oui, à partir du plan Débutant. Les rapports séparent les heures normales et les heures supplémentaires.'],
+      ['Peut-on essayer avant de payer?', 'Oui. Chaque nouveau compte essaie les fonctions payantes gratuitement pendant 14 jours, et une démo avec des données fictives est offerte.'],
+    ],
+  },
+};
+
 // ── Rendering ─────────────────────────────────────────────────────────────────────────────────────
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const urlOf = (lang, slug) => `${SITE}/${lang}/${slug}/`;
+// The home pages are `/` (English, the app's own landing page) and `/fr/` (HOME_FR above).
+const homeUrl = lang => (lang === 'fr' ? `${SITE}/fr/` : `${SITE}/`);
+const pageUrl = (page, lang) => (page.home ? homeUrl(lang) : urlOf(lang, page[lang].slug));
 const T = {
   en: { tagline: 'Punch, schedules and time off in one Canadian app', start: 'Start free', demo: 'Try the live demo', faq: 'Questions', more: 'More about PunchClock Crew', other: 'Français', home: 'Home', updated: 'Updated', plansH: 'Plans', addonH: 'Add-on' },
   fr: { tagline: 'Pointage, horaires et congés dans une seule application québécoise', start: 'Commencer gratuitement', demo: 'Essayer la démo', faq: 'Questions', more: 'En savoir plus', other: 'English', home: 'Accueil', updated: 'Mis à jour le', plansH: 'Plans', addonH: 'Module' },
@@ -296,7 +346,7 @@ const T = {
 function render(page, lang) {
   const p = page[lang], o = page[lang === 'en' ? 'fr' : 'en'], other = lang === 'en' ? 'fr' : 'en';
   const t = T[lang];
-  const home = lang === 'fr' ? `${SITE}/?lang=fr` : `${SITE}/`;
+  const home = homeUrl(lang);
   const signup = lang === 'fr' ? `${SITE}/?signup=1&lang=fr` : `${SITE}/?signup=1`;
   const demo = lang === 'fr' ? `${SITE}/?demo=1&lang=fr` : `${SITE}/?demo=1`;
   const related = PAGES.filter(x => x !== page).map(x => `<li><a href="${urlOf(lang, x[lang].slug)}">${esc(x[lang].h1)}</a></li>`).join('');
@@ -310,7 +360,7 @@ function render(page, lang) {
   const faqItems = p.faq.filter((f) => inWindow(f[2]));
   const faq = faqItems.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('\n');
   const ld = [
-    { '@context': 'https://schema.org', '@type': 'WebPage', name: p.title, description: p.desc, url: urlOf(lang, p.slug), inLanguage: lang === 'fr' ? 'fr-CA' : 'en-CA', dateModified: UPDATED,
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: p.title, description: p.desc, url: pageUrl(page, lang), inLanguage: lang === 'fr' ? 'fr-CA' : 'en-CA', dateModified: UPDATED,
       isPartOf: { '@type': 'WebSite', name: 'PunchClock Crew', url: SITE },
       about: { '@type': 'SoftwareApplication', name: 'PunchClock Crew', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', url: SITE } },
     { '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang === 'fr' ? 'fr-CA' : 'en-CA',
@@ -323,14 +373,14 @@ function render(page, lang) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(p.title)}</title>
 <meta name="description" content="${esc(p.desc)}">
-<link rel="canonical" href="${urlOf(lang, p.slug)}">
-<link rel="alternate" hreflang="${lang === 'fr' ? 'fr-CA' : 'en-CA'}" href="${urlOf(lang, p.slug)}">
-<link rel="alternate" hreflang="${other === 'fr' ? 'fr-CA' : 'en-CA'}" href="${urlOf(other, o.slug)}">
-<link rel="alternate" hreflang="x-default" href="${urlOf('en', page.en.slug)}">
+<link rel="canonical" href="${pageUrl(page, lang)}">
+<link rel="alternate" hreflang="${lang === 'fr' ? 'fr-CA' : 'en-CA'}" href="${pageUrl(page, lang)}">
+<link rel="alternate" hreflang="${other === 'fr' ? 'fr-CA' : 'en-CA'}" href="${pageUrl(page, other)}">
+<link rel="alternate" hreflang="x-default" href="${pageUrl(page, 'en')}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(p.title)}">
 <meta property="og:description" content="${esc(p.desc)}">
-<meta property="og:url" content="${urlOf(lang, p.slug)}">
+<meta property="og:url" content="${pageUrl(page, lang)}">
 <meta property="og:image" content="${SITE}/og-image.png">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -356,7 +406,7 @@ footer{padding-top:24px;padding-bottom:40px;font-size:14px;color:var(--muted)}fo
 <body>
 <header>
   <a class="brand" href="${home}"><img src="/icon-192.png" alt="" width="34" height="34">PunchClock Crew</a>
-  <nav><a href="${home}">${t.home}</a><a href="${urlOf(lang, PAGES.find(x => x.pair === 'pricing')[lang].slug)}">${lang === 'fr' ? 'Tarifs' : 'Pricing'}</a><a href="${urlOf(other, o.slug)}" hreflang="${other}">${t.other}</a></nav>
+  <nav><a href="${home}">${t.home}</a><a href="${urlOf(lang, PAGES.find(x => x.pair === 'pricing')[lang].slug)}">${lang === 'fr' ? 'Tarifs' : 'Pricing'}</a><a href="${pageUrl(page, other)}" hreflang="${other}">${t.other}</a></nav>
 </header>
 <main>
   <p class="tag">${esc(t.tagline)}</p>
@@ -387,7 +437,7 @@ function llmsTxt() {
 
 Key facts:
 - Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds lunch breaks and visitor check-in); Business $79.49 (unlimited).
-- Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal, time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
+- Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal (schedule, hours, time off, and reporting a forgotten clock-in or clock-out for the manager to approve), time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
 - Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
 - Works in a web browser; no app install needed for the clock-in page.
@@ -398,6 +448,7 @@ Key facts:
 ${PAGES.map(x => line('en', x)).join('\n')}
 
 ## Pages (français)
+- [${HOME_FR.fr.h1}](${homeUrl('fr')}): ${HOME_FR.fr.desc}
 ${PAGES.map(x => line('fr', x)).join('\n')}
 
 ## Start
@@ -415,6 +466,8 @@ for (const page of PAGES) {
     written.push(urlOf(lang, page[lang].slug));
   }
 }
+writeFileSync(join(ROOT, 'fr', 'index.html'), render(HOME_FR, 'fr'));
+written.push(homeUrl('fr'));
 writeFileSync(join(ROOT, 'llms.txt'), llmsTxt());
 console.log(written.join('\n'));
 console.log('+ llms.txt');

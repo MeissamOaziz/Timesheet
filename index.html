@@ -38,9 +38,9 @@ if (window.top !== window.self) {
 }
 </script>
 
-<!-- Primary EN meta -->
-<title id="metaTitle">Logiciel de pointage pour équipes au Québec et au Canada | PunchClock Crew</title>
-<meta name="description" id="metaDesc" content="PunchClock Crew est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service (horaire, heures, congés), suivi des pauses repas, pointage visiteur, rapports de paie automatisés, planification des quarts. Essai gratuit.">
+<!-- Primary meta: English, like the page as served. updateMetaTags() swaps in French for ?lang=fr. -->
+<title id="metaTitle">Punch Clock App for Employees in Canada | PunchClock Crew</title>
+<meta name="description" id="metaDesc" content="PunchClock Crew is a simple punch clock app for Canadian businesses. Employees clock in and out with a PIN on your own tablet or from their phone. Hours, overtime, payroll reports and shift scheduling, in English and French. Free plan available.">
 <meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec, portail employé, employee self-service portal, employee portal app, portail libre-service, demande de congé en ligne, consulter son horaire en ligne, suivi des pauses repas, lunch break tracking, pointage visiteur, visitor check-in, visitor sign in software, who is in the building">
 <meta name="robots" content="index, follow">
 <meta name="author" content="PunchClock Crew">
@@ -49,25 +49,25 @@ if (window.top !== window.self) {
 <meta name="language" content="fr, en">
 
 <!-- Canonical + hreflang for bilingual SEO -->
-<link rel="canonical" href="https://www.punchclock.ca/">
-<link rel="alternate" hreflang="fr-CA" href="https://www.punchclock.ca/?lang=fr">
+<link rel="canonical" id="metaCanonical" href="https://www.punchclock.ca/">
+<link rel="alternate" hreflang="fr-CA" href="https://www.punchclock.ca/fr/">
 <link rel="alternate" hreflang="en-CA" href="https://www.punchclock.ca/">
 <link rel="alternate" hreflang="x-default" href="https://www.punchclock.ca/">
 
 <!-- Open Graph — bilingual -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.punchclock.ca/">
-<meta property="og:title" id="ogTitle" content="PunchClock Crew — Logiciel de pointage pour le Québec et le Canada">
-<meta property="og:description" id="ogDesc" content="Logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.">
+<meta property="og:title" id="ogTitle" content="PunchClock Crew — Punch Clock App for Employees in Canada">
+<meta property="og:description" id="ogDesc" content="A simple punch clock app for shift-based businesses. PIN clock-in on your own tablet or by phone, multi-site, an employee self-service portal, payroll reports and shift scheduling. Free plan available.">
 <meta property="og:image" content="https://www.punchclock.ca/og-image.png">
-<meta property="og:locale" content="fr_CA">
-<meta property="og:locale:alternate" content="en_CA">
+<meta property="og:locale" content="en_CA">
+<meta property="og:locale:alternate" content="fr_CA">
 <meta property="og:site_name" content="PunchClock Crew">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="twTitle" content="PunchClock Crew — Logiciel de pointage Québec &amp; Canada">
-<meta name="twitter:description" id="twDesc" content="Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit disponible.">
+<meta name="twitter:title" id="twTitle" content="PunchClock Crew — Punch Clock App for Employees">
+<meta name="twitter:description" id="twDesc" content="Simple punch clock app for shift-based businesses. PIN clock-in, employee self-service portal, automated reports, shift scheduling. Free plan available.">
 <meta name="twitter:image" content="https://www.punchclock.ca/og-image.png">
 
 <!-- Structured Data — bilingual SoftwareApplication schema -->
@@ -967,6 +967,10 @@ body.land-menu-open .land-sticky-cta{display:none;}
 .land-footer-links{display:flex;gap:18px;}
 .land-footer-links a{font-size:12px;color:var(--text2);text-decoration:none;cursor:pointer;}
 .land-footer-links a:hover{color:var(--text);}
+.land-footer-topics{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 18px;}
+.land-footer-topics a{font-size:12px;color:var(--text3);text-decoration:none;}
+.land-footer-topics a:hover{color:var(--text);}
+html[lang="fr"] .ft-en,html:not([lang="fr"]) .ft-fr{display:none;}
 /* ── LEGAL PAGES ── */
 .legal-page{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:7500;display:none;}
 .legal-page.show{display:block;}
@@ -1507,7 +1511,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:var(--r-xl);padding:5px 14px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:24px">
       <span data-i18n="land.badge">Now with automated payroll period reports</span>
     </div>
-    <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
+    <h1 data-i18n-html="land.heroTitle">The punch clock app that <span>actually works</span> for shift workers</h1>
     <p data-i18n="land.heroSub">PIN-based clock in/out on your own tablet, fixed at your location, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
     <!-- Feature pills -->
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px;margin-top:-8px">
@@ -2057,6 +2061,22 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <a onclick="showLegal('privacy')" data-i18n="land.privacyPolicy">Privacy Policy</a>
         <a onclick="hideLanding();navigate('login')" data-i18n="land.adminLogin">Admin Login</a>
         <a href="employee.html" data-i18n="land.portalLogin">Employee Portal</a>
+      </div>
+      <div class="land-footer-topics ft-en" lang="en">
+        <a href="/en/time-clock-app-quebec/">Punch clock app for Québec</a>
+        <a href="/en/gps-geofencing-time-clock/">GPS and geofencing</a>
+        <a href="/en/free-time-clock-app/">Free time clock app</a>
+        <a href="/en/employee-scheduling-app/">Employee scheduling</a>
+        <a href="/en/pricing/">Pricing</a>
+        <a href="/fr/" hreflang="fr">Français</a>
+      </div>
+      <div class="land-footer-topics ft-fr" lang="fr">
+        <a href="/fr/">Application de punch pour employés</a>
+        <a href="/fr/application-pointage-quebec/">Application de pointage au Québec</a>
+        <a href="/fr/pointage-gps-georeperage/">Pointage GPS et géorepérage</a>
+        <a href="/fr/application-pointage-gratuite/">Application de pointage gratuite</a>
+        <a href="/fr/logiciel-horaires-employes/">Logiciel d’horaires</a>
+        <a href="/fr/tarifs/">Tarifs</a>
       </div>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:8px" data-i18n="land.copyright">© 2026 PunchClock Crew. All rights reserved.</p>
@@ -18873,7 +18893,7 @@ en:{
 'land.howSchedTitle':'Employee Scheduling Add-On',
 'land.howSchedDesc':'Once your team is set up, unlock the Scheduling Add-On to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — all for $14.95/mo added to any paid plan.',
 'land.howSchedCta':'See pricing →',
-'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
+'land.heroTitle':'The punch clock app that <span>actually works</span> for shift workers',
 'land.heroSub':'PIN-based clock in/out on your own tablet, fixed at your location, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free forever: 1 site · up to 10 employees · PIN clock-in on your own tablet or computer',
@@ -20551,23 +20571,28 @@ function getUrlLang(){
 function updateMetaTags(lang){
   var isFr=lang==='fr';
   document.getElementById('htmlRoot').lang=lang;
+  // ?lang=fr still opens the app in French, but its main address for search engines is the real French page
+  // (/fr/, built by tools/seo-pages/build.mjs). Only when the address says so: a French browser on / stays on /.
+  var canon=document.getElementById('metaCanonical');
+  if(canon)canon.href=(isFr&&_cameWithLangFr)?'https://www.punchclock.ca/fr/':'https://www.punchclock.ca/';
   if(isFr){
-    document.getElementById('metaTitle').textContent='Logiciel de pointage pour équipes au Québec et au Canada | PunchClock Crew';
-    document.getElementById('metaDesc').content='PunchClock Crew est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service (horaire, heures, demandes de congé), rapports de paie automatisés, planification des quarts de travail. Essai gratuit, aucune carte de crédit requise.';
-    document.getElementById('ogTitle').content='PunchClock Crew — Logiciel de pointage Québec et Canada';
-    document.getElementById('ogDesc').content='Logiciel de pointage pour entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service, gestion multi-sites, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.';
-    document.getElementById('twTitle').content='PunchClock Crew — Logiciel de pointage Québec & Canada';
-    document.getElementById('twDesc').content='Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit.';
+    document.getElementById('metaTitle').textContent='Application de punch pour employés au Québec | PunchClock Crew';
+    document.getElementById('metaDesc').content='PunchClock Crew est une application de punch et de pointage des heures de travail pour les entreprises du Québec. Vos employés pointent par NIP sur votre propre tablette ou sur leur téléphone. Heures, temps supplémentaire, rapports de paie et horaires. Plan gratuit.';
+    document.getElementById('ogTitle').content='PunchClock Crew — Application de punch pour employés au Québec';
+    document.getElementById('ogDesc').content='Application de punch et logiciel de pointage pour les entreprises québécoises. Pointage par NIP sur votre propre tablette ou par téléphone, multi-sites, portail employé, rapports de paie, horaires. Plan gratuit.';
+    document.getElementById('twTitle').content='PunchClock Crew — Application de punch pour employés';
+    document.getElementById('twDesc').content='Application de punch simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, horaires. Plan gratuit.';
   } else {
-    document.getElementById('metaTitle').textContent='Time & Attendance Software for Shift Workforces in Canada | PunchClock Crew';
-    document.getElementById('metaDesc').content='PunchClock Crew is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, an employee self-service portal (schedule, hours, time-off requests), automated payroll reports, shift scheduling. Free plan available.';
-    document.getElementById('ogTitle').content='PunchClock Crew — Time & Attendance Software for Canada';
-    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, an employee self-service portal, payroll reports, shift scheduling, and a free plan to get started.';
-    document.getElementById('twTitle').content='PunchClock Crew — Time & Attendance Software';
-    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, an employee self-service portal, automated reports, shift scheduling. Free plan available.';
+    document.getElementById('metaTitle').textContent='Punch Clock App for Employees in Canada | PunchClock Crew';
+    document.getElementById('metaDesc').content='PunchClock Crew is a simple punch clock app for Canadian businesses. Employees clock in and out with a PIN on your own tablet or from their phone. Hours, overtime, payroll reports and shift scheduling, in English and French. Free plan available.';
+    document.getElementById('ogTitle').content='PunchClock Crew — Punch Clock App for Employees in Canada';
+    document.getElementById('ogDesc').content='A simple punch clock app for shift-based businesses. PIN clock-in on your own tablet or by phone, multi-site, an employee self-service portal, payroll reports and shift scheduling. Free plan available.';
+    document.getElementById('twTitle').content='PunchClock Crew — Punch Clock App for Employees';
+    document.getElementById('twDesc').content='Simple punch clock app for shift-based businesses. PIN clock-in, employee self-service portal, automated reports, shift scheduling. Free plan available.';
   }
 }
 
+var _cameWithLangFr=false; // the page was opened as ?lang=fr (initLang removes it from the address bar)
 function initLang(){
   // Priority: 1) URL param (?lang=fr) 2) stored preference 3) browser language
   var urlLang=getUrlLang();
@@ -20576,6 +20601,7 @@ function initLang(){
   _punchLang=_appLang;
   // If URL param was used, save it and clean URL
   if(urlLang){
+    _cameWithLangFr=urlLang==='fr';
     setStoredAdminLang(urlLang);
     try{
       var url=new URL(window.location.href);
