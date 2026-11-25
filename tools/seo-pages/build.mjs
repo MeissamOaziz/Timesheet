@@ -774,7 +774,7 @@ const HOME_FR = {
 // ── Screenshots. The images already exist in both languages under assets/screenshots (made by
 // tools/capture-screenshots.mjs from demo mode, so they never show a customer's data). A page shows up to two:
 // the first under the buttons, the second before the questions. Keyed by `pair` ('home' = /fr/).
-const SHOT_SIZE = { 'product-punch-mobile': [828, 1720], '12-geofence': [2880, 1780], '16-phone-clock-in': [2880, 1780], '15-time-off': [2880, 1048] }; // others 2880x1800
+const SHOT_SIZE = { 'product-punch-mobile': [828, 1720], '12-geofence': [2880, 1780], '16-phone-clock-in': [2880, 1780], '15-time-off': [2880, 1208] }; // others 2880x1800
 const CAP = {
   dashboard: { en: 'The dashboard: who is clocked in at each site, and the latest punches.', fr: 'Le tableau de bord : qui est pointé à chaque site, et les derniers pointages.' },
   punch: { en: 'The clock-in page on your own tablet: pick your name, then IN or OUT.', fr: 'La page de pointage sur votre propre tablette : choisissez votre nom, puis ENTRÉE ou SORTIE.' },
