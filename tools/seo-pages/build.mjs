@@ -246,6 +246,215 @@ const PAGES = [
       ],
     },
   },
+  // ── Added 2026-11-24 from Search Console: searches where the site showed on page 2 or 3 with no page that answers
+  // them directly. Each pair has its own angle so the pages do not compete: A = what the software does end to end,
+  // B = replacing a punch machine, C = crews who never pass by the office. Same rules: proven claims only, plan
+  // names and prices as on the pricing page, software only, and say plainly what the product does NOT do.
+  {
+    pair: 'software',
+    en: {
+      slug: 'time-and-attendance-software-canada',
+      title: 'Time and attendance software for Canadian small businesses | PunchClock Crew',
+      desc: 'Time and attendance software made in Canada: PIN or phone clock-in, live attendance, overtime, time off and payroll-ready reports, in English and French, priced in Canadian dollars. Free plan, no credit card.',
+      h1: 'Time and attendance software for Canadian small businesses',
+      lead: 'Time and attendance software records when each employee starts and stops, adds up the hours and prepares the report for payroll. PunchClock Crew does that for small businesses, with nothing to install and no hardware to buy.',
+      pricing: true,
+      sections: [
+        ['From clock-in to payroll report', [
+          'Clock-in: each employee punches with a 4-digit PIN on your own tablet or computer, or on their phone with remote clock-in (Starter plan and up).',
+          'Attendance: the dashboard shows who is at work right now, and the activity log keeps every punch.',
+          'Hours: totals per employee are calculated for you. Overtime, with the daily and weekly thresholds you set, and evening hours are added from the Starter plan.',
+          'Corrections: a manager fixes a forgotten or wrong punch, and every correction stays in the audit log (Starter plan and up).',
+          'Payroll: PDF reports for any date range, plus Excel or CSV export and an automatic end-of-period email with a summary for your accountant (Starter plan and up).',
+        ]],
+        ['What comes with it', [
+          'Time-off requests and an employee portal where each person sees their hours and schedule (paid plans).',
+          'Lunch-break tracking and visitor check-in (Growth plan and up).',
+          'Several sites from the Starter plan, and several companies under one account from the Growth plan.',
+          'Shift schedules with the Scheduling add-on, including Québec statutory holidays in one click.',
+          'English and French throughout: the app, the reports and the automatic emails.',
+        ]],
+        ['What it does not do', [
+          'PunchClock Crew does not run payroll: it prepares the hours, which you export to your payroll software or send to your accountant. It does not calculate statutory holiday pay either.',
+        ]],
+      ],
+      faq: [
+        ['How much does time and attendance software cost?', 'PunchClock Crew has a Free plan (1 site, up to 10 active employees) and paid plans at $19.49, $39.49 and $79.49 per month, in Canadian dollars.'],
+        ['Do I need to install anything?', 'No. It runs in a web browser, on a tablet, computer or phone you already have.'],
+        ['Does it follow the overtime rules of my province?', 'You set the daily and weekly overtime thresholds yourself, so they can match the rules that apply to your business. Overtime is included from the Starter plan.'],
+        ['Does it do payroll?', 'No. It calculates the hours and prepares the reports. Payroll is done in your payroll software or by your accountant, from the Excel, CSV or PDF export.'],
+        ['Is it available in French?', 'Yes. The app, the reports and the automatic emails work in French or English, and each person can switch language at any time.'],
+      ],
+    },
+    fr: {
+      slug: 'logiciel-de-pointage',
+      title: 'Logiciel de pointage des employés pour PME | PunchClock Crew',
+      desc: 'Un logiciel de pointage horaire pour les entreprises : pointage par NIP ou sur téléphone, présences en temps réel, heures supplémentaires, congés et rapports prêts pour la paie. Plan gratuit, sans carte de crédit.',
+      h1: 'Un logiciel de pointage simple pour les entreprises',
+      lead: 'Un logiciel de pointage enregistre l’heure d’arrivée et de départ de chaque employé, additionne les heures et prépare le rapport pour la paie. PunchClock Crew fait ce travail pour les PME, sans rien à installer et sans appareil à acheter.',
+      pricing: true,
+      sections: [
+        ['Du pointage au rapport de paie', [
+          'Pointage : chaque employé pointe avec un NIP à 4 chiffres sur votre propre tablette ou ordinateur, ou sur son téléphone avec le pointage à distance (plan Débutant et plus).',
+          'Présences : le tableau de bord montre en tout temps qui est au travail, et le journal d’activité garde chaque pointage.',
+          'Heures : le total par employé est calculé pour vous. Les heures supplémentaires, selon les seuils par jour et par semaine que vous réglez, et les heures de soir s’ajoutent dès le plan Débutant.',
+          'Corrections : un gestionnaire corrige un pointage oublié ou erroné, et chaque correction reste au journal d’audit (plan Débutant et plus).',
+          'Paie : rapports PDF pour n’importe quelle période, puis export Excel ou CSV et courriel automatique de fin de période avec un sommaire pour votre comptable (plan Débutant et plus).',
+        ]],
+        ['Ce qui s’ajoute au pointage', [
+          'Demandes de congé et portail employé, où chacun voit ses heures et son horaire (plans payants).',
+          'Suivi des pauses repas et pointage des visiteurs (plan Croissance et plus).',
+          'Plusieurs sites dès le plan Débutant, et plusieurs compagnies dans un même compte dès le plan Croissance.',
+          'Horaires de travail avec le module Planification, y compris les jours fériés du Québec en un clic.',
+          'Tout en français ou en anglais : l’application, les rapports et les courriels automatiques.',
+        ]],
+        ['Ce qu’il ne fait pas', [
+          'PunchClock Crew ne produit pas la paie : il prépare les heures, que vous exportez vers votre logiciel de paie ou envoyez à votre comptable. Il ne calcule pas non plus l’indemnité des jours fériés.',
+        ]],
+      ],
+      faq: [
+        ['Combien coûte un logiciel de pointage?', 'PunchClock Crew offre un plan Gratuit (1 site, jusqu’à 10 employés actifs) et des plans payants à 19,49 $, 39,49 $ et 79,49 $ par mois, en dollars canadiens.'],
+        ['Faut-il installer quelque chose?', 'Non. Le logiciel fonctionne dans un navigateur web, sur une tablette, un ordinateur ou un téléphone que vous avez déjà.'],
+        ['Le logiciel calcule-t-il les heures supplémentaires?', 'Oui, dès le plan Débutant. Vous réglez vous-même les seuils par jour et par semaine, pour qu’ils correspondent aux règles qui s’appliquent à votre entreprise.'],
+        ['Est-ce que le logiciel fait la paie?', 'Non. Il calcule les heures et prépare les rapports. La paie se fait dans votre logiciel de paie ou chez votre comptable, à partir de l’export Excel, CSV ou PDF.'],
+        ['Le logiciel est-il en français?', 'Oui. L’application, les rapports et les courriels automatiques fonctionnent en français ou en anglais, et chacun peut changer de langue en tout temps.'],
+      ],
+    },
+  },
+  {
+    pair: 'machine',
+    en: {
+      slug: 'online-punch-clock',
+      title: 'Online punch clock: replace the time clock machine | PunchClock Crew',
+      desc: 'An online punch clock that runs on a tablet or computer you already own: PIN clock-in, hours added up for you, PDF reports. No machine, no punch cards, no hardware to buy. Free for up to 10 employees.',
+      h1: 'An online punch clock on a tablet you already own',
+      lead: 'An online punch clock does the job of the time clock machine and its punch cards, with no machine to buy and no cards to add up. With PunchClock Crew, the punch clock is a web page open on your own tablet, fixed at the entrance.',
+      sections: [
+        ['What you need', [
+          'A tablet, computer or phone you already have, with a web browser and an internet connection: an iPad, an Android tablet, a Windows PC or a Mac.',
+          'A PunchClock Crew account. The Free plan is enough for 1 site and up to 10 active employees.',
+          'That is all. PunchClock Crew is software: we do not sell, rent or supply any device.',
+        ]],
+        ['How your employees punch', [
+          'The employee picks their name, punches in or out and confirms with their 4-digit PIN.',
+          'Each employee has their own PIN, and the page locks for a while after several wrong PINs.',
+          'The dashboard shows right away who is at work.',
+        ]],
+        ['What replaces the punch cards', [
+          'Hours are added up for you: no more cards to total by hand at the end of the period.',
+          'PDF reports for any date range, and Excel or CSV export for payroll from the Starter plan.',
+          'A manager fixes a forgotten punch, and the correction stays in the audit log (Starter plan and up).',
+          'Several locations: each site has its own clock-in page, and you see everything in the same account.',
+        ]],
+      ],
+      faq: [
+        ['Do I need to buy a punch clock machine?', 'No. PunchClock Crew is software. You use a tablet, computer or phone you already have, and we do not sell any device.'],
+        ['Does it work on a computer?', 'Yes. The clock-in page runs in a web browser on a Windows PC, a Mac, an iPad or an Android tablet.'],
+        ['What happens if the internet goes down?', 'The clock-in page needs an internet connection to record a punch. If the connection drops, a manager can add the missing punches afterwards (Starter plan and up).'],
+        ['Is it free?', 'The Free plan covers 1 company, 1 site and up to 10 active employees, with no credit card and no end date. Paid plans start at $19.49 per month in Canadian dollars.'],
+      ],
+    },
+    fr: {
+      slug: 'pointeuse-en-ligne',
+      title: 'Pointeuse en ligne : remplacez l’horodateur | PunchClock Crew',
+      desc: 'Une pointeuse en ligne qui fonctionne sur une tablette ou un ordinateur que vous avez déjà : pointage par NIP, heures additionnées pour vous, rapports PDF. Pas de machine, pas de cartes de punch, aucun appareil à acheter. Gratuit jusqu’à 10 employés.',
+      h1: 'Une pointeuse en ligne, sur une tablette que vous avez déjà',
+      lead: 'Une pointeuse en ligne fait le travail de l’horodateur et des cartes de punch, sans machine à acheter ni cartes à compiler. Avec PunchClock Crew, la pointeuse est une page web ouverte sur votre propre tablette, fixée à l’entrée.',
+      sections: [
+        ['Ce qu’il vous faut', [
+          'Une tablette, un ordinateur ou un téléphone que vous avez déjà, avec un navigateur web et une connexion Internet : un iPad, une tablette Android, un PC Windows ou un Mac.',
+          'Un compte PunchClock Crew. Le plan Gratuit suffit pour 1 site et jusqu’à 10 employés actifs.',
+          'C’est tout. PunchClock Crew est un logiciel : nous ne vendons, ne louons et ne fournissons aucun appareil.',
+        ]],
+        ['Comment vos employés pointent', [
+          'L’employé choisit son nom, pointe son arrivée ou son départ et confirme avec son NIP à 4 chiffres.',
+          'Chaque employé a son propre NIP, et la page se verrouille un moment après plusieurs NIP erronés.',
+          'Le tableau de bord montre tout de suite qui est au travail.',
+        ]],
+        ['Ce qui remplace les cartes de punch', [
+          'Les heures sont additionnées pour vous : plus de cartes à compiler à la main à la fin de la période.',
+          'Rapports PDF pour n’importe quelle période, et export Excel ou CSV pour la paie dès le plan Débutant.',
+          'Un gestionnaire corrige un pointage oublié, et la correction reste au journal d’audit (plan Débutant et plus).',
+          'Plusieurs emplacements : chaque site a sa propre page de pointage, et vous voyez tout dans le même compte.',
+        ]],
+      ],
+      faq: [
+        ['Faut-il acheter une pointeuse ou un horodateur?', 'Non. PunchClock Crew est un logiciel. Vous utilisez une tablette, un ordinateur ou un téléphone que vous avez déjà, et nous ne vendons aucun appareil.'],
+        ['Est-ce que ça fonctionne sur un ordinateur?', 'Oui. La page de pointage fonctionne dans un navigateur web, sur un PC Windows, un Mac, un iPad ou une tablette Android.'],
+        ['Que se passe-t-il si Internet tombe?', 'La page de pointage a besoin d’une connexion Internet pour enregistrer un pointage. Si la connexion tombe, un gestionnaire peut ajouter les pointages manquants par la suite (plan Débutant et plus).'],
+        ['Est-ce gratuit?', 'Le plan Gratuit couvre 1 compagnie, 1 site et jusqu’à 10 employés actifs, sans carte de crédit et sans date de fin. Les plans payants commencent à 19,49 $ par mois.'],
+      ],
+    },
+  },
+  {
+    pair: 'field',
+    en: {
+      slug: 'time-clock-for-field-crews',
+      title: 'Time clock app for field crews and job sites | PunchClock Crew',
+      desc: 'A time clock for crews who never pass by the office: employees punch on their own phone, each punch records the GPS location, with a zone per job site or location required anywhere. From $19.49/month CAD.',
+      h1: 'A time clock for field crews and job sites',
+      lead: 'When the crew does not pass by the office, a tablet at the entrance is not enough. With remote clock-in, each employee punches on their own phone, and you see where and when each punch was made.',
+      sections: [
+        ['How it works in the field', [
+          'You turn on remote clock-in and grant it to the employees who need it.',
+          'The employee opens their employee portal on their phone and punches in or out. Nothing to install.',
+          'Each punch records the GPS position, shown as a map pin in the activity log.',
+        ]],
+        ['One job site, or a different client every day', [
+          'A fixed job site: draw a zone around the address, from 10 m to 500 m. A punch from outside the zone is blocked, and the employee sees how far away they are.',
+          'A different client every day: set the site to Strict mode with no address. Location is then required on every punch, from anywhere, with no distance limit.',
+          'Several job sites: each site has its own employees. The Starter plan covers 2 sites, Growth 6, and Business has no limit.',
+        ]],
+        ['For the office', [
+          'The dashboard shows who is at work right now.',
+          'An employee who forgot to punch reports it from their portal, and you approve or deny it.',
+          'Hours and overtime are calculated, then exported to Excel or CSV for payroll.',
+        ]],
+        ['Good to know', [
+          'The phone needs an internet connection at the moment of the punch. Remote clock-in, geofencing and the employee portal are included from the Starter plan ($19.49/month CAD).',
+        ]],
+      ],
+      faq: [
+        ['What should a time clock app for a construction or field crew have?', 'Look for phone clock-in with the GPS position, a zone per job site, and an export for payroll. PunchClock Crew includes all three from the Starter plan, at $19.49 per month in Canadian dollars, in English and French.'],
+        ['Do employees need to install an app?', 'No. They punch from the employee portal in their phone’s web browser.'],
+        ['Does it track employees all day?', 'No. The location is recorded only at the moment of a punch. PunchClock Crew does not follow anyone between punches.'],
+        ['What if an employee refuses to share their location?', 'You choose per site. In lenient mode the punch goes through with a warning. In strict mode it is blocked.'],
+      ],
+    },
+    fr: {
+      slug: 'punch-chantier-equipes-mobiles',
+      title: 'Application de punch pour chantiers et équipes mobiles | PunchClock Crew',
+      desc: 'Un punch pour les équipes qui ne passent pas par le bureau : chaque employé pointe sur son téléphone, la position GPS est enregistrée, avec une zone par chantier ou la localisation exigée partout. Dès 19,49 $/mois.',
+      h1: 'L’application de punch pour les chantiers et les équipes sur la route',
+      lead: 'Quand l’équipe ne passe pas par le bureau, la tablette à l’entrée ne suffit plus. Avec le pointage à distance, chaque employé pointe sur son propre téléphone, et vous voyez où et quand chaque pointage a été fait.',
+      sections: [
+        ['Comment ça marche sur le terrain', [
+          'Vous activez le pointage à distance et l’accordez aux employés qui en ont besoin.',
+          'L’employé ouvre son portail employé sur son téléphone et pointe son arrivée ou son départ. Rien à installer.',
+          'Chaque pointage enregistre la position GPS, affichée sur une carte dans le journal d’activité.',
+        ]],
+        ['Un chantier fixe, ou un client différent chaque jour', [
+          'Chantier fixe : tracez une zone autour de l’adresse, de 10 m à 500 m. Un pointage fait hors de la zone est bloqué, et l’employé voit à quelle distance il se trouve.',
+          'Client différent chaque jour : mettez le site en mode strict sans adresse. La localisation est alors exigée à chaque pointage, de n’importe où, sans limite de distance.',
+          'Plusieurs chantiers : chaque site a ses employés. Le plan Débutant couvre 2 sites, le plan Croissance 6, et le plan Entreprise n’a pas de limite.',
+        ]],
+        ['Pour le bureau', [
+          'Le tableau de bord montre qui est au travail en ce moment.',
+          'Un employé qui a oublié de pointer le signale à partir de son portail, et vous approuvez ou refusez.',
+          'Les heures et les heures supplémentaires sont calculées, puis exportées en Excel ou CSV pour la paie.',
+        ]],
+        ['Bon à savoir', [
+          'Le téléphone a besoin d’une connexion Internet au moment du pointage. Le pointage à distance, le géorepérage et le portail employé sont inclus dès le plan Débutant (19,49 $/mois).',
+        ]],
+      ],
+      faq: [
+        ['Quelle application de punch choisir pour des employés de chantier au Québec?', 'Cherchez un pointage sur téléphone avec la position GPS, une zone par chantier, une application en français et un export pour la paie. PunchClock Crew offre ces quatre éléments dès le plan Débutant, à 19,49 $ par mois.'],
+        ['Les employés doivent-ils installer une application?', 'Non. Ils pointent à partir du portail employé, dans le navigateur web de leur téléphone.'],
+        ['Est-ce que l’application suit les employés toute la journée?', 'Non. La position est enregistrée seulement au moment d’un pointage. PunchClock Crew ne suit personne entre les pointages.'],
+        ['Que se passe-t-il si un employé refuse de partager sa position?', 'Vous choisissez pour chaque site. En mode souple, le pointage est accepté avec un avertissement. En mode strict, il est bloqué.'],
+      ],
+    },
+  },
   {
     pair: 'pricing',
     en: {
