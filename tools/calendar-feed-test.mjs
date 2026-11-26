@@ -83,7 +83,9 @@ if (!LIVE) {
   const z = (d, t, tz, add) => { const ms = localToUtcMs(d, t, tz, add); return ms == null ? null : icsUtc(ms); };
   check('Toronto winter 08:00 is 13:00 UTC', z('2026-11-16', '08:00', 'America/Toronto') === '20261116T130000Z', z('2026-11-16', '08:00', 'America/Toronto'));
   check('Toronto summer 08:00 is 12:00 UTC', z('2026-07-01', '08:00:00', 'America/Toronto') === '20260701T120000Z');
-  check('Vancouver winter 08:00 is 16:00 UTC', z('2026-12-01', '08:00', 'America/Vancouver') === '20261201T160000Z');
+  // Halifax rather than Vancouver: the western provinces stopped changing their clocks in 2026, so what
+  // "Vancouver winter" means depends on how recent the runtime's time zone data is.
+  check('Halifax winter 08:00 is 12:00 UTC', z('2026-12-01', '08:00', 'America/Halifax') === '20261201T120000Z');
   check('St. John\'s half-hour offset', z('2026-12-01', '08:00', 'America/St_Johns') === '20261201T113000Z');
   check('the evening before clocks go back', z('2026-10-31', '23:00', 'America/Toronto') === '20261101T030000Z');
   check('the morning after clocks go back', z('2026-11-01', '08:00', 'America/Toronto') === '20261101T130000Z');
@@ -134,7 +136,7 @@ if (!LIVE) {
   out('\n== the function: a working link ==');
   const s1 = newSecret(), s2 = newSecret();
   const hostileNote = 'Bring keys\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSUMMARY:Forged shift\r\nATTENDEE:mailto:x@example.com';
-  feeds.set(sha256hex(s1), { status: 'ok', company: 'Acme, Inc.; "QA"', tz: 'America/Vancouver', lang: 'fr', events: [
+  feeds.set(sha256hex(s1), { status: 'ok', company: 'Acme, Inc.; "QA"', tz: 'America/Halifax', lang: 'fr', events: [
     { id: '11111111-1111-4111-8111-111111111111', date: '2026-11-16', start: '08:00:00', end: '12:00:00', label: 'Installation', site: 'Siège social', note: 'Apporter l\'échelle' },
     { id: '22222222-2222-4222-8222-222222222222', date: '2026-11-16', start: '12:30:00', end: '15:30:00', label: null, site: null, note: null },
     { id: '33333333-3333-4333-8333-333333333333', date: '2026-11-17', start: '09:00:00', end: '10:00:00', label: hostileNote, site: hostileNote, note: hostileNote },
@@ -159,7 +161,7 @@ if (!LIVE) {
   check('the service key is not in the answer', !body.includes(SERVICE_KEY) && ![...r.headers.values()].join(' ').includes(SERVICE_KEY));
   check('nothing is logged for a normal read', logLines.length === 0, logLines.join(' | '));
   check('three good shifts; the broken and malformed rows are left out', evs.length === 3, evs.length);
-  check('times are converted from the company time zone (Vancouver)', evs[0] && evs[0].DTSTART === '20261116T160000Z' && evs[0].DTEND === '20261116T200000Z', evs[0] && evs[0].DTSTART);
+  check('times are converted from the company time zone (Halifax)', evs[0] && evs[0].DTSTART === '20261116T120000Z' && evs[0].DTEND === '20261116T160000Z', evs[0] && evs[0].DTSTART);
   check('label, site and note are shown', evs[0] && evs[0].SUMMARY === 'Installation' && evs[0].LOCATION === 'Siège social' && evs[0].DESCRIPTION === 'Apporter l\'échelle');
   check('a shift with no label gets a French title for a French link, and no empty fields', evs[1] && evs[1].SUMMARY === 'Quart de travail' && !('LOCATION' in evs[1]) && !('DESCRIPTION' in evs[1]));
   check('hostile text stays inside its fields', evs[2] && Object.keys(evs[2]).sort().join() === 'DESCRIPTION,DTEND,DTSTAMP,DTSTART,LOCATION,SUMMARY,TRANSP,UID' && evs[2].DESCRIPTION.startsWith('Bring keys\\nEND:VEVENT'));

@@ -1,3 +1,25 @@
+# Checks
+
+Run every check before committing. CI (`.github/workflows/check.yml`) runs the same command on every push.
+
+```bash
+cd tools
+npm install                      # once
+npx playwright install chromium  # once
+node check.mjs                   # the cache-version check, then every *-test.mjs
+node check.mjs kiosk portal      # only test files whose name contains "kiosk" or "portal"
+```
+
+- A new test needs no registration: name the file `something-test.mjs`, print `N passed, M failed`
+  as the last line and exit non-zero on failure, like the existing ones.
+- `check-cache-version.mjs` fails when a file the service worker precaches (`index.html`,
+  `manifest.json`) changed without a higher `CACHE_NAME` in `sw.js`.
+- `KNOWN_FAILURES` in `check.mjs` lists the tests that were already failing when the runner was added.
+  The run fails if one of them gets worse or better, so the list can only shrink.
+- `entitlement-test.mjs` and `map-test.mjs` load Leaflet from cdnjs.cloudflare.com, as the app does.
+  They fail where that host is blocked; the runner says so.
+- `secure-db-regression/` is not part of this run: its scripts take arguments and some need a live project (see its README).
+
 # Screenshot tooling
 
 Regenerates every product screenshot used by the in-app help centre and the landing page.
