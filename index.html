@@ -21,7 +21,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://cdnjs.cloudflare.com https://tile.openstreetmap.org;
+  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://cdnjs.cloudflare.com https://tile.openstreetmap.org https://ibasemaps-api.arcgis.com https://static-map-tiles-api.arcgis.com;
   connect-src 'self' https://uziwymrwaeojhqaagqcm.supabase.co https://nominatim.openstreetmap.org https://cdnjs.cloudflare.com;
   worker-src 'self';
   manifest-src 'self';
@@ -1034,6 +1034,7 @@ html[lang="fr"] .ft-en,html:not([lang="fr"]) .ft-fr{display:none;}
 .map-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--text3);align-items:center;}
 .map-legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
 .map-legend .ring{background:transparent!important;border:2px solid;box-sizing:border-box;}
+.leaflet-control-layers{font-family:inherit;font-size:12px;border-radius:8px!important;}.leaflet-control-layers-expanded{padding:4px 8px!important;}.leaflet-control-layers-base label{display:inline-block;margin:0 4px;color:#1f2937;}.leaflet-control-layers-separator{display:none;}
 .leaflet-tooltip.geo-lbl{font-family:inherit;font-size:12px;font-weight:600;padding:3px 7px;}
 .leaflet-tooltip.geo-dist{font-family:inherit;font-size:11.5px;font-weight:700;padding:2px 6px;background:#fff;color:#1f2937;border:1px solid #d1d5db;}
 @media(max-width:600px){
@@ -9580,9 +9581,7 @@ function initGeoMap() {
   // Carto's anonymous basemaps arrive watermarked "API KEY REQUIRED" — a 200 response whose
   // image says the service is unconfigured, which is what every customer saw here. OSM's own
   // tiles need no key; their licence asks for the attribution this layer already shows.
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors', maxZoom: 19
-  }).addTo(_geoMap);
+  geoAddBaseLayers(_geoMap);
   if (latVal) setGeoPin(lat, lng, false);
 }
 
@@ -9690,9 +9689,35 @@ function geoSiteLayers(map, site) {
   return L.circleMarker([site.geo_lat, site.geo_lng], { radius: 6, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 1, weight: 2 })
     .addTo(map).bindTooltip(esc(site.name || '') + (site.geo_radius_m ? ' · ' + (site.geo_radius_m) + ' m' : ''), { direction: 'top' });
 }
+// Map / Satellite switch on every map. Satellite is Esri World Imagery with Esri's street and place
+// labels on top (French when the app is in French), through the free ArcGIS Location Platform tier
+// (2M tiles a month, pay-as-you-go off, so it can never bill). ESRI_MAP_KEY is a browser key: public
+// by design, limited to Basemaps and to punchclock.ca referrers (ArcGIS item "punchclock.ca maps").
+// It expires on ESRI_MAP_KEY_UNTIL; after that day, or with no key, the maps show the street map only,
+// with no switch, so an expired key can never leave a grey map. Renew the key before then.
+const ESRI_MAP_KEY = 'AAPTakq3tNGm_L7w7_z7dPpOJLg..VEp1K2apFp91R7GFMJNg9Dl61RcjhZqaSkUEF4t-tW5ZDD0VZoj7MCopbMaMUnnB1g6aJeZD4RcQoZ414z3mmMUyZAXwwZDPR5Ed9tuoEc1cQT-CYpPw42VZOQa579-D4Tm_t0BRhfWHnjI5uOn2AiOsmS-5ccrriHOU_5ROxo28O7nXTz0AHVoSQ2XXqQfsZtl75Qj97bP3WjfLaRsSScZVEOnQJnlddp9R4E8R0hJPk7_Fs5CeZlE.AT1_3TXQyRQc';
+const ESRI_MAP_KEY_UNTIL = '2027-11-24';
+function geoAddBaseLayers(m) {
+  const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 });
+  if (!ESRI_MAP_KEY || new Date().toISOString().slice(0, 10) > ESRI_MAP_KEY_UNTIL) { street.addTo(m); return; }
+  const tok = 'token=' + encodeURIComponent(ESRI_MAP_KEY);
+  const sat = L.layerGroup([
+    L.tileLayer('https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?' + tok,
+      { maxZoom: 19, attribution: 'Powered by <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a> | Esri, Maxar, Earthstar Geographics' }),
+    // 512-pixel label tiles: tileSize 512 + zoomOffset -1 keep the text at its normal size.
+    L.tileLayer('https://static-map-tiles-api.arcgis.com/arcgis/rest/services/static-basemap-tiles-service/v1/arcgis/imagery/labels/static/tile/{z}/{y}/{x}?' + tok + '&language=' + (_appLang === 'fr' ? 'fr' : 'en'),
+      { maxZoom: 19, tileSize: 512, zoomOffset: -1 }),
+  ]);
+  let pick = 'sat';
+  try { pick = localStorage.getItem('pc_map_base') || 'sat'; } catch (_e) { /* storage blocked */ }
+  (pick === 'street' ? street : sat).addTo(m);
+  const names = { [t('map.street') || 'Map']: street, [t('map.satellite') || 'Satellite']: sat };
+  L.control.layers(names, null, { collapsed: false, position: 'topright' }).addTo(m);
+  m.on('baselayerchange', e => { try { localStorage.setItem('pc_map_base', e.layer === street ? 'street' : 'sat'); } catch (_e) { /* storage blocked */ } });
+}
 function geoBaseMap(el, center, zoom) {
   const m = L.map(el).setView(center, zoom);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(m);
+  geoAddBaseLayers(m);
   return m;
 }
 
@@ -18979,7 +19004,7 @@ en:{
 'activity.bulkReassignTitle':'Reassign Site','activity.bulkReassignDesc':'Move the selected punches to a different site.','activity.bulkReassignDescTail':'punches will be updated.','activity.bulkReassignConfirm':'Reassign',
 'activity.mobile':'MOBILE','activity.viewLocation':'View location','activity.break':'BREAK',
 'punchMap.title':'Punch Location','punchMap.site':'Site (registered)','punchMap.punch':'Punch location',
-'punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
+'map.street':'Map','map.satellite':'Satellite','punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
 'punchMap.distance':'Distance from site: {m} m','geo.radiusHint':'50 to 100 m works for most workplaces. Phones are often 10 to 30 m off indoors, so a very small radius can turn people away who are standing at the door.','geo.radiusSmallWarn':'With Strict mode, a radius under 50 m can block people who are really on site.','punchMap.accuracy':'GPS accuracy: ±{m} m','punchMap.legendIn':'Filled = IN','punchMap.legendOut':'Ring = OUT','punchMap.legendAccuracy':'Light circle = GPS accuracy','crewMap.btn':'Map','crewMap.title':'Where punches happened','crewMap.none':'No punches with a location in this filter. Phone punches and tablets with a geofence save one.','crewMap.summary':'{n} punches with a location, {o} outside the geofence.','crewMap.capped':'Showing the latest {n}; narrow the dates or site to see the rest.',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
@@ -20090,7 +20115,7 @@ fr:{
 'activity.bulkReassignTitle':'Réassigner le site','activity.bulkReassignDesc':"Déplacer les pointages sélectionnés vers un autre site.",'activity.bulkReassignDescTail':"pointages seront mis à jour.",'activity.bulkReassignConfirm':"Réassigner",
 'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement','activity.break':'PAUSE',
 'punchMap.title':'Emplacement du pointage','punchMap.site':'Site (enregistré)','punchMap.punch':'Emplacement du pointage',
-'punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
+'map.street':'Plan','map.satellite':'Satellite','punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
 'punchMap.distance':'Distance du site : {m} m','geo.radiusHint':'De 50 à 100 m convient à la plupart des lieux de travail. Un téléphone se trompe souvent de 10 à 30 m à l’intérieur : un rayon très petit peut refuser quelqu’un qui est à la porte.','geo.radiusSmallWarn':'En mode Strict, un rayon sous 50 m peut bloquer des personnes qui sont vraiment sur place.','punchMap.accuracy':'Précision GPS : ±{m} m','punchMap.legendIn':'Plein = ENTRÉE','punchMap.legendOut':'Anneau = SORTIE','punchMap.legendAccuracy':'Cercle pâle = précision GPS','crewMap.btn':'Carte','crewMap.title':'Où les pointages ont eu lieu','crewMap.none':'Aucun pointage avec position pour ce filtre. Les pointages par téléphone et les tablettes avec une zone en enregistrent une.','crewMap.summary':'{n} pointages avec position, {o} hors de la zone.','crewMap.capped':'Les {n} plus récents sont affichés; réduisez les dates ou le site pour voir le reste.',
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
