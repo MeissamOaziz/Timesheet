@@ -284,7 +284,7 @@ async function validateWritePayload(
     // The browser already locks these controls; this is what stops a hand-made request.
     if (table === 'companies') {
       const wantsPaid = row.track_overtime === true || (row.evening_start != null && row.evening_start !== '');
-      const wantsGrowth = row.track_lunch_breaks === true || row.visitor_checkin_enabled === true;
+      const wantsGrowth = row.track_lunch_breaks === true || row.visitor_checkin_enabled === true || row.arrival_prompts_enabled === true;
       // (Comped accounts carry the 'unlimited' plan. Exemptions by company name are gone: anyone could pick a name.)
       if (wantsPaid || wantsGrowth) {
         if (wantsPaid && (await planRpc('has_paid_features', { p_admin: caller.primaryAdminId })) === false) {
@@ -293,10 +293,19 @@ async function validateWritePayload(
         if (wantsGrowth) {
           const rank = await planRpc('admin_plan_rank', { p_admin: caller.primaryAdminId });
           if (typeof rank === 'number' && rank < 2) {
-            return { field: row.track_lunch_breaks === true ? 'track_lunch_breaks' : 'visitor_checkin_enabled', reason: 'plan' };
+            return {
+              field: row.track_lunch_breaks === true ? 'track_lunch_breaks'
+                : row.visitor_checkin_enabled === true ? 'visitor_checkin_enabled' : 'arrival_prompts_enabled',
+              reason: 'plan',
+            };
           }
         }
       }
+    }
+    // Arrival reminders per employee are Growth-and-up too (portal_arrival_status checks the plan again live).
+    if (table === 'employees' && row.arrival_prompts_enabled === true) {
+      const rank = await planRpc('admin_plan_rank', { p_admin: caller.primaryAdminId });
+      if (typeof rank === 'number' && rank < 2) return { field: 'arrival_prompts_enabled', reason: 'plan' };
     }
     if ((table === 'report_recipients' || table === 'time_off') && co &&
         (await planRpc('company_has_paid_features', { p_company: co })) === false) {

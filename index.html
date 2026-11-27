@@ -2160,7 +2160,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       <li data-i18n="priv.li3">Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)</li>
       <li data-i18n="priv.li4">Time and attendance records: clock-in/out times, dates, site locations</li>
       <li data-i18n="priv.liSignup">How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”</li>
-      <li data-i18n="priv.liApp">From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on, and never in the background; a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.</li>
+      <li data-i18n="priv.liApp">From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on; if your employer offers arrival and departure reminders and you turn them on in the app, the phone itself watches the area around your workplace, also in the background, so it can ask you to clock in or out (it may check with our server that reminders are still on, but your location is only sent when you tap to punch, like any punch, and you can turn reminders off at any time); a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.</li>
     </ul>
     <h2 data-i18n="priv.h2">2. How We Use Your Information</h2>
     <p data-i18n="priv.p2">We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.</p>
@@ -4011,6 +4011,19 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           </div>
         </div>
       </div>
+      <!-- Arrival reminders: per employee, shown only when the company switch is on (Growth and up) and this
+           employee has phone clock-in. Mixed crews: an admin picks who gets them. -->
+      <div id="empArrivalRow" style="display:none;margin-top:8px;margin-left:20px;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleEmpArrivalOpt()">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:12.5px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-bell"/></svg><span data-i18n="emp.arrivalTitle">Arrival and departure reminders</span></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="emp.arrivalDesc">The phone app asks this employee to clock in when they arrive at a site and to clock out when they leave. They also have to agree on their phone.</div>
+          </div>
+          <div id="empArrivalToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+            <div id="empArrivalThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+          </div>
+        </div>
+      </div>
       <div id="empPaidLockHint">
         <svg class="ic" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px"><use href="#i-lock"/></svg><span data-i18n="emp.paidLock">The employee portal and remote clock-in are part of the Starter plan and above.</span>
         <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addEmpModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
@@ -4299,6 +4312,20 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       </div>
     </div>
     <div id="remotePunchSetupRow" style="display:none;margin-top:8px"><button type="button" class="ph-link" onclick="var cid=document.getElementById('editCompanyUid').value;closeModal('addCompanyModal');openPhoneSetup(cid)" data-i18n="setup.s6">Set up phone clock-in</button></div>
+    <!-- Arrival and departure reminders (phone app, Growth and up): only meaningful once phone clock-in is on.
+         The company switch makes it available; each employee is then switched on one by one (employee profile). -->
+    <div id="arrivalPromptsBlock" style="display:none;margin-top:10px">
+      <div id="arrivalPromptsToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleArrivalPromptsOpt()">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap"><svg style="width:15px;height:15px"><use href="#i-bell"/></svg><span data-i18n="modal.arrivalPrompts">Arrival and departure reminders</span><span style="font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:1px 6px;border-radius:var(--r-xl)" data-i18n="modal.growthPlanBadge">GROWTH+</span></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.arrivalPromptsDesc">In the PunchClock Crew phone app, an employee who arrives at or leaves a site gets a notification asking them to clock in or out. One tap records it. Nothing is punched automatically. Turn it on for each employee in their profile.</div>
+        </div>
+        <div id="arrivalPromptsToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+          <div id="arrivalPromptsThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+        </div>
+      </div>
+      <div id="arrivalPromptsAllRow" style="display:none;margin-top:8px"><button type="button" class="ph-link" onclick="arrivalPromptsForAll()" data-i18n="modal.arrivalPromptsAll">Turn on for everyone with phone clock-in</button></div>
+    </div>
     <hr class="divider" style="margin:14px 0">
     <div class="form-group" id="punchLabelModeRow" style="margin-top:14px;display:none">
       <label data-i18n="modal.labelsAtPunch">Work labels at clock-in</label>
@@ -4343,7 +4370,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     </div>
     <p id="growthAddonLockNote" style="display:none;font-size:11px;color:var(--accent);margin:8px 2px 0;line-height:1.5">
       <svg class="ic" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px"><use href="#i-lock"/></svg>
-      <span data-i18n="modal.growthAddonLock">Lunch break tracking and visitor check-in are included on the Growth plan and above.</span>
+      <span data-i18n="modal.growthAddonLock">Lunch break tracking, visitor check-in and arrival reminders are included on the Growth plan and above.</span>
       <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addCompanyModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
     </p>
     </div>
@@ -12119,10 +12146,31 @@ function _refreshEmpRemotePunchRowState(companyId){
   const companyOk=!!co?.remote_punch_enabled;
   row.style.display=companyOk?'':'none';
   if(hint) hint.style.display=companyOk?'none':'';
+  _refreshEmpArrivalRow(companyId);
 }
 function setEmpRemotePunchToggle(on){
   document.getElementById('empRemotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('empRemotePunchThumb').style.left=on?'20px':'2px';
+  _refreshEmpArrivalRow();
+}
+// Arrival reminders for one employee: offered only when the company has them on (Growth and up) and this
+// employee may clock in from the phone. Hidden otherwise; saveEmployee then stores false.
+function _empArrivalAvailable(companyId){
+  const cid=companyId||(C.employees.find(e=>e.id===document.getElementById('editEmpUid').value)||{}).company_id||Ctx.get()?.co?.id;
+  const co=C.companies.find(c=>c.id===cid);
+  const remoteOn=document.getElementById('empRemotePunchThumb').style.left==='20px';
+  return !!(co&&co.remote_punch_enabled&&co.arrival_prompts_enabled&&hasGrowthOrAbove()&&remoteOn);
+}
+function _refreshEmpArrivalRow(companyId){
+  const row=document.getElementById('empArrivalRow'); if(!row) return;
+  row.style.display=_empArrivalAvailable(companyId)?'':'none';
+}
+function setEmpArrivalToggle(on){
+  document.getElementById('empArrivalToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('empArrivalThumb').style.left=on?'20px':'2px';
+}
+function toggleEmpArrivalOpt(){
+  setEmpArrivalToggle(document.getElementById('empArrivalThumb').style.left!=='20px');
 }
 // Turning it OFF needs no confirmation (it only ever removes access); turning it ON grants an
 // employee the ability to punch from any device anywhere, so it gets the same explicit,
@@ -12177,6 +12225,7 @@ function openAddEmpModal(){
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
   setEmailToggle(false);
+  setEmpArrivalToggle(false);
   setEmpRemotePunchToggle(false);
   _refreshEmpRemotePunchRowState(ctx.co.id);
   // Hide availability + promote buttons in add mode
@@ -12302,6 +12351,7 @@ function editEmployee(id){
   document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">${esc(t('emp.noPinSet'))}</div>`;
   setEmailToggle(!!(e.send_report&&e.email));
   setEmpRemotePunchToggle(!!e.remote_punch_enabled);
+  setEmpArrivalToggle(!!e.arrival_prompts_enabled);
   _refreshEmpRemotePunchRowState(e.company_id||ctx?.co?.id);
   populateSiteDropdown('empSiteSelect',e.company_id||ctx?.co?.id,e.site_id);
   // Show manage availability button only in edit mode
@@ -12536,6 +12586,8 @@ async function saveEmployee(opts){
   const email=document.getElementById('empEmail').value.trim()||null;
   const remote_punch_enabled=document.getElementById('empRemotePunchThumb').style.left==='20px';
   const editId=document.getElementById('editEmpUid').value;
+  // Hidden row (no phone clock-in, company switch off, below Growth) = off; the server checks the plan too.
+  const arrival_prompts_enabled=_empArrivalAvailable()&&document.getElementById('empArrivalThumb').style.left==='20px';
   if(!name){showMsg('empModalMsg',t('val.nameRequired')||'Name is required.','error');return null;}
   if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg',t('val.pinDigits')||'PIN must be exactly 4 digits.','error');return null;}
   if(!editId&&!pin){showMsg('empModalMsg',t('val.pinRequired')||'A 4-digit PIN is required for new employees.','error');return null;}
@@ -12549,7 +12601,7 @@ async function saveEmployee(opts){
 
     let savedRow=null;
     if(editId){
-      const upd={name,dept,emp_code,site_id,email,send_report,remote_punch_enabled,photo_url};if(pin)upd.pin=pin;
+      const upd={name,dept,emp_code,site_id,email,send_report,remote_punch_enabled,arrival_prompts_enabled,photo_url};if(pin)upd.pin=pin;
       await DB.update('employees',`id=eq.${editId}`,upd);
       const idx=C.employees.findIndex(e=>e.id===editId);
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd,photo_url:viewUrl(photo_url)};
@@ -12563,7 +12615,7 @@ async function saveEmployee(opts){
         showUpgradePrompt('empModalMsg',t('limit.employees').replace('{plan}',esc(plan.name)).replace('{max}',max).replace('{current}',current));
         return null;
       }
-      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,remote_punch_enabled,photo_url});
+      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,remote_punch_enabled,arrival_prompts_enabled,photo_url});
       if(r?.[0]){C.employees.push(r[0]);savedRow=r[0];}
     }
     renderEmployees();renderSitesAdmin();
@@ -12823,6 +12875,7 @@ function openAddCompanyModal(){
   document.getElementById('companyLunchPaidMinutes').value='0';
   setVisitorCheckinToggle(false);
   setRemotePunchToggle(false);
+  setArrivalPromptsToggle(false);
   setMgrAllSitesToggle(false);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
   document.getElementById('companyPunchLabelMode').value='off';
@@ -12868,6 +12921,7 @@ function _fillCompanyForm(co){
   document.getElementById('companyLunchPaidMinutes').value=String(co.lunch_break_paid_minutes||0);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
   setRemotePunchToggle(!!co.remote_punch_enabled);
+  setArrivalPromptsToggle(!!co.arrival_prompts_enabled);
   { const r=document.getElementById('remotePunchSetupRow'); if(r) r.style.display=featureEntitled('paid',co)&&!isManager()?'':'none'; }
   setMgrAllSitesToggle(!!co.managers_see_all_sites);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
@@ -12907,7 +12961,7 @@ function _coShowMsg(msg,type,sec){
 function _settingsSnap(){
   const f=document.getElementById('companyFormBody'); if(!f) return '';
   const v=[...f.querySelectorAll('input,select,textarea')].filter(e=>e.type!=='file').map(e=>(e.id||(e.className+e.value))+'='+(e.type==='checkbox'?(e.checked?1:0):e.value));
-  const tg=['overtimeThumb','lunchThumb','visitorCheckinThumb','remotePunchThumb','mgrAllSitesThumb'].map(id=>{const e=document.getElementById(id);return e?e.style.left:'';});
+  const tg=['overtimeThumb','lunchThumb','visitorCheckinThumb','remotePunchThumb','arrivalPromptsThumb','mgrAllSitesThumb'].map(id=>{const e=document.getElementById(id);return e?e.style.left:'';});
   const lf=document.getElementById('logoFileInput');
   return v.join('|')+'#'+tg.join(',')+(lf&&lf.files&&lf.files.length?'#file':'');
 }
@@ -13056,6 +13110,45 @@ function toggleRemotePunchOpt(){
   const on=document.getElementById('remotePunchThumb').style.left!=='20px';
   document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('remotePunchThumb').style.left=on?'20px':'2px';
+  _refreshArrivalPromptsBlock();
+}
+// Arrival and departure reminders (phone app, Growth and up). Shown under phone clock-in because they need it;
+// below Growth the row is locked and switched off, like lunch breaks and visitor check-in.
+function setArrivalPromptsToggle(on){
+  document.getElementById('arrivalPromptsToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('arrivalPromptsThumb').style.left=on?'20px':'2px';
+  _refreshArrivalPromptsBlock();
+}
+function toggleArrivalPromptsOpt(){
+  setArrivalPromptsToggle(document.getElementById('arrivalPromptsThumb').style.left!=='20px');
+}
+function _refreshArrivalPromptsBlock(){
+  const block=document.getElementById('arrivalPromptsBlock'); if(!block) return;
+  const remoteOn=document.getElementById('remotePunchThumb').style.left==='20px';
+  block.style.display=remoteOn&&!isManager()?'':'none';
+  const editId=document.getElementById('editCompanyUid').value;
+  const stored=C.companies.find(c=>c.id===editId);
+  // The "everyone" button acts on saved settings, so it shows once the switch is saved on.
+  const all=document.getElementById('arrivalPromptsAllRow');
+  if(all) all.style.display=(stored&&stored.arrival_prompts_enabled&&stored.remote_punch_enabled&&hasGrowthOrAbove())?'':'none';
+}
+// Switches reminders on for every active employee of the company who already has phone clock-in.
+async function arrivalPromptsForAll(){
+  const editId=document.getElementById('editCompanyUid').value;
+  const co=C.companies.find(c=>c.id===editId);
+  if(!co||!co.arrival_prompts_enabled||!hasGrowthOrAbove()) return;
+  const list=C.employees.filter(e=>e.company_id===co.id&&e.active&&e.remote_punch_enabled&&!e.arrival_prompts_enabled);
+  if(!list.length){ showToast(t('modal.arrivalPromptsAllNone')||'Everyone with phone clock-in already has reminders on.','info'); return; }
+  const msg=(t('modal.arrivalPromptsAllConfirm')||'Turn on arrival and departure reminders for {n} employee(s) who can clock in from their phone? Each of them still has to agree in the app.').replace('{n}',list.length);
+  if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
+  let done=0;
+  try{
+    for(const e of list){ await DB.update('employees',`id=eq.${e.id}`,{arrival_prompts_enabled:true}); e.arrival_prompts_enabled=true; done++; }
+    showToast((t('modal.arrivalPromptsAllDone')||'Reminders turned on for {n} employee(s).').replace('{n}',done),'success');
+  }catch(err){
+    showToast((t('modal.arrivalPromptsAllDone')||'Reminders turned on for {n} employee(s).').replace('{n}',done)+' '+String((err&&err.message)||''),'error');
+  }
+  renderEmployees();
 }
 function toggleMgrAllSitesOpt(){
   setMgrAllSitesToggle(document.getElementById('mgrAllSitesThumb').style.left!=='20px');
@@ -13093,12 +13186,12 @@ function _setGrowthAddonLockState(){
   const ok=hasGrowthOrAbove();
   const note=document.getElementById('growthAddonLockNote');
   if(note) note.style.display=ok?'none':'';
-  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow'),document.getElementById('paidBreakRow')].forEach(row=>{
+  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow'),document.getElementById('paidBreakRow'),document.getElementById('arrivalPromptsToggleRow')].forEach(row=>{
     if(!row)return;
     row.style.opacity=ok?'1':'.5';
     row.style.pointerEvents=ok?'':'none';
   });
-  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); document.getElementById('companyLunchPaidMinutes').value='0'; }
+  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); setArrivalPromptsToggle(false); document.getElementById('companyLunchPaidMinutes').value='0'; }
 }
 
 async function saveCompany(){
@@ -13128,6 +13221,8 @@ async function saveCompany(){
   // Outside the paid plans the remote switch cannot be changed: keep whatever is stored.
   const _storedCo=C.companies.find(c=>c.id===document.getElementById('editCompanyUid').value);
   const remote_punch_enabled=paidOk?document.getElementById('remotePunchThumb').style.left==='20px':!!(_storedCo&&_storedCo.remote_punch_enabled);
+  // Reminders need phone clock-in and Growth; the server refuses the switch below Growth as well.
+  const arrival_prompts_enabled=growthOk&&remote_punch_enabled&&document.getElementById('arrivalPromptsThumb').style.left==='20px';
   const managers_see_all_sites=document.getElementById('mgrAllSitesThumb').style.left==='20px';
   // Declared before first use: reading it below while it was still unset threw for every account without
   // the Scheduling add-on, so their company settings silently never saved.
@@ -13163,13 +13258,13 @@ async function saveCompany(){
     if(_newLogoFile) logo_url = null;
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url,admin_id:sess?.id||null});
       if(r?.[0] && _newLogoFile){
         try{
           const _lu=await uploadImage(_newLogoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`,{companyId:r[0].id});
@@ -19034,7 +19129,7 @@ en:{
 'tos.h11':'11. Governing Law','tos.p11':'These Terms are governed by the laws of the Province of Quebec, Canada, without regard to conflict of law principles.',
 'tos.h12':'12. Contact','tos.p12':'For questions about these Terms, contact us through the app or at the email address on file with your account.',
 'priv.title':'Privacy Policy','priv.updated':'Last updated: November 23, 2026',
-'priv.liApp':'From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on, and never in the background; a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.',
+'priv.liApp':'From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on; if your employer offers arrival and departure reminders and you turn them on in the app, the phone itself watches the area around your workplace, also in the background, so it can ask you to clock in or out (it may check with our server that reminders are still on, but your location is only sent when you tap to punch, like any punch, and you can turn reminders off at any time); a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.',
 'priv.liSignup':'How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”',
 'priv.h1':'1. Information We Collect','priv.p1':'We collect information you provide directly to us, including:',
 'priv.h2':'2. How We Use Your Information','priv.p2':'We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.',
@@ -19086,9 +19181,10 @@ en:{
 'modal.visitorSettings':'Visitor Check-In','modal.scheduleSettings':'Schedule','modal.mgrAllSites':'Managers can schedule staff from all sites','modal.mgrAllSitesDesc':'Off: a site manager only sees and schedules the staff at the sites they manage. On: they see everyone in the company, for locations that share staff.','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
-'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
+'modal.growthAddonLock':'Lunch break tracking, visitor check-in and arrival reminders are included on the Growth plan and above.',
 'modal.upgradeLink':'Upgrade now',
 'modal.remoteAccessSettings':'Remote Access','modal.enableRemotePunch':'Allow Remote Clock-In',
+'modal.arrivalPrompts':'Arrival and departure reminders','modal.arrivalPromptsDesc':'In the PunchClock Crew phone app, an employee who arrives at or leaves a site gets a notification asking them to clock in or out. One tap records it. Nothing is punched automatically. Turn it on for each employee in their profile.','modal.arrivalPromptsAll':'Turn on for everyone with phone clock-in','modal.arrivalPromptsAllConfirm':'Turn on arrival and departure reminders for {n} employee(s) who can clock in from their phone? Each of them still has to agree in the app.','modal.arrivalPromptsAllDone':'Reminders turned on for {n} employee(s).','modal.arrivalPromptsAllNone':'Everyone with phone clock-in already has reminders on.',
 'modal.remotePunchDesc':'Makes remote clock-in available for this account. Nobody gets it automatically — grant it to specific employees (or all employees at a site) from the Employees page.',
 'modal.tzNewfoundland':'Newfoundland','modal.tzAtlantic':'Atlantic','modal.tzEastern':'Eastern','modal.tzCentral':'Central','modal.tzMountain':'Mountain','modal.tzPacific':'Pacific',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
@@ -19405,6 +19501,7 @@ en:{
 'sched.unavailableHint':'Employee unavailable — add shift anyway?',
 'emp.portalInviteTitle':'Employee Portal Access',
 'emp.remotePunchTitle':'Remote Clock-In','emp.remotePunchDesc':'Lets this employee clock in/out from their own phone or computer in the Employee Portal, instead of only the physical kiosk',
+'emp.arrivalTitle':'Arrival and departure reminders','emp.arrivalDesc':'The phone app asks this employee to clock in when they arrive at a site and to clock out when they leave. They also have to agree on their phone.',
 'emp.remotePunchNeedsCompany':'Turn on "Allow Remote Clock-In" in Settings → Clocking first to make this available.',
 'emp.remotePunchConfirm':'This employee will get access to the clock in/out page from their own account, and will be able to clock in and out from anywhere, on any device they have. If this is intended, press Confirm — otherwise cancel, and this employee will keep clocking in only at the physical kiosk at their site.',
 'emp.portalLoading':'Checking...',
@@ -20141,7 +20238,7 @@ fr:{
 'tos.h11':'11. Droit applicable','tos.p11':'Ces Conditions sont régies par les lois de la province de Québec, Canada, sans égard aux principes de conflit de lois.',
 'tos.h12':'12. Contact','tos.p12':'Pour toute question concernant ces Conditions, contactez-nous via l\'application ou à l\'adresse courriel associée à votre compte.',
 'priv.title':'Politique de confidentialité','priv.updated':'Dernière mise à jour : 23 novembre 2026',
-'priv.liApp':'Dans les applications pour téléphone (PunchClock Crew pour les employés, PunchClock Crew Admin pour les propriétaires et les gestionnaires) : votre position au moment où vous pointez votre arrivée ou votre départ, lorsque votre employeur a activé la localisation, et jamais en arrière-plan; une adresse de notification pour votre téléphone, seulement si vous activez les notifications; et le modèle du téléphone, pour que vous puissiez voir où vous êtes connecté. Les applications ne contiennent ni publicité ni outil de suivi.',
+'priv.liApp':'Dans les applications pour téléphone (PunchClock Crew pour les employés, PunchClock Crew Admin pour les propriétaires et les gestionnaires) : votre position au moment où vous pointez votre arrivée ou votre départ, lorsque votre employeur a activé la localisation; si votre employeur offre les rappels d\'arrivée et de départ et que vous les activez dans l\'application, le téléphone surveille lui-même le secteur de votre lieu de travail, aussi en arrière-plan, pour vous demander de pointer (il peut vérifier auprès de notre serveur que les rappels sont toujours actifs, mais votre position n\'est envoyée que lorsque vous touchez pour pointer, comme tout pointage, et vous pouvez désactiver les rappels en tout temps); une adresse de notification pour votre téléphone, seulement si vous activez les notifications; et le modèle du téléphone, pour que vous puissiez voir où vous êtes connecté. Les applications ne contiennent ni publicité ni outil de suivi.',
 'priv.liSignup':'Comment vous nous avez trouvés, enregistré à la création du compte : les étiquettes de campagne du lien suivi, le domaine du site qui vous a dirigé vers nous et votre réponse facultative à « Comment avez-vous entendu parler de nous? »',
 'priv.h1':'1. Informations collectées','priv.p1':'Nous collectons les informations que vous nous fournissez directement, notamment :',
 'priv.h2':'2. Utilisation de vos informations','priv.p2':'Nous utilisons les informations collectées pour : fournir et maintenir le Service; envoyer des courriels de résumé de période automatisés aux employés (si activé); générer des rapports de présence; améliorer et développer le Service; et respecter les obligations légales.',
@@ -20193,9 +20290,10 @@ fr:{
 'modal.visitorSettings':'Pointage visiteur','modal.scheduleSettings':'Horaire','modal.mgrAllSites':'Les gestionnaires peuvent planifier le personnel de tous les sites','modal.mgrAllSitesDesc':'Désactivé : un gestionnaire de site ne voit et ne planifie que le personnel des sites qu\'il gère. Activé : il voit tout le monde dans l\'entreprise, pour les emplacements qui partagent leur personnel.','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',
-'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
+'modal.growthAddonLock':'Le suivi des pauses repas, le pointage visiteur et les rappels d\'arrivée sont inclus à partir du plan Croissance.',
 'modal.upgradeLink':'Mettre à niveau',
 'modal.remoteAccessSettings':'Accès à distance','modal.enableRemotePunch':'Permettre le pointage à distance',
+'modal.arrivalPrompts':'Rappels d\'arrivée et de départ','modal.arrivalPromptsDesc':'Dans l\'application PunchClock Crew, l\'employé qui arrive sur un site ou le quitte reçoit une notification lui demandant de pointer l\'entrée ou la sortie. Un toucher l\'enregistre. Rien n\'est pointé automatiquement. Activez-les pour chaque employé dans sa fiche.','modal.arrivalPromptsAll':'Activer pour tous ceux qui pointent par téléphone','modal.arrivalPromptsAllConfirm':'Activer les rappels d\'arrivée et de départ pour {n} employé(s) qui peuvent pointer depuis leur téléphone? Chacun doit encore accepter dans l\'application.','modal.arrivalPromptsAllDone':'Rappels activés pour {n} employé(s).','modal.arrivalPromptsAllNone':'Tous ceux qui pointent par téléphone ont déjà les rappels.',
 'modal.remotePunchDesc':'Rend le pointage à distance disponible pour ce compte. Personne ne l\'obtient automatiquement — accordez-le à des employés spécifiques (ou à tous les employés d\'un site) depuis la page Employés.',
 'modal.tzNewfoundland':'Terre-Neuve','modal.tzAtlantic':'Atlantique','modal.tzEastern':'Est','modal.tzCentral':'Centre','modal.tzMountain':'Rocheuses','modal.tzPacific':'Pacifique',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
@@ -20516,6 +20614,7 @@ fr:{
 'sched.unavailableHint':'Employé indisponible — ajouter quand même?',
 'emp.portalInviteTitle':'Accès portail employé',
 'emp.remotePunchTitle':'Pointage à distance','emp.remotePunchDesc':'Permet à cet employé de pointer l\'entrée/sortie depuis son propre téléphone ou ordinateur dans le portail employé, au lieu du pointeau physique seulement',
+'emp.arrivalTitle':'Rappels d\'arrivée et de départ','emp.arrivalDesc':'L\'application demande à cet employé de pointer l\'entrée en arrivant sur un site et la sortie en le quittant. Il doit aussi accepter sur son téléphone.',
 'emp.remotePunchNeedsCompany':'Activez d\'abord « Permettre le pointage à distance » dans Paramètres → Pointage pour rendre ceci disponible.',
 'emp.remotePunchConfirm':'Cet employé obtiendra l\'accès à la page de pointage depuis son propre compte, et pourra pointer l\'entrée et la sortie de n\'importe où, sur n\'importe quel appareil. Si c\'est voulu, appuyez sur Confirmer — sinon annulez, et cet employé continuera de pointer uniquement au pointeau physique de son site.',
 'emp.portalLoading':'Vérification...',
