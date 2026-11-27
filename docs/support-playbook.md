@@ -295,7 +295,16 @@ The pricing page, the in-app locks and the server jobs all follow this table. If
 | PIN clock-in on the customer's own tablet or computer (we supply no device), dashboard and activity log, PDF reports, missed clock-out alerts | yes | yes | yes | yes |
 | Geofencing, remote clock-in, employee portal, time off, Excel and CSV export, add / edit / delete punches, overtime tracking, evening hours, automatic email reports (employees and the accountant's payroll summary) | no | yes | yes | yes |
 | Lunch breaks, visitor check-in | no | no | yes | yes |
-| Scheduling add-on $14.95 (shifts, holidays and the Québec holiday button, work labels, calendar sync for employees), 14-day trial | paid plans only | | | |
+| Scheduling (shifts, holidays and the Québec holiday button, work labels, calendar sync for employees) | 14-day trial only | $14.95 add-on, 14-day trial | included | included |
+
+- **Growth and Business include Scheduling (from 2026-11-26).** Starter buys it as the $14.95 add-on and can try it
+  free for 14 days. The rule lives in four places that must agree: `index.html` `hasSchedulingAddon`, secure-db
+  `schedulingActive`, the database helper `admin_scheduling_active` (portal schedule, portal labels and clock-in
+  label, calendar link) and `stripe-handler` (refuses the add-on checkout for Growth and up).
+- A Starter customer who pays the add-on and moves to Growth or Business: the add-on subscription is set to end
+  with the month already paid (no refund, per the Terms; no further charge). Scheduling stays on the whole time,
+  because the new plan includes it. Nothing for the customer to do. If they later move back to Starter, they buy
+  the add-on again (or start the trial, if they never used it).
 
 - Every Free account previews the Starter features until **14 days after it was created, and in any case until
   2026-11-06**. The lock starts at midnight Eastern at the start of 6 November (the screens and the portal lock at once;
@@ -330,7 +339,8 @@ Cause: the plan was right on the server. The browser kept the plan it saved on t
 - Fixed on 2026-11-23: every time the page loads it now re-reads the plan and extra seats from the server. A refresh of the page is enough.
 - If it still shows the old plan after a refresh: sign out and sign in again (this always worked, also before the fix).
 - Never tell a customer in this situation to pay again. First confirm the plan in the database (the owner's row: plan, subscription present). If the database also says Free and they have a receipt, that is a billing matter for the owner: escalate.
-- A paid plan and the Scheduling add-on are two separate purchases. Starter alone does not open the Schedule tab.
+- On Starter, the plan and the Scheduling add-on are two separate purchases: Starter alone does not open the Schedule
+  tab. Growth and Business include Scheduling (from 2026-11-26), so there is nothing extra to buy there.
 
 ## Referral program, December 2026 ("Refer a business")
 
@@ -368,7 +378,7 @@ Cause: the plan was right on the server. The browser kept the plan it saved on t
 
 ## Features and how to explain them
 
-Work labels (Scheduling add-on, $14.95/month, paid plans). Customers define their own labels (a task,
+Work labels (part of Scheduling: included in Growth and Business, the $14.95/month add-on on Starter). Customers define their own labels (a task,
 a job, a project, a client) with a colour.
 - Setup: Schedule, Create/Manage labels. Owners and admins only; managers can use labels, not edit them.
 - Scheduling: pick a Label on each shift. A day with two kinds of work is two shifts. Use "Also apply
@@ -384,15 +394,16 @@ a job, a project, a client) with a colour.
 - Employee portal (phone clock-in, since 2026-10-31): with the same "Work labels at clock-in" setting, an
   employee who taps Clock In sees "What are you working on?" with the company's active labels (Skip only
   when the setting is "Ask but allow skipping"; Cancel records nothing). The label is saved on the IN only; a
-  clock-out never asks. It needs the Scheduling add-on or its trial, like the kiosk. If the add-on lapses the
+  clock-out never asks. It needs Scheduling (Growth and up, or the add-on or its trial on Starter), like the kiosk. If it lapses the
   picker disappears and punches carry no label. If the list does not appear: check the setting, that the
-  company has active labels, and the add-on. Server messages: "That job is no longer available" (label
+  company has active labels, and the plan or add-on. Server messages: "That job is no longer available" (label
   deleted or deactivated since the page loaded) and "Please choose what you are working on" (Required).
   Requested by a consulting customer whose technicians move between client jobs.
 - A label is not the employee's Department. Department says who a person is; a label says what a
   shift or stretch of work is for.
 - The Scheduling trial is 14 days and self-serve (from 2026-10-28): Schedule tab, "Try it free for 14 days"
-  (owner only, once per account, no card; any plan including Free). It is only an end date on the owner's account
+  (owner only, once per account, no card; Free and Starter. Growth and up include Scheduling and are not offered
+  the trial, so it stays unused should they move down to Starter). It is only an end date on the owner's account
   (`admins.scheduling_trial_ends_at`, set by secure-db `start_scheduling_trial`); `scheduling_addon` stays true only
   for a paying account, so nothing has to be switched off and trials never count as revenue. While it runs the
   Schedule tab, work labels (admin and kiosk) and the employee portal's team schedule are open; a banner shows the
@@ -408,8 +419,8 @@ Evening hours (added 2026-10-22, all plans). For customers who pay an evening/ni
   applied the same way as the hour totals. Not in the employee portal or the emailed period summaries.
 - It does not price the premium: we store no wages, so customers apply their own rate to the hours.
 
-Calendar sync, "Add my shifts to my calendar" (added 2026-11-14, Scheduling add-on or its trial, plus the employee
-portal, so Starter and up). In the employee portal, My Schedule, the employee presses "Get my calendar link" and
+Calendar sync, "Add my shifts to my calendar" (added 2026-11-14; needs Scheduling, which is included in Growth and
+Business or the add-on or its trial on Starter, plus the employee portal). In the employee portal, My Schedule, the employee presses "Get my calendar link" and
 adds it once to Google Calendar, Apple Calendar or Outlook. Their own shifts then show there: time, work label,
 site name and the note. Nothing else is in the calendar, and nobody else's shifts.
 - It is a private link per employee, read-only. It is shown once, when it is made. To add it to a second
@@ -423,7 +434,7 @@ site name and the note. Nothing else is in the calendar, and nobody else's shift
   the app: Settings, the calendar's name, turn Sync on).
 - **The calendar stopped updating or went empty.** Check, in this order: the employee pressed "Get a new link" or
   "Turn off"; an admin cancelled it (employee dialog, "Calendar link: on ... Cancel link") or revoked portal
-  access; the employee was made inactive; the Scheduling add-on or trial ended, or the account went back to
+  access; the employee was made inactive; the Scheduling add-on or trial ended (Starter), or the account went back to
   Free. In the last case the same link works again when the plan is back; in the others the employee makes a
   new link.
 - An owner, co-admin or the site's manager can see that a link exists and when a calendar last read it, and can
@@ -434,7 +445,7 @@ site name and the note. Nothing else is in the calendar, and nobody else's shift
 - Gemini / Google Workspace AI: asked on 2026-11-13. Google does not let a Workspace account add its own
   connector today, so the answer is "not yet"; the Claude and ChatGPT connector is the one in progress.
 
-Quebec statutory holidays (added 2026-10-22, Scheduling add-on). Schedule, Holidays, "Add Quebec
+Quebec statutory holidays (added 2026-10-22, part of Scheduling). Schedule, Holidays, "Add Quebec
 statutory holidays": adds the 8 statutory holidays for the chosen year for all sites, skipping dates that
 are already listed. Good Friday is used for the Easter holiday (employer may use Easter Monday: delete it
 and add that date); Canada Day moves to 2 July when 1 July is a Sunday. Holidays are only a calendar flag

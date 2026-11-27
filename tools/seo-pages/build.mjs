@@ -23,19 +23,19 @@ const PLANS = {
   en: [
     { name: 'Free', price: '$0', limits: '1 company, 1 site, up to 10 active employees', note: 'PIN clock-in on your own tablet or computer, dashboard, activity log, PDF reports. No credit card.' },
     { name: 'Starter', price: '$19.49/month', limits: '1 company, 2 sites, up to 25 employees', note: 'Adds geofencing, remote clock-in, the employee portal, time off, Excel and CSV export, punch corrections, overtime, evening hours and automatic email reports.' },
-    { name: 'Growth', price: '$39.49/month', limits: '3 companies, 6 sites, up to 60 employees', note: 'Everything in Starter, plus lunch-break tracking and visitor check-in.' },
-    { name: 'Business', price: '$79.49/month', limits: 'Unlimited companies, sites and employees', note: 'Everything in Growth.' },
+    { name: 'Growth', price: '$39.49/month', limits: '3 companies, 6 sites, up to 60 employees', note: 'Everything in Starter, plus employee scheduling, lunch-break tracking and visitor check-in.' },
+    { name: 'Business', price: '$79.49/month', limits: 'Unlimited companies, sites and employees', note: 'Everything in Growth, including employee scheduling.' },
   ],
   fr: [
     { name: 'Gratuit', price: '0 $', limits: '1 compagnie, 1 site, jusqu’à 10 employés actifs', note: 'Pointage par NIP sur votre propre tablette ou ordinateur, tableau de bord, journal d’activité, rapports PDF. Aucune carte de crédit.' },
     { name: 'Débutant', price: '19,49 $/mois', limits: '1 compagnie, 2 sites, jusqu’à 25 employés', note: 'Ajoute le géorepérage, le pointage à distance, le portail employé, les congés, l’export Excel et CSV, la correction des pointages, les heures supplémentaires, les heures de soir et les rapports automatiques par courriel.' },
-    { name: 'Croissance', price: '39,49 $/mois', limits: '3 compagnies, 6 sites, jusqu’à 60 employés', note: 'Tout le plan Débutant, plus le suivi des pauses repas et le pointage visiteur.' },
-    { name: 'Entreprise', price: '79,49 $/mois', limits: 'Compagnies, sites et employés illimités', note: 'Tout le plan Croissance.' },
+    { name: 'Croissance', price: '39,49 $/mois', limits: '3 compagnies, 6 sites, jusqu’à 60 employés', note: 'Tout le plan Débutant, plus la planification des horaires, le suivi des pauses repas et le pointage visiteur.' },
+    { name: 'Entreprise', price: '79,49 $/mois', limits: 'Compagnies, sites et employés illimités', note: 'Tout le plan Croissance, y compris la planification des horaires.' },
   ],
 };
 const ADDON = {
-  en: 'Scheduling add-on: $14.95/month on any paid plan, with a free 14-day trial. All prices in Canadian dollars.',
-  fr: 'Module Planification : 14,95 $/mois sur tout plan payant, avec un essai gratuit de 14 jours. Tous les prix sont en dollars canadiens.',
+  en: 'Employee scheduling is included in Growth and Business. On Starter it is a $14.95/month add-on, with a free 14-day trial. All prices in Canadian dollars.',
+  fr: 'La planification des horaires est incluse dans les plans Croissance et Entreprise. Sur le plan Débutant, c’est un module à 14,95 $/mois, avec un essai gratuit de 14 jours. Tous les prix sont en dollars canadiens.',
 };
 
 // ── Pages. Each topic exists in both languages; `pair` links the two. ─────────────────────────────
@@ -53,7 +53,7 @@ const PAGES = [
           'Employees clock in and out with a 4-digit PIN on a shared tablet, computer or phone at your location. No app to install.',
           'Several locations under one account, each with its own employees and its own clock-in page.',
           'Hours, overtime and evening hours calculated for you, then exported to PDF, Excel or CSV for payroll.',
-          'Québec statutory holidays added to the schedule in one click (Scheduling add-on).',
+          'Québec statutory holidays added to the schedule in one click (Scheduling: Growth and up, or the Starter add-on).',
           'Time-off requests, an employee portal and automatic pay-period emails, including a payroll summary for your accountant.',
         ]],
         ['Who uses it', [
@@ -77,7 +77,7 @@ const PAGES = [
           'Les employés pointent leur arrivée et leur départ avec un NIP à 4 chiffres sur une tablette, un ordinateur ou un téléphone partagé sur place. Aucune application à installer.',
           'Plusieurs emplacements dans un seul compte, chacun avec ses employés et sa propre page de pointage.',
           'Heures, heures supplémentaires et heures de soir calculées pour vous, puis exportées en PDF, Excel ou CSV pour la paie.',
-          'Les jours fériés du Québec ajoutés à l’horaire en un clic (module Planification).',
+          'Les jours fériés du Québec ajoutés à l’horaire en un clic (planification : plan Croissance et plus, ou module sur Débutant).',
           'Demandes de congé, portail employé et courriels automatiques de fin de période, y compris un sommaire de paie pour votre comptable.',
         ]],
         ['Pour qui', [
@@ -198,9 +198,9 @@ const PAGES = [
     en: {
       slug: 'employee-scheduling-app',
       title: 'Employee scheduling app with time clock | PunchClock Crew',
-      desc: 'Build weekly shift schedules, email them to your team, let employees add their shifts to Google Calendar, Apple Calendar or Outlook, and add Québec statutory holidays in one click. $14.95/month CAD, 14-day free trial.',
+      desc: 'Build weekly shift schedules, email them to your team, let employees add their shifts to Google Calendar, Apple Calendar or Outlook, and add Québec statutory holidays in one click. Included in Growth and Business, or $14.95/month CAD on Starter with a 14-day free trial.',
       h1: 'Employee scheduling in the same app as your punch clock',
-      lead: 'The Scheduling add-on puts weekly shift planning next to clock-in, time off and hours, so you are not copying names between two tools.',
+      lead: 'Scheduling puts weekly shift planning next to clock-in, time off and hours, so you are not copying names between two tools.',
       sections: [
         ['What it does', [
           'Build a weekly schedule per company and add shifts with start and end times.',
@@ -210,22 +210,22 @@ const PAGES = [
           'Approved time off shows up where you plan, so you do not schedule someone who is away.',
         ]],
         ['Price', [
-          '$14.95/month CAD on any paid plan (Starter, Growth or Business), with a free 14-day trial started from the Schedule tab.',
+          'Included in the Growth and Business plans. On Starter it is a $14.95/month CAD add-on, with a free 14-day trial started from the Schedule tab.',
         ]],
       ],
       faq: [
         ['Do I need a separate scheduling tool?', 'No. Schedules, punches, time off and hours are in the same app and the same account.'],
         ['Can employees see their schedule?', 'Yes, in their employee portal, by email when you send the schedule, and in their own calendar.'],
         ['Does the schedule sync with Google Calendar, Apple Calendar or Outlook?', 'Yes. In the employee portal, each employee chooses “Add my shifts to my calendar” and adds a private link once. It shows only that person’s shifts, and they can replace it or turn it off at any time. Calendar apps re-read the schedule on their own timetable (Google Calendar about once or twice a day), so a same-day change can show up late; the portal is always up to date.'],
-        ['Is there a free trial?', 'Yes, 14 days, started with one click from the Schedule tab.'],
+        ['Is there a free trial?', 'Growth and Business include Scheduling. On Starter, yes: 14 days, started with one click from the Schedule tab.'],
       ],
     },
     fr: {
       slug: 'logiciel-horaires-employes',
       title: 'Logiciel d’horaires pour employés, avec pointage | PunchClock Crew',
-      desc: 'Créez les horaires de la semaine, envoyez-les à votre équipe par courriel, laissez les employés ajouter leurs quarts à Google Agenda, au Calendrier Apple ou à Outlook, et ajoutez les jours fériés du Québec en un clic. 14,95 $/mois, essai gratuit de 14 jours.',
+      desc: 'Créez les horaires de la semaine, envoyez-les à votre équipe par courriel, laissez les employés ajouter leurs quarts à Google Agenda, au Calendrier Apple ou à Outlook, et ajoutez les jours fériés du Québec en un clic. Inclus dans les plans Croissance et Entreprise, ou 14,95 $/mois sur le plan Débutant, essai gratuit de 14 jours.',
       h1: 'Les horaires de vos employés dans la même application que le pointage',
-      lead: 'Le module Planification place les horaires de la semaine à côté du pointage, des congés et des heures. Plus besoin de recopier les noms d’un outil à l’autre.',
+      lead: 'La planification place les horaires de la semaine à côté du pointage, des congés et des heures. Plus besoin de recopier les noms d’un outil à l’autre.',
       sections: [
         ['Ce qu’il fait', [
           'Créez l’horaire de la semaine par compagnie et ajoutez des quarts avec heure de début et de fin.',
@@ -235,14 +235,14 @@ const PAGES = [
           'Les congés approuvés apparaissent là où vous planifiez, pour ne pas mettre à l’horaire une personne absente.',
         ]],
         ['Prix', [
-          '14,95 $/mois sur tout plan payant (Débutant, Croissance ou Entreprise), avec un essai gratuit de 14 jours lancé à partir de l’onglet Horaires.',
+          'Incluse dans les plans Croissance et Entreprise. Sur le plan Débutant, c’est un module à 14,95 $/mois, avec un essai gratuit de 14 jours lancé à partir de l’onglet Horaires.',
         ]],
       ],
       faq: [
         ['Ai-je besoin d’un autre outil pour les horaires?', 'Non. Horaires, pointages, congés et heures sont dans la même application et le même compte.'],
         ['Les employés peuvent-ils voir leur horaire?', 'Oui, dans leur portail employé, par courriel quand vous envoyez l’horaire, et dans leur propre calendrier.'],
         ['L’horaire se synchronise-t-il avec Google Agenda, le Calendrier Apple ou Outlook?', 'Oui. Dans le portail employé, chaque employé choisit « Ajouter mes quarts à mon calendrier » et ajoute un lien privé une seule fois. Le lien ne montre que ses quarts, et il peut le remplacer ou le désactiver en tout temps. Les applications de calendrier relisent l’horaire à leur propre rythme (Google Agenda environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Le portail, lui, est toujours à jour.'],
-        ['Y a-t-il un essai gratuit?', 'Oui, 14 jours, lancé en un clic à partir de l’onglet Horaires.'],
+        ['Y a-t-il un essai gratuit?', 'Les plans Croissance et Entreprise incluent la planification. Sur le plan Débutant, oui : 14 jours, lancé en un clic à partir de l’onglet Horaires.'],
       ],
     },
   },
@@ -271,7 +271,7 @@ const PAGES = [
           'Time-off requests and an employee portal where each person sees their hours and schedule (paid plans).',
           'Lunch-break tracking and visitor check-in (Growth plan and up).',
           'Several sites from the Starter plan, and several companies under one account from the Growth plan.',
-          'Shift schedules with the Scheduling add-on, including Québec statutory holidays in one click.',
+          'Shift schedules with Scheduling (Growth and up, or the Starter add-on), including Québec statutory holidays in one click.',
           'English and French throughout: the app, the reports and the automatic emails.',
         ]],
         ['What it does not do', [
@@ -305,7 +305,7 @@ const PAGES = [
           'Demandes de congé et portail employé, où chacun voit ses heures et son horaire (plans payants).',
           'Suivi des pauses repas et pointage des visiteurs (plan Croissance et plus).',
           'Plusieurs sites dès le plan Débutant, et plusieurs compagnies dans un même compte dès le plan Croissance.',
-          'Horaires de travail avec le module Planification, y compris les jours fériés du Québec en un clic.',
+          'Horaires de travail avec la planification (plan Croissance et plus, ou module sur Débutant), y compris les jours fériés du Québec en un clic.',
           'Tout en français ou en anglais : l’application, les rapports et les courriels automatiques.',
         ]],
         ['Ce qu’il ne fait pas', [
@@ -475,7 +475,7 @@ const PAGES = [
         ['Shifts, breaks and evenings', [
           'Overtime follows the daily and weekly thresholds you set, and evening hours can be reported separately (Starter plan and up).',
           'Meal breaks: a Break button on the clock-in screen, separate from punching out, and break time shows as its own line in reports (Growth plan and up).',
-          'Weekly schedule with the Scheduling add-on: build the week, email it to the team, and each person sees their shifts in their portal or in their own calendar.',
+          'Weekly schedule with Scheduling (Growth and up, or the Starter add-on): build the week, email it to the team, and each person sees their shifts in their portal or in their own calendar.',
           'Time-off requests come in through the employee portal, and approved time off shows where you plan (paid plans).',
         ]],
         ['At the end of the pay period', [
@@ -511,7 +511,7 @@ const PAGES = [
         ['Quarts, pauses et soirées', [
           'Les heures supplémentaires suivent les seuils par jour et par semaine que vous réglez, et les heures de soir peuvent être présentées à part (plan Débutant et plus).',
           'Pauses repas : un bouton Pause à l’écran de pointage, distinct de la sortie, et le temps de pause a sa propre ligne dans les rapports (plan Croissance et plus).',
-          'Horaire de la semaine avec le module Planification : préparez la semaine, envoyez-la à l’équipe par courriel, et chacun voit ses quarts dans son portail ou dans son propre calendrier.',
+          'Horaire de la semaine avec la planification (plan Croissance et plus, ou module sur Débutant) : préparez la semaine, envoyez-la à l’équipe par courriel, et chacun voit ses quarts dans son portail ou dans son propre calendrier.',
           'Les demandes de congé arrivent par le portail employé, et les congés approuvés apparaissent là où vous planifiez (plans payants).',
         ]],
         ['À la fin de la période de paie', [
@@ -553,7 +553,7 @@ const PAGES = [
           'Several companies under one account from the Growth plan.',
         ]],
         ['Part-time staff and changing shifts', [
-          'Weekly schedule with the Scheduling add-on: build the week, email it to the team, and each person can add their shifts to their own calendar.',
+          'Weekly schedule with Scheduling (Growth and up, or the Starter add-on): build the week, email it to the team, and each person can add their shifts to their own calendar.',
           'Each employee sees their own hours and schedule in the employee portal, and asks for time off there (paid plans).',
           'Approved time off shows where you plan, so you do not schedule someone who is away.',
         ]],
@@ -568,7 +568,7 @@ const PAGES = [
       faq: [
         ['How many employees can I have?', 'Up to 10 active employees on the Free plan, 25 on Starter, 60 on Growth, and no limit on Business.'],
         ['Can it run on the store computer?', 'Yes. The clock-in page runs in a web browser on a Windows PC, a Mac, an iPad or an Android tablet.'],
-        ['Can employees see their schedule on their phone?', 'Yes, with the Scheduling add-on: in their employee portal, by email when you send the schedule, and in their own calendar.'],
+        ['Can employees see their schedule on their phone?', 'Yes, with Scheduling (Growth and up, or the Starter add-on): in their employee portal, by email when you send the schedule, and in their own calendar.'],
         ['Does it connect to my cash register?', 'No. Hours are exported as PDF, Excel or CSV for your payroll software or your accountant.'],
       ],
     },
@@ -590,7 +590,7 @@ const PAGES = [
           'Plusieurs compagnies dans un même compte dès le plan Croissance.',
         ]],
         ['Temps partiel et quarts qui changent', [
-          'Horaire de la semaine avec le module Planification : préparez la semaine, envoyez-la à l’équipe par courriel, et chacun peut ajouter ses quarts à son propre calendrier.',
+          'Horaire de la semaine avec la planification (plan Croissance et plus, ou module sur Débutant) : préparez la semaine, envoyez-la à l’équipe par courriel, et chacun peut ajouter ses quarts à son propre calendrier.',
           'Chaque employé voit ses heures et son horaire dans le portail employé, et y fait ses demandes de congé (plans payants).',
           'Les congés approuvés apparaissent là où vous planifiez, pour ne pas mettre à l’horaire une personne absente.',
         ]],
@@ -605,7 +605,7 @@ const PAGES = [
       faq: [
         ['Combien d’employés puis-je avoir?', 'Jusqu’à 10 employés actifs au plan Gratuit, 25 au plan Débutant, 60 au plan Croissance, et sans limite au plan Entreprise.'],
         ['Est-ce que ça fonctionne sur l’ordinateur du magasin?', 'Oui. La page de pointage fonctionne dans un navigateur web, sur un PC Windows, un Mac, un iPad ou une tablette Android.'],
-        ['Les employés peuvent-ils voir leur horaire sur leur téléphone?', 'Oui, avec le module Planification : dans leur portail employé, par courriel quand vous envoyez l’horaire, et dans leur propre calendrier.'],
+        ['Les employés peuvent-ils voir leur horaire sur leur téléphone?', 'Oui, avec la planification (plan Croissance et plus, ou module sur Débutant) : dans leur portail employé, par courriel quand vous envoyez l’horaire, et dans leur propre calendrier.'],
         ['Est-ce que ça se connecte à ma caisse?', 'Non. Les heures sont exportées en PDF, Excel ou CSV pour votre logiciel de paie ou votre comptable.'],
       ],
     },
@@ -627,7 +627,7 @@ const PAGES = [
         ['Shifts and overtime', [
           'Overtime follows the daily and weekly thresholds you set, and evening hours can be reported separately (Starter plan and up).',
           'Meal breaks: a Break button separate from punching out, with break time on its own line in reports (Growth plan and up).',
-          'Shift schedules with the Scheduling add-on, including Québec statutory holidays in one click.',
+          'Shift schedules with Scheduling (Growth and up, or the Starter add-on), including Québec statutory holidays in one click.',
           'A manager fixes a forgotten punch, and every correction stays in the audit log (Starter plan and up).',
         ]],
         ['Visitors', [
@@ -663,7 +663,7 @@ const PAGES = [
         ['Quarts et heures supplémentaires', [
           'Les heures supplémentaires suivent les seuils par jour et par semaine que vous réglez, et les heures de soir peuvent être présentées à part (plan Débutant et plus).',
           'Pauses repas : un bouton Pause distinct de la sortie, et le temps de pause a sa propre ligne dans les rapports (plan Croissance et plus).',
-          'Horaires de quarts avec le module Planification, y compris les jours fériés du Québec en un clic.',
+          'Horaires de quarts avec la planification (plan Croissance et plus, ou module sur Débutant), y compris les jours fériés du Québec en un clic.',
           'Un gestionnaire corrige un pointage oublié, et chaque correction reste au journal d’audit (plan Débutant et plus).',
         ]],
         ['Visiteurs', [
@@ -690,7 +690,7 @@ const PAGES = [
     en: {
       slug: 'pricing',
       title: 'Pricing: punch clock and scheduling plans in CAD | PunchClock Crew',
-      desc: 'PunchClock Crew plans in Canadian dollars: Free, Starter $19.49, Growth $39.49 and Business $79.49 per month, plus the Scheduling add-on at $14.95.',
+      desc: 'PunchClock Crew plans in Canadian dollars: Free, Starter $19.49, Growth $39.49 and Business $79.49 per month, with employee scheduling included from Growth (a $14.95 add-on on Starter).',
       h1: 'PunchClock Crew pricing',
       lead: 'Simple monthly plans in Canadian dollars. Start free, and every new account tries the paid features for 14 days.',
       pricing: true,
@@ -698,7 +698,7 @@ const PAGES = [
       faq: [
         ['Do I need a credit card to start?', 'No. The Free plan needs no credit card.'],
         ['Can I change plans later?', 'Yes, from your account at any time. Your data stays where it is.'],
-        ['Is the Scheduling add-on included?', 'No. It is $14.95/month CAD on any paid plan, and you can try it free for 14 days.'],
+        ['Is employee scheduling included?', 'Yes, in Growth and Business. On Starter it is a $14.95/month CAD add-on, and you can try it free for 14 days.'],
         ['Can I get a refund?', 'No. Payments are not refundable, including partial months, so try the paid features free for 14 days first. If you cancel, you keep your plan until the end of the month already paid and are not charged again.'],
         // Referral program (owner-approved 2026-11-20). Only in a build made from 1 to 31 December 2026 (a build before or after leaves it out).
         ["Is there a referral offer?", "Yes, for new accounts created from 1 to 31 December 2026. Sign up with the referral code of a business that already uses PunchClock Crew and you get 10% off your first paid month. The business that referred you gets a $19.49 credit, the price of one month of Starter: $9.75 when you pay your first month and $9.74 when you pay your second. The credit comes off their next invoice automatically, for up to 10 referred businesses. Every account has its own code in the profile menu, under \"Refer a business\". Conditions are in the Terms of Service.", { from: '2026-12-01T05:00:00Z', until: '2027-01-01T05:00:00Z' }],
@@ -707,7 +707,7 @@ const PAGES = [
     fr: {
       slug: 'tarifs',
       title: 'Tarifs : plans de pointage et d’horaires en dollars canadiens | PunchClock Crew',
-      desc: 'Les plans PunchClock Crew en dollars canadiens : Gratuit, Débutant 19,49 $, Croissance 39,49 $ et Entreprise 79,49 $ par mois, plus le module Planification à 14,95 $.',
+      desc: 'Les plans PunchClock Crew en dollars canadiens : Gratuit, Débutant 19,49 $, Croissance 39,49 $ et Entreprise 79,49 $ par mois, avec la planification des horaires incluse dès Croissance (module à 14,95 $ sur Débutant).',
       h1: 'Tarifs PunchClock Crew',
       lead: 'Des plans mensuels simples, en dollars canadiens. Commencez gratuitement : chaque nouveau compte essaie les fonctions payantes pendant 14 jours.',
       pricing: true,
@@ -715,7 +715,7 @@ const PAGES = [
       faq: [
         ['Faut-il une carte de crédit pour commencer?', 'Non. Le plan Gratuit ne demande aucune carte de crédit.'],
         ['Puis-je changer de plan plus tard?', 'Oui, à partir de votre compte, en tout temps. Vos données restent en place.'],
-        ['Le module Planification est-il inclus?', 'Non. Il coûte 14,95 $/mois sur tout plan payant, et vous pouvez l’essayer gratuitement pendant 14 jours.'],
+        ['La planification des horaires est-elle incluse?', 'Oui, dans les plans Croissance et Entreprise. Sur le plan Débutant, c’est un module à 14,95 $/mois, et vous pouvez l’essayer gratuitement pendant 14 jours.'],
         // Programme de parrainage (approuvé 2026-11-20). Seulement dans une reconstruction faite du 1er au 31 décembre 2026.
         ["Y a-t-il une offre de parrainage?", "Oui, pour les nouveaux comptes créés du 1er au 31 décembre 2026. Inscrivez-vous avec le code de parrainage d'une entreprise qui utilise déjà PunchClock Crew et obtenez 10 % de rabais sur votre premier mois payé. L'entreprise qui vous a recommandé reçoit un crédit de 19,49 $, soit le prix d'un mois du forfait Débutant : 9,75 $ lorsque vous payez votre premier mois et 9,74 $ lorsque vous payez le deuxième. Le crédit se déduit automatiquement de sa prochaine facture, pour au plus 10 entreprises recommandées. Chaque compte a son propre code dans le menu du profil, sous « Recommander une entreprise ». Les conditions figurent dans les Conditions d'utilisation.", { from: '2026-12-01T05:00:00Z', until: '2027-01-01T05:00:00Z' }],
         ['Puis-je obtenir un remboursement?', 'Non. Les paiements ne sont pas remboursables, y compris pour un mois partiel : essayez d’abord les fonctions payantes gratuitement pendant 14 jours. Si vous annulez, vous gardez votre forfait jusqu’à la fin du mois déjà payé et vous n’êtes plus facturé.'],
@@ -751,7 +751,7 @@ const HOME_FR = {
         'Portail employé : chacun voit ses heures et son horaire, demande un congé et signale un pointage oublié (plans payants).',
         'Heures supplémentaires, correction des pointages et export Excel ou CSV pour la paie (plan Débutant et plus).',
         'Suivi des pauses repas et pointage des visiteurs (plan Croissance et plus).',
-        'Horaires et quarts de travail avec le module Planification, y compris les jours fériés du Québec en un clic.',
+        'Horaires et quarts de travail avec la planification (plan Croissance et plus, ou module sur Débutant), y compris les jours fériés du Québec en un clic.',
         'Tout fonctionne en français ou en anglais : l’application, les rapports et les courriels automatiques.',
       ]],
       ['Remplace la pointeuse et les feuilles de temps', [
@@ -779,7 +779,7 @@ const CAP = {
   dashboard: { en: 'The dashboard: who is clocked in at each site, and the latest punches.', fr: 'Le tableau de bord : qui est pointé à chaque site, et les derniers pointages.' },
   punch: { en: 'The clock-in page on your own tablet: pick your name, then IN or OUT.', fr: 'La page de pointage sur votre propre tablette : choisissez votre nom, puis ENTRÉE ou SORTIE.' },
   reports: { en: 'A report for a pay period, with total and overtime hours, exported to Excel, CSV or PDF.', fr: 'Un rapport pour une période de paie, avec le total des heures et les heures supplémentaires, exporté en Excel, CSV ou PDF.' },
-  schedule: { en: 'The weekly schedule grid of the Scheduling add-on.', fr: 'La grille d’horaire de la semaine du module Planification.' },
+  schedule: { en: 'The weekly schedule grid (Scheduling).', fr: 'La grille d’horaire de la semaine (planification).' },
   activity: { en: 'The activity log: every punch, with Edit and Delete for a manager.', fr: 'Le journal d’activité : chaque pointage, avec Modifier et Supprimer pour un gestionnaire.' },
   geofence: { en: 'A site’s settings: the zone on the map, its radius, and lenient or strict mode.', fr: 'Les réglages d’un site : la zone sur la carte, son rayon, et le mode souple ou strict.' },
   phone: { en: 'Choosing who may clock in from their own phone, and from where.', fr: 'Choisir qui peut pointer avec son propre téléphone, et à partir d’où.' },
@@ -912,9 +912,9 @@ function llmsTxt() {
 > Time-and-attendance software made in Québec, Canada: employees clock in and out with a PIN on a shared tablet or computer (or from their phone with remote clock-in), and owners get hours, overtime, time off, schedules and payroll reports. Fully bilingual (French and English). Prices in Canadian dollars. Website: ${SITE}
 
 Key facts:
-- Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds lunch breaks and visitor check-in); Business $79.49 (unlimited).
+- Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds employee scheduling, lunch breaks and visitor check-in); Business $79.49 (unlimited).
 - Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal (schedule, hours, time off, and reporting a forgotten clock-in or clock-out for the manager to approve), time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
-- Scheduling add-on: $14.95/month on any paid plan, 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
+- Scheduling: included in Growth and Business; on Starter a $14.95/month add-on with a 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
 - Works in a web browser; no app install needed for the clock-in page.
 - Software only: PunchClock Crew does not sell, lend or supply tablets or any hardware. Customers use a tablet, computer or phone they already have.

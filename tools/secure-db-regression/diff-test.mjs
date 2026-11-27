@@ -74,6 +74,9 @@ admins.x1 = { id: 'x1', parent_admin_id: null, role: 'admin', status: 'active' }
 admins.d1 = { id: 'd1', parent_admin_id: null, role: 'admin', status: 'active' };
 companiesOf.t1 = ['c7']; companiesOf.x1 = ['c6'];
 sitesOf.c7 = ['s7']; sitesOf.c6 = ['s6'];
+// Growth includes Scheduling (2026-11-26): g1 is a Growth owner with no add-on and no trial, company c5, site s5
+sessions.tokGrowth = 'g1'; admins.g1 = { id: 'g1', parent_admin_id: null, role: 'admin', status: 'active' };
+companiesOf.g1 = ['c5']; sitesOf.c5 = ['s5'];
 sessions.tokNew = 'a3'; admins.a3 = { id: 'a3', parent_admin_id: null, role: 'admin', status: 'active' };
 // Private images: an account whose company id is a real uuid (uploads are filed under <company uuid>/)
 const CO_IMG = '55555555-5555-4555-8555-555555555551', CO_FOREIGN = '55555555-5555-4555-8555-555555555552', SITE_UUID = '66666666-6666-4666-8666-666666666661';
@@ -145,7 +148,7 @@ for (const [id, tok] of [['l1', 'tokL1'], ['l2', 'tokL2'], ['l3', 'tokL3'], ['l4
 companiesOf.l1 = ['cL1']; companiesOf.l2 = ['cL2']; companiesOf.l3 = ['cG']; companiesOf.l4 = ['cL4'];
 sitesOf.cL1 = ['sL1']; sitesOf.cL2 = ['sL2a', 'sL2b']; sitesOf.cG = ['sG']; sitesOf.cL4 = ['sa', 'sb', 'sc', 'sd', 'se', 'sf'];
 employeesOf.cL1 = ['eL1']; employeesOf.cL2 = ['eL2']; employeesOf.cG = ['eG']; employeesOf.cL4 = ['eL4'];
-const planOf = { a1: 'business', f1: 'business', b1: 'free', l1: 'free', l2: 'starter', l3: 'unlimited', l4: 'growth' };
+const planOf = { a1: 'business', f1: 'business', b1: 'free', l1: 'free', l2: 'starter', l3: 'unlimited', l4: 'growth', g1: 'growth', x1: 'starter', d1: 'starter' };
 const activeEmps = { cL1: 10, cL2: 26, cG: 30, cL4: 3 };
 const siteCounts = { cL1: 1, cL2: 2, cG: 1, cL4: 6 };
 const sr = (id, o) => ({ id, company_id: 'c1', ...o });
@@ -246,12 +249,13 @@ function makeFetch() {
     }
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon') return j([{ scheduling_addon: ['a1', 'f1'].includes(eq('id')) }]);
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_trial_ends_at') return j([{ scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
+    if (t === 'admins' && method === 'GET' && p.q.get('select') === 'plan,scheduling_addon,scheduling_trial_ends_at') return j([{ plan: planOf[eq('id')] || 'free', scheduling_addon: ['a1', 'f1'].includes(eq('id')), scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'scheduling_addon,scheduling_trial_ends_at') return j([{ scheduling_addon: ['a1', 'f1'].includes(eq('id')), scheduling_trial_ends_at: eq('id') === 't1' ? FUTURE : eq('id') === 'x1' ? PAST : null }]);
     if (t === 'admins' && method === 'GET' && p.q.get('select') === 'id' && p.q.has('parent_admin_id')) return j([{ id: 'a2' }]);
     if (t === 'companies' && method === 'GET' && p.q.has('admin_id')) return j((companiesOf[eq('admin_id')] || []).map(id => ({ id, admin_id: eq('admin_id'), name: 'Acme Fence' })));
-    if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j(eq('id') === 'c7' ? [{ admin_id: 't1', punch_label_mode: 'optional' }] : eq('id') === 'c6' ? [{ admin_id: 'x1', punch_label_mode: 'optional' }] : [{ admin_id: 'a1', punch_label_mode: 'off' }]);
-    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9', 's7', 's6', 'sImg'].includes(eq('id')) ? [{ id: eq('id') }] : []);
-    if (t === 'sites' && method === 'GET' && p.q.get('select') === 'company_id') return j([{ company_id: eq('id') === 's7' ? 'c7' : eq('id') === 's6' ? 'c6' : 'c1' }]);
+    if (t === 'companies' && method === 'GET' && p.q.get('select') === 'admin_id,punch_label_mode') return j(eq('id') === 'c7' ? [{ admin_id: 't1', punch_label_mode: 'optional' }] : eq('id') === 'c6' ? [{ admin_id: 'x1', punch_label_mode: 'optional' }] : eq('id') === 'c5' ? [{ admin_id: 'g1', punch_label_mode: 'optional' }] : [{ admin_id: 'a1', punch_label_mode: 'off' }]);
+    if (t === 'sites' && method === 'GET' && p.q.has('id') && p.q.get('select') === 'id') return j(['s1', 's2', 's8', 's9', 's7', 's6', 's5', 'sImg'].includes(eq('id')) ? [{ id: eq('id') }] : []);
+    if (t === 'sites' && method === 'GET' && p.q.get('select') === 'company_id') return j([{ company_id: eq('id') === 's7' ? 'c7' : eq('id') === 's6' ? 'c6' : eq('id') === 's5' ? 'c5' : 'c1' }]);
     if (t === 'sites' && method === 'GET' && p.q.has('company_id')) { const cs = (p.q.get('company_id') || '').replace(/^in\.\(|\)$/g, '').split(','); return j(cs.flatMap(c => (sitesOf[c] || []).map(id => ({ id })))); }
     if (t === 'employees' && method === 'GET' && (p.q.has('imgtest') || p.q.get('site_id') === 'eq.sImg')) return j([
       { id: 'i1', name: 'One', photo_url: `${PUB}/avatars/${CO_IMG}/photo-aaa.png`, company_id: CO_IMG }, { id: 'i2', name: 'Two', photo_url: `${PUB}/avatars/legacy-2.png` },
@@ -525,11 +529,16 @@ const cases = [
   R('trial', 'never started: owner cannot create a label', { table: 'work_labels', method: 'POST', body: { company_id: 'c9', name: 'x' }, ...other }, r => r.status === 403),
   R('trial', 'trial running: a terminal sees the labels', { table: 'work_labels', method: 'GET', filter: '', kioskSiteId: 's7' }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length > 0),
   R('trial', 'trial used up: a terminal sees no labels', { table: 'work_labels', method: 'GET', filter: '', kioskSiteId: 's6' }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length === 0),
+  // Growth includes Scheduling (2026-11-26): no add-on and no trial needed. OLD refuses these; NEW allows them.
+  R('trial', 'growth without add-on: owner creates a label', { table: 'work_labels', method: 'POST', body: { company_id: 'c5', name: 'Job 1' }, sessionToken: 'tokGrowth' }, r => r.status === 201 || r.status === 200),
+  R('trial', 'growth without add-on: a terminal sees the labels', { table: 'work_labels', method: 'GET', filter: '', kioskSiteId: 's5' }, r => r.status === 200 && Array.isArray(r.obj) && r.obj.length > 0),
+  R('trial', 'starter without add-on or trial: still no label', { table: 'work_labels', method: 'POST', body: { company_id: 'c6', name: 'Job 2' }, sessionToken: 'tokTrialOver' }, r => r.status === 403),
   R('trial-start', 'start trial: no session', { action: 'start_scheduling_trial' }, r => r.status === 401),
   R('trial-start', 'start trial: a manager cannot', { action: 'start_scheduling_trial', ...mgr }, r => r.status === 403),
   R('trial-start', 'start trial: already paid', { action: 'start_scheduling_trial', ...own }, r => r.status === 400),
   R('trial-start', 'start trial: already running', { action: 'start_scheduling_trial', sessionToken: 'tokTrial' }, r => r.status === 400),
   R('trial-start', 'start trial: used up, not offered again', { action: 'start_scheduling_trial', sessionToken: 'tokTrialOver' }, r => r.status === 400),
+  R('trial-start', 'start trial: growth already includes it, nothing written', { action: 'start_scheduling_trial', sessionToken: 'tokGrowth' }, r => r.status === 400 && /included/.test(r.body) && !r.calls.some(c => c.startsWith('PATCH'))),
   R('trial-start', 'start trial: first time, the server sets 14 days', { action: 'start_scheduling_trial', sessionToken: 'tokNoTrial' },
     r => { if (r.status !== 200 || !r.obj || !r.obj.endsAt) return false; const d = (Date.parse(r.obj.endsAt) - Date.now()) / 864e5; const w = r.calls.find(c => c.startsWith('PATCH') && /admins/.test(c)); return d > 13.9 && d < 14.1 && !!w && /scheduling_trial_ends_at=is\.null/.test(w) && Object.keys(JSON.parse(w.split(' ').slice(2).join(' '))).join() === 'scheduling_trial_ends_at'; }),
   // time off and the employee portal are paid features (b1 = Free past its preview, a1 = paid)
@@ -790,6 +799,10 @@ const cases = [
       R(G, 'deleting a shift stays open after the add-on lapsed', { table: 'shifts', method: 'DELETE', filter: 'id=eq.shS1', sessionToken: 'tokTrialOver' }, ok),
       R(G, 'reading shifts stays open without the add-on', { table: 'shifts', method: 'GET', filter: 'shift_date=gte.2026-11-01', sessionToken: 'tokTrialOver' }, ok),
       R(G, 'super admin is not gated', { table: 'shifts', method: 'POST', body: { company_id: 'c1', site_id: 's1', shift_date: '2026-11-10' }, ...sup }, ok),
+      // Growth includes Scheduling (2026-11-26); Starter without the add-on or a trial is still refused (x1, d1 above)
+      R(G, 'growth without add-on: a shift is allowed', { table: 'shifts', method: 'POST', body: { company_id: 'c5', site_id: 's5', shift_date: '2026-11-10' }, sessionToken: 'tokGrowth' }, ok),
+      R(G, 'growth without add-on: a holiday is allowed', { table: 'holidays', method: 'POST', body: { company_id: 'c5', holiday_date: '2026-12-25', name: 'Christmas' }, sessionToken: 'tokGrowth' }, ok),
+      R(G, 'starter without add-on: a holiday is still refused', { table: 'holidays', method: 'POST', body: { company_id: 'c1', holiday_date: '2026-12-25', name: 'Christmas' }, sessionToken: 'tokNoTrial' }, r => r.status === 403),
     ];
   })(),
   // ---- manager read scope (added 2026-11-05): a manager reads only the rows at their own sites ----

@@ -42,6 +42,9 @@ const MAIN_PLAN_PRICES = new Set([
   PRICE_IDS.growth,
   PRICE_IDS.business,
 ]);
+// Growth and Business (and comped Unlimited) include Scheduling since 2026-11-26; on Starter it stays a paid add-on.
+// Same rule as secure-db's schedulingActive, the database's admin_scheduling_active and the website.
+const SCHEDULING_INCLUDED_PLANS = new Set(["growth", "business", "unlimited"]);
 const PLAN_LABELS: Record<string, string> = {
   starter: "Starter ($19.49/mo)",
   growth: "Growth ($39.49/mo)",
@@ -90,6 +93,30 @@ async function stripeGet(path: string) {
   const data = await res.json();
   if (!res.ok) throw new Error(data?.error?.message || `Stripe error ${res.status}`);
   return data;
+}
+// An owner who moves to a plan that includes Scheduling must not keep paying for the separate add-on. Each running
+// add-on subscription of that customer is set to end with the period already paid: no refund (Terms), no further
+// charge. Its own customer.subscription.deleted event then clears scheduling_addon, and the plan keeps Scheduling on.
+// Only a subscription made of nothing but the add-on price is touched, never the main plan's subscription.
+async function endSchedulingAddon(customerId: unknown): Promise<number> {
+  if (typeof customerId !== "string" || !/^cus_[A-Za-z0-9]+$/.test(customerId)) return 0;
+  const list = await stripeGet(`subscriptions?customer=${customerId}&status=all&limit=100`);
+  let ended = 0;
+  for (const sub of list?.data || []) {
+    if (!["active", "trialing", "past_due"].includes(sub.status) || sub.cancel_at_period_end) continue;
+    const items = sub.items?.data || [];
+    if (!items.length || !items.every((it) => it.price?.id === PRICE_IDS.scheduling_addon)) continue;
+    await stripePost(`subscriptions/${sub.id}`, { cancel_at_period_end: "true" }, `end-scheduling-addon-${sub.id}`);
+    ended++;
+  }
+  return ended;
+}
+async function endSchedulingAddonSafely(customerId: unknown, why: string): Promise<void> {
+  // Never allowed to fail the webhook: Stripe would retry and replay the plan change.
+  try {
+    const n = await endSchedulingAddon(customerId);
+    if (n) console.log(`scheduling add-on set to end at period end (${why}): ${n}`);
+  } catch (e) { console.error("endSchedulingAddon failed:", (e as Error).message); }
 }
 // ── Response helpers ──────────────────────────────────────────────────────────
 function json(data, status = 200) {
@@ -563,6 +590,9 @@ async function handleCheckout(body) {
   if (!admin) return json({
     error: "Admin not found"
   }, 404);
+  if (plan === "scheduling_addon" && SCHEDULING_INCLUDED_PLANS.has(String(admin.plan ?? ""))) {
+    return json({ error: "Scheduling is already included in your plan" }, 400);
+  }
   let customerId = admin.stripe_customer_id;
   const hadCustomer = !!customerId;
   if (!customerId) {
@@ -708,6 +738,7 @@ async function handleWebhook(req: Request) {
         updateFields.extra_seats = 0;
       }
       await supabase.from("admins").update(updateFields).eq("id", adminId);
+      if (SCHEDULING_INCLUDED_PLANS.has(plan)) await endSchedulingAddonSafely(s.customer, `checkout ${plan}`);
       // Referral program. Two things happen when an account starts paying for a plan: the 10% coupon it used
       // (if any) is marked as spent, and referral credits it earned while on Free are put on its Stripe balance.
       // Never allowed to fail the webhook (see the note on notifyPayment below).
@@ -743,6 +774,9 @@ async function handleWebhook(req: Request) {
         updateFields.extra_seats = 0;
       }
       await supabase.from("admins").update(updateFields).eq("id", admin.id);
+      if (status === "active" && SCHEDULING_INCLUDED_PLANS.has(resolvedPlan)) {
+        await endSchedulingAddonSafely(sub.customer, `plan change ${resolvedPlan}`);
+      }
     }
   } else if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object;

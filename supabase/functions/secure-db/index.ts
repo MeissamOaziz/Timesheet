@@ -525,12 +525,16 @@ async function kioskRecentPunches(siteId: string): Promise<unknown[] | null> {
   }
 }
 
-// The Scheduling add-on is on when it is paid for, or during the free 14-day trial (an end date in the future,
-// set once by start_scheduling_trial). Paid is checked first, so the common case costs one lookup as before.
+// Scheduling is included in Growth, Business and Unlimited (since 2026-11-26). On Starter it is the paid add-on, or
+// its free 14-day trial (an end date in the future, set once by start_scheduling_trial). One lookup on the owner's
+// row. Same rule as the database's admin_scheduling_active and the website's hasSchedulingAddon: change all three.
+const SCHEDULING_INCLUDED_PLANS = new Set(['growth', 'business', 'unlimited']);
 async function schedulingActive(adminId: string): Promise<boolean> {
-  const paid = (await restJson(`admins?id=eq.${adminId}&select=scheduling_addon&limit=1`))?.[0];
-  if (paid?.scheduling_addon) return true;
-  const t = (await restJson(`admins?id=eq.${adminId}&select=scheduling_trial_ends_at&limit=1`))?.[0]?.scheduling_trial_ends_at;
+  const row = (await restJson(`admins?id=eq.${adminId}&select=plan,scheduling_addon,scheduling_trial_ends_at&limit=1`))?.[0];
+  if (!row) return false;
+  if (SCHEDULING_INCLUDED_PLANS.has(String(row.plan ?? ''))) return true;
+  if (row.scheduling_addon) return true;
+  const t = row.scheduling_trial_ends_at;
   return !!t && new Date(t as string).getTime() > Date.now();
 }
 
@@ -2248,11 +2252,13 @@ Deno.serve(async (req: Request) => {
       return errResp('Only the account owner can start the scheduling trial', 403);
     }
     const ownerRows = await fetch(
-      `${SUPABASE_URL}/rest/v1/admins?id=eq.${caller.primaryAdminId}&select=scheduling_addon,scheduling_trial_ends_at&limit=1`,
+      `${SUPABASE_URL}/rest/v1/admins?id=eq.${caller.primaryAdminId}&select=plan,scheduling_addon,scheduling_trial_ends_at&limit=1`,
       { headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` } }
     ).then(r => r.ok ? r.json() : null).catch(() => null);
     const owner = Array.isArray(ownerRows) ? ownerRows[0] : null;
     if (!owner) return errResp('Account not found', 404);
+    // Growth and up include Scheduling: nothing to try, and the trial stays unused should the account move to Starter.
+    if (SCHEDULING_INCLUDED_PLANS.has(String(owner.plan ?? ''))) return errResp('Scheduling is already included in your plan', 400);
     if (owner.scheduling_addon) return errResp('Scheduling is already active on this account', 400);
     if (owner.scheduling_trial_ends_at) return errResp('The scheduling trial has already been used', 400);
 
@@ -2394,13 +2400,13 @@ Deno.serve(async (req: Request) => {
       return errResp('Unauthorized', 401);
     }
     if (table === 'work_labels' && caller && caller.role !== 'super_admin') {
-      // Managing labels is an owner/admin task, and the feature belongs to the Scheduling add-on.
+      // Managing labels is an owner/admin task, and the feature belongs to Scheduling (Growth and up, or the Starter add-on).
       if (caller.role === 'manager') return errResp('Forbidden: managers cannot manage work labels', 403);
       if (!(await schedulingActive(caller.primaryAdminId))) {
         return errResp('Forbidden: work labels are part of the Scheduling add-on', 403);
       }
     }
-    // Shifts and holidays are the Scheduling add-on (paid, or its free 14-day trial). The website shows the page read-only
+    // Shifts and holidays are Scheduling (Growth and up; on Starter the paid add-on or its free 14-day trial). The website shows the page read-only
     // without it; this is what stops a hand-made request. Deleting stays open so an account whose add-on lapsed can still
     // clean up (and company or employee deletes can cascade).
     if ((table === 'shifts' || table === 'holidays') && method !== 'DELETE' && caller && caller.role !== 'super_admin') {

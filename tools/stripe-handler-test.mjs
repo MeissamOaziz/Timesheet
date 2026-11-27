@@ -19,12 +19,14 @@ const tables = {
     { token: 'tokOther', admin_id: 'b1', expires_at: FUTURE },
     { token: 'tokExpired', admin_id: 'a1', expires_at: PAST },
     { token: 'tokGone', admin_id: 'a3', expires_at: FUTURE },
+    { token: 'tokGrowth', admin_id: 'g1', expires_at: FUTURE },
   ],
   admins: [
     { id: 'a1', email: 'owner@acme.test', parent_admin_id: null, status: 'active', plan: 'free', stripe_customer_id: 'cus_A1', extra_seats: 0, scheduling_addon: false, stripe_subscription_id: null },
     { id: 'a2', email: 'co@acme.test', parent_admin_id: 'a1', status: 'active', plan: 'free', stripe_customer_id: null },
     { id: 'b1', email: 'owner@other.test', parent_admin_id: null, status: 'active', plan: 'free', stripe_customer_id: 'cus_B1' },
     { id: 'a3', email: 'gone@acme.test', parent_admin_id: null, status: 'suspended', plan: 'free', stripe_customer_id: null },
+    { id: 'g1', email: 'growth@acme.test', parent_admin_id: null, status: 'active', plan: 'growth', stripe_customer_id: 'cus_G1', extra_seats: 0, scheduling_addon: false, stripe_subscription_id: 'sub_main' },
   ],
 };
 const updates = [];
@@ -51,11 +53,26 @@ globalThis.__FAKE_SB = { from: makeBuilder,
   async rpc(fn, args) { if (fn !== '_admin_session_lookup') return { data: null }; return { data: tables.admin_sessions.filter(x => x.token === args.p_token).map(x => ({ admin_id: x.admin_id, expires_at: x.expires_at })) }; } };
 globalThis.__WC = webcrypto;
 const stripeCalls = []; const mailCalls = [];
+// The customer's subscriptions as Stripe lists them: the main plan, a running Scheduling add-on, one already set to end,
+// a cancelled one, and a mixed subscription that holds the add-on next to another price (never touched).
+const ADDON = 'price_1TM5NMIhFqyQNAEWo4s8iSpb', GROWTH = 'price_1TM5NPIhFqyQNAEW2itq6QuX', SEAT = 'price_1TM5NMIhFqyQNAEWRPqJ23ZY';
+const subList = { data: [
+  { id: 'sub_main', status: 'active', cancel_at_period_end: false, items: { data: [{ price: { id: GROWTH } }] } },
+  { id: 'sub_addon', status: 'active', cancel_at_period_end: false, items: { data: [{ price: { id: ADDON } }] } },
+  { id: 'sub_addon_ending', status: 'active', cancel_at_period_end: true, items: { data: [{ price: { id: ADDON } }] } },
+  { id: 'sub_addon_gone', status: 'canceled', cancel_at_period_end: false, items: { data: [{ price: { id: ADDON } }] } },
+  { id: 'sub_mixed', status: 'active', cancel_at_period_end: false, items: { data: [{ price: { id: ADDON } }, { price: { id: SEAT } }] } },
+] };
+let stripeListFails = false;
 globalThis.fetch = async (url, init = {}) => {
   const u = String(url);
   if (u.startsWith('https://api.stripe.com/')) {
     const body = decodeURIComponent(String(init.body || ''));
-    stripeCalls.push({ path: u.replace('https://api.stripe.com/v1/', ''), body });
+    stripeCalls.push({ path: u.replace('https://api.stripe.com/v1/', ''), body, method: init.method || 'GET', idem: (init.headers || {})['Idempotency-Key'] });
+    if (u.includes('/v1/subscriptions?')) {
+      if (stripeListFails) return new Response(JSON.stringify({ error: { message: 'boom' } }), { status: 500, headers: { 'content-type': 'application/json' } });
+      return new Response(JSON.stringify(subList), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
     return new Response(JSON.stringify({ id: 'cus_new', url: 'https://stripe.test/session' }), { status: 200, headers: { 'content-type': 'application/json' } });
   }
   if (u.includes('resend.com')) { mailCalls.push(u); return new Response('{}', { status: 200 }); }
@@ -110,6 +127,10 @@ r = await call('checkout', { plan: 'extra_seat', sessionToken: 'tokOwner' });
 ok('add-ons still work (extra seat)', r.status === 200 && r.stripe.find(s => s.path === 'checkout/sessions').body.includes('price_1TM5NMIhFqyQNAEWRPqJ23ZY'));
 r = await call('checkout', { plan: 'scheduling_addon', sessionToken: 'tokOwner' });
 ok('add-ons still work (scheduling)', r.status === 200 && r.stripe.find(s => s.path === 'checkout/sessions').body.includes('price_1TM5NMIhFqyQNAEWo4s8iSpb'));
+r = await call('checkout', { plan: 'scheduling_addon', sessionToken: 'tokGrowth' });
+ok('growth includes Scheduling: the add-on checkout is refused, Stripe never called', r.status === 400 && /included/.test(r.json?.error || '') && r.stripe.length === 0);
+r = await call('checkout', { plan: 'extra_seat', sessionToken: 'tokGrowth' });
+ok('growth can still buy an extra seat', r.status === 200 && !!r.stripe.find(s => s.path === 'checkout/sessions'));
 
 console.log('\n── billing portal ──');
 r = await call('portal', { adminId: 'b1' });
@@ -138,6 +159,45 @@ r = await call('whatever', {});
 ok('unknown action still a 400', r.status === 400);
 const w = await handler(new Request('https://fn/stripe-handler/webhook', { method: 'POST', body: '{}' }));
 ok('webhook without a signature is still refused (not by the session gate)', w.status >= 400 && w.status < 500);
+
+console.log('\n── moving to Growth or Business ends a paid Scheduling add-on (2026-11-26) ──');
+let evN = 0;
+async function webhook(type, obj) {
+  const payload = JSON.stringify({ id: 'evt_' + (++evN) + '_' + Date.now(), type, created: Math.floor(Date.now() / 1000), data: { object: obj } });
+  const t = Math.floor(Date.now() / 1000);
+  const key = await webcrypto.subtle.importKey('raw', new TextEncoder().encode('whsec_x'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = Buffer.from(await webcrypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${t}.${payload}`))).toString('hex');
+  stripeCalls.length = 0; updates.length = 0;
+  const res = await handler(new Request('https://fn/stripe-handler/webhook', { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${sig}` }, body: payload }));
+  return { status: res.status, stripe: [...stripeCalls], updates: [...updates] };
+}
+const ended = (w) => w.stripe.filter(c => c.method === 'POST' && /^subscriptions\/sub_/.test(c.path));
+let wh = await webhook('checkout.session.completed', { customer: 'cus_A1', subscription: 'sub_main', metadata: { adminId: 'a1', plan: 'growth' } });
+ok('checkout to Growth: answered 200', wh.status === 200);
+ok('checkout to Growth: the plan is saved', wh.updates.some(u => u.name === 'admins' && u.patch.plan === 'growth'));
+ok('checkout to Growth: only the running add-on is set to end at period end', ended(wh).length === 1 && ended(wh)[0].path === 'subscriptions/sub_addon' && ended(wh)[0].body === 'cancel_at_period_end=true' && ended(wh)[0].idem === 'end-scheduling-addon-sub_addon');
+ok('checkout to Growth: it lists only this customer’s subscriptions', wh.stripe.some(c => c.path.startsWith('subscriptions?customer=cus_A1&')));
+ok('checkout to Growth: nothing cancelled at once, the add-on flag is left to its own end event', !wh.stripe.some(c => c.method === 'DELETE') && !wh.updates.some(u => 'scheduling_addon' in u.patch));
+wh = await webhook('checkout.session.completed', { customer: 'cus_A1', subscription: 'sub_main', metadata: { adminId: 'a1', plan: 'business' } });
+ok('checkout to Business: the add-on is set to end too', ended(wh).length === 1 && ended(wh)[0].path === 'subscriptions/sub_addon');
+wh = await webhook('checkout.session.completed', { customer: 'cus_A1', subscription: 'sub_main', metadata: { adminId: 'a1', plan: 'starter' } });
+ok('checkout to Starter: the add-on is kept, Stripe not asked', wh.status === 200 && wh.stripe.length === 0);
+wh = await webhook('checkout.session.completed', { customer: 'cus_A1', subscription: 'sub_x', metadata: { adminId: 'a1', plan: 'scheduling_addon' } });
+ok('buying the add-on itself never ends it', wh.status === 200 && ended(wh).length === 0 && wh.updates.some(u => u.patch.scheduling_addon === true));
+wh = await webhook('customer.subscription.updated', { id: 'sub_main', customer: 'cus_A1', status: 'active', metadata: { adminId: 'a1' }, items: { data: [{ price: { id: GROWTH } }] } });
+ok('plan change to Growth in the billing portal: the add-on is set to end', wh.status === 200 && ended(wh).length === 1 && ended(wh)[0].path === 'subscriptions/sub_addon');
+wh = await webhook('customer.subscription.updated', { id: 'sub_main', customer: 'cus_A1', status: 'active', metadata: { adminId: 'a1' }, items: { data: [{ price: { id: 'price_1TM5NRIhFqyQNAEWBIazJeAo' } }] } });
+ok('plan change to Starter: the add-on is kept', wh.status === 200 && wh.stripe.length === 0);
+wh = await webhook('customer.subscription.updated', { id: 'sub_main', customer: 'cus_A1', status: 'past_due', metadata: { adminId: 'a1' }, items: { data: [{ price: { id: GROWTH } }] } });
+ok('Growth subscription not paid (past due): the add-on is left alone', wh.status === 200 && wh.stripe.length === 0);
+wh = await webhook('customer.subscription.updated', { id: 'sub_addon', customer: 'cus_A1', status: 'active', cancel_at_period_end: true, metadata: { adminId: 'a1', plan: 'scheduling_addon' }, items: { data: [{ price: { id: ADDON } }] } });
+ok('the add-on’s own "will end" event changes nothing', wh.status === 200 && wh.stripe.length === 0 && wh.updates.length === 0);
+stripeListFails = true;
+wh = await webhook('checkout.session.completed', { customer: 'cus_A1', subscription: 'sub_main', metadata: { adminId: 'a1', plan: 'growth' } });
+stripeListFails = false;
+ok('Stripe failing while ending the add-on never fails the webhook (no retry replays the plan change)', wh.status === 200 && wh.updates.some(u => u.patch.plan === 'growth'));
+wh = await webhook('checkout.session.completed', { customer: 'cus_A1&status=all', subscription: 'sub_main', metadata: { adminId: 'a1', plan: 'growth' } });
+ok('a malformed customer id is never put in a Stripe URL', wh.status === 200 && !wh.stripe.some(c => c.path.startsWith('subscriptions')));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
