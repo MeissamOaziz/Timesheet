@@ -21,7 +21,7 @@
   script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
   font-src 'self' https://fonts.gstatic.com data:;
-  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://cdnjs.cloudflare.com https://tile.openstreetmap.org;
+  img-src 'self' data: blob: https://uziwymrwaeojhqaagqcm.supabase.co https://cdnjs.cloudflare.com https://tile.openstreetmap.org https://ibasemaps-api.arcgis.com https://static-map-tiles-api.arcgis.com;
   connect-src 'self' https://uziwymrwaeojhqaagqcm.supabase.co https://nominatim.openstreetmap.org https://cdnjs.cloudflare.com;
   worker-src 'self';
   manifest-src 'self';
@@ -38,9 +38,9 @@ if (window.top !== window.self) {
 }
 </script>
 
-<!-- Primary EN meta -->
-<title id="metaTitle">Logiciel de pointage pour équipes au Québec et au Canada | PunchClock Crew</title>
-<meta name="description" id="metaDesc" content="PunchClock Crew est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service (horaire, heures, congés), suivi des pauses repas, pointage visiteur, rapports de paie automatisés, planification des quarts. Essai gratuit.">
+<!-- Primary meta: English, like the page as served. updateMetaTags() swaps in French for ?lang=fr. -->
+<title id="metaTitle">Punch Clock App for Employees in Canada | PunchClock Crew</title>
+<meta name="description" id="metaDesc" content="PunchClock Crew is a simple punch clock app for Canadian businesses. Employees clock in and out with a PIN on your own tablet or from their phone. Hours, overtime, payroll reports and shift scheduling, in English and French. Free plan available.">
 <meta name="keywords" content="logiciel de pointage, suivi du temps employé, gestion des quarts, pointeuse, rapports de paie, entrée sortie employé, logiciel RH Québec, gestion des présences, time and attendance software Quebec, employee time tracking Canada, shift management software, punch clock, payroll reports, logiciel paie québec, planification horaire employé, horaire de travail, quarts de travail québec, portail employé, employee self-service portal, employee portal app, portail libre-service, demande de congé en ligne, consulter son horaire en ligne, suivi des pauses repas, lunch break tracking, pointage visiteur, visitor check-in, visitor sign in software, who is in the building">
 <meta name="robots" content="index, follow">
 <meta name="author" content="PunchClock Crew">
@@ -49,25 +49,25 @@ if (window.top !== window.self) {
 <meta name="language" content="fr, en">
 
 <!-- Canonical + hreflang for bilingual SEO -->
-<link rel="canonical" href="https://www.punchclock.ca/">
-<link rel="alternate" hreflang="fr-CA" href="https://www.punchclock.ca/?lang=fr">
+<link rel="canonical" id="metaCanonical" href="https://www.punchclock.ca/">
+<link rel="alternate" hreflang="fr-CA" href="https://www.punchclock.ca/fr/">
 <link rel="alternate" hreflang="en-CA" href="https://www.punchclock.ca/">
 <link rel="alternate" hreflang="x-default" href="https://www.punchclock.ca/">
 
 <!-- Open Graph — bilingual -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.punchclock.ca/">
-<meta property="og:title" id="ogTitle" content="PunchClock Crew — Logiciel de pointage pour le Québec et le Canada">
-<meta property="og:description" id="ogDesc" content="Logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.">
+<meta property="og:title" id="ogTitle" content="PunchClock Crew — Punch Clock App for Employees in Canada">
+<meta property="og:description" id="ogDesc" content="A simple punch clock app for shift-based businesses. PIN clock-in on your own tablet or by phone, multi-site, an employee self-service portal, payroll reports and shift scheduling. Free plan available.">
 <meta property="og:image" content="https://www.punchclock.ca/og-image.png">
-<meta property="og:locale" content="fr_CA">
-<meta property="og:locale:alternate" content="en_CA">
+<meta property="og:locale" content="en_CA">
+<meta property="og:locale:alternate" content="fr_CA">
 <meta property="og:site_name" content="PunchClock Crew">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="twTitle" content="PunchClock Crew — Logiciel de pointage Québec &amp; Canada">
-<meta name="twitter:description" id="twDesc" content="Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit disponible.">
+<meta name="twitter:title" id="twTitle" content="PunchClock Crew — Punch Clock App for Employees">
+<meta name="twitter:description" id="twDesc" content="Simple punch clock app for shift-based businesses. PIN clock-in, employee self-service portal, automated reports, shift scheduling. Free plan available.">
 <meta name="twitter:image" content="https://www.punchclock.ca/og-image.png">
 
 <!-- Structured Data — bilingual SoftwareApplication schema -->
@@ -95,7 +95,7 @@ if (window.top !== window.self) {
     {"@type": "Offer", "name": "Débutant / Starter", "price": "19.49", "priceCurrency": "CAD"},
     {"@type": "Offer", "name": "Croissance / Growth", "price": "39.49", "priceCurrency": "CAD"},
     {"@type": "Offer", "name": "Entreprise / Business", "price": "79.49", "priceCurrency": "CAD"},
-    {"@type": "Offer", "name": "Planification / Scheduling Add-On", "price": "14.95", "priceCurrency": "CAD"}
+    {"@type": "Offer", "name": "Planification / Scheduling Add-On", "description": "Débutant seulement; inclus dans Croissance et Entreprise / Starter only; included in Growth and Business", "price": "14.95", "priceCurrency": "CAD"}
   ],
   "publisher": {
     "@type": "Organization",
@@ -182,7 +182,7 @@ if (window.top !== window.self) {
       "name": "Can employees check their own schedule, hours and time off without contacting me?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes — every employee gets their own self-service portal, included on every paid plan (Starter and above; free accounts have it during their 14-day preview). From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, report a clock-in or clock-out they forgot, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
+        "text": "Yes — every employee gets their own self-service portal, included on every paid plan (Starter and above; free accounts have it during their 14-day preview). From Admin → Employees, turn on email for an employee and click Send Invitation; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the account has Scheduling), review their hours for the current pay period, request time off, report a clock-in or clock-out they forgot, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen."
       }
     },
     {
@@ -203,10 +203,10 @@ if (window.top !== window.self) {
     },
     {
       "@type": "Question",
-      "name": "What is the Scheduling Add-On and how does it work?",
+      "name": "What is Scheduling and how does it work?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Crew. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. (5) Each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook from their portal, with a private link. Available on any paid plan (Starter, Growth, or Business), and you can try it free for 14 days: open the Schedule tab and click \"Try it free for 14 days\"."
+        "text": "Scheduling lets you build weekly shift schedules for your employees directly inside PunchClock Crew. Here's how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap \"Send to my email\" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. (5) Each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook from their portal, with a private link. Included in the Growth and Business plans. On Starter it is a $14.95/mo CAD add-on, and you can try it free for 14 days: open the Schedule tab and click \"Try it free for 14 days\"."
       }
     }
   ]
@@ -967,6 +967,10 @@ body.land-menu-open .land-sticky-cta{display:none;}
 .land-footer-links{display:flex;gap:18px;}
 .land-footer-links a{font-size:12px;color:var(--text2);text-decoration:none;cursor:pointer;}
 .land-footer-links a:hover{color:var(--text);}
+.land-footer-topics{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 18px;}
+.land-footer-topics a,.land-footer-topics span{font-size:12px;color:var(--text3);text-decoration:none;}
+.land-footer-topics a:hover{color:var(--text);}
+html[lang="fr"] .ft-en,html:not([lang="fr"]) .ft-fr{display:none;}
 /* ── LEGAL PAGES ── */
 .legal-page{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:7500;display:none;}
 .legal-page.show{display:block;}
@@ -1030,6 +1034,7 @@ body.land-menu-open .land-sticky-cta{display:none;}
 .map-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--text3);align-items:center;}
 .map-legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;}
 .map-legend .ring{background:transparent!important;border:2px solid;box-sizing:border-box;}
+.leaflet-control-layers{font-family:inherit;font-size:12px;border-radius:8px!important;}.leaflet-control-layers-expanded{padding:4px 8px!important;}.leaflet-control-layers-base label{display:inline-block;margin:0 4px;color:#1f2937;}.leaflet-control-layers-separator{display:none;}
 .leaflet-tooltip.geo-lbl{font-family:inherit;font-size:12px;font-weight:600;padding:3px 7px;}
 .leaflet-tooltip.geo-dist{font-family:inherit;font-size:11.5px;font-weight:700;padding:2px 6px;background:#fff;color:#1f2937;border:1px solid #d1d5db;}
 @media(max-width:600px){
@@ -1507,14 +1512,14 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:var(--r-xl);padding:5px 14px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:24px">
       <span data-i18n="land.badge">Now with automated payroll period reports</span>
     </div>
-    <h1 data-i18n-html="land.heroTitle">Time tracking that <span>actually works</span> for shift workers</h1>
+    <h1 data-i18n-html="land.heroTitle">The punch clock app that <span>actually works</span> for shift workers</h1>
     <p data-i18n="land.heroSub">PIN-based clock in/out on your own tablet, fixed at your location, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
     <!-- Feature pills -->
     <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px;margin-top:-8px">
       <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:var(--text2)"><svg class="ic" style="margin-right:5px"><use href="#i-monitor"/></svg><span data-i18n="land.pill1">Clock in on your own tablet</span></span>
       <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:var(--text2)"><svg class="ic" style="margin-right:5px"><use href="#i-bar-chart"/></svg><span data-i18n="land.pill2">Automated payroll reports</span></span>
       <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:var(--text2)"><svg class="ic" style="margin-right:5px"><use href="#i-bar-chart"/></svg><span data-i18n="land.pill3">Excel &amp; CSV export</span></span>
-      <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,92,191,.15);border:1px solid rgba(124,92,191,.35);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-calendar"/></svg><span data-i18n="land.pill4">Employee scheduling</span> <span style="font-size:10px;background:#7c5cbf;color:#fff;border-radius:var(--r-md);padding:1px 6px;margin-left:2px" data-i18n="land.pillAddon">Add-On</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,92,191,.15);border:1px solid rgba(124,92,191,.35);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-calendar"/></svg><span data-i18n="land.pill4">Employee scheduling</span> <span style="font-size:10px;background:#7c5cbf;color:#fff;border-radius:var(--r-md);padding:1px 6px;margin-left:2px" data-i18n="land.pillAddon">Included in Growth</span></span>
     </div>
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
@@ -1652,7 +1657,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
         <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-calendar-clock"/></svg></div>
         <h3><span data-i18n="land.feat9Title">Employee Scheduling</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.addonBadge">ADD-ON</span></h3>
-        <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Employees can add their shifts to Google Calendar, Apple Calendar or Outlook. Available as a $14.95/mo add-on on any paid plan.</p>
+        <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Employees can add their shifts to Google Calendar, Apple Calendar or Outlook. Included in Growth and Business, or a $14.95/mo add-on on Starter.</p>
       </div>
       <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
         <div class="feature-icon"><svg style="color:#22c55e"><use href="#i-shield-pin"/></svg></div>
@@ -1821,6 +1826,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           <li data-i18n="land.f.start13">Geofencing</li>
           <li data-i18n="land.f.start14">Employee portal &amp; remote clock-in</li>
           <li data-i18n="land.f.start15">Time-off tracking &amp; requests</li>
+          <li class="dim" data-i18n="land.f.startSched">Employee scheduling: $14.95/mo add-on (included in Growth+)</li>
           <li data-i18n="land.f.start8">1 co-admin included</li>
           <li class="dim" data-i18n="land.f.start9">Lunch break tracking (Growth+)</li>
           <li class="dim" data-i18n="land.f.start10">Visitor check-in (Growth+)</li>
@@ -1837,6 +1843,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           <li data-i18n="land.f.grow2">Up to 6 sites</li>
           <li data-i18n="land.f.grow3">Up to 60 employees</li>
           <li data-i18n="land.f.grow4">All Starter features</li>
+          <li data-i18n="land.f.growSched">Employee scheduling included (a $14.95/mo add-on on Starter)</li>
           <li data-i18n="land.f.grow5">Priority support</li>
           <li data-i18n="land.f.grow6">Up to 4 admins per account</li>
           <li data-i18n="land.f.grow7">Lunch break tracking</li>
@@ -1854,6 +1861,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           <li data-i18n="land.f.biz2">Unlimited sites</li>
           <li data-i18n="land.f.biz3">Unlimited employees</li>
           <li data-i18n="land.f.biz4">All Growth features</li>
+          <li data-i18n="land.f.bizSched">Employee scheduling included</li>
           <li data-i18n="land.f.biz5">Up to 6 admins per account</li>
           <li data-i18n="land.f.biz6">Dedicated support</li>
           <li data-i18n="land.f.biz7">Early access to new features</li>
@@ -1888,7 +1896,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
 
     <!-- SCHEDULING ADD-ON -->
     <div style="margin-top:40px;border:1.5px solid rgba(124,92,191,.4);border-radius:var(--r-xl);padding:28px 32px;background:linear-gradient(135deg,rgba(124,92,191,.07),rgba(79,142,247,.04));max-width:800px;margin-left:auto;margin-right:auto">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent2);text-transform:uppercase;margin-bottom:16px" data-i18n="land.addonLabel">Available Add-Ons (Paid Plans Only)</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent2);text-transform:uppercase;margin-bottom:16px" data-i18n="land.addonLabel">Add-on for Starter · included in Growth and Business</div>
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px">
         <div style="flex:1;min-width:220px">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
@@ -1902,7 +1910,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         </div>
         <div style="text-align:center;flex-shrink:0;min-width:150px">
           <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px">$14.95<span style="font-size:13px;font-weight:400;color:var(--text2)">/mo CAD</span></div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="land.addonSchedNote">Add to any paid plan</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="land.addonSchedNote">Add to Starter</div>
           <button class="btn-secondary" style="padding:9px 22px;font-size:13px;border-radius:var(--r-md);white-space:nowrap" onclick="isLoggedIn()?startSchedulingAddonCheckout():(hideLanding(),navigate('register'))" data-i18n="land.addonSchedBtn">Add Scheduling</button>
         </div>
       </div>
@@ -1990,10 +1998,10 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <div style="color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-calendar"/></svg></div>
         <div style="flex:1;min-width:200px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-            <strong style="font-size:15px" data-i18n="land.howSchedTitle">Employee Scheduling Add-On</strong>
-            <span style="font-size:10px;font-weight:700;background:#7c5cbf;color:#fff;padding:2px 8px;border-radius:var(--r-md)" data-i18n="land.pillAddon">Add-On</span>
+            <strong style="font-size:15px" data-i18n="land.howSchedTitle">Employee Scheduling</strong>
+            <span style="font-size:10px;font-weight:700;background:#7c5cbf;color:#fff;padding:2px 8px;border-radius:var(--r-md)" data-i18n="land.pillAddon">Included in Growth</span>
           </div>
-          <p style="font-size:13px;color:var(--text2);margin:0;line-height:1.6" data-i18n="land.howSchedDesc">Once your team is set up, unlock the Scheduling Add-On to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — all for $14.95/mo added to any paid plan.</p>
+          <p style="font-size:13px;color:var(--text2);margin:0;line-height:1.6" data-i18n="land.howSchedDesc">Once your team is set up, turn on Scheduling to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — included in Growth and Business, or $14.95/mo added to Starter.</p>
         </div>
         <button class="btn-secondary" style="padding:9px 20px;font-size:13px;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.howSchedCta">See pricing →</button>
       </div>
@@ -2058,6 +2066,40 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
         <a onclick="hideLanding();navigate('login')" data-i18n="land.adminLogin">Admin Login</a>
         <a href="employee.html" data-i18n="land.portalLogin">Employee Portal</a>
       </div>
+      <div class="land-footer-topics ft-en" lang="en">
+        <a href="/en/time-clock-app-quebec/">Punch clock app for Québec</a>
+        <a href="/en/gps-geofencing-time-clock/">GPS and geofencing</a>
+        <a href="/en/free-time-clock-app/">Free time clock app</a>
+        <a href="/en/employee-scheduling-app/">Employee scheduling</a>
+        <a href="/en/time-and-attendance-software-canada/">Time and attendance software</a>
+        <a href="/en/online-punch-clock/">Online punch clock</a>
+        <a href="/en/pricing/">Pricing</a>
+        <a href="/fr/" hreflang="fr">Français</a>
+      </div>
+      <div class="land-footer-topics ft-en" lang="en">
+        <span>By industry:</span>
+        <a href="/en/time-clock-for-restaurants/">Restaurants and cafés</a>
+        <a href="/en/time-clock-for-retail-stores/">Retail stores</a>
+        <a href="/en/time-clock-for-manufacturing/">Factories and workshops</a>
+        <a href="/en/time-clock-for-field-crews/">Field crews</a>
+      </div>
+      <div class="land-footer-topics ft-fr" lang="fr">
+        <a href="/fr/">Application de punch pour employés</a>
+        <a href="/fr/application-pointage-quebec/">Application de pointage au Québec</a>
+        <a href="/fr/pointage-gps-georeperage/">Pointage GPS et géorepérage</a>
+        <a href="/fr/application-pointage-gratuite/">Application de pointage gratuite</a>
+        <a href="/fr/logiciel-horaires-employes/">Logiciel d’horaires</a>
+        <a href="/fr/logiciel-de-pointage/">Logiciel de pointage</a>
+        <a href="/fr/pointeuse-en-ligne/">Pointeuse en ligne</a>
+        <a href="/fr/tarifs/">Tarifs</a>
+      </div>
+      <div class="land-footer-topics ft-fr" lang="fr">
+        <span>Par secteur :</span>
+        <a href="/fr/pointage-restaurant/">Restaurants et cafés</a>
+        <a href="/fr/pointage-commerce-de-detail/">Commerces de détail</a>
+        <a href="/fr/pointage-usine-manufacturier/">Usines et ateliers</a>
+        <a href="/fr/punch-chantier-equipes-mobiles/">Chantiers et équipes mobiles</a>
+      </div>
     </div>
     <p style="text-align:center;font-size:11px;color:var(--text3);padding-bottom:8px" data-i18n="land.copyright">© 2026 PunchClock Crew. All rights reserved.</p>
   </div>
@@ -2076,7 +2118,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <h2 data-i18n="tos.h3">3. Account Registration</h2>
     <p data-i18n="tos.p3">You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.</p>
     <h2 data-i18n="tos.h4">4. Subscription Plans and Billing</h2>
-    <p data-i18n="tos.p4">PunchClock Crew offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). An optional Scheduling Add-On is available for $14.95/month on any paid plan. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. All payments are final and non-refundable, including the first payment, partial months and unused time. Every new account can try the paid features free for 14 days before paying: please use that period to make sure the Service fits your needs. After you cancel, you are not charged again and you keep your paid plan until the end of the period already paid.</p>
+    <p data-i18n="tos.p4">PunchClock Crew offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). Scheduling is included in the Growth and Business plans and is available on the Starter plan as an optional add-on for $14.95/month. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. All payments are final and non-refundable, including the first payment, partial months and unused time. Every new account can try the paid features free for 14 days before paying: please use that period to make sure the Service fits your needs. After you cancel, you are not charged again and you keep your paid plan until the end of the period already paid.</p>
     <p data-i18n="tos.p4b">Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan's included limit.</p>
     <h3 data-i18n="tos.hRef">4.1 Referral program (December 2026)</h3>
     <p data-i18n="tos.pRef1">From 1 December 2026 at 12:00 a.m. to 31 December 2026 at 11:59 p.m. (Eastern Time), a new PunchClock Crew account may enter the referral code of an existing account, at sign-up or at any time before its first payment. One code per account. A code cannot be added after a payment has been made.</p>
@@ -2122,7 +2164,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       <li data-i18n="priv.li3">Employee data: names, employee IDs, department, site assignments, email addresses, 4-digit PINs (stored as entered)</li>
       <li data-i18n="priv.li4">Time and attendance records: clock-in/out times, dates, site locations</li>
       <li data-i18n="priv.liSignup">How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”</li>
-      <li data-i18n="priv.liApp">From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on, and never in the background; a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.</li>
+      <li data-i18n="priv.liApp">From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on; if your employer offers arrival and departure reminders and you turn them on in the app, the phone itself watches the area around your workplace, also in the background, so it can ask you to clock in or out (it may check with our server that reminders are still on, but your location is only sent when you tap to punch, like any punch, and you can turn reminders off at any time); a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.</li>
     </ul>
     <h2 data-i18n="priv.h2">2. How We Use Your Information</h2>
     <p data-i18n="priv.p2">We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.</p>
@@ -3732,7 +3774,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       <div id="profileSchedulingAddon" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:5px"><svg style="width:14px;height:14px"><use href="#i-nav-schedule"/></svg><span data-i18n="addon.scheduling">Scheduling Add-On</span></div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:5px"><svg style="width:14px;height:14px"><use href="#i-nav-schedule"/></svg><span id="profileSchedulingLabel">Scheduling Add-On</span></div>
             <div id="profileSchedulingStatus" style="font-size:11px;color:var(--text3)"></div>
           </div>
           <button id="profileSchedulingBtn" class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12px;flex-shrink:0"></button>
@@ -3970,6 +4012,19 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
           </div>
           <div id="empRemotePunchToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
             <div id="empRemotePunchThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Arrival reminders: per employee, shown only when the company switch is on (Growth and up) and this
+           employee has phone clock-in. Mixed crews: an admin picks who gets them. -->
+      <div id="empArrivalRow" style="display:none;margin-top:8px;margin-left:20px;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleEmpArrivalOpt()">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:12.5px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px"><svg style="width:14px;height:14px"><use href="#i-bell"/></svg><span data-i18n="emp.arrivalTitle">Arrival and departure reminders</span></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="emp.arrivalDesc">The phone app asks this employee to clock in when they arrive at a site and to clock out when they leave. They also have to agree on their phone.</div>
+          </div>
+          <div id="empArrivalToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+            <div id="empArrivalThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
           </div>
         </div>
       </div>
@@ -4261,6 +4316,20 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       </div>
     </div>
     <div id="remotePunchSetupRow" style="display:none;margin-top:8px"><button type="button" class="ph-link" onclick="var cid=document.getElementById('editCompanyUid').value;closeModal('addCompanyModal');openPhoneSetup(cid)" data-i18n="setup.s6">Set up phone clock-in</button></div>
+    <!-- Arrival and departure reminders (phone app, Growth and up): only meaningful once phone clock-in is on.
+         The company switch makes it available; each employee is then switched on one by one (employee profile). -->
+    <div id="arrivalPromptsBlock" style="display:none;margin-top:10px">
+      <div id="arrivalPromptsToggleRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer" onclick="toggleArrivalPromptsOpt()">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap"><svg style="width:15px;height:15px"><use href="#i-bell"/></svg><span data-i18n="modal.arrivalPrompts">Arrival and departure reminders</span><span style="font-size:9.5px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:1px 6px;border-radius:var(--r-xl)" data-i18n="modal.growthPlanBadge">GROWTH+</span></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" data-i18n="modal.arrivalPromptsDesc">In the PunchClock Crew phone app, an employee who arrives at or leaves a site gets a notification asking them to clock in or out. One tap records it. Nothing is punched automatically. Turn it on for each employee in their profile.</div>
+        </div>
+        <div id="arrivalPromptsToggle" style="width:40px;height:22px;border-radius:var(--r-md);background:var(--border);position:relative;flex-shrink:0;transition:background .2s;margin-left:14px">
+          <div id="arrivalPromptsThumb" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>
+        </div>
+      </div>
+      <div id="arrivalPromptsAllRow" style="display:none;margin-top:8px"><button type="button" class="ph-link" onclick="arrivalPromptsForAll()" data-i18n="modal.arrivalPromptsAll">Turn on for everyone with phone clock-in</button></div>
+    </div>
     <hr class="divider" style="margin:14px 0">
     <div class="form-group" id="punchLabelModeRow" style="margin-top:14px;display:none">
       <label data-i18n="modal.labelsAtPunch">Work labels at clock-in</label>
@@ -4305,7 +4374,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     </div>
     <p id="growthAddonLockNote" style="display:none;font-size:11px;color:var(--accent);margin:8px 2px 0;line-height:1.5">
       <svg class="ic" style="width:12px;height:12px;vertical-align:-1.5px;margin-right:3px"><use href="#i-lock"/></svg>
-      <span data-i18n="modal.growthAddonLock">Lunch break tracking and visitor check-in are included on the Growth plan and above.</span>
+      <span data-i18n="modal.growthAddonLock">Lunch break tracking, visitor check-in and arrival reminders are included on the Growth plan and above.</span>
       <a href="#" style="color:var(--accent);font-weight:600" onclick="event.preventDefault();closeModal('addCompanyModal');showUpgradePlans()" data-i18n="modal.upgradeLink">Upgrade now</a>
     </p>
     </div>
@@ -5384,6 +5453,8 @@ const PLANS = {
 // against the logged-in admin's plan — only ever evaluated inside admin-session screens (the
 // Company Info modal), never at an unauthenticated kiosk, which has no session to check.
 const PLAN_TIER_ORDER = ['Free','Starter','Growth','Business','Unlimited'];
+// Plans that include Scheduling (2026-11-26). Starter buys it as the add-on.
+const SCHED_INCLUDED_PLANS = ['growth','business','unlimited'];
 function hasGrowthOrAbove() {
   return PLAN_TIER_ORDER.indexOf(getAdminPlan().name) >= PLAN_TIER_ORDER.indexOf('Growth');
 }
@@ -7537,7 +7608,7 @@ function updateNav(){
     const a2=Sess.get();
     const plan2=a2?.plan||'free';
     const isCoAdmin2=!!(a2?.parent_admin_id);
-    const showMobileSched=!isCoAdmin2&&plan2!=='free'&&plan2!=='unlimited';
+    const showMobileSched=!isCoAdmin2&&plan2!=='free'&&!SCHED_INCLUDED_PLANS.includes(plan2);
     mobileSchedBtn.style.display=showMobileSched?'':'none';
     if(showMobileSched&&mobileSchedLabel){
       const hasAddon2=!!(a2?.scheduling_addon)||schedulingTrialState().state==='active';
@@ -7614,7 +7685,7 @@ function updateNav(){
       const ddSched=document.getElementById('ddSchedulingAddon');
       const ddSchedSep=document.getElementById('ddAddonSep');
       const ddSchedBadge=document.getElementById('ddSchedulingBadge');
-      const showSched=!isCoAdmin&&plan!=='free'&&plan!=='unlimited';
+      const showSched=!isCoAdmin&&plan!=='free'&&!SCHED_INCLUDED_PLANS.includes(plan);
       if(ddSched){
         ddSched.style.display=showSched?'':'none';
         if(ddSchedSep) ddSchedSep.style.display=showSched?'':'none';
@@ -7643,7 +7714,7 @@ function closeUserMenu(){
 function handleSchedulingAddonClick(){
   const s=Sess.get();
   if(!s) return;
-  if(s.scheduling_addon||schedulingTrialState().state==='active'){
+  if(hasSchedulingAddon()){
     closeUserMenu();
     navigate('schedule');
   } else {
@@ -8261,6 +8332,11 @@ async function startSchedulingAddonCheckout(){
     showUpgradePlans();
     return;
   }
+  if(schedulingIncludedInPlan()){
+    showToast(t('addon.includedToast')||'Scheduling is included in your plan.');
+    navigate('schedule');
+    return;
+  }
   if(s.scheduling_addon){
     showToast(t('addon.alreadyActive')||'Scheduling add-on is already active on your account.');
     return;
@@ -8643,9 +8719,17 @@ function openProfile(){
   const schedStatusEl=document.getElementById('profileSchedulingStatus');
   const schedBtn=document.getElementById('profileSchedulingBtn');
   if(schedAddonEl){
+    const schedIncluded=SCHED_INCLUDED_PLANS.includes(plan);
     const showSched=!isCoAdmin&&plan!=='free'&&plan!=='unlimited';
     schedAddonEl.style.display=showSched?'':'none';
-    if(showSched){
+    const schedLabelEl=document.getElementById('profileSchedulingLabel');
+    if(schedLabelEl) schedLabelEl.textContent=schedIncluded?(t('addon.schedIncludedLabel')||'Scheduling'):(t('addon.scheduling')||'Scheduling Add-On');
+    if(showSched&&schedIncluded){
+      schedStatusEl.textContent=t('addon.included')||'✓ Included in your plan';
+      schedStatusEl.style.color='var(--green)';
+      schedBtn.style.display='none';
+    } else if(showSched){
+      schedBtn.style.display='';
       const hasScheduling=!!(s.scheduling_addon);
       schedStatusEl.textContent=hasScheduling?(t('addon.active')||'✓ Active — $14.95/mo'):(t('addon.notActive')||'Not active — $14.95/mo');
       schedStatusEl.style.color=hasScheduling?'var(--green)':'var(--text3)';
@@ -9515,9 +9599,7 @@ function initGeoMap() {
   // Carto's anonymous basemaps arrive watermarked "API KEY REQUIRED" — a 200 response whose
   // image says the service is unconfigured, which is what every customer saw here. OSM's own
   // tiles need no key; their licence asks for the attribution this layer already shows.
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors', maxZoom: 19
-  }).addTo(_geoMap);
+  geoAddBaseLayers(_geoMap);
   if (latVal) setGeoPin(lat, lng, false);
 }
 
@@ -9625,9 +9707,35 @@ function geoSiteLayers(map, site) {
   return L.circleMarker([site.geo_lat, site.geo_lng], { radius: 6, color: '#4f8ef7', fillColor: '#4f8ef7', fillOpacity: 1, weight: 2 })
     .addTo(map).bindTooltip(esc(site.name || '') + (site.geo_radius_m ? ' · ' + (site.geo_radius_m) + ' m' : ''), { direction: 'top' });
 }
+// Map / Satellite switch on every map. Satellite is Esri World Imagery with Esri's street and place
+// labels on top (French when the app is in French), through the free ArcGIS Location Platform tier
+// (2M tiles a month, pay-as-you-go off, so it can never bill). ESRI_MAP_KEY is a browser key: public
+// by design, limited to Basemaps and to punchclock.ca referrers (ArcGIS item "punchclock.ca maps").
+// It expires on ESRI_MAP_KEY_UNTIL; after that day, or with no key, the maps show the street map only,
+// with no switch, so an expired key can never leave a grey map. Renew the key before then.
+const ESRI_MAP_KEY = 'AAPTakq3tNGm_L7w7_z7dPpOJLg..VEp1K2apFp91R7GFMJNg9Dl61RcjhZqaSkUEF4t-tW5ZDD0VZoj7MCopbMaMUnnB1g6aJeZD4RcQoZ414z3mmMUyZAXwwZDPR5Ed9tuoEc1cQT-CYpPw42VZOQa579-D4Tm_t0BRhfWHnjI5uOn2AiOsmS-5ccrriHOU_5ROxo28O7nXTz0AHVoSQ2XXqQfsZtl75Qj97bP3WjfLaRsSScZVEOnQJnlddp9R4E8R0hJPk7_Fs5CeZlE.AT1_3TXQyRQc';
+const ESRI_MAP_KEY_UNTIL = '2027-11-24';
+function geoAddBaseLayers(m) {
+  const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 });
+  if (!ESRI_MAP_KEY || new Date().toISOString().slice(0, 10) > ESRI_MAP_KEY_UNTIL) { street.addTo(m); return; }
+  const tok = 'token=' + encodeURIComponent(ESRI_MAP_KEY);
+  const sat = L.layerGroup([
+    L.tileLayer('https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?' + tok,
+      { maxZoom: 19, attribution: 'Powered by <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a> | Esri, Maxar, Earthstar Geographics' }),
+    // 512-pixel label tiles: tileSize 512 + zoomOffset -1 keep the text at its normal size.
+    L.tileLayer('https://static-map-tiles-api.arcgis.com/arcgis/rest/services/static-basemap-tiles-service/v1/arcgis/imagery/labels/static/tile/{z}/{y}/{x}?' + tok + '&language=' + (_appLang === 'fr' ? 'fr' : 'en'),
+      { maxZoom: 19, tileSize: 512, zoomOffset: -1 }),
+  ]);
+  let pick = 'sat';
+  try { pick = localStorage.getItem('pc_map_base') || 'sat'; } catch (_e) { /* storage blocked */ }
+  (pick === 'street' ? street : sat).addTo(m);
+  const names = { [t('map.street') || 'Map']: street, [t('map.satellite') || 'Satellite']: sat };
+  L.control.layers(names, null, { collapsed: false, position: 'topright' }).addTo(m);
+  m.on('baselayerchange', e => { try { localStorage.setItem('pc_map_base', e.layer === street ? 'street' : 'sat'); } catch (_e) { /* storage blocked */ } });
+}
 function geoBaseMap(el, center, zoom) {
   const m = L.map(el).setView(center, zoom);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(m);
+  geoAddBaseLayers(m);
   return m;
 }
 
@@ -12081,10 +12189,31 @@ function _refreshEmpRemotePunchRowState(companyId){
   const companyOk=!!co?.remote_punch_enabled;
   row.style.display=companyOk?'':'none';
   if(hint) hint.style.display=companyOk?'none':'';
+  _refreshEmpArrivalRow(companyId);
 }
 function setEmpRemotePunchToggle(on){
   document.getElementById('empRemotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('empRemotePunchThumb').style.left=on?'20px':'2px';
+  _refreshEmpArrivalRow();
+}
+// Arrival reminders for one employee: offered only when the company has them on (Growth and up) and this
+// employee may clock in from the phone. Hidden otherwise; saveEmployee then stores false.
+function _empArrivalAvailable(companyId){
+  const cid=companyId||(C.employees.find(e=>e.id===document.getElementById('editEmpUid').value)||{}).company_id||Ctx.get()?.co?.id;
+  const co=C.companies.find(c=>c.id===cid);
+  const remoteOn=document.getElementById('empRemotePunchThumb').style.left==='20px';
+  return !!(co&&co.remote_punch_enabled&&co.arrival_prompts_enabled&&hasGrowthOrAbove()&&remoteOn);
+}
+function _refreshEmpArrivalRow(companyId){
+  const row=document.getElementById('empArrivalRow'); if(!row) return;
+  row.style.display=_empArrivalAvailable(companyId)?'':'none';
+}
+function setEmpArrivalToggle(on){
+  document.getElementById('empArrivalToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('empArrivalThumb').style.left=on?'20px':'2px';
+}
+function toggleEmpArrivalOpt(){
+  setEmpArrivalToggle(document.getElementById('empArrivalThumb').style.left!=='20px');
 }
 // Turning it OFF needs no confirmation (it only ever removes access); turning it ON grants an
 // employee the ability to punch from any device anywhere, so it gets the same explicit,
@@ -12139,6 +12268,7 @@ function openAddEmpModal(){
   document.getElementById('editEmpUid').value='';
   document.getElementById('empModalMsg').innerHTML='';
   setEmailToggle(false);
+  setEmpArrivalToggle(false);
   setEmpRemotePunchToggle(false);
   _refreshEmpRemotePunchRowState(ctx.co.id);
   // Hide availability + promote buttons in add mode
@@ -12264,6 +12394,7 @@ function editEmployee(id){
   document.getElementById('empModalMsg').innerHTML=e.pin?'':`<div class="msg info">${esc(t('emp.noPinSet'))}</div>`;
   setEmailToggle(!!(e.send_report&&e.email));
   setEmpRemotePunchToggle(!!e.remote_punch_enabled);
+  setEmpArrivalToggle(!!e.arrival_prompts_enabled);
   _refreshEmpRemotePunchRowState(e.company_id||ctx?.co?.id);
   populateSiteDropdown('empSiteSelect',e.company_id||ctx?.co?.id,e.site_id);
   // Show manage availability button only in edit mode
@@ -12498,6 +12629,8 @@ async function saveEmployee(opts){
   const email=document.getElementById('empEmail').value.trim()||null;
   const remote_punch_enabled=document.getElementById('empRemotePunchThumb').style.left==='20px';
   const editId=document.getElementById('editEmpUid').value;
+  // Hidden row (no phone clock-in, company switch off, below Growth) = off; the server checks the plan too.
+  const arrival_prompts_enabled=_empArrivalAvailable()&&document.getElementById('empArrivalThumb').style.left==='20px';
   if(!name){showMsg('empModalMsg',t('val.nameRequired')||'Name is required.','error');return null;}
   if(pin&&!/^\d{4}$/.test(pin)){showMsg('empModalMsg',t('val.pinDigits')||'PIN must be exactly 4 digits.','error');return null;}
   if(!editId&&!pin){showMsg('empModalMsg',t('val.pinRequired')||'A 4-digit PIN is required for new employees.','error');return null;}
@@ -12511,7 +12644,7 @@ async function saveEmployee(opts){
 
     let savedRow=null;
     if(editId){
-      const upd={name,dept,emp_code,site_id,email,send_report,remote_punch_enabled,photo_url};if(pin)upd.pin=pin;
+      const upd={name,dept,emp_code,site_id,email,send_report,remote_punch_enabled,arrival_prompts_enabled,photo_url};if(pin)upd.pin=pin;
       await DB.update('employees',`id=eq.${editId}`,upd);
       const idx=C.employees.findIndex(e=>e.id===editId);
       if(idx!==-1)C.employees[idx]={...C.employees[idx],...upd,photo_url:viewUrl(photo_url)};
@@ -12525,7 +12658,7 @@ async function saveEmployee(opts){
         showUpgradePrompt('empModalMsg',t('limit.employees').replace('{plan}',esc(plan.name)).replace('{max}',max).replace('{current}',current));
         return null;
       }
-      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,remote_punch_enabled,photo_url});
+      const r=await DB.insert('employees',{name,dept,emp_code,company_id:ctx.co.id,site_id,pin,active:true,email,send_report,remote_punch_enabled,arrival_prompts_enabled,photo_url});
       if(r?.[0]){C.employees.push(r[0]);savedRow=r[0];}
     }
     renderEmployees();renderSitesAdmin();
@@ -12785,6 +12918,7 @@ function openAddCompanyModal(){
   document.getElementById('companyLunchPaidMinutes').value='0';
   setVisitorCheckinToggle(false);
   setRemotePunchToggle(false);
+  setArrivalPromptsToggle(false);
   setMgrAllSitesToggle(false);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
   document.getElementById('companyPunchLabelMode').value='off';
@@ -12830,6 +12964,7 @@ function _fillCompanyForm(co){
   document.getElementById('companyLunchPaidMinutes').value=String(co.lunch_break_paid_minutes||0);
   setVisitorCheckinToggle(!!co.visitor_checkin_enabled);
   setRemotePunchToggle(!!co.remote_punch_enabled);
+  setArrivalPromptsToggle(!!co.arrival_prompts_enabled);
   { const r=document.getElementById('remotePunchSetupRow'); if(r) r.style.display=featureEntitled('paid',co)&&!isManager()?'':'none'; }
   setMgrAllSitesToggle(!!co.managers_see_all_sites);
   document.getElementById('punchLabelModeRow').style.display=hasSchedulingAddon()?'':'none';
@@ -12869,7 +13004,7 @@ function _coShowMsg(msg,type,sec){
 function _settingsSnap(){
   const f=document.getElementById('companyFormBody'); if(!f) return '';
   const v=[...f.querySelectorAll('input,select,textarea')].filter(e=>e.type!=='file').map(e=>(e.id||(e.className+e.value))+'='+(e.type==='checkbox'?(e.checked?1:0):e.value));
-  const tg=['overtimeThumb','lunchThumb','visitorCheckinThumb','remotePunchThumb','mgrAllSitesThumb'].map(id=>{const e=document.getElementById(id);return e?e.style.left:'';});
+  const tg=['overtimeThumb','lunchThumb','visitorCheckinThumb','remotePunchThumb','arrivalPromptsThumb','mgrAllSitesThumb'].map(id=>{const e=document.getElementById(id);return e?e.style.left:'';});
   const lf=document.getElementById('logoFileInput');
   return v.join('|')+'#'+tg.join(',')+(lf&&lf.files&&lf.files.length?'#file':'');
 }
@@ -13018,6 +13153,45 @@ function toggleRemotePunchOpt(){
   const on=document.getElementById('remotePunchThumb').style.left!=='20px';
   document.getElementById('remotePunchToggle').style.background=on?'var(--accent)':'var(--border)';
   document.getElementById('remotePunchThumb').style.left=on?'20px':'2px';
+  _refreshArrivalPromptsBlock();
+}
+// Arrival and departure reminders (phone app, Growth and up). Shown under phone clock-in because they need it;
+// below Growth the row is locked and switched off, like lunch breaks and visitor check-in.
+function setArrivalPromptsToggle(on){
+  document.getElementById('arrivalPromptsToggle').style.background=on?'var(--accent)':'var(--border)';
+  document.getElementById('arrivalPromptsThumb').style.left=on?'20px':'2px';
+  _refreshArrivalPromptsBlock();
+}
+function toggleArrivalPromptsOpt(){
+  setArrivalPromptsToggle(document.getElementById('arrivalPromptsThumb').style.left!=='20px');
+}
+function _refreshArrivalPromptsBlock(){
+  const block=document.getElementById('arrivalPromptsBlock'); if(!block) return;
+  const remoteOn=document.getElementById('remotePunchThumb').style.left==='20px';
+  block.style.display=remoteOn&&!isManager()?'':'none';
+  const editId=document.getElementById('editCompanyUid').value;
+  const stored=C.companies.find(c=>c.id===editId);
+  // The "everyone" button acts on saved settings, so it shows once the switch is saved on.
+  const all=document.getElementById('arrivalPromptsAllRow');
+  if(all) all.style.display=(stored&&stored.arrival_prompts_enabled&&stored.remote_punch_enabled&&hasGrowthOrAbove())?'':'none';
+}
+// Switches reminders on for every active employee of the company who already has phone clock-in.
+async function arrivalPromptsForAll(){
+  const editId=document.getElementById('editCompanyUid').value;
+  const co=C.companies.find(c=>c.id===editId);
+  if(!co||!co.arrival_prompts_enabled||!hasGrowthOrAbove()) return;
+  const list=C.employees.filter(e=>e.company_id===co.id&&e.active&&e.remote_punch_enabled&&!e.arrival_prompts_enabled);
+  if(!list.length){ showToast(t('modal.arrivalPromptsAllNone')||'Everyone with phone clock-in already has reminders on.','info'); return; }
+  const msg=(t('modal.arrivalPromptsAllConfirm')||'Turn on arrival and departure reminders for {n} employee(s) who can clock in from their phone? Each of them still has to agree in the app.').replace('{n}',list.length);
+  if(!(await uiConfirm(msg,{danger:false,confirmLabel:t('dlg.confirm')||'Confirm'}))) return;
+  let done=0;
+  try{
+    for(const e of list){ await DB.update('employees',`id=eq.${e.id}`,{arrival_prompts_enabled:true}); e.arrival_prompts_enabled=true; done++; }
+    showToast((t('modal.arrivalPromptsAllDone')||'Reminders turned on for {n} employee(s).').replace('{n}',done),'success');
+  }catch(err){
+    showToast((t('modal.arrivalPromptsAllDone')||'Reminders turned on for {n} employee(s).').replace('{n}',done)+' '+String((err&&err.message)||''),'error');
+  }
+  renderEmployees();
 }
 function toggleMgrAllSitesOpt(){
   setMgrAllSitesToggle(document.getElementById('mgrAllSitesThumb').style.left!=='20px');
@@ -13055,12 +13229,12 @@ function _setGrowthAddonLockState(){
   const ok=hasGrowthOrAbove();
   const note=document.getElementById('growthAddonLockNote');
   if(note) note.style.display=ok?'none':'';
-  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow'),document.getElementById('paidBreakRow')].forEach(row=>{
+  [document.getElementById('lunchToggleRow'),document.getElementById('visitorCheckinToggleRow'),document.getElementById('paidBreakRow'),document.getElementById('arrivalPromptsToggleRow')].forEach(row=>{
     if(!row)return;
     row.style.opacity=ok?'1':'.5';
     row.style.pointerEvents=ok?'':'none';
   });
-  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); document.getElementById('companyLunchPaidMinutes').value='0'; }
+  if(!ok){ setLunchToggle(false); setVisitorCheckinToggle(false); setArrivalPromptsToggle(false); document.getElementById('companyLunchPaidMinutes').value='0'; }
 }
 
 async function saveCompany(){
@@ -13090,6 +13264,8 @@ async function saveCompany(){
   // Outside the paid plans the remote switch cannot be changed: keep whatever is stored.
   const _storedCo=C.companies.find(c=>c.id===document.getElementById('editCompanyUid').value);
   const remote_punch_enabled=paidOk?document.getElementById('remotePunchThumb').style.left==='20px':!!(_storedCo&&_storedCo.remote_punch_enabled);
+  // Reminders need phone clock-in and Growth; the server refuses the switch below Growth as well.
+  const arrival_prompts_enabled=growthOk&&remote_punch_enabled&&document.getElementById('arrivalPromptsThumb').style.left==='20px';
   const managers_see_all_sites=document.getElementById('mgrAllSitesThumb').style.left==='20px';
   // Declared before first use: reading it below while it was still unset threw for every account without
   // the Scheduling add-on, so their company settings silently never saved.
@@ -13125,13 +13301,13 @@ async function saveCompany(){
     if(_newLogoFile) logo_url = null;
 
     if(editId){
-      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url});
+      await DB.update('companies',`id=eq.${editId}`,{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url});
       const co=C.companies.find(c=>c.id===editId);
-      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)});
-      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)}});updateContextPill();}
+      if(co)Object.assign(co,{name,address,phone,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)});
+      const ctx=Ctx.get();if(ctx?.co?.id===editId){Ctx.set({...ctx,co:{...ctx.co,name,address,phone,week_start,payroll_frequency,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url:viewUrl(logo_url)}});updateContextPill();}
     }else{
       const sess=Sess.get();
-      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url,admin_id:sess?.id||null});
+      const r=await DB.insert('companies',{name,address:address||null,phone:phone||null,industry,description,week_start,payroll_frequency,punch_rounding,alerts_enabled,alert_forgot_out,alert_overtime,forgot_out_hours,ot_daily_hours,ot_weekly_hours,payroll_anchor_date,track_overtime,track_lunch_breaks,lunch_break_paid_minutes,visitor_checkin_enabled,remote_punch_enabled,arrival_prompts_enabled,managers_see_all_sites,punch_label_mode,evening_start,evening_end,evening_days,logo_url,admin_id:sess?.id||null});
       if(r?.[0] && _newLogoFile){
         try{
           const _lu=await uploadImage(_newLogoFile,'logos',`logo-${name.replace(/\s+/g,'-').toLowerCase()}`,{companyId:r[0].id});
@@ -17051,6 +17227,12 @@ function _schedTrialCtaHtml() {
   }
   return buy;
 }
+// Under the trial and add-on buttons: Growth includes Scheduling, so say so to the owner who could move up.
+function _schedGrowthLinkHtml() {
+  const s = Sess.get();
+  if (!s || s.parent_admin_id || isDemo()) return '';
+  return `<p style="color:var(--text3);font-size:12.5px;margin:12px 0 0"><a href="#" onclick="showUpgradePlans();return false">${esc(t('sched.growthLink')||'Or move to Growth: Scheduling is included.')}</a></p>`;
+}
 async function startSchedulingTrial() {
   const s = Sess.get();
   if (!s) { navigate('login'); return; }
@@ -17141,8 +17323,8 @@ function renderSchedulePreview(){
     </div>
     <div class="sched-preview-cta">
       <h3 style="margin:0 0 6px;font-size:17px">${esc(t('sched.previewTitle')||'Build this for your team')}</h3>
-      <p style="color:var(--text2);font-size:13.5px;margin:0 auto 16px;max-width:52ch">${esc(t('sched.previewBody')||'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.')}</p>
-      ${_schedTrialCtaHtml()}
+      <p style="color:var(--text2);font-size:13.5px;margin:0 auto 16px;max-width:52ch">${esc(t('sched.previewBody')||'Plan the week, see everyone’s hours as you go, and send it to your team in one action. Included in Growth and Business, or $14.95/month on Starter.')}</p>
+      ${_schedTrialCtaHtml()}${_schedGrowthLinkHtml()}
     </div>`;
 }
 
@@ -17195,19 +17377,23 @@ function _schedTrialEnd(row) {
   const ms = v ? Date.parse(v) : NaN;
   return isNaN(ms) ? null : ms;
 }
-// {state:'paid'|'active'|'ended'|'none', endsAt?} for the account that owns the subscription.
+// {state:'included'|'paid'|'active'|'ended'|'none', endsAt?} for the account that owns the subscription.
 function schedulingTrialState() {
   const s = Sess.get();
   const src = (s && s.parent_admin_id && C.primaryAdmin) ? C.primaryAdmin : s;
   if (!src) return { state: 'none' };
+  if (schedulingIncludedInPlan()) return { state: 'included' };
   if (src.scheduling_addon) return { state: 'paid' };
   const e = _schedTrialEnd(src);
   if (e === null) return { state: 'none' };
   return { state: e > Date.now() ? 'active' : 'ended', endsAt: e };
 }
+// Growth, Business and Unlimited include Scheduling (2026-11-26); on Starter it is the paid add-on or its free trial.
+// Same rule as secure-db schedulingActive and the database's admin_scheduling_active: change all three together.
+function schedulingIncludedInPlan() { return hasGrowthOrAbove(); }
 function hasSchedulingAddon() {
   const s = Sess.get();
-  return !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || schedulingTrialState().state === 'active' || isSuperAdmin() || isDemo();
+  return schedulingIncludedInPlan() || !!(s?.scheduling_addon) || !!(C.primaryAdmin?.scheduling_addon) || schedulingTrialState().state === 'active' || isSuperAdmin() || isDemo();
 }
 function labelById(id) { return _workLabels.find(l => l.id === id) || null; }
 async function loadWorkLabels(coId) {
@@ -17217,7 +17403,7 @@ async function loadWorkLabels(coId) {
 function _labelErr(e) {
   const raw = (e && (e._raw || e.message)) || '';
   if(/23505|duplicate|unique/i.test(raw)) return t('labels.dupName')||'You already have a label with that name.';
-  if(/Scheduling add-on|Forbidden/i.test(raw)) return t('labels.needAddon')||'Work labels are part of the Scheduling add-on.';
+  if(/Scheduling add-on|Forbidden/i.test(raw)) return t('labels.needAddon')||'Work labels are part of Scheduling: included in Growth and up, or the add-on on Starter.';
   return (e && e.message) || 'Error';
 }
 function setSchedLabelFilter(v) {
@@ -18446,7 +18632,7 @@ en:{
 'toast.removed':'✓ {name} removed.',
 'sched.previewNote':'Sample week — these shifts are an example, not your real schedule. Nothing here is saved.',
 'sched.previewTitle':'Build this for your team',
-'sched.previewBody':'Plan the week, see everyone’s hours as you go, and send it to your team in one action. $14.95/month on any paid plan.','sched.trialBtn':'Try it free for 14 days','sched.trialNote':'No card needed. It starts now and stops by itself after 14 days.','sched.trialEnded':'Your free trial ended on {date}.','sched.trialOwnerOnly':'The account owner can start the free 14-day trial or add Scheduling.','sched.trialStarted':'Trial started: Scheduling is yours until {date}.','sched.trialLeft':'Free trial: {n} days left (ends {date}).','sched.trialKeep':'Keep it — $14.95/mo','addon.trial':'Trial',
+'sched.previewBody':'Plan the week, see everyone’s hours as you go, and send it to your team in one action. Included in Growth and Business, or $14.95/month on Starter.','sched.trialBtn':'Try it free for 14 days','sched.trialNote':'No card needed. It starts now and stops by itself after 14 days.','sched.trialEnded':'Your free trial ended on {date}.','sched.trialOwnerOnly':'The account owner can start the free 14-day trial or add Scheduling.','sched.trialStarted':'Trial started: Scheduling is yours until {date}.','sched.trialLeft':'Free trial: {n} days left (ends {date}).','sched.trialKeep':'Keep it — $14.95/mo','addon.trial':'Trial',
 'sched.hoursCol':'Hours',
 'help.catFix':'Fixing things',
 'kiosk.adminLogin':'Admin sign-in','kiosk.notAKiosk':'This device isn’t a kiosk? Reset it',
@@ -18846,7 +19032,7 @@ en:{
 'activity.bulkReassignTitle':'Reassign Site','activity.bulkReassignDesc':'Move the selected punches to a different site.','activity.bulkReassignDescTail':'punches will be updated.','activity.bulkReassignConfirm':'Reassign',
 'activity.mobile':'MOBILE','activity.viewLocation':'View location','activity.break':'BREAK',
 'punchMap.title':'Punch Location','punchMap.site':'Site (registered)','punchMap.punch':'Punch location',
-'punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
+'map.street':'Map','map.satellite':'Satellite','punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
 'punchMap.distance':'Distance from site: {m} m','geo.radiusHint':'50 to 100 m works for most workplaces. Phones are often 10 to 30 m off indoors, so a very small radius can turn people away who are standing at the door.','geo.radiusSmallWarn':'With Strict mode, a radius under 50 m can block people who are really on site.','punchMap.accuracy':'GPS accuracy: ±{m} m','punchMap.legendIn':'Filled = IN','punchMap.legendOut':'Ring = OUT','punchMap.legendAccuracy':'Light circle = GPS accuracy','crewMap.btn':'Map','crewMap.title':'Where punches happened','crewMap.none':'No punches with a location in this filter. Phone punches and tablets with a geofence save one.','crewMap.summary':'{n} punches with a location, {o} outside the geofence.','crewMap.capped':'Showing the latest {n}; narrow the dates or site to see the rest.',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
@@ -18869,11 +19055,11 @@ en:{
 'land.features':'Features','land.themeNav':'Light / dark mode','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.geoNav':'Geofencing',
 'land.getStarted':'Get Started Free','land.badge':'Now with automated payroll period reports',
-'land.pill1':'Clock in on your own tablet','land.pill2':'Automated payroll reports','land.pill3':'Excel & CSV export','land.pill4':'Employee scheduling','land.pillAddon':'Add-On',
-'land.howSchedTitle':'Employee Scheduling Add-On',
-'land.howSchedDesc':'Once your team is set up, unlock the Scheduling Add-On to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — all for $14.95/mo added to any paid plan.',
+'land.pill1':'Clock in on your own tablet','land.pill2':'Automated payroll reports','land.pill3':'Excel & CSV export','land.pill4':'Employee scheduling','land.pillAddon':'Included in Growth',
+'land.howSchedTitle':'Employee Scheduling',
+'land.howSchedDesc':'Once your team is set up, turn on Scheduling to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — included in Growth and Business, or $14.95/mo added to Starter.',
 'land.howSchedCta':'See pricing →',
-'land.heroTitle':'Time tracking that <span>actually works</span> for shift workers',
+'land.heroTitle':'The punch clock app that <span>actually works</span> for shift workers',
 'land.heroSub':'PIN-based clock in/out on your own tablet, fixed at your location, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free forever: 1 site · up to 10 employees · PIN clock-in on your own tablet or computer',
@@ -18985,7 +19171,7 @@ en:{
 'tos.h1':'1. Acceptance of Terms','tos.p1':'By accessing or using PunchClock Crew ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.',
 'tos.h2':'2. Description of Service','tos.p2':'PunchClock Crew is a time and attendance tracking software-as-a-service ("SaaS") platform that allows businesses to track employee work hours, manage multiple locations, generate reports, and integrate with payroll software.',
 'tos.h3':'3. Account Registration','tos.p3':'You must provide accurate, current, and complete information during registration. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You agree to notify us immediately of any unauthorized use of your account.',
-'tos.h4':'4. Subscription Plans and Billing','tos.p4':'PunchClock Crew offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). An optional Scheduling Add-On is available for $14.95/month on any paid plan. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. All payments are final and non-refundable, including the first payment, partial months and unused time. Every new account can try the paid features free for 14 days before paying: please use that period to make sure the Service fits your needs. After you cancel, you are not charged again and you keep your paid plan until the end of the period already paid.',
+'tos.h4':'4. Subscription Plans and Billing','tos.p4':'PunchClock Crew offers several subscription tiers: Free, Starter ($19.49/month), Growth ($39.49/month), and Business ($79.49/month). Scheduling is included in the Growth and Business plans and is available on the Starter plan as an optional add-on for $14.95/month. Features and limits vary by plan. Paid subscriptions are billed monthly in advance. You may cancel at any time; cancellation takes effect at the end of the current billing period. All payments are final and non-refundable, including the first payment, partial months and unused time. Every new account can try the paid features free for 14 days before paying: please use that period to make sure the Service fits your needs. After you cancel, you are not charged again and you keep your paid plan until the end of the period already paid.',
 'tos.p4b':'Additional employee seats on Starter and Growth plans are billed at $4.90/month per employee beyond the plan\'s included limit.',
 'tos.h5':'5. Employee Data','tos.p5':'You are responsible for obtaining any necessary consent from your employees to collect and store their time and attendance data. You represent that you have the legal authority to use the Service on behalf of your organization and to submit employee data through the platform.',
 'tos.h6':'6. Acceptable Use','tos.p6':'You agree not to: (a) use the Service for any unlawful purpose; (b) attempt to gain unauthorized access to any part of the Service; (c) interfere with or disrupt the integrity of the Service; (d) upload or transmit malicious code; (e) resell or sublicense the Service without our written consent.',
@@ -18996,7 +19182,7 @@ en:{
 'tos.h11':'11. Governing Law','tos.p11':'These Terms are governed by the laws of the Province of Quebec, Canada, without regard to conflict of law principles.',
 'tos.h12':'12. Contact','tos.p12':'For questions about these Terms, contact us through the app or at the email address on file with your account.',
 'priv.title':'Privacy Policy','priv.updated':'Last updated: November 23, 2026',
-'priv.liApp':'From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on, and never in the background; a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.',
+'priv.liApp':'From the phone apps (PunchClock Crew for employees, PunchClock Crew Admin for owners and managers): your location at the moment you clock in or out, when your employer has turned location on; if your employer offers arrival and departure reminders and you turn them on in the app, the phone itself watches the area around your workplace, also in the background, so it can ask you to clock in or out (it may check with our server that reminders are still on, but your location is only sent when you tap to punch, like any punch, and you can turn reminders off at any time); a notification address for your phone, only if you turn notifications on; and the model name of the phone, so you can see where you are signed in. The apps contain no advertising and no tracking tools.',
 'priv.liSignup':'How you found us, recorded when you create an account: the campaign tags of the link you followed, the domain of the website that sent you, and your optional answer to “How did you hear about us?”',
 'priv.h1':'1. Information We Collect','priv.p1':'We collect information you provide directly to us, including:',
 'priv.h2':'2. How We Use Your Information','priv.p2':'We use the information we collect to: provide and maintain the Service; send automated period summary emails to employees (when enabled); generate time and attendance reports; improve and develop the Service; and comply with legal obligations.',
@@ -19048,9 +19234,10 @@ en:{
 'modal.visitorSettings':'Visitor Check-In','modal.scheduleSettings':'Schedule','modal.mgrAllSites':'Managers can schedule staff from all sites','modal.mgrAllSitesDesc':'Off: a site manager only sees and schedules the staff at the sites they manage. On: they see everyone in the company, for locations that share staff.','modal.enableVisitorCheckin':'Enable Visitor Check-In',
 'modal.visitorCheckinDesc':'Adds a Visitor Check In button on the clock-in screen for guests to sign themselves in and out',
 'modal.growthPlanBadge':'GROWTH+',
-'modal.growthAddonLock':'Lunch break tracking and visitor check-in are included on the Growth plan and above.',
+'modal.growthAddonLock':'Lunch break tracking, visitor check-in and arrival reminders are included on the Growth plan and above.',
 'modal.upgradeLink':'Upgrade now',
 'modal.remoteAccessSettings':'Remote Access','modal.enableRemotePunch':'Allow Remote Clock-In',
+'modal.arrivalPrompts':'Arrival and departure reminders','modal.arrivalPromptsDesc':'In the PunchClock Crew phone app, an employee who arrives at or leaves a site gets a notification asking them to clock in or out. One tap records it. Nothing is punched automatically. Turn it on for each employee in their profile.','modal.arrivalPromptsAll':'Turn on for everyone with phone clock-in','modal.arrivalPromptsAllConfirm':'Turn on arrival and departure reminders for {n} employee(s) who can clock in from their phone? Each of them still has to agree in the app.','modal.arrivalPromptsAllDone':'Reminders turned on for {n} employee(s).','modal.arrivalPromptsAllNone':'Everyone with phone clock-in already has reminders on.',
 'modal.remotePunchDesc':'Makes remote clock-in available for this account. Nobody gets it automatically — grant it to specific employees (or all employees at a site) from the Employees page.',
 'modal.tzNewfoundland':'Newfoundland','modal.tzAtlantic':'Atlantic','modal.tzEastern':'Eastern','modal.tzCentral':'Central','modal.tzMountain':'Mountain','modal.tzPacific':'Pacific',
 'modal.punchRounding':'Punch Rounding','modal.punchRoundingLabel':'Round punch times to','modal.roundOff':'Off (exact times)','modal.punchRoundingHint':'Rounds to the nearest interval in hour totals and payroll. Raw punch times are always kept.',
@@ -19092,10 +19279,10 @@ en:{
 'faq.q31':"If an employee forgets to clock out, can they correct it themselves?",'faq.a31':"Yes, and you still approve it. Employees report the time they really started or left from the work tablet or from their Employee Portal (<em>My Hours</em>, <em>Report a missed punch</em>), up to 14 days back. When someone is still clocked in long after their shift, they also get an email with a button to that form. The request waits in <strong>Activity</strong> for an owner or manager; nothing changes the hours until it is approved. If a manager already typed a time for that shift, you see both and choose which one to keep. The Employee Portal is included on every paid plan (Starter and above; free accounts have it during their 14-day preview).",
 'help.toTitle':'Time off requests',
 'help.toDesc':'The <strong>Time Off</strong> page lists vacation, sick days and other absences. Employees with portal access request time off themselves and it lands here as <em>Pending</em>; you can also add an absence directly. Approved time off shows on the schedule and is listed at the bottom of payroll reports, so hours and absences line up for the same period.',
-'help.schedTitle':'Build a schedule','help.labelsTitle':"Work labels: schedule people for specific tasks, jobs or projects",'help.labelsDesc':"<strong>Work labels</strong> let you say <em>what</em> a shift is for: snow removal, a client job, a project, a task your business tracks. They are part of the Scheduling add-on, and the names are entirely yours.<br><br><strong>Set up</strong><ol><li>Open <strong>Schedule</strong> and click <strong>Create labels</strong> (or <strong>Manage labels</strong> once you have some) above the grid.</li><li>Type a name (for example <em>Snow removal</em>), pick a colour and click <strong>Add label</strong>. Repeat for each kind of work.</li></ol><strong>Use it</strong><ol><li>Click <em>+</em> in a cell, or click an existing shift, and choose the <strong>Label</strong>.</li><li>A day with two kinds of work? Add a second shift for the same person and day with a different label (8:00 to 12:00 Snow removal, 13:00 to 17:00 Transport).</li><li>Use <strong>Also apply this shift to</strong> (other days) and <strong>Also assign this shift to</strong> (other employees) to give the same labelled shift to several days and people in one save.</li><li>Click a label above the grid to see only those shifts. The Hours column then shows the scheduled hours for that label alone. Click <strong>All</strong> to come back.</li></ol><strong>At clock-in (optional)</strong><ol><li>Open <strong>Sites</strong>, edit your company and set <strong>Work labels at clock-in</strong> to <em>Ask, but allow skipping</em> or <em>Required</em>. It is <em>Off</em> by default.</li><li>From then on, after entering their PIN to clock IN, employees pick what they are working on. If they have a shift today with a label, that label is highlighted as <em>Scheduled</em>.</li><li>Changing tasks mid-shift? They select their name and tap <strong>Switch task</strong>, enter their PIN and pick the new task. Their hours carry on without a gap and the Activity page shows a <em>Switch</em> tag.</li><li>Coming back from a break returns them to the same task automatically.</li><li>On the <strong>Activity</strong> page each IN shows its label, and you can filter by label. Editing a punch or adding a missed one lets you set the label too.</li></ol><strong>In Reports</strong><ul><li>Once punches carry labels, <strong>Reports</strong> gets a <strong>Label</strong> filter, a Label column, and an <strong>Hours by label</strong> table showing the hours each label received and who worked them. Export to PDF, Excel or CSV includes both.</li><li>Hours are counted from the IN punch that started the work. Filtering by a label never changes which hours count as overtime: overtime is still worked out from everything the person worked that week.</li><li>Time worked before you turned labels on shows as <em>No label</em>.</li></ul><strong>Good to know</strong><ul><li>The clock-in picker only appears on a kiosk when the setting above is on, and only shows your active labels.</li><li>Employees see the label on their shifts in the Employee Portal and in the schedule email.</li><li><strong>Archive</strong> a label you no longer use: it leaves the picker but stays on past shifts. <strong>Delete</strong> removes it; shifts that used it keep their hours but lose the label.</li><li>A label is not the same as an employee's <em>Department</em>. A department says who someone is (one per person). A label says what a particular shift is for, so one person can do different work on different days or hours.</li><li>Owners and admins create and edit labels. Site managers can use them when scheduling.</li></ul>",
-'help.schedDesc':"<strong>Schedule</strong> shows one week at a time, employees down the side and days across the top. Click a <em>+</em> in any cell to add a shift, or click a shift to edit it. The grid flags conflicts for you — it marks days an employee said they are unavailable, and shows approved time off before you assign anything. Most weeks repeat: use <strong>↺ Copy last week</strong> next to a single employee's row to copy just their shifts forward, or the toolbar's <strong>Copy last week (all)</strong> to copy the whole roster's shifts into the current week in one click — a shift is left out only where the employee already has one at an overlapping time, so split days copy in full. When adding a shift you can also give it to other days and other employees in the same save (<strong>Also apply this shift to</strong> and <strong>Also assign this shift to</strong>); anyone who already has a shift at an overlapping time, or is off that day, is skipped. <strong>Clear week</strong> on an employee's row removes all of their shifts for the week on screen, after a confirmation. If you have site managers, they only see and schedule the staff at their own sites; to let them plan staff from every site, turn on <strong>Managers can schedule staff from all sites</strong> in the company's settings. To say what each shift is for (a task, job or project), see <strong>Work labels</strong>. Scheduling is a paid add-on ($14.95/mo on any paid plan).",
+'help.schedTitle':'Build a schedule','help.labelsTitle':"Work labels: schedule people for specific tasks, jobs or projects",'help.labelsDesc':"<strong>Work labels</strong> let you say <em>what</em> a shift is for: snow removal, a client job, a project, a task your business tracks. They are part of Scheduling (included in Growth and Business, an add-on on Starter), and the names are entirely yours.<br><br><strong>Set up</strong><ol><li>Open <strong>Schedule</strong> and click <strong>Create labels</strong> (or <strong>Manage labels</strong> once you have some) above the grid.</li><li>Type a name (for example <em>Snow removal</em>), pick a colour and click <strong>Add label</strong>. Repeat for each kind of work.</li></ol><strong>Use it</strong><ol><li>Click <em>+</em> in a cell, or click an existing shift, and choose the <strong>Label</strong>.</li><li>A day with two kinds of work? Add a second shift for the same person and day with a different label (8:00 to 12:00 Snow removal, 13:00 to 17:00 Transport).</li><li>Use <strong>Also apply this shift to</strong> (other days) and <strong>Also assign this shift to</strong> (other employees) to give the same labelled shift to several days and people in one save.</li><li>Click a label above the grid to see only those shifts. The Hours column then shows the scheduled hours for that label alone. Click <strong>All</strong> to come back.</li></ol><strong>At clock-in (optional)</strong><ol><li>Open <strong>Sites</strong>, edit your company and set <strong>Work labels at clock-in</strong> to <em>Ask, but allow skipping</em> or <em>Required</em>. It is <em>Off</em> by default.</li><li>From then on, after entering their PIN to clock IN, employees pick what they are working on. If they have a shift today with a label, that label is highlighted as <em>Scheduled</em>.</li><li>Changing tasks mid-shift? They select their name and tap <strong>Switch task</strong>, enter their PIN and pick the new task. Their hours carry on without a gap and the Activity page shows a <em>Switch</em> tag.</li><li>Coming back from a break returns them to the same task automatically.</li><li>On the <strong>Activity</strong> page each IN shows its label, and you can filter by label. Editing a punch or adding a missed one lets you set the label too.</li></ol><strong>In Reports</strong><ul><li>Once punches carry labels, <strong>Reports</strong> gets a <strong>Label</strong> filter, a Label column, and an <strong>Hours by label</strong> table showing the hours each label received and who worked them. Export to PDF, Excel or CSV includes both.</li><li>Hours are counted from the IN punch that started the work. Filtering by a label never changes which hours count as overtime: overtime is still worked out from everything the person worked that week.</li><li>Time worked before you turned labels on shows as <em>No label</em>.</li></ul><strong>Good to know</strong><ul><li>The clock-in picker only appears on a kiosk when the setting above is on, and only shows your active labels.</li><li>Employees see the label on their shifts in the Employee Portal and in the schedule email.</li><li><strong>Archive</strong> a label you no longer use: it leaves the picker but stays on past shifts. <strong>Delete</strong> removes it; shifts that used it keep their hours but lose the label.</li><li>A label is not the same as an employee's <em>Department</em>. A department says who someone is (one per person). A label says what a particular shift is for, so one person can do different work on different days or hours.</li><li>Owners and admins create and edit labels. Site managers can use them when scheduling.</li></ul>",
+'help.schedDesc':"<strong>Schedule</strong> shows one week at a time, employees down the side and days across the top. Click a <em>+</em> in any cell to add a shift, or click a shift to edit it. The grid flags conflicts for you — it marks days an employee said they are unavailable, and shows approved time off before you assign anything. Most weeks repeat: use <strong>↺ Copy last week</strong> next to a single employee's row to copy just their shifts forward, or the toolbar's <strong>Copy last week (all)</strong> to copy the whole roster's shifts into the current week in one click — a shift is left out only where the employee already has one at an overlapping time, so split days copy in full. When adding a shift you can also give it to other days and other employees in the same save (<strong>Also apply this shift to</strong> and <strong>Also assign this shift to</strong>); anyone who already has a shift at an overlapping time, or is off that day, is skipped. <strong>Clear week</strong> on an employee's row removes all of their shifts for the week on screen, after a confirmation. If you have site managers, they only see and schedule the staff at their own sites; to let them plan staff from every site, turn on <strong>Managers can schedule staff from all sites</strong> in the company's settings. To say what each shift is for (a task, job or project), see <strong>Work labels</strong>. Scheduling is included in Growth and Business, and is a $14.95/mo add-on on Starter.",
 'help.portalTitle':'Give an employee access to their own hours',
-'help.portalDesc':'The employee portal lets staff check their own punches, hours and schedule, and request time off — without an admin doing it for them. Open <strong>Admin → Employees</strong>, edit the employee, turn on email and enter their address, then use <em>Send Invitation</em>. They set their own password from the emailed link. You can resend or revoke access from the same place at any time. <strong>Shifts in their own calendar</strong> (with the Scheduling add-on): in the portal, under <em>My Schedule</em>, the employee chooses <em>Add my shifts to my calendar</em> and adds the link once to Google Calendar, Apple Calendar or Outlook; their own shifts then show there, with the work label, the site and the note. The link is private to that employee. Calendar apps refresh on their own timetable (Google about once or twice a day), so a same-day change can show late. In the employee\'s profile you see <em>Calendar link: on</em> and when a calendar last read it, and you can <em>Cancel link</em>; revoking portal access cancels it too.',
+'help.portalDesc':'The employee portal lets staff check their own punches, hours and schedule, and request time off — without an admin doing it for them. Open <strong>Admin → Employees</strong>, edit the employee, turn on email and enter their address, then use <em>Send Invitation</em>. They set their own password from the emailed link. You can resend or revoke access from the same place at any time. <strong>Shifts in their own calendar</strong> (with Scheduling): in the portal, under <em>My Schedule</em>, the employee chooses <em>Add my shifts to my calendar</em> and adds the link once to Google Calendar, Apple Calendar or Outlook; their own shifts then show there, with the work label, the site and the note. The link is private to that employee. Calendar apps refresh on their own timetable (Google about once or twice a day), so a same-day change can show late. In the employee\'s profile you see <em>Calendar link: on</em> and when a calendar last read it, and you can <em>Cancel link</em>; revoking portal access cancels it too.',
 'help.billTitle':'Plans, billing and adding seats',
 'help.billDesc':'Your plan sets how many employees, sites and admins you can have. Open the menu under your name and choose <strong>Manage Billing</strong> to change plan, update your card or download invoices. If you only need a little more room, extra employee or admin seats can be added to your current plan rather than upgrading it outright.',
 'help.lunchTitle':'Track Lunch Breaks',
@@ -19180,10 +19367,10 @@ en:{
 'faq.a11':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
 'faq.q12':'Why use a tablet terminal instead of a GPS mobile app?',
 'faq.a12':'A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There\'s also no app to install, no personal device required, and no battery or connectivity excuses.',
-'faq.q13':'What is the Scheduling Add-On and how does it work?',
-'faq.a13':'The Scheduling Add-On ($14.95/mo CAD) lets you build weekly shift schedules for your employees directly inside PunchClock Crew. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. (5) Each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook from their portal, with a private link. Available on any paid plan (Starter, Growth, or Business), and you can try it free for 14 days: open the Schedule tab and click "Try it free for 14 days".',
+'faq.q13':'What is Scheduling and how does it work?',
+'faq.a13':'Scheduling lets you build weekly shift schedules for your employees directly inside PunchClock Crew. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. (5) Each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook from their portal, with a private link. Included in the Growth and Business plans. On Starter it is a $14.95/mo CAD add-on, and you can try it free for 14 days: open the Schedule tab and click "Try it free for 14 days".',
 'faq.q14':'Can employees see their schedule when they clock in?',
-'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. With the employee portal, each employee can also add their shifts to Google Calendar, Apple Calendar or Outlook through a private link (My Schedule, then "Add my shifts to my calendar"). Calendar apps refresh on their own schedule, Google about once or twice a day. The Scheduling Add-On must be active on the account.',
+'faq.a14':'Yes. When an employee selects their name on the clock-in terminal, their upcoming shifts for the next 7 days automatically appear below the clock-in buttons. They can also tap "Send to my email" to get their schedule emailed to them — they just need to verify their identity with their 4-digit PIN. If they haven\'t registered an email yet, they can add one right there and it gets saved to their profile for future use. With the employee portal, each employee can also add their shifts to Google Calendar, Apple Calendar or Outlook through a private link (My Schedule, then "Add my shifts to my calendar"). Calendar apps refresh on their own schedule, Google about once or twice a day. The account needs Scheduling (included in Growth and Business, or the add-on on Starter).',
 'faq.q15':'Is PunchClock Crew available in French and suitable for Quebec businesses?',
 'faq.a15':'Yes — fully. PunchClock Crew is entirely bilingual (French and English) and built with Quebec businesses in mind. The entire interface, all reports, and all automated emails can be used in French. Pricing is in Canadian dollars (CAD). The software respects Quebec Law 25 (Loi 25) requirements for personal data protection — data is stored securely, employees are only asked for what\'s necessary, and you can request data deletion at any time. Whether you run a restaurant in Montreal, a retail store in Quebec City, or a warehouse in Laval, PunchClock Crew is built for you.',
 'faq.q16':'What is Geofencing and how does it prevent employees from punching in remotely?',
@@ -19203,15 +19390,15 @@ en:{
 'faq.q23':'Do I have to delete employees who have left to stay within my plan limit?',
 'faq.a23':'No. Your plan limit counts <strong>active employees only</strong>, so the simple answer is to <strong>deactivate</strong> anyone who has left — the seat frees up immediately and you keep everything. Go to <strong>Admin → Employees</strong> and click the pause icon on their row; their status becomes "Inactive". You can reactivate them any time if they come back, which is handy for seasonal or on-call staff.<br><br><strong>Avoid the Delete button for departed staff.</strong> Deleting removes the employee <em>and every punch they ever made</em>, permanently. Since employers generally have to keep payroll and hours records for several years, deactivating is almost always the right choice. If you do need a report covering someone who has left, tick <strong>"Include inactive employees"</strong> on the Reports page.',
 'faq.q24':'Can employees check their own schedule, hours and time off without contacting me?',
-'faq.a24':'Yes — every employee gets their own self-service portal, included on every paid plan (Starter and above; free accounts have it during their 14-day preview). From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the Scheduling Add-On is active), review their hours for the current pay period, request time off, report a clock-in or clock-out they forgot, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
+'faq.a24':'Yes — every employee gets their own self-service portal, included on every paid plan (Starter and above; free accounts have it during their 14-day preview). From <strong>Admin → Employees</strong>, turn on email for an employee and click <strong>Send Invitation</strong>; they set their own password from the link and can then log in from any phone, tablet or computer. From there they can check their upcoming schedule (if the account has Scheduling), review their hours for the current pay period, request time off, report a clock-in or clock-out they forgot, set their availability, and change their own password — all without calling or texting you. You can resend the invitation or revoke access at any time from the same screen.',
 'faq.q25':'Can I track lunch breaks separately from clocking out?',
 'faq.a25':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Track Lunch Breaks</strong> in Settings → Clocking → Lunch Breaks, and a dedicated Break button appears on the clock-in screen, separate from IN/OUT. Break time is already excluded from worked hours either way — with tracking on, it also shows up as its own line in reports and a BREAK badge in the Activity log, instead of you having to infer it from a gap. You can also set <strong>Paid Break Minutes</strong> to pay part of a break automatically — say 30 of a 60-minute lunch — while the rest stays unpaid with no extra work.',
 'faq.q26':'Can visitors sign in and out, not just employees?',
 'faq.a26':'Yes, on the <strong>Growth plan and above</strong>. Turn on <strong>Enable Visitor Check-In</strong> in Settings → Clocking, and every clock-in screen gets a <strong>Visitor Check In</strong> button — no PIN or employee record needed. A visitor enters their full name, company, phone and email once, and checks themselves out later by picking their name off a "currently in the building" list. It\'s useful for front-desk sign-in and for knowing exactly who\'s on-site in an emergency, alongside your staff.',
 'faq.q28':"Can I schedule my team for specific tasks, jobs or projects?",
 'faq.q29':"Can the schedule sync with Google Calendar, Apple Calendar or Outlook?",
-'faq.a29':"Yes. With the Scheduling add-on, each employee can add their own shifts to the calendar they already use. In the employee portal, under <strong>My Schedule</strong>, they choose <strong>Add my shifts to my calendar</strong>, then <strong>Add to Google Calendar</strong> or <strong>Add to Apple Calendar</strong>, or copy the link into Outlook. It is done once; after that their shifts appear on their own, with the time, the work label, the site and the note. Each link is private to one employee and shows only that person's shifts. They can replace it or turn it off at any time, and an admin can cancel it from the employee's profile. Good to know: calendar apps re-read the schedule on their own timetable (Google Calendar about once or twice a day), so a same-day change can show up late; the portal is always up to date. Included with the Scheduling add-on ($14.95/month, 14-day free trial) on any paid plan.",
-'faq.a28':"Yes. With the Scheduling add-on you create your own labels — a task, a job, a project, a client, whatever you track — and put one on each shift. Filter the schedule by label to see who is doing what and how many hours are planned for each. One person can have several shifts in a day with different labels (for example snow removal in the morning, transport in the afternoon). Employees see the label on their shifts in their portal and in the schedule email. You can also have employees pick what they are working on when they clock in, switch tasks during a shift, filter the Activity page by label, and get hours per label in Reports. Labels are available on paid plans with the Scheduling add-on ($14.95/month).",
+'faq.a29':"Yes. With Scheduling, each employee can add their own shifts to the calendar they already use. In the employee portal, under <strong>My Schedule</strong>, they choose <strong>Add my shifts to my calendar</strong>, then <strong>Add to Google Calendar</strong> or <strong>Add to Apple Calendar</strong>, or copy the link into Outlook. It is done once; after that their shifts appear on their own, with the time, the work label, the site and the note. Each link is private to one employee and shows only that person's shifts. They can replace it or turn it off at any time, and an admin can cancel it from the employee's profile. Good to know: calendar apps re-read the schedule on their own timetable (Google Calendar about once or twice a day), so a same-day change can show up late; the portal is always up to date. Part of Scheduling: included in Growth and Business, or the $14.95/month add-on on Starter (14-day free trial).",
+'faq.a28':"Yes. With Scheduling you create your own labels — a task, a job, a project, a client, whatever you track — and put one on each shift. Filter the schedule by label to see who is doing what and how many hours are planned for each. One person can have several shifts in a day with different labels (for example snow removal in the morning, transport in the afternoon). Employees see the label on their shifts in their portal and in the schedule email. You can also have employees pick what they are working on when they clock in, switch tasks during a shift, filter the Activity page by label, and get hours per label in Reports. Labels are part of Scheduling: included in Growth and Business, or the $14.95/month add-on on Starter.",
 'faq.q27':'We have remote or field staff — can they clock in from their phone, with GPS showing where?',
 'faq.a27':'Yes, on <strong>every paid plan</strong> (Starter and above; free accounts have it during their 14-day preview). Turn on <strong>Allow Remote Clock-In</strong> in Settings → Clocking, then grant it to specific employees (or a whole site\'s roster at once) from the Employees page — nobody gets it automatically just from having portal access. Once granted, that employee logs into their own Employee Portal and clocks in/out from their own phone or computer, no shared kiosk required. Every phone punch records the GPS location (and the distance from the employee\'s site, if it has a location), shown as a map pin in Activity, so you can see where they clocked in and out. Remote punches count against the employee\'s assigned site; they are only blocked outside the boundary when that site is set to Strict mode, while Lenient mode just records the distance. For crews that move between job sites, open the site, choose <strong>Strict</strong> and leave the address empty: location is then required on every phone punch, from anywhere. A punch with location refused or switched off is blocked, and every punch shows where it was made. Employees need to allow location access on their phone. The quickest way to set it up: open Settings, go to the Clocking tab, then Remote Access, and press <strong>Set up phone clock-in</strong>, then tick the people, choose where they can clock in, and send their links.',
 'upgrade.desc.starter':'1 company · 2 sites · 25 employees · 2 admins',
@@ -19246,7 +19433,7 @@ en:{
 'land.feat1Title':'Your Tablet Is the Terminal — No GPS Needed',
 'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet of your own, fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
 'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
-'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal, and can add them to Google Calendar, Apple Calendar or Outlook. $14.95/mo on any paid plan, and you can try it free for 14 days from the Schedule tab.',
+'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal, and can add them to Google Calendar, Apple Calendar or Outlook. Included in Growth and Business, or $14.95/mo on Starter with a free 14-day trial from the Schedule tab.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
 'land.feat10Desc':'Set a GPS boundary per site (as tight as 25 m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own configurable radius, so a small restaurant uses 25m while a large warehouse uses 200m.',
 'land.feat11Title':'Kiosk Shortcut — One Tap to Punch',
@@ -19278,11 +19465,13 @@ en:{
 'land.howA7Desc':'In Admin → Sites, edit any site, toggle Geofence ON, tap "Use my current location," set the radius, and save. Punches from outside that boundary are blocked automatically — no extra setup needed on each device.',
 'land.howA8Title':'Create Kiosk Shortcuts',
 'land.howA8Desc':'Click "Kiosk Shortcut" on any site card to get a direct URL, QR code, or install the PunchClock app on that device. Employees tap the icon and land directly on the punch page — no login required. Set up once, works forever.',
-'land.addonLabel':'Available Add-Ons (Paid Plans Only)',
+'land.addonLabel':'Add-on for Starter · included in Growth and Business',
 'land.addonSchedTitle':'Employee Scheduling',
 'land.addonSchedSub':'Shift builder · weekly view · per-site assignment · calendar sync',
 'land.addonSchedDesc':'Plan your week in advance. Assign shifts to employees at each site, view the schedule in a clean weekly grid, and let your team know exactly when they\'re working — all inside PunchClock. Employees can also add their shifts to Google Calendar, Apple Calendar or Outlook.',
-'land.addonSchedNote':'Add to any paid plan',
+'land.addonSchedNote':'Add to Starter',
+'land.f.startSched':'Employee scheduling: $14.95/mo add-on (included in Growth+)','land.f.growSched':'Employee scheduling included (a $14.95/mo add-on on Starter)','land.f.bizSched':'Employee scheduling included',
+'addon.included':'✓ Included in your plan','addon.schedIncludedLabel':'Scheduling','addon.includedToast':'Scheduling is included in your plan.','sched.growthLink':'Or move to Growth: Scheduling is included.',
 'land.addonSchedBtn':'Add Scheduling',
 'addon.scheduling':'Scheduling Add-On',
 'addon.active':'✓ Active — $14.95/mo',
@@ -19346,7 +19535,7 @@ en:{
 'sched.sendEmail':'Send schedule',
 'sched.sendConfirm':'Send {name}\'s schedule for this week to {email}?',
 'sched.addEmail':'+ Add email',
-'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.','labels.title':"Work labels",'labels.intro':"Labels say what kind of work a shift is for: a task, a job, a project, a client. Create the ones your business uses, then pick one when you add a shift. You can filter the schedule by label to see who is doing what.",'labels.namePh':"e.g. Snow removal",'labels.add':"Add label",'labels.empty':"No labels yet. Add your first one below.",'labels.archive':"Archive",'labels.restore':"Restore",'labels.delete':"Delete",'labels.deleteConfirm':"Delete the label \"{name}\"? Shifts that use it keep their hours but lose the label. To keep it on past shifts and just stop using it, archive it instead.",'labels.dupName':"You already have a label with that name.",'labels.nameRequired':"Give the label a name.",'labels.needAddon':"Work labels are part of the Scheduling add-on.",'labels.manage':"Manage labels",'labels.barHint':"Labels let you schedule people for specific tasks, jobs or projects.",'labels.createFirst':"Create labels",'labels.all':"All",'labels.none':"No label",'labels.shiftField':"Label",'labels.optional':"(optional)",'labels.noneOption':"— No label —",'labels.noMatch':"No shifts with this label this week.",'labels.archivedTag':"(archived)",'reports.hoursByLabel':"Hours by label",'reports.employeesCol':"Employees",'reports.col.employee':"Employee",'reports.col.in':"Punch In",'reports.col.out':"Punch Out",'reports.total':"Total",'labels.deleted':"(deleted label)",'plabel.title':"What are you working on?",'plabel.switchTitle':"Switch to which task?",'plabel.skip':"Skip",'plabel.scheduled':"Scheduled",'plabel.cancelled':"Clock-in cancelled. Please try again.",'plabel.switchCancelled':"Task not switched.",'plabel.notIn':"needs to be clocked IN to switch task.",'plabel.switchBtn':"Switch task",'plabel.pinSwitch':"Enter PIN to switch task",'plabel.switchedTo':"switched to",'plabel.switchFailed':"The switch did not finish and {name} is now clocked OUT. Please clock IN again.",'activity.switch':"SWITCH",'activity.flagNoLocation':"NO LOCATION",'activity.flagOutside':"OUTSIDE SITE",'activity.flagWeakGps':"WEAK GPS",'activity.flagClock':"TIME UNVERIFIED",'activity.empNote':"Employee's note",'activity.tipNoLocation':"The employee punched without sharing a location (permission off or no signal). Read their note if they left one.",'activity.tipOutside':"Synced late from outside the site area. It was kept so no time is lost: check it with the employee.",'activity.tipWeakGps':"The phone location was too imprecise to be sure, and its uncertainty overlaps the site area. Accepted.",'activity.tipTimeStale':"Made offline and synced after more than 72 hours (or with a time in the future): the time recorded is the sync time. Click Edit to set the real time.",'activity.tipClock':"The phone clock could not be confirmed while it was offline. The time shown is what the phone reported: edit it if it looks wrong.",'addPunch.errDuplicate':"This looks like a duplicate: there is already an {type} at {when}, within 10 minutes (it may have come from the employee's phone). Edit that punch instead.",'activity.lateSync':"LATE SYNC",'activity.checkTime':"CHECK TIME",'activity.lateSyncTip':"Made offline on the phone and synced later. The time shown is when the employee actually punched.",'activity.checkTimeTip':"This punch was made offline and synced much later. The time shown is when the employee punched, but the hours may be counted from the sync time. Click Edit and re-save the date and time to correct it.",'labels.allLabels':"All labels",'modal.labelsAtPunch':"Work labels at clock-in",'modal.labelsOff':"Off",'modal.labelsOptional':"Ask, but allow skipping",'modal.labelsRequired':"Required",'modal.labelsAtPunchDesc':"When on, employees pick what they are working on after entering their PIN, and a Switch task button lets them change tasks mid-shift. Create the labels from the Schedule page.",'sched.assignToEmployees':"Also assign this shift to",'sched.allEmployees':"Everyone",'sched.copyEmpDone':"Also scheduled {n} shift(s) for {e} other employee(s).",'sched.copyEmpSkipped':"{k} skipped (already scheduled or off that day).",
+'sched.copyLastWeek':'↺ Copy last week','sched.clearWeek':'Clear week','sched.clearWeekTitle':"Remove all of this employee's shifts this week",'sched.clearWeekNone':'No shifts to clear this week.','sched.clearWeekConfirm':'Remove all {n} shift(s) for {name} from {start} to {end}? This cannot be undone.','sched.clearWeekDone':'Cleared {n} shift(s) for {name}.','labels.title':"Work labels",'labels.intro':"Labels say what kind of work a shift is for: a task, a job, a project, a client. Create the ones your business uses, then pick one when you add a shift. You can filter the schedule by label to see who is doing what.",'labels.namePh':"e.g. Snow removal",'labels.add':"Add label",'labels.empty':"No labels yet. Add your first one below.",'labels.archive':"Archive",'labels.restore':"Restore",'labels.delete':"Delete",'labels.deleteConfirm':"Delete the label \"{name}\"? Shifts that use it keep their hours but lose the label. To keep it on past shifts and just stop using it, archive it instead.",'labels.dupName':"You already have a label with that name.",'labels.nameRequired':"Give the label a name.",'labels.needAddon':"Work labels are part of Scheduling: included in Growth and up, or the add-on on Starter.",'labels.manage':"Manage labels",'labels.barHint':"Labels let you schedule people for specific tasks, jobs or projects.",'labels.createFirst':"Create labels",'labels.all':"All",'labels.none':"No label",'labels.shiftField':"Label",'labels.optional':"(optional)",'labels.noneOption':"— No label —",'labels.noMatch':"No shifts with this label this week.",'labels.archivedTag':"(archived)",'reports.hoursByLabel':"Hours by label",'reports.employeesCol':"Employees",'reports.col.employee':"Employee",'reports.col.in':"Punch In",'reports.col.out':"Punch Out",'reports.total':"Total",'labels.deleted':"(deleted label)",'plabel.title':"What are you working on?",'plabel.switchTitle':"Switch to which task?",'plabel.skip':"Skip",'plabel.scheduled':"Scheduled",'plabel.cancelled':"Clock-in cancelled. Please try again.",'plabel.switchCancelled':"Task not switched.",'plabel.notIn':"needs to be clocked IN to switch task.",'plabel.switchBtn':"Switch task",'plabel.pinSwitch':"Enter PIN to switch task",'plabel.switchedTo':"switched to",'plabel.switchFailed':"The switch did not finish and {name} is now clocked OUT. Please clock IN again.",'activity.switch':"SWITCH",'activity.flagNoLocation':"NO LOCATION",'activity.flagOutside':"OUTSIDE SITE",'activity.flagWeakGps':"WEAK GPS",'activity.flagClock':"TIME UNVERIFIED",'activity.empNote':"Employee's note",'activity.tipNoLocation':"The employee punched without sharing a location (permission off or no signal). Read their note if they left one.",'activity.tipOutside':"Synced late from outside the site area. It was kept so no time is lost: check it with the employee.",'activity.tipWeakGps':"The phone location was too imprecise to be sure, and its uncertainty overlaps the site area. Accepted.",'activity.tipTimeStale':"Made offline and synced after more than 72 hours (or with a time in the future): the time recorded is the sync time. Click Edit to set the real time.",'activity.tipClock':"The phone clock could not be confirmed while it was offline. The time shown is what the phone reported: edit it if it looks wrong.",'addPunch.errDuplicate':"This looks like a duplicate: there is already an {type} at {when}, within 10 minutes (it may have come from the employee's phone). Edit that punch instead.",'activity.lateSync':"LATE SYNC",'activity.checkTime':"CHECK TIME",'activity.lateSyncTip':"Made offline on the phone and synced later. The time shown is when the employee actually punched.",'activity.checkTimeTip':"This punch was made offline and synced much later. The time shown is when the employee punched, but the hours may be counted from the sync time. Click Edit and re-save the date and time to correct it.",'labels.allLabels':"All labels",'modal.labelsAtPunch':"Work labels at clock-in",'modal.labelsOff':"Off",'modal.labelsOptional':"Ask, but allow skipping",'modal.labelsRequired':"Required",'modal.labelsAtPunchDesc':"When on, employees pick what they are working on after entering their PIN, and a Switch task button lets them change tasks mid-shift. Create the labels from the Schedule page.",'sched.assignToEmployees':"Also assign this shift to",'sched.allEmployees':"Everyone",'sched.copyEmpDone':"Also scheduled {n} shift(s) for {e} other employee(s).",'sched.copyEmpSkipped':"{k} skipped (already scheduled or off that day).",
 'sched.copyLastWeekTitle':'Copy this person\'s shifts from last week into this week',
 'sched.copyNone':'{name} had no shifts last week to copy.',
 'sched.copyMixed':'Copied {n} shift(s) for {name}; {k} day(s) already had one and were left as-is.',
@@ -19367,6 +19556,7 @@ en:{
 'sched.unavailableHint':'Employee unavailable — add shift anyway?',
 'emp.portalInviteTitle':'Employee Portal Access',
 'emp.remotePunchTitle':'Remote Clock-In','emp.remotePunchDesc':'Lets this employee clock in/out from their own phone or computer in the Employee Portal, instead of only the physical kiosk',
+'emp.arrivalTitle':'Arrival and departure reminders','emp.arrivalDesc':'The phone app asks this employee to clock in when they arrive at a site and to clock out when they leave. They also have to agree on their phone.',
 'emp.remotePunchNeedsCompany':'Turn on "Allow Remote Clock-In" in Settings → Clocking first to make this available.',
 'emp.remotePunchConfirm':'This employee will get access to the clock in/out page from their own account, and will be able to clock in and out from anywhere, on any device they have. If this is intended, press Confirm — otherwise cancel, and this employee will keep clocking in only at the physical kiosk at their site.',
 'emp.portalLoading':'Checking...',
@@ -19555,7 +19745,7 @@ fr:{
 'toast.removed':'✓ {name} retiré.',
 'sched.previewNote':'Semaine d’exemple — ces quarts sont une illustration, pas votre horaire réel. Rien n’est enregistré ici.',
 'sched.previewTitle':'Construisez le vôtre pour votre équipe',
-'sched.previewBody':'Planifiez la semaine, voyez les heures de chacun au fur et à mesure, et envoyez l’horaire à votre équipe en une seule action. 14,95 $/mois sur tout forfait payant.','sched.trialBtn':'Essayer gratuitement pendant 14 jours','sched.trialNote':'Sans carte de crédit. L\'essai commence maintenant et s\'arrête de lui-même après 14 jours.','sched.trialEnded':'Votre essai gratuit a pris fin le {date}.','sched.trialOwnerOnly':'Le propriétaire du compte peut démarrer l\'essai gratuit de 14 jours ou ajouter la planification.','sched.trialStarted':'Essai démarré : la planification est à vous jusqu\'au {date}.','sched.trialLeft':'Essai gratuit : {n} jours restants (se termine le {date}).','sched.trialKeep':'La garder — 14,95$/mois','addon.trial':'Essai',
+'sched.previewBody':'Planifiez la semaine, voyez les heures de chacun au fur et à mesure, et envoyez l’horaire à votre équipe en une seule action. Inclus dans les forfaits Croissance et Entreprise, ou 14,95 $/mois sur le forfait Débutant.','sched.trialBtn':'Essayer gratuitement pendant 14 jours','sched.trialNote':'Sans carte de crédit. L\'essai commence maintenant et s\'arrête de lui-même après 14 jours.','sched.trialEnded':'Votre essai gratuit a pris fin le {date}.','sched.trialOwnerOnly':'Le propriétaire du compte peut démarrer l\'essai gratuit de 14 jours ou ajouter la planification.','sched.trialStarted':'Essai démarré : la planification est à vous jusqu\'au {date}.','sched.trialLeft':'Essai gratuit : {n} jours restants (se termine le {date}).','sched.trialKeep':'La garder — 14,95$/mois','addon.trial':'Essai',
 'sched.hoursCol':'Heures',
 'help.catFix':'Résoudre un problème',
 'kiosk.adminLogin':'Connexion admin','kiosk.notAKiosk':'Cet appareil n’est pas un kiosque? Réinitialiser',
@@ -19955,7 +20145,7 @@ fr:{
 'activity.bulkReassignTitle':'Réassigner le site','activity.bulkReassignDesc':"Déplacer les pointages sélectionnés vers un autre site.",'activity.bulkReassignDescTail':"pointages seront mis à jour.",'activity.bulkReassignConfirm':"Réassigner",
 'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement','activity.break':'PAUSE',
 'punchMap.title':'Emplacement du pointage','punchMap.site':'Site (enregistré)','punchMap.punch':'Emplacement du pointage',
-'punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
+'map.street':'Plan','map.satellite':'Satellite','punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
 'punchMap.distance':'Distance du site : {m} m','geo.radiusHint':'De 50 à 100 m convient à la plupart des lieux de travail. Un téléphone se trompe souvent de 10 à 30 m à l’intérieur : un rayon très petit peut refuser quelqu’un qui est à la porte.','geo.radiusSmallWarn':'En mode Strict, un rayon sous 50 m peut bloquer des personnes qui sont vraiment sur place.','punchMap.accuracy':'Précision GPS : ±{m} m','punchMap.legendIn':'Plein = ENTRÉE','punchMap.legendOut':'Anneau = SORTIE','punchMap.legendAccuracy':'Cercle pâle = précision GPS','crewMap.btn':'Carte','crewMap.title':'Où les pointages ont eu lieu','crewMap.none':'Aucun pointage avec position pour ce filtre. Les pointages par téléphone et les tablettes avec une zone en enregistrent une.','crewMap.summary':'{n} pointages avec position, {o} hors de la zone.','crewMap.capped':'Les {n} plus récents sont affichés; réduisez les dates ou le site pour voir le reste.',
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
@@ -19978,9 +20168,9 @@ fr:{
 'land.features':'Fonctionnalités','land.themeNav':'Mode clair / sombre','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.geoNav':'Géorepérage',
 'land.getStarted':'Commencer gratuitement','land.badge':'Maintenant avec rapports de paie automatisés',
-'land.pill1':'Pointage sur votre tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export Excel et CSV','land.pill4':'Planification des employés','land.pillAddon':'Complément',
-'land.howSchedTitle':'Complément Planification des employés',
-'land.howSchedDesc':'Une fois votre équipe configurée, activez le complément Planification pour créer des horaires de quarts hebdomadaires directement dans PunchClock. Assignez des quarts par site, envoyez les horaires par courriel et permettez aux employés de voir leurs prochains quarts sur la page de pointage ou dans leur propre calendrier Google, Apple ou Outlook — tout ça pour 14,95 $/mois en supplément de tout plan payant.',
+'land.pill1':'Pointage sur votre tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export Excel et CSV','land.pill4':'Planification des employés','land.pillAddon':'Inclus dans Croissance',
+'land.howSchedTitle':'Planification des employés',
+'land.howSchedDesc':'Une fois votre équipe configurée, activez la planification pour créer des horaires de quarts hebdomadaires directement dans PunchClock. Assignez des quarts par site, envoyez les horaires par courriel et permettez aux employés de voir leurs prochains quarts sur la page de pointage ou dans leur propre calendrier Google, Apple ou Outlook — inclus dans les forfaits Croissance et Entreprise, ou 14,95 $/mois en supplément du forfait Débutant.',
 'land.howSchedCta':'Voir les tarifs →',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
 'land.heroSub':'Pointage par NIP sur votre propre tablette, fixée à votre emplacement, multi-sites, rapports de période automatisés, suivi des heures supplémentaires — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
@@ -20092,7 +20282,7 @@ fr:{
 'tos.h1':'1. Acceptation des conditions','tos.p1':'En accédant au service PunchClock Crew (« le Service »), vous acceptez d\'être lié par ces Conditions d\'utilisation. Si vous n\'acceptez pas ces conditions, veuillez ne pas utiliser le Service.',
 'tos.h2':'2. Description du service','tos.p2':'PunchClock Crew est une plateforme logicielle de suivi du temps et des présences (SaaS) permettant aux entreprises de suivre les heures de travail des employés, gérer plusieurs sites, générer des rapports et s\'intégrer à un logiciel de paie.',
 'tos.h3':'3. Inscription au compte','tos.p3':'Vous devez fournir des informations exactes, actuelles et complètes lors de l\'inscription. Vous êtes responsable de la confidentialité de vos identifiants et de toutes les activités effectuées sous votre compte.',
-'tos.h4':'4. Abonnements et facturation','tos.p4':'PunchClock Crew offre plusieurs niveaux : Gratuit, Débutant (19,49 $/mois), Croissance (39,49 $/mois) et Entreprise (79,49 $/mois). Un complément optionnel de Planification est disponible à 14,95 $/mois sur tout plan payant. Les abonnements payants sont facturés mensuellement à l\'avance. Vous pouvez annuler à tout moment; l\'annulation prend effet à la fin de la période en cours. Tous les paiements sont définitifs et non remboursables, y compris le premier paiement, les mois partiels et le temps non utilisé. Chaque nouveau compte peut essayer gratuitement les fonctions payantes pendant 14 jours avant de payer : utilisez cette période pour vous assurer que le Service répond à vos besoins. Après une annulation, vous n\'êtes plus facturé et vous gardez votre forfait payant jusqu\'à la fin de la période déjà payée.',
+'tos.h4':'4. Abonnements et facturation','tos.p4':'PunchClock Crew offre plusieurs niveaux : Gratuit, Débutant (19,49 $/mois), Croissance (39,49 $/mois) et Entreprise (79,49 $/mois). La planification est incluse dans les forfaits Croissance et Entreprise, et offerte sur le forfait Débutant comme complément optionnel à 14,95 $/mois. Les abonnements payants sont facturés mensuellement à l\'avance. Vous pouvez annuler à tout moment; l\'annulation prend effet à la fin de la période en cours. Tous les paiements sont définitifs et non remboursables, y compris le premier paiement, les mois partiels et le temps non utilisé. Chaque nouveau compte peut essayer gratuitement les fonctions payantes pendant 14 jours avant de payer : utilisez cette période pour vous assurer que le Service répond à vos besoins. Après une annulation, vous n\'êtes plus facturé et vous gardez votre forfait payant jusqu\'à la fin de la période déjà payée.',
 'tos.p4b':'Des sièges supplémentaires pour les forfaits Débutant et Croissance sont facturés à 4,90 $/mois par employé au-delà de la limite incluse.',
 'tos.h5':'5. Données des employés','tos.p5':'Vous êtes responsable d\'obtenir le consentement nécessaire de vos employés pour collecter et stocker leurs données de présence. Vous déclarez avoir l\'autorité légale pour utiliser le Service au nom de votre organisation.',
 'tos.h6':'6. Utilisation acceptable','tos.p6':'Vous acceptez de ne pas : (a) utiliser le Service à des fins illégales; (b) tenter d\'accéder sans autorisation à une partie du Service; (c) perturber l\'intégrité du Service; (d) transmettre du code malveillant; (e) revendre ou sous-licencier le Service sans notre consentement écrit.',
@@ -20103,7 +20293,7 @@ fr:{
 'tos.h11':'11. Droit applicable','tos.p11':'Ces Conditions sont régies par les lois de la province de Québec, Canada, sans égard aux principes de conflit de lois.',
 'tos.h12':'12. Contact','tos.p12':'Pour toute question concernant ces Conditions, contactez-nous via l\'application ou à l\'adresse courriel associée à votre compte.',
 'priv.title':'Politique de confidentialité','priv.updated':'Dernière mise à jour : 23 novembre 2026',
-'priv.liApp':'Dans les applications pour téléphone (PunchClock Crew pour les employés, PunchClock Crew Admin pour les propriétaires et les gestionnaires) : votre position au moment où vous pointez votre arrivée ou votre départ, lorsque votre employeur a activé la localisation, et jamais en arrière-plan; une adresse de notification pour votre téléphone, seulement si vous activez les notifications; et le modèle du téléphone, pour que vous puissiez voir où vous êtes connecté. Les applications ne contiennent ni publicité ni outil de suivi.',
+'priv.liApp':'Dans les applications pour téléphone (PunchClock Crew pour les employés, PunchClock Crew Admin pour les propriétaires et les gestionnaires) : votre position au moment où vous pointez votre arrivée ou votre départ, lorsque votre employeur a activé la localisation; si votre employeur offre les rappels d\'arrivée et de départ et que vous les activez dans l\'application, le téléphone surveille lui-même le secteur de votre lieu de travail, aussi en arrière-plan, pour vous demander de pointer (il peut vérifier auprès de notre serveur que les rappels sont toujours actifs, mais votre position n\'est envoyée que lorsque vous touchez pour pointer, comme tout pointage, et vous pouvez désactiver les rappels en tout temps); une adresse de notification pour votre téléphone, seulement si vous activez les notifications; et le modèle du téléphone, pour que vous puissiez voir où vous êtes connecté. Les applications ne contiennent ni publicité ni outil de suivi.',
 'priv.liSignup':'Comment vous nous avez trouvés, enregistré à la création du compte : les étiquettes de campagne du lien suivi, le domaine du site qui vous a dirigé vers nous et votre réponse facultative à « Comment avez-vous entendu parler de nous? »',
 'priv.h1':'1. Informations collectées','priv.p1':'Nous collectons les informations que vous nous fournissez directement, notamment :',
 'priv.h2':'2. Utilisation de vos informations','priv.p2':'Nous utilisons les informations collectées pour : fournir et maintenir le Service; envoyer des courriels de résumé de période automatisés aux employés (si activé); générer des rapports de présence; améliorer et développer le Service; et respecter les obligations légales.',
@@ -20155,9 +20345,10 @@ fr:{
 'modal.visitorSettings':'Pointage visiteur','modal.scheduleSettings':'Horaire','modal.mgrAllSites':'Les gestionnaires peuvent planifier le personnel de tous les sites','modal.mgrAllSitesDesc':'Désactivé : un gestionnaire de site ne voit et ne planifie que le personnel des sites qu\'il gère. Activé : il voit tout le monde dans l\'entreprise, pour les emplacements qui partagent leur personnel.','modal.enableVisitorCheckin':'Activer le pointage visiteur',
 'modal.visitorCheckinDesc':'Ajoute un bouton Pointage visiteur sur l\'écran de pointage pour que les invités s\'inscrivent et se désinscrivent eux-mêmes',
 'modal.growthPlanBadge':'CROISSANCE+',
-'modal.growthAddonLock':'Le suivi des pauses repas et le pointage visiteur sont inclus à partir du plan Croissance.',
+'modal.growthAddonLock':'Le suivi des pauses repas, le pointage visiteur et les rappels d\'arrivée sont inclus à partir du plan Croissance.',
 'modal.upgradeLink':'Mettre à niveau',
 'modal.remoteAccessSettings':'Accès à distance','modal.enableRemotePunch':'Permettre le pointage à distance',
+'modal.arrivalPrompts':'Rappels d\'arrivée et de départ','modal.arrivalPromptsDesc':'Dans l\'application PunchClock Crew, l\'employé qui arrive sur un site ou le quitte reçoit une notification lui demandant de pointer l\'entrée ou la sortie. Un toucher l\'enregistre. Rien n\'est pointé automatiquement. Activez-les pour chaque employé dans sa fiche.','modal.arrivalPromptsAll':'Activer pour tous ceux qui pointent par téléphone','modal.arrivalPromptsAllConfirm':'Activer les rappels d\'arrivée et de départ pour {n} employé(s) qui peuvent pointer depuis leur téléphone? Chacun doit encore accepter dans l\'application.','modal.arrivalPromptsAllDone':'Rappels activés pour {n} employé(s).','modal.arrivalPromptsAllNone':'Tous ceux qui pointent par téléphone ont déjà les rappels.',
 'modal.remotePunchDesc':'Rend le pointage à distance disponible pour ce compte. Personne ne l\'obtient automatiquement — accordez-le à des employés spécifiques (ou à tous les employés d\'un site) depuis la page Employés.',
 'modal.tzNewfoundland':'Terre-Neuve','modal.tzAtlantic':'Atlantique','modal.tzEastern':'Est','modal.tzCentral':'Centre','modal.tzMountain':'Rocheuses','modal.tzPacific':'Pacifique',
 'modal.punchRounding':'Arrondi des pointages','modal.punchRoundingLabel':'Arrondir les pointages à','modal.roundOff':'Désactivé (temps exact)','modal.punchRoundingHint':'Arrondit à l\'intervalle le plus proche dans les totaux d\'heures et la paie. Les pointages exacts sont toujours conservés.',
@@ -20199,10 +20390,10 @@ fr:{
 'faq.q31':"Si un employé oublie de pointer sa sortie, peut-il le corriger lui-même?",'faq.a31':"Oui, et c’est vous qui approuvez. L’employé signale l’heure réelle de son arrivée ou de son départ depuis la tablette de travail ou depuis son portail employé (<em>Mes heures</em>, <em>Signaler un pointage oublié</em>), jusqu’à 14 jours en arrière. Quand quelqu’un est encore pointé longtemps après son quart, il reçoit aussi un courriel avec un bouton vers ce formulaire. La demande attend dans <strong>Activité</strong> qu’un propriétaire ou un gestionnaire l’approuve; rien ne change dans les heures avant. Si un gestionnaire a déjà entré une heure pour ce quart, vous voyez les deux et choisissez laquelle garder. Le portail employé est inclus dans tous les forfaits payants (Starter et plus; les comptes gratuits l’ont pendant leur aperçu de 14 jours).",
 'help.toTitle':'Demandes de congé',
 'help.toDesc':'La page <strong>Congés</strong> regroupe les vacances, les congés de maladie et autres absences. Les employés ayant accès au portail font leurs demandes eux-mêmes et celles-ci arrivent ici avec le statut <em>En attente</em>; vous pouvez aussi ajouter une absence directement. Les congés approuvés apparaissent dans l\'horaire et au bas des rapports de paie, pour que les heures et les absences concordent sur la même période.',
-'help.schedTitle':'Créer un horaire','help.labelsTitle':"Étiquettes de travail : planifier des personnes pour des tâches, chantiers ou projets précis",'help.labelsDesc':"Les <strong>étiquettes de travail</strong> indiquent <em>à quoi sert</em> un quart : déneigement, un chantier client, un projet, une tâche que votre entreprise veut suivre. Elles font partie du module complémentaire Horaires, et les noms sont entièrement les vôtres.<br><br><strong>Configuration</strong><ol><li>Ouvrez <strong>Horaires</strong> et cliquez sur <strong>Créer des étiquettes</strong> (ou <strong>Gérer les étiquettes</strong> une fois que vous en avez) au-dessus de la grille.</li><li>Saisissez un nom (par exemple <em>Déneigement</em>), choisissez une couleur et cliquez sur <strong>Ajouter une étiquette</strong>. Répétez pour chaque type de travail.</li></ol><strong>Utilisation</strong><ol><li>Cliquez sur <em>+</em> dans une case, ou sur un quart existant, et choisissez l'<strong>Étiquette</strong>.</li><li>Une journée avec deux types de travail? Ajoutez un deuxième quart pour la même personne et le même jour avec une autre étiquette (8 h à 12 h Déneigement, 13 h à 17 h Transport).</li><li>Servez-vous de <strong>Appliquer aussi ce quart à</strong> (autres jours) et <strong>Assigner aussi ce quart à</strong> (autres employés) pour donner le même quart étiqueté à plusieurs jours et personnes en un seul enregistrement.</li><li>Cliquez sur une étiquette au-dessus de la grille pour n'afficher que ces quarts. La colonne Heures montre alors seulement les heures planifiées pour cette étiquette. Cliquez sur <strong>Toutes</strong> pour revenir.</li></ol><strong>Au pointage (facultatif)</strong><ol><li>Ouvrez <strong>Sites</strong>, modifiez votre entreprise et réglez <strong>Étiquettes de travail au pointage</strong> à <em>Demander, mais permettre de passer</em> ou <em>Obligatoire</em>. C'est <em>Désactivé</em> par défaut.</li><li>Dès lors, après avoir entré leur NIP pour pointer leur entrée, les employés choisissent sur quoi ils travaillent. S'ils ont un quart étiqueté aujourd'hui, cette étiquette est mise en évidence comme <em>Prévu</em>.</li><li>Changement de tâche en cours de quart? Ils sélectionnent leur nom et touchent <strong>Changer de tâche</strong>, entrent leur NIP et choisissent la nouvelle tâche. Leurs heures se poursuivent sans interruption et la page Activité affiche une pastille <em>Changement</em>.</li><li>Au retour d'une pause, ils reprennent automatiquement la même tâche.</li><li>Sur la page <strong>Activité</strong>, chaque entrée affiche son étiquette et vous pouvez filtrer par étiquette. En modifiant un pointage ou en ajoutant un pointage oublié, vous pouvez aussi définir l'étiquette.</li></ol><strong>Dans les rapports</strong><ul><li>Une fois que des pointages portent des étiquettes, <strong>Rapports</strong> offre un filtre <strong>Étiquette</strong>, une colonne Étiquette et un tableau <strong>Heures par étiquette</strong> qui montre les heures de chaque étiquette et qui les a travaillées. L'exportation PDF, Excel ou CSV inclut les deux.</li><li>Les heures sont comptées à partir du pointage d'entrée qui a commencé le travail. Filtrer par étiquette ne change jamais quelles heures comptent comme du temps supplémentaire : celui-ci est toujours calculé à partir de tout ce que la personne a travaillé dans la semaine.</li><li>Le temps travaillé avant l'activation des étiquettes apparaît comme <em>Sans étiquette</em>.</li></ul><strong>Bon à savoir</strong><ul><li>Le choix au pointage n'apparaît sur une borne que si le réglage ci-dessus est activé, et il n'affiche que vos étiquettes actives.</li><li>Les employés voient l'étiquette sur leurs quarts dans le portail employé et dans le courriel d'horaire.</li><li><strong>Archivez</strong> une étiquette que vous n'utilisez plus : elle disparaît du choix mais reste sur les quarts passés. <strong>Supprimer</strong> la retire; les quarts qui l'utilisaient conservent leurs heures mais perdent l'étiquette.</li><li>Une étiquette n'est pas la même chose que le <em>Département</em> d'un employé. Un département dit qui est la personne (un seul par personne). Une étiquette dit à quoi sert un quart précis, donc une même personne peut faire un travail différent selon les jours ou les heures.</li><li>Les propriétaires et les administrateurs créent et modifient les étiquettes. Les gestionnaires de site peuvent les utiliser en planifiant.</li></ul>",
-'help.schedDesc':"<strong>Horaires</strong> affiche une semaine à la fois : les employés en colonne, les jours en rangée. Cliquez sur un <em>+</em> dans une case pour ajouter un quart, ou sur un quart pour le modifier. La grille signale les conflits : elle indique les jours où un employé s'est déclaré non disponible et affiche les congés approuvés avant que vous n'assigniez quoi que ce soit. La plupart des semaines se répètent : utilisez <strong>↺ Copier la semaine dernière</strong> à côté de la rangée d'un employé pour copier seulement ses quarts, ou <strong>Copier la semaine dernière (tous)</strong> dans la barre d'outils pour copier les quarts de toute l'équipe dans la semaine actuelle en un clic — un quart est laissé de côté seulement si l'employé en a déjà un qui chevauche ces heures; les journées en deux quarts sont donc copiées au complet. En ajoutant un quart, vous pouvez aussi le donner à d'autres jours et à d'autres employés dans le même enregistrement (<strong>Appliquer aussi ce quart à</strong> et <strong>Assigner aussi ce quart à</strong>); toute personne qui a déjà un quart chevauchant ces heures, ou qui est absente ce jour-là, est ignorée. <strong>Vider la semaine</strong>, sur la rangée d'un employé, retire tous ses quarts de la semaine affichée, après confirmation. Si vous avez des gestionnaires de site, ils ne voient et ne planifient que le personnel de leurs propres sites; pour leur permettre de planifier le personnel de tous les sites, activez <strong>Les gestionnaires peuvent planifier le personnel de tous les sites</strong> dans les paramètres de l'entreprise. Pour indiquer à quoi sert chaque quart (une tâche, un chantier ou un projet), consultez les <strong>Étiquettes de travail</strong>. Les horaires sont un module complémentaire (14,95 $/mois sur tout forfait payant).",
+'help.schedTitle':'Créer un horaire','help.labelsTitle':"Étiquettes de travail : planifier des personnes pour des tâches, chantiers ou projets précis",'help.labelsDesc':"Les <strong>étiquettes de travail</strong> indiquent <em>à quoi sert</em> un quart : déneigement, un chantier client, un projet, une tâche que votre entreprise veut suivre. Elles font partie de la planification (incluse dans Croissance et Entreprise, en complément sur Débutant), et les noms sont entièrement les vôtres.<br><br><strong>Configuration</strong><ol><li>Ouvrez <strong>Horaires</strong> et cliquez sur <strong>Créer des étiquettes</strong> (ou <strong>Gérer les étiquettes</strong> une fois que vous en avez) au-dessus de la grille.</li><li>Saisissez un nom (par exemple <em>Déneigement</em>), choisissez une couleur et cliquez sur <strong>Ajouter une étiquette</strong>. Répétez pour chaque type de travail.</li></ol><strong>Utilisation</strong><ol><li>Cliquez sur <em>+</em> dans une case, ou sur un quart existant, et choisissez l'<strong>Étiquette</strong>.</li><li>Une journée avec deux types de travail? Ajoutez un deuxième quart pour la même personne et le même jour avec une autre étiquette (8 h à 12 h Déneigement, 13 h à 17 h Transport).</li><li>Servez-vous de <strong>Appliquer aussi ce quart à</strong> (autres jours) et <strong>Assigner aussi ce quart à</strong> (autres employés) pour donner le même quart étiqueté à plusieurs jours et personnes en un seul enregistrement.</li><li>Cliquez sur une étiquette au-dessus de la grille pour n'afficher que ces quarts. La colonne Heures montre alors seulement les heures planifiées pour cette étiquette. Cliquez sur <strong>Toutes</strong> pour revenir.</li></ol><strong>Au pointage (facultatif)</strong><ol><li>Ouvrez <strong>Sites</strong>, modifiez votre entreprise et réglez <strong>Étiquettes de travail au pointage</strong> à <em>Demander, mais permettre de passer</em> ou <em>Obligatoire</em>. C'est <em>Désactivé</em> par défaut.</li><li>Dès lors, après avoir entré leur NIP pour pointer leur entrée, les employés choisissent sur quoi ils travaillent. S'ils ont un quart étiqueté aujourd'hui, cette étiquette est mise en évidence comme <em>Prévu</em>.</li><li>Changement de tâche en cours de quart? Ils sélectionnent leur nom et touchent <strong>Changer de tâche</strong>, entrent leur NIP et choisissent la nouvelle tâche. Leurs heures se poursuivent sans interruption et la page Activité affiche une pastille <em>Changement</em>.</li><li>Au retour d'une pause, ils reprennent automatiquement la même tâche.</li><li>Sur la page <strong>Activité</strong>, chaque entrée affiche son étiquette et vous pouvez filtrer par étiquette. En modifiant un pointage ou en ajoutant un pointage oublié, vous pouvez aussi définir l'étiquette.</li></ol><strong>Dans les rapports</strong><ul><li>Une fois que des pointages portent des étiquettes, <strong>Rapports</strong> offre un filtre <strong>Étiquette</strong>, une colonne Étiquette et un tableau <strong>Heures par étiquette</strong> qui montre les heures de chaque étiquette et qui les a travaillées. L'exportation PDF, Excel ou CSV inclut les deux.</li><li>Les heures sont comptées à partir du pointage d'entrée qui a commencé le travail. Filtrer par étiquette ne change jamais quelles heures comptent comme du temps supplémentaire : celui-ci est toujours calculé à partir de tout ce que la personne a travaillé dans la semaine.</li><li>Le temps travaillé avant l'activation des étiquettes apparaît comme <em>Sans étiquette</em>.</li></ul><strong>Bon à savoir</strong><ul><li>Le choix au pointage n'apparaît sur une borne que si le réglage ci-dessus est activé, et il n'affiche que vos étiquettes actives.</li><li>Les employés voient l'étiquette sur leurs quarts dans le portail employé et dans le courriel d'horaire.</li><li><strong>Archivez</strong> une étiquette que vous n'utilisez plus : elle disparaît du choix mais reste sur les quarts passés. <strong>Supprimer</strong> la retire; les quarts qui l'utilisaient conservent leurs heures mais perdent l'étiquette.</li><li>Une étiquette n'est pas la même chose que le <em>Département</em> d'un employé. Un département dit qui est la personne (un seul par personne). Une étiquette dit à quoi sert un quart précis, donc une même personne peut faire un travail différent selon les jours ou les heures.</li><li>Les propriétaires et les administrateurs créent et modifient les étiquettes. Les gestionnaires de site peuvent les utiliser en planifiant.</li></ul>",
+'help.schedDesc':"<strong>Horaires</strong> affiche une semaine à la fois : les employés en colonne, les jours en rangée. Cliquez sur un <em>+</em> dans une case pour ajouter un quart, ou sur un quart pour le modifier. La grille signale les conflits : elle indique les jours où un employé s'est déclaré non disponible et affiche les congés approuvés avant que vous n'assigniez quoi que ce soit. La plupart des semaines se répètent : utilisez <strong>↺ Copier la semaine dernière</strong> à côté de la rangée d'un employé pour copier seulement ses quarts, ou <strong>Copier la semaine dernière (tous)</strong> dans la barre d'outils pour copier les quarts de toute l'équipe dans la semaine actuelle en un clic — un quart est laissé de côté seulement si l'employé en a déjà un qui chevauche ces heures; les journées en deux quarts sont donc copiées au complet. En ajoutant un quart, vous pouvez aussi le donner à d'autres jours et à d'autres employés dans le même enregistrement (<strong>Appliquer aussi ce quart à</strong> et <strong>Assigner aussi ce quart à</strong>); toute personne qui a déjà un quart chevauchant ces heures, ou qui est absente ce jour-là, est ignorée. <strong>Vider la semaine</strong>, sur la rangée d'un employé, retire tous ses quarts de la semaine affichée, après confirmation. Si vous avez des gestionnaires de site, ils ne voient et ne planifient que le personnel de leurs propres sites; pour leur permettre de planifier le personnel de tous les sites, activez <strong>Les gestionnaires peuvent planifier le personnel de tous les sites</strong> dans les paramètres de l'entreprise. Pour indiquer à quoi sert chaque quart (une tâche, un chantier ou un projet), consultez les <strong>Étiquettes de travail</strong>. Les horaires sont inclus dans les forfaits Croissance et Entreprise, et sont un module complémentaire de 14,95 $/mois sur le forfait Débutant.",
 'help.portalTitle':'Donner à un employé l\'accès à ses heures',
-'help.portalDesc':'Le portail employé permet à votre personnel de consulter ses pointages, ses heures et son horaire, et de demander des congés — sans passer par un administrateur. Ouvrez <strong>Admin → Employés</strong>, modifiez l\'employé, activez le courriel et saisissez son adresse, puis utilisez <em>Envoyer l\'invitation</em>. Il choisit son mot de passe à partir du lien reçu. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès au même endroit. <strong>Ses quarts dans son propre calendrier</strong> (avec le module Planification) : dans le portail, sous <em>Mon horaire</em>, l\'employé choisit <em>Ajouter mes quarts à mon calendrier</em> et ajoute le lien une seule fois à Google Agenda, au Calendrier Apple ou à Outlook; ses propres quarts s\'y affichent ensuite, avec l\'étiquette de travail, le site et la note. Le lien est privé, propre à cet employé. Les applications de calendrier se mettent à jour à leur propre rythme (Google environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Dans la fiche de l\'employé, vous voyez <em>Lien de calendrier : actif</em> et la dernière lecture par un calendrier, et vous pouvez <em>Annuler le lien</em>; révoquer l\'accès au portail l\'annule aussi.',
+'help.portalDesc':'Le portail employé permet à votre personnel de consulter ses pointages, ses heures et son horaire, et de demander des congés — sans passer par un administrateur. Ouvrez <strong>Admin → Employés</strong>, modifiez l\'employé, activez le courriel et saisissez son adresse, puis utilisez <em>Envoyer l\'invitation</em>. Il choisit son mot de passe à partir du lien reçu. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès au même endroit. <strong>Ses quarts dans son propre calendrier</strong> (avec la planification) : dans le portail, sous <em>Mon horaire</em>, l\'employé choisit <em>Ajouter mes quarts à mon calendrier</em> et ajoute le lien une seule fois à Google Agenda, au Calendrier Apple ou à Outlook; ses propres quarts s\'y affichent ensuite, avec l\'étiquette de travail, le site et la note. Le lien est privé, propre à cet employé. Les applications de calendrier se mettent à jour à leur propre rythme (Google environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Dans la fiche de l\'employé, vous voyez <em>Lien de calendrier : actif</em> et la dernière lecture par un calendrier, et vous pouvez <em>Annuler le lien</em>; révoquer l\'accès au portail l\'annule aussi.',
 'help.billTitle':'Forfaits, facturation et sièges supplémentaires',
 'help.billDesc':'Votre forfait détermine le nombre d\'employés, de sites et d\'administrateurs permis. Ouvrez le menu sous votre nom et choisissez <strong>Gérer la facturation</strong> pour changer de forfait, mettre à jour votre carte ou télécharger vos factures. S\'il vous manque seulement un peu d\'espace, vous pouvez ajouter des sièges employé ou admin à votre forfait actuel au lieu de passer au forfait supérieur.',
 'help.lunchTitle':'Suivi des pauses repas',
@@ -20287,10 +20478,10 @@ fr:{
 'faq.a11':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
 'faq.q12':'Pourquoi utiliser un terminal tablette plutôt qu\'une appli GPS mobile?',
 'faq.a12':'Un terminal tablette fixe à votre emplacement est plus précis et plus difficile à contourner qu\'une appli GPS. Avec les applis GPS, les employés peuvent pointer depuis leur domicile, leur voiture ou n\'importe où — et le GPS peut être falsifié. Un terminal ancré à votre entrée oblige les employés à être physiquement sur place pour pointer. De plus, aucune appli à installer, aucun appareil personnel requis, et pas d\'excuse de batterie ou de connexion.',
-'faq.q13':'Qu\'est-ce que le complément Planification et comment ça fonctionne?',
-'faq.a13':'Le complément Planification (14,95 $/mois CAD) vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Crew. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. (4) Ajoutez les jours fériés à l\'horaire, avec les jours fériés du Québec en un clic, et identifiez les quarts avec des étiquettes de travail. (5) Chaque employé peut ajouter ses propres quarts à Google Agenda, au Calendrier Apple ou à Outlook à partir de son portail, au moyen d\'un lien privé. Disponible sur tout forfait payant (Débutant, Croissance ou Entreprise), et vous pouvez l\'essayer gratuitement pendant 14 jours : ouvrez l\'onglet Horaires et cliquez sur « Essayer gratuitement pendant 14 jours ».',
+'faq.q13':'Qu\'est-ce que la planification et comment ça fonctionne?',
+'faq.a13':'La planification vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Crew. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. (4) Ajoutez les jours fériés à l\'horaire, avec les jours fériés du Québec en un clic, et identifiez les quarts avec des étiquettes de travail. (5) Chaque employé peut ajouter ses propres quarts à Google Agenda, au Calendrier Apple ou à Outlook à partir de son portail, au moyen d\'un lien privé. Incluse dans les forfaits Croissance et Entreprise. Sur le forfait Débutant, c\'est un complément de 14,95 $/mois CAD, et vous pouvez l\'essayer gratuitement pendant 14 jours : ouvrez l\'onglet Horaires et cliquez sur « Essayer gratuitement pendant 14 jours ».',
 'faq.q14':'Les employés peuvent-ils voir leur horaire quand ils pointent?',
-'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Avec le portail employé, chaque employé peut aussi ajouter ses quarts à Google Agenda, au Calendrier Apple ou à Outlook au moyen d\'un lien privé (Mon horaire, puis « Ajouter mes quarts à mon calendrier »). Les applications de calendrier se mettent à jour à leur propre rythme, Google environ une ou deux fois par jour. Le complément Planification doit être actif sur le compte.',
+'faq.a14':'Oui. Quand un employé sélectionne son nom sur le terminal de pointage, ses prochains quarts des 7 prochains jours s\'affichent automatiquement sous les boutons d\'entrée/sortie. Il peut aussi appuyer sur « Envoyer à mon courriel » pour recevoir son horaire par courriel — il lui suffit de vérifier son identité avec son NIP à 4 chiffres. S\'il n\'a pas encore d\'adresse courriel enregistrée, il peut en ajouter une directement et elle sera sauvegardée dans son profil pour les prochaines fois. Avec le portail employé, chaque employé peut aussi ajouter ses quarts à Google Agenda, au Calendrier Apple ou à Outlook au moyen d\'un lien privé (Mon horaire, puis « Ajouter mes quarts à mon calendrier »). Les applications de calendrier se mettent à jour à leur propre rythme, Google environ une ou deux fois par jour. Le compte doit avoir la planification (incluse dans Croissance et Entreprise, ou le complément sur Débutant).',
 'faq.q15':'PunchClock Crew est-il disponible en français et adapté aux entreprises québécoises?',
 'faq.a15':'Oui — entièrement. PunchClock Crew est complètement bilingue (français et anglais) et conçu en pensant aux entreprises québécoises. L\'interface, les rapports et les communications par courriel sont tous disponibles en français. Les prix sont en dollars canadiens (CAD). Le logiciel respecte les exigences de la Loi 25 du Québec en matière de protection des renseignements personnels — les données sont stockées de façon sécurisée, on ne demande aux employés que le strict nécessaire, et vous pouvez demander la suppression de vos données en tout temps. Que vous gériez un restaurant à Montréal, un commerce au détail à Québec ou un entrepôt à Laval, PunchClock Crew est fait pour vous.',
 'faq.q16':'Qu\'est-ce que le géorepérage et comment empêche-t-il les employés de pointer à distance?',
@@ -20310,15 +20501,15 @@ fr:{
 'faq.q23':'Dois-je supprimer les employés qui ont quitté pour respecter la limite de mon forfait?',
 'faq.a23':'Non. La limite de votre forfait ne compte que les <strong>employés actifs</strong>. Il suffit donc de <strong>désactiver</strong> une personne qui a quitté : la place se libère immédiatement et vous conservez tout. Allez dans <strong>Admin → Employés</strong> et cliquez l\'icône pause sur sa ligne; son statut devient « Inactif ». Vous pouvez la réactiver en tout temps si elle revient — pratique pour le personnel saisonnier ou sur appel.<br><br><strong>Évitez le bouton Supprimer pour un départ.</strong> La suppression efface l\'employé <em>et tous ses pointages</em>, définitivement. Comme les employeurs doivent généralement conserver les registres d\'heures et de paie pendant plusieurs années, la désactivation est presque toujours le bon choix. Si vous avez besoin d\'un rapport couvrant une personne qui a quitté, cochez <strong>« Inclure les employés inactifs »</strong> dans la page Rapports.',
 'faq.q24':'Les employés peuvent-ils consulter leur horaire, leurs heures et leurs congés sans me contacter?',
-'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service, inclus dans tous les forfaits payants (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le complément Planification est actif), voir ses heures pour la période de paie en cours, faire une demande de congé, signaler un pointage oublié, indiquer ses disponibilités et changer lui-même son mot de passe — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
+'faq.a24':'Oui — chaque employé reçoit son propre portail libre-service, inclus dans tous les forfaits payants (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Depuis <strong>Admin → Employés</strong>, activez le courriel pour un employé et cliquez sur <strong>Envoyer l\'invitation</strong>; il choisit son mot de passe à partir du lien reçu, puis peut se connecter depuis n\'importe quel téléphone, tablette ou ordinateur. Il peut ensuite consulter son horaire à venir (si le compte a la planification), voir ses heures pour la période de paie en cours, faire une demande de congé, signaler un pointage oublié, indiquer ses disponibilités et changer lui-même son mot de passe — sans avoir à vous appeler ou vous texter. Vous pouvez renvoyer l\'invitation ou révoquer l\'accès en tout temps depuis le même endroit.',
 'faq.q25':'Puis-je suivre les pauses repas séparément de la sortie?',
 'faq.a25':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Suivi des pauses repas</strong> dans Paramètres → Pointage → Pauses repas, et un bouton Pause dédié apparaît sur l\'écran de pointage, distinct des boutons ENTRÉE/SORTIE. Le temps de pause est déjà exclu des heures travaillées de toute façon — avec le suivi activé, il apparaît aussi comme une ligne distincte dans les rapports et un badge PAUSE dans le journal d\'activité, plutôt que d\'avoir à le déduire d\'un écart. Vous pouvez aussi régler les <strong>Minutes de pause payées</strong> pour qu\'une partie de la pause soit payée automatiquement — par exemple 30 minutes d\'un dîner de 60 minutes — le reste demeurant non payé sans effort supplémentaire.',
 'faq.q26':'Les visiteurs peuvent-ils pointer leur arrivée et leur départ, pas seulement les employés?',
 'faq.a26':'Oui, à partir du <strong>plan Croissance</strong>. Activez <strong>Activer le pointage visiteur</strong> dans Paramètres → Pointage, et chaque écran de pointage obtient un bouton <strong>Pointage visiteur</strong> — sans NIP ni dossier employé requis. Un visiteur inscrit son nom complet, son entreprise, son téléphone et son courriel une seule fois, puis pointe sa sortie plus tard en choisissant son nom dans une liste des personnes « actuellement dans l\'immeuble ». Utile pour l\'accueil et pour savoir exactement qui se trouve sur place en cas d\'urgence, en plus de votre personnel.',
 'faq.q28':"Puis-je planifier mon équipe pour des tâches, chantiers ou projets précis?",
 'faq.q29':"L'horaire peut-il se synchroniser avec Google Agenda, le Calendrier Apple ou Outlook?",
-'faq.a29':"Oui. Avec le module Planification, chaque employé peut ajouter ses propres quarts au calendrier qu'il utilise déjà. Dans le portail employé, sous <strong>Mon horaire</strong>, il choisit <strong>Ajouter mes quarts à mon calendrier</strong>, puis <strong>Ajouter à Google Agenda</strong> ou <strong>Ajouter au Calendrier Apple</strong>, ou il copie le lien dans Outlook. C'est à faire une seule fois; ses quarts s'affichent ensuite d'eux-mêmes, avec l'heure, l'étiquette de travail, le site et la note. Chaque lien est privé, propre à un employé, et ne montre que ses quarts. Il peut le remplacer ou le désactiver en tout temps, et un administrateur peut l'annuler à partir de la fiche de l'employé. À savoir : les applications de calendrier relisent l'horaire à leur propre rythme (Google Agenda environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Le portail, lui, est toujours à jour. Inclus avec le module Planification (14,95 $/mois, essai gratuit de 14 jours) sur tout forfait payant.",
-'faq.a28':"Oui. Avec le module complémentaire Horaires, vous créez vos propres étiquettes — une tâche, un chantier, un projet, un client, tout ce que vous suivez — et vous en mettez une sur chaque quart. Filtrez l'horaire par étiquette pour voir qui fait quoi et combien d'heures sont prévues pour chacune. Une même personne peut avoir plusieurs quarts dans une journée avec des étiquettes différentes (par exemple déneigement le matin, transport l'après-midi). Les employés voient l'étiquette sur leurs quarts dans leur portail et dans le courriel d'horaire. Vous pouvez aussi demander aux employés de choisir sur quoi ils travaillent en pointant leur entrée, de changer de tâche en cours de quart, filtrer la page Activité par étiquette et obtenir les heures par étiquette dans les rapports. Les étiquettes sont offertes avec les forfaits payants qui incluent le module Horaires (14,95 $/mois).",
+'faq.a29':"Oui. Avec la planification, chaque employé peut ajouter ses propres quarts au calendrier qu'il utilise déjà. Dans le portail employé, sous <strong>Mon horaire</strong>, il choisit <strong>Ajouter mes quarts à mon calendrier</strong>, puis <strong>Ajouter à Google Agenda</strong> ou <strong>Ajouter au Calendrier Apple</strong>, ou il copie le lien dans Outlook. C'est à faire une seule fois; ses quarts s'affichent ensuite d'eux-mêmes, avec l'heure, l'étiquette de travail, le site et la note. Chaque lien est privé, propre à un employé, et ne montre que ses quarts. Il peut le remplacer ou le désactiver en tout temps, et un administrateur peut l'annuler à partir de la fiche de l'employé. À savoir : les applications de calendrier relisent l'horaire à leur propre rythme (Google Agenda environ une ou deux fois par jour); un changement fait le jour même peut donc apparaître en retard. Le portail, lui, est toujours à jour. Fait partie de la planification : incluse dans les forfaits Croissance et Entreprise, ou module à 14,95 $/mois sur le forfait Débutant (essai gratuit de 14 jours).",
+'faq.a28':"Oui. Avec la planification, vous créez vos propres étiquettes — une tâche, un chantier, un projet, un client, tout ce que vous suivez — et vous en mettez une sur chaque quart. Filtrez l'horaire par étiquette pour voir qui fait quoi et combien d'heures sont prévues pour chacune. Une même personne peut avoir plusieurs quarts dans une journée avec des étiquettes différentes (par exemple déneigement le matin, transport l'après-midi). Les employés voient l'étiquette sur leurs quarts dans leur portail et dans le courriel d'horaire. Vous pouvez aussi demander aux employés de choisir sur quoi ils travaillent en pointant leur entrée, de changer de tâche en cours de quart, filtrer la page Activité par étiquette et obtenir les heures par étiquette dans les rapports. Les étiquettes font partie des horaires : incluses dans les forfaits Croissance et Entreprise, ou module à 14,95 $/mois sur le forfait Débutant.",
 'faq.q27':'Nos employés travaillent à distance ou sur le terrain — peuvent-ils pointer depuis leur téléphone, avec le GPS pour voir où?',
 'faq.a27':'Oui, sur <strong>tous les forfaits payants</strong> (Débutant et plus; les comptes gratuits l\'ont pendant leur aperçu de 14 jours). Activez <strong>Permettre le pointage à distance</strong> dans Paramètres → Pointage, puis accordez-le à des employés spécifiques (ou à tout le personnel d\'un site d\'un coup) depuis la page Employés — personne ne l\'obtient automatiquement juste en ayant accès au portail. Une fois accordé, cet employé se connecte à son propre portail employé et pointe l\'entrée/sortie depuis son téléphone ou ordinateur, sans pointeau partagé. Chaque pointage sur téléphone enregistre la position GPS (et la distance par rapport au site de l\'employé, s\'il a un emplacement), affichée sous forme d\'épingle sur la carte dans Activité : vous voyez où l\'employé a pointé son entrée et sa sortie. Les pointages à distance comptent pour le site assigné à l\'employé; ils ne sont bloqués hors de la limite que si ce site est en mode Strict, alors que le mode Tolérant enregistre seulement la distance. Pour les équipes qui se déplacent entre chantiers, ouvrez le site, choisissez <strong>Strict</strong> et laissez l\'adresse vide : la localisation est alors exigée à chaque pointage sur téléphone, de n\'importe où. Un pointage dont la localisation est refusée ou désactivée est bloqué, et chaque pointage montre où il a été fait. Les employés doivent autoriser l\'accès à la localisation sur leur téléphone. Le plus simple pour la configurer : ouvrez Paramètres, allez à l\'onglet Pointage, puis Accès à distance, et touchez <strong>Configurer le pointage par téléphone</strong>, puis cochez les personnes, choisissez où elles peuvent pointer et envoyez-leur leur lien.',
 'upgrade.desc.starter':'1 compagnie · 2 sites · 25 employés · 2 admins',
@@ -20357,7 +20548,7 @@ fr:{
 'land.feat1Title':'Votre tablette sert de terminal — sans GPS',
 'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée qui vous appartient, fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
 'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
-'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail, et peuvent les ajouter à Google Agenda, au Calendrier Apple ou à Outlook. 14,95$/mois sur tout forfait payant, avec un essai gratuit de 14 jours à partir de l\'onglet Horaires.',
+'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail, et peuvent les ajouter à Google Agenda, au Calendrier Apple ou à Outlook. Inclus dans les forfaits Croissance et Entreprise, ou 14,95$/mois sur le forfait Débutant, avec un essai gratuit de 14 jours à partir de l\'onglet Horaires.',
 'land.feat10Title':'Géorepérage — Pointage verrouillé par localisation',
 'land.feat10Desc':'Définissez une zone GPS par site (aussi précise que 25 m). Les employés hors de cette zone sont bloqués lors du pointage — peu importe l\'appareil ou leur emplacement. Chaque site a son propre rayon configurable : 25m pour un restaurant, 200m pour un entrepôt.',
 'land.feat11Title':'Raccourci kiosque — Pointer en un tap',
@@ -20389,11 +20580,13 @@ fr:{
 'land.howA7Desc':'Dans Admin → Sites, modifiez un site, activez le géorepérage, utilisez votre position, réglez le rayon et sauvegardez. Les pointages hors zone sont bloqués automatiquement — sans configuration supplémentaire sur chaque appareil.',
 'land.howA8Title':'Créer des raccourcis kiosque',
 'land.howA8Desc':'Cliquez sur «Raccourci kiosque» sur une fiche de site pour obtenir une URL directe, un code QR ou installer l\'app PunchClock. Les employés appuient sur l\'icône et arrivent directement sur la page de pointage. Configurer une fois, ça marche indéfiniment.',
-'land.addonLabel':'Compléments disponibles (plans payants uniquement)',
+'land.addonLabel':'Complément pour le forfait Débutant · inclus dans Croissance et Entreprise',
 'land.addonSchedTitle':'Planification des employés',
 'land.addonSchedSub':'Créateur de quarts · vue hebdomadaire · assignation par site · synchro calendrier',
 'land.addonSchedDesc':'Planifiez votre semaine à l\'avance. Assignez des quarts aux employés par site, consultez l\'horaire dans une grille hebdomadaire claire et informez votre équipe de leurs quarts de travail — directement dans PunchClock. Les employés peuvent aussi ajouter leurs quarts à Google Agenda, au Calendrier Apple ou à Outlook.',
-'land.addonSchedNote':'À ajouter à tout plan payant',
+'land.addonSchedNote':'À ajouter au forfait Débutant',
+'land.f.startSched':'Planification des horaires : complément à 14,95 $/mois (inclus dans Croissance+)','land.f.growSched':'Planification des horaires incluse (complément à 14,95 $/mois sur Débutant)','land.f.bizSched':'Planification des horaires incluse',
+'addon.included':'✓ Inclus dans votre forfait','addon.schedIncludedLabel':'Planification','addon.includedToast':'La planification est incluse dans votre forfait.','sched.growthLink':'Ou passez à Croissance : la planification est incluse.',
 'land.addonSchedBtn':'Ajouter la planification',
 'addon.scheduling':'Complément Planification',
 'addon.active':'✓ Actif — 14,95 $/mois',
@@ -20457,7 +20650,7 @@ fr:{
 'sched.sendEmail':'Envoyer l\'horaire',
 'sched.sendConfirm':'Envoyer l\'horaire de {name} pour cette semaine à {email}?',
 'sched.addEmail':'+ Ajouter courriel',
-'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.','labels.title':"Étiquettes de travail",'labels.intro':"Les étiquettes précisent le type de travail d'un quart : une tâche, un chantier, un projet, un client. Créez celles qu'utilise votre entreprise, puis choisissez-en une en ajoutant un quart. Vous pouvez filtrer l'horaire par étiquette pour voir qui fait quoi.",'labels.namePh':"p. ex. Déneigement",'labels.add':"Ajouter une étiquette",'labels.empty':"Aucune étiquette pour l'instant. Ajoutez la première ci-dessous.",'labels.archive':"Archiver",'labels.restore':"Restaurer",'labels.delete':"Supprimer",'labels.deleteConfirm':"Supprimer l'étiquette « {name} » ? Les quarts qui l'utilisent conservent leurs heures mais perdent l'étiquette. Pour la garder sur les quarts passés sans l'utiliser davantage, archivez-la plutôt.",'labels.dupName':"Vous avez déjà une étiquette portant ce nom.",'labels.nameRequired':"Donnez un nom à l'étiquette.",'labels.needAddon':"Les étiquettes de travail font partie de l'option Horaire.",'labels.manage':"Gérer les étiquettes",'labels.barHint':"Les étiquettes permettent de planifier des personnes pour des tâches, chantiers ou projets précis.",'labels.createFirst':"Créer des étiquettes",'labels.all':"Toutes",'labels.none':"Sans étiquette",'labels.shiftField':"Étiquette",'labels.optional':"(facultatif)",'labels.noneOption':"— Aucune étiquette —",'labels.noMatch':"Aucun quart avec cette étiquette cette semaine.",'labels.archivedTag':"(archivée)",'reports.hoursByLabel':"Heures par étiquette",'reports.employeesCol':"Employés",'reports.col.employee':"Employé",'reports.col.in':"Entrée",'reports.col.out':"Sortie",'reports.total':"Total",'labels.deleted':"(étiquette supprimée)",'plabel.title':"Sur quoi travaillez-vous?",'plabel.switchTitle':"Passer à quelle tâche?",'plabel.skip':"Passer",'plabel.scheduled':"Prévu",'plabel.cancelled':"Pointage annulé. Veuillez réessayer.",'plabel.switchCancelled':"Tâche non changée.",'plabel.notIn':"doit être pointé(e) en entrée pour changer de tâche.",'plabel.switchBtn':"Changer de tâche",'plabel.pinSwitch':"Entrez votre NIP pour changer de tâche",'plabel.switchedTo':"est passé(e) à",'plabel.switchFailed':"Le changement n'a pas abouti et {name} est maintenant pointé(e) en sortie. Veuillez pointer l'entrée de nouveau.",'activity.switch':"CHANGEMENT",'activity.flagNoLocation':"SANS LOCALISATION",'activity.flagOutside':"HORS DU SITE",'activity.flagWeakGps':"GPS FAIBLE",'activity.flagClock':"HEURE NON VÉRIFIÉE",'activity.empNote':"Note de l’employé",'activity.tipNoLocation':"L’employé a pointé sans partager sa position (autorisation désactivée ou pas de signal). Lisez sa note s’il en a laissé une.",'activity.tipOutside':"Synchronisé en retard depuis l’extérieur du site. Le pointage a été conservé pour ne perdre aucune heure : vérifiez-le avec l’employé.",'activity.tipWeakGps':"La position du téléphone était trop imprécise pour être certaine et chevauche la zone du site. Accepté.",'activity.tipTimeStale':"Pointage fait hors connexion et synchronisé après plus de 72 heures (ou avec une heure dans le futur) : l’heure enregistrée est celle de la synchronisation. Cliquez sur Modifier pour indiquer l’heure réelle.",'activity.tipClock':"L’horloge du téléphone n’a pas pu être confirmée hors connexion. L’heure affichée est celle rapportée par le téléphone : modifiez-la si elle semble erronée.",'addPunch.errDuplicate':"Ce pointage ressemble à un doublon : il y a déjà une {type} à {when}, à moins de 10 minutes (il vient peut-être du téléphone de l’employé). Modifiez plutôt ce pointage.",'activity.lateSync':"SYNC TARDIVE",'activity.checkTime':"VÉRIFIER L’HEURE",'activity.lateSyncTip':"Pointage fait hors connexion sur le téléphone et synchronisé plus tard. L'heure affichée est celle où l'employé a réellement pointé.",'activity.checkTimeTip':"Ce pointage a été fait hors connexion et synchronisé beaucoup plus tard. L'heure affichée est celle du pointage, mais les heures peuvent être comptées à partir de l'heure de synchronisation. Cliquez sur Modifier et réenregistrez la date et l'heure pour corriger.",'labels.allLabels':"Toutes les étiquettes",'modal.labelsAtPunch':"Étiquettes de travail au pointage",'modal.labelsOff':"Désactivé",'modal.labelsOptional':"Demander, mais permettre de passer",'modal.labelsRequired':"Obligatoire",'modal.labelsAtPunchDesc':"Lorsque activé, les employés choisissent sur quoi ils travaillent après avoir entré leur NIP, et un bouton Changer de tâche leur permet de changer de tâche en cours de quart. Créez les étiquettes depuis la page Horaires.",'sched.assignToEmployees':"Assigner aussi ce quart à",'sched.allEmployees':"Tout le monde",'sched.copyEmpDone':"{n} quart(s) aussi planifié(s) pour {e} autre(s) employé(s).",'sched.copyEmpSkipped':"{k} ignoré(s) (déjà planifié ou absent ce jour-là).",
+'sched.copyLastWeek':'↺ Copier la semaine dernière','sched.clearWeek':'Vider la semaine','sched.clearWeekTitle':"Retirer tous les quarts de cet employé cette semaine",'sched.clearWeekNone':'Aucun quart à vider cette semaine.','sched.clearWeekConfirm':'Retirer les {n} quart(s) de {name} du {start} au {end} ? Cette action est irréversible.','sched.clearWeekDone':'{n} quart(s) retiré(s) pour {name}.','labels.title':"Étiquettes de travail",'labels.intro':"Les étiquettes précisent le type de travail d'un quart : une tâche, un chantier, un projet, un client. Créez celles qu'utilise votre entreprise, puis choisissez-en une en ajoutant un quart. Vous pouvez filtrer l'horaire par étiquette pour voir qui fait quoi.",'labels.namePh':"p. ex. Déneigement",'labels.add':"Ajouter une étiquette",'labels.empty':"Aucune étiquette pour l'instant. Ajoutez la première ci-dessous.",'labels.archive':"Archiver",'labels.restore':"Restaurer",'labels.delete':"Supprimer",'labels.deleteConfirm':"Supprimer l'étiquette « {name} » ? Les quarts qui l'utilisent conservent leurs heures mais perdent l'étiquette. Pour la garder sur les quarts passés sans l'utiliser davantage, archivez-la plutôt.",'labels.dupName':"Vous avez déjà une étiquette portant ce nom.",'labels.nameRequired':"Donnez un nom à l'étiquette.",'labels.needAddon':"Les étiquettes de travail font partie de la planification : incluse à partir de Croissance, ou en complément sur Débutant.",'labels.manage':"Gérer les étiquettes",'labels.barHint':"Les étiquettes permettent de planifier des personnes pour des tâches, chantiers ou projets précis.",'labels.createFirst':"Créer des étiquettes",'labels.all':"Toutes",'labels.none':"Sans étiquette",'labels.shiftField':"Étiquette",'labels.optional':"(facultatif)",'labels.noneOption':"— Aucune étiquette —",'labels.noMatch':"Aucun quart avec cette étiquette cette semaine.",'labels.archivedTag':"(archivée)",'reports.hoursByLabel':"Heures par étiquette",'reports.employeesCol':"Employés",'reports.col.employee':"Employé",'reports.col.in':"Entrée",'reports.col.out':"Sortie",'reports.total':"Total",'labels.deleted':"(étiquette supprimée)",'plabel.title':"Sur quoi travaillez-vous?",'plabel.switchTitle':"Passer à quelle tâche?",'plabel.skip':"Passer",'plabel.scheduled':"Prévu",'plabel.cancelled':"Pointage annulé. Veuillez réessayer.",'plabel.switchCancelled':"Tâche non changée.",'plabel.notIn':"doit être pointé(e) en entrée pour changer de tâche.",'plabel.switchBtn':"Changer de tâche",'plabel.pinSwitch':"Entrez votre NIP pour changer de tâche",'plabel.switchedTo':"est passé(e) à",'plabel.switchFailed':"Le changement n'a pas abouti et {name} est maintenant pointé(e) en sortie. Veuillez pointer l'entrée de nouveau.",'activity.switch':"CHANGEMENT",'activity.flagNoLocation':"SANS LOCALISATION",'activity.flagOutside':"HORS DU SITE",'activity.flagWeakGps':"GPS FAIBLE",'activity.flagClock':"HEURE NON VÉRIFIÉE",'activity.empNote':"Note de l’employé",'activity.tipNoLocation':"L’employé a pointé sans partager sa position (autorisation désactivée ou pas de signal). Lisez sa note s’il en a laissé une.",'activity.tipOutside':"Synchronisé en retard depuis l’extérieur du site. Le pointage a été conservé pour ne perdre aucune heure : vérifiez-le avec l’employé.",'activity.tipWeakGps':"La position du téléphone était trop imprécise pour être certaine et chevauche la zone du site. Accepté.",'activity.tipTimeStale':"Pointage fait hors connexion et synchronisé après plus de 72 heures (ou avec une heure dans le futur) : l’heure enregistrée est celle de la synchronisation. Cliquez sur Modifier pour indiquer l’heure réelle.",'activity.tipClock':"L’horloge du téléphone n’a pas pu être confirmée hors connexion. L’heure affichée est celle rapportée par le téléphone : modifiez-la si elle semble erronée.",'addPunch.errDuplicate':"Ce pointage ressemble à un doublon : il y a déjà une {type} à {when}, à moins de 10 minutes (il vient peut-être du téléphone de l’employé). Modifiez plutôt ce pointage.",'activity.lateSync':"SYNC TARDIVE",'activity.checkTime':"VÉRIFIER L’HEURE",'activity.lateSyncTip':"Pointage fait hors connexion sur le téléphone et synchronisé plus tard. L'heure affichée est celle où l'employé a réellement pointé.",'activity.checkTimeTip':"Ce pointage a été fait hors connexion et synchronisé beaucoup plus tard. L'heure affichée est celle du pointage, mais les heures peuvent être comptées à partir de l'heure de synchronisation. Cliquez sur Modifier et réenregistrez la date et l'heure pour corriger.",'labels.allLabels':"Toutes les étiquettes",'modal.labelsAtPunch':"Étiquettes de travail au pointage",'modal.labelsOff':"Désactivé",'modal.labelsOptional':"Demander, mais permettre de passer",'modal.labelsRequired':"Obligatoire",'modal.labelsAtPunchDesc':"Lorsque activé, les employés choisissent sur quoi ils travaillent après avoir entré leur NIP, et un bouton Changer de tâche leur permet de changer de tâche en cours de quart. Créez les étiquettes depuis la page Horaires.",'sched.assignToEmployees':"Assigner aussi ce quart à",'sched.allEmployees':"Tout le monde",'sched.copyEmpDone':"{n} quart(s) aussi planifié(s) pour {e} autre(s) employé(s).",'sched.copyEmpSkipped':"{k} ignoré(s) (déjà planifié ou absent ce jour-là).",
 'sched.copyLastWeekTitle':'Copier les quarts de cette personne de la semaine dernière vers cette semaine',
 'sched.copyNone':'{name} n\'avait aucun quart la semaine dernière à copier.',
 'sched.copyMixed':'{n} quart(s) copié(s) pour {name}; {k} jour(s) avaient déjà un quart et n\'ont pas été modifiés.',
@@ -20478,6 +20671,7 @@ fr:{
 'sched.unavailableHint':'Employé indisponible — ajouter quand même?',
 'emp.portalInviteTitle':'Accès portail employé',
 'emp.remotePunchTitle':'Pointage à distance','emp.remotePunchDesc':'Permet à cet employé de pointer l\'entrée/sortie depuis son propre téléphone ou ordinateur dans le portail employé, au lieu du pointeau physique seulement',
+'emp.arrivalTitle':'Rappels d\'arrivée et de départ','emp.arrivalDesc':'L\'application demande à cet employé de pointer l\'entrée en arrivant sur un site et la sortie en le quittant. Il doit aussi accepter sur son téléphone.',
 'emp.remotePunchNeedsCompany':'Activez d\'abord « Permettre le pointage à distance » dans Paramètres → Pointage pour rendre ceci disponible.',
 'emp.remotePunchConfirm':'Cet employé obtiendra l\'accès à la page de pointage depuis son propre compte, et pourra pointer l\'entrée et la sortie de n\'importe où, sur n\'importe quel appareil. Si c\'est voulu, appuyez sur Confirmer — sinon annulez, et cet employé continuera de pointer uniquement au pointeau physique de son site.',
 'emp.portalLoading':'Vérification...',
@@ -20551,23 +20745,28 @@ function getUrlLang(){
 function updateMetaTags(lang){
   var isFr=lang==='fr';
   document.getElementById('htmlRoot').lang=lang;
+  // ?lang=fr still opens the app in French, but its main address for search engines is the real French page
+  // (/fr/, built by tools/seo-pages/build.mjs). Only when the address says so: a French browser on / stays on /.
+  var canon=document.getElementById('metaCanonical');
+  if(canon)canon.href=(isFr&&_cameWithLangFr)?'https://www.punchclock.ca/fr/':'https://www.punchclock.ca/';
   if(isFr){
-    document.getElementById('metaTitle').textContent='Logiciel de pointage pour équipes au Québec et au Canada | PunchClock Crew';
-    document.getElementById('metaDesc').content='PunchClock Crew est un logiciel de pointage simple et abordable pour les entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service (horaire, heures, demandes de congé), rapports de paie automatisés, planification des quarts de travail. Essai gratuit, aucune carte de crédit requise.';
-    document.getElementById('ogTitle').content='PunchClock Crew — Logiciel de pointage Québec et Canada';
-    document.getElementById('ogDesc').content='Logiciel de pointage pour entreprises québécoises. Pointage par NIP sur votre tablette, portail employé libre-service, gestion multi-sites, rapports de paie automatisés, planification des quarts. Plan gratuit disponible.';
-    document.getElementById('twTitle').content='PunchClock Crew — Logiciel de pointage Québec & Canada';
-    document.getElementById('twDesc').content='Logiciel de pointage simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, planification des quarts. Plan gratuit.';
+    document.getElementById('metaTitle').textContent='Application de punch pour employés au Québec | PunchClock Crew';
+    document.getElementById('metaDesc').content='PunchClock Crew est une application de punch et de pointage des heures de travail pour les entreprises du Québec. Vos employés pointent par NIP sur votre propre tablette ou sur leur téléphone. Heures, temps supplémentaire, rapports de paie et horaires. Plan gratuit.';
+    document.getElementById('ogTitle').content='PunchClock Crew — Application de punch pour employés au Québec';
+    document.getElementById('ogDesc').content='Application de punch et logiciel de pointage pour les entreprises québécoises. Pointage par NIP sur votre propre tablette ou par téléphone, multi-sites, portail employé, rapports de paie, horaires. Plan gratuit.';
+    document.getElementById('twTitle').content='PunchClock Crew — Application de punch pour employés';
+    document.getElementById('twDesc').content='Application de punch simple pour les entreprises québécoises. Pointage par NIP, portail employé libre-service, rapports automatisés, horaires. Plan gratuit.';
   } else {
-    document.getElementById('metaTitle').textContent='Time & Attendance Software for Shift Workforces in Canada | PunchClock Crew';
-    document.getElementById('metaDesc').content='PunchClock Crew is simple, affordable time and attendance software for Canadian businesses. PIN clock-in on tablet, an employee self-service portal (schedule, hours, time-off requests), automated payroll reports, shift scheduling. Free plan available.';
-    document.getElementById('ogTitle').content='PunchClock Crew — Time & Attendance Software for Canada';
-    document.getElementById('ogDesc').content='Simple, affordable time and attendance tracking for shift-based businesses. Multi-site support, an employee self-service portal, payroll reports, shift scheduling, and a free plan to get started.';
-    document.getElementById('twTitle').content='PunchClock Crew — Time & Attendance Software';
-    document.getElementById('twDesc').content='Simple time and attendance tracking for shift-based businesses. PIN clock-in, an employee self-service portal, automated reports, shift scheduling. Free plan available.';
+    document.getElementById('metaTitle').textContent='Punch Clock App for Employees in Canada | PunchClock Crew';
+    document.getElementById('metaDesc').content='PunchClock Crew is a simple punch clock app for Canadian businesses. Employees clock in and out with a PIN on your own tablet or from their phone. Hours, overtime, payroll reports and shift scheduling, in English and French. Free plan available.';
+    document.getElementById('ogTitle').content='PunchClock Crew — Punch Clock App for Employees in Canada';
+    document.getElementById('ogDesc').content='A simple punch clock app for shift-based businesses. PIN clock-in on your own tablet or by phone, multi-site, an employee self-service portal, payroll reports and shift scheduling. Free plan available.';
+    document.getElementById('twTitle').content='PunchClock Crew — Punch Clock App for Employees';
+    document.getElementById('twDesc').content='Simple punch clock app for shift-based businesses. PIN clock-in, employee self-service portal, automated reports, shift scheduling. Free plan available.';
   }
 }
 
+var _cameWithLangFr=false; // the page was opened as ?lang=fr (initLang removes it from the address bar)
 function initLang(){
   // Priority: 1) URL param (?lang=fr) 2) stored preference 3) browser language
   var urlLang=getUrlLang();
@@ -20576,6 +20775,7 @@ function initLang(){
   _punchLang=_appLang;
   // If URL param was used, save it and clean URL
   if(urlLang){
+    _cameWithLangFr=urlLang==='fr';
     setStoredAdminLang(urlLang);
     try{
       var url=new URL(window.location.href);

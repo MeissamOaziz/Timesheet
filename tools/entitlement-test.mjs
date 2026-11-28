@@ -124,7 +124,7 @@ for(const lang of ['en','fr']){
 
   // ── Scheduling add-on: the free 14-day trial button
   const sched = async (o) => {
-    await setup(page, { plan: 'free', created: '2026-01-01T12:00:00Z', now: '2026-11-20T12:00:00Z' });
+    await setup(page, { plan: o.plan || 'free', created: '2026-01-01T12:00:00Z', now: '2026-11-20T12:00:00Z' });
     await page.evaluate(a => {
       document.getElementById('schedTrialBanner')?.remove();
       const s = Sess.get(); Object.assign(s, a.sess || {}); Sess.set(s);
@@ -169,6 +169,34 @@ for(const lang of ['en','fr']){
   await sched({ fail: true });
   await page.evaluate(() => startSchedulingTrial()); await page.waitForTimeout(150);
   ok('trial refused by the server: button comes back, the reason is shown, nothing turns on', await q(page, "!document.getElementById('schedTrialBtn').disabled && window.__toasts.some(m=>/already been used/.test(m)) && !hasSchedulingAddon()"));
+
+  // ── Growth and up include Scheduling (2026-11-26); Starter keeps the add-on and the trial
+  await sched({ plan: 'growth' });
+  ok('Growth without add-on or trial: scheduling is open', await q(page, "hasSchedulingAddon() && schedulingTrialState().state==='included'"));
+  ok('Growth: the real schedule shows, no sample week, no trial banner, no trial or buy button', await q(page, "!!document.getElementById('realGrid') && !document.querySelector('.sched-preview-note') && !document.getElementById('schedTrialBanner') && !document.getElementById('schedTrialBtn')"));
+  await page.evaluate(() => {
+    const nav = window.navigate, f = window.fetch;
+    window.__nav = []; window.__fetched = 0;
+    window.navigate = (p) => window.__nav.push(p);
+    window.fetch = (...a) => { window.__fetched++; return f(...a); };
+    try { startSchedulingAddonCheckout(); } finally { window.navigate = nav; window.fetch = f; }
+  });
+  ok('Growth: "Add Scheduling" opens the schedule instead of a checkout', await q(page, "window.__fetched===0 && window.__nav.includes('schedule') && window.__toasts.some(m=>/included|incluse/i.test(m))"), await q(page, "JSON.stringify({f:window.__fetched,n:window.__nav,t:window.__toasts})"));
+  await sched({ plan: 'growth', sess: { scheduling_trial_ends_at: PST } });
+  ok('Growth with a trial that ended long ago: still open', await q(page, "hasSchedulingAddon() && !document.getElementById('schedTrialBanner')"));
+  await sched({ plan: 'business' });
+  ok('Business: scheduling is open', await q(page, "hasSchedulingAddon() && !!document.getElementById('realGrid')"));
+  await sched({ plan: 'starter', sess: { parent_admin_id: 'owner-1' }, primary: { id: 'owner-1', plan: 'growth', scheduling_addon: false, scheduling_trial_ends_at: null } });
+  ok("co-admin of a Growth owner: scheduling is open for the team", await q(page, 'hasSchedulingAddon()'));
+  await sched({ plan: 'starter' });
+  ok('Starter without the add-on: still closed, sample week shown', !(await q(page, 'hasSchedulingAddon()')) && await q(page, "!!document.querySelector('.sched-preview-note')"));
+  ok('Starter: the free-trial button and the $14.95 add-on are still offered', await q(page, "!!document.getElementById('schedTrialBtn') && /14\\.95|14,95/.test(document.querySelector('.sched-preview-cta').textContent)"), await q(page, "document.querySelector('.sched-preview-cta').textContent.replace(/\s+/g,' ').slice(0,200)"));
+  ok('Starter: the preview also says Growth includes it', await q(page, "/Growth|Croissance/.test(document.querySelector('.sched-preview-cta').textContent)"));
+  await sched({ plan: 'starter', sess: { scheduling_trial_ends_at: PST } });
+  ok('Starter with an ended trial: closed', !(await q(page, 'hasSchedulingAddon()')));
+  await sched({ plan: 'starter', sess: { scheduling_addon: true } });
+  ok('Starter with the paid add-on: open', await q(page, "hasSchedulingAddon() && schedulingTrialState().state==='paid'"));
+  ok('pricing: the Growth and Business cards say Scheduling is included, Starter shows it as the add-on', await q(page, "!!document.querySelector('[data-i18n=\"land.f.growSched\"]') && !!document.querySelector('[data-i18n=\"land.f.bizSched\"]') && /14[.,]95/.test(t('land.f.startSched')) && /included|incluse/i.test(t('land.f.growSched')) && /included|incluse/i.test(t('land.f.bizSched'))"), await q(page, "JSON.stringify([t('land.f.startSched'), t('land.f.growSched'), t('land.f.bizSched')])"));
 
   // ── Geofencing, remote clock-in, the employee portal and time off are Starter-and-up too
   const lockSetup = async (plan, now, created = '2026-01-01T12:00:00Z') => {

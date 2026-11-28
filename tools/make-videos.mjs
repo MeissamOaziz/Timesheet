@@ -183,7 +183,49 @@ const VIDEOS = [
       await v.cap(4, T('Total hours and overtime for each person', 'Heures totales et temps supplémentaire de chacun')); await v.wait(2800);
       await v.scrollPage(-2000);
       await v.cap(5, T('Download it: Excel, CSV or PDF', 'Téléchargez-le : Excel, CSV ou PDF')); await v.wait(500);
-      await v.glide('#page-reports button[onclick*="Excel"], #page-reports button:text-is("Excel")'); await v.wait(1800);
+      await v.glide('#page-reports button[onclick*="guardedExport"]'); await v.wait(1800);
+    },
+  },
+  {
+    // The product overview that software directories (GetApp, Software Advice) ask for. Plain captions, no numbers.
+    id: 'product-overview',
+    title: T('PunchClock Crew in one minute', 'PunchClock Crew en une minute'),
+    sub: T('Time and attendance for shift teams', 'Le pointage pour les équipes par quarts'),
+    end: T('Free for up to 10 employees', 'Gratuit jusqu’à 10 employés'),
+    endSub: T('Try it at punchclock.ca. No card needed.', 'Essayez-le sur punchclock.ca. Sans carte.'),
+    async steps(v) {
+      await v.cap(null, T('Employees clock in on a tablet you already own', 'Vos employés pointent sur une tablette que vous avez déjà')); await v.wait(900);
+      await v.nav('punch');
+      await v.tap('#pickerSiteGrid .pick-card', 1000);
+      const who = await v.page.evaluate(() => {
+        const site = (Ctx.get() || {}).site; const emps = C.employees.filter(e => e.active && (!site || e.site_id === site.id));
+        const last = id => (C.punches.find(x => x.emp_id === id) || {}).type;
+        const e = emps.find(e => last(e.id) !== 'IN') || emps[0];
+        return { id: e.id, pin: e.pin };
+      });
+      await v.glide('#empSelect'); await v.page.selectOption('#empSelect', who.id); await v.wait(900);
+      await v.cap(null, T('Pick your name, tap IN, enter your PIN', 'Choisissez votre nom, touchez ENTRÉE, entrez votre NIP')); await v.wait(400);
+      await v.tap('#page-punch .punch-btn', 800);
+      for (const d of String(who.pin)) await v.tap(`#pinModal .pin-key:text-is("${d}")`, 280, 150);
+      await v.wait(1500);
+      await v.cap(null, T('See who is at work right now, at every site', 'Voyez qui est au travail en ce moment, à chaque site')); await v.wait(500);
+      await v.nav('dashboard'); await v.wait(3200);
+      await v.cap(null, T('Every punch is listed, and a manager can correct one', 'Chaque pointage est listé, et un gestionnaire peut en corriger un')); await v.wait(500);
+      await v.nav('activity'); await v.wait(3200);
+      await v.cap(null, T('Hours and overtime are added up for you', 'Les heures et les heures supplémentaires sont calculées pour vous')); await v.wait(500);
+      await v.nav('reports');
+      await v.tap('#page-reports button[onclick*="generateReport"]', 1600);
+      await v.scrollPage(520); await v.wait(2600);
+      await v.scrollPage(-2000);
+      await v.cap(null, T('Export to Excel, CSV or PDF for payroll', 'Exportez en Excel, CSV ou PDF pour la paie')); await v.wait(500);
+      await v.glide('#page-reports button[onclick*="guardedExport"]'); await v.wait(2200);
+      await v.cap(null, T('Plan the week with the Scheduling add-on', 'Planifiez la semaine avec le module Planification')); await v.wait(500);
+      await v.nav('schedule'); await v.wait(3400);
+      await v.cap(null, T('Your team can also clock in from their own phone', 'Votre équipe peut aussi pointer avec son propre téléphone')); await v.wait(500);
+      await v.nav('admin');
+      await v.openMenuItem('#phoneSetupModal', 'openPhoneSetup()');
+      await v.wait(3200);
+      await v.cap(null, T('In English and French, in any web browser', 'En français et en anglais, dans tout navigateur web')); await v.wait(2600);
     },
   },
 ];

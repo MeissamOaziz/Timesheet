@@ -319,6 +319,15 @@ async function run() {
       try {
         await page.evaluate(p => navigate(p), shot.page);
         await page.waitForTimeout(700);
+        // The clock-in page asks for a work site first when the company has more than one (the demo café has
+        // two). Pick the first, or every clock-in shot is a photo of the site picker.
+        if (shot.page === 'punch') {
+          await page.evaluate(() => {
+            const ps = document.getElementById('pickerSite');
+            if (ps && !ps.classList.contains('hidden')) { const s = C.sites[0]; onSitePicked(s.company_id, s.id); }
+          });
+          await page.waitForTimeout(700);
+        }
         if (shot.before) await shot.before(page);
 
         if (shot.kind === 'help') {
