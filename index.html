@@ -195,10 +195,10 @@ if (window.top !== window.self) {
     },
     {
       "@type": "Question",
-      "name": "Why use a tablet terminal instead of a GPS mobile app?",
+      "name": "Tablet at the door or phone clock-in: which should I use?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There's also no app to install, no personal device required, and no battery or connectivity excuses."
+        "text": "Use the one that fits your crew, or both. A tablet at the door suits a shop, a kitchen or a plant where everyone starts in the same place: people tap their name and enter a PIN on your own tablet or computer, with no phones needed. It is on every plan, including Free. Phone clock-in suits crews on the road or spread over several sites: each person clocks in from their own phone in the browser, each punch saves the time and a map pin, and you can require people to be at the site with a geofence. Phone clock-in is on Starter and up. Many businesses use a tablet on site and phones on the road."
       }
     },
     {
@@ -705,6 +705,20 @@ body.role-resolved.role-admin .sn-item[data-admin-only]{display:flex;}
 .pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:var(--r-xl);font-size:11px;font-weight:600;}
 .pill.in{background:rgba(34,197,94,.15);color:var(--green);}
 .pill.out{background:rgba(239,68,68,.15);color:var(--red);}
+.act-view-seg{display:inline-flex;background:var(--surface2);border-radius:9px;padding:3px;gap:2px;margin-bottom:12px;}
+.act-view-seg button{font-family:inherit;font-size:13px;font-weight:600;border:0;background:none;color:var(--text2);padding:7px 14px;border-radius:7px;cursor:pointer;min-height:34px;}
+.act-view-seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.18);}
+.act-view-seg button:focus-visible,.act-time-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.act-day-row td{background:var(--surface2);font-weight:600;font-size:13px;padding:9px 14px;}
+.act-day-row .act-day-sum{float:right;font-weight:500;color:var(--text2);font-size:12px;}
+.act-day-card{font-weight:600;font-size:13px;color:var(--text2);padding:14px 4px 6px;display:flex;justify-content:space-between;gap:10px;}
+.act-shift-sub{display:block;font-size:12px;color:var(--text2);font-weight:400;margin-top:3px;line-height:1.6;}
+.act-time{font-family:'DM Mono',monospace;font-size:13px;white-space:nowrap;}
+.act-time-btn{font:inherit;color:inherit;background:none;border:0;border-bottom:1px dashed var(--text3);padding:0 0 1px;cursor:pointer;}
+.act-time-btn:hover{color:var(--accent);border-bottom-color:var(--accent);}
+.act-hrs{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.act-plus{font-size:10px;color:var(--text3);margin-left:3px;font-family:inherit;}
+.pill.act-warn{background:rgba(245,158,11,.15);color:var(--amber);}
 .pill.admin{background:rgba(79,142,247,.15);color:var(--accent);}
 .pill.site{background:rgba(245,158,11,.15);color:var(--amber);}
 /* Phone clock-in state on the Employees list and in the Phone clock-in window. */
@@ -918,6 +932,40 @@ body.land-menu-open .land-sticky-cta{display:none;}
 [data-theme="light"] .land-shot-dark{display:none;}
 .land-preview-note{text-align:center;font-size:12.5px;color:var(--text3);margin-top:10px;}
 @media (prefers-reduced-motion:reduce){.land-shot-frame{transition:none;}.land-shot-frame:hover{transform:none;}}
+/* Two ways to clock in (tablet at the door / own phone) and the "apps coming soon" band, right under the hero. */
+.land-ways{max-width:1000px;margin:-30px auto 0;padding:0 20px;}
+.land-ways h2{text-align:center;font-size:20px;font-weight:700;margin:0 0 14px;}
+.land-way-switch{display:flex;justify-content:center;gap:6px;padding:5px;margin:0 auto 18px;width:max-content;max-width:100%;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);}
+.land-way-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border:none;border-radius:var(--r-xl);background:none;
+  color:var(--text2);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.land-way-btn svg{width:16px;height:16px;flex-shrink:0;}
+.land-way-btn:hover{color:var(--text);}
+.land-way-btn[aria-pressed="true"]{background:var(--accent);color:#fff;}
+.land-way-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.land-way-panel{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px;align-items:center;}
+.land-way-panel[hidden]{display:none;}
+.land-way-panel img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);}
+.land-way-lines{list-style:none;margin:0;padding:0;}
+.land-way-lines li{font-size:15px;color:var(--text2);line-height:1.6;padding:6px 0 6px 22px;position:relative;}
+.land-way-lines li::before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:700;}
+.land-way-lines li:first-child{color:var(--text);font-weight:600;}
+.land-way-lines li.land-way-plan::before{content:none;}
+.land-apps{max-width:960px;margin:28px auto 40px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg);}
+.land-apps>svg{width:22px;height:22px;color:var(--accent);flex-shrink:0;margin-top:1px;}
+.land-apps strong{display:block;font-size:14px;margin-bottom:2px;}
+.land-apps p{margin:0;font-size:13px;color:var(--text2);line-height:1.55;}
+@media(max-width:760px){
+  .land-ways{margin-top:-40px;padding:0 16px;}
+  .land-way-panel{grid-template-columns:1fr;gap:12px;}
+  .land-way-btn{padding:9px 12px;font-size:13px;}
+  .land-apps{margin:22px 16px 32px;}
+}
+@media(max-width:360px){.land-way-btn{padding:8px 9px;font-size:12.5px;gap:5px;}.land-way-btn svg{display:none;}}
+/* Features: six cards by default, the rest behind "Show all features" (they stay in the DOM). */
+.features-grid:not(.show-all) .land-feat-more{display:none;}
+.land-feat-toggle-wrap{text-align:center;margin-top:26px;}
 .land-section{padding:70px 24px;max-width:1080px;margin:0 auto;}
 .land-section h2{text-align:center;font-size:32px;font-weight:700;margin-bottom:10px;}
 .land-section .sub{text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px;}
@@ -1509,18 +1557,8 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
 
   <!-- HERO -->
   <div class="land-hero">
-    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:var(--r-xl);padding:5px 14px;font-size:12px;font-weight:600;color:var(--accent);margin-bottom:24px">
-      <span data-i18n="land.badge">Now with automated payroll period reports</span>
-    </div>
     <h1 data-i18n-html="land.heroTitle">The punch clock app that <span>actually works</span> for shift workers</h1>
-    <p data-i18n="land.heroSub">PIN-based clock in/out on your own tablet, fixed at your location, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.</p>
-    <!-- Feature pills -->
-    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px;margin-top:-8px">
-      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:var(--text2)"><svg class="ic" style="margin-right:5px"><use href="#i-monitor"/></svg><span data-i18n="land.pill1">Clock in on your own tablet</span></span>
-      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:var(--text2)"><svg class="ic" style="margin-right:5px"><use href="#i-bar-chart"/></svg><span data-i18n="land.pill2">Automated payroll reports</span></span>
-      <span style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:var(--text2)"><svg class="ic" style="margin-right:5px"><use href="#i-bar-chart"/></svg><span data-i18n="land.pill3">Excel &amp; CSV export</span></span>
-      <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,92,191,.15);border:1px solid rgba(124,92,191,.35);border-radius:var(--r-xl);padding:4px 13px;font-size:12px;color:#a78bfa"><svg class="ic" style="margin-right:5px"><use href="#i-calendar"/></svg><span data-i18n="land.pill4">Employee scheduling</span> <span style="font-size:10px;background:#7c5cbf;color:#fff;border-radius:var(--r-md);padding:1px 6px;margin-left:2px" data-i18n="land.pillAddon">Included in Growth</span></span>
-    </div>
+    <p data-i18n="land.heroSub">Clock in at the door or on the phone. Hours ready for payroll. One flat price for the whole crew, from $0, in English and French.</p>
     <div class="land-cta-group">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
       <button class="land-btn-secondary" onclick="startDemo()" data-i18n="land.ctaDemo">▶ See a live demo — no signup</button>
@@ -1528,6 +1566,39 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     </div>
     <p style="font-size:12px;color:var(--text3);margin-top:16px" data-i18n="land.freeNote">Free forever: 1 site · up to 10 employees · PIN clock-in on your own tablet or computer</p>
     <p style="font-size:13px;margin-top:10px"><a href="employee.html" style="color:var(--text2);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px" data-i18n="land.portalHint">Employee? Open the employee portal &rarr;</a></p>
+  </div>
+
+  <!-- TWO WAYS TO CLOCK IN. Real screenshots (data-shot swaps the language). setLandWay() flips the panels. -->
+  <div class="land-ways" id="landingWays">
+    <h2 id="landWaysTitle" data-i18n="land.waysTitle">Two ways to clock in</h2>
+    <div class="land-way-switch" role="group" aria-labelledby="landWaysTitle">
+      <button type="button" class="land-way-btn" id="landWayBtnTablet" aria-pressed="true" aria-controls="landWayTablet" onclick="setLandWay('tablet')"><svg aria-hidden="true"><use href="#i-tablet"/></svg><span data-i18n="land.wayTablet">Tablet at the door</span></button>
+      <button type="button" class="land-way-btn" id="landWayBtnPhone" aria-pressed="false" aria-controls="landWayPhone" onclick="setLandWay('phone')"><svg aria-hidden="true"><use href="#i-smartphone"/></svg><span data-i18n="land.wayPhone">Their own phones</span></button>
+    </div>
+    <div class="land-way-panel" id="landWayTablet">
+      <img data-shot="product-punch" src="assets/screenshots/product-punch-en.webp" width="2880" height="1800" alt="" decoding="async">
+      <ul class="land-way-lines">
+        <li data-i18n="land.wayTablet1">Your own tablet or computer at the door. Each person has a PIN.</li>
+        <li data-i18n="land.wayTablet2">No phones needed, and harder to punch for a friend.</li>
+      </ul>
+    </div>
+    <div class="land-way-panel" id="landWayPhone" hidden>
+      <img data-shot="16-phone-clock-in" src="assets/screenshots/16-phone-clock-in-en.webp" width="2880" height="1780" alt="" loading="lazy" decoding="async">
+      <ul class="land-way-lines">
+        <li data-i18n="land.wayPhone1">Each person clocks in from their own phone, in the browser. Nothing to install.</li>
+        <li data-i18n="land.wayPhone2">Each punch saves the time and a map pin. You can require them to be at the site.</li>
+        <li class="land-way-plan"><span class="plan-tag" style="margin-left:0" data-i18n="land.starterBadge">STARTER+</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MOBILE APPS: coming soon. No date, no store badges, no links until they are published. -->
+  <div class="land-apps" id="landingApps">
+    <svg aria-hidden="true"><use href="#i-smartphone"/></svg>
+    <div>
+      <strong data-i18n="land.appsTitle">Mobile apps coming soon</strong>
+      <p data-i18n="land.appsText">The PunchClock Crew app for employees and the PunchClock Crew Admin app for owners and managers are coming soon for iPhone and Android. Until then, phone clock-in works today in the browser, with nothing to install.</p>
+    </div>
   </div>
 
   <!-- PRODUCT PREVIEW — an actual screenshot of the running app, captured by
@@ -1578,6 +1649,97 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
   </div>
 
 
+  <!-- HOW IT WORKS -->
+  <div class="land-section" id="landingHowItWorks" style="background:var(--surface);border-radius:0;padding:70px 24px">
+    <h2 data-i18n="land.howTitle">How It Works</h2>
+    <p class="sub" data-i18n="land.howSub">Up and running in under 10 minutes.</p>
+
+    <!-- Setup flow -->
+    <h3 style="text-align:center;font-size:14px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:36px 0 20px" data-i18n="land.howSetupLabel">Getting Set Up</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-nav-building"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how1Title">1. Create Your Account</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register with your name, email and company name. Verify your email and add your first site.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-map-pin"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how2Title">2. Add Sites</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how2Desc">Create one or more physical locations — stores, warehouses, offices.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how3Title">3. Add Employees</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how3Desc">Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="font-size:34px;margin-bottom:10px">&#9201;</div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how4Title">4. Start Tracking</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how4Desc">Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.</p>
+      </div>
+    </div>
+
+    <!-- Admin capabilities -->
+    <h3 style="text-align:center;font-size:14px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:44px 0 20px" data-i18n="land.howAdminLabel">What Admins Can Do</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-edit"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA1Title">Edit Any Punch</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA1Desc">Correct clock-in/out times, add missed punches, or remove invalid entries — all logged in an audit trail.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-bar-chart"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA2Title">Generate Reports</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA2Desc">Export hours by employee, site, or period in Excel, CSV, or PDF. Send reports directly to employees by email.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-clock"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA3Title">Overtime Alerts</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA3Desc">Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and exports.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-bell"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA4Title">Automated Emails</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA4Desc">At the end of each pay period, PunchClock automatically emails each employee their hours summary — no manual work.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA5Title">Bulk Actions</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA5Desc">Select multiple employees to send reports, activate, deactivate, or delete them all at once.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-lock"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA6Title">Co-Admin Access</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA6Desc">Invite co-admins to share management duties. Each co-admin sees the same companies, sites, and employees.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid rgba(34,197,94,.25);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-map-pin"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA7Title">Set Up Geofencing</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA7Desc">In Admin → Sites, edit any site, toggle Geofence ON, tap "Use my current location," set the radius, and save. Punches from outside that boundary are blocked automatically — no extra setup on each device.</p>
+      </div>
+      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid rgba(79,142,247,.25);border-radius:var(--r-lg)">
+        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-tablet"/></svg></div>
+        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA8Title">Create Kiosk Shortcuts</div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA8Desc">Click "Kiosk Shortcut" on any site card to get a direct URL, QR code, or install the PunchClock app on that device. Employees tap the icon and land directly on the punch page — no login required. Set up once, works forever.</p>
+      </div>
+    </div>
+
+    <!-- Scheduling add-on callout in How It Works -->
+    <div style="margin-top:44px;background:linear-gradient(135deg,rgba(124,92,191,.1),rgba(79,142,247,.06));border:1.5px solid rgba(124,92,191,.3);border-radius:var(--r-lg);padding:28px 32px;max-width:760px;margin-left:auto;margin-right:auto">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-calendar"/></svg></div>
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <strong style="font-size:15px" data-i18n="land.howSchedTitle">Employee Scheduling</strong>
+            <span style="font-size:10px;font-weight:700;background:#7c5cbf;color:#fff;padding:2px 8px;border-radius:var(--r-md)" data-i18n="land.pillAddon">Included in Growth</span>
+          </div>
+          <p style="font-size:13px;color:var(--text2);margin:0;line-height:1.6" data-i18n="land.howSchedDesc">Once your team is set up, turn on Scheduling to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — included in Growth and Business, or $14.95/mo added to Starter.</p>
+        </div>
+        <button class="btn-secondary" style="padding:9px 20px;font-size:13px;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.howSchedCta">See pricing →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- WHAT IT COSTS AS YOU GROW -->
   <div class="land-section" id="landingCompare" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 24px">
     <h2 data-i18n="land.costTitle">Your bill shouldn't grow every time you hire</h2>
@@ -1602,180 +1764,6 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     </div>
     <div class="cmp-cta" style="text-align:center;margin-top:26px">
       <button class="land-btn-primary" onclick="hideLanding();navigate('register')" data-i18n="land.ctaFree">Start for free — no credit card</button>
-    </div>
-  </div>
-  <!-- FEATURES -->
-  <div class="land-section" id="landingFeatures">
-    <h2 data-i18n="land.featTitle">Everything you need to manage shift workers</h2>
-    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="land.featSub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-tablet"/></svg></div>
-        <h3 data-i18n="land.feat1Title">Your Tablet Is the Terminal — No GPS Needed</h3>
-        <p data-i18n="land.feat1Desc">Employees clock in with a 4-digit PIN on a shared tablet of your own at the job site. Unlike GPS or mobile apps, the terminal is fixed at your location — no spoofing, no "clocking in from home," no battery issues. Just reliable, tamper-proof attendance at the front door.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-map-pin"/></svg></div>
-        <h3 data-i18n="land.feat2Title">Multi-Site Support</h3>
-        <p data-i18n="land.feat2Desc">Manage multiple locations under one company. Each site gets its own employee roster and its own clock-in page.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-bar-chart"/></svg></div>
-        <h3><span data-i18n="land.feat3Title">Automated Reports</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat3Desc">Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-edit"/></svg></div>
-        <h3><span data-i18n="land.feat4Title">Punch Corrections</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat4Desc">Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
-        <h3><span data-i18n="land.feat5Title">Overtime Tracking</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat5Desc">Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
-        <h3><span data-i18n="land.feat16Title">Evening Hours</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat16Desc">Pick an evening window and the days it applies. Reports and exports get an Evening Hrs column, handy for evening and night premiums. It never changes regular or overtime hours.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
-        <h3><span data-i18n="land.feat6Title">Time Off Tracking</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat6Desc">Log vacation, sick days and absences. See who is off today at a glance, and approve requests in one click.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-users"/></svg></div>
-        <h3 data-i18n="land.feat7Title">Team Access</h3>
-        <p data-i18n="land.feat7Desc">Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
-        <h3 data-i18n="land.feat8Title">Flexible Payroll Periods</h3>
-        <p data-i18n="land.feat8Desc">Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
-      </div>
-      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
-        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-calendar-clock"/></svg></div>
-        <h3><span data-i18n="land.feat9Title">Employee Scheduling</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.addonBadge">ADD-ON</span></h3>
-        <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Employees can add their shifts to Google Calendar, Apple Calendar or Outlook. Included in Growth and Business, or a $14.95/mo add-on on Starter.</p>
-      </div>
-      <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
-        <div class="feature-icon"><svg style="color:#22c55e"><use href="#i-shield-pin"/></svg></div>
-        <h3><span data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 25 m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-smartphone"/></svg></div>
-        <h3 data-i18n="land.feat11Title">Kiosk Shortcut — One Tap to Punch</h3>
-        <p data-i18n="land.feat11Desc">Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-user"/></svg></div>
-        <h3><span data-i18n="land.feat12Title">Employee Self-Service Portal</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. With Scheduling, they can also add their shifts to their own Google, Apple or Outlook calendar. Included on every paid plan (Starter and up).</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
-        <h3><span data-i18n="land.feat15Title">Remote Clock-In — For Distributed Teams</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
-        <p data-i18n="land.feat15Desc">No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site's roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. For crews on the road, you can require location on every punch without tying anyone to one address. Included on every paid plan (Starter and up).</p>
-      </div>
-      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
-        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-pause"/></svg></div>
-        <h3><span data-i18n="land.feat13Title">Lunch &amp; Break Tracking</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
-        <p data-i18n="land.feat13Desc">A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports. Pay part of a break automatically — say 30 of 60 minutes — with Paid Break Minutes. Included on the Growth plan and above.</p>
-      </div>
-      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
-        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-users"/></svg></div>
-        <h3><span data-i18n="land.feat14Title">Visitor Check-In</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
-        <p data-i18n="land.feat14Desc">A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who's in the building alongside your staff, for emergency preparedness and front-desk sign-in alike. Included on the Growth plan and above.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- TABLET TERMINAL ADVANTAGE -->
-  <div class="land-section" id="landingTabletAdvantage" style="background:linear-gradient(135deg,rgba(79,142,247,.05),rgba(124,92,191,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 24px">
-    <div style="max-width:920px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:48px">
-        <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--accent);text-transform:uppercase;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:var(--r-xl);padding:4px 14px;margin-bottom:14px" data-i18n="land.tabletBadge">Why a Fixed Terminal Beats GPS Tracking</div>
-        <h2 style="font-size:clamp(26px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:14px" data-i18n-html="land.tabletTitle">Your front desk <em>is</em> the clock.</h2>
-        <p style="color:var(--text2);font-size:16px;max-width:600px;margin:0 auto;line-height:1.75" data-i18n="land.tabletSub">GPS apps sound convenient — until employees clock in from their car, their couch, or three blocks away. PunchClock's PIN terminal is physically at your location. No app. No phone. No doubt.</p>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px">
-        <div class="card card-lg">
-          <div style="margin-bottom:12px;color:var(--accent)"><svg class="ic" style="width:30px;height:30px"><use href="#i-map-pin"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet1Title">Location-Locked Accuracy</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet1Desc">The tablet stays at your site. Employees can only punch in when they're physically there — not from a parking lot, not from bed. GPS can be spoofed. A fixed terminal can't.</p>
-        </div>
-        <div class="card card-lg">
-          <div style="margin-bottom:12px;color:var(--accent)"><svg class="ic" style="width:30px;height:30px"><use href="#i-signal-off"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet2Title">No Smartphones Required</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet2Desc">Not every employee has a smartphone, data plan, or the latest OS. One shared tablet of your own covers your entire team — no installs, no updates, no compatibility issues.</p>
-        </div>
-        <div class="card card-lg">
-          <div style="margin-bottom:12px;color:var(--accent)"><svg class="ic" style="width:30px;height:30px"><use href="#i-battery"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet3Title">No App Headaches</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet3Desc">No app to install, update, or troubleshoot. No "my GPS was off" excuses. Employees enter their PIN and go. Admins get clean, reliable punch data every time.</p>
-        </div>
-        <div class="card card-lg">
-          <div style="margin-bottom:12px;color:var(--accent)"><svg class="ic" style="width:30px;height:30px"><use href="#i-shield"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:8px" data-i18n="land.tablet4Title">Buddy Punching Protection</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.tablet4Desc">Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.</p>
-        </div>
-      </div>
-      <p style="text-align:center;font-size:13px;color:var(--text3);margin-top:32px;max-width:560px;margin-left:auto;margin-right:auto" data-i18n-html="land.tabletRemoteNote">No shared location to put a terminal at? PunchClock also supports individually-authorized <strong>remote clock-in</strong> from each employee's own device — see Remote Clock-In below.</p>
-    </div>
-  </div>
-
-  <!-- GEOFENCING SECTION -->
-  <div class="land-section" id="landingGeofencing" style="background:linear-gradient(135deg,rgba(34,197,94,.04),rgba(79,142,247,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 24px">
-    <div style="max-width:960px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:52px">
-        <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--green);text-transform:uppercase;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r-xl);padding:4px 14px;margin-bottom:14px" data-i18n="land.geoBadge">Location Security — Built Right In</div>
-        <h2 style="font-size:clamp(26px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:14px" data-i18n="land.geoTitle">Employees can only punch where they work.</h2>
-        <p style="color:var(--text2);font-size:16px;max-width:640px;margin:0 auto;line-height:1.75" data-i18n="land.geoSub">Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.</p>
-      </div>
-
-      <!-- How geofencing works — 3 column explainer -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-bottom:48px">
-        <div class="card card-lg card-center">
-          <div style="margin-bottom:14px;color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-settings"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow1Title">1. Admin Sets a Boundary</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow1Desc">In the Sites settings, toggle Geofence ON, click "Use my current location" while standing at the site, and drag the radius slider. Default is 25m — ideal for a restaurant or retail store. Warehouses and large sites can go up to 500m. One map preview shows exactly what's covered.</p>
-        </div>
-        <div class="card card-lg card-center">
-          <div style="margin-bottom:14px;color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-map-pin"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow2Title">2. Every Punch is Verified</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow2Desc">When an employee taps IN or OUT, their device's GPS is checked silently in the background. If they're inside the boundary, the punch goes through instantly. If they're outside — whether at home, in a car, or at another location — the punch is blocked with a clear message showing exactly how far away they are.</p>
-        </div>
-        <div class="card card-lg card-center">
-          <div style="margin-bottom:14px;color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-bar-chart"/></svg></div>
-          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow3Title">3. Every Location is Logged</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow3Desc">Each punch record stores the GPS coordinates, accuracy, and distance from the site boundary. Admins can review exactly where an employee was when they clocked in — a full location audit trail for every punch.</p>
-        </div>
-      </div>
-
-      <!-- GPS strict vs lenient modes -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:40px;max-width:780px;margin-left:auto;margin-right:auto">
-        <div style="background:var(--surface);border:1.5px solid rgba(239,68,68,.3);border-radius:var(--r-lg);padding:20px 22px">
-          <div style="margin-bottom:8px;color:var(--accent)"><svg class="ic" style="width:20px;height:20px"><use href="#i-lock"/></svg></div>
-          <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--red)" data-i18n="land.geoStrictTitle">Strict Mode</div>
-          <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0" data-i18n="land.geoStrictDesc">If GPS is unavailable or denied by the employee's device, the punch is blocked entirely. Best for sites where location accuracy is critical and you want zero exceptions.</p>
-        </div>
-        <div style="background:var(--surface);border:1.5px solid rgba(245,158,11,.3);border-radius:var(--r-lg);padding:20px 22px">
-          <div style="margin-bottom:8px;color:var(--amber)"><svg class="ic" style="width:20px;height:20px"><use href="#i-warn"/></svg></div>
-          <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--amber)" data-i18n="land.geoLenientTitle">Lenient Mode (Default)</div>
-          <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0" data-i18n="land.geoLenientDesc">If GPS is unavailable, employees see a warning but the punch still goes through. Ideal for sites with poor indoor GPS signal, or businesses that want a softer rollout.</p>
-        </div>
-      </div>
-
-      <!-- Device token add-on callout -->
-      <div style="background:var(--surface);border:1.5px solid rgba(79,142,247,.3);border-radius:var(--r-lg);padding:26px 30px;max-width:780px;margin:0 auto;display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
-        <div style="flex-shrink:0;color:var(--accent)"><svg class="ic" style="width:32px;height:32px"><use href="#i-key"/></svg></div>
-        <div style="flex:1;min-width:220px">
-          <div style="font-weight:700;font-size:15px;margin-bottom:6px" data-i18n="land.geoDeviceTitle">Optional: Device Token — Double Lock</div>
-          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoDeviceDesc">Enable the Device Token option per site to add a second layer on top of geofencing. Only devices physically registered by a manager via the Kiosk Shortcut panel can punch — even if someone is standing in the right location on an unregistered phone, they're blocked. Geofencing + Device Token together is the strongest protection available.</p>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1917,93 +1905,144 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     </div>
   </div>
 
-  <!-- HOW IT WORKS -->
-  <div class="land-section" id="landingHowItWorks" style="background:var(--surface);border-radius:0;padding:70px 24px">
-    <h2 data-i18n="land.howTitle">How It Works</h2>
-    <p class="sub" data-i18n="land.howSub">Up and running in under 10 minutes.</p>
-
-    <!-- Setup flow -->
-    <h3 style="text-align:center;font-size:14px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:36px 0 20px" data-i18n="land.howSetupLabel">Getting Set Up</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-nav-building"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how1Title">1. Create Your Account</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how1Desc">Register with your name, email and company name. Verify your email and add your first site.</p>
+  <!-- FEATURES -->
+  <div class="land-section" id="landingFeatures">
+    <h2 data-i18n="land.featTitle">Everything you need to manage shift workers</h2>
+    <p class="sub" style="text-align:center;color:var(--text2);margin-bottom:50px;font-size:16px" data-i18n="land.featSub">No complicated setup. No per-feature upsells. Just the tools your team needs.</p>
+    <div class="features-grid" id="landFeatGrid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-tablet"/></svg></div>
+        <h3 data-i18n="land.feat1Title">Clock in on your own tablet</h3>
+        <p data-i18n="land.feat1Desc">Employees clock in with a 4-digit PIN on a shared tablet or computer of your own at the door. Quick for a whole crew, and no phones needed.</p>
       </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-map-pin"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how2Title">2. Add Sites</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how2Desc">Create one or more physical locations — stores, warehouses, offices.</p>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
+        <h3><span data-i18n="land.feat15Title">Remote Clock-In — For Distributed Teams</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat15Desc">No shared site to put a tablet at? Turn on remote clock-in and authorize specific employees (or a whole site's roster at once) to punch in and out from their own phone or computer through their Employee Portal — no shared kiosk, nothing to install. Every punch records the phone\'s GPS location, with a map pin in your Activity log, so you can see where each shift started and finished. For crews on the road, you can require location on every punch without tying anyone to one address. Included on every paid plan (Starter and up).</p>
       </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how3Title">3. Add Employees</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how3Desc">Register staff with a name, site, and 4-digit PIN. Optionally add emails for automated reports.</p>
+      <div class="feature-card" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(79,142,247,.04))">
+        <div class="feature-icon"><svg style="color:#22c55e"><use href="#i-shield-pin"/></svg></div>
+        <h3><span data-i18n="land.feat10Title">Geofencing — Location-Locked Punching</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat10Desc">Set a GPS boundary per site (as tight as 25 m). Employees outside that radius are blocked from clocking in — no matter what device they use or where they are. Each site has its own radius, so a small restaurant uses 25m while a large warehouse uses 200m.</p>
       </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="font-size:34px;margin-bottom:10px">&#9201;</div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.how4Title">4. Start Tracking</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.how4Desc">Point any tablet or PC at the clock page, log out of admin, and employees clock in with their PIN.</p>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-bar-chart"/></svg></div>
+        <h3><span data-i18n="land.feat3Title">Automated Reports</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat3Desc">Period summary emails sent automatically to each employee at the end of every pay period. Full punch log included.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
+        <h3><span data-i18n="land.feat5Title">Overtime Tracking</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat5Desc">Automatically flags daily (>8h) and weekly (>40h) overtime in reports. Toggle on or off per company.</p>
+      </div>
+      <div class="feature-card" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
+        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-calendar-clock"/></svg></div>
+        <h3><span data-i18n="land.feat9Title">Employee Scheduling</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.addonBadge">ADD-ON</span></h3>
+        <p data-i18n="land.feat9Desc">Build weekly schedules, assign shifts to employees per site, and let your team see their upcoming shifts — all inside PunchClock. Employees can add their shifts to Google Calendar, Apple Calendar or Outlook. Included in Growth and Business, or a $14.95/mo add-on on Starter.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-map-pin"/></svg></div>
+        <h3 data-i18n="land.feat2Title">Multi-Site Support</h3>
+        <p data-i18n="land.feat2Desc">Manage multiple locations under one company. Each site gets its own employee roster and its own clock-in page.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-edit"/></svg></div>
+        <h3><span data-i18n="land.feat4Title">Punch Corrections</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat4Desc">Admins can correct forgotten clock-ins, edit times, or add missing records directly from the activity log.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
+        <h3><span data-i18n="land.feat16Title">Evening Hours</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat16Desc">Pick an evening window and the days it applies. Reports and exports get an Evening Hrs column, handy for evening and night premiums. It never changes regular or overtime hours.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
+        <h3><span data-i18n="land.feat6Title">Time Off Tracking</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat6Desc">Log vacation, sick days and absences. See who is off today at a glance, and approve requests in one click.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-users"/></svg></div>
+        <h3 data-i18n="land.feat7Title">Team Access</h3>
+        <p data-i18n="land.feat7Desc">Invite co-admins with full access or managers with site-specific access. Each invitation is sent by email — no join requests needed.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
+        <h3 data-i18n="land.feat8Title">Flexible Payroll Periods</h3>
+        <p data-i18n="land.feat8Desc">Weekly, bi-weekly, or monthly payroll. Sunday or Monday week start. Period presets auto-adjust per company.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-smartphone"/></svg></div>
+        <h3 data-i18n="land.feat11Title">Kiosk Shortcut — One Tap to Punch</h3>
+        <p data-i18n="land.feat11Desc">Generate a site-specific URL or install the PunchClock app as a desktop/home screen icon. Employees tap it and land directly on the punch page — no login, no navigation, no confusion. Managers set it up once per device.</p>
+      </div>
+      <div class="feature-card land-feat-more">
+        <div class="feature-icon"><svg><use href="#i-user"/></svg></div>
+        <h3><span data-i18n="land.feat12Title">Employee Self-Service Portal</span> <span class="plan-tag" data-i18n="land.starterBadge">STARTER+</span></h3>
+        <p data-i18n="land.feat12Desc">Every employee gets their own secure login — from a phone, tablet or computer, no app to install. They can check their schedule, review their hours for the current pay period, request time off, and set their availability, without calling or texting you. With Scheduling, they can also add their shifts to their own Google, Apple or Outlook calendar. Included on every paid plan (Starter and up).</p>
+      </div>
+      <div class="feature-card land-feat-more" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
+        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-pause"/></svg></div>
+        <h3><span data-i18n="land.feat13Title">Lunch &amp; Break Tracking</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
+        <p data-i18n="land.feat13Desc">A dedicated Break button on the clock-in screen, separate from clocking out — so staff never confuse a lunch break with leaving for the day. Turn it on per company; break time shows up as its own line in reports. Pay part of a break automatically — say 30 of 60 minutes — with Paid Break Minutes. Included on the Growth plan and above.</p>
+      </div>
+      <div class="feature-card land-feat-more" style="border-color:rgba(124,92,191,.35);background:linear-gradient(135deg,rgba(124,92,191,.08),rgba(79,142,247,.05))">
+        <div class="feature-icon"><svg style="color:#a78bfa"><use href="#i-users"/></svg></div>
+        <h3><span data-i18n="land.feat14Title">Visitor Check-In</span> <span style="font-size:10px;font-weight:700;background:linear-gradient(135deg,#7c5cbf,#4f8ef7);color:#fff;padding:2px 7px;border-radius:var(--r-xl);vertical-align:middle;margin-left:6px;white-space:nowrap" data-i18n="land.growthBadge">GROWTH+</span></h3>
+        <p data-i18n="land.feat14Desc">A Visitor Check In button right on the kiosk — no PIN, no employee record. Visitors log their name, company, phone and email, and check themselves out later. Know exactly who's in the building alongside your staff, for emergency preparedness and front-desk sign-in alike. Included on the Growth plan and above.</p>
       </div>
     </div>
+    <div class="land-feat-toggle-wrap"><button type="button" class="land-btn-secondary" id="landFeatMore" aria-expanded="false" aria-controls="landFeatGrid" onclick="toggleLandFeatures()"><span data-i18n="land.featShowAll">Show all features</span></button></div>
+  </div>
 
-    <!-- Admin capabilities -->
-    <h3 style="text-align:center;font-size:14px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin:44px 0 20px" data-i18n="land.howAdminLabel">What Admins Can Do</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-edit"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA1Title">Edit Any Punch</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA1Desc">Correct clock-in/out times, add missed punches, or remove invalid entries — all logged in an audit trail.</p>
+  <!-- GEOFENCING SECTION -->
+  <div class="land-section" id="landingGeofencing" style="background:linear-gradient(135deg,rgba(34,197,94,.04),rgba(79,142,247,.05));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:70px 24px">
+    <div style="max-width:960px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:52px">
+        <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--green);text-transform:uppercase;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r-xl);padding:4px 14px;margin-bottom:14px" data-i18n="land.geoBadge">Location Security — Built Right In</div>
+        <h2 style="font-size:clamp(26px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:14px" data-i18n="land.geoTitle">Employees can only punch where they work.</h2>
+        <p style="color:var(--text2);font-size:16px;max-width:640px;margin:0 auto;line-height:1.75" data-i18n="land.geoSub">Geofencing draws an invisible GPS boundary around each of your locations. Clock in/out only works inside that boundary — whether an employee is on a shared terminal or using a saved shortcut link on their phone.</p>
       </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-bar-chart"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA2Title">Generate Reports</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA2Desc">Export hours by employee, site, or period in Excel, CSV, or PDF. Send reports directly to employees by email.</p>
-      </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-clock"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA3Title">Overtime Alerts</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA3Desc">Automatically flag shifts over 8 hours or weeks over 40 hours. Highlighted in reports and exports.</p>
-      </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-bell"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA4Title">Automated Emails</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA4Desc">At the end of each pay period, PunchClock automatically emails each employee their hours summary — no manual work.</p>
-      </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-users"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA5Title">Bulk Actions</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA5Desc">Select multiple employees to send reports, activate, deactivate, or delete them all at once.</p>
-      </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-lock"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA6Title">Co-Admin Access</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA6Desc">Invite co-admins to share management duties. Each co-admin sees the same companies, sites, and employees.</p>
-      </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid rgba(34,197,94,.25);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-map-pin"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA7Title">Set Up Geofencing</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA7Desc">In Admin → Sites, edit any site, toggle Geofence ON, tap "Use my current location," set the radius, and save. Punches from outside that boundary are blocked automatically — no extra setup on each device.</p>
-      </div>
-      <div style="text-align:center;padding:22px 14px;background:var(--surface2);border:1px solid rgba(79,142,247,.25);border-radius:var(--r-lg)">
-        <div style="margin-bottom:10px;color:var(--accent)"><svg class="ic" style="width:34px;height:34px"><use href="#i-tablet"/></svg></div>
-        <div style="font-weight:700;margin-bottom:5px;font-size:14px" data-i18n="land.howA8Title">Create Kiosk Shortcuts</div>
-        <p style="font-size:12px;color:var(--text2);line-height:1.55" data-i18n="land.howA8Desc">Click "Kiosk Shortcut" on any site card to get a direct URL, QR code, or install the PunchClock app on that device. Employees tap the icon and land directly on the punch page — no login required. Set up once, works forever.</p>
-      </div>
-    </div>
 
-    <!-- Scheduling add-on callout in How It Works -->
-    <div style="margin-top:44px;background:linear-gradient(135deg,rgba(124,92,191,.1),rgba(79,142,247,.06));border:1.5px solid rgba(124,92,191,.3);border-radius:var(--r-lg);padding:28px 32px;max-width:760px;margin-left:auto;margin-right:auto">
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <div style="color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-calendar"/></svg></div>
-        <div style="flex:1;min-width:200px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-            <strong style="font-size:15px" data-i18n="land.howSchedTitle">Employee Scheduling</strong>
-            <span style="font-size:10px;font-weight:700;background:#7c5cbf;color:#fff;padding:2px 8px;border-radius:var(--r-md)" data-i18n="land.pillAddon">Included in Growth</span>
-          </div>
-          <p style="font-size:13px;color:var(--text2);margin:0;line-height:1.6" data-i18n="land.howSchedDesc">Once your team is set up, turn on Scheduling to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — included in Growth and Business, or $14.95/mo added to Starter.</p>
+      <!-- How geofencing works — 3 column explainer -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-bottom:48px">
+        <div class="card card-lg card-center">
+          <div style="margin-bottom:14px;color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-settings"/></svg></div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow1Title">1. Admin Sets a Boundary</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow1Desc">In the Sites settings, toggle Geofence ON, click "Use my current location" while standing at the site, and drag the radius slider. Default is 25m — ideal for a restaurant or retail store. Warehouses and large sites can go up to 500m. One map preview shows exactly what's covered.</p>
         </div>
-        <button class="btn-secondary" style="padding:9px 20px;font-size:13px;white-space:nowrap;flex-shrink:0" onclick="document.getElementById('landingPricing').scrollIntoView({behavior:'smooth'})" data-i18n="land.howSchedCta">See pricing →</button>
+        <div class="card card-lg card-center">
+          <div style="margin-bottom:14px;color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-map-pin"/></svg></div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow2Title">2. Every Punch is Verified</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow2Desc">When an employee taps IN or OUT, their device's GPS is checked silently in the background. If they're inside the boundary, the punch goes through instantly. If they're outside — whether at home, in a car, or at another location — the punch is blocked with a clear message showing exactly how far away they are.</p>
+        </div>
+        <div class="card card-lg card-center">
+          <div style="margin-bottom:14px;color:var(--accent)"><svg class="ic" style="width:36px;height:36px"><use href="#i-bar-chart"/></svg></div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:9px" data-i18n="land.geoHow3Title">3. Every Location is Logged</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoHow3Desc">Each punch record stores the GPS coordinates, accuracy, and distance from the site boundary. Admins can review exactly where an employee was when they clocked in — a full location audit trail for every punch.</p>
+        </div>
+      </div>
+
+      <!-- GPS strict vs lenient modes -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:40px;max-width:780px;margin-left:auto;margin-right:auto">
+        <div style="background:var(--surface);border:1.5px solid rgba(239,68,68,.3);border-radius:var(--r-lg);padding:20px 22px">
+          <div style="margin-bottom:8px;color:var(--accent)"><svg class="ic" style="width:20px;height:20px"><use href="#i-lock"/></svg></div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--red)" data-i18n="land.geoStrictTitle">Strict Mode</div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0" data-i18n="land.geoStrictDesc">If GPS is unavailable or denied by the employee's device, the punch is blocked entirely. Best for sites where location accuracy is critical and you want zero exceptions.</p>
+        </div>
+        <div style="background:var(--surface);border:1.5px solid rgba(245,158,11,.3);border-radius:var(--r-lg);padding:20px 22px">
+          <div style="margin-bottom:8px;color:var(--amber)"><svg class="ic" style="width:20px;height:20px"><use href="#i-warn"/></svg></div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--amber)" data-i18n="land.geoLenientTitle">Lenient Mode (Default)</div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0" data-i18n="land.geoLenientDesc">If GPS is unavailable, employees see a warning but the punch still goes through. Ideal for sites with poor indoor GPS signal, or businesses that want a softer rollout.</p>
+        </div>
+      </div>
+
+      <!-- Device token add-on callout -->
+      <div style="background:var(--surface);border:1.5px solid rgba(79,142,247,.3);border-radius:var(--r-lg);padding:26px 30px;max-width:780px;margin:0 auto;display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
+        <div style="flex-shrink:0;color:var(--accent)"><svg class="ic" style="width:32px;height:32px"><use href="#i-key"/></svg></div>
+        <div style="flex:1;min-width:220px">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px" data-i18n="land.geoDeviceTitle">Optional: Device Token — Double Lock</div>
+          <p style="font-size:13px;color:var(--text2);line-height:1.65;margin:0" data-i18n="land.geoDeviceDesc">Enable the Device Token option per site to add a second layer on top of geofencing. Only devices physically registered by a manager via the Kiosk Shortcut panel can punch — even if someone is standing in the right location on an unregistered phone, they're blocked. Geofencing + Device Token together is the strongest protection available.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -3432,6 +3471,18 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
       <button class="btn-secondary" style="padding:6px 14px;font-size:12px" onclick="clearActivitySelection()" data-i18n="activity.bulkClear">Clear</button>
     </div>
   </div>
+  <div class="act-view-seg" id="actViewSeg" role="group" aria-label="View">
+    <button type="button" id="actViewShift" aria-pressed="true" onclick="setActView('shift')" data-i18n="activity.viewShift">By shift</button>
+    <button type="button" id="actViewPunch" aria-pressed="false" onclick="setActView('punch')" data-i18n="activity.viewPunch">Every punch</button>
+  </div>
+  <div id="actShiftWrap">
+    <div class="table-wrap"><table>
+      <thead><tr><th data-i18n="activity.employee">Employee</th><th data-i18n="activity.colIn">In</th><th data-i18n="activity.colOut">Out</th><th data-i18n="activity.colHours">Hours</th><th></th></tr></thead>
+      <tbody id="actShiftBody"></tbody>
+    </table></div>
+    <div id="actShiftCards" class="mcards"></div>
+  </div>
+  <div id="actPunchWrap" style="display:none">
   <div class="table-wrap"><table>
     <thead><tr>
       <th style="width:36px"><input type="checkbox" id="actSelectAll" onclick="toggleSelectAllActivity(this)" style="accent-color:var(--accent);width:15px;height:15px;cursor:pointer" title="Select all visible"></th>
@@ -3440,6 +3491,7 @@ body:has(.mobile-menu.open) #demoCoach{display:none;}
     <tbody id="activityBody"></tbody>
   </table></div>
   <div id="activityCardsContainer" class="mcards"></div>
+  </div>
 
   <!-- VISITOR CHECK-INS — same company/site/date filters as the punch table above, since a
        visit isn't a punch (start+end pair, not a single timestamped event) and can't share rows
@@ -5652,6 +5704,25 @@ function hideLanding() {
   document.getElementById('landingPage').classList.remove('show');
   document.getElementById('mainNav').style.display = '';
 }
+// Landing "Two ways to clock in": two toggle buttons (aria-pressed), one panel shown at a time.
+function setLandWay(way){
+  [['tablet','landWayBtnTablet','landWayTablet'],['phone','landWayBtnPhone','landWayPhone']].forEach(function(w){
+    const on=w[0]===way, btn=document.getElementById(w[1]), panel=document.getElementById(w[2]);
+    if(btn) btn.setAttribute('aria-pressed',on?'true':'false');
+    if(panel) panel.hidden=!on;
+  });
+}
+// Landing features: six cards by default; the rest stay in the DOM behind one toggle.
+function toggleLandFeatures(){
+  const grid=document.getElementById('landFeatGrid'), btn=document.getElementById('landFeatMore');
+  if(!grid||!btn) return;
+  const open=!grid.classList.contains('show-all');
+  grid.classList.toggle('show-all',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  const lbl=btn.querySelector('[data-i18n]');
+  if(lbl){ lbl.setAttribute('data-i18n',open?'land.featHide':'land.featShowAll'); lbl.textContent=t(lbl.getAttribute('data-i18n')); }
+  if(!open) btn.scrollIntoView({block:'nearest'});
+}
 // Phone only (see .land-sticky-cta): the bottom button slides in once the hero's two buttons
 // are out of view. Without IntersectionObserver it simply stays visible, as before.
 (function(){
@@ -5668,7 +5739,7 @@ function hideLegal(type) {
   document.getElementById(type==='tos'?'tosPage':'privacyPage').classList.remove('show');
 }
 
-const FAQ_SALES=[1,2,6,7,8,24,31,11,12,13,15,16,19,25,26,27,28,29];
+const FAQ_SALES=[1,32,2,6,7,8,24,31,11,12,13,15,16,19,25,26,27,28,29];
 
 function renderFAQ(){
   const acc=document.getElementById('faqAccordion');
@@ -9791,7 +9862,7 @@ function destroyCrewMap() { if (_crewMap) { _crewMap.remove(); _crewMap = null; 
 function openCrewMap() {
   const located = (_actFiltered || []).filter(p => p.geo_lat != null && p.geo_lng != null)
     .sort((a, b) => new Date(b.punched_at) - new Date(a.punched_at));
-  if (!located.length) { showToast(t('crewMap.none') || 'No punches with a location in this filter. Phone punches and tablets with a geofence save one.', 'info'); return; }
+  if (!located.length) { showToast(t('crewMap.none') || 'No punches with a location in this filter. Punches made from a phone save one. Tablet punches do not.', 'info'); return; }
   const shown = located.slice(0, CREW_MAP_MAX);
   const outside = shown.filter(p => p.geo_status === 'outside').length;
   let sum = (t('crewMap.summary') || '{n} punches with a location, {o} outside the geofence.').replace('{n}', shown.length).replace('{o}', outside);
@@ -14479,9 +14550,14 @@ async function loadActivityPage(){
   // refreshCache (which deliberately ignores it — punches are always fetched by company, never
   // by site, since other views need an employee's full cross-site history) — but nothing ever
   // applied it client-side, so selecting a site here had no effect on what was shown at all.
+  // By shift pairs each IN with its OUT before the Site and Label filters are applied: an OUT carries
+  // no label, so filtering punches first would leave every labelled shift without its clock-out.
+  const shiftBase=empId==='all'?all:all.filter(p=>p.emp_id===empId);
   if(siteId!=='all')all=all.filter(p=>p.site_id===siteId);
   if(empId!=='all')all=all.filter(p=>p.emp_id===empId);
   const labelF=document.getElementById('actLabelFilter')?.value||'all';
+  renderActShifts(shiftBase,siteId,labelF);
+  applyActView();
   if(labelF!=='all')all=all.filter(p=>labelF==='__none__'?!p.label_id:p.label_id===labelF);
   _actFiltered=all;   // what the Activity "Map" button shows
   const today=new Date().toLocaleDateString('en-CA');
@@ -14548,6 +14624,177 @@ async function loadActivityPage(){
       </div></td>
     </tr>`;
   }).join('');
+}
+
+// ── Activity "By shift" ────────────────────────────────────────────────────
+// A reading aid over the same punches: one row per clock-in and clock-out, with the hours worked out.
+// It changes nothing that is stored and it is not the payroll total. Pairing and rounding follow the
+// Reports page (IN followed by OUT; a break or a label switch stays inside the same shift; the paid
+// part of a break counts), so a shift here adds up to the same hours as its rows in a report.
+function actView(){
+  try{ return localStorage.getItem('pc_act_view')==='punch'?'punch':'shift'; }catch(_){ return 'shift'; }
+}
+function setActView(v){
+  try{ localStorage.setItem('pc_act_view',v==='punch'?'punch':'shift'); }catch(_){}
+  if(v!=='punch') clearActivitySelection();
+  applyActView();
+}
+function applyActView(){
+  const v=actView();
+  const sw=document.getElementById('actShiftWrap'), pw=document.getElementById('actPunchWrap');
+  if(sw) sw.style.display=v==='shift'?'':'none';
+  if(pw) pw.style.display=v==='punch'?'':'none';
+  document.getElementById('actViewShift')?.setAttribute('aria-pressed',String(v==='shift'));
+  document.getElementById('actViewPunch')?.setAttribute('aria-pressed',String(v==='punch'));
+  document.getElementById('actViewSeg')?.setAttribute('aria-label',t('activity.viewLabel')||'View');
+}
+// punches: any mix of employees. Returns shifts, oldest first per employee.
+// state: 'done' | 'working' (open, recent, the person's latest punch) | 'noout' | 'noin' (an OUT with no IN before it)
+function buildActShifts(punches, nowMs){
+  const now=nowMs||Date.now();
+  const byEmp=new Map();
+  (punches||[]).forEach(p=>{ if(!byEmp.has(p.emp_id)) byEmp.set(p.emp_id,[]); byEmp.get(p.emp_id).push(p); });
+  const out=[];
+  byEmp.forEach((list,empId)=>{
+    list.sort((a,b)=>new Date(a.punched_at)-new Date(b.punched_at));
+    const co=C.companies.find(c=>c.id===list[0].company_id);
+    const rnd=co?.punch_rounding||0;
+    const breakCapMs=(co?.track_lunch_breaks?(co?.lunch_break_paid_minutes||0):0)*60000;
+    const forgotMs=(co?.forgot_out_hours||14)*3600000;
+    let cur=null;
+    const close=()=>{
+      if(!cur) return;
+      if(cur.openIn){
+        const last=getEmpStatus(empId).last;
+        const age=now-new Date(cur.openIn.punched_at).getTime();
+        if(last&&last.id===cur.openIn.id&&age<forgotMs){ cur.state='working'; cur.hours+=Math.max(0,age)/3600000; }
+        else cur.state='noout';
+      } else cur.state='done';
+      out.push(cur); cur=null;
+    };
+    list.forEach(p=>{
+      if(p.type==='IN'){
+        const prev=cur&&!cur.openIn?cur.outP:null;
+        const joins=prev&&((prev.is_break&&p.is_break)||(prev.is_switch&&p.is_switch));
+        if(joins){
+          if(p.is_break){
+            const gap=new Date(p.punched_at)-new Date(prev.punched_at);
+            cur.breakMin+=gap/60000;
+            if(breakCapMs>0) cur.hours+=Math.min(gap,breakCapMs)/3600000;
+          }
+          cur.openIn=p; cur.outP=null; cur.punches.push(p);
+        } else {
+          close();
+          cur={empId,companyId:p.company_id,siteId:p.site_id,date:p.punch_date,inP:p,outP:null,openIn:p,hours:0,breakMin:0,labels:[],punches:[p],state:''};
+        }
+        if(p.label_id&&!cur.labels.includes(p.label_id)) cur.labels.push(p.label_id);
+      } else if(cur&&cur.openIn){
+        cur.hours+=(_roundPunchMs(p.punched_at,rnd)-_roundPunchMs(cur.openIn.punched_at,rnd))/3600000;
+        cur.outP=p; cur.openIn=null; cur.punches.push(p);
+      } else {
+        close();
+        out.push({empId,companyId:p.company_id,siteId:p.site_id,date:p.punch_date,inP:null,outP:p,openIn:null,hours:0,breakMin:0,labels:[],punches:[p],state:'noin'});
+      }
+    });
+    close();
+  });
+  return out;
+}
+function actHM(hours){
+  const m=Math.max(0,Math.round((hours||0)*60));
+  return `${Math.floor(m/60)} h ${String(m%60).padStart(2,'0')}`;
+}
+function _actCanEdit(p){
+  return isPaidCompany(p.company_id)&&(!isManager()||(managerSiteIds||[]).includes(p.site_id));
+}
+function _actTime(p, base){
+  if(!p) return '';
+  const hm=esc(String(p.punch_time||'').slice(0,5));
+  const plus=base&&p.punch_date!==base?`<span class="act-plus" title="${esc(p.punch_date)}">+1</span>`:'';
+  return _actCanEdit(p)
+    ? `<button type="button" class="act-time-btn act-time" title="${esc(t('activity.editPunchTip')||'Edit this punch')}" onclick="openEditPunch('${p.id}')">${hm}</button>${plus}`
+    : `<span class="act-time">${hm}</span>${plus}`;
+}
+function renderActShifts(punches, siteId, labelF){
+  const tb=document.getElementById('actShiftBody'), cards=document.getElementById('actShiftCards');
+  if(!tb) return;
+  let shifts=buildActShifts(punches);
+  if(siteId&&siteId!=='all') shifts=shifts.filter(s=>s.siteId===siteId);
+  if(labelF&&labelF!=='all') shifts=shifts.filter(s=>labelF==='__none__'?!s.labels.length:s.labels.includes(labelF));
+  if(!shifts.length){
+    const none=t('activity.none')||'No punch records found for the selected filters.';
+    tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:36px">${none}</td></tr>`;
+    if(cards) cards.innerHTML=mcardEmpty(none);
+    return;
+  }
+  const ts=s=>new Date((s.inP||s.outP).punched_at).getTime();
+  const days=[...new Set(shifts.map(s=>s.date))].sort().reverse();
+  const loc=_appLang==='fr'?'fr-CA':'en-CA';
+  const pillOf=s=>s.state==='working'?`<span class="pill in">${esc(t('activity.workingNow')||'Working now')}</span>`
+    :s.state==='noout'?`<span class="pill act-warn">${esc(t('activity.noOut')||'No clock-out')}</span>`
+    :s.state==='noin'?`<span class="pill act-warn">${esc(t('activity.noIn')||'No clock-in')}</span>`:'';
+  const fixOf=s=>{
+    const p=s.inP||s.outP;
+    if((s.state!=='noout'&&s.state!=='noin')||(isManager()&&!(managerSiteIds||[]).includes(p.site_id))) return '';
+    const type=s.state==='noout'?'OUT':'IN';
+    return `<button class="btn-primary" style="width:auto;padding:5px 12px;font-size:12px;margin-top:0" onclick="actAddMissing('${s.empId}','${esc(s.date)}','${type}')">${esc(type==='OUT'?(t('activity.addOut')||'Add clock-out'):(t('activity.addIn')||'Add clock-in'))}</button>`;
+  };
+  const subOf=s=>{
+    const co=C.companies.find(c=>c.id===s.companyId), site=C.sites.find(x=>x.id===s.siteId);
+    const where=esc([C.companies.length>1?co?.name:null,site?.name].filter(Boolean).join(' · '));
+    const brk=s.breakMin>=1?(t('activity.breakNote')||'Break {m} min').replace('{m}',Math.round(s.breakMin)):'';
+    const first=s.inP||s.outP;
+    const badges=(s.punches.some(p=>p.is_manual)?`<span class="manual-badge">${t('reports.manual')}</span>`:'')
+      +channelBadge(first)+s.punches.map(reviewBadges).filter((b,i,a)=>b&&a.indexOf(b)===i).join('')
+      +s.labels.map(id=>labelBadge({label_id:id})).join('')
+      +(s.inP?punchMapBtn(s.inP):'')+(s.outP?punchMapBtn(s.outP):'');
+    const notes=s.punches.map(geoNoteLine).join('');
+    return [where,esc(brk)].filter(Boolean).join(' · ')+badges+notes;
+  };
+  let rows='', cardHtml='';
+  days.forEach(d=>{
+    const list=shifts.filter(s=>s.date===d).sort((a,b)=>ts(a)-ts(b));
+    const dayName=new Date(d+'T12:00:00').toLocaleDateString(loc,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const sum=(list.length===1?(t('activity.dayShift')||'1 shift'):(t('activity.dayShifts')||'{n} shifts').replace('{n}',list.length))+' · '+actHM(list.reduce((a,s)=>a+s.hours,0));
+    rows+=`<tr class="act-day-row"><td colspan="5">${esc(dayName)}<span class="act-day-sum">${esc(sum)}</span></td></tr>`;
+    cardHtml+=`<div class="act-day-card"><span>${esc(dayName)}</span><span>${esc(sum)}</span></div>`;
+    list.forEach(s=>{
+      const emp=C.employees.find(e=>e.id===s.empId);
+      const name=esc((s.inP||s.outP).emp_name||emp?.name||'');
+      const code=emp?.emp_code?`<span style="color:var(--text3);font-size:11px;margin-left:5px">${esc(emp.emp_code)}</span>`:'';
+      const inCell=s.inP?_actTime(s.inP):pillOf(s);
+      const outCell=s.outP?_actTime(s.outP,s.date):pillOf(s);
+      const hrs=s.state==='done'||s.state==='working'?`<span class="act-hrs">${actHM(s.hours)}</span>`:'<span style="color:var(--text3)">–</span>';
+      rows+=`<tr data-shift-state="${s.state}"><td style="font-weight:500">${name}${code}<span class="act-shift-sub">${subOf(s)}</span></td><td>${inCell}</td><td>${outCell}</td><td>${hrs}</td><td>${fixOf(s)}</td></tr>`;
+      cardHtml+=mcard(name+code,
+        [[t('activity.colIn')||'In',inCell],[t('activity.colOut')||'Out',outCell],[t('activity.colHours')||'Hours',hrs],
+         [t('admin.col.site')||'Site',`<span style="text-align:right">${subOf(s)||'—'}</span>`]],
+        fixOf(s));
+    });
+  });
+  tb.innerHTML=rows;
+  if(cards) cards.innerHTML=cardHtml;
+}
+// "Add clock-out" / "Add clock-in" on a shift that misses one: the normal Add Punch window, already
+// filled in with the person, the day and the missing side. Saving goes through the same checks.
+function actAddMissing(empId, date, type){
+  const emp=C.employees.find(e=>e.id===empId);
+  if(!emp) return;
+  if(!isPaidCompany(emp.company_id)){
+    showPlanGate(t('gate.addPunch')||'Manual punch editing is available on paid plans.','activity-upgrade-hint');
+    return;
+  }
+  openAddPunchModal();
+  const sel=document.getElementById('addPunchEmp');
+  if(![...sel.options].some(o=>o.value===empId)){
+    const o=document.createElement('option'); o.value=empId; o.textContent=emp.name; sel.appendChild(o);
+  }
+  sel.value=empId;
+  document.getElementById('addPunchDate').value=date;
+  document.getElementById('addPunchType').value=type==='IN'?'IN':'OUT';
+  _onAddPunchTypeChange();
+  _syncAddPunchLabelRow();
+  document.getElementById('addPunchTime')?.focus();
 }
 
 // ── Activity bulk selection ────────────────────────────────────────────────
@@ -18673,6 +18920,7 @@ en:{
 'admin.joinTarget':'Requesting access to','admin.col.requested':'Requested','admin.col.type':'Type',
 'common.approve':'Approve','common.deny':'Deny',
 'activity.none':'No punch records found for the selected filters.',
+'activity.viewLabel':'View','activity.viewShift':'By shift','activity.viewPunch':'Every punch','activity.colIn':'In','activity.colOut':'Out','activity.colHours':'Hours','activity.workingNow':'Working now','activity.noOut':'No clock-out','activity.noIn':'No clock-in','activity.addOut':'Add clock-out','activity.addIn':'Add clock-in','activity.breakNote':'Break {m} min','activity.dayShift':'1 shift','activity.dayShifts':'{n} shifts','activity.editPunchTip':'Edit this punch',
 'reports.siteTotal':'Site total','reports.hours':'Hours','reports.ot':'Overtime','reports.breakTime':'Break Time',
 'reports.date':'Date','reports.time':'Time','reports.stillIn':'Still in',
 'dc.step':'Step {n} of {total}','dc.hide':'Hide',
@@ -19033,7 +19281,7 @@ en:{
 'activity.mobile':'MOBILE','activity.viewLocation':'View location','activity.break':'BREAK',
 'punchMap.title':'Punch Location','punchMap.site':'Site (registered)','punchMap.punch':'Punch location',
 'map.street':'Map','map.satellite':'Satellite','punchMap.statusOk':'Inside the geofence','punchMap.statusOutside':'Outside the geofence','punchMap.statusUnavailable':'Location unavailable when punched','punchMap.statusSkipped':'No geofence configured for this site',
-'punchMap.distance':'Distance from site: {m} m','geo.radiusHint':'50 to 100 m works for most workplaces. Phones are often 10 to 30 m off indoors, so a very small radius can turn people away who are standing at the door.','geo.radiusSmallWarn':'With Strict mode, a radius under 50 m can block people who are really on site.','punchMap.accuracy':'GPS accuracy: ±{m} m','punchMap.legendIn':'Filled = IN','punchMap.legendOut':'Ring = OUT','punchMap.legendAccuracy':'Light circle = GPS accuracy','crewMap.btn':'Map','crewMap.title':'Where punches happened','crewMap.none':'No punches with a location in this filter. Phone punches and tablets with a geofence save one.','crewMap.summary':'{n} punches with a location, {o} outside the geofence.','crewMap.capped':'Showing the latest {n}; narrow the dates or site to see the rest.',
+'punchMap.distance':'Distance from site: {m} m','geo.radiusHint':'50 to 100 m works for most workplaces. Phones are often 10 to 30 m off indoors, so a very small radius can turn people away who are standing at the door.','geo.radiusSmallWarn':'With Strict mode, a radius under 50 m can block people who are really on site.','punchMap.accuracy':'GPS accuracy: ±{m} m','punchMap.legendIn':'Filled = IN','punchMap.legendOut':'Ring = OUT','punchMap.legendAccuracy':'Light circle = GPS accuracy','crewMap.btn':'Map','crewMap.title':'Where punches happened','crewMap.none':'No punches with a location in this filter. Punches made from a phone save one. Tablet punches do not.','crewMap.summary':'{n} punches with a location, {o} outside the geofence.','crewMap.capped':'Showing the latest {n}; narrow the dates or site to see the rest.',
 'companies.title':'Companies','companies.subtitle':'Manage organizations and their payroll settings',
 'companies.new':'+ New Company',
 'sites.title':'Sites','sites.subtitle':'Manage your work locations','sites.noSites':'No sites yet. Add your first site.',
@@ -19054,13 +19302,21 @@ en:{
 'plan.free':'Free','plan.starter':'Starter','plan.growth':'Growth','plan.business':'Business','plan.unlimited':'Unlimited',
 'land.features':'Features','land.themeNav':'Light / dark mode','land.pricing':'Pricing','land.terms':'Terms','land.privacy':'Privacy',
 'land.geoNav':'Geofencing',
-'land.getStarted':'Get Started Free','land.badge':'Now with automated payroll period reports',
-'land.pill1':'Clock in on your own tablet','land.pill2':'Automated payroll reports','land.pill3':'Excel & CSV export','land.pill4':'Employee scheduling','land.pillAddon':'Included in Growth',
+'land.getStarted':'Get Started Free',
+'land.pillAddon':'Included in Growth',
 'land.howSchedTitle':'Employee Scheduling',
 'land.howSchedDesc':'Once your team is set up, turn on Scheduling to build weekly shift schedules right inside PunchClock. Assign shifts per site, send schedules by email, and let employees see their upcoming shifts on the clock-in page or in their own Google, Apple or Outlook calendar — included in Growth and Business, or $14.95/mo added to Starter.',
 'land.howSchedCta':'See pricing →',
 'land.heroTitle':'The punch clock app that <span>actually works</span> for shift workers',
-'land.heroSub':'PIN-based clock in/out on your own tablet, fixed at your location, multi-site support, automated period reports, overtime tracking, — plus optional employee scheduling. Built for retail, hospitality, restaurants, manufacturing, and tech companies.',
+'land.heroSub':'Clock in at the door or on the phone. Hours ready for payroll. One flat price for the whole crew, from $0, in English and French.',
+'land.waysTitle':'Two ways to clock in','land.wayTablet':'Tablet at the door','land.wayPhone':'Their own phones',
+'land.wayTablet1':'Your own tablet or computer at the door. Each person has a PIN.',
+'land.wayTablet2':'No phones needed, and harder to punch for a friend.',
+'land.wayPhone1':'Each person clocks in from their own phone, in the browser. Nothing to install.',
+'land.wayPhone2':'Each punch saves the time and a map pin. You can require them to be at the site.',
+'land.appsTitle':'Mobile apps coming soon',
+'land.appsText':'The PunchClock Crew app for employees and the PunchClock Crew Admin app for owners and managers are coming soon for iPhone and Android. Until then, phone clock-in works today in the browser, with nothing to install.',
+'land.featShowAll':'Show all features','land.featHide':'Hide',
 'land.ctaFree':'Start for free — no credit card','land.ctaLogin':'Sign in to your account',
 'land.freeNote':'Free forever: 1 site · up to 10 employees · PIN clock-in on your own tablet or computer',
 'land.featTitle':'Everything you need to manage shift workers',
@@ -19277,6 +19533,7 @@ en:{
 'help.fixDesc':'Go to <strong>Activity</strong>, find the punch and click <em>Edit</em> to correct the time, or <em>Delete</em> to remove it. To add one that was never recorded, use <strong>+ Add Punch</strong>. If an employee reported the problem themselves, their request appears at the top of the page with <em>Approve</em>, <em>Edit + Approve</em> and <em>Deny</em> buttons. If the shift already has a punch of the same type, approving shows both and you choose which one to keep. Every correction is written to the audit log with your name on it.',
 'help.mpTitle':"Employees report a forgotten clock-in or clock-out",'help.mpDesc':"<strong>Forgot to clock in or out?</strong> Employees can report it themselves, and you still decide.<ul><li><strong>From the work tablet:</strong> if they tap IN while already clocked in (or OUT while not clocked in), the tablet offers to report a missed punch after their PIN.</li><li><strong>From their Employee Portal:</strong> under <em>My Hours</em>, <em>Report a missed punch</em>. They choose clock-in or clock-out, the day and the time, and can add a note for you. Up to 14 days back, never in the future, one request per day and type.</li><li><strong>From the forgot-to-clock-out alert:</strong> when someone is still clocked in after the hours you set (Settings, <em>Managers and alerts</em> tab), the employee also gets an email with a button straight to that form, if they have a portal login.</li></ul>Requests appear at the top of <strong>Activity</strong> with <em>Approve</em>, <em>Edit + Approve</em> and <em>Deny</em>, and managers are notified. Nothing changes the hours until someone approves. If the shift already has a punch of the same type (for example a clock-out a manager typed in), approving shows both times and who entered each, and you choose which one to keep. The one replaced stays in the audit log. The Employee Portal is included on every paid plan (Starter and above).",
 'faq.q31':"If an employee forgets to clock out, can they correct it themselves?",'faq.a31':"Yes, and you still approve it. Employees report the time they really started or left from the work tablet or from their Employee Portal (<em>My Hours</em>, <em>Report a missed punch</em>), up to 14 days back. When someone is still clocked in long after their shift, they also get an email with a button to that form. The request waits in <strong>Activity</strong> for an owner or manager; nothing changes the hours until it is approved. If a manager already typed a time for that shift, you see both and choose which one to keep. The Employee Portal is included on every paid plan (Starter and above; free accounts have it during their 14-day preview).",
+'faq.q32':'Is there a mobile app?','faq.a32':'Mobile apps are coming soon for iPhone and Android: one for employees and one for owners and managers. Today, employees clock in from their phone in the browser at punchclock.ca, with nothing to install, and owners use the same website on their phone.',
 'help.toTitle':'Time off requests',
 'help.toDesc':'The <strong>Time Off</strong> page lists vacation, sick days and other absences. Employees with portal access request time off themselves and it lands here as <em>Pending</em>; you can also add an absence directly. Approved time off shows on the schedule and is listed at the bottom of payroll reports, so hours and absences line up for the same period.',
 'help.schedTitle':'Build a schedule','help.labelsTitle':"Work labels: schedule people for specific tasks, jobs or projects",'help.labelsDesc':"<strong>Work labels</strong> let you say <em>what</em> a shift is for: snow removal, a client job, a project, a task your business tracks. They are part of Scheduling (included in Growth and Business, an add-on on Starter), and the names are entirely yours.<br><br><strong>Set up</strong><ol><li>Open <strong>Schedule</strong> and click <strong>Create labels</strong> (or <strong>Manage labels</strong> once you have some) above the grid.</li><li>Type a name (for example <em>Snow removal</em>), pick a colour and click <strong>Add label</strong>. Repeat for each kind of work.</li></ol><strong>Use it</strong><ol><li>Click <em>+</em> in a cell, or click an existing shift, and choose the <strong>Label</strong>.</li><li>A day with two kinds of work? Add a second shift for the same person and day with a different label (8:00 to 12:00 Snow removal, 13:00 to 17:00 Transport).</li><li>Use <strong>Also apply this shift to</strong> (other days) and <strong>Also assign this shift to</strong> (other employees) to give the same labelled shift to several days and people in one save.</li><li>Click a label above the grid to see only those shifts. The Hours column then shows the scheduled hours for that label alone. Click <strong>All</strong> to come back.</li></ol><strong>At clock-in (optional)</strong><ol><li>Open <strong>Sites</strong>, edit your company and set <strong>Work labels at clock-in</strong> to <em>Ask, but allow skipping</em> or <em>Required</em>. It is <em>Off</em> by default.</li><li>From then on, after entering their PIN to clock IN, employees pick what they are working on. If they have a shift today with a label, that label is highlighted as <em>Scheduled</em>.</li><li>Changing tasks mid-shift? They select their name and tap <strong>Switch task</strong>, enter their PIN and pick the new task. Their hours carry on without a gap and the Activity page shows a <em>Switch</em> tag.</li><li>Coming back from a break returns them to the same task automatically.</li><li>On the <strong>Activity</strong> page each IN shows its label, and you can filter by label. Editing a punch or adding a missed one lets you set the label too.</li></ol><strong>In Reports</strong><ul><li>Once punches carry labels, <strong>Reports</strong> gets a <strong>Label</strong> filter, a Label column, and an <strong>Hours by label</strong> table showing the hours each label received and who worked them. Export to PDF, Excel or CSV includes both.</li><li>Hours are counted from the IN punch that started the work. Filtering by a label never changes which hours count as overtime: overtime is still worked out from everything the person worked that week.</li><li>Time worked before you turned labels on shows as <em>No label</em>.</li></ul><strong>Good to know</strong><ul><li>The clock-in picker only appears on a kiosk when the setting above is on, and only shows your active labels.</li><li>Employees see the label on their shifts in the Employee Portal and in the schedule email.</li><li><strong>Archive</strong> a label you no longer use: it leaves the picker but stays on past shifts. <strong>Delete</strong> removes it; shifts that used it keep their hours but lose the label.</li><li>A label is not the same as an employee's <em>Department</em>. A department says who someone is (one per person). A label says what a particular shift is for, so one person can do different work on different days or hours.</li><li>Owners and admins create and edit labels. Site managers can use them when scheduling.</li></ul>",
@@ -19365,8 +19622,8 @@ en:{
 'faq.a10':'Yes. In the Employees tab of the admin panel, you can check any number of employees and then: send their pay period reports by email, activate or deactivate their accounts, or permanently delete them — all in one click. The bulk action toolbar appears automatically as soon as you select at least one employee.',
 'faq.q11':'How secure is my data?',
 'faq.a11':'All data is stored securely in Supabase (PostgreSQL) with row-level security. Passwords are hashed using bcrypt. The application uses HTTPS. Employee PINs are stored as entered and should not contain personal information.',
-'faq.q12':'Why use a tablet terminal instead of a GPS mobile app?',
-'faq.a12':'A fixed tablet terminal at your location is more accurate and harder to abuse than a GPS-based mobile app. With GPS apps, employees can clock in from home, their car, or anywhere their phone reports a nearby location — and GPS signals can be spoofed. A terminal pinned to your front desk means employees must physically be at your site to punch in. There\'s also no app to install, no personal device required, and no battery or connectivity excuses.',
+'faq.q12':'Tablet at the door or phone clock-in: which should I use?',
+'faq.a12':'Use the one that fits your crew, or both. A tablet at the door suits a shop, a kitchen or a plant where everyone starts in the same place: people tap their name and enter a PIN on your own tablet or computer, with no phones needed. It is on every plan, including Free. Phone clock-in suits crews on the road or spread over several sites: each person clocks in from their own phone in the browser, each punch saves the time and a map pin, and you can require people to be at the site with a geofence. Phone clock-in is on Starter and up. Many businesses use a tablet on site and phones on the road.',
 'faq.q13':'What is Scheduling and how does it work?',
 'faq.a13':'Scheduling lets you build weekly shift schedules for your employees directly inside PunchClock Crew. Here\'s how it works: (1) Go to the Schedules tab, pick your company and week, and click + Add Shift to assign start/end times to any employee. (2) Send the schedule by email directly from the grid — employees with a registered email get a formatted schedule in their inbox. (3) Employees can also request their own schedule from the clock-in page: they select their name, see upcoming shifts, and tap "Send to my email" — verifying with their PIN first. (4) Add holidays to the schedule, with the Québec statutory holidays in one click, and tag shifts with work labels. (5) Each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook from their portal, with a private link. Included in the Growth and Business plans. On Starter it is a $14.95/mo CAD add-on, and you can try it free for 14 days: open the Schedule tab and click "Try it free for 14 days".',
 'faq.q14':'Can employees see their schedule when they clock in?',
@@ -19418,20 +19675,8 @@ en:{
 'msg.redirectingCheckout':'Redirecting to checkout...',
 'msg.upgradePlanOption':'Upgrade Your Plan',
 'msg.upgradePlanDesc':'Get more employees, sites, and admins.',
-'land.tabletBadge':'Why a Fixed Terminal Beats GPS Tracking',
-'land.tabletTitle':'Your front desk <em>is</em> the clock.',
-'land.tabletSub':'GPS apps sound convenient — until employees clock in from their car, their couch, or three blocks away. PunchClock\'s PIN terminal is physically at your location. No app. No phone. No doubt.',
-'land.tablet1Title':'Location-Locked Accuracy',
-'land.tablet1Desc':'The tablet stays at your site. Employees can only punch in when they\'re physically there — not from a parking lot, not from bed. GPS can be spoofed. A fixed terminal can\'t.',
-'land.tablet2Title':'No Smartphones Required',
-'land.tablet2Desc':'Not every employee has a smartphone, data plan, or the latest OS. One shared tablet of your own covers your entire team — no installs, no updates, no compatibility issues.',
-'land.tablet3Title':'No App Headaches',
-'land.tablet3Desc':'No app to install, update, or troubleshoot. No "my GPS was off" excuses. Employees enter their PIN and go. Admins get clean, reliable punch data every time.',
-'land.tablet4Title':'Buddy Punching Protection',
-'land.tablet4Desc':'Each employee has a unique PIN, and clocking in for someone else requires being physically at the terminal — far harder to abuse than a mobile app shared over text.',
-'land.tabletRemoteNote':'No shared location to put a terminal at? PunchClock also supports individually-authorized <strong>remote clock-in</strong> from each employee\'s own device — see Remote Clock-In below.',
-'land.feat1Title':'Your Tablet Is the Terminal — No GPS Needed',
-'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet of your own, fixed at your location. Unlike GPS or mobile apps, there\'s no clocking in from home, no spoofing, no dead batteries. Reliable, tamper-proof attendance right at your door.',
+'land.feat1Title':'Clock in on your own tablet',
+'land.feat1Desc':'Employees clock in with a 4-digit PIN on a shared tablet or computer of your own at the door. Quick for a whole crew, and no phones needed.',
 'land.feat9Title':'Employee Scheduling','land.addonBadge':'ADD-ON','land.growthBadge':'GROWTH+',
 'land.feat9Desc':'Build weekly schedules, assign shifts to employees per site, add holidays (Québec statutory holidays in one click) and tag shifts and clock-ins with your own work labels: a job, a task, a project. Employees see their upcoming shifts on the clock-in page and in their portal, and can add them to Google Calendar, Apple Calendar or Outlook. Included in Growth and Business, or $14.95/mo on Starter with a free 14-day trial from the Schedule tab.',
 'land.feat10Title':'Geofencing — Location-Locked Punching',
@@ -19786,6 +20031,7 @@ fr:{
 'admin.joinTarget':'Demande d’accès à','admin.col.requested':'Demandé le','admin.col.type':'Type',
 'common.approve':'Approuver','common.deny':'Refuser',
 'activity.none':'Aucun pointage trouvé pour les filtres sélectionnés.',
+'activity.viewLabel':'Affichage','activity.viewShift':'Par quart','activity.viewPunch':'Chaque pointage','activity.colIn':'Entrée','activity.colOut':'Sortie','activity.colHours':'Heures','activity.workingNow':'Au travail','activity.noOut':'Sortie manquante','activity.noIn':'Entrée manquante','activity.addOut':'Ajouter la sortie','activity.addIn':'Ajouter l’entrée','activity.breakNote':'Pause de {m} min','activity.dayShift':'1 quart','activity.dayShifts':'{n} quarts','activity.editPunchTip':'Modifier ce pointage',
 'reports.siteTotal':'Total du site','reports.hours':'Heures','reports.ot':'Heures supp.','reports.breakTime':'Temps de pause',
 'reports.date':'Date','reports.time':'Heure','reports.stillIn':'En cours',
 'dc.step':'Étape {n} sur {total}','dc.hide':'Masquer',
@@ -20146,7 +20392,7 @@ fr:{
 'activity.mobile':'MOBILE','activity.viewLocation':'Voir l\'emplacement','activity.break':'PAUSE',
 'punchMap.title':'Emplacement du pointage','punchMap.site':'Site (enregistré)','punchMap.punch':'Emplacement du pointage',
 'map.street':'Plan','map.satellite':'Satellite','punchMap.statusOk':'À l\'intérieur de la zone','punchMap.statusOutside':'À l\'extérieur de la zone','punchMap.statusUnavailable':'Position indisponible au moment du pointage','punchMap.statusSkipped':'Aucune zone géographique configurée pour ce site',
-'punchMap.distance':'Distance du site : {m} m','geo.radiusHint':'De 50 à 100 m convient à la plupart des lieux de travail. Un téléphone se trompe souvent de 10 à 30 m à l’intérieur : un rayon très petit peut refuser quelqu’un qui est à la porte.','geo.radiusSmallWarn':'En mode Strict, un rayon sous 50 m peut bloquer des personnes qui sont vraiment sur place.','punchMap.accuracy':'Précision GPS : ±{m} m','punchMap.legendIn':'Plein = ENTRÉE','punchMap.legendOut':'Anneau = SORTIE','punchMap.legendAccuracy':'Cercle pâle = précision GPS','crewMap.btn':'Carte','crewMap.title':'Où les pointages ont eu lieu','crewMap.none':'Aucun pointage avec position pour ce filtre. Les pointages par téléphone et les tablettes avec une zone en enregistrent une.','crewMap.summary':'{n} pointages avec position, {o} hors de la zone.','crewMap.capped':'Les {n} plus récents sont affichés; réduisez les dates ou le site pour voir le reste.',
+'punchMap.distance':'Distance du site : {m} m','geo.radiusHint':'De 50 à 100 m convient à la plupart des lieux de travail. Un téléphone se trompe souvent de 10 à 30 m à l’intérieur : un rayon très petit peut refuser quelqu’un qui est à la porte.','geo.radiusSmallWarn':'En mode Strict, un rayon sous 50 m peut bloquer des personnes qui sont vraiment sur place.','punchMap.accuracy':'Précision GPS : ±{m} m','punchMap.legendIn':'Plein = ENTRÉE','punchMap.legendOut':'Anneau = SORTIE','punchMap.legendAccuracy':'Cercle pâle = précision GPS','crewMap.btn':'Carte','crewMap.title':'Où les pointages ont eu lieu','crewMap.none':'Aucun pointage avec position pour ce filtre. Les pointages faits par téléphone en enregistrent une. Ceux de la tablette, non.','crewMap.summary':'{n} pointages avec position, {o} hors de la zone.','crewMap.capped':'Les {n} plus récents sont affichés; réduisez les dates ou le site pour voir le reste.',
 'companies.title':'Compagnies','companies.subtitle':'Gérer les compagnies et leurs paramètres de paie',
 'companies.new':'+ Nouvelle compagnie',
 'sites.title':'Sites','sites.subtitle':'Gérer vos emplacements','sites.noSites':'Aucun site. Ajoutez votre premier site.',
@@ -20167,13 +20413,21 @@ fr:{
 'plan.free':'Gratuit','plan.starter':'Débutant','plan.growth':'Croissance','plan.business':'Entreprise','plan.unlimited':'Illimité',
 'land.features':'Fonctionnalités','land.themeNav':'Mode clair / sombre','land.pricing':'Tarifs','land.terms':'CGU','land.privacy':'Confidentialité',
 'land.geoNav':'Géorepérage',
-'land.getStarted':'Commencer gratuitement','land.badge':'Maintenant avec rapports de paie automatisés',
-'land.pill1':'Pointage sur votre tablette','land.pill2':'Rapports de paie automatisés','land.pill3':'Export Excel et CSV','land.pill4':'Planification des employés','land.pillAddon':'Inclus dans Croissance',
+'land.getStarted':'Commencer gratuitement',
+'land.pillAddon':'Inclus dans Croissance',
 'land.howSchedTitle':'Planification des employés',
 'land.howSchedDesc':'Une fois votre équipe configurée, activez la planification pour créer des horaires de quarts hebdomadaires directement dans PunchClock. Assignez des quarts par site, envoyez les horaires par courriel et permettez aux employés de voir leurs prochains quarts sur la page de pointage ou dans leur propre calendrier Google, Apple ou Outlook — inclus dans les forfaits Croissance et Entreprise, ou 14,95 $/mois en supplément du forfait Débutant.',
 'land.howSchedCta':'Voir les tarifs →',
 'land.heroTitle':'Le pointage qui <span>fonctionne vraiment</span> pour les travailleurs par quarts',
-'land.heroSub':'Pointage par NIP sur votre propre tablette, fixée à votre emplacement, multi-sites, rapports de période automatisés, suivi des heures supplémentaires — plus la planification des quarts en option. Conçu pour le commerce de détail, la restauration, l\'hôtellerie, la production et les entreprises tech.',
+'land.heroSub':'Vos employés pointent à l’entrée ou sur leur téléphone. Des heures prêtes pour la paie. Un seul prix fixe pour toute l’équipe, dès 0 $, en français et en anglais.',
+'land.waysTitle':'Deux façons de pointer','land.wayTablet':'Tablette à l’entrée','land.wayPhone':'Leur propre téléphone',
+'land.wayTablet1':'Votre propre tablette ou ordinateur à l’entrée. Chaque personne a son NIP.',
+'land.wayTablet2':'Pas besoin de téléphone, et plus difficile de pointer à la place d’un collègue.',
+'land.wayPhone1':'Chaque personne pointe sur son propre téléphone, dans le navigateur. Rien à installer.',
+'land.wayPhone2':'Chaque pointage enregistre l’heure et un repère sur la carte. Vous pouvez exiger que la personne soit sur le site.',
+'land.appsTitle':'Applications mobiles à venir',
+'land.appsText':'L’application PunchClock Crew pour les employés et l’application PunchClock Crew Admin pour les propriétaires et les gestionnaires arrivent bientôt sur iPhone et Android. D’ici là, le pointage sur téléphone fonctionne déjà dans le navigateur, sans rien installer.',
+'land.featShowAll':'Voir toutes les fonctions','land.featHide':'Masquer',
 'land.ctaFree':'Commencer gratuitement — sans carte de crédit','land.ctaLogin':'Se connecter à votre compte',
 'land.freeNote':'Gratuit pour toujours : 1 site · jusqu\'à 10 employés · pointage par NIP sur votre propre tablette ou ordinateur',
 'land.featTitle':'Tout ce dont vous avez besoin pour gérer vos équipes',
@@ -20388,6 +20642,7 @@ fr:{
 'help.fixDesc':'Allez dans <strong>Activité</strong>, trouvez le pointage et cliquez sur <em>Modifier</em> pour corriger l\'heure, ou <em>Supprimer</em> pour l\'effacer. Pour en ajouter un qui n\'a jamais été enregistré, utilisez <strong>+ Ajouter un pointage</strong>. Si l\'employé a signalé le problème lui-même, sa demande apparaît en haut de la page avec les boutons <em>Approuver</em>, <em>Modifier + Approuver</em> et <em>Refuser</em>. Si le quart a déjà un pointage du même type, l\'approbation affiche les deux et vous choisissez lequel garder. Chaque correction est inscrite au journal d\'audit à votre nom.',
 'help.mpTitle':"Les employés signalent une arrivée ou une sortie oubliée",'help.mpDesc':"<strong>Oubli de pointer?</strong> Les employés peuvent le signaler eux-mêmes, et c’est vous qui décidez.<ul><li><strong>Depuis la tablette de travail :</strong> s’ils touchent ARRIVÉE alors qu’ils sont déjà pointés (ou SORTIE sans être pointés), la tablette leur propose de signaler le pointage oublié après leur NIP.</li><li><strong>Depuis leur portail employé :</strong> dans <em>Mes heures</em>, <em>Signaler un pointage oublié</em>. Ils choisissent l’arrivée ou la sortie, le jour et l’heure, et peuvent ajouter une note pour vous. Jusqu’à 14 jours en arrière, jamais dans le futur, une demande par jour et par type.</li><li><strong>Depuis l’alerte d’oubli de sortie :</strong> quand quelqu’un est encore pointé après le nombre d’heures choisi (Paramètres, onglet <em>Gestionnaires et alertes</em>), l’employé reçoit aussi un courriel avec un bouton qui mène directement à ce formulaire, s’il a un accès au portail.</li></ul>Les demandes apparaissent en haut de <strong>Activité</strong> avec <em>Approuver</em>, <em>Modifier + Approuver</em> et <em>Refuser</em>, et les gestionnaires sont avisés. Rien ne change dans les heures avant l’approbation. Si le quart a déjà un pointage du même type (par exemple une sortie entrée par un gestionnaire), l’approbation affiche les deux heures et qui a entré chacune, et vous choisissez laquelle garder. Celle remplacée reste dans le journal d’audit. Le portail employé est inclus dans tous les forfaits payants (Starter et plus).",
 'faq.q31':"Si un employé oublie de pointer sa sortie, peut-il le corriger lui-même?",'faq.a31':"Oui, et c’est vous qui approuvez. L’employé signale l’heure réelle de son arrivée ou de son départ depuis la tablette de travail ou depuis son portail employé (<em>Mes heures</em>, <em>Signaler un pointage oublié</em>), jusqu’à 14 jours en arrière. Quand quelqu’un est encore pointé longtemps après son quart, il reçoit aussi un courriel avec un bouton vers ce formulaire. La demande attend dans <strong>Activité</strong> qu’un propriétaire ou un gestionnaire l’approuve; rien ne change dans les heures avant. Si un gestionnaire a déjà entré une heure pour ce quart, vous voyez les deux et choisissez laquelle garder. Le portail employé est inclus dans tous les forfaits payants (Starter et plus; les comptes gratuits l’ont pendant leur aperçu de 14 jours).",
+'faq.q32':'Y a-t-il une application mobile?','faq.a32':'Des applications mobiles arrivent bientôt sur iPhone et Android : une pour les employés et une pour les propriétaires et les gestionnaires. Dès aujourd’hui, les employés pointent depuis leur téléphone dans le navigateur, sur punchclock.ca, sans rien installer, et les propriétaires utilisent le même site Web sur leur téléphone.',
 'help.toTitle':'Demandes de congé',
 'help.toDesc':'La page <strong>Congés</strong> regroupe les vacances, les congés de maladie et autres absences. Les employés ayant accès au portail font leurs demandes eux-mêmes et celles-ci arrivent ici avec le statut <em>En attente</em>; vous pouvez aussi ajouter une absence directement. Les congés approuvés apparaissent dans l\'horaire et au bas des rapports de paie, pour que les heures et les absences concordent sur la même période.',
 'help.schedTitle':'Créer un horaire','help.labelsTitle':"Étiquettes de travail : planifier des personnes pour des tâches, chantiers ou projets précis",'help.labelsDesc':"Les <strong>étiquettes de travail</strong> indiquent <em>à quoi sert</em> un quart : déneigement, un chantier client, un projet, une tâche que votre entreprise veut suivre. Elles font partie de la planification (incluse dans Croissance et Entreprise, en complément sur Débutant), et les noms sont entièrement les vôtres.<br><br><strong>Configuration</strong><ol><li>Ouvrez <strong>Horaires</strong> et cliquez sur <strong>Créer des étiquettes</strong> (ou <strong>Gérer les étiquettes</strong> une fois que vous en avez) au-dessus de la grille.</li><li>Saisissez un nom (par exemple <em>Déneigement</em>), choisissez une couleur et cliquez sur <strong>Ajouter une étiquette</strong>. Répétez pour chaque type de travail.</li></ol><strong>Utilisation</strong><ol><li>Cliquez sur <em>+</em> dans une case, ou sur un quart existant, et choisissez l'<strong>Étiquette</strong>.</li><li>Une journée avec deux types de travail? Ajoutez un deuxième quart pour la même personne et le même jour avec une autre étiquette (8 h à 12 h Déneigement, 13 h à 17 h Transport).</li><li>Servez-vous de <strong>Appliquer aussi ce quart à</strong> (autres jours) et <strong>Assigner aussi ce quart à</strong> (autres employés) pour donner le même quart étiqueté à plusieurs jours et personnes en un seul enregistrement.</li><li>Cliquez sur une étiquette au-dessus de la grille pour n'afficher que ces quarts. La colonne Heures montre alors seulement les heures planifiées pour cette étiquette. Cliquez sur <strong>Toutes</strong> pour revenir.</li></ol><strong>Au pointage (facultatif)</strong><ol><li>Ouvrez <strong>Sites</strong>, modifiez votre entreprise et réglez <strong>Étiquettes de travail au pointage</strong> à <em>Demander, mais permettre de passer</em> ou <em>Obligatoire</em>. C'est <em>Désactivé</em> par défaut.</li><li>Dès lors, après avoir entré leur NIP pour pointer leur entrée, les employés choisissent sur quoi ils travaillent. S'ils ont un quart étiqueté aujourd'hui, cette étiquette est mise en évidence comme <em>Prévu</em>.</li><li>Changement de tâche en cours de quart? Ils sélectionnent leur nom et touchent <strong>Changer de tâche</strong>, entrent leur NIP et choisissent la nouvelle tâche. Leurs heures se poursuivent sans interruption et la page Activité affiche une pastille <em>Changement</em>.</li><li>Au retour d'une pause, ils reprennent automatiquement la même tâche.</li><li>Sur la page <strong>Activité</strong>, chaque entrée affiche son étiquette et vous pouvez filtrer par étiquette. En modifiant un pointage ou en ajoutant un pointage oublié, vous pouvez aussi définir l'étiquette.</li></ol><strong>Dans les rapports</strong><ul><li>Une fois que des pointages portent des étiquettes, <strong>Rapports</strong> offre un filtre <strong>Étiquette</strong>, une colonne Étiquette et un tableau <strong>Heures par étiquette</strong> qui montre les heures de chaque étiquette et qui les a travaillées. L'exportation PDF, Excel ou CSV inclut les deux.</li><li>Les heures sont comptées à partir du pointage d'entrée qui a commencé le travail. Filtrer par étiquette ne change jamais quelles heures comptent comme du temps supplémentaire : celui-ci est toujours calculé à partir de tout ce que la personne a travaillé dans la semaine.</li><li>Le temps travaillé avant l'activation des étiquettes apparaît comme <em>Sans étiquette</em>.</li></ul><strong>Bon à savoir</strong><ul><li>Le choix au pointage n'apparaît sur une borne que si le réglage ci-dessus est activé, et il n'affiche que vos étiquettes actives.</li><li>Les employés voient l'étiquette sur leurs quarts dans le portail employé et dans le courriel d'horaire.</li><li><strong>Archivez</strong> une étiquette que vous n'utilisez plus : elle disparaît du choix mais reste sur les quarts passés. <strong>Supprimer</strong> la retire; les quarts qui l'utilisaient conservent leurs heures mais perdent l'étiquette.</li><li>Une étiquette n'est pas la même chose que le <em>Département</em> d'un employé. Un département dit qui est la personne (un seul par personne). Une étiquette dit à quoi sert un quart précis, donc une même personne peut faire un travail différent selon les jours ou les heures.</li><li>Les propriétaires et les administrateurs créent et modifient les étiquettes. Les gestionnaires de site peuvent les utiliser en planifiant.</li></ul>",
@@ -20476,8 +20731,8 @@ fr:{
 'faq.a10':'Oui. Dans l\'onglet Employés, cochez autant d\'employés que souhaité, puis envoyez leurs rapports, activez, désactivez ou supprimez-les en un seul clic. La barre d\'actions groupées apparaît dès qu\'un employé est sélectionné.',
 'faq.q11':'Mes données sont-elles sécurisées?',
 'faq.a11':'Toutes les données sont stockées de manière sécurisée dans Supabase (PostgreSQL) avec sécurité au niveau des lignes. Les mots de passe sont hachés avec bcrypt. L\'application utilise HTTPS.',
-'faq.q12':'Pourquoi utiliser un terminal tablette plutôt qu\'une appli GPS mobile?',
-'faq.a12':'Un terminal tablette fixe à votre emplacement est plus précis et plus difficile à contourner qu\'une appli GPS. Avec les applis GPS, les employés peuvent pointer depuis leur domicile, leur voiture ou n\'importe où — et le GPS peut être falsifié. Un terminal ancré à votre entrée oblige les employés à être physiquement sur place pour pointer. De plus, aucune appli à installer, aucun appareil personnel requis, et pas d\'excuse de batterie ou de connexion.',
+'faq.q12':'Tablette à l’entrée ou pointage par téléphone : lequel choisir?',
+'faq.a12':'Celui qui convient à votre équipe, ou les deux. Une tablette à l’entrée convient à un commerce, une cuisine ou une usine où tout le monde commence au même endroit : chacun touche son nom et entre son NIP sur votre propre tablette ou ordinateur, sans téléphone. C’est offert dans tous les forfaits, y compris le forfait Gratuit. Le pointage par téléphone convient aux équipes sur la route ou réparties sur plusieurs sites : chaque personne pointe sur son propre téléphone, dans le navigateur, chaque pointage enregistre l’heure et un repère sur la carte, et vous pouvez exiger que la personne soit sur le site grâce au géorepérage. Le pointage par téléphone est offert à partir du forfait Débutant. Plusieurs entreprises utilisent une tablette sur place et les téléphones sur la route.',
 'faq.q13':'Qu\'est-ce que la planification et comment ça fonctionne?',
 'faq.a13':'La planification vous permet de créer des horaires de quarts hebdomadaires pour vos employés directement dans PunchClock Crew. Voici comment ça fonctionne : (1) Allez dans l\'onglet Horaires, choisissez votre compagnie et la semaine, puis cliquez sur + Ajouter un quart pour assigner des heures à chaque employé. (2) Envoyez l\'horaire par courriel directement depuis la grille — les employés avec un courriel enregistré reçoivent un horaire formaté dans leur boîte de réception. (3) Les employés peuvent aussi demander leur propre horaire depuis la page de pointage : ils sélectionnent leur nom, voient leurs prochains quarts et appuient sur « Envoyer à mon courriel » — en vérifiant leur identité avec leur NIP. (4) Ajoutez les jours fériés à l\'horaire, avec les jours fériés du Québec en un clic, et identifiez les quarts avec des étiquettes de travail. (5) Chaque employé peut ajouter ses propres quarts à Google Agenda, au Calendrier Apple ou à Outlook à partir de son portail, au moyen d\'un lien privé. Incluse dans les forfaits Croissance et Entreprise. Sur le forfait Débutant, c\'est un complément de 14,95 $/mois CAD, et vous pouvez l\'essayer gratuitement pendant 14 jours : ouvrez l\'onglet Horaires et cliquez sur « Essayer gratuitement pendant 14 jours ».',
 'faq.q14':'Les employés peuvent-ils voir leur horaire quand ils pointent?',
@@ -20533,20 +20788,8 @@ fr:{
 'msg.redirectingCheckout':'Redirection vers le paiement...',
 'msg.upgradePlanOption':'Mettre à niveau votre forfait',
 'msg.upgradePlanDesc':'Obtenez plus d\'employés, de sites et d\'admins.',
-'land.tabletBadge':'Pourquoi un terminal fixe surpasse le suivi GPS',
-'land.tabletTitle':'Votre entrée <em>est</em> la pointeuse.',
-'land.tabletSub':'Les applis GPS semblent pratiques — jusqu\'à ce qu\'un employé pointe depuis sa voiture, son canapé ou à trois rues de là. Le terminal NIP de PunchClock est physiquement à votre emplacement. Aucune appli. Aucun téléphone. Aucun doute.',
-'land.tablet1Title':'Présence garantie sur place',
-'land.tablet1Desc':'La tablette reste sur votre site. Les employés ne peuvent pointer qu\'en étant physiquement présents — pas du stationnement, pas de chez eux. Le GPS peut être falsifié. Un terminal fixe, non.',
-'land.tablet2Title':'Aucun téléphone requis',
-'land.tablet2Desc':'Tous les employés n\'ont pas un téléphone intelligent, un forfait données ou le dernier système d\'exploitation. Une tablette partagée, la vôtre, suffit pour toute l\'équipe — sans installation ni mise à jour.',
-'land.tablet3Title':'Pas de tracas d\'application',
-'land.tablet3Desc':'Aucune appli à installer, mettre à jour ou dépanner. Plus d\'excuse "mon GPS était désactivé". L\'employé entre son NIP et c\'est fait. L\'admin obtient des données propres et fiables à chaque fois.',
-'land.tablet4Title':'Protection contre la fraude de pointage',
-'land.tablet4Desc':'Chaque employé a un NIP unique, et pointer pour quelqu\'un d\'autre exige une présence physique au terminal — bien plus difficile à contourner qu\'une appli mobile partagée par texto.',
-'land.tabletRemoteNote':'Aucun lieu commun où installer un terminal? PunchClock permet aussi le <strong>pointage à distance</strong> autorisé individuellement depuis l\'appareil de chaque employé — voir Pointage à distance ci-dessous.',
-'land.feat1Title':'Votre tablette sert de terminal — sans GPS',
-'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette partagée qui vous appartient, fixée à votre emplacement. Contrairement aux applis GPS, impossible de pointer depuis la maison, pas de falsification ni de batterie morte. Une présence fiable et infalsifiable à votre porte.',
+'land.feat1Title':'Pointage sur votre propre tablette',
+'land.feat1Desc':'Les employés pointent avec un NIP à 4 chiffres sur une tablette ou un ordinateur partagé qui vous appartient, à l’entrée. Rapide pour toute une équipe, sans téléphone.',
 'land.feat9Title':'Planification des employés','land.addonBadge':'COMPLÉMENT','land.growthBadge':'CROISSANCE+',
 'land.feat9Desc':'Créez des horaires hebdomadaires, assignez des quarts par site, ajoutez les jours fériés (jours fériés du Québec en un clic) et identifiez quarts et pointages avec vos propres étiquettes de travail : un chantier, une tâche, un projet. Les employés voient leurs prochains quarts sur la page de pointage et dans leur portail, et peuvent les ajouter à Google Agenda, au Calendrier Apple ou à Outlook. Inclus dans les forfaits Croissance et Entreprise, ou 14,95$/mois sur le forfait Débutant, avec un essai gratuit de 14 jours à partir de l\'onglet Horaires.',
 'land.feat10Title':'Géorepérage — Pointage verrouillé par localisation',

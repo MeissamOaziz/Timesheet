@@ -22,6 +22,7 @@ const ok=(n,c,x='')=>{c?pass++:fail++;console.log(`  ${c?'PASS':'FAIL'}  ${n}${x
 const browser=await chromium.launch();
 const page=await browser.newPage({viewport:{width:1280,height:900}});
 const errs=[]; page.on('pageerror',e=>errs.push(e.message));
+const warns=[]; page.on('console',m=>{ if(/missing translation key/.test(m.text())) warns.push(m.text()); });
 await page.goto(`http://127.0.0.1:${server.address().port}/index.html`,{waitUntil:'networkidle'});
 
 console.log('\n── the numbers must match PLANS ───────────────');
@@ -78,6 +79,97 @@ const heroBtns = await page.evaluate(()=>
   [...document.querySelectorAll('.land-hero .land-cta-group button')]
     .filter(b=>getComputedStyle(b).display!=='none').map(b=>b.textContent.trim()));
 ok('the hero is down to two calls to action', heroBtns.length===2, heroBtns.join(' | '));
+
+console.log('\n── home page layout (2026-11-28) ──────────────');
+{
+  // Order of the blocks inside #landingPage: hero, two ways, apps band, preview, trust band, then the sections.
+  const order = await page.evaluate(()=>{
+    const lp=document.getElementById('landingPage');
+    const pick=['.land-hero','#landingWays','#landingApps','.land-preview','#landingHowItWorks','#landingCompare','#landingPricing',
+                '#landingFeatures','#landingGeofencing','#landingFAQ','#landingContact'];
+    const els=pick.map(s=>lp.querySelector(s));
+    const ok=els.every(Boolean) && els.every((e,i)=>i===0||(els[i-1].compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING));
+    return {ok, missing:pick.filter((s,i)=>!els[i])};
+  });
+  ok('sections are in the new order (hero, two ways, apps, preview, how, compare, pricing, features, geofencing, FAQ, contact)', order.ok, JSON.stringify(order));
+  ok('the "fixed terminal beats GPS" section is gone', await page.evaluate(()=>!document.getElementById('landingTabletAdvantage')));
+  ok('hero keeps its SEO title, loses the badge and the pills', await page.evaluate(()=>{
+    const h=document.querySelector('.land-hero h1'); const hero=document.querySelector('.land-hero');
+    return /actually works/.test(h.textContent) && !/automated payroll period reports/i.test(hero.textContent) && !hero.querySelector('[data-i18n^="land.pill"]');
+  }));
+  const noAttack = await page.evaluate(()=>{
+    const txt=['.land-hero','#landingWays','#landingApps','#landingFeatures','#landingHowItWorks'].map(s=>document.querySelector(s).textContent).join(' ');
+    return ['spoof','couch','from home','beats GPS','No GPS'].filter(w=>txt.toLowerCase().includes(w.toLowerCase()));
+  });
+  ok('no sentence argues against GPS or phones in the hero, features or how it works', noAttack.length===0, noAttack.join(', ')||'none');
+
+  // Two ways to clock in: two real buttons, one panel at a time, works from the keyboard.
+  const way = () => page.evaluate(()=>({
+    tab:document.getElementById('landWayBtnTablet').getAttribute('aria-pressed'), ph:document.getElementById('landWayBtnPhone').getAttribute('aria-pressed'),
+    tabShown:!document.getElementById('landWayTablet').hidden && document.getElementById('landWayTablet').offsetParent!==null,
+    phShown:!document.getElementById('landWayPhone').hidden && document.getElementById('landWayPhone').offsetParent!==null }));
+  let w = await way();
+  ok('two ways: tablet is shown first', w.tab==='true' && w.ph==='false' && w.tabShown && !w.phShown, JSON.stringify(w));
+  await page.click('#landWayBtnPhone'); w = await way();
+  ok('two ways: clicking "Their own phones" swaps the panel', w.tab==='false' && w.ph==='true' && !w.tabShown && w.phShown, JSON.stringify(w));
+  await page.focus('#landWayBtnPhone'); await page.keyboard.press('Shift+Tab');
+  const focused = await page.evaluate(()=>document.activeElement&&document.activeElement.id);
+  await page.keyboard.press('Enter'); w = await way();
+  ok('two ways: Tab reaches the other button and Enter switches back', focused==='landWayBtnTablet' && w.tab==='true' && w.tabShown && !w.phShown, focused+' '+JSON.stringify(w));
+  await page.keyboard.press('Tab'); await page.keyboard.press('Space'); w = await way();
+  ok('two ways: Space works too', w.ph==='true' && w.phShown, JSON.stringify(w));
+  ok('two ways: both screenshots are real files that load', await page.evaluate(async()=>{
+    const imgs=[...document.querySelectorAll('#landingWays img')];
+    for(const i of imgs){ i.loading='eager'; if(!i.complete) await new Promise(r=>{i.onload=i.onerror=r;}); }
+    return imgs.length===2 && imgs.every(i=>i.naturalWidth>0);
+  }));
+  await page.click('#landWayBtnTablet');
+
+  // Apps band: what it says, and what it must not (no date, no store badge, no link).
+  const apps = await page.evaluate(()=>{ const e=document.getElementById('landingApps'); return {t:e.innerText, links:e.querySelectorAll('a,img').length}; });
+  ok('apps band (EN) says the apps are coming soon', /Mobile apps coming soon/.test(apps.t) && /PunchClock Crew Admin/.test(apps.t) && /iPhone and Android/.test(apps.t), apps.t);
+  ok('apps band has no date, store badge or download link', apps.links===0 && !/20\d\d|january|february|march|spring|summer|App Store|Google Play|watch|reminder/i.test(apps.t));
+
+  // Features: six first, the rest behind one button, in the DOM all along.
+  const feats = () => page.evaluate(()=>({vis:[...document.querySelectorAll('#landingFeatures .feature-card')].filter(e=>e.offsetParent!==null).length,
+    all:document.querySelectorAll('#landingFeatures .feature-card').length, exp:document.getElementById('landFeatMore').getAttribute('aria-expanded'),
+    label:document.getElementById('landFeatMore').textContent.trim()}));
+  let f = await feats();
+  ok('features: six cards shown first, the rest still in the page', f.vis===6 && f.all===16 && f.exp==='false' && f.label==='Show all features', JSON.stringify(f));
+  await page.click('#landFeatMore'); f = await feats();
+  ok('features: "Show all features" reveals all of them', f.vis===16 && f.exp==='true' && f.label==='Hide', JSON.stringify(f));
+  await page.click('#landFeatMore'); f = await feats();
+  ok('features: "Hide" goes back to six', f.vis===6 && f.exp==='false', JSON.stringify(f));
+
+  // FAQ: the mobile-app question is there.
+  ok('FAQ: "Is there a mobile app?" is listed', await page.evaluate(()=>{ renderFAQ(); const e=document.getElementById('faqItem32'); return !!e && /Is there a mobile app\?/.test(e.innerText); }));
+
+  // French.
+  await page.evaluate(()=>setLang('fr')); await page.waitForTimeout(200);
+  const fr = await page.evaluate(()=>({apps:document.getElementById('landingApps').innerText, ways:document.getElementById('landingWays').innerText,
+    btn:document.getElementById('landFeatMore').textContent.trim(), shot:document.querySelector('#landWayTablet img').getAttribute('src'),
+    faq:(renderFAQ(), (document.getElementById('faqItem32')||{}).innerText||'')}));
+  ok('apps band (FR) is in French', /Applications mobiles à venir/.test(fr.apps) && /iPhone et Android/.test(fr.apps), fr.apps);
+  ok('two ways (FR) is in French, with the French screenshot', /Tablette à l’entrée/.test(fr.ways) && /Leur propre téléphone/.test(fr.ways) && /-fr\.webp$/.test(fr.shot), fr.shot);
+  ok('features button (FR) is in French', fr.btn==='Voir toutes les fonctions', fr.btn);
+  ok('FAQ (FR): « Y a-t-il une application mobile? »', /Y a-t-il une application mobile\?/.test(fr.faq));
+  await page.evaluate(()=>setLang('en')); await page.waitForTimeout(150);
+
+  // No sideways scroll inside #landingPage, with each panel open and all features shown.
+  for (const W of [320, 390, 768, 1280]) {
+    await page.setViewportSize({width:W,height:800}); await page.waitForTimeout(150);
+    const res = {};
+    for (const wayName of ['tablet','phone']) {
+      await page.evaluate(n=>{ setLandWay(n); const g=document.getElementById('landFeatGrid'); if(!g.classList.contains('show-all')) toggleLandFeatures(); }, wayName);
+      res[wayName] = await page.evaluate(()=>{ const lp=document.getElementById('landingPage'); return lp.scrollWidth<=innerWidth+1 && document.documentElement.scrollWidth<=innerWidth+1; });
+    }
+    await page.evaluate(()=>{ setLandWay('tablet'); toggleLandFeatures(); });
+    ok(`${W} px: no horizontal overflow in #landingPage (both panels, all features)`, res.tablet && res.phone, JSON.stringify(res));
+  }
+  await page.setViewportSize({width:1280,height:900});
+  const landWarns = warns.filter(m=>/key:\s*(land\.|faq\.q32|faq\.a32)/.test(m));
+  ok('no missing-translation warnings for land.* (EN and FR)', landWarns.length===0, landWarns.join(' / ')||'none');
+}
 
 console.log('\n── phone ──────────────────────────────────────');
 await page.setViewportSize({width:390,height:844});

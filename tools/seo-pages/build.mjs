@@ -767,6 +767,7 @@ const HOME_FR = {
       ['Les employés peuvent-ils puncher avec leur téléphone?', 'Oui, avec le pointage à distance (plan Débutant et plus). La position GPS est enregistrée à chaque pointage, et vous pouvez définir une zone autour de chaque site.'],
       ['Est-ce que le logiciel calcule les heures supplémentaires?', 'Oui, à partir du plan Débutant. Les rapports séparent les heures normales et les heures supplémentaires.'],
       ['Peut-on essayer avant de payer?', 'Oui. Chaque nouveau compte essaie les fonctions payantes gratuitement pendant 14 jours, et une démo avec des données fictives est offerte.'],
+      ['Y a-t-il une application mobile?', 'Des applications mobiles pour iPhone et Android arrivent bientôt : une pour les employés et une pour les propriétaires et les gestionnaires. D’ici là, le pointage sur téléphone fonctionne déjà dans le navigateur, sans rien installer.'],
     ],
   },
 };
@@ -917,6 +918,7 @@ Key facts:
 - Scheduling: included in Growth and Business; on Starter a $14.95/month add-on with a 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
 - Works in a web browser; no app install needed for the clock-in page.
+- Mobile apps for iPhone and Android (employee app and admin app) are coming soon; phone clock-in works in the browser today.
 - Software only: PunchClock Crew does not sell, lend or supply tablets or any hardware. Customers use a tablet, computer or phone they already have.
 - Operated by 9317-3516 Québec Inc. Support: support@punchclock.ca
 

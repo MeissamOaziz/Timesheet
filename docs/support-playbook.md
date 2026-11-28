@@ -52,6 +52,27 @@ The product is **PunchClock Crew**. It was called PunchClock Pro until 2026-11-0
 - If a ticket reveals something this playbook does not cover (a new cause, a feature question, a
   trap), add a short "Playbook suggestion:" line to the summary email so it can be added.
 
+## What changed on 2026-11-28 (Activity "By shift", new home page, apps "coming soon")
+
+Same rule as the section below: a ticket that matches one of these is probably about the change. Put
+"POSSIBLE REGRESSION: <the change>" first in the digest entry when it could be a fault.
+
+| What the customer says | What changed | What to do |
+|---|---|---|
+| "My Activity log looks different" / "Where is the list of punches?" / "I cannot tick punches to delete them any more" | Activity now opens on **By shift**: one row per clock-in and clock-out, grouped by day, with the hours worked out. Nothing was removed | The switch above the table has two choices: **By shift** and **Every punch**. **Every punch** is the table as it always was (tick boxes, Reassign Site, Delete Selected, Edit, Delete). The choice is remembered in that browser |
+| "It says No clock-out" / "What is the Add clock-out button?" | A clock-in with no clock-out after it, older than the company's forgotten clock-out limit (Settings, Managers and alerts; 14 hours unless changed), shows **No clock-out** and an **Add clock-out** button. The button opens the normal Add Punch window with the person, the day and OUT already chosen (Starter and up, as before; managers only at their own sites) | They type the time and save. A recent open shift shows **Working now** instead and needs nothing. **No clock-in** with **Add clock-in** is the mirror case: a clock-out with no clock-in before it in the dates shown |
+| "No clock-in" on the first day of the dates shown, or "No clock-out" on the last day, for someone who works nights | The shift crosses the edge of the date range, so its other half is outside what is shown | Widen the dates by a day. Nothing is missing |
+| "The hours in By shift are not the hours on my report" | By shift pairs punches the same way as Reports (company rounding, a lunch break or a label switch stays inside one shift, the paid part of a break counts). It shows no overtime split and no evening hours, and a shift still open counts up to now | The report and the emailed period summary are the payroll figures. If a finished shift really differs from its report rows, flag it POSSIBLE REGRESSION with the employee and the day |
+| "How do I change a time in By shift?" | Each time in the In and Out columns opens Edit for that punch (Starter and up) | Click the time. A break or a label switch inside a shift is edited from **Every punch** |
+| "The home page changed" / "Where is the part about the fixed terminal and GPS?" | The home page was shortened on 2026-11-28: a Tablet / Phone switch at the top, pricing higher up, six features with a "Show all features" button. The section that said a fixed terminal beats GPS was removed, because the product does both | Nothing to do. Both ways to clock in are offered: the customer's own tablet at the door, or each person's own phone |
+| "Is there an app?" / "Your site says apps are coming soon" | The home page and the FAQ now say the employee app and the admin app are **coming soon for iPhone and Android**, with no date | Use the "Phone apps" answer under "How punching works" below (it is unchanged). Never send a download link, a store name as if it were available, or a feature the website does not have |
+| Activity Map: "No punches with a location in this filter" | The message now reads "Punches made from a phone save one. Tablet punches do not." (the old text wrongly said tablets with a geofence save one) | Expected: a tablet at the door saves no position |
+
+Also on 2026-11-28: a message-centre post (the bell) tells every admin that **Scheduling is now included in Growth and
+Business**; Starter keeps the $14.95 add-on and its 14-day trial. A Starter customer with the add-on who asks "should I
+move to Growth?": Growth is $39.49 against $34.44 for Starter plus the add-on, and adds lunch breaks, visitor check-in and
+room for 3 companies, 6 sites and 60 employees; the add-on then ends by itself at the end of the month already paid.
+
 ## What changed on 2026-11-17 and 2026-11-18 (read first: new releases, symptoms and what to do)
 
 Many changes shipped in two days while customers were using the product. Nothing here is known to be broken, but a ticket
