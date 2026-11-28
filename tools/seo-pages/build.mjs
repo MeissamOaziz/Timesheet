@@ -770,7 +770,7 @@ const HOME_FR = {
       ['Les employés peuvent-ils puncher avec leur téléphone?', 'Oui, avec le pointage à distance (plan Débutant et plus). La position GPS est enregistrée à chaque pointage, et vous pouvez définir une zone autour de chaque site.'],
       ['Est-ce que le logiciel calcule les heures supplémentaires?', 'Oui, à partir du plan Débutant. Les rapports séparent les heures normales et les heures supplémentaires.'],
       ['Peut-on essayer avant de payer?', 'Oui. Chaque nouveau compte essaie les fonctions payantes gratuitement pendant 14 jours, et une démo avec des données fictives est offerte.'],
-      ['Y a-t-il une application mobile?', 'Des applications mobiles pour iPhone et Android arrivent bientôt : une pour les employés et une pour les propriétaires et les gestionnaires. D’ici là, le pointage sur téléphone fonctionne déjà dans le navigateur, sans rien installer.'],
+      ['Y a-t-il une application mobile?', 'Des applications mobiles pour iPhone et Android arrivent bientôt : une pour les employés et une pour les propriétaires et les gestionnaires. D’ici là, le pointage sur téléphone fonctionne déjà dans le navigateur, sans rien installer. Elles seront incluses dans les plans Croissance et Entreprise.'],
     ],
   },
 };
@@ -917,12 +917,11 @@ function llmsTxt() {
 
 Key facts:
 - Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds employee scheduling, lunch breaks and visitor check-in); Business $79.49 (unlimited).
-- Phone apps: iPhone and Android apps are planned for January 2027 and will be included with Growth and Business. Nothing is in the App Store or Google Play yet; today everything runs in the browser, and employees can clock in from their own phone through the employee portal (Starter and up).
+- Phone apps: iPhone and Android apps (one for employees, one for owners and managers) are planned for January 2027 and will be included with Growth and Business. Nothing is in the App Store or Google Play yet; today everything runs in the browser, and employees can clock in from their own phone through the employee portal (Starter and up).
 - Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal (schedule, hours, time off, and reporting a forgotten clock-in or clock-out for the manager to approve), time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
 - Scheduling: included in Growth and Business; on Starter a $14.95/month add-on with a 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.
 - Works in a web browser; no app install needed for the clock-in page.
-- Mobile apps for iPhone and Android (employee app and admin app) are coming soon; phone clock-in works in the browser today.
 - Software only: PunchClock Crew does not sell, lend or supply tablets or any hardware. Customers use a tablet, computer or phone they already have.
 - Operated by 9317-3516 Québec Inc. Support: support@punchclock.ca
 

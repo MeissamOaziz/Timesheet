@@ -1,5 +1,5 @@
-// "Phone apps are on the way" notice (owner's wording, 2026-11-28): home page for visitors, dashboard for owners
-// and co-admins. The plan it names is a promise to customers, so the exact text is pinned here in both languages:
+// "Phone apps are on the way" (owner, 2026-11-28): the home page's apps section and the Growth and Business pricing
+// cards for visitors, a notice on the dashboard for owners and co-admins. The plan it names is a promise to customers, so the exact text is pinned here in both languages:
 // planned for January 2027 (a month, never a day), included with Growth and Business, nothing about Starter or Free.
 // The network is stubbed: nothing real is contacted.
 //   node tools/appsbanner-test.mjs [folder-for-screenshots]
@@ -66,17 +66,11 @@ for (const lang of ['en', 'fr']) {
   console.log(`\n── home page, ${lang} ──`);
   const { page, st, ctx } = await open('', { viewport: { width: 375, height: 800 } });
   await page.evaluate((l) => { setLang(l); showLanding(); }, lang);
-  ok(`${lang}: a visitor sees the notice on the home page`, await visible(page, 'appsLandBanner'));
-  const txt = await text(page, 'appsLandBanner');
-  ok(`${lang}: the exact approved wording`, WORDING[lang].test(txt), txt);
-  ok(`${lang}: no day, no price, no store name, no Starter or Free`, !/\$|App Store|Google Play|Starter|Débutant|Free|Gratuit|\b\d{1,2} (January|janvier)/i.test(txt), txt);
+  const txt = await text(page, 'landingApps');
+  ok(`${lang}: the home page's apps section names the plans`, lang === 'fr' ? /Elles seront incluses dans les forfaits Croissance et Entreprise\./.test(txt) : /They will be included with the Growth and Business plans\./.test(txt), txt);
+  ok(`${lang}: no price, no store name, no Starter or Free in it`, !/\$|App Store|Google Play|Starter|Débutant|\bFree\b|Gratuit/i.test(txt), txt);
+  ok(`${lang}: it is the only apps notice on the home page (no second banner)`, await page.evaluate(() => !document.getElementById('appsLandBanner') && document.querySelectorAll('#landingPage .apps-banner').length === 0));
   ok(`${lang}: no sideways scroll on a phone`, await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
-  await page.evaluate(() => window.scrollTo(0, 0)); await shot(page, 'apps-home-phone-' + lang);
-  await page.click('#appsLandBanner .link-btn');
-  ok(`${lang}: Hide removes it`, !(await visible(page, 'appsLandBanner')));
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.evaluate(() => showLanding());
-  ok(`${lang}: and it stays hidden after a reload`, !(await visible(page, 'appsLandBanner')));
   ok(`${lang}: no page errors`, st.errs.length === 0, st.errs.join(' / '));
   await ctx.close();
 }
@@ -87,7 +81,6 @@ console.log('\n── dashboard ──');
   await signIn(page, OWNER);
   ok('an owner on the Free plan sees it on the dashboard', await visible(page, 'appsDashBanner'));
   ok('with the same wording', WORDING.en.test(await text(page, 'appsDashBanner')), await text(page, 'appsDashBanner'));
-  ok('and the home-page copy is not drawn for someone signed in', !(await visible(page, 'appsLandBanner')));
   await shot(page, 'apps-dashboard');
   await page.click('#appsDashBanner .link-btn');
   ok('Hide removes it from the dashboard', !(await visible(page, 'appsDashBanner')));

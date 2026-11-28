@@ -22,7 +22,7 @@ const TEST_TIMEOUT_MS = 6 * 60 * 1000;
 // list can only shrink. Do not add to it to get a change through; fix the code or the test.
 const KNOWN_FAILURES = {
   'addpunch-test.mjs': { failed: 4, why: 'a second IN while clocked in is confirmed instead of refused (EN and FR)' },
-  'help-test.mjs': { failed: 4, why: 'expects 12 landing FAQ questions and 23 help articles; the page has 18 and 29' },
+  'help-test.mjs': { failed: 2, why: 'expects 23 help articles; the help centre has 29 (EN and FR)' },
   'mobiletables-test.mjs': { failed: 2, why: 'time off list: no .mcards container inside #toListWrap on a phone' },
 };
 
