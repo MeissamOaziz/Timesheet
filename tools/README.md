@@ -18,6 +18,9 @@ node check.mjs kiosk portal      # only test files whose name contains "kiosk" o
   The run fails if one of them gets worse or better, so the list can only shrink.
 - `entitlement-test.mjs` and `map-test.mjs` load Leaflet from cdnjs.cloudflare.com, as the app does.
   They fail where that host is blocked; the runner says so.
+- `walkthrough-test.mjs` opens every sidebar page in demo mode, in English and French, on a desktop and a phone,
+  and fails on a script error, a translation key or "undefined" shown as text, an English label on a French page,
+  or a page that scrolls sideways. A new page is covered without touching the test.
 - `secure-db-regression/` is not part of this run: its scripts take arguments and some need a live project (see its README).
 
 # Screenshot tooling

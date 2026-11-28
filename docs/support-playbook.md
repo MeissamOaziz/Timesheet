@@ -105,6 +105,11 @@ the previous 48 hours.
   today: everything runs in the browser, employees clock in from their own phone through the employee portal
   (Starter and up), and the page can be added to the phone's home screen. Their account, employees and hours
   will carry over to the apps; nothing to redo. Do not answer only "no app": that reads as a dead end.
+  Plans (owner's decision, 2026-11-28): the apps will be included with Growth and Business only, not with Free
+  or Starter. Say so whenever the apps come up, and never tell a Free or Starter customer the apps will be part
+  of their plan. On Free and Starter everything keeps working in the browser exactly as today, phone clock-in
+  through the employee portal included (Starter and up). The home page and the dashboard carry a short notice
+  with the same wording.
   A punch made from the
   employee portal on a phone is tagged MOBILE in Activity. Portal punches always use the employee's
   assigned site: there is no site picker, so geofence distance is measured against that one site.
