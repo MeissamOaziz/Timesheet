@@ -26,6 +26,12 @@ for(const [label,w] of [['phone',390],['tablet',1024]]){
   console.log(`\n── ${label} ───────────────────────────────────`);
   const page=await browser.newPage({viewport:{width:w,height:844}});
   const errs=[]; page.on('pageerror',e=>errs.push(e.message));
+  // Nothing here may reach the real backend: answer every server call locally. Unstubbed, the outcome depended on
+  // the machine's network (a refused connection surfaced as "Failed to fetch" page errors on some, not on others).
+  const json=(route,data)=>route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(data)});
+  await page.route('**/functions/v1/**',route=>{ let b={}; try{ b=JSON.parse(route.request().postData()||'{}'); }catch{} return json(route,b.action?{ok:true}:[]); });
+  await page.route('**/rest/v1/**',route=>json(route,{}));
+  await page.route('**/*.supabase.co/storage/**',r=>r.fulfill({status:404,body:''}));
   await page.goto(`http://127.0.0.1:${server.address().port}/index.html`,{waitUntil:'networkidle'});
 
   // Put the page in the state a kiosk-bound device boots into.
@@ -45,6 +51,8 @@ for(const [label,w] of [['phone',390],['tablet',1024]]){
   // Signed in on that same device: the lock must release.
   const released = await page.evaluate(()=>{
     Sess.set({id:'a1',email:'o@t.ca',status:'active',role:'admin',token:'t'}, false);
+    // The page data is planted below; a reload from the (stubbed, empty) server would wipe it mid-test.
+    window.refreshCache=async()=>{};
     // A set-up account: without a company, navigate() legitimately diverts to onboarding and
     // the test would be measuring that rather than the kiosk guard.
     C.companies=[{id:'co1',name:'Acme',admin_id:'a1'}];
