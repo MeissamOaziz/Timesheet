@@ -37,7 +37,10 @@ for(const lang of ['en','fr']){
   });
   // 12, not 11: FAQ_SALES gained q24 (the employee self-service portal), added because the
   // portal existed nowhere in the landing page, the meta tags, or the FAQPage rich-result data.
-  ok('landing FAQ is trimmed to the pre-sale set', faq.count===12, faq.count+' questions');
+  // 19 since 2026-11-28 (the list had grown to 18; q32 "Is there a mobile app?" makes 19), plus the
+  // referral question while that offer is open.
+  const faqWant = 19 + (await page.evaluate(()=>typeof referralOpen==='function'&&referralOpen()?1:0));
+  ok('landing FAQ is trimmed to the pre-sale set', faq.count===faqWant, faq.count+' questions');
   ok('troubleshooting is no longer on the sales page',
      !/reset it|réinitialiser/i.test(faq.text) && !/alert emails|courriels d.alerte/i.test(faq.text));
   ok('the buying questions are still there',
