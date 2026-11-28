@@ -23,14 +23,14 @@ const PLANS = {
   en: [
     { name: 'Free', price: '$0', limits: '1 company, 1 site, up to 10 active employees', note: 'PIN clock-in on your own tablet or computer, dashboard, activity log, PDF reports. No credit card.' },
     { name: 'Starter', price: '$19.49/month', limits: '1 company, 2 sites, up to 25 employees', note: 'Adds geofencing, remote clock-in, the employee portal, time off, Excel and CSV export, punch corrections, overtime, evening hours and automatic email reports.' },
-    { name: 'Growth', price: '$39.49/month', limits: '3 companies, 6 sites, up to 60 employees', note: 'Everything in Starter, plus employee scheduling, lunch-break tracking and visitor check-in.' },
-    { name: 'Business', price: '$79.49/month', limits: 'Unlimited companies, sites and employees', note: 'Everything in Growth, including employee scheduling.' },
+    { name: 'Growth', price: '$39.49/month', limits: '3 companies, 6 sites, up to 60 employees', note: 'Everything in Starter, plus employee scheduling, lunch-break tracking and visitor check-in. The iPhone and Android apps, planned for January 2027, will be included.' },
+    { name: 'Business', price: '$79.49/month', limits: 'Unlimited companies, sites and employees', note: 'Everything in Growth, including employee scheduling. The iPhone and Android apps, planned for January 2027, will be included.' },
   ],
   fr: [
     { name: 'Gratuit', price: '0 $', limits: '1 compagnie, 1 site, jusqu’à 10 employés actifs', note: 'Pointage par NIP sur votre propre tablette ou ordinateur, tableau de bord, journal d’activité, rapports PDF. Aucune carte de crédit.' },
     { name: 'Débutant', price: '19,49 $/mois', limits: '1 compagnie, 2 sites, jusqu’à 25 employés', note: 'Ajoute le géorepérage, le pointage à distance, le portail employé, les congés, l’export Excel et CSV, la correction des pointages, les heures supplémentaires, les heures de soir et les rapports automatiques par courriel.' },
-    { name: 'Croissance', price: '39,49 $/mois', limits: '3 compagnies, 6 sites, jusqu’à 60 employés', note: 'Tout le plan Débutant, plus la planification des horaires, le suivi des pauses repas et le pointage visiteur.' },
-    { name: 'Entreprise', price: '79,49 $/mois', limits: 'Compagnies, sites et employés illimités', note: 'Tout le plan Croissance, y compris la planification des horaires.' },
+    { name: 'Croissance', price: '39,49 $/mois', limits: '3 compagnies, 6 sites, jusqu’à 60 employés', note: 'Tout le plan Débutant, plus la planification des horaires, le suivi des pauses repas et le pointage visiteur. Les applications iPhone et Android, prévues pour janvier 2027, seront incluses.' },
+    { name: 'Entreprise', price: '79,49 $/mois', limits: 'Compagnies, sites et employés illimités', note: 'Tout le plan Croissance, y compris la planification des horaires. Les applications iPhone et Android, prévues pour janvier 2027, seront incluses.' },
   ],
 };
 const ADDON = {
@@ -699,6 +699,8 @@ const PAGES = [
         ['Do I need a credit card to start?', 'No. The Free plan needs no credit card.'],
         ['Can I change plans later?', 'Yes, from your account at any time. Your data stays where it is.'],
         ['Is employee scheduling included?', 'Yes, in Growth and Business. On Starter it is a $14.95/month CAD add-on, and you can try it free for 14 days.'],
+        // Owner's decision 2026-11-28. Replace with the real answer and the store links on the day the apps are released.
+        ['Is there a phone app?', 'iPhone and Android apps are on the way, planned for January 2027, and will be included with the Growth and Business plans. Today everything runs in the browser on every plan, and from Starter up employees can clock in from their own phone through the employee portal.'],
         ['Can I get a refund?', 'No. Payments are not refundable, including partial months, so try the paid features free for 14 days first. If you cancel, you keep your plan until the end of the month already paid and are not charged again.'],
         // Referral program (owner-approved 2026-11-20). Only in a build made from 1 to 31 December 2026 (a build before or after leaves it out).
         ["Is there a referral offer?", "Yes, for new accounts created from 1 to 31 December 2026. Sign up with the referral code of a business that already uses PunchClock Crew and you get 10% off your first paid month. The business that referred you gets a $19.49 credit, the price of one month of Starter: $9.75 when you pay your first month and $9.74 when you pay your second. The credit comes off their next invoice automatically, for up to 10 referred businesses. Every account has its own code in the profile menu, under \"Refer a business\". Conditions are in the Terms of Service.", { from: '2026-12-01T05:00:00Z', until: '2027-01-01T05:00:00Z' }],
@@ -716,6 +718,7 @@ const PAGES = [
         ['Faut-il une carte de crédit pour commencer?', 'Non. Le plan Gratuit ne demande aucune carte de crédit.'],
         ['Puis-je changer de plan plus tard?', 'Oui, à partir de votre compte, en tout temps. Vos données restent en place.'],
         ['La planification des horaires est-elle incluse?', 'Oui, dans les plans Croissance et Entreprise. Sur le plan Débutant, c’est un module à 14,95 $/mois, et vous pouvez l’essayer gratuitement pendant 14 jours.'],
+        ['Y a-t-il une application mobile?', 'Des applications pour iPhone et Android arrivent : la sortie est prévue pour janvier 2027, et elles seront incluses dans les plans Croissance et Entreprise. Aujourd’hui, tout fonctionne dans le navigateur avec tous les plans, et à partir du plan Débutant, les employés peuvent pointer de leur propre téléphone par le portail employé.'],
         // Programme de parrainage (approuvé 2026-11-20). Seulement dans une reconstruction faite du 1er au 31 décembre 2026.
         ["Y a-t-il une offre de parrainage?", "Oui, pour les nouveaux comptes créés du 1er au 31 décembre 2026. Inscrivez-vous avec le code de parrainage d'une entreprise qui utilise déjà PunchClock Crew et obtenez 10 % de rabais sur votre premier mois payé. L'entreprise qui vous a recommandé reçoit un crédit de 19,49 $, soit le prix d'un mois du forfait Débutant : 9,75 $ lorsque vous payez votre premier mois et 9,74 $ lorsque vous payez le deuxième. Le crédit se déduit automatiquement de sa prochaine facture, pour au plus 10 entreprises recommandées. Chaque compte a son propre code dans le menu du profil, sous « Recommander une entreprise ». Les conditions figurent dans les Conditions d'utilisation.", { from: '2026-12-01T05:00:00Z', until: '2027-01-01T05:00:00Z' }],
         ['Puis-je obtenir un remboursement?', 'Non. Les paiements ne sont pas remboursables, y compris pour un mois partiel : essayez d’abord les fonctions payantes gratuitement pendant 14 jours. Si vous annulez, vous gardez votre forfait jusqu’à la fin du mois déjà payé et vous n’êtes plus facturé.'],
@@ -913,6 +916,7 @@ function llmsTxt() {
 
 Key facts:
 - Plans (CAD per month): Free $0 (1 company, 1 site, up to 10 active employees); Starter $19.49 (2 sites, 25 employees); Growth $39.49 (3 companies, 6 sites, 60 employees, adds employee scheduling, lunch breaks and visitor check-in); Business $79.49 (unlimited).
+- Phone apps: iPhone and Android apps are planned for January 2027 and will be included with Growth and Business. Nothing is in the App Store or Google Play yet; today everything runs in the browser, and employees can clock in from their own phone through the employee portal (Starter and up).
 - Starter and up add geofencing, remote clock-in with GPS (location can be required on every phone punch, from anywhere, for crews on the road), the employee self-service portal (schedule, hours, time off, and reporting a forgotten clock-in or clock-out for the manager to approve), time-off requests, Excel and CSV export, punch corrections, overtime and evening-hours tracking, and automatic email reports including a payroll summary for the accountant.
 - Scheduling: included in Growth and Business; on Starter a $14.95/month add-on with a 14-day free trial; includes Québec statutory holidays in one click, work labels, and calendar sync: each employee can add their own shifts to Google Calendar, Apple Calendar or Outlook with a private link.
 - Every new account previews the paid features free for 14 days. No credit card for the Free plan.

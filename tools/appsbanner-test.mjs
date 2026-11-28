@@ -111,6 +111,22 @@ console.log('\n── dashboard ──');
   await ctx.close();
 }
 
+console.log('\n── pricing cards ──');
+for (const lang of ['en', 'fr']) {
+  const { page, st, ctx } = await open();
+  await page.evaluate((l) => { setLang(l); showLanding(); }, lang);
+  const cards = await page.evaluate(() => [...document.querySelectorAll('.price-card')].map((c) => ({
+    name: c.querySelector('.price-name').getAttribute('data-i18n'), lines: [...c.querySelectorAll('.price-features li')].map((li) => li.innerText.trim()) })));
+  const line = lang === 'fr' ? 'Applications iPhone et Android (sortie prévue en janvier 2027)' : 'iPhone and Android apps (planned for January 2027)';
+  const has = (n) => { const c = cards.find((c) => c.name === n); return !!c && c.lines.includes(line); };
+  const mentions = (n) => { const c = cards.find((c) => c.name === n); return !c || c.lines.some((l) => /iPhone|Android/i.test(l)); };
+  ok(`${lang}: the four plan cards are there`, ['plan.free', 'plan.starter', 'plan.growth', 'plan.business'].every((n) => cards.some((c) => c.name === n)), cards.map((c) => c.name).join(' '));
+  ok(`${lang}: Growth and Business list the apps, with the planned month`, has('plan.growth') && has('plan.business'), JSON.stringify(cards.filter((c) => /growth|business/.test(c.name))));
+  ok(`${lang}: Free and Starter do not mention them`, !mentions('plan.free') && !mentions('plan.starter'));
+  ok(`${lang}: no page errors`, st.errs.length === 0, st.errs.join(' / '));
+  await ctx.close();
+}
+
 console.log('\n── translations ──');
 {
   const { page, ctx } = await open();
